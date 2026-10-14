@@ -20,7 +20,7 @@ describe('Form Builder UI-FORM.5 visual state reconciliation', () => {
     const button = (toolbar.nativeElement as HTMLElement).querySelector('#tab-editor-visual') as HTMLButtonElement;
     expect(button).toBeTruthy();
     expect(button.textContent).toContain('Editor Visual');
-    expect(button.className).toContain('border-blue-600');
+    expect(button.className).toContain('border-ihss-600');
     expect(button.getAttribute('aria-current')).toBe('page');
     expect((toolbar.nativeElement as HTMLElement).querySelector('#tab-configuracion-general')).toBeNull();
   });

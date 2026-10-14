@@ -67,7 +67,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           text: 'Su sesión ha caducado por inactividad. Por favor, ingrese de nuevo.',
           icon: 'info',
           confirmButtonText: 'Entendido',
-          confirmButtonColor: '#1e3a8a'
+          confirmButtonColor: 'var(--ihss-primary-color)'
         });
       });
     } else if (razon === 'cambio-password') {
@@ -78,7 +78,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           text: 'Debe iniciar sesión y completar el cambio de contraseña provisional antes de acceder al sistema.',
           icon: 'warning',
           confirmButtonText: 'Entendido',
-          confirmButtonColor: '#1e3a8a'
+          confirmButtonColor: 'var(--ihss-primary-color)'
         });
       });
     }
@@ -199,7 +199,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         focusConfirm: false,
         allowEscapeKey: false,
         confirmButtonText: 'Actualizar Contraseña',
-        confirmButtonColor: '#1e3a8a',
+        confirmButtonColor: 'var(--ihss-primary-color)',
         showLoaderOnConfirm: true,
         didOpen: () => {
           const toggleNew = document.getElementById('toggle-new-pw');
@@ -295,7 +295,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         showCancelButton: true,
         confirmButtonText: 'Enviar Clave',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#1e3a8a',
+        confirmButtonColor: 'var(--ihss-primary-color)',
         showLoaderOnConfirm: true,
         preConfirm: (email) => {
           if (!email) {
@@ -323,7 +323,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             title: '¡Correo Enviado!',
             text: result.value.mensaje || 'Se ha enviado una clave provisional a su correo electrónico.',
             icon: 'success',
-            confirmButtonColor: '#1e3a8a'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });

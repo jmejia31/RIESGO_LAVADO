@@ -62,7 +62,7 @@ test('Monitoreo de Listas reutiliza la carga institucional con selector, retiro 
     return data;
   });
   await dropzone.dispatchEvent('dragenter', { dataTransfer: transfer });
-  await expect(dropzone).toHaveClass(/border-blue-500/);
+  await expect(dropzone).toHaveClass(/border-ihss-500/);
   await dropzone.dispatchEvent('dragover', { dataTransfer: transfer });
   await dropzone.dispatchEvent('drop', { dataTransfer: transfer });
   await expect(page.getByText('evidencia-arrastrada.pdf')).toBeVisible();

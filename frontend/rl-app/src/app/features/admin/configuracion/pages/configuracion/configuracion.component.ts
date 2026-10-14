@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { ConfigSistema, LoginSlide } from '../../../../../core/configuration/configuracion.models';
+import { DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY } from '../../../../../core/configuration/system-theme.util';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
@@ -52,8 +53,8 @@ export class ConfiguracionComponent implements OnInit {
       nombreSistema: ['', Validators.required],
       logoUrl: [''],
       iconoUrl: [''],
-      colorPrimario: ['#1e3a8a', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
-      colorSecundario: ['#1d4ed8', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
+      colorPrimario: [DEFAULT_SYSTEM_PRIMARY, [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
+      colorSecundario: [DEFAULT_SYSTEM_ACCENT, [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
       timeoutSesion: [30, [Validators.required, Validators.min(1), Validators.max(1440)]],
       acuerdoLegal: ['', [Validators.maxLength(this.maxTextoTextarea)]],
       maxIntentos: [5, [Validators.required, Validators.min(1), Validators.max(20)]]
@@ -267,7 +268,7 @@ export class ConfiguracionComponent implements OnInit {
             text: msg,
             icon: 'error',
             confirmButtonText: 'Entendido',
-            confirmButtonColor: '#1e3a8a'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         });
       }

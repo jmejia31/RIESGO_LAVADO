@@ -9,7 +9,7 @@
         </p>
       </div>
       <button (click)="agregarPositivoManual()" title="Crear positivo manual" aria-label="Crear positivo manual"
-        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
+        class="px-4 py-2 bg-ihss-600 hover:bg-ihss-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
             <app-action-icon action="create"></app-action-icon>
           </button>
     </div>
@@ -65,10 +65,10 @@
           <p class="mt-2 text-3xl font-bold text-emerald-700">{{ conMotivoGeneral() }}</p>
           <p class="mt-auto pt-2 text-xs text-emerald-700/80">Preparadas para seguimiento</p>
         </article>
-        <article data-ui-monitoring-kpi="manual" class="flex h-full flex-col rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
-          <p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Positivos manuales</p>
-          <p class="mt-2 text-3xl font-bold text-blue-700">{{ positivosManualesGeneral() }}</p>
-          <p class="mt-auto pt-2 text-xs text-blue-700/80">Registrados por la Sección de Cumplimiento</p>
+        <article data-ui-monitoring-kpi="manual" class="flex h-full flex-col rounded-xl border border-ihss-100 bg-ihss-50 p-4 shadow-sm">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-ihss-700">Positivos manuales</p>
+          <p class="mt-2 text-3xl font-bold text-ihss-700">{{ positivosManualesGeneral() }}</p>
+          <p class="mt-auto pt-2 text-xs text-ihss-700/80">Registrados por la Sección de Cumplimiento</p>
         </article>
         <article data-ui-monitoring-kpi="closed-passive" class="flex h-full flex-col rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Cerrados / Pasivos</p>
@@ -238,7 +238,7 @@
                         <!-- Registrar Motivo -->
                         <div class="relative group inline-block">
                           <button (click)="registrarMotivo(row)" title="Registrar motivo" aria-label="Registrar motivo"
-                            class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
+                            class="inline-flex items-center justify-center p-1.5 text-ihss-600 bg-ihss-50 hover:bg-ihss-100 rounded-lg transition-colors border border-ihss-200">
             <app-action-icon action="create"></app-action-icon>
           </button>
                           <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
@@ -330,7 +330,7 @@
                         <!-- Registrar Motivo -->
                         <div class="relative group inline-block">
                           <button (click)="registrarMotivo(row)" title="Registrar motivo" aria-label="Registrar motivo"
-                            class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
+                            class="inline-flex items-center justify-center p-1.5 text-ihss-600 bg-ihss-50 hover:bg-ihss-100 rounded-lg transition-colors border border-ihss-200">
             <app-action-icon action="create"></app-action-icon>
           </button>
                           <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
@@ -422,7 +422,7 @@
                         <!-- Registrar Motivo -->
                         <div class="relative group inline-block">
                           <button (click)="registrarMotivo(row)" title="Registrar motivo" aria-label="Registrar motivo"
-                            class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
+                            class="inline-flex items-center justify-center p-1.5 text-ihss-600 bg-ihss-50 hover:bg-ihss-100 rounded-lg transition-colors border border-ihss-200">
             <app-action-icon action="create"></app-action-icon>
           </button>
                           <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
@@ -542,10 +542,10 @@
                   <p class="mt-2 text-xs text-gray-500">Última coincidencia: {{ detalleSujetoFecha() ? (detalleSujetoFecha() | date:'dd/MM/yyyy') : 'N/D' }}</p>
                 </article>
 
-                <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
-                  <p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Resumen operativo</p>
-                  <p class="mt-2 text-2xl font-bold text-blue-800">{{ totalCoincidencias() }}</p>
-                  <p class="text-xs text-blue-700/80">Coincidencia(s) detalladas</p>
+                <article class="rounded-xl border border-ihss-100 bg-ihss-50 p-4 shadow-sm">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-ihss-700">Resumen operativo</p>
+                  <p class="mt-2 text-2xl font-bold text-ihss-800">{{ totalCoincidencias() }}</p>
+                  <p class="text-xs text-ihss-700/80">Coincidencia(s) detalladas</p>
                 </article>
               </div>
 
@@ -789,7 +789,7 @@
             <app-action-icon action="cancel"></app-action-icon>
           </button>
             <button (click)="guardarMotivo()" [disabled]="guardandoMotivo() || !formTipoDocId() || !formOrigenRegistro() || !formMotivo().trim()" title="Guardar motivo" aria-label="Guardar motivo"
-              class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              class="px-4 py-2 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
 <app-action-icon action="save" [loading]="guardandoMotivo()"></app-action-icon>
           </button>
           </div>
@@ -856,14 +856,14 @@
               <div class="space-y-6 overflow-y-auto max-h-[480px] pl-4 pr-2">
                 @for (seg of listaSeguimientos(); track seg.detalleListaId) {
                   <div class="relative pl-6 border-l-2 border-gray-200 pb-2">
-                    <span class="absolute -left-1.5 top-1.5 bg-blue-600 rounded-full w-3 h-3 ring-4 ring-white"></span>
+                    <span class="absolute -left-1.5 top-1.5 bg-ihss-600 rounded-full w-3 h-3 ring-4 ring-white"></span>
 
                     <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 shadow-sm space-y-2">
                       <div class="flex justify-between items-center text-xs text-gray-400">
                         <span class="font-bold text-gray-600">{{ seg.usrEmail }}</span>
                         <div class="flex items-center gap-2">
                           <span>{{ seg.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
-                          <button (click)="iniciarEdicionSeguimiento(seg)" class="text-blue-600 hover:text-blue-800 transition-colors p-0.5" title="Editar seguimiento" aria-label="Editar seguimiento">
+                          <button (click)="iniciarEdicionSeguimiento(seg)" class="text-ihss-600 hover:text-ihss-800 transition-colors p-0.5" title="Editar seguimiento" aria-label="Editar seguimiento">
             <app-action-icon action="edit"></app-action-icon>
           </button>
                           <button (click)="eliminarSeguimiento(seg)" class="text-red-500 hover:text-red-700 transition-colors p-0.5" title="Eliminar seguimiento" aria-label="Eliminar seguimiento">
@@ -942,7 +942,7 @@
 
             <div class="pt-2 flex flex-col gap-2">
               <button (click)="guardarSeguimiento()" [disabled]="guardandoSeguimiento() || !formComentarioSeguimiento().trim()" title="Guardar seguimiento" aria-label="Guardar seguimiento"
-                class="w-full px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-bold">
+                class="w-full px-4 py-2.5 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-bold">
 <app-action-icon action="save" [loading]="guardandoSeguimiento()"></app-action-icon>
           </button>
 

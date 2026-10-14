@@ -26,7 +26,7 @@
       <div class="ml-4 flex shrink-0 items-center gap-2">
         <div class="group relative">
         <button type="button" aria-label="Regresar sin crear la familia"
-                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-ihss-200 hover:bg-ihss-50 hover:text-ihss-700 focus:outline-none focus:ring-2 focus:ring-ihss-500/30 disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Regresar a Familias de Formularios"
                   title="Regresar a Familias de Formularios"
                   [disabled]="guardando()"
@@ -63,7 +63,7 @@
 
       <section class="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Resumen de creación de familia" data-ui-fam-create="summary">
         <article class="flex min-h-[84px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600" aria-hidden="true">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ihss-50 text-ihss-600" aria-hidden="true">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 104 0M9 5a2 2 0 014 0m-4 7h6m-6 4h6"/></svg>
           </span>
           <div><p class="text-xs font-medium text-gray-500">Paso actual:</p><p class="mt-0.5 text-sm font-bold text-gray-900">Identificación</p></div>
@@ -100,7 +100,7 @@
                      required
                      maxlength="50"
                      autocomplete="off"
-                     class="w-full rounded-xl border bg-white px-4 py-2.5 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                     class="w-full rounded-xl border bg-white px-4 py-2.5 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-500/30"
                      [class.border-red-300]="codigoModel.invalid && codigoModel.touched"
                      [class.border-gray-200]="!(codigoModel.invalid && codigoModel.touched)"
                      [(ngModel)]="codigo"
@@ -125,7 +125,7 @@
                      required
                      maxlength="150"
                      autocomplete="off"
-                     class="w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                     class="w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-500/30"
                      [class.border-red-300]="nombreModel.invalid && nombreModel.touched"
                      [class.border-gray-200]="!(nombreModel.invalid && nombreModel.touched)"
                      [(ngModel)]="nombre"
@@ -145,7 +145,7 @@
                         name="descripcion"
                         rows="4"
                         maxlength="500"
-                        class="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        class="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-500/30"
                         [(ngModel)]="descripcion"
                         (blur)="descripcion = descripcion.trim()"
                         placeholder="Describa el propósito y alcance de esta familia de formularios."
@@ -187,7 +187,7 @@
             <app-action-icon action="back"></app-action-icon>
           </button>
        <button type="submit" title="Crear la familia de formularios" aria-label="Crear la familia de formularios"
-              class="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
+              class="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-ihss-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-ihss-700 focus:outline-none focus:ring-2 focus:ring-ihss-500/30 disabled:cursor-not-allowed disabled:opacity-55"
               [disabled]="guardando() || familiaForm.invalid"
               title="Crear la familia de formularios"
               data-ui-fam-create-action="submit">

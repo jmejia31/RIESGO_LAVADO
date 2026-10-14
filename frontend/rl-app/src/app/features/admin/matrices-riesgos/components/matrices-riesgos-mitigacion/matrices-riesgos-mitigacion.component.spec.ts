@@ -149,8 +149,8 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     editarPlan.click();
     fixture.detectChanges();
     expect(root.querySelector('[data-ui-action="save-plan"]')?.getAttribute('aria-label')).toBe('Actualizar plan');
-    expect(root.querySelector('[data-ui-action="new-control"]')?.className).toContain('bg-blue-50');
-    expect(root.querySelector('[data-ui-action="new-plan"]')?.className).toContain('bg-blue-50');
+    expect(root.querySelector('[data-ui-action="new-control"]')?.className).toContain('bg-ihss-50');
+    expect(root.querySelector('[data-ui-action="new-plan"]')?.className).toContain('bg-ihss-50');
   });
 
   it('crea un control válido y resetea el formulario', () => {

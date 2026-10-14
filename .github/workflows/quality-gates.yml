@@ -125,6 +125,11 @@ jobs:
       - name: Validate institutional shared file upload standard
         run: node tools/validate_institutional_file_upload_standard.js
 
+      - name: Validate institutional modal standard and dynamic system theme
+        run: |
+          node tools/validate_institutional_modal_standard.js
+          node tools/validate_dynamic_system_theme.js
+
       - name: Validate exact matrices object inventory
         shell: pwsh
         run: |

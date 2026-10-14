@@ -48,8 +48,8 @@
 }
 
 .form-builder-section__menu-item:hover:not(:disabled) {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: rgb(var(--ihss-50-rgb));
+  color: rgb(var(--ihss-700-rgb));
 }
 
 .form-builder-section__menu-item:disabled {

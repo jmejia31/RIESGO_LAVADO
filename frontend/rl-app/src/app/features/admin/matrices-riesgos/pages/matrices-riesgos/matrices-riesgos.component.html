@@ -44,15 +44,15 @@
     @if (tab() === 'evaluaciones') {
       <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total evaluaciones</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ totalRegistros() }}</p><p class="text-xs text-gray-500">Total según la consulta actual</p></article>
       <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">En borrador</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ contarEvaluacionesPorEstado('BORRADOR') }}</p><p class="text-xs text-amber-700/80">Pendientes en la página actual</p></article>
-      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">En revisión</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ contarEvaluacionesPorEstado('EN_REVISION') }}</p><p class="text-xs text-blue-700/80">En análisis en la página actual</p></article>
+      <article class="rounded-xl border border-ihss-100 bg-ihss-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-ihss-700">En revisión</p><p class="mt-2 text-3xl font-bold text-ihss-700">{{ contarEvaluacionesPorEstado('EN_REVISION') }}</p><p class="text-xs text-ihss-700/80">En análisis en la página actual</p></article>
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Aprobadas</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ contarEvaluacionesPorEstado('APROBADA') }}</p><p class="text-xs text-emerald-700/80">Oficiales en la página actual</p></article>
     } @else if (tab() === 'plantillas') {
-      <article class="rounded-xl border border-blue-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Total familias</p><p class="mt-2 text-3xl font-bold text-gray-900" data-ui-fam-kpi="total">{{ totalFamilias() }}</p><p class="text-xs text-gray-500">Familias registradas</p></article>
+      <article class="rounded-xl border border-ihss-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-ihss-700">Total familias</p><p class="mt-2 text-3xl font-bold text-gray-900" data-ui-fam-kpi="total">{{ totalFamilias() }}</p><p class="text-xs text-gray-500">Familias registradas</p></article>
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Activas</p><p class="mt-2 text-3xl font-bold text-emerald-700" data-ui-fam-kpi="activas">{{ totalFamiliasActivas() }}</p><p class="text-xs text-emerald-700/80">Disponibles para uso</p></article>
       <article class="rounded-xl border border-rose-100 bg-rose-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-rose-700">Inactivas</p><p class="mt-2 text-3xl font-bold text-rose-700" data-ui-fam-kpi="inactivas">{{ totalFamiliasInactivas() }}</p><p class="text-xs text-rose-700/80">Fuera de uso</p></article>
       <article class="rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-violet-700">Total versiones</p><p class="mt-2 text-3xl font-bold text-violet-700" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p><p class="text-xs text-violet-700/80">Versiones disponibles</p></article>
     } @else if (tab() === 'consolidado') {
-      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Con evaluación aprobada</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ totalesConsolidado().totalConEvaluacionOficial }}</p><p class="text-xs text-blue-700/80">Solo evaluaciones con estado vigente APROBADA</p></article>
+      <article class="rounded-xl border border-ihss-100 bg-ihss-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-ihss-700">Con evaluación aprobada</p><p class="mt-2 text-3xl font-bold text-ihss-700">{{ totalesConsolidado().totalConEvaluacionOficial }}</p><p class="text-xs text-ihss-700/80">Solo evaluaciones con estado vigente APROBADA</p></article>
       <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Nivel alto/crítico</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ totalesConsolidado().totalAltoCritico }}</p><p class="text-xs text-amber-700/80">Según nivel residual</p></article>
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Estados disponibles</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ estadosConsolidado().length }}</p><p class="text-xs text-emerald-700/80">En la consulta actual</p></article>
     }
@@ -126,7 +126,7 @@
           <h2 class="text-lg font-bold text-gray-900">Evaluaciones de Riesgo</h2>
           <p class="text-xs text-gray-500">Estado operativo proveniente del último flujo transaccional registrado.</p>
         </div>
-        <button type="button" title="Crear nueva evaluación" aria-label="Crear nueva evaluación" class="inline-flex h-10 w-10 items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm" (click)="nuevaEvaluacion()">
+        <button type="button" title="Crear nueva evaluación" aria-label="Crear nueva evaluación" class="inline-flex h-10 w-10 items-center justify-center bg-ihss-600 hover:bg-ihss-700 text-white font-bold rounded-xl transition-all shadow-sm" (click)="nuevaEvaluacion()">
             <app-action-icon action="create"></app-action-icon>
           </button>
       </div>
@@ -170,7 +170,7 @@
                 <td class="px-6 py-4">
                   <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold"
                         [class.bg-amber-50]="evaluacion.estado === 'BORRADOR'" [class.text-amber-700]="evaluacion.estado === 'BORRADOR'" [class.ring-1]="evaluacion.estado === 'BORRADOR'" [class.ring-amber-600\/20]="evaluacion.estado === 'BORRADOR'"
-                        [class.bg-blue-50]="evaluacion.estado === 'EN_REVISION'" [class.text-blue-700]="evaluacion.estado === 'EN_REVISION'"
+                        [class.bg-ihss-50]="evaluacion.estado === 'EN_REVISION'" [class.text-ihss-700]="evaluacion.estado === 'EN_REVISION'"
                         [class.bg-purple-50]="evaluacion.estado === 'OBSERVADA'" [class.text-purple-700]="evaluacion.estado === 'OBSERVADA'"
                         [class.bg-emerald-50]="evaluacion.estado === 'APROBADA'" [class.text-emerald-700]="evaluacion.estado === 'APROBADA'"
                         [class.bg-red-50]="evaluacion.estado === 'RECHAZADA'" [class.text-red-700]="evaluacion.estado === 'RECHAZADA'"
@@ -190,7 +190,7 @@
                 <td class="px-6 py-4 text-center whitespace-nowrap">
                   <div class="inline-flex flex-nowrap items-center justify-center gap-1.5">
                     <button type="button"
-                            class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+                            class="inline-flex items-center justify-center p-1.5 text-ihss-600 bg-ihss-50 hover:bg-ihss-100 rounded-lg transition-colors border border-ihss-200"
                             title="Ver evaluación"
                             aria-label="Ver evaluación"
                             (click)="abrirModalVer(evaluacion)">
@@ -288,7 +288,7 @@
                 <td class="px-6 py-4 font-mono font-bold">{{ fila.vrr }}</td>
                 <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ etiquetaNivelRiesgo(fila.vrr) }}</span></td>
                 <td class="px-6 py-4">{{ etiquetaRespuestaRiesgo(fila.respuestaRiesgo) }}</td>
-                <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700">{{ fila.estadoEvaluacion }}</span></td>
+                <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-ihss-50 text-ihss-700">{{ fila.estadoEvaluacion }}</span></td>
                 <td class="px-6 py-4 font-mono">{{ fila.versionFormularioId }}</td>
                 <td class="px-6 py-4 text-center whitespace-nowrap">
                   <div class="inline-flex flex-nowrap items-center justify-center gap-1.5" data-consolidado-actions>
@@ -474,7 +474,7 @@
                     @if (bloque4.planes.length) {
                       <div class="mt-3 space-y-3">
                         @for (plan of bloque4.planes; track plan.plaId; let planIndex = $index; let primerPlan = $first) {
-                          <article class="min-w-0 rounded-xl border border-blue-200 bg-blue-50/40 p-3 sm:p-4" data-matrix-plan [attr.data-plan-id]="plan.plaId" [attr.data-plan-index]="planIndex + 1">
+                          <article class="min-w-0 rounded-xl border border-ihss-200 bg-ihss-50/40 p-3 sm:p-4" data-matrix-plan [attr.data-plan-id]="plan.plaId" [attr.data-plan-index]="planIndex + 1">
                             <h5 class="text-sm font-bold text-ihss-900">Plan {{ planIndex + 1 }}</h5>
                             <p class="mt-1 whitespace-pre-wrap break-words text-sm text-gray-900">{{ plan.plaDescripcion || '—' }}</p>
                             <div class="mt-3 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
@@ -541,7 +541,7 @@
                     <h3 id="matrix-block-5-title" class="text-base font-bold text-ihss-900">5. Cálculos Auxiliares y Verificaciones</h3>
                     <p class="mt-1 text-xs text-gray-500">20 campos · Calculados automáticamente</p>
                   </div>
-                  <button type="button" data-ui-control="navigation" class="inline-flex min-h-10 items-center justify-center rounded-lg border border-ihss-700 px-3 py-2 text-sm font-semibold text-ihss-800 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" aria-controls="matrix-block-5-details" [attr.aria-expanded]="bloque5DetalleExpandido()" (click)="bloque5DetalleExpandido.update(expandido => !expandido)">
+                  <button type="button" data-ui-control="navigation" class="inline-flex min-h-10 items-center justify-center rounded-lg border border-ihss-700 px-3 py-2 text-sm font-semibold text-ihss-800 hover:bg-ihss-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" aria-controls="matrix-block-5-details" [attr.aria-expanded]="bloque5DetalleExpandido()" (click)="bloque5DetalleExpandido.update(expandido => !expandido)">
                     {{ bloque5DetalleExpandido() ? 'Ocultar detalle' : 'Mostrar detalle' }}
                   </button>
                 </div>
@@ -640,7 +640,7 @@
               </div>
             </div>
             @if (esAdministrador()) {
-              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" title="Crear una nueva familia" aria-label="Crear una nueva familia" (click)="abrirModalCrearFamilia()" data-ui-fam-action="nueva-familia">
+              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-ihss-600 text-white shadow-sm transition-all hover:bg-ihss-700 focus:outline-none focus:ring-2 focus:ring-ihss-500/30" title="Crear una nueva familia" aria-label="Crear una nueva familia" (click)="abrirModalCrearFamilia()" data-ui-fam-action="nueva-familia">
             <app-action-icon action="create"></app-action-icon>
           </button>
             }
@@ -649,9 +649,9 @@
 
         @if (false) {
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores de familias de formularios">
-          <article class="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+          <article class="rounded-2xl border border-ihss-100 bg-white p-5 shadow-sm">
             <div class="flex items-center gap-4">
-              <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span>
+              <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-ihss-50 text-ihss-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span>
               <div><p class="text-xs font-semibold text-gray-500">Total familias</p><p class="mt-1 text-3xl font-bold text-gray-900" data-ui-fam-kpi="total">{{ totalFamilias() }}</p></div>
             </div>
           </article>
@@ -743,14 +743,14 @@
                               </div>
                             }
                           <div class="group relative">
-                            <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-100 hover:text-ihss-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="Ver detalle" title="Ver detalle" (click)="abrirModalVerFamilia(fam)">
+                            <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-100 hover:text-ihss-900 focus:outline-none focus:ring-2 focus:ring-ihss-500/30" aria-label="Ver detalle" title="Ver detalle" (click)="abrirModalVerFamilia(fam)">
             <app-action-icon action="view"></app-action-icon>
           </button>
                             <span class="pointer-events-none absolute bottom-full right-0 z-40 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Ver detalle</span>
                           </div>
                           @if (esAdministrador()) {
                             <div class="group relative">
-                              <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-200 bg-blue-50/50 text-blue-700 shadow-sm transition-colors hover:bg-blue-100 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="Editar familia" title="Editar familia" (click)="abrirModalEditarFamilia(fam)">
+                              <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-ihss-200 bg-ihss-50/50 text-ihss-700 shadow-sm transition-colors hover:bg-ihss-100 hover:text-ihss-900 focus:outline-none focus:ring-2 focus:ring-ihss-500/30" aria-label="Editar familia" title="Editar familia" (click)="abrirModalEditarFamilia(fam)">
             <app-action-icon action="edit"></app-action-icon>
           </button>
                               <span class="pointer-events-none absolute bottom-full right-0 z-40 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Editar familia</span>
@@ -848,7 +848,7 @@
           </div>
           <div class="flex items-center gap-3">
             @if (esAdministrador()) {
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm" title="Crear nueva familia" aria-label="Crear nueva familia" (click)="abrirModalCrearFamilia()">
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-ihss-600 hover:bg-ihss-700 text-white font-bold rounded-xl transition-all shadow-sm" title="Crear nueva familia" aria-label="Crear nueva familia" (click)="abrirModalCrearFamilia()">
             <app-action-icon action="create"></app-action-icon>
           </button>
             }
@@ -940,7 +940,7 @@
           </button>
                         @if (esAdministrador()) {
                           <button type="button"
-                                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200 bg-blue-50/50 shadow-2xs"
+                                  class="p-1.5 text-ihss-600 hover:text-ihss-800 hover:bg-ihss-50 rounded-lg transition-colors border border-ihss-200 bg-ihss-50/50 shadow-2xs"
                                   aria-label="Editar"
                                   title="Editar"
                                   (click)="abrirModalEditarFamilia(fam)">
@@ -1047,7 +1047,7 @@
 
             @if (modoEdicionFamilia()) {
               <div class="flex items-center gap-2 pt-1">
-                <input id="fam-activo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" [(ngModel)]="nuevaFamiliaActivo" />
+                <input id="fam-activo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-ihss-600 focus:ring-ihss-500" [(ngModel)]="nuevaFamiliaActivo" />
                 <label for="fam-activo" class="font-bold text-gray-700 text-sm">Familia Activa</label>
               </div>
             }
@@ -1058,7 +1058,7 @@
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de familia" aria-label="Cancelar edición de familia" (click)="cerrarModalFamilia()">
             <app-action-icon action="cancel"></app-action-icon>
           </button>
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-sm disabled:opacity-50" title="Guardar familia" aria-label="Guardar familia" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-ihss-600 hover:bg-ihss-700 text-white rounded-xl transition-all shadow-sm disabled:opacity-50" title="Guardar familia" aria-label="Guardar familia" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">
             <app-action-icon action="save"></app-action-icon>
           </button>
         </div>
@@ -1153,8 +1153,8 @@
 
         <nav class="mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
           @for (bloque of bloquesEvaluacion; track bloque) {
-            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-              [class.border-blue-700]="bloqueEvaluacionActual() === bloque" [class.bg-blue-50]="bloqueEvaluacionActual() === bloque"
+            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700"
+              [class.border-ihss-700]="bloqueEvaluacionActual() === bloque" [class.bg-ihss-50]="bloqueEvaluacionActual() === bloque"
               [class.border-slate-200]="bloqueEvaluacionActual() !== bloque" [disabled]="bloque > bloqueMasAltoAlcanzado() && !evaluacionSeleccionada()"
               [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
               {{ tituloBloqueEvaluacion(bloque) }}
@@ -1189,7 +1189,7 @@
             </div>
             <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">BORRADOR</span>
           </div>
-          @if (actualizandoCalculo()) { <p class="text-xs text-blue-700" role="status">Actualizando cálculo institucional…</p> }
+          @if (actualizandoCalculo()) { <p class="text-xs text-ihss-700" role="status">Actualizando cálculo institucional…</p> }
           @if (errorCalculoPreview()) { <p class="text-xs text-red-700" role="alert">{{ errorCalculoPreview() }}</p> }
 
           @if (bloqueEvaluacionActual() === 1) {
@@ -1280,7 +1280,7 @@
           <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
           <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Atrás" aria-label="Atrás" [disabled]="guardando() || bloqueEvaluacionActual() <= 1" (click)="volverBloqueEvaluacion()"><app-action-icon action="back"></app-action-icon></button>
           <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
-                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
+                  class="px-4 py-2 bg-ihss-600 hover:bg-ihss-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
                   [disabled]="guardando()"
                   (click)="continuarBloqueEvaluacion()">
             <app-action-icon action="next"></app-action-icon>
@@ -1308,7 +1308,7 @@
         </div>
 
         <div class="modal-body-scrollable space-y-6">
-          @if (actualizandoCalculo()) { <p class="text-xs text-blue-700" role="status">Actualizando cálculo institucional…</p> }
+          @if (actualizandoCalculo()) { <p class="text-xs text-ihss-700" role="status">Actualizando cálculo institucional…</p> }
           @if (errorCalculoPreview()) { <p class="text-xs text-red-700" role="alert">{{ errorCalculoPreview() }}</p> }
           @if (obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || '').length > 0) {
             <section class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
@@ -1353,7 +1353,7 @@
             <div class="relative border-l-2 border-gray-200 ml-4 space-y-4 py-1">
               @for (flujo of flujos(); track flujo.fluId) {
                 <div class="relative pl-6">
-                  <span class="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-blue-600"></span>
+                  <span class="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-ihss-600"></span>
                   <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm text-xs space-y-1">
                     <div class="flex items-center justify-between">
                       <span class="font-bold text-gray-900">{{ flujo.fluEstado }}</span>
@@ -1384,8 +1384,8 @@
       <div class="modal-container-card modal-size-workspace" data-modal="nueva-evaluacion">
         <nav class="mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
           @for (bloque of bloquesEvaluacion; track bloque) {
-            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-              [class.border-blue-700]="bloqueEvaluacionActual() === bloque" [class.bg-blue-50]="bloqueEvaluacionActual() === bloque"
+            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700"
+              [class.border-ihss-700]="bloqueEvaluacionActual() === bloque" [class.bg-ihss-50]="bloqueEvaluacionActual() === bloque"
               [class.border-slate-200]="bloqueEvaluacionActual() !== bloque" [disabled]="bloque > 1"
               [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null">
               {{ tituloBloqueEvaluacion(bloque) }}
@@ -1415,13 +1415,13 @@
         </div>
 
         <div class="modal-body-scrollable space-y-6">
-          <section class="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5" aria-labelledby="titulo-configuracion-nueva-eval">
+          <section class="space-y-4 rounded-2xl border border-ihss-100 bg-ihss-50/30 p-5" aria-labelledby="titulo-configuracion-nueva-eval">
             <div>
               <h4 id="titulo-configuracion-nueva-eval" class="text-base font-bold text-gray-900">Configuración de la evaluación</h4>
               <p class="mt-1 text-sm text-gray-500">Seleccione la familia y el riesgo institucional para generar la evaluación.</p>
             </div>
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div class="rounded-2xl border border-blue-100 bg-blue-50/40 p-5 space-y-4">
+          <div class="rounded-2xl border border-ihss-100 bg-ihss-50/40 p-5 space-y-4">
             <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
               <div>
                 <label for="modal-selector-familia" class="mb-1.5 block text-xs font-bold text-gray-700">Familia de formulario <span class="text-red-500">*</span></label>
@@ -1432,11 +1432,11 @@
                   }
                 </select>
               </div>
-              <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 shadow-sm transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Ver detalle de familia" title="Ver detalle de familia" [disabled]="!familiaNuevaSeleccionada()" (click)="familiaNuevaSeleccionada() && abrirModalVerFamilia(familiaNuevaSeleccionada()!, true)">
+              <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-ihss-200 bg-white text-ihss-700 shadow-sm transition-colors hover:bg-ihss-50 focus:outline-none focus:ring-2 focus:ring-ihss-500/30 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Ver detalle de familia" title="Ver detalle de familia" [disabled]="!familiaNuevaSeleccionada()" (click)="familiaNuevaSeleccionada() && abrirModalVerFamilia(familiaNuevaSeleccionada()!, true)">
             <app-action-icon action="view"></app-action-icon>
           </button>
             </div>
-            @if (cargandoFormulario()) { <p class="text-xs font-semibold text-blue-700" role="status">Cargando la versión activa de la familia...</p> }
+            @if (cargandoFormulario()) { <p class="text-xs font-semibold text-ihss-700" role="status">Cargando la versión activa de la familia...</p> }
             @if (errorFormulario(); as errorNueva) { <p class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="status">{{ errorNueva }}</p> }
             @if (!cargandoFamilias() && familiasElegibles().length === 0) {
               <p class="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800" role="status">No existe una familia activa con una versión publicada y vigente.</p>
@@ -1506,7 +1506,7 @@
           </button>
           <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
           <button type="button" title="Continuar" aria-label="Continuar"
-                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
+                  class="px-4 py-2 bg-ihss-600 hover:bg-ihss-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
                   [disabled]="guardando()"
                   (click)="continuarBloqueEvaluacion()">
                   <app-action-icon action="next"></app-action-icon>

@@ -18,13 +18,13 @@
 .palette-heading h3 { margin: 0; color: #17233d; font-size: .8125rem; font-weight: 800; text-transform: uppercase; }
 .palette-heading p { margin: .45rem 0 0; color: #71809d; font-size: .6875rem; line-height: 1.55; }
 .palette-search { position: relative; display: flex; align-items: center; height: 2.2rem; margin-bottom: .7rem; border: 1px solid #d7dfec; border-radius: .55rem; background: #fff; }
-.palette-search:focus-within { border-color: #8cb1f7; box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1); }
+.palette-search:focus-within { border-color: #8cb1f7; box-shadow: 0 0 0 3px rgb(var(--ihss-600-rgb) / 0.1); }
 .palette-search svg { width: .95rem; height: .95rem; margin-left: .7rem; fill: none; stroke: #71809d; stroke-width: 1.7; }
 .palette-search input { width: 100%; min-width: 0; border: 0; outline: 0; padding: 0 .45rem; color: #17233d; font-size: .6875rem; }
 .palette-search input::placeholder { color: #8290a9; }
 .palette-search button { margin-right: .45rem; border: 0; background: transparent; color: #8390a8; font-size: .85rem; cursor: pointer; }
 .palette-search-meta { display: flex; justify-content: space-between; margin: -.2rem 0 .75rem; color: #8190a9; font-size: .625rem; }
-.palette-search-meta button { border: 0; background: none; color: #2563eb; cursor: pointer; }
+.palette-search-meta button { border: 0; background: none; color: rgb(var(--ihss-600-rgb)); cursor: pointer; }
 .palette-notice { display: flex; gap: .45rem; margin-bottom: .8rem; padding: .55rem; border: 1px solid #f5d28a; border-radius: .55rem; background: #fffaf0; color: #956400; font-size: .625rem; line-height: 1.4; }
 .palette-notice span:first-child { display: grid; place-items: center; width: 1rem; height: 1rem; flex: 0 0 auto; border-radius: 50%; background: #f6b73c; color: #fff; font-weight: 800; }
 .palette-groups { display: flex; flex-direction: column; gap: .65rem; }
@@ -33,10 +33,10 @@
 .palette-card:hover, .palette-card:focus-visible { border-color: #9cbcf7; background: #fbfdff; box-shadow: 0 3px 10px rgb(31 78 160 / 0.08); outline: none; }
 .palette-card--readonly { cursor: default; }
 .palette-card--inactive { cursor: not-allowed; opacity: .58; }
-.palette-icon { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; flex: 0 0 auto; border-radius: .45rem; background: #eef4ff; color: #2563eb; font-size: .68rem; font-weight: 800; }
+.palette-icon { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; flex: 0 0 auto; border-radius: .45rem; background: rgb(var(--ihss-50-rgb)); color: rgb(var(--ihss-600-rgb)); font-size: .68rem; font-weight: 800; }
 .palette-icon[data-icon='numero'], .palette-icon[data-icon='catalogo-multiple'] { background: #e8faf2; color: #159b63; }
 .palette-icon[data-icon='fecha'], .palette-icon[data-icon='texto-largo'] { background: #f1edff; color: #7548da; }
-.palette-icon[data-icon='selector-catalogo'] { background: #eef4ff; color: #3e5d9b; }
+.palette-icon[data-icon='selector-catalogo'] { background: rgb(var(--ihss-50-rgb)); color: #3e5d9b; }
 .palette-icon[data-icon='radio'] { background: #f7efff; color: #8739df; }
 .palette-icon[data-icon='checkbox'] { background: #e8fbf4; color: #159b63; }
 .palette-icon[data-icon='formula'] { background: #fff1fb; color: #d832a5; }

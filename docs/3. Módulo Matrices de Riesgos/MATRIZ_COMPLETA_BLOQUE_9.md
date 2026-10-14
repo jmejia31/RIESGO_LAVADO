@@ -61,6 +61,20 @@ La certificación transversal forma parte de esta misma ejecución del Bloque 9.
 
 El uploader compartido no añade llamadas HTTP ni cambia las políticas backend. El validador se ejecuta en Quality Gates para impedir inputs de archivo crudos fuera del componente compartido.
 
+## Tema dinámico y estándar global de modales
+
+La ampliación visual del Bloque 9 reutiliza el estándar modal que ya existía; no crea un segundo sistema ni cambia el backend. `colorPrimario` y `colorSecundario` de `ConfiguracionService` son la fuente única. Carga y guardado llaman al mismo método de tema; la raíz del documento recibe los dos tokens RGB, los once tonos `ihss-50…950`, foregrounds contrastados, superficies de modal y controles de cierre. Un modal abierto se actualiza al cambiar esas propiedades.
+
+El header y footer institucionales heredan un gradiente dinámico. El generador oscurece cada extremo del gradiente hasta alcanzar contraste de texto WCAG AA ≥4.5:1; el body, backdrop y sombras permanecen neutros. El color primario o secundario inválido no rompe CSS y conserva el último tema válido. Botones de marca, foco, selección y acentos usan la paleta dinámica; los azules de mensajes informativos siguen siendo semánticos.
+
+La auditoría encontró 22 instancias modales. Se migraron una vez los dos shells con headers fuera de la clase canónica; los demás conservaron su template. Todos los 22 quedan cubiertos por el tema global, sin color especial para Matriz completa. No se alteraron tamaños, scroll, eventos, formularios ni flujos.
+
+La configuración y los estilos institucionales están descritos en [Estándar de tema dinámico y modales](../0.0%20Documentación/ESTANDAR_TEMA_DINAMICO_Y_MODALES.md). Los validadores `validate_institutional_modal_standard.js` y `validate_dynamic_system_theme.js` se ejecutan en Quality Gates. La auditoría global no encontró colores de marca azules fijos; permanecen tres bindings azules para el estado semántico `info`.
+
+Verificación local de esta enmienda: frontend 867/867; lint, build, `npm audit` (0 vulnerabilidades), validadores modal/tema y `git diff --check` PASS. E2E Chromium: modal shell 8/8, flujo Matriz completa 1/1, uploader Monitoreo de Listas 1/1 y prueba visual azul/rojo 2/2. Las capturas y auditorías externas se guardan junto con los artefactos del Bloque 9 y se sellan en `SHA256SUMS.json`. Quality Gates remoto del SHA que contiene esta documentación se verifica antes del handoff.
+
+La auditoría final también revisó templates Angular inline en TypeScript y colores asignados a SweetAlert. Se eliminaron los colores fijos hallados en la capa visual: 52 botones de confirmación ahora consumen `--ihss-primary-color`; los defaults de Configuración están centralizados; los estados pendientes de selector/foco usan tokens `ihss-*`. Los tres azules informativos semánticos permanecen clasificados como `info`. Los validadores modal/tema, contrato 82/82, catálogos, UI Block7/Block8/Block9, estructura, scripts DB y enlaces documentales pasaron en esta intervención. Frontend local: lint, build, audit sin vulnerabilidades y 867/867 unitarias; Playwright local focalizado: modal shell 8/8, Matriz completa azul/rojo 1/1 y uploader Monitoreo de Listas 1/1. El resultado remoto del SHA publicado se añadirá al registro después de CI.
+
 ### Corrección de navegación en el browser real
 
 En CI `38613567583`, los gates de build y validación pasaron, pero el test de carga desde Matrices buscó el uploader después de abrir `Seguimiento de evaluación`, acción que corresponde al workflow transaccional. Se corrigió la ruta de prueba para abrir el borrador con `Editar evaluación` y navegar al Bloque 6 antes de seleccionar evidencia. La repetición Oracle/browser es obligatoria; el estado permanece pendiente hasta el CI completo exitoso.

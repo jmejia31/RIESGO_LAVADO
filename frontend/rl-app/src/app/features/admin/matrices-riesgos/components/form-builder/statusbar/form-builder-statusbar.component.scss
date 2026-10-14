@@ -11,6 +11,6 @@
 .form-builder-statusbar__mode--readonly { color: #b45309; }
 .form-builder-statusbar__cancel, .form-builder-statusbar__save { min-height: 2.25rem; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; }
 .form-builder-statusbar__cancel { border: 1px solid #cbd5e1; background: #fff; color: #334155; }
-.form-builder-statusbar__save { border: 1px solid #1d4ed8; background: #2563eb; color: #fff; }
+.form-builder-statusbar__save { border: 1px solid rgb(var(--ihss-700-rgb)); background: rgb(var(--ihss-600-rgb)); color: #fff; }
 .form-builder-statusbar__save:disabled { cursor: not-allowed; border-color: #cbd5e1; background: #e2e8f0; color: #94a3b8; }
 @media (max-width: 900px) { .form-builder-statusbar__content { align-items: flex-start; flex-direction: column; } .form-builder-statusbar__actions { align-self: flex-end; } }

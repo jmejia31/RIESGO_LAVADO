@@ -323,7 +323,7 @@
           </button>
             <button type="submit" title="Guardar usuario" aria-label="Guardar usuario"
               [disabled]="guardando() || form.invalid || estadoAd() === 'verificando' || (esDominio && (estadoAd() === 'no-existe' || estadoAd() === 'bloqueado' || estadoAd() === 'inactivo' || estadoAd() === 'error'))"
-              class="px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              class="px-5 py-2 bg-ihss-600 text-white rounded-xl text-xs font-semibold hover:bg-ihss-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               @if (guardando()) {
               }
             <app-action-icon action="save"></app-action-icon>

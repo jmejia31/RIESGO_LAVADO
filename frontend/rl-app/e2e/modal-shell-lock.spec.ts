@@ -1,5 +1,8 @@
 import { expect, Page, test } from '@playwright/test';
 import { Buffer } from 'node:buffer';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { contrastRatio, createSystemTheme, parseHexColor } from '../src/app/core/configuration/system-theme.util';
 
 const definicion = JSON.stringify({
   codigoFormulario: 'MATRIZ_RIESGOS_LAFT_V2', nombreFormulario: 'Matriz UAT',
@@ -153,15 +156,96 @@ test('el maestro visual de modales muestra una X de cierre legible y consistente
     };
   });
 
-  expect(estilos.backgroundColor).toBe('rgb(248, 250, 252)');
-  expect(estilos.borderColor).toBe('rgb(203, 213, 225)');
-  expect(estilos.color).toBe('rgb(51, 65, 85)');
+  expect(estilos.backgroundColor).toBe('rgba(255, 255, 255, 0.16)');
+  expect(estilos.borderColor).toBe('rgba(255, 255, 255, 0.46)');
+  expect(estilos.color).toBe('rgb(255, 255, 255)');
   expect(Number.parseFloat(estilos.iconWidth)).toBeGreaterThanOrEqual(20);
   expect(Number.parseFloat(estilos.iconHeight)).toBeGreaterThanOrEqual(20);
 
   await cerrar.hover();
   await expect.poll(async () => cerrar.evaluate(element => getComputedStyle(element).backgroundColor))
-    .toBe('rgb(226, 232, 240)');
+    .toBe('rgba(255, 255, 255, 0.28)');
+});
+
+test('el modal abierto hereda cambios azul, rojo y verde del tema sin alterar geometría', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const modal = page.locator('[data-ui-fam-detail="modal"]');
+  const header = modal.locator('.modal-container-card > header');
+  const title = header.getByRole('heading', { name: 'Detalle de Familia' });
+  const close = header.getByRole('button', { name: 'Cerrar detalle de familia' });
+  const card = modal.locator('.modal-container-card');
+  await expect(modal).toBeVisible();
+
+  const desktopBoxBefore = await card.boundingBox();
+  const initialTheme = createSystemTheme('#1e3a8a', '#1d4ed8');
+  const applyTheme = async (primary: string, accent: string) => {
+    const theme = createSystemTheme(primary, accent);
+    await page.evaluate(properties => {
+      for (const [name, value] of Object.entries(properties)) document.documentElement.style.setProperty(name, value);
+    }, theme.properties);
+    return theme;
+  };
+
+  await applyTheme('#1e3a8a', '#1d4ed8');
+  const blueHeader = await header.evaluate(element => getComputedStyle(element).backgroundImage);
+  expect(blueHeader).toContain('rgb(30, 58, 138)');
+  expect(await title.evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
+  const artifactsDir = process.env.RL_BLOCK9_ARTIFACT_DIR;
+  if (artifactsDir) {
+    await mkdir(artifactsDir, { recursive: true });
+    await page.screenshot({ path: join(artifactsDir, 'modal-theme-blue-desktop.png'), fullPage: true });
+  }
+
+  const redTheme = await applyTheme('#991b1b', '#dc2626');
+  const redHeader = await header.evaluate(element => getComputedStyle(element).backgroundImage);
+  expect(redHeader).not.toBe(blueHeader);
+  expect(redHeader).toContain('rgb(153, 27, 27)');
+  expect(await page.locator('.modal-container-card > header').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('rgb(220, 38, 38)');
+  const redForeground = parseHexColor(`#${redTheme.properties['--ihss-on-modal-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!;
+  const redSurface = parseHexColor(`#${redTheme.properties['--ihss-modal-primary-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!;
+  expect(contrastRatio(redSurface, redForeground)).toBeGreaterThanOrEqual(4.5);
+  if (artifactsDir) await page.screenshot({ path: join(artifactsDir, 'modal-theme-red-desktop.png'), fullPage: true });
+
+  await applyTheme('#fff8b5', '#fef08a');
+  const lightHeaderText = await title.evaluate(element => getComputedStyle(element).color);
+  expect(lightHeaderText).toBe('rgb(255, 255, 255)');
+  const lightSurface = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ihss-modal-primary-rgb').trim());
+  const lightSurfaceRgb = lightSurface.split(' ').map(Number);
+  const lightModalSurface = { r: lightSurfaceRgb[0], g: lightSurfaceRgb[1], b: lightSurfaceRgb[2] };
+  expect(contrastRatio(lightModalSurface, parseHexColor('#ffffff')!)).toBeGreaterThanOrEqual(4.5);
+
+  const greenTheme = await applyTheme('#166534', '#22c55e');
+  const greenHeader = await header.evaluate(element => getComputedStyle(element).backgroundImage);
+  expect(greenHeader).toContain('rgb(22, 101, 52)');
+  expect(greenHeader).not.toBe(redHeader);
+  await expect(close).toBeVisible();
+  expect(await close.evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
+  expect(contrastRatio(
+    parseHexColor(`#${greenTheme.properties['--ihss-modal-primary-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!,
+    parseHexColor(`#${greenTheme.properties['--ihss-on-modal-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!
+  )).toBeGreaterThanOrEqual(4.5);
+
+  const desktopBoxAfter = await card.boundingBox();
+  expect(desktopBoxBefore?.width).toBe(desktopBoxAfter?.width);
+  expect(desktopBoxBefore?.height).toBe(desktopBoxAfter?.height);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await applyTheme('#991b1b', '#dc2626');
+  const mobileState = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+    headerWidth: document.querySelector('[data-ui-fam-detail="modal"] .modal-container-card > header')?.getBoundingClientRect().width ?? 0
+  }));
+  expect(mobileState.documentWidth).toBeLessThanOrEqual(mobileState.viewportWidth);
+  expect(mobileState.headerWidth).toBeLessThanOrEqual(390);
+  if (artifactsDir) {
+    await page.screenshot({ path: join(artifactsDir, 'modal-theme-red-mobile.png'), fullPage: true });
+    await applyTheme('#1e3a8a', '#1d4ed8');
+    await page.screenshot({ path: join(artifactsDir, 'modal-theme-blue-mobile.png'), fullPage: true });
+  }
+  expect(initialTheme.properties['--ihss-primary-rgb']).toBe('30 58 138');
 });
 
 test('captura el estado editable del constructor a 1536x1024', async ({ page }) => {
@@ -184,7 +268,7 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   const editorTab = dialogo.locator('#tab-editor-visual');
   const previewTab = dialogo.locator('#tab-vista-preview');
   await expect(editorTab).toHaveAttribute('aria-current', 'page');
-  await expect(editorTab).toHaveClass(/border-blue-600/);
+  await expect(editorTab).toHaveClass(/border-ihss-600/);
   await expect(previewTab).not.toHaveAttribute('aria-current', 'page');
   const canvasTab = dialogo.locator('#tab-vista-secciones');
   const catalogsTab = dialogo.locator('#tab-vista-catalogos');
@@ -198,7 +282,7 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   await expect(catalogsTab).not.toHaveClass(/bg-white/);
   await previewTab.click();
   await expect(previewTab).toHaveAttribute('aria-current', 'page');
-  await expect(previewTab).toHaveClass(/border-blue-600/);
+  await expect(previewTab).toHaveClass(/border-ihss-600/);
   await expect(editorTab).not.toHaveAttribute('aria-current', 'page');
   await editorTab.click();
   await expect(editorTab).toHaveAttribute('aria-current', 'page');

@@ -2801,7 +2801,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
                </ul>`,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#2563eb',
+        confirmButtonColor: 'var(--ihss-primary-color)',
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Sí, publicar versión',
         cancelButtonText: 'Cancelar'

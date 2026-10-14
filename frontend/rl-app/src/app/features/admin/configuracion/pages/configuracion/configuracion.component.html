@@ -200,7 +200,7 @@
             <div class="flex h-48">
               <!-- Sidebar Simulado -->
               <div class="w-20 text-[8px] p-2 flex flex-col justify-between text-white"
-                [style.backgroundColor]="form.get('colorPrimario')?.value || '#1e3a8a'">
+                [style.backgroundColor]="form.get('colorPrimario')?.value || 'var(--ihss-primary-color)'">
                 <div class="space-y-3">
                   <!-- Logo / Identidad -->
                   <div class="flex items-center gap-1">
@@ -242,13 +242,13 @@
                   <div class="h-4 w-full bg-white border border-gray-200 rounded"></div>
                   <div class="grid grid-cols-3 gap-1">
                     <div class="h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
-                      <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'"></span>
+                      <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || 'rgb(var(--ihss-700-rgb))'"></span>
                     </div>
                     <div class="h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
-                      <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'"></span>
+                      <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || 'rgb(var(--ihss-700-rgb))'"></span>
                     </div>
                     <div class="h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
-                      <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'"></span>
+                      <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || 'rgb(var(--ihss-700-rgb))'"></span>
                     </div>
                   </div>
                 </div>
@@ -256,7 +256,7 @@
                 <!-- Botón Simulado -->
                 <div class="flex justify-end">
                   <div class="h-4 px-3 rounded text-[6px] font-bold text-white flex items-center"
-                    [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'">
+                    [style.backgroundColor]="form.get('colorSecundario')?.value || 'rgb(var(--ihss-700-rgb))'">
                     Acción
                   </div>
                 </div>
@@ -349,7 +349,7 @@
                   </td>
                   <td class="px-6 py-4 text-center">
                     <div class="flex items-center justify-center gap-2">
-                      <button (click)="abrirModalSlide(slide)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-100" title="Editar slide" aria-label="Editar slide">
+                      <button (click)="abrirModalSlide(slide)" class="p-1.5 text-ihss-600 hover:bg-ihss-50 rounded-lg transition-colors border border-ihss-100" title="Editar slide" aria-label="Editar slide">
             <app-action-icon action="edit"></app-action-icon>
           </button>
                       <button (click)="eliminarSlide(slide.id)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-100" title="Eliminar slide" aria-label="Eliminar slide">
@@ -458,7 +458,7 @@
             <app-action-icon action="cancel"></app-action-icon>
           </button>
             <button type="submit" [disabled]="slideForm.invalid || guardandoSlide()" title="Guardar slide" aria-label="Guardar slide"
-              class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+              class="px-4 py-2 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
 <app-action-icon action="save" [loading]="guardandoSlide()"></app-action-icon>
           </button>
           </div>

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { map, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
+import { createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
 
 @Injectable({
   providedIn: 'root'
@@ -13,38 +14,32 @@ export class ConfiguracionService {
 
   // Signal global para la identidad del sistema
   configSistema = signal<ConfigSistema | null>(null);
+  private ultimoColorPrimarioValido = DEFAULT_SYSTEM_PRIMARY;
+  private ultimoColorSecundarioValido = DEFAULT_SYSTEM_ACCENT;
 
   CargarConfiguracion() {
     return this.http.get<{ success: boolean, datos: ConfigSistema }>(`${this.apiUrl}/sistema`)
       .pipe(
         map(res => {
           const cfg = res.datos;
-          if (!cfg.colorPrimario) cfg.colorPrimario = '#1e3a8a';
-          if (!cfg.colorSecundario) cfg.colorSecundario = '#1d4ed8';
+          if (!cfg.colorPrimario) cfg.colorPrimario = DEFAULT_SYSTEM_PRIMARY;
+          if (!cfg.colorSecundario) cfg.colorSecundario = DEFAULT_SYSTEM_ACCENT;
           if (!cfg.timeoutSesion || cfg.timeoutSesion <= 0) cfg.timeoutSesion = 30;
           return cfg;
         }),
         tap(cfg => {
           this.configSistema.set(cfg);
-          if (cfg.colorPrimario) {
-            const rgb = this.hexToRgb(cfg.colorPrimario);
-            if (rgb) document.documentElement.style.setProperty('--ihss-primary-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
-          }
-          if (cfg.colorSecundario) {
-            const rgb = this.hexToRgb(cfg.colorSecundario);
-            if (rgb) document.documentElement.style.setProperty('--ihss-accent-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
-          }
+          this.aplicarTemaSistema(cfg);
         })
       );
   }
 
-  private hexToRgb(hex: string) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
+  private aplicarTemaSistema(config: ConfigSistema): void {
+    if (parseHexColor(config.colorPrimario)) this.ultimoColorPrimarioValido = config.colorPrimario!;
+    if (parseHexColor(config.colorSecundario)) this.ultimoColorSecundarioValido = config.colorSecundario!;
+    const tema = createSystemTheme(this.ultimoColorPrimarioValido, this.ultimoColorSecundarioValido);
+    const root = document.documentElement;
+    for (const [property, value] of Object.entries(tema.properties)) root.style.setProperty(property, value);
   }
 
   GuardarConfiguracion(config: ConfigSistema) {
@@ -52,14 +47,7 @@ export class ConfiguracionService {
       .pipe(
         tap(() => {
           this.configSistema.set(config);
-          if (config.colorPrimario) {
-            const rgb = this.hexToRgb(config.colorPrimario);
-            if (rgb) document.documentElement.style.setProperty('--ihss-primary-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
-          }
-          if (config.colorSecundario) {
-            const rgb = this.hexToRgb(config.colorSecundario);
-            if (rgb) document.documentElement.style.setProperty('--ihss-accent-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
-          }
+          this.aplicarTemaSistema(config);
         })
       );
   }

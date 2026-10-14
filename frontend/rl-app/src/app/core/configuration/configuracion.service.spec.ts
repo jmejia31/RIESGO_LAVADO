@@ -4,6 +4,15 @@ import { TestBed } from '@angular/core/testing';
 import { ConfiguracionService } from './configuracion.service';
 import { ConfigSistema } from './configuracion.models';
 
+const propiedadesTema = [
+  '--ihss-primary-color', '--ihss-accent-color',
+  '--ihss-primary-rgb', '--ihss-accent-rgb', '--ihss-on-primary-rgb', '--ihss-on-accent-rgb',
+  '--ihss-modal-primary-rgb', '--ihss-modal-accent-rgb', '--ihss-on-modal-rgb', '--modal-close-bg',
+  '--modal-close-bg-hover', '--modal-close-border', '--modal-close-border-hover', '--modal-close-color',
+  '--modal-close-color-hover', '--modal-close-focus-rgb',
+  ...[50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].flatMap(level => [`--ihss-${level}-rgb`, `--ihss-on-${level}-rgb`])
+];
+
 describe('ConfiguracionService', () => {
   let service: ConfiguracionService;
   let http: HttpTestingController;
@@ -18,8 +27,7 @@ describe('ConfiguracionService', () => {
 
   afterEach(() => {
     http.verify();
-    document.documentElement.style.removeProperty('--ihss-primary-rgb');
-    document.documentElement.style.removeProperty('--ihss-accent-rgb');
+    propiedadesTema.forEach(property => document.documentElement.style.removeProperty(property));
     TestBed.resetTestingModule();
   });
 
@@ -37,6 +45,10 @@ describe('ConfiguracionService', () => {
     expect(resultado?.timeoutSesion).toBe(30);
     expect(service.configSistema()).toEqual(resultado);
     expect(document.documentElement.style.getPropertyValue('--ihss-primary-rgb')).toBe('30 58 138');
+    expect(document.documentElement.style.getPropertyValue('--ihss-accent-rgb')).toBe('29 78 216');
+    expect(document.documentElement.style.getPropertyValue('--ihss-50-rgb')).not.toBe('');
+    expect(document.documentElement.style.getPropertyValue('--ihss-950-rgb')).not.toBe('');
+    expect(document.documentElement.style.getPropertyValue('--ihss-modal-primary-rgb')).toBe('30 58 138');
   });
 
   it('guarda configuración y actualiza identidad visual local', () => {
@@ -53,6 +65,24 @@ describe('ConfiguracionService', () => {
     expect(service.configSistema()).toEqual(config);
     expect(document.documentElement.style.getPropertyValue('--ihss-primary-rgb')).toBe('17 34 51');
     expect(document.documentElement.style.getPropertyValue('--ihss-accent-rgb')).toBe('171 205 239');
+    expect(document.documentElement.style.getPropertyValue('--ihss-700-rgb')).toBe('17 34 51');
+    expect(document.documentElement.style.getPropertyValue('--ihss-modal-accent-rgb')).not.toBe('171 205 239');
+  });
+
+  it('conserva el último tema válido si la configuración recibida trae HEX inválido', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: { nombreInstitucion: 'IHSS', nombreSistema: 'SGRLA', colorPrimario: '#991b1b', colorSecundario: '#dc2626', timeoutSesion: 30 }
+    });
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: { nombreInstitucion: 'IHSS', nombreSistema: 'SGRLA', colorPrimario: 'rojo', colorSecundario: '#12xz00', timeoutSesion: 30 }
+    });
+
+    expect(document.documentElement.style.getPropertyValue('--ihss-primary-rgb')).toBe('153 27 27');
+    expect(document.documentElement.style.getPropertyValue('--ihss-accent-rgb')).toBe('220 38 38');
   });
 
   it.each([

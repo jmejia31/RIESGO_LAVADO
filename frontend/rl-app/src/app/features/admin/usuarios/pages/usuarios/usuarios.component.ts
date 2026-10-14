@@ -286,7 +286,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
         text: `Se generará una nueva contraseña provisional y se enviará por correo electrónico a ${u.email}.`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#1d4ed8',
+        confirmButtonColor: 'var(--ihss-primary-color)',
         cancelButtonColor: '#d1d5db',
         confirmButtonText: 'Sí, reiniciar',
         cancelButtonText: 'Cancelar'
@@ -311,7 +311,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
                 title: 'Contraseña Reiniciada',
                 text: `Se ha enviado la nueva clave provisional al correo electrónico del usuario.`,
                 icon: 'success',
-                confirmButtonColor: '#1d4ed8'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             },
             error: (err) => {
@@ -320,7 +320,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo reiniciar la contraseña.',
                 icon: 'error',
-                confirmButtonColor: '#1d4ed8'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             }
           });

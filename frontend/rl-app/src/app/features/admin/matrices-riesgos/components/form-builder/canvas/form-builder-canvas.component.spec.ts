@@ -57,11 +57,11 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
       const el = fixture.nativeElement as HTMLElement;
       const cards = el.querySelectorAll('article');
 
-      expect(cards[0].classList.contains('border-blue-500')).toBe(true);
+      expect(cards[0].classList.contains('border-ihss-500')).toBe(true);
       expect(cards[0].classList.contains('ring-2')).toBe(true);
 
-      expect(cards[1].classList.contains('border-blue-500')).toBe(false);
-      expect(cards[2].classList.contains('border-blue-500')).toBe(false);
+      expect(cards[1].classList.contains('border-ihss-500')).toBe(false);
+      expect(cards[2].classList.contains('border-ihss-500')).toBe(false);
     });
 
     it('click en una tarjeta emite seleccionarCampo con el modelo exacto', () => {

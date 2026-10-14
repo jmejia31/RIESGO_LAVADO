@@ -1,3 +1,19 @@
+## Enmienda de tema dinámico global de modales — Bloque 9 (COD)
+
+- **Fecha/hora local:** 2026-10-14 14:54 -06:00 (America/Tegucigalpa).
+- **Autor:** COD (Codex).
+- **Rama / SHA inicial:** `desarrollo` / `5aafdca7ec4bb8a7b8afa1a7088bb5a4725f950d`; en precheck el `HEAD` y `origin/desarrollo` coincidían. El SHA final y run de Quality Gates se agregarán tras publicar.
+- **Objetivo:** integrar en el mismo Bloque 9 el tema institucional dinámico global para modales, paleta Tailwind completa y auditoría de los colores de marca frontend.
+- **Cambios:** se usa `ConfigSistema.colorPrimario/colorSecundario` y un único método de aplicación en `ConfiguracionService`; se generan 11 tonos IHSS y foregrounds con contraste, se actualiza el estándar global de header/footer/cierre/foco, y se migran dos shells antiguos al modal canónico. Se corrigieron tokens `blue-*` de templates inline, 52 opciones de color SweetAlert y defaults de Configuración; no hay override de Matriz completa ni estado de tema por modal. Se agregaron validadores de modal/tema al workflow y a `run_quality_gates.ps1`, más una guía global y actualización de documentación Block9.
+- **Archivos propios:** `.github/workflows/quality-gates.yml`, `tools/run_quality_gates.ps1`, `tools/validate_institutional_modal_standard.js`, `tools/validate_dynamic_system_theme.js`; `frontend/rl-app/tailwind.config.js`, `src/styles.css`, `system-theme.util.ts/.spec.ts`, pruebas/configuración y E2E modal/Matrix; shells en Bitácora, Familia y componentes Admin/Listas/Matrices/Usuarios/Configuración, uploader compartido y report preview; `docs/0.0 Documentación/ESTANDAR_TEMA_DINAMICO_Y_MODALES.md`, `docs/3. Módulo Matrices de Riesgos/MATRIZ_COMPLETA_BLOQUE_9.md`, este archivo y el estado colaborativo. Los detalles por archivo están en el diff del commit.
+- **Verificación ejecutada en esta intervención:** `npm run lint` PASS; `npm test -- --watch=false` PASS (87 archivos, 867 pruebas); `npm run build` PASS; `npm audit --audit-level=low` PASS (0 vulnerabilidades); Chromium E2E: `modal-shell-lock.spec.ts` 8/8, Matriz completa tema azul/rojo 1/1 y uploader de Monitoreo de Listas 1/1. Validadores de modal/tema, contrato (82/82), catálogos (14/91, drift=0), UI Block7, responsabilidades Block8, contrato Block9 (23/23 y 12/12), estructura, DB scripts, enlaces documentales y UTF-8 PASS; `git diff --check` PASS. La primera corrida E2E sin servidor fue rechazada por conexión; tras levantar Angular se repitieron y pasaron las suites citadas.
+- **Auditoría modal/tema:** 22 modales; 2 shells migrados una sola vez; 22 cubiertos por tema global; plantilla conforme requiere 0 cambios para cambiar color; palette IHSS 11/11 dinámica; botones de confirmación SweetAlert detectados = 52 y dinámicos; colores de marca fijos = 0; tres azules `info` semánticos preservados. Contraste de header/accent, controles y verde/claro/oscuro se valida con utilitarios y E2E.
+- **Artefactos externos:** `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK9_MITIGATION_MONITORING\20261014_145000\modal-theme`; incluye auditorías, capturas desktop/mobile y `SHA256SUMS.json` (verificado antes de publicar).
+- **Seguridad / alcance:** no se accedió a producción; DML=0, DDL=0, `SCHEMA_CHANGE_REQUIRED=NO`. Se preservaron sin staging los cambios ajenos a `DatabaseEnvironmentGuard.cs`, `DatabaseEnvironmentGuardTests.cs`, `frontend/rl-app/tsconfig.json` y todos los untracked preexistentes.
+- **Estado al registrar:** código y documentación listos localmente; Quality Gates remoto pendiente del SHA de publicación. No se declara una nueva certificación CI hasta inspeccionar el run correspondiente.
+
+---
+
 ## Registro de intervención — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico #2 - ANTIG)
 
 - **Fecha/hora local:** 2026-10-12 10:20:00 -06:00 (America/Tegucigalpa).

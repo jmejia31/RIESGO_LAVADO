@@ -155,7 +155,7 @@ export class TipoListasComponent implements OnInit {
                 title: 'Eliminado',
                 text: res.mensaje || 'El tipo de lista ha sido eliminado.',
                 icon: 'success',
-                confirmButtonColor: '#1e3a8a'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             },
             error: (err) => {
@@ -164,7 +164,7 @@ export class TipoListasComponent implements OnInit {
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo eliminar el tipo de lista.',
                 icon: 'error',
-                confirmButtonColor: '#1e3a8a'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             }
           });

@@ -224,7 +224,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
         title,
         text,
         icon: 'error',
-        confirmButtonColor: '#1e3a8a'
+        confirmButtonColor: 'var(--ihss-primary-color)'
       });
     });
   }
@@ -249,7 +249,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
               title: 'Información',
               text: 'No hay registros de coincidencias para esta fecha para exportar.',
               icon: 'info',
-              confirmButtonColor: '#1e3a8a'
+              confirmButtonColor: 'var(--ihss-primary-color)'
             });
             return;
           }
@@ -351,7 +351,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
                 title: 'Auditoría requerida',
                 text: 'No se pudo registrar la auditoría de exportación. La exportación fue cancelada.',
                 icon: 'error',
-                confirmButtonColor: '#1e3a8a'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             }
           });
@@ -364,7 +364,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
             title: 'Error',
             text: 'Ocurrió un error al intentar exportar las coincidencias.',
             icon: 'error',
-            confirmButtonColor: '#1e3a8a'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });
@@ -379,7 +379,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
         text: `Desea calificar este registro con ID ${r.reporteCoincidenciaId} como "${desc}"?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#1e3a8a',
+        confirmButtonColor: 'var(--ihss-primary-color)',
         cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, calificar',
         cancelButtonText: 'Cancelar'
@@ -406,7 +406,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
                 title: 'Calificado',
                 text: `El registro ha sido calificado como ${desc}.`,
                 icon: 'success',
-                confirmButtonColor: '#1e3a8a'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             },
             error: (err) => {
@@ -416,7 +416,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
                 title: 'Error',
                 text: 'No se pudo guardar la calificación del registro.',
                 icon: 'error',
-                confirmButtonColor: '#1e3a8a'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             }
           });
@@ -530,7 +530,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
             title: '🔎 Detalle de Coincidencia',
             html: htmlContent,
             width: 600,
-            confirmButtonColor: '#1e3a8a',
+            confirmButtonColor: 'var(--ihss-primary-color)',
             confirmButtonText: 'Cerrar',
             customClass: {
               popup: 'rounded-2xl',
@@ -545,7 +545,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
             title: 'Error',
             text: 'Ocurrió un error al intentar consultar el detalle de coincidencias en la base de datos.',
             icon: 'error',
-            confirmButtonColor: '#1e3a8a'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });

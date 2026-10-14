@@ -2,9 +2,9 @@
   <h3 [id]="inputId + '-label'" class="block text-xs font-semibold text-gray-600">{{ label }}{{ required ? ' *' : '' }}</h3>
   <button
     type="button"
-    class="relative flex min-h-28 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-4 text-center transition-colors hover:border-blue-500 hover:bg-blue-50/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-    [class.border-blue-500]="dragging()"
-    [class.bg-blue-50]="dragging()"
+    class="relative flex min-h-28 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-4 text-center transition-colors hover:border-ihss-500 hover:bg-ihss-50/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700 disabled:cursor-not-allowed disabled:opacity-60"
+    [class.border-ihss-500]="dragging()"
+    [class.bg-ihss-50]="dragging()"
     [disabled]="disabledState"
     [attr.aria-disabled]="disabledState"
     [attr.aria-required]="required"
@@ -21,7 +21,7 @@
     <span class="text-xs font-bold text-gray-700">Arrastra archivos aquí o haz clic</span>
     <span [id]="inputId + '-description'" class="text-[10px] text-gray-500">{{ sizeText }}</span>
     @if (helperText) { <span [id]="inputId + '-helper'" class="text-[10px] text-gray-500">{{ helperText }}</span> }
-    @if (uploading) { <span role="status" class="text-xs font-semibold text-blue-700">Subiendo…</span> }
+    @if (uploading) { <span role="status" class="text-xs font-semibold text-ihss-700">Subiendo…</span> }
   </button>
   <input #filePicker class="sr-only" [id]="inputId" type="file" [accept]="accept" [multiple]="multiple" [disabled]="disabledState" [attr.aria-hidden]="true" tabindex="-1" (change)="onSelection($event)" />
 
@@ -32,10 +32,10 @@
   @if (selectedFiles.length > 0) {
     <ul class="max-h-32 space-y-1.5 overflow-y-auto" aria-label="Archivos seleccionados">
       @for (file of selectedFiles; track file.name + file.size + file.lastModified; let index = $index) {
-        <li class="flex items-center justify-between gap-2 rounded-xl border border-blue-100 bg-blue-50/50 p-2 text-xs">
-          <span class="min-w-0 flex-1 truncate font-medium text-blue-900" [title]="file.name">{{ file.name }}</span>
+        <li class="flex items-center justify-between gap-2 rounded-xl border border-ihss-100 bg-ihss-50/50 p-2 text-xs">
+          <span class="min-w-0 flex-1 truncate font-medium text-ihss-900" [title]="file.name">{{ file.name }}</span>
           <span class="shrink-0 text-[10px] text-gray-500">{{ formatFileSize(file.size) }}</span>
-          <button type="button" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-red-600 hover:text-red-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700" [disabled]="disabledState" [attr.aria-label]="'Quitar archivo ' + file.name" [attr.title]="'Quitar archivo ' + file.name" (click)="removeFile(index)"><app-action-icon action="delete"></app-action-icon></button>
+          <button type="button" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-red-600 hover:text-red-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700" [disabled]="disabledState" [attr.aria-label]="'Quitar archivo ' + file.name" [attr.title]="'Quitar archivo ' + file.name" (click)="removeFile(index)"><app-action-icon action="delete"></app-action-icon></button>
         </li>
       }
     </ul>

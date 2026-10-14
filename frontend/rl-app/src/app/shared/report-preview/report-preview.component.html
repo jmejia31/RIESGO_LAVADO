@@ -7,7 +7,7 @@
           <p class="mt-1 text-xs text-slate-500">{{ state.description }}</p>
           <p class="mt-1 text-xs font-medium text-slate-500">Archivo: {{ state.fileName }}</p>
         </div>
-        <button type="button" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" (click)="close()" title="Cerrar vista previa" aria-label="Cerrar vista previa">
+        <button type="button" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ihss-500" (click)="close()" title="Cerrar vista previa" aria-label="Cerrar vista previa">
           <app-action-icon action="close" />
         </button>
       </header>
@@ -24,7 +24,7 @@
               </div>
               <nav class="flex max-w-full flex-wrap gap-2" aria-label="Hojas del libro Excel">
                 @for (sheet of sheets; track sheet.name; let i = $index) {
-                  <button type="button" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" [class.bg-blue-900]="selectedSheet() === i" [class.text-white]="selectedSheet() === i" [class.border-blue-900]="selectedSheet() === i" [class.bg-white]="selectedSheet() !== i" [class.text-slate-700]="selectedSheet() !== i" (click)="selectSheet(i)">{{ sheet.name }}</button>
+                  <button type="button" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ihss-500" [class.bg-ihss-900]="selectedSheet() === i" [class.text-white]="selectedSheet() === i" [class.border-ihss-900]="selectedSheet() === i" [class.bg-white]="selectedSheet() !== i" [class.text-slate-700]="selectedSheet() !== i" (click)="selectSheet(i)">{{ sheet.name }}</button>
                 }
               </nav>
             </div>
@@ -71,8 +71,8 @@
       </div>
 
       <footer class="modal-footer-institutional">
-        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" (click)="close()" title="Cerrar vista previa" aria-label="Cerrar vista previa"><app-action-icon action="close" /></button>
-        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-900 text-white hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" (click)="download()" title="Descargar reporte revisado" aria-label="Descargar reporte revisado"><app-action-icon action="download" /></button>
+        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ihss-500" (click)="close()" title="Cerrar vista previa" aria-label="Cerrar vista previa"><app-action-icon action="close" /></button>
+        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-900 text-white hover:bg-ihss-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ihss-500" (click)="download()" title="Descargar reporte revisado" aria-label="Descargar reporte revisado"><app-action-icon action="download" /></button>
       </footer>
     </div>
   </div>

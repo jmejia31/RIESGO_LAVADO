@@ -48,7 +48,7 @@
 }
 
 .form-builder-toolbar__control:focus-visible {
-  outline: 2px solid rgb(37 99 235 / 0.35);
+  outline: 2px solid rgb(var(--ihss-600-rgb) / 0.35);
   outline-offset: 2px;
 }
 
@@ -74,7 +74,7 @@
 }
 
 .form-builder-toolbar__actions-menu[open] .form-builder-toolbar__control {
-  border-color: #93c5fd;
+  border-color: rgb(var(--ihss-300-rgb));
   box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
 }
 
@@ -90,8 +90,8 @@
 }
 
 .form-builder-toolbar__menu-item:hover {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: rgb(var(--ihss-50-rgb));
+  color: rgb(var(--ihss-700-rgb));
 }
 
 .form-builder-toolbar__menu-empty {
@@ -102,8 +102,8 @@
 
 .form-builder-toolbar nav > button[aria-current='page'] {
   position: relative;
-  border-bottom-color: #2563eb;
-  color: #1d4ed8;
+  border-bottom-color: rgb(var(--ihss-600-rgb));
+  color: rgb(var(--ihss-700-rgb));
   font-weight: 800;
 }
 
@@ -114,12 +114,12 @@
   left: 0.5rem;
   height: 2px;
   border-radius: 999px;
-  background: #2563eb;
+  background: rgb(var(--ihss-600-rgb));
   content: '';
 }
 
 .form-builder-toolbar nav > button:not([aria-current='page']):hover {
-  color: #2563eb;
+  color: rgb(var(--ihss-600-rgb));
 }
 
 .form-builder-toolbar__workspace-tabs > button {
@@ -129,8 +129,8 @@
 }
 
 .form-builder-toolbar__workspace-tabs > button.bg-white {
-  border-bottom-color: #2563eb;
-  color: #1d4ed8;
+  border-bottom-color: rgb(var(--ihss-600-rgb));
+  color: rgb(var(--ihss-700-rgb));
   font-weight: 800;
 }
 
@@ -141,12 +141,12 @@
   left: 0.5rem;
   height: 2px;
   border-radius: 999px;
-  background: #2563eb;
+  background: rgb(var(--ihss-600-rgb));
   content: '';
 }
 
 .form-builder-toolbar__workspace-tabs > button:not(.bg-white):hover {
-  color: #2563eb;
+  color: rgb(var(--ihss-600-rgb));
 }
 
 @media (max-width: 1100px) {

@@ -28,7 +28,7 @@ export interface BoundedSelectOption {
       <button
         type="button"
         [id]="inputId"
-        class="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-xs font-medium text-slate-800 shadow-sm transition-colors hover:border-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+        class="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-xs font-medium text-slate-800 shadow-sm transition-colors hover:border-ihss-500 focus:border-ihss-600 focus:outline-none focus:ring-2 focus:ring-ihss-600/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
         role="combobox"
         aria-haspopup="listbox"
         [attr.aria-label]="ariaLabel"
@@ -57,7 +57,7 @@ export interface BoundedSelectOption {
                 </span>
                 <input
                   type="search"
-                  class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 outline-none transition-colors focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 outline-none transition-colors focus:border-ihss-600 focus:bg-white focus:ring-2 focus:ring-ihss-600/20"
                   [value]="consulta()"
                   [placeholder]="searchPlaceholder"
                   [attr.aria-label]="'Buscar en ' + ariaLabel"
@@ -76,9 +76,9 @@ export interface BoundedSelectOption {
               type="button"
               role="option"
               class="flex w-full items-center rounded-lg px-3 py-2 text-left text-xs transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-              [class.bg-blue-50]="esValorVacio()"
+                [class.bg-ihss-50]="esValorVacio()"
               [class.font-semibold]="esValorVacio()"
-              [class.text-blue-800]="esValorVacio()"
+                [class.text-ihss-800]="esValorVacio()"
               [class.text-slate-700]="!esValorVacio()"
               [attr.aria-selected]="esValorVacio()"
               (click)="seleccionarVacio()">
@@ -90,9 +90,9 @@ export interface BoundedSelectOption {
                 type="button"
                 role="option"
                 class="flex w-full items-center rounded-lg px-3 py-2 text-left text-xs transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                [class.bg-blue-50]="esSeleccionada(option)"
+                [class.bg-ihss-50]="esSeleccionada(option)"
                 [class.font-semibold]="esSeleccionada(option)"
-                [class.text-blue-800]="esSeleccionada(option)"
+                [class.text-ihss-800]="esSeleccionada(option)"
                 [class.text-slate-700]="!esSeleccionada(option)"
                 [disabled]="option.disabled"
                 [attr.aria-selected]="esSeleccionada(option)"

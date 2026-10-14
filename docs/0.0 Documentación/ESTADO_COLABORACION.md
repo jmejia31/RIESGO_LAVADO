@@ -2542,3 +2542,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - El run `38618732332` confirmó success de todos los gates; también mostró que una ejecución E2E posterior limpia `test-results`, así que no preservó el screenshot Matrix nombrado.
 - El E2E exporta ahora la captura a `RUNNER_TEMP/block9-browser-evidence` y el workflow sube esa carpeta junto a Playwright results. Falta verificar descarga y hashes del artifact en el CI actualizado.
+## Enmienda actual — tema global dinámico de modales dentro de Bloque 9 (COD) — 2026-10-14 14:54 -06:00
+
+- Bloques 1–9 conservan sus estados cerrados ya publicados; el alcance actual es una enmienda transversal de frontend del Bloque 9, sin reimplementar mitigación/monitoreo ni cambiar backend/esquema.
+- Precheck: rama `desarrollo`; inicio `5aafdca7ec4bb8a7b8afa1a7088bb5a4725f950d`, igual a `origin/desarrollo`. Los cambios actuales todavía requieren commit, publicación y Quality Gates del SHA final.
+- Fuente única: `ConfigSistema.colorPrimario/colorSecundario`; `ConfiguracionService.aplicarTemaSistema` sirve carga y guardado. Paleta IHSS dinámica 11/11; contraste de superficies modales WCAG AA; header/footer/cierre/foco dinámicos, body neutro, defaults centralizados y HEX inválido seguro.
+- Auditoría: 22 shells modales cubiertos; dos shells legados migrados al estándar canónico; cero overrides específicos; 51 opciones SweetAlert dinámicas; cero azul de marca fijo detectado y tres azules informativos semánticos conservados. Validadores nuevos se ejecutan en Quality Gates y en el gate local.
+- Evidencia local fresca: lint/build PASS, 867/867 pruebas frontend, npm audit 0 vulnerabilidades; modal E2E 8/8 y Matriz completa azul/rojo 1/1. Validadores contract 82/82, catálogo 14/91 drift 0, Block7 UI, Block8, Block9, estructura, DB y enlaces documentales PASS. Capturas/auditorías/hash: `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK9_MITIGATION_MONITORING\20261014_145000\modal-theme`.
+- Seguridad: producción no consultada ni modificada; DML=0, DDL=0; los cambios ajenos de `DatabaseEnvironmentGuard`/tests, `tsconfig.json` y los untracked preexistentes siguen fuera de staging.
+- Continuación exacta: revisar/stagear sólo los paths de esta enmienda, commit y push normal a `origin/desarrollo`; observar el workflow Quality Gates de ese SHA y corregir cualquier fallo. Actualizar este estado con commit/run/conclusión real antes del handoff.
+
+# Estado vigente — Bloques 1–9 cerrados (COD) — 2026-10-14 14:04 -06:00

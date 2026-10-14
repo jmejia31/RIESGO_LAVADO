@@ -55,6 +55,20 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'INSTITUTIONAL_FILE_UPLOAD_VALIDATOR=PASS'
 
+$modalStandardValidator = Join-Path $RepositoryRoot 'tools/validate_institutional_modal_standard.js'
+& node $modalStandardValidator
+if ($LASTEXITCODE -ne 0) {
+    throw "El estandar institucional de modales fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'MODAL_STANDARD_VALIDATOR=PASS'
+
+$dynamicThemeValidator = Join-Path $RepositoryRoot 'tools/validate_dynamic_system_theme.js'
+& node $dynamicThemeValidator
+if ($LASTEXITCODE -ne 0) {
+    throw "El tema dinamico del sistema fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'DYNAMIC_THEME_VALIDATOR=PASS'
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'

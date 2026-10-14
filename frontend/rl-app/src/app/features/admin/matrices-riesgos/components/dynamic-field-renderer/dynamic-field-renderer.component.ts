@@ -52,7 +52,7 @@ export interface OpcionCampoRenderer {
                 <label class="inline-flex items-center gap-2 text-xs font-medium text-gray-700"
                        [for]="idOpcion(indice)">
                   <input type="radio"
-                         class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                         class="h-4 w-4 border-gray-300 text-ihss-600 focus:ring-ihss-500"
                          [id]="idOpcion(indice)"
                          [name]="idControl"
                          [value]="opcion.codigo"
@@ -99,7 +99,7 @@ export interface OpcionCampoRenderer {
                 <label class="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50/70 px-3 py-2 text-xs font-medium text-gray-700"
                        [for]="idOpcion(indice)">
                   <input type="checkbox"
-                         class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                         class="h-4 w-4 rounded border-gray-300 text-ihss-600 focus:ring-ihss-500"
                          [id]="idOpcion(indice)"
                          [attr.aria-invalid]="validationError ? 'true' : null"
                          [attr.aria-describedby]="validationError ? errorId : null"
@@ -228,7 +228,7 @@ export interface OpcionCampoRenderer {
             <div class="mt-2 flex items-center gap-2">
               <input [id]="idControl"
                      type="checkbox"
-                     class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                     class="h-4 w-4 rounded border-gray-300 text-ihss-600 focus:ring-ihss-500"
                      [required]="campo.obligatorio"
                      [attr.aria-required]="campo.obligatorio ? 'true' : null"
                      [attr.aria-invalid]="validationError ? 'true' : null"
@@ -244,7 +244,7 @@ export interface OpcionCampoRenderer {
                  class="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-ihss-900 shadow-inner"
                  aria-readonly="true">
               <span>{{ textoLectura === '-' ? 'Calculado automáticamente' : textoLectura }}</span>
-              <span class="rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+              <span class="rounded-md border border-ihss-100 bg-ihss-50 px-2 py-0.5 text-[10px] font-semibold text-ihss-700">
                 {{ campo.formula || 'Fórmula calculada' }}
               </span>
             </div>

@@ -1,6 +1,9 @@
 import { expect, Page, test } from '@playwright/test';
 import { Buffer } from 'node:buffer';
 import * as ExcelJS from 'exceljs';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { createSystemTheme } from '../src/app/core/configuration/system-theme.util';
 
 function tokenAdministrador(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -393,6 +396,49 @@ test('Configuración de cálculo muestra referencias institucionales F01, F15 y 
   expect(mutations).toHaveLength(0);
   expect(consoleErrors).toHaveLength(0);
   expect(pageErrors).toHaveLength(0);
+});
+
+test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios de template', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
+  const modal = page.locator('[data-matrix-modal="complete"]');
+  const header = modal.locator('.modal-header-institutional');
+  const footer = modal.locator('.modal-footer-institutional');
+  await expect(modal).toBeVisible();
+
+  const aplicar = async (primary: string, accent: string) => {
+    const theme = createSystemTheme(primary, accent);
+    await page.evaluate(properties => {
+      for (const [name, value] of Object.entries(properties)) document.documentElement.style.setProperty(name, value);
+    }, theme.properties);
+  };
+  await aplicar('#1e3a8a', '#1d4ed8');
+  const azul = await header.evaluate(element => getComputedStyle(element).backgroundImage);
+  expect(azul).toContain('rgb(30, 58, 138)');
+
+  const artifactDir = process.env.RL_BLOCK9_ARTIFACT_DIR;
+  if (artifactDir) {
+    await mkdir(artifactDir, { recursive: true });
+    await modal.screenshot({ path: join(artifactDir, 'matriz-completa-theme-blue.png') });
+  }
+  await aplicar('#991b1b', '#dc2626');
+  const rojo = await header.evaluate(element => getComputedStyle(element).backgroundImage);
+  expect(rojo).not.toBe(azul);
+  expect(rojo).toContain('rgb(153, 27, 27)');
+  expect(await footer.evaluate(element => getComputedStyle(element).backgroundImage)).toContain('rgb(220, 38, 38)');
+  if (artifactDir) await modal.screenshot({ path: join(artifactDir, 'matriz-completa-theme-red.png') });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const dimensions = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    document: document.documentElement.scrollWidth,
+    card: document.querySelector('[data-matrix-modal="complete"] .modal-container-card')?.getBoundingClientRect().width ?? 0
+  }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+  expect(dimensions.card).toBeLessThanOrEqual(390);
+  if (artifactDir) await modal.screenshot({ path: join(artifactDir, 'matriz-completa-theme-red-mobile.png') });
 });
 
 test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET posterior', async ({ page }) => {

@@ -105,7 +105,7 @@ export class CargarListasComponent implements OnInit {
           title: 'Archivo requerido',
           text: 'Por favor, seleccione un archivo para cargar.',
           icon: 'warning',
-          confirmButtonColor: '#1e3a8a'
+          confirmButtonColor: 'var(--ihss-primary-color)'
         });
       });
       return;
@@ -132,7 +132,7 @@ export class CargarListasComponent implements OnInit {
             title: 'Carga Exitosa',
             text: res.mensaje || 'Los registros fueron cargados exitosamente.',
             icon: 'success',
-            confirmButtonColor: '#1e3a8a'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
           // Limpiar archivo seleccionado
           this.archivoSeleccionado.set(null);
@@ -149,7 +149,7 @@ export class CargarListasComponent implements OnInit {
             title: 'Error de Validación',
             text: msg,
             icon: 'error',
-            confirmButtonColor: '#1e3a8a'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });
@@ -163,7 +163,7 @@ export class CargarListasComponent implements OnInit {
           title: 'Error',
           text: 'No se puede exportar esta lista porque no tiene un ID de tipo válido.',
           icon: 'error',
-          confirmButtonColor: '#1e3a8a'
+          confirmButtonColor: 'var(--ihss-primary-color)'
         });
       });
       return;
@@ -191,7 +191,7 @@ export class CargarListasComponent implements OnInit {
               title: 'Información',
               text: 'No hay registros en esta lista para exportar.',
               icon: 'info',
-              confirmButtonColor: '#1e3a8a'
+              confirmButtonColor: 'var(--ihss-primary-color)'
             });
             return;
           }
@@ -283,7 +283,7 @@ export class CargarListasComponent implements OnInit {
             title: 'Error',
             text: err?.error?.mensaje || 'Ocurrió un error al intentar exportar la lista de cautela.',
             icon: 'error',
-            confirmButtonColor: '#1e3a8a'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });

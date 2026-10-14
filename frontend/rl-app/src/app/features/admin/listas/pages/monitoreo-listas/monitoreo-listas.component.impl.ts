@@ -1372,7 +1372,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         title: 'Auditoría requerida',
         text: `No se pudo registrar la auditoría de ${operacion}. La operación fue cancelada.`,
         icon: 'error',
-        confirmButtonColor: '#1e3a8a'
+        confirmButtonColor: 'var(--ihss-primary-color)'
       });
     });
   }
@@ -2139,7 +2139,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
             title: 'Campos requeridos',
             text: 'Por favor complete todos los campos obligatorios del registro manual.',
             icon: 'warning',
-            confirmButtonColor: '#1d4ed8'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         });
         return;
@@ -2159,7 +2159,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           title: 'Campos requeridos',
           text: 'Por favor seleccione el tipo de documento, el tipo de lista de cautela, el origen del registro e ingrese el motivo.',
           icon: 'warning',
-          confirmButtonColor: '#1d4ed8'
+          confirmButtonColor: 'var(--ihss-primary-color)'
         });
       });
       return;
@@ -2172,7 +2172,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           title: 'Seguimiento requerido',
           text: 'Para adjuntar evidencias debe escribir una nota de seguimiento.',
           icon: 'warning',
-          confirmButtonColor: '#1d4ed8'
+          confirmButtonColor: 'var(--ihss-primary-color)'
         });
       });
       return;
@@ -2212,7 +2212,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                   title: 'Registro Completo',
                   text: 'Se ha registrado el motivo y el primer seguimiento correctamente.',
                   icon: 'success',
-                  confirmButtonColor: '#1d4ed8'
+                  confirmButtonColor: 'var(--ihss-primary-color)'
                 });
                 this.cargarDatos();
               },
@@ -2224,7 +2224,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                   title: 'Registro Parcial',
                   text: 'El motivo se registró con éxito, pero hubo un error al registrar el seguimiento: ' + (errSeg.error?.mensaje || 'Error desconocido'),
                   icon: 'warning',
-                  confirmButtonColor: '#1d4ed8'
+                  confirmButtonColor: 'var(--ihss-primary-color)'
                 });
                 this.cargarDatos();
               }
@@ -2237,7 +2237,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
               title: 'Registro Exitoso',
               text: resp.mensaje || 'Se ha registrado el motivo correctamente.',
               icon: 'success',
-              confirmButtonColor: '#1d4ed8'
+              confirmButtonColor: 'var(--ihss-primary-color)'
             });
             this.cargarDatos();
           }
@@ -2249,7 +2249,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
             title: 'Error',
             text: err.error?.mensaje || 'No se pudo guardar el registro.',
             icon: 'error',
-            confirmButtonColor: '#1d4ed8'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });
@@ -2324,7 +2324,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           title: 'Rango no valido',
           text: 'La fecha desde no puede ser mayor que la fecha hasta.',
           icon: 'warning',
-          confirmButtonColor: '#1d4ed8'
+          confirmButtonColor: 'var(--ihss-primary-color)'
         });
       });
       return;
@@ -2455,7 +2455,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                 title: 'Eliminado',
                 text: resp.mensaje || 'Evidencia eliminada correctamente.',
                 icon: 'success',
-                confirmButtonColor: '#1d4ed8'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             },
             error: (err) => {
@@ -2464,7 +2464,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo eliminar la evidencia.',
                 icon: 'error',
-                confirmButtonColor: '#1d4ed8'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             }
           });
@@ -2507,7 +2507,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
             title: 'Éxito',
             text: resp.mensaje || (editMode ? 'Seguimiento actualizado exitosamente.' : 'Seguimiento registrado exitosamente.'),
             icon: 'success',
-            confirmButtonColor: '#1d4ed8'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
 
           this.cargarSeguimientos(entidad.noDocumento);
@@ -2519,7 +2519,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
             title: 'Error',
             text: err.error?.mensaje || 'No se pudo guardar el seguimiento.',
             icon: 'error',
-            confirmButtonColor: '#1d4ed8'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });
@@ -2564,7 +2564,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
             title: 'Error',
             text: 'No se pudo cargar el archivo de evidencia.',
             icon: 'error',
-            confirmButtonColor: '#1d4ed8'
+            confirmButtonColor: 'var(--ihss-primary-color)'
           });
         }
       });
@@ -2599,7 +2599,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                 title: 'Eliminado',
                 text: resp.mensaje || 'El seguimiento ha sido eliminado correctamente.',
                 icon: 'success',
-                confirmButtonColor: '#1d4ed8'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
 
               const entidad = this.entidadSeleccionada();
@@ -2613,7 +2613,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo eliminar el seguimiento.',
                 icon: 'error',
-                confirmButtonColor: '#1d4ed8'
+                confirmButtonColor: 'var(--ihss-primary-color)'
               });
             }
           });
