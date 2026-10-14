@@ -176,8 +176,13 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect((await updateResponsePromise).status()).toBe(200);
 
   await page.reload();
-  await page.getByTitle('Editar evaluación').click();
-  await expect(page.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
+  const pageA = await page.context().newPage();
+  await installNonCriticalFixtures(pageA, fixture, evaluation);
+  await pageA.goto('/matrices-riesgos');
+  await expect(pageA.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  await expect(pageA.locator('button[title^="Editar evaluaci"]')).toBeVisible();
+  await pageA.locator('button[title^="Editar evaluaci"]').click();
+  await expect(pageA.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
   const projectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   const projectionBody = await projectionResponse.text();
   expect(projectionResponse.ok(), `Projection HTTP ${projectionResponse.status()}: ${projectionBody.slice(0, 1000)}`).toBeTruthy();
@@ -255,8 +260,13 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
 
   await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
 
-  await page.locator('button[title^="Editar evaluaci"]').click();
-  await expect(page.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
+  const pageA = await page.context().newPage();
+  await installNonCriticalFixtures(pageA, fixture, evaluation);
+  await pageA.goto('/matrices-riesgos');
+  await expect(pageA.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  await expect(pageA.locator('button[title^="Editar evaluaci"]')).toBeVisible();
+  await pageA.locator('button[title^="Editar evaluaci"]').click();
+  await expect(pageA.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
 
   const pageB = await page.context().newPage();
   await installNonCriticalFixtures(pageB, fixture, evaluation);
@@ -270,10 +280,10 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await expect(pageB.locator('dialog[aria-labelledby="titulo-modal-editar"]')).toBeVisible();
   await expect(pageB.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
 
-  await page.getByLabel('Área principal').fill('Editor A');
-  const saveA = page.waitForResponse(response => response.request().method() === 'PUT'
+  await pageA.getByLabel('Área principal').fill('Editor A');
+  const saveA = pageA.waitForResponse(response => response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
-  await page.getByRole('button', { name: 'Guardar borrador' }).click();
+  await pageA.getByRole('button', { name: 'Guardar borrador' }).click();
   expect((await saveA).status()).toBe(200);
 
   await pageB.getByLabel('Área principal').fill('Editor B stale');
@@ -290,6 +300,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect(persistedBody.evaVersionRow).toBe(3);
   expect(persistedBody.evaDataJson).toContain('Editor A');
   expect(persistedBody.evaDataJson).not.toContain('Editor B stale');
+  await pageA.close();
   await pageB.close();
   console.log('BLOCK7_MATRIX_API_ROUTES_MOCKED=0');
 });
