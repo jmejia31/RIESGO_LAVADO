@@ -2,7 +2,7 @@
 
 **Estado:** `BLOCK8_STATUS=CLOSED`.
 **Rama:** `desarrollo`.
-**Alcance:** separar las vistas de catálogo maestro, ciclo transaccional y consulta institucional; eliminar acciones de matriz completa fuera del Consolidado y unificar la selección de la evaluación oficial.
+**Alcance:** separar las vistas de catálogo maestro, ciclo transaccional y consulta institucional; eliminar acciones de matriz completa fuera del Consolidado y exponer todas las evaluaciones activas registradas.
 
 ## Responsabilidades
 
@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | Riesgos | `MASTER_CATALOG` | Consultar y administrar la identidad maestra del riesgo según permisos. | Evaluaciones, consolidado y matriz completa de 82 campos. |
 | Evaluaciones | `TRANSACTIONAL_WORKFLOW` | Crear, editar borradores, ver una evaluación transaccional, historial, workflow y seguimiento. | Entrada a la matriz completa institucional. |
-| Consolidado | `OFFICIAL_INSTITUTIONAL_VIEW` | Consulta institucional global, matriz completa, exportación Excel y reporte PDF. | Edición de borradores o modificación del workflow. |
+| Consolidado | `INSTITUTIONAL_GLOBAL_READONLY_VIEW_OF_REGISTERED_EVALUATIONS` | Consulta global de todas las evaluaciones activas registradas, matriz completa, exportación Excel y reporte PDF. | Edición de borradores o modificación del workflow. |
 
 La definición tipada se encuentra en `MATRICES_VIEW_RESPONSIBILITIES` y se verifica mediante `tools/validate_block8_view_responsibilities.js`.
 
@@ -23,17 +23,17 @@ La definición tipada se encuentra en `MATRICES_VIEW_RESPONSIBILITIES` y se veri
 - En contexto de riesgo, `rieNombre` se presenta como **Riesgo Inherente** y `rieDescripcion` como **Evaluación**. La identidad se etiqueta **Código de Riesgo**. No se renombraron DTOs, columnas Oracle ni esquema.
 - La búsqueda de Evaluaciones expresa `Código de Riesgo`, `Riesgo Inherente` y `Evaluación`. Se conservaron nombres administrativos que no representan F08/F09.
 
-## Selección oficial del Consolidado
+## Consulta global del Consolidado
 
-La consulta central del repositorio se comparte entre el listado paginado, el conteo y la exportación. Por cada evaluación se obtiene el estado vigente del workflow desde su evento más reciente (`FLU_FECHA DESC, FLU_ID DESC`). Sólo las evaluaciones cuyo estado vigente es `APROBADA` participan. Por riesgo se selecciona la aprobación más reciente con desempate determinista por fecha del evento, ID de flujo y, finalmente, ID de evaluación, todos descendentes.
+La semántica anterior `LATEST_APPROVED_ONLY` queda superada por el requerimiento vigente: el Consolidado es una consulta institucional global de matrices registradas y muestra una fila por cada evaluación activa, sin reducirlas a una por riesgo ni exigir estado `APROBADA` o una proyección completa.
 
-Un borrador, revisión, rechazo o evaluación cerrada posterior no desplaza una aprobación. No se documentó equivalencia autorizada entre `CERRADA` y `APROBADA`; por eso `CERRADA` queda excluida. Los riesgos sin evaluación aprobada no se presentan como si un borrador fuera oficial. El estado vacío del listado informa que no hay evaluaciones aprobadas para los filtros seleccionados.
+La fuente parte de `RL_MR_EVALUACIONES_RIESGO`, incorpora la identidad del riesgo y obtiene la proyección con `LEFT JOIN`. El estado mostrado viene del último evento de workflow por evaluación (`FLU_FECHA DESC, FLU_ID DESC`). La ausencia de un evento se presenta como `BORRADOR`; los campos sin proyección conservan semántica nula. No se inventan valores ni se aprueban registros para hacerlos visibles.
 
-La UI, el export Excel y la fuente del PDF parten de la misma selección central del backend; la selección no se realiza en Angular. El dashboard institucional consume la misma fuente oficial.
+El filtro `TODOS` incluye todos los estados vigentes; `BORRADOR`, `EN_REVISION`, `OBSERVADA`, `APROBADA`, `RECHAZADA` y `CERRADA` filtran su estado correspondiente. El listado, conteo y exportaciones Excel/PDF comparten el mismo dataset y filtros. Cada fila mantiene `EVA_ID` como identidad y abre la matriz completa de esa evaluación exacta, incluso si está en borrador.
 
 ## Pruebas y verificación
 
-La prueba Oracle XE opt-in `ConsolidatedApiAndReportUseLatestCurrentApprovedEvaluationPerRisk` crea candidatos de distintos estados para un mismo riesgo, dos aprobaciones con empate temporal, y una aprobación después cerrada. Verifica la selección mediante el endpoint paginado real y que la exportación utilice los mismos IDs. Se ejecuta en el Quality Gates existente, usando el mismo Oracle XE desechable que la integración del Bloque 6.
+La regresión Oracle XE `ConsolidatedApiAndReportIncludeEveryActiveEvaluationAndFilterByLatestState` cubre los seis estados, un borrador sin proyección, varias evaluaciones del mismo riesgo, estado más reciente y paridad entre API y exportación. El checkout local no debe declarar Oracle ejecutado cuando no está configurada la conexión; CI usa Oracle XE desechable.
 
 El validador `node tools/validate_block8_view_responsibilities.js --inventory` comprueba responsabilidades, labels del riesgo, ausencia de acciones prohibidas, único contexto de matriz completa, proyección canónica lazy, ausencia de selector oficial en el cliente e inventario de acciones. El validador UI del Bloque 7 verifica cobertura y labels 82/82. Las suites frontend y Playwright conservan las pruebas de Bloques 1–7 y agregan navegación por teclado, acción única, carga de la proyección 82/82 y mediciones responsive.
 
