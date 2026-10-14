@@ -723,7 +723,7 @@ if ($riskTextContents.ContainsKey('44_postcheck_unicode_modulo_matrices_completo
 $backendRepositoryPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
 $backendExportPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosReportExportService.cs'
 $monitorPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosMonitoreoRepository.cs'
-if ((Get-Content -LiteralPath $backendRepositoryPath -Raw) -notmatch 'AreaPrincipal = TextoVisibleUtf8Normalizer\.Normalizar') { $errors.Add('Backend no normaliza AreaPrincipal en reportes.') }
+if ((Get-Content -LiteralPath $backendRepositoryPath -Raw) -notmatch 'AreaPrincipal\s*=\s*(?:reader\.IsDBNull\(4\)\s*\?\s*null\s*:\s*)?TextoVisibleUtf8Normalizer\.Normalizar\(reader\.GetString\(4\)\)') { $errors.Add('Backend no normaliza AreaPrincipal en reportes.') }
 if ((Get-Content -LiteralPath $backendExportPath -Raw) -notmatch 'TextoVisibleUtf8Normalizer\.Normalizar') { $errors.Add('Export service no recibe/escribe texto visible normalizado.') }
 if ((Get-Content -LiteralPath $monitorPath -Raw) -notmatch 'TextoVisibleUtf8Normalizer\.Normalizar') { $errors.Add('Monitoreo no normaliza ALE_INDICADOR/MON_RESULTADO y demás salidas visibles.') }
 
