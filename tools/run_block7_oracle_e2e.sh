@@ -66,6 +66,9 @@ if [[ "$ready" != "true" ]]; then
 fi
 echo 'BLOCK7_REAL_API_ORACLE_READY=PASS'
 
+block9_evidence_dir="${RUNNER_TEMP:-/tmp}/block9-browser-evidence"
+mkdir -p "$block9_evidence_dir"
+export BLOCK9_EVIDENCE_OUTPUT_DIR="$block9_evidence_dir"
 pushd "$repo_root/frontend/rl-app" >/dev/null
 export CI=true
 if ! browser_output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts 2>&1 | tee /dev/stderr)"; then

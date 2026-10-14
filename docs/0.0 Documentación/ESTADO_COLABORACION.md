@@ -2527,3 +2527,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - Quality Gates `38616972937` concluyó success: Oracle Block7=1/1, Browser Oracle=1/1, mitigación/monitoreo/RBAC/evidencia Oracle PASS, backend 965/965, frontend 858/858, Playwright 49/49, Block6 Oracle 3/3 y Block8 Oracle 1/1.
 - El artifact del run no incluyó el nombre de captura dedicado del uploader Matrix. La prueba lo escribe ahora en la raíz de `test-results` para que CI lo conserve; la repetición con esa captura estable precede al cierre documental.
+
+### Captura en artefacto temporal durable del job (2026-10-14 12:50 -06:00)
+
+- El run `38618732332` confirmó success de todos los gates; también mostró que una ejecución E2E posterior limpia `test-results`, así que no preservó el screenshot Matrix nombrado.
+- El E2E exporta ahora la captura a `RUNNER_TEMP/block9-browser-evidence` y el workflow sube esa carpeta junto a Playwright results. Falta verificar descarga y hashes del artifact en el CI actualizado.

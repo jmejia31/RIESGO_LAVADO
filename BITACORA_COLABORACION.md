@@ -8879,3 +8879,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 - Quality Gates `38616972937` terminó `completed/success`: Oracle Block7=1/1, Browser real=1/1, Block9 Oracle/browser PASS, backend=965/965, frontend=858/858, Playwright=49/49, Block6 Oracle=3/3 y Block8 Oracle=1/1. El run no retuvo el screenshot con nombre del uploader Matrix solicitado.
 - El test guarda ahora `institutional-file-upload-matrices.png` directamente en `test-results/` para que el artifact workflow lo publique junto a las demás capturas. Se repetirá CI antes del cierre final; la evidencia funcional Oracle/browser ya pasó en el SHA `6b0d23f4`.
+
+## Captura fuera de la carpeta de resultados transitoria (COD) — 2026-10-14 12:50 -06:00
+
+- El run `38618732332` también terminó success, pero confirmó que la suite E2E general limpia/reemplaza `test-results` después de ejecutar el test Oracle, por lo que el screenshot dedicado no quedó en el artifact.
+- El test ahora escribe la captura en `RUNNER_TEMP/block9-browser-evidence` (con fallback local a `test-results`), y el step de upload-artifact incluye explícitamente ese directorio temporal. Se repetirá CI para verificar el archivo descargado y luego se hará el cierre documental.
