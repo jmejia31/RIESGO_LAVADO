@@ -2497,3 +2497,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - CI `38611981993` pasó Oracle draft write y llegó al browser, donde XE devolvió `ORA-12516` en la segunda vinculación de evidencia. Se cambió sólo la cadena del API de test para reusar un pool máximo de 5 sesiones, con tamaño inicial cero; producción no se afecta.
 - La proyección esperada F73/F76/F79 también quedó alineada a los porcentajes institucionales del fixture 30/50/85/90.
 - Continuar con el nuevo Quality Gates. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`.
+
+### Expectativa de proyección F71 (2026-10-14 12:13 -06:00)
+
+- Run `38612827455` atravesó vínculo/lectura de evidencia. El browser falló porque F71 en la proyección devuelve la clave `MITIGADO`; el endpoint de historial expone la etiqueta `Mitigado`. Se conserva el assertion de historial y se ajustó sólo el esperado de la proyección.
+- El siguiente Quality Gates debe confirmar F40–F82 por API/browser y finalizar los pasos Oracle 6/8. No marcar Bloque 9 cerrado antes del éxito completo.
