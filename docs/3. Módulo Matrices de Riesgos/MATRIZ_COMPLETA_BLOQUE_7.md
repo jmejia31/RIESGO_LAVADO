@@ -5,7 +5,7 @@
 **Rama:** `desarrollo`
 **Commit funcional certificado:** `d3c0766e30981f8101accb90bf812b490a3cebc5`
 **Quality Gates:** [run 38494209621](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/38494209621) — `completed / success`
-**Bloque 8:** `NOT_STARTED`
+**Bloque 8 al cierre de este documento:** `NOT_STARTED` (el cierre posterior está registrado en `MATRIZ_COMPLETA_BLOQUE_8.md`).
 
 ## Alcance certificado
 
@@ -67,4 +67,4 @@ Los controles, planes y actividades del E2E se escribieron a través de sus endp
 
 `PRODUCTION_READ_ONLY_USED=NO` · `PRODUCTION_DML_EXECUTED=0` · `PRODUCTION_DDL_EXECUTED=0` · `PRODUCTION_APPLY_EXECUTED=NO` · `PRODUCTION_APPLY_AUTHORIZED=NO` · `SCHEMA_CHANGE_REQUIRED=NO` · `AUTH_PRODUCTION_BYPASS_ADDED=NO`.
 
-`BLOCK1_STATUS=CLOSED` · `BLOCK2_STATUS=CLOSED` · `BLOCK3_STATUS=CLOSED` · `BLOCK4_STATUS=CLOSED` · `BLOCK5_STATUS=CLOSED` · `BLOCK6_STATUS=CLOSED` · `BLOCK7_STATUS=CLOSED` · `BLOCK8_STATUS=NOT_STARTED`.
+`BLOCK1_STATUS=CLOSED` · `BLOCK2_STATUS=CLOSED` · `BLOCK3_STATUS=CLOSED` · `BLOCK4_STATUS=CLOSED` · `BLOCK5_STATUS=CLOSED` · `BLOCK6_STATUS=CLOSED` · `BLOCK7_STATUS=CLOSED` · `BLOCK8_STATUS=NOT_STARTED al cierre histórico del Bloque 7`.
