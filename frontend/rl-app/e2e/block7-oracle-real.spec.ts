@@ -255,7 +255,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
 
   await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
 
-  await page.getByTitle('Editar evaluación').click();
+  await page.locator('button[title^="Editar evaluaci"]').click();
   await expect(page.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
 
   const pageB = await page.context().newPage();
@@ -265,7 +265,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await expect(pageB.locator('button[title^="Editar evaluaci"]')).toBeVisible();
   const pageBEvaluationRead = pageB.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
-  await pageB.getByTitle('Editar evaluación').click();
+  await pageB.locator('button[title^="Editar evaluaci"]').click();
   expect((await pageBEvaluationRead).status()).toBe(200);
   await expect(pageB.locator('dialog[aria-labelledby="titulo-modal-editar"]')).toBeVisible();
   await expect(pageB.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
