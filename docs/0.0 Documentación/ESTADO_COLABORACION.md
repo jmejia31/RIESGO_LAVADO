@@ -2491,3 +2491,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El CI `38611093662` pasó la prueba Oracle de borradores/concurrencia y luego encontró `ORA-00904 EVI_USR_CREACION` al subir evidencia desde browser. El test Block6 anterior dejaba una tabla simplificada en el Oracle XE compartido; el host E2E reutilizaba ese objeto por ORA-00955.
 - La fixture Block6 ahora crea la forma completa de evidencia del harness y usa inserts con columnas explícitas, compatible con ambos pasos. No se hizo DDL fuera de fixture ni se cambia el esquema requerido.
 - Verificar con el siguiente Quality Gates todos los tests Oracle y el upload→link→proyección por navegador. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta `completed/success`.
+
+### Reutilización de conexiones del API E2E (2026-10-14 12:08 -06:00)
+
+- CI `38611981993` pasó Oracle draft write y llegó al browser, donde XE devolvió `ORA-12516` en la segunda vinculación de evidencia. Se cambió sólo la cadena del API de test para reusar un pool máximo de 5 sesiones, con tamaño inicial cero; producción no se afecta.
+- La proyección esperada F73/F76/F79 también quedó alineada a los porcentajes institucionales del fixture 30/50/85/90.
+- Continuar con el nuevo Quality Gates. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`.

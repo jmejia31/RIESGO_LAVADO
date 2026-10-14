@@ -315,13 +315,13 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(monitoringProjection.find(field => field.fieldNumber === 70)?.value).toContain('Señal activa de prueba');
   expect(monitoringProjection.find(field => field.fieldNumber === 71)?.value).toBe('Mitigado');
   expect(monitoringProjection.find(field => field.fieldNumber === 72)?.value).toBe('1. SE_MANTIENE\n2. NO_SE_MANTIENE');
-  expect(monitoringProjection.find(field => field.fieldNumber === 73)?.value).toBe('1. 65\n2. 66');
+  expect(monitoringProjection.find(field => field.fieldNumber === 73)?.value).toBe('1. 30\n2. 50');
   expect(monitoringProjection.find(field => field.fieldNumber === 74)?.value).toBe('1. block9-evidence-preventive-a.pdf\n2. block9-evidence-preventive-b.pdf');
   expect(monitoringProjection.find(field => field.fieldNumber === 75)?.value).toBe('1. SE_MANTIENE');
-  expect(monitoringProjection.find(field => field.fieldNumber === 76)?.value).toBe('1. 67');
+  expect(monitoringProjection.find(field => field.fieldNumber === 76)?.value).toBe('1. 85');
   expect(monitoringProjection.find(field => field.fieldNumber === 77)?.value).toBe('1. block9-evidence-detective.pdf');
   expect(monitoringProjection.find(field => field.fieldNumber === 78)?.value).toBe('1. NO_SE_MANTIENE');
-  expect(monitoringProjection.find(field => field.fieldNumber === 79)?.value).toBe('1. 68');
+  expect(monitoringProjection.find(field => field.fieldNumber === 79)?.value).toBe('1. 90');
   expect(monitoringProjection.find(field => field.fieldNumber === 80)?.value).toBe('1. block9-evidence-corrective.pdf');
   expect(monitoringProjection.find(field => field.fieldNumber === 81)?.value).toBe('OBS-AREA-BOTH');
   expect(monitoringProjection.find(field => field.fieldNumber === 82)?.value).toBe('OBS-UGR-BOTH');

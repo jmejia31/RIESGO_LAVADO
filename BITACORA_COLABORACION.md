@@ -8841,3 +8841,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El run `38611093662` pasó la integración Oracle de borrador, incluida la concurrencia, pero el browser falló al cargar evidencia: `ORA-00904: "EVI_USR_CREACION": invalid identifier`. El XE único se comparte entre los tests Block6 y el host browser; el test de proyección había creado `RL_MR_EVIDENCIAS` con sólo tres columnas y el host conservó esa tabla al tolerar ORA-00955.
 - Se alineó el DDL efímero de `InstitutionalProjectionOracleIntegrationTests` con las columnas reales que necesita el host y se cambiaron los inserts a listas explícitas de columnas. El mismo fixture completo sirve en el test de proyección, upload E2E y los pasos Oracle posteriores, sin modificar tablas de producción ni agregar schema change.
 - La regresión local compilada/validada y el próximo Quality Gates deben confirmar el reuso de esquema. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta que todos los pasos del SHA nuevo concluyan correctamente.
+
+## Ajuste de conexiones y proyección canónica (COD) — 2026-10-14 12:08 -06:00
+
+- El run `38611981993` confirmó `BLOCK7_ORACLE_WRITE_INTEGRATION=PASS` y llegó al browser real. En la segunda vinculación de evidencia el listener XE devolvió `ORA-12516` (sin protocolo de servicio disponible) y el test vio HTTP 500. No es una falla de contrato de archivo; se limita el pool ODP.NET del API E2E a 5 conexiones reutilizables en el XE compartido (`Pooling=true`, tamaño mínimo 0), evitando aperturas/cierres reiterados sin usar esperas fijas.
+- Se alinearon F73/F76/F79 con los valores canónicos del mismo fixture (30/50/85/90), después de cambiar F73/F76/F79 de porcentajes arbitrarios a valores del catálogo.
+- Ejecutar CI otra vez y verificar upload/link/read/proyección y los pasos Oracle 6/8 posteriores. El cierre permanece pendiente hasta `completed/success`.
