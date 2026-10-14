@@ -2517,3 +2517,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - El run `38615607010` confirmó upload y escenario de concurrencia antes de encontrar que controles/observaciones no se presentan en el modal `Seguimiento de evaluación` (workflow).
 - El E2E ahora abre `Editar evaluación`, selecciona Bloque 6 y espera el snapshot API real antes de verificar monitoreo y observaciones. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta completar CI.
+
+### Selector de textbox para aserciones Área/UGR (2026-10-14 12:39 -06:00)
+
+- El run `38616285559` llegó a verificar observaciones, donde el nombre accesible coincidía en textarea y botón de guardado. Se acotaron las aserciones al rol `textbox`; los endpoints y permisos no cambiaron.
+- Pendiente repetir el Oracle/browser completo en CI; Bloque 9 se mantiene abierto.

@@ -8869,3 +8869,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El run `38615607010` confirmó que la carga UI de evidencia y el conflicto optimista pasan; la prueba falló al esperar controles/observaciones tras abrir `Seguimiento de evaluación`, que pertenece al modal de workflow.
 - Se corrigió la lectura E2E para abrir el borrador, navegar a Bloque 6 y esperar `GET .../monitoreo/evaluaciones/{id}/bloque6` HTTP 200 antes de comprobar controles y observaciones. La UI de producción mantiene responsabilidades distintas: `Seguimiento` workflow, Bloque 6 controles/observaciones/evidencias.
 - ESLint y la ejecución Oracle/browser del siguiente Quality Gates siguen requeridos. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`.
+
+## Selector inequívoco de textareas Área/UGR (COD) — 2026-10-14 12:39 -06:00
+
+- El Quality Gates `38616285559` pasó las comprobaciones previas y avanzó hasta las observaciones independientes. Playwright reportó modo estricto porque `getByLabel` resolvía tanto el textarea como el botón Guardar con el mismo nombre accesible.
+- Se usa ahora el rol `textbox` para seleccionar exclusivamente cada textarea Área/UGR. No cambia nombres accesibles, capacidades, API ni persistencia. El siguiente CI repetirá la suite completa.

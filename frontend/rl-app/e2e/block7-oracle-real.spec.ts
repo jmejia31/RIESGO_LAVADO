@@ -536,15 +536,17 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await pageABlock6Read).status()).toBe(200);
   await expect(pageA.getByRole('heading', { name: 'Controles monitoreados y evidencias' })).toBeVisible();
   await expect(pageA.getByText('Control E2E A', { exact: true })).toBeVisible();
-  await expect(pageA.getByLabel('Observaciones del Área')).toHaveValue('OBS-AREA-BOTH');
-  await expect(pageA.getByLabel('Observaciones UGR')).toHaveValue('OBS-UGR-BOTH');
+  const areaObservations = pageA.getByRole('textbox', { name: 'Observaciones del Área' });
+  const ugrObservations = pageA.getByRole('textbox', { name: 'Observaciones UGR' });
+  await expect(areaObservations).toHaveValue('OBS-AREA-BOTH');
+  await expect(ugrObservations).toHaveValue('OBS-UGR-BOTH');
   await pageA.screenshot({ path: testInfo.outputPath('monitoring-area-ugr-desktop.png'), fullPage: true });
-  await pageA.getByLabel('Observaciones del Área').fill('OBS-AREA-BROWSER');
+  await areaObservations.fill('OBS-AREA-BROWSER');
   const saveArea = pageA.waitForResponse(response => response.request().method() === 'PUT'
     && new URL(response.url()).pathname.endsWith(`/observaciones/area`));
   await pageA.getByRole('button', { name: 'Guardar Observaciones del Área' }).click();
   expect((await saveArea).status()).toBe(200);
-  await expect(pageA.getByLabel('Observaciones del Área')).toHaveValue('OBS-AREA-BROWSER');
+  await expect(areaObservations).toHaveValue('OBS-AREA-BROWSER');
   const finalMonitoringProjection = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   const finalProjectionBody = (await finalMonitoringProjection.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos.fields;
   expect(finalProjectionBody.find(field => field.fieldNumber === 81)?.value).toBe('OBS-AREA-BROWSER');
@@ -558,8 +560,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const desktopOverflow = await pageA.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(desktopOverflow).toBeLessThanOrEqual(0);
   await pageA.setViewportSize({ width: 390, height: 844 });
-  await expect(pageA.getByLabel('Observaciones del Área')).toBeVisible();
-  await expect(pageA.getByLabel('Observaciones UGR')).toBeVisible();
+  await expect(areaObservations).toBeVisible();
+  await expect(ugrObservations).toBeVisible();
   await pageA.screenshot({ path: testInfo.outputPath('monitoring-mobile.png'), fullPage: true });
   const mobileOverflow = await pageA.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(mobileOverflow).toBeLessThanOrEqual(0);

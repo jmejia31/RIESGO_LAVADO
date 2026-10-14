@@ -67,3 +67,5 @@ En CI `38613567583`, los gates de build y validación pasaron, pero el test de c
 El run `38614577297` pasó la carga de evidencia desde esa ruta y progresó al conflicto concurrente. El test sólo falló al hacer un segundo cierre del modal después de que un guardado exitoso ya lo había cerrado. El cierre del E2E ahora es condicional si el diálogo permanece visible. Hace falta confirmar la repetición íntegra en CI.
 
 En el run `38615607010`, el flujo superó carga y concurrencia, y detectó que el test buscaba las observaciones en el modal de workflow `Seguimiento de evaluación`. Se corrigió para leerlas desde el Bloque 6 del editor y exigir el GET real del snapshot antes de validar controles, evidencias y Área/UGR.
+
+El run `38616285559` avanzó hasta las aserciones de Área/UGR y señaló una ambigüedad de selector (`getByLabel` encontraba el textarea y el botón Guardar). La prueba ahora selecciona expresamente el rol `textbox`; falta confirmar el siguiente CI completo.
