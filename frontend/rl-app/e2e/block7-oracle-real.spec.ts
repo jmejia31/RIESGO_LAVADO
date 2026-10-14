@@ -209,7 +209,6 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   ]);
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
-  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/mitigacion/evaluaciones/{id}/bloque4'))).toBeTruthy();
 
   const blockNavigation = page.locator('nav[aria-label^="Bloques funcionales"]');
   await expect(blockNavigation.getByRole('button')).toHaveCount(6);
@@ -228,6 +227,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await expect(matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first()).toBeVisible();
   await expect(matrixDialog.locator('[data-matrix-plan]')).toHaveCount(2);
   await expect(matrixDialog.locator('[data-control-type="PREVENTIVO"]')).toHaveCount(4);
+  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/mitigacion/evaluaciones/{id}/bloque4'))).toBeTruthy();
 
   const block5 = matrixDialog.locator('[data-matrix-block="5"]');
   const details = block5.getByRole('button', { name: 'Mostrar detalle' });
