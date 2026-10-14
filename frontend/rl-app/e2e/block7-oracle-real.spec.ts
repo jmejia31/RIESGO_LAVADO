@@ -341,7 +341,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await matrixBlock6Read).status()).toBe(200);
   const matrixUploader = monitoringUiPage.getByRole('button', { name: `Evidencias del Control #${controlIds[0]}` });
   await expect(matrixUploader).toBeVisible();
-  await monitoringUiPage.screenshot({ path: testInfo.outputPath('institutional-file-upload-matrices.png'), fullPage: true });
+  await monitoringUiPage.screenshot({ path: 'test-results/institutional-file-upload-matrices.png', fullPage: true });
   const matrixFileChooserPromise = monitoringUiPage.waitForEvent('filechooser');
   await matrixUploader.click();
   const matrixFileChooser = await matrixFileChooserPromise;

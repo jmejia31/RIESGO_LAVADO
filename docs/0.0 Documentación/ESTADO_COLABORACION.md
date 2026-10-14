@@ -2522,3 +2522,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - El run `38616285559` llegó a verificar observaciones, donde el nombre accesible coincidía en textarea y botón de guardado. Se acotaron las aserciones al rol `textbox`; los endpoints y permisos no cambiaron.
 - Pendiente repetir el Oracle/browser completo en CI; Bloque 9 se mantiene abierto.
+
+### Captura específica del uploader Matrix (2026-10-14 12:48 -06:00)
+
+- Quality Gates `38616972937` concluyó success: Oracle Block7=1/1, Browser Oracle=1/1, mitigación/monitoreo/RBAC/evidencia Oracle PASS, backend 965/965, frontend 858/858, Playwright 49/49, Block6 Oracle 3/3 y Block8 Oracle 1/1.
+- El artifact del run no incluyó el nombre de captura dedicado del uploader Matrix. La prueba lo escribe ahora en la raíz de `test-results` para que CI lo conserve; la repetición con esa captura estable precede al cierre documental.

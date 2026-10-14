@@ -69,3 +69,5 @@ El run `38614577297` pasó la carga de evidencia desde esa ruta y progresó al c
 En el run `38615607010`, el flujo superó carga y concurrencia, y detectó que el test buscaba las observaciones en el modal de workflow `Seguimiento de evaluación`. Se corrigió para leerlas desde el Bloque 6 del editor y exigir el GET real del snapshot antes de validar controles, evidencias y Área/UGR.
 
 El run `38616285559` avanzó hasta las aserciones de Área/UGR y señaló una ambigüedad de selector (`getByLabel` encontraba el textarea y el botón Guardar). La prueba ahora selecciona expresamente el rol `textbox`; falta confirmar el siguiente CI completo.
+
+El Quality Gates `38616972937` terminó `completed/success` en el SHA `6b0d23f4f7d1503a8fe891eea23964e14142371b`: Block7 Oracle write 1/1, browser real 1/1, Block9 mitigación/monitoreo/RBAC/evidencias Oracle y browser PASS sin rutas críticas mockeadas, backend 965/965, frontend 858/858, Playwright 49/49, Block6 Oracle 3/3 y Block8 Oracle 1/1. El artefacto de CI omitió la captura nombrada del uploader Matrix; el E2E ahora la escribe en la raíz de `test-results`, y se ejecutará otra vez antes de fijar el cierre definitivo.

@@ -8874,3 +8874,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 - El Quality Gates `38616285559` pasó las comprobaciones previas y avanzó hasta las observaciones independientes. Playwright reportó modo estricto porque `getByLabel` resolvía tanto el textarea como el botón Guardar con el mismo nombre accesible.
 - Se usa ahora el rol `textbox` para seleccionar exclusivamente cada textarea Área/UGR. No cambia nombres accesibles, capacidades, API ni persistencia. El siguiente CI repetirá la suite completa.
+
+## Captura estable del uploader Matrix en CI (COD) — 2026-10-14 12:48 -06:00
+
+- Quality Gates `38616972937` terminó `completed/success`: Oracle Block7=1/1, Browser real=1/1, Block9 Oracle/browser PASS, backend=965/965, frontend=858/858, Playwright=49/49, Block6 Oracle=3/3 y Block8 Oracle=1/1. El run no retuvo el screenshot con nombre del uploader Matrix solicitado.
+- El test guarda ahora `institutional-file-upload-matrices.png` directamente en `test-results/` para que el artifact workflow lo publique junto a las demás capturas. Se repetirá CI antes del cierre final; la evidencia funcional Oracle/browser ya pasó en el SHA `6b0d23f4`.
