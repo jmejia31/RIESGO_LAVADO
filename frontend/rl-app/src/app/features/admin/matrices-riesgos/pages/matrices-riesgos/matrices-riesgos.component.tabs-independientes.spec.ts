@@ -396,4 +396,28 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(panel?.textContent).toContain('No hay matrices que coincidan con los filtros seleccionados.');
     expect(panel?.textContent).not.toContain('Sin evaluaciones aprobadas');
   });
+
+  it('mantiene las alertas de página separadas y limpia sólo las alertas del editor al cerrar/reabrir', () => {
+    component.error.set('Error genuino de página');
+    component.nuevaEvaluacion();
+    component['mostrarError']('Error de nueva evaluación');
+    expect(component.errorNuevaEvaluacion()).toBe('Error de nueva evaluación');
+    expect(component.error()).toBe('Error genuino de página');
+
+    component.cerrarModalNuevaEvaluacion();
+    expect(component.errorNuevaEvaluacion()).toBeNull();
+    expect(component.error()).toBe('Error genuino de página');
+    component.nuevaEvaluacion();
+    expect(component.errorNuevaEvaluacion()).toBeNull();
+    expect(component.error()).toBe('Error genuino de página');
+
+    component.modalNuevaEvaluacionAbierto.set(false);
+    component.modalEditarAbierto.set(true);
+    component['mostrarError']('Error de edición');
+    expect(component.errorEdicionEvaluacion()).toBe('Error de edición');
+    expect(component.error()).toBe('Error genuino de página');
+    component.cerrarModalEditar();
+    expect(component.errorEdicionEvaluacion()).toBeNull();
+    expect(component.error()).toBe('Error genuino de página');
+  });
 });

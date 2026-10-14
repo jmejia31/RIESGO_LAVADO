@@ -59,7 +59,7 @@
   </div>
 
   @if (error(); as errorTexto) {
-    <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
+    <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive" data-uat="feedback-page-error">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="flex-1 font-medium">{{ errorTexto }}</span>
       <button type="button" class="rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-800 transition-colors" aria-label="Cerrar notificación" title="Cerrar notificación" (click)="error.set(null)">
@@ -1162,20 +1162,20 @@
           }
         </nav>
 
-        @if (error(); as errorEdicion) {
+        @if (errorEdicionEvaluacion(); as errorEdicion) {
           <div class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-uat="feedback-edicion-error">
             <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span class="flex-1 font-medium">{{ errorEdicion }}</span>
-             <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error de edición" title="Cerrar error de edición" (click)="error.set(null)">
+             <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error de edición" title="Cerrar error de edición" (click)="errorEdicionEvaluacion.set(null)">
             <app-action-icon action="close"></app-action-icon>
           </button>
           </div>
         }
-        @if (mensaje(); as mensajeEdicion) {
+        @if (mensajeEdicionEvaluacion(); as mensajeEdicion) {
           <output class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" aria-live="polite" data-uat="feedback-edicion-exito">
             <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span class="flex-1 font-medium">{{ mensajeEdicion }}</span>
-             <button type="button" class="rounded p-0.5 text-emerald-400 hover:text-emerald-700" aria-label="Cerrar confirmación de edición" title="Cerrar confirmación de edición" (click)="mensaje.set(null)">
+             <button type="button" class="rounded p-0.5 text-emerald-400 hover:text-emerald-700" aria-label="Cerrar confirmación de edición" title="Cerrar confirmación de edición" (click)="mensajeEdicionEvaluacion.set(null)">
             <app-action-icon action="close"></app-action-icon>
           </button>
           </output>
@@ -1382,6 +1382,18 @@
   @if (modalNuevaEvaluacionAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-nueva-eval">
       <div class="modal-container-card modal-size-workspace" data-modal="nueva-evaluacion">
+        @if (errorNuevaEvaluacion(); as errorNueva) {
+          <div class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-uat="feedback-nueva-error">
+            <span class="flex-1 font-medium">{{ errorNueva }}</span>
+            <button type="button" class="rounded p-1 text-red-500 hover:bg-red-100" aria-label="Cerrar error de nueva evaluación" title="Cerrar error de nueva evaluación" (click)="errorNuevaEvaluacion.set(null)"><app-action-icon action="close"></app-action-icon></button>
+          </div>
+        }
+        @if (mensajeNuevaEvaluacion(); as mensajeNueva) {
+          <output class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" aria-live="polite" data-uat="feedback-nueva-exito">
+            <span class="flex-1 font-medium">{{ mensajeNueva }}</span>
+            <button type="button" class="rounded p-1 text-emerald-500 hover:bg-emerald-100" aria-label="Cerrar confirmación de nueva evaluación" title="Cerrar confirmación de nueva evaluación" (click)="mensajeNuevaEvaluacion.set(null)"><app-action-icon action="close"></app-action-icon></button>
+          </output>
+        }
         <nav class="mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
           @for (bloque of bloquesEvaluacion; track bloque) {
             <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700"

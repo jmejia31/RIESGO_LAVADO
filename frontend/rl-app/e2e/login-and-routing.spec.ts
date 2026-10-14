@@ -493,6 +493,17 @@ test('asocia el error requerido al control y enfoca el primer campo al continuar
   await expect(page.locator(`#${describedBy}`)).toContainText('Área principal es obligatorio.');
   await expect(area).toBeFocused();
   await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
+  const modalError = page.locator('[data-uat="feedback-nueva-error"]');
+  await expect(modalError).toContainText('campo(s) requerido(s)');
+  await expect(page.locator('[data-uat="feedback-page-error"]')).toHaveCount(0);
+
+  page.on('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Cerrar creación' }).click();
+  await expect(page.locator('[data-modal="nueva-evaluacion"]')).toHaveCount(0);
+  await expect(page.locator('[data-uat="feedback-page-error"]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Nueva evaluación' }).click();
+  await expect(page.locator('[data-modal="nueva-evaluacion"]')).toBeVisible();
+  await expect(page.locator('[data-uat="feedback-nueva-error"]')).toHaveCount(0);
 });
 
 test('el detalle de cálculo expone su estado expandido en el editor', async ({ page }) => {

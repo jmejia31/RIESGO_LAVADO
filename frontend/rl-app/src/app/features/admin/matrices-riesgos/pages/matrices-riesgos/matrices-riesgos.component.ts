@@ -47,6 +47,7 @@ import { canonicalCatalogOptions, canonicalRiskLevelLabel, canonicalRiskResponse
 import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_BLOCK_6_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
+type AlertScope = 'page' | 'newEvaluation' | 'editEvaluation';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
@@ -79,7 +80,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly suscripcionesDetalleFamilia: Subscription[] = [];
   private readonly suscripcionesCrearFamilia: Subscription[] = [];
   private readonly suscripcionesEditarFamilia: Subscription[] = [];
-  private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly autoDismissTimers: Partial<Record<AlertScope, ReturnType<typeof setTimeout>>> = {};
   private focoRetornoEditarFamilia: HTMLElement | null = null;
   private focoRetornoPredeterminada: HTMLElement | null = null;
   private focoRetornoMatrizCompleta: HTMLElement | null = null;
@@ -104,6 +105,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly operacionBuilderEnCurso = signal<'guardar' | 'publicar' | null>(null);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
+  readonly errorNuevaEvaluacion = signal<string | null>(null);
+  readonly mensajeNuevaEvaluacion = signal<string | null>(null);
+  readonly errorEdicionEvaluacion = signal<string | null>(null);
+  readonly mensajeEdicionEvaluacion = signal<string | null>(null);
   readonly errorModal = signal<string | null>(null);
 
   readonly cargandoEvaluaciones = signal(false);
@@ -1515,7 +1520,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         `${field.etiqueta} es obligatorio.`
       ]));
       this.erroresValidacionBloque.set(errors);
-      this.mostrarError(`Revise ${faltantes.length} campo(s) requerido(s) de ${this.tituloBloqueEvaluacion(bloque)}.`);
+      this.mostrarErrorEnEditor(`Revise ${faltantes.length} campo(s) requerido(s) de ${this.tituloBloqueEvaluacion(bloque)}.`);
       const first = faltantes[0];
       if (first) {
         const prefix = this.modalNuevaEvaluacionAbierto() ? 'campo-new' : 'campo-edit';
@@ -1746,7 +1751,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.calculoPreview.set(null);
     this.errorCalculoPreview.set(null);
     this.actualizandoCalculo.set(false);
-    this.limpiarAlertas();
+    this.limpiarAlertasEditor('newEvaluation');
     this.evaluacionSeleccionada.set(null);
     this.proyeccionMatrizCompleta.set(null);
     this.proyeccionMatrizCompletaEnCarga.set(false);
@@ -1790,11 +1795,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.actualizandoCalculo.set(false);
     ++this.secuenciaVersionNuevaEvaluacion;
     this.modalNuevaEvaluacionAbierto.set(false);
+    this.limpiarAlertasEditor('newEvaluation');
     this.familiaSeleccionada.set('');
     this.versionVigente.set(null);
     this.metodologia.set(null);
     this.respuestas.set({});
-    this.globalState.limpiarError();
     if (typeof (this.service as MatricesRiesgosService & {
       obtenerFamiliaPredeterminada?: () => Observable<FamiliaPredeterminadaDto>;
     }).obtenerFamiliaPredeterminada === 'function') {
@@ -2396,7 +2401,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.limpiarAlertas();
+    this.limpiarAlertasEditor('editEvaluation');
     this.cargando.set(true);
     this.evaluacionResumenSeleccionada.set(evaluacion);
 
@@ -2444,8 +2449,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cerrarModalEditar(): void {
     if (this.cambiosSinGuardar() && !window.confirm('Hay cambios sin guardar. ¿Desea descartarlos?')) return;
     this.modalEditarAbierto.set(false);
+    this.limpiarAlertasEditor('editEvaluation');
     this.cambiosSinGuardar.set(false);
-    this.globalState.limpiarError();
   }
 
   abrirModalSeguimiento(evaluacion: EvaluacionRiesgoResumenDto): void {
@@ -2531,7 +2536,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
               this.evaluacionSeleccionada.set(detallePersistido);
               this.respuestas.set(this.parsearRespuestas(detallePersistido.evaDataJson));
-              this.globalState.limpiarError();
               this.mostrarMensaje(`Cambios de la evaluación #${actual.evaId} guardados y verificados correctamente.`);
               this.cargarEvaluaciones();
             },
@@ -2547,7 +2551,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         }
 
         this.guardando.set(false);
-        this.globalState.limpiarError();
         this.mostrarMensaje('Evaluación creada correctamente.');
         this.modalNuevaEvaluacionAbierto.set(false);
         this.cargarEvaluaciones();
@@ -3070,36 +3073,78 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private mostrarMensaje(texto: string): void {
-    this.error.set(null);
-    this.mensaje.set(texto);
-    this.programarAutoDismiss(5000);
+    const scope = this.obtenerScopeAlerta();
+    this.establecerMensaje(scope, texto);
+    this.programarAutoDismiss(5000, scope);
   }
 
   private mostrarError(texto: string): void {
-    this.mensaje.set(null);
-    this.error.set(texto);
-    this.programarAutoDismiss(8000);
+    const scope = this.obtenerScopeAlerta();
+    this.establecerError(scope, texto);
+    this.programarAutoDismiss(8000, scope);
   }
 
   private limpiarAlertas(): void {
-    this.error.set(null);
-    this.mensaje.set(null);
-    this.limpiarAutoDismiss();
+    this.limpiarAlertasPorScope(this.obtenerScopeAlerta());
   }
 
-  private programarAutoDismiss(ms: number): void {
-    this.limpiarAutoDismiss();
-    this.autoDismissTimer = setTimeout(() => {
-      this.error.set(null);
-      this.mensaje.set(null);
-      this.globalState.limpiarError();
+  private mostrarErrorEnEditor(texto: string): void {
+    const scope = this.modalEditarAbierto() ? 'editEvaluation' : 'newEvaluation';
+    this.establecerError(scope, texto);
+    this.programarAutoDismiss(8000, scope);
+  }
+
+  private obtenerScopeAlerta(): AlertScope {
+    if (this.modalEditarAbierto()) return 'editEvaluation';
+    if (this.modalNuevaEvaluacionAbierto()) return 'newEvaluation';
+    return 'page';
+  }
+
+  private establecerError(scope: AlertScope, texto: string): void {
+    this.establecerAlerta(scope, texto, null);
+  }
+
+  private establecerMensaje(scope: AlertScope, texto: string): void {
+    this.establecerAlerta(scope, null, texto);
+  }
+
+  private establecerAlerta(scope: AlertScope, error: string | null, mensaje: string | null): void {
+    if (scope === 'newEvaluation') {
+      this.errorNuevaEvaluacion.set(error);
+      this.mensajeNuevaEvaluacion.set(mensaje);
+    } else if (scope === 'editEvaluation') {
+      this.errorEdicionEvaluacion.set(error);
+      this.mensajeEdicionEvaluacion.set(mensaje);
+    } else {
+      this.error.set(error);
+      this.mensaje.set(mensaje);
+    }
+  }
+
+  private limpiarAlertasEditor(scope: 'newEvaluation' | 'editEvaluation'): void {
+    this.limpiarAlertasPorScope(scope);
+  }
+
+  private limpiarAlertasPorScope(scope: AlertScope): void {
+    this.establecerAlerta(scope, null, null);
+    this.limpiarAutoDismiss(scope);
+  }
+
+  private programarAutoDismiss(ms: number, scope: AlertScope): void {
+    this.limpiarAutoDismiss(scope);
+    this.autoDismissTimers[scope] = setTimeout(() => {
+      this.establecerAlerta(scope, null, null);
+      delete this.autoDismissTimers[scope];
+      if (scope === 'page') this.globalState.limpiarError();
     }, ms);
   }
 
-  private limpiarAutoDismiss(): void {
-    if (this.autoDismissTimer) {
-      clearTimeout(this.autoDismissTimer);
-      this.autoDismissTimer = null;
+  private limpiarAutoDismiss(scope?: AlertScope): void {
+    const scopes: AlertScope[] = scope ? [scope] : ['page', 'newEvaluation', 'editEvaluation'];
+    for (const current of scopes) {
+      const timer = this.autoDismissTimers[current];
+      if (timer) clearTimeout(timer);
+      delete this.autoDismissTimers[current];
     }
   }
 
