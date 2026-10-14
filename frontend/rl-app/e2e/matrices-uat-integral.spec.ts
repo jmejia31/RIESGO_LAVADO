@@ -441,6 +441,35 @@ test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios d
   if (artifactDir) await modal.screenshot({ path: join(artifactDir, 'matriz-completa-theme-red-mobile.png') });
 });
 
+test('Consolidado muestra todos los estados y abre una matriz BORRADOR por su evaluación', async ({ page }) => {
+  await preparar(page);
+  const rows = [
+    { riesgoId: 7, evaluacionId: 20, codigoRiesgo: 'R-007', areaPrincipal: null, duenoRiesgo: null, vri: null, nivelInherente: null, vrr: null, nivelResidual: null, respuestaRiesgo: null, estadoEvaluacion: 'BORRADOR', versionFormularioId: 10, fechaEvaluacion: null },
+    { riesgoId: 7, evaluacionId: 21, codigoRiesgo: 'R-007', areaPrincipal: 'Área', duenoRiesgo: 'Responsable', vri: 7, nivelInherente: 'MEDIO', vrr: 4, nivelResidual: 'BAJO', respuestaRiesgo: 'Mitigar', estadoEvaluacion: 'EN_REVISION', versionFormularioId: 10, fechaEvaluacion: '2026-08-07T12:00:00Z' },
+    { riesgoId: 7, evaluacionId: 22, codigoRiesgo: 'R-007', areaPrincipal: 'Área', duenoRiesgo: 'Responsable', vri: 7, nivelInherente: 'MEDIO', vrr: 4, nivelResidual: 'BAJO', respuestaRiesgo: 'Mitigar', estadoEvaluacion: 'APROBADA', versionFormularioId: 10, fechaEvaluacion: '2026-08-07T12:00:00Z' },
+    { riesgoId: 7, evaluacionId: 23, codigoRiesgo: 'R-007', areaPrincipal: 'Área', duenoRiesgo: 'Responsable', vri: 7, nivelInherente: 'MEDIO', vrr: 4, nivelResidual: 'BAJO', respuestaRiesgo: 'Mitigar', estadoEvaluacion: 'RECHAZADA', versionFormularioId: 10, fechaEvaluacion: '2026-08-07T12:00:00Z' },
+    { riesgoId: 7, evaluacionId: 24, codigoRiesgo: 'R-007', areaPrincipal: 'Área', duenoRiesgo: 'Responsable', vri: 7, nivelInherente: 'MEDIO', vrr: 4, nivelResidual: 'BAJO', respuestaRiesgo: 'Mitigar', estadoEvaluacion: 'CERRADA', versionFormularioId: 10, fechaEvaluacion: '2026-08-07T12:00:00Z' }
+  ];
+  await page.route('**/api/matrices-riesgos/consolidado/paginado*', async route => {
+    const state = new URL(route.request().url()).searchParams.get('estadoEvaluacion');
+    const items = state ? rows.filter(row => row.estadoEvaluacion === state) : rows;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { items, pagina: 1, tamanoPagina: 10, totalRegistros: items.length, totalPaginas: items.length ? 1 : 0, totales: { totalRiesgos: 1, totalConEvaluacionOficial: 1, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } } }) });
+  });
+
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
+  const tableRows = page.locator('#panel-consolidado tbody tr');
+  await expect(tableRows).toHaveCount(5);
+  for (const status of ['BORRADOR', 'EN_REVISION', 'APROBADA', 'RECHAZADA', 'CERRADA']) await expect(page.locator('#panel-consolidado tbody')).toContainText(status);
+  await expect(page.locator('[data-kpi="matrices-registradas"]')).toHaveText('5');
+
+  await page.getByLabel('Estado', { exact: true }).selectOption('BORRADOR');
+  await expect(tableRows).toHaveCount(1);
+  await expect(tableRows.first()).toContainText('BORRADOR');
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).click();
+  await expect(page.locator('[data-matrix-modal="complete"]')).toBeVisible();
+});
+
 test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET posterior', async ({ page }) => {
   test.setTimeout(60000);
   const serverBlock = {

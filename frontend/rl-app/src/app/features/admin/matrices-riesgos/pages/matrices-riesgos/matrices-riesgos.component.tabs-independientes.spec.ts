@@ -263,6 +263,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
 
   it('13. renderiza un solo bloque superior de KPIs contextual a la pestana activa', () => {
     const kpis = () => (fixture.nativeElement as HTMLElement).querySelectorAll('[data-ui-kpis-context]');
+    component.totalRegistrosConsolidado.set(11);
 
     component.tab.set('evaluaciones');
     fixture.detectChanges();
@@ -272,7 +273,11 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     component.tab.set('consolidado');
     fixture.detectChanges();
     expect(kpis()).toHaveLength(1);
-    expect(kpis()[0].textContent).toContain('Con evaluación aprobada');
+    expect(kpis()[0].textContent).toContain('Matrices registradas');
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-kpi="matrices-registradas"]')?.textContent?.trim()).toBe('11');
+    expect(component.filtroEstadoConsolidado()).toBe('TODOS');
+    expect(component['filtroReporteConsolidado']().estadoEvaluacion).toBeUndefined();
+    expect(kpis()[0].textContent).not.toContain('Solo evaluaciones con estado vigente APROBADA');
     expect(kpis()[0].textContent).not.toContain('Total evaluaciones');
 
     component.tab.set('plantillas');
@@ -348,22 +353,23 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(root.querySelector('[data-matrix-modal="complete"] .modal-size-workspace')).not.toBeNull();
   });
 
-  it('16. conserva una única acción canónica para abrir la Matriz completa desde el Consolidado', () => {
+  it('16. abre la Matriz completa desde un borrador con el ID exacto de evaluación', () => {
+    const abrirMatriz = vi.spyOn(component, 'abrirMatrizCompleta').mockImplementation(() => undefined);
     component.consolidado.set([{
       riesgoId: 5,
       evaluacionId: 101,
       codigoRiesgo: 'RIE-005',
-      areaPrincipal: 'Cumplimiento',
-      duenoRiesgo: 'Responsable',
-      vri: 5,
-      nivelInherente: 'MEDIO',
-      vrr: 2,
-      nivelResidual: 'BAJO',
-      respuestaRiesgo: 'ACEPTAR',
-      estadoEvaluacion: 'APROBADA',
+      areaPrincipal: null,
+      duenoRiesgo: null,
+      vri: null,
+      nivelInherente: null,
+      vrr: null,
+      nivelResidual: null,
+      respuestaRiesgo: null,
+      estadoEvaluacion: 'BORRADOR',
       versionFormularioId: 10,
-      fechaEvaluacion: '2026-08-17T00:00:00'
-    } as never]);
+      fechaEvaluacion: null
+    }]);
     component.totalRegistrosConsolidado.set(1);
     component.tab.set('consolidado');
     fixture.detectChanges();
@@ -376,5 +382,18 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(etiquetas).toEqual(['Ver Matriz completa']);
     expect(root.querySelectorAll('#panel-consolidado [aria-label="Ver detalle del consolidado"]')).toHaveLength(0);
     expect(root.querySelectorAll('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveLength(0);
+
+    (root.querySelector('[data-matrix-open="complete"]') as HTMLButtonElement).click();
+    expect(abrirMatriz).toHaveBeenCalledWith(expect.objectContaining({ evaId: 101, estado: 'BORRADOR' }));
+  });
+
+  it('muestra el mensaje de ausencia general para filtros del Consolidado', () => {
+    component.tab.set('consolidado');
+    component.consolidado.set([]);
+    fixture.detectChanges();
+
+    const panel = (fixture.nativeElement as HTMLElement).querySelector('#panel-consolidado');
+    expect(panel?.textContent).toContain('No hay matrices que coincidan con los filtros seleccionados.');
+    expect(panel?.textContent).not.toContain('Sin evaluaciones aprobadas');
   });
 });

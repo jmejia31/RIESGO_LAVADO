@@ -52,7 +52,7 @@
       <article class="rounded-xl border border-rose-100 bg-rose-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-rose-700">Inactivas</p><p class="mt-2 text-3xl font-bold text-rose-700" data-ui-fam-kpi="inactivas">{{ totalFamiliasInactivas() }}</p><p class="text-xs text-rose-700/80">Fuera de uso</p></article>
       <article class="rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-violet-700">Total versiones</p><p class="mt-2 text-3xl font-bold text-violet-700" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p><p class="text-xs text-violet-700/80">Versiones disponibles</p></article>
     } @else if (tab() === 'consolidado') {
-      <article class="rounded-xl border border-ihss-100 bg-ihss-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-ihss-700">Con evaluación aprobada</p><p class="mt-2 text-3xl font-bold text-ihss-700">{{ totalesConsolidado().totalConEvaluacionOficial }}</p><p class="text-xs text-ihss-700/80">Solo evaluaciones con estado vigente APROBADA</p></article>
+      <article class="rounded-xl border border-ihss-100 bg-ihss-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-ihss-700">Matrices registradas</p><p class="mt-2 text-3xl font-bold text-ihss-700" data-kpi="matrices-registradas">{{ totalRegistrosConsolidado() }}</p><p class="text-xs text-ihss-700/80">Evaluaciones activas según los filtros seleccionados</p></article>
       <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Nivel alto/crítico</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ totalesConsolidado().totalAltoCritico }}</p><p class="text-xs text-amber-700/80">Según nivel residual</p></article>
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Estados disponibles</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ estadosConsolidado().length }}</p><p class="text-xs text-emerald-700/80">En la consulta actual</p></article>
     }
@@ -303,7 +303,7 @@
                   </div>
                 </td>
               </tr>
-            } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">Sin evaluaciones aprobadas para los filtros seleccionados.</td></tr> }
+            } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">No hay matrices que coincidan con los filtros seleccionados.</td></tr> }
           </tbody>
         </table>
       </div>

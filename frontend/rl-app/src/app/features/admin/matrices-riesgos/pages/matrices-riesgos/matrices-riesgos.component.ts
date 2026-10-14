@@ -1278,11 +1278,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private normalizarFilaReporte(fila: RiesgoReporteFila): RiesgoReporteFila {
     return {
       ...fila,
-      areaPrincipal: normalizarMojibakeVisibleUtf8(fila.areaPrincipal),
-      duenoRiesgo: normalizarMojibakeVisibleUtf8(fila.duenoRiesgo),
-      nivelInherente: normalizarMojibakeVisibleUtf8(fila.nivelInherente),
-      nivelResidual: normalizarMojibakeVisibleUtf8(fila.nivelResidual),
-      respuestaRiesgo: normalizarMojibakeVisibleUtf8(fila.respuestaRiesgo),
+      areaPrincipal: fila.areaPrincipal === null ? null : normalizarMojibakeVisibleUtf8(fila.areaPrincipal),
+      duenoRiesgo: fila.duenoRiesgo === null ? null : normalizarMojibakeVisibleUtf8(fila.duenoRiesgo),
+      nivelInherente: fila.nivelInherente === null ? null : normalizarMojibakeVisibleUtf8(fila.nivelInherente),
+      nivelResidual: fila.nivelResidual === null ? null : normalizarMojibakeVisibleUtf8(fila.nivelResidual),
+      respuestaRiesgo: fila.respuestaRiesgo === null ? null : normalizarMojibakeVisibleUtf8(fila.respuestaRiesgo),
       estadoEvaluacion: normalizarMojibakeVisibleUtf8(fila.estadoEvaluacion)
     };
   }
@@ -2368,8 +2368,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       vri: fila.vri,
       vrr: fila.vrr,
       nivelResidual: fila.nivelResidual,
-      fechaEval: fila.fechaEvaluacion,
-      evaFechaEval: fila.fechaEvaluacion
+      fechaEval: fila.fechaEvaluacion ?? '',
+      evaFechaEval: fila.fechaEvaluacion ?? undefined
     });
   }
 

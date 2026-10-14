@@ -235,15 +235,15 @@ export interface RiesgoReporteFila {
   evaluacionId: number;
   versionFormularioId: number;
   codigoRiesgo: string;
-  areaPrincipal: string;
-  duenoRiesgo: string;
-  vri: number;
-  nivelInherente: string;
-  vrr: number;
-  nivelResidual: string;
-  respuestaRiesgo: string;
+  areaPrincipal: string | null;
+  duenoRiesgo: string | null;
+  vri: number | null;
+  nivelInherente: string | null;
+  vrr: number | null;
+  nivelResidual: string | null;
+  respuestaRiesgo: string | null;
   estadoEvaluacion: string;
-  fechaEvaluacion: string;
+  fechaEvaluacion: string | null;
 }
 
 export interface ReporteMatricesTotales {
