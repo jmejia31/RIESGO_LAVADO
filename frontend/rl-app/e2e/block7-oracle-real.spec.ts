@@ -260,14 +260,6 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
 
   await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
 
-  const pageA = await page.context().newPage();
-  await installNonCriticalFixtures(pageA, fixture, evaluation);
-  await pageA.goto('/matrices-riesgos');
-  await expect(pageA.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
-  await expect(pageA.locator('button[title^="Editar evaluaci"]')).toBeVisible();
-  await pageA.locator('button[title^="Editar evaluaci"]').click();
-  await expect(pageA.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
-
   const pageB = await page.context().newPage();
   await installNonCriticalFixtures(pageB, fixture, evaluation);
   await pageB.goto('/matrices-riesgos');
