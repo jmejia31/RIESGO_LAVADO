@@ -8852,3 +8852,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 - El run `38612827455` avanzó por el vínculo y lectura real de evidencias sin el `ORA-12516` anterior. La suite falló sólo al comparar F71: el historial devuelve la etiqueta `Mitigado`, pero la proyección institucional de este campo serializa la clave persistida `MITIGADO`.
 - Se mantiene la expectativa del historial como etiqueta y se cambia exclusivamente F71 de proyección a la clave canónica. No se modifica mapper ni datos. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta el Quality Gates nuevo exitoso.
+
+## Ruta UI para evidencia del Control en E2E real (COD) — 2026-10-14 12:19 -06:00
+
+- El Quality Gates `38613567583` del SHA `7d53bdc7e26a715d52e16b4beb7d130eebe18dd7` pasó validadores, análisis, build y preparación Oracle; falló el E2E browser real al buscar el uploader del control. El test abría la acción transaccional `Seguimiento de evaluación`, que muestra workflow y no el editor con Bloque 6. No se observó fallo del componente uploader ni de su endpoint.
+- Se corrigió el test para abrir el borrador con `Editar evaluación` y navegar por teclado/controles al bloque 6 antes de probar el file chooser. Así la prueba sigue recorriendo UI real y conserva la carga contra la API/Oracle XE.
+- `npm run lint` y el Quality Gates del nuevo SHA deben verificarse; el E2E Oracle no se declara aprobado localmente porque no hay Oracle XE opt-in en el checkout. Estado sigue `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`, y se repetirá el workflow publicado.

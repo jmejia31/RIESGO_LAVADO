@@ -59,3 +59,7 @@ El selector de archivos usado en Monitoreo de Listas se extrajo como `Institutio
 La certificación transversal forma parte de esta misma ejecución del Bloque 9. Verificación local: `SHARED_FILE_UPLOAD_COMPONENT=PASS`, `MONITOREO_LISTAS_USES_SHARED_FILE_UPLOAD=PASS`, `MATRICES_USES_SHARED_FILE_UPLOAD=PASS`, `ALL_USER_FILE_UPLOAD_SURFACES_AUDITED=PASS` (5 instancias en 4 templates), `RAW_FILE_INPUTS_OUTSIDE_SHARED_COMPONENT=0`, `CANONICAL_DROPZONE_TEXT_IMPLEMENTATIONS=1`, `DRAG_DROP=PASS`, `CLICK_TO_SELECT=PASS`, `FILE_UPLOAD_KEYBOARD=PASS`, `FILE_UPLOAD_ACCESSIBILITY=PASS`. El E2E de Monitoreo de Listas pasó 1/1 en Chromium, incluyendo file chooser, retiro, drag/drop y viewport 390×844; Playwright Matrix API→Oracle queda exigido por el CI del SHA final.
 
 El estado continúa `PENDING_CI_ORACLE_BROWSER` hasta que el Quality Gates del SHA publicado termine `completed/success` y los logs muestren las integraciones Oracle y browser Block 9 ejecutadas con conteos mayores que cero. El uploader compartido no añade llamadas HTTP ni cambia las políticas backend.
+
+### Corrección de navegación en el browser real
+
+En CI `38613567583`, los gates de build y validación pasaron, pero el test de carga desde Matrices buscó el uploader después de abrir `Seguimiento de evaluación`, acción que corresponde al workflow transaccional. Se corrigió la ruta de prueba para abrir el borrador con `Editar evaluación` y navegar al Bloque 6 antes de seleccionar evidencia. La repetición Oracle/browser es obligatoria; el estado permanece pendiente hasta el CI completo exitoso.

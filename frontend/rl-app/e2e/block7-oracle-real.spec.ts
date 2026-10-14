@@ -331,7 +331,14 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await installNonCriticalFixtures(monitoringUiPage, fixture, evaluation);
   await monitoringUiPage.goto('/matrices-riesgos');
   await expect(monitoringUiPage.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
-  await monitoringUiPage.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
+  await monitoringUiPage.locator('button[title^="Editar evaluaci"]').click();
+  const monitoringBlocks = monitoringUiPage.locator('nav[aria-label^="Bloques funcionales"]');
+  await expect(monitoringBlocks.getByRole('button')).toHaveCount(6);
+  const matrixBlock6Read = monitoringUiPage.waitForResponse(response =>
+    response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${evaluation.id}/bloque6`);
+  await monitoringBlocks.getByRole('button').nth(5).click();
+  expect((await matrixBlock6Read).status()).toBe(200);
   const matrixUploader = monitoringUiPage.getByRole('button', { name: `Evidencias del Control #${controlIds[0]}` });
   await expect(matrixUploader).toBeVisible();
   await monitoringUiPage.screenshot({ path: testInfo.outputPath('institutional-file-upload-matrices.png'), fullPage: true });

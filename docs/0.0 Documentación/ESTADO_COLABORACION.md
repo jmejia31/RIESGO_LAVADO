@@ -2502,3 +2502,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - Run `38612827455` atravesó vínculo/lectura de evidencia. El browser falló porque F71 en la proyección devuelve la clave `MITIGADO`; el endpoint de historial expone la etiqueta `Mitigado`. Se conserva el assertion de historial y se ajustó sólo el esperado de la proyección.
 - El siguiente Quality Gates debe confirmar F40–F82 por API/browser y finalizar los pasos Oracle 6/8. No marcar Bloque 9 cerrado antes del éxito completo.
+
+### E2E de evidencia navega a Bloque 6 (2026-10-14 12:19 -06:00)
+
+- El run `38613567583` pasó validadores, build/análisis y arranque de API real sobre XE, pero falló al localizar el uploader del control. El test se había quedado en la acción `Seguimiento de evaluación` (workflow); ahora abre `Editar evaluación` y navega al bloque 6, donde reside el uploader.
+- Corregido el E2E en `frontend/rl-app/e2e/block7-oracle-real.spec.ts`. Oracle/browser sigue pendiente de la nueva ejecución en CI; no declarar PASS por este cambio. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`.
