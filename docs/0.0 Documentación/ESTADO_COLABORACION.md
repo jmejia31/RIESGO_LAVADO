@@ -2485,3 +2485,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - El run `38610346332` del SHA `b7653e3e1106f5ebff63d3d83c64caa85fda0b44` confirmó que la API real rechaza 65–68 porque la efectividad debe pertenecer a la escala canónica del catálogo. Se actualizó el fixture de cuatro controles a 30/50/85/90; backend y catálogo permanecen intactos.
 - Esperar un nuevo Quality Gates y comprobar la parte Oracle/browser. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta `completed/success` del SHA corregido.
+
+### Alineación del esquema de test Oracle compartido (2026-10-14 12:02 -06:00)
+
+- El CI `38611093662` pasó la prueba Oracle de borradores/concurrencia y luego encontró `ORA-00904 EVI_USR_CREACION` al subir evidencia desde browser. El test Block6 anterior dejaba una tabla simplificada en el Oracle XE compartido; el host E2E reutilizaba ese objeto por ORA-00955.
+- La fixture Block6 ahora crea la forma completa de evidencia del harness y usa inserts con columnas explícitas, compatible con ambos pasos. No se hizo DDL fuera de fixture ni se cambia el esquema requerido.
+- Verificar con el siguiente Quality Gates todos los tests Oracle y el upload→link→proyección por navegador. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta `completed/success`.

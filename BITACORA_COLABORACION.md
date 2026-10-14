@@ -8835,3 +8835,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 - El Quality Gates `38610346332` del commit `b7653e3e1106f5ebff63d3d83c64caa85fda0b44` pasó validadores y compilación, pero el browser real falló al enviar efectividades 65–68. El backend valida contra la escala canónica institucional de efectividad, no cualquier entero entre 0 y 100; el catálogo admite porcentajes como 30, 50, 85 y 90.
 - Se ajustó sólo el fixture del test a cuatro porcentajes canónicos distintos `[30, 50, 85, 90]`. No se relajó el backend ni el contrato. Debe confirmarse Oracle/browser en el nuevo run; el estado continúa `PENDING_CI_ORACLE_BROWSER`.
+
+## Alineación del fixture Oracle compartido (COD) — 2026-10-14 12:02 -06:00
+
+- El run `38611093662` pasó la integración Oracle de borrador, incluida la concurrencia, pero el browser falló al cargar evidencia: `ORA-00904: "EVI_USR_CREACION": invalid identifier`. El XE único se comparte entre los tests Block6 y el host browser; el test de proyección había creado `RL_MR_EVIDENCIAS` con sólo tres columnas y el host conservó esa tabla al tolerar ORA-00955.
+- Se alineó el DDL efímero de `InstitutionalProjectionOracleIntegrationTests` con las columnas reales que necesita el host y se cambiaron los inserts a listas explícitas de columnas. El mismo fixture completo sirve en el test de proyección, upload E2E y los pasos Oracle posteriores, sin modificar tablas de producción ni agregar schema change.
+- La regresión local compilada/validada y el próximo Quality Gates deben confirmar el reuso de esquema. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta que todos los pasos del SHA nuevo concluyan correctamente.
