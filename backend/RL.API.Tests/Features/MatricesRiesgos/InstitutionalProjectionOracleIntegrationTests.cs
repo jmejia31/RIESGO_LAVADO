@@ -233,7 +233,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.Equal(versionId, persisted.EvaVersionId);
             Assert.Equal(1, persisted.EvaVersionRow);
             Assert.Equal("BORRADOR", persisted.EvaEstado);
-            Assert.Equal("{}", persisted.EvaDataJson);
+            AssertLegacyPreimagePreserved(persisted.EvaDataJson);
             using (JsonDocument persistedCalculations = JsonDocument.Parse(persisted.EvaDataCalcJson))
             {
                 JsonElement root = persistedCalculations.RootElement;
@@ -297,9 +297,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             EvaluacionRiesgoDto afterA = await ReadEvaluationAsync(readA);
             Assert.Equal(2, afterA.EvaVersionRow);
             Assert.Contains("Cliente A", afterA.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("R-LEGACY", afterA.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Área histórica", afterA.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("\"ordinal\":87", afterA.EvaDataJson, StringComparison.Ordinal);
+            AssertLegacyPreimagePreserved(afterA.EvaDataJson);
 
             EvaluacionRiesgoDto staleClient = CopyEvaluation(persisted);
             staleClient.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B" });
@@ -309,9 +307,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             EvaluacionRiesgoDto afterConflict = await ReadEvaluationAsync(readAfterConflict);
             Assert.Equal(2, afterConflict.EvaVersionRow);
             Assert.Contains("Cliente A", afterConflict.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("R-LEGACY", afterConflict.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Área histórica", afterConflict.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("\"ordinal\":87", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            AssertLegacyPreimagePreserved(afterConflict.EvaDataJson);
             Assert.DoesNotContain("Cliente B", afterConflict.EvaDataJson, StringComparison.Ordinal);
 
             afterConflict.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B recargado" });
@@ -321,7 +317,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             EvaluacionRiesgoDto afterB = await ReadEvaluationAsync(readB);
             Assert.Equal(3, afterB.EvaVersionRow);
             Assert.Contains("Cliente B recargado", afterB.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("R-LEGACY", afterB.EvaDataJson, StringComparison.Ordinal);
+            AssertLegacyPreimagePreserved(afterB.EvaDataJson);
 
             EvaluacionRiesgoDto injected = CopyEvaluation(afterB);
             injected.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object>
@@ -336,6 +332,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.Equal(3, afterInjection.EvaVersionRow);
             Assert.Contains("Cliente B recargado", afterInjection.EvaDataJson, StringComparison.Ordinal);
             Assert.DoesNotContain("hack_field", afterInjection.EvaDataJson, StringComparison.Ordinal);
+            AssertLegacyPreimagePreserved(afterInjection.EvaDataJson);
 
             EvaluacionRiesgoDto derivedMutation = CopyEvaluation(afterInjection);
             derivedMutation.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object>
@@ -350,7 +347,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             using HttpResponseMessage readAfterDerived = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
             EvaluacionRiesgoDto afterDerived = await ReadEvaluationAsync(readAfterDerived);
             Assert.Equal(3, afterDerived.EvaVersionRow);
-            Assert.Contains("\"ordinal\":87", afterDerived.EvaDataJson, StringComparison.Ordinal);
+            AssertLegacyPreimagePreserved(afterDerived.EvaDataJson);
 
             EvaluacionRiesgoDto manipulatedIdentity = CopyEvaluation(completePreview);
             manipulatedIdentity.EvaRiesgoId = riskId + 1;
@@ -416,6 +413,15 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         EvaVersionRow = source.EvaVersionRow,
         EvaActivo = source.EvaActivo
     };
+
+    private static void AssertLegacyPreimagePreserved(string payload)
+    {
+        using JsonDocument json = JsonDocument.Parse(payload);
+        JsonElement root = json.RootElement;
+        Assert.Equal(87, root.GetProperty("ordinal").GetInt32());
+        Assert.Equal("R-LEGACY", root.GetProperty("rieCodigo").GetString());
+        Assert.Equal("Área histórica", root.GetProperty("area_consolidada").GetString());
+    }
 
     private static async Task<EvaluacionRiesgoDto> ReadEvaluationAsync(HttpResponseMessage response)
     {
