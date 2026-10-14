@@ -2466,3 +2466,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificación local ejecutada: solución Release PASS; backend 967/967; frontend 851/851; lint/build/npm audit PASS; validador Block9 11/11; contrato institucional 82/82; catálogos 14/91, drift 0; validadores Bloques 7/8 y `git diff --check` PASS.
 - CI debe ejecutar el test real de mitigación/monitoreo, RBAC/evidencia y browser contra el Oracle XE desechable ya configurado en Quality Gates. Hasta comprobar `completed/success` y `BLOCK9_BROWSER_API_ORACLE_E2E=PASS` con test count > 0, `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`. No se ejecutó producción DML/DDL/apply ni se cambió esquema.
 - Punto de continuación: confirmar diff/staging focalizado, commit, push normal a `origin/desarrollo`, inspeccionar Quality Gates y corregir/repetir si falla; después registrar el resultado final, actualizar Block9 a CLOSED sólo si todos los gates pasan, y dejar el bloque siguiente sin iniciar.
+
+## Actualización viva — Bloque 9: estándar transversal de carga (2026-10-14 11:42 -06:00)
+
+- Se amplió la intervención actual para extraer y desplegar `InstitutionalFileUploadComponent` en todas las cinco instancias de carga de usuario encontradas: dos en Monitoreo de Listas, importación de Listas, evidencia por control de Matrices y carga de imágenes de slides en Configuración.
+- El uploader centraliza dropzone, drag/drop, click/teclado, lista, tamaño, retiro local y accesibilidad; cada padre conserva su endpoint. Políticas: evidencia 10 MB/formats contractuales; importación CSV/XLSX/XML sin límite inventado; slides JPG/JPEG/PNG/GIF/WebP como permite el endpoint.
+- Validador global añadido a CI y al quality gate local; resultado ejecutado: un componente, cinco instancias/cuatro templates, cero `input type=file` crudos fuera del shared component, una sola implementación del texto canónico.
+- Pruebas frontend y browser se están repitiendo tras corregir los errores de compilación detectados. El CI anterior ejecutó Oracle y Browser pero falló en la aserción de lectura de historial (`Mitigado`), ya corregida.
+- Estado actual: `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`. No marcar cerrado hasta que el workflow de `desarrollo` en el SHA final indique `completed/success`. Continuación exacta: finalizar tests locales, añadir evidencia, commit sólo archivos de alcance, push y seguir cualquier fallo de CI.
+
+### Verificación local posterior (2026-10-14 11:52 -06:00)
+
+- Build Angular, lint, `npm audit` (0 vulnerabilidades), tests frontend (858/858), E2E focalizado Monitoreo de Listas (1/1 Chromium) y validadores estructural/DB/docs/contratos/uploader pasaron. El E2E cubre file chooser, retiro local, drag/drop y viewport móvil. El inventario global mantiene 5 instancias en 4 templates, 0 raw file inputs fuera del shared component y una implementación del texto canónico.
+- La expectativa F71 del browser Oracle fue corregida de la etiqueta técnica a la etiqueta canónica. El run `38603747251` sigue registrado como fallo previo; falta ejecutar el nuevo SHA contra el Oracle XE desechable y revisar el nuevo Quality Gates. No se afirma todavía Matrix browser→API→Oracle.
+- `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`. En el siguiente paso stagear sólo los archivos de alcance, publicar en `origin/desarrollo`, inspeccionar el CI y corregir/repetir si falla. Los cambios ajenos de DatabaseEnvironmentGuard, su prueba y tsconfig se preservan fuera del stage.

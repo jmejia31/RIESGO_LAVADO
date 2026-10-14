@@ -240,34 +240,27 @@ describe('MonitoreoListasComponent', () => {
     }));
   });
 
-  it('acepta archivos permitidos y rechaza los que superan el tamano maximo', async () => {
+  it('entrega la política de evidencias del backend al uploader compartido', () => {
     component.politicaEvidencias.set({
       maximoMb: 0.000005,
       maximoBytes: 5,
       extensionesPermitidas: ['.pdf'],
       tiposPermitidosTexto: 'PDF'
     });
-    const valido = new File(['1234'], 'soporte.pdf', { type: 'application/pdf' });
-    const grande = new File(['123456'], 'grande.pdf', { type: 'application/pdf' });
-
-    component.onFileSelected({ target: { files: [valido, grande] } });
-
-    await vi.waitFor(() => expect(fire).toHaveBeenCalledOnce());
-    expect(component.archivosSeleccionados()).toEqual([valido]);
-    expect(fire).toHaveBeenCalledWith(expect.objectContaining({ title: 'Archivo no permitido' }));
+    expect(component.politicaCargaArchivos).toEqual({
+      allowedExtensions: ['.pdf'],
+      allowedTypesText: 'PDF',
+      maxFileSizeBytes: 5
+    });
   });
 
-  it('rechaza archivos cuya extension no esta autorizada', async () => {
-    const extensionInvalida = new File(['12'], 'nota.txt', { type: 'text/plain' });
-
-    component.onFileSelected({ target: { files: [extensionInvalida] } });
-
-    await vi.waitFor(() => expect(fire).toHaveBeenCalledOnce());
-    expect(component.archivosSeleccionados()).toEqual([]);
-    expect(fire).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Archivo no permitido',
-      text: expect.stringContaining('no tiene una extensión permitida')
-    }));
+  it('conserva la selección emitida por el uploader sin duplicar validación de archivos', () => {
+    const selected = [new File(['12'], 'nota.pdf', { type: 'application/pdf' })];
+    component.onSeguimientoFilesSelected(selected);
+    component.onManualSeguimientoFilesSelected(selected);
+    expect(component.archivosSeleccionados()).toEqual(selected);
+    expect(component.archivosSeguimiento()).toEqual(selected);
+    expect(fire).not.toHaveBeenCalled();
   });
 
   it('cancela la eliminacion de evidencia sin invocar el servicio', async () => {

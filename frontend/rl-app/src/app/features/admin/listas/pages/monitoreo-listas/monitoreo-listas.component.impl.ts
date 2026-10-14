@@ -12,6 +12,8 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
+import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
+import { INSTITUTIONAL_EVIDENCE_FILE_POLICY, InstitutionalFileUploadPolicy } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
@@ -31,7 +33,7 @@ type RespuestaMonitoreo = {
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html',
 })
@@ -75,10 +77,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   ];
   formOrigenRegistro = signal<string>('DNP_LISTAS');
   politicaEvidencias = signal<EvidenciaPolitica>({
-    maximoMb: 10,
-    maximoBytes: 10 * 1024 * 1024,
-    extensionesPermitidas: ['.pdf', '.png', '.jpg', '.jpeg', '.doc', '.docx', '.xls', '.xlsx'],
-    tiposPermitidosTexto: 'PDF, imágenes, Word, Excel'
+    maximoMb: (INSTITUTIONAL_EVIDENCE_FILE_POLICY.maxFileSizeBytes ?? 10 * 1024 * 1024) / (1024 * 1024),
+    maximoBytes: INSTITUTIONAL_EVIDENCE_FILE_POLICY.maxFileSizeBytes ?? 10 * 1024 * 1024,
+    extensionesPermitidas: INSTITUTIONAL_EVIDENCE_FILE_POLICY.allowedExtensions.map(extension => `.${extension.replace(/^\./, '')}`),
+    tiposPermitidosTexto: INSTITUTIONAL_EVIDENCE_FILE_POLICY.allowedTypesText
   });
   formTipoListaCautelaId = signal<number | null>(null);
   esRegistroManual = signal<boolean>(false);
@@ -2100,63 +2102,17 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.archivosSeguimiento.set([]);
   }
 
-  private obtenerExtensionesPermitidasEvidencia(): string[] {
-    return this.politicaEvidencias().extensionesPermitidas
-      .map(ext => ext.replace(/^\./, '').toLowerCase())
-      .filter(ext => !!ext);
-  }
-
-  private validarArchivoEvidencia(file: File): string | null {
+  get politicaCargaArchivos(): InstitutionalFileUploadPolicy {
     const politica = this.politicaEvidencias();
-    const maximoBytes = politica.maximoBytes || (politica.maximoMb * 1024 * 1024);
-
-    if (file.size > maximoBytes) {
-      return `El archivo ${file.name} supera el límite de ${politica.maximoMb}MB.`;
-    }
-
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!ext || !this.obtenerExtensionesPermitidasEvidencia().includes(ext)) {
-      return `El archivo ${file.name} no tiene una extensión permitida (${politica.tiposPermitidosTexto}).`;
-    }
-
-    return null;
+    return {
+      allowedExtensions: politica.extensionesPermitidas,
+      allowedTypesText: politica.tiposPermitidosTexto,
+      maxFileSizeBytes: politica.maximoBytes || politica.maximoMb * 1024 * 1024,
+    };
   }
 
-  private mostrarAdvertenciaArchivo(text: string) {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        allowOutsideClick: false,
-        title: 'Archivo no permitido',
-        text,
-        icon: 'warning',
-        confirmButtonColor: '#1d4ed8'
-      });
-    });
-  }
-
-  onManualSeguimientoFileSelected(event: any) {
-    const files: FileList = event.target.files;
-    if (files && files.length > 0) {
-      const currentList = [...this.archivosSeguimiento()];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        
-        const errorArchivo = this.validarArchivoEvidencia(file);
-        if (errorArchivo) {
-          this.mostrarAdvertenciaArchivo(errorArchivo);
-          continue;
-        }
-
-        currentList.push(file);
-      }
-      this.archivosSeguimiento.set(currentList);
-    }
-  }
-
-  eliminarArchivoSeguimientoManual(index: number) {
-    const currentList = [...this.archivosSeguimiento()];
-    currentList.splice(index, 1);
-    this.archivosSeguimiento.set(currentList);
+  onManualSeguimientoFilesSelected(files: File[]): void {
+    this.archivosSeguimiento.set(files);
   }
 
   guardarMotivo() {
@@ -2412,29 +2368,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.evidenciasExistentes.set([]);
   }
 
-  onFileSelected(event: any) {
-    const files: FileList = event.target.files;
-    if (files && files.length > 0) {
-      const currentList = [...this.archivosSeleccionados()];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        
-        const errorArchivo = this.validarArchivoEvidencia(file);
-        if (errorArchivo) {
-          this.mostrarAdvertenciaArchivo(errorArchivo);
-          continue;
-        }
-
-        currentList.push(file);
-      }
-      this.archivosSeleccionados.set(currentList);
-    }
-  }
-
-  eliminarArchivoSeleccionado(index: number) {
-    const currentList = [...this.archivosSeleccionados()];
-    currentList.splice(index, 1);
-    this.archivosSeleccionados.set(currentList);
+  onSeguimientoFilesSelected(files: File[]): void {
+    this.archivosSeleccionados.set(files);
   }
 
   iniciarEdicionSeguimiento(seg: Seguimiento) {

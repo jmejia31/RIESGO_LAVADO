@@ -5,11 +5,13 @@ import { ConfiguracionService } from '../../../../../core/configuration/configur
 import { ConfigSistema, LoginSlide } from '../../../../../core/configuration/configuracion.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
+import { LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './configuracion.component.html',
 })
@@ -34,6 +36,8 @@ export class ConfiguracionComponent implements OnInit {
   slideEditando = signal<LoginSlide | null>(null);
   guardandoSlide = signal(false);
   subiendoImagen = signal(false);
+  readonly politicaImagenSlide = LOGIN_SLIDE_IMAGE_FILE_POLICY;
+  archivosImagenPendientes = signal<File[]>([]);
 
   ngOnInit() {
     this.construirForm();
@@ -229,14 +233,16 @@ export class ConfiguracionComponent implements OnInit {
     setTimeout(() => this.mensajeError.set(null), 7000);
   }
 
-  onArchivoSeleccionado(event: any) {
-    const file = event.target.files?.[0];
+  onArchivoSeleccionado(files: File[]) {
+    const file = files[0];
     if (!file) return;
 
+    this.archivosImagenPendientes.set([file]);
     this.subiendoImagen.set(true);
     this.configService.subirImagen(file).subscribe({
       next: (res) => {
         this.subiendoImagen.set(false);
+        this.archivosImagenPendientes.set([]);
         this.slideForm.patchValue({ imagenUrl: res.url });
         this.slideForm.get('imagenUrl')?.markAsTouched();
         

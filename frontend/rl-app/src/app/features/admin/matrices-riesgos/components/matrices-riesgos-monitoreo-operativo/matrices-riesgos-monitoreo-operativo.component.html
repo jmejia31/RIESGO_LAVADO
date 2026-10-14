@@ -110,8 +110,14 @@
                       @for (evidencia of control.evidencias; track evidencia.id) { <li class="flex items-center justify-between gap-3"><span class="break-all">{{ evidencia.nombreArchivo }}</span><button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded text-red-700" [disabled]="guardando()" [attr.aria-label]="'Desvincular ' + evidencia.nombreArchivo + ' del control ' + control.controlId" [attr.title]="'Desvincular ' + evidencia.nombreArchivo + ' del control ' + control.controlId" (click)="desvincularEvidencia(control, evidencia.id)"><app-action-icon action="delete"></app-action-icon></button></li> }
                       @empty { <li class="list-none text-slate-500">Sin evidencias vinculadas.</li> }
                     </ul>
-                    <label [for]="'evidencia-control-' + control.controlId" class="mt-2 inline-block text-sm font-medium text-blue-700">Cargar evidencia para Control #{{ control.controlId }}</label>
-                    <input [id]="'evidencia-control-' + control.controlId" type="file" class="mt-1 block max-w-full text-sm" (change)="cargarEvidencia(control, $event)" />
+                    <app-institutional-file-upload
+                      [label]="'Evidencias del Control #' + control.controlId"
+                      [policy]="politicaEvidencias"
+                      [multiple]="false"
+                      [disabled]="guardando()"
+                      [uploading]="guardando() && archivosPendientesPorControl()[control.controlId]?.length > 0"
+                      [selectedFiles]="archivosPendientesPorControl()[control.controlId] ?? []"
+                      (filesChange)="cargarEvidencia(control, $event)" />
                   </div>
                 </article>
             } @empty {

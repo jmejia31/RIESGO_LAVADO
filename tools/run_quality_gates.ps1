@@ -48,6 +48,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'BLOCK9_CONTRACT_VALIDATOR=PASS'
 
+$fileUploadValidator = Join-Path $RepositoryRoot 'tools/validate_institutional_file_upload_standard.js'
+& node $fileUploadValidator
+if ($LASTEXITCODE -ne 0) {
+    throw "El estandar institucional de carga de archivos fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'INSTITUTIONAL_FILE_UPLOAD_VALIDATOR=PASS'
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'

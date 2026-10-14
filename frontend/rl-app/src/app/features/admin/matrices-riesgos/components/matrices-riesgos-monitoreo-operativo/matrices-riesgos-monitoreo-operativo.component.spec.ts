@@ -146,11 +146,10 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
   it('sube y vincula la evidencia al control seleccionado antes de refrescar la proyección', () => {
     component.seleccionarEvaluacion(20);
     const control = { controlId: 31, tipo: 'PREVENTIVO' as const, descripcion: 'Control test', estadoMonitoreo: null, efectividadMonitoreo: null, evidencias: [] };
-    const input = { files: [new File(['pdf'], 'control.pdf', { type: 'application/pdf' })], value: 'selected' };
-    component.cargarEvidencia(control, { target: input } as unknown as Event);
+    const file = new File(['pdf'], 'control.pdf', { type: 'application/pdf' });
+    component.cargarEvidencia(control, [file]);
 
-    expect(input.value).toBe('');
-    expect(service['cargarEvidencia']).toHaveBeenCalledWith(input.files[0]);
+    expect(service['cargarEvidencia']).toHaveBeenCalledWith(file);
     expect(service['vincularEvidencia']).toHaveBeenCalledWith({ evidenciaId: 44, tipoEntidad: 'control', entidadId: 31 });
     expect(service['obtenerProyeccionInstitucional']).toHaveBeenCalledWith(20);
   });

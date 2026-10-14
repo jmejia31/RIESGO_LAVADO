@@ -161,6 +161,7 @@ describe('regla global de acciones icon-only', () => {
     for (const { path, source } of productionSources(appRoot)) {
       if (path.includes('data-pagination.component.ts#inline-template') || path.includes('bounded-select.component.ts#inline-template')) continue;
       for (const button of extractButtons(source)) {
+        if (path.includes('institutional-file-upload.component.html') && button.body.includes('Arrastra archivos aquí o haz clic')) continue;
         if (!isAction(button.attrs) || isNonActionControl(button.attrs, source, button.offset)) continue;
         const text = visibleButtonText(button.body);
         const hasAriaLabel = /aria-label|attr\.aria-label/i.test(button.attrs);

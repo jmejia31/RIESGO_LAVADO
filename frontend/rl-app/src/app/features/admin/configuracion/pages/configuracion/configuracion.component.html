@@ -390,12 +390,16 @@
                 <input type="text" formControlName="imagenUrl" placeholder="Ej. assets/login/slide1.png o /uploads/..."
                   class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
 
-                <input type="file" #fileInput (change)="onArchivoSeleccionado($event)" accept="image/*" class="hidden" />
-
-                <button type="button" (click)="fileInput.click()" [disabled]="subiendoImagen()" title="Subir imagen" aria-label="Subir imagen"
-                  class="px-4 py-2 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
-<app-action-icon action="upload" [loading]="subiendoImagen()"></app-action-icon>
-          </button>
+                <app-institutional-file-upload
+                  label="Imagen del slide"
+                  [policy]="politicaImagenSlide"
+                  [multiple]="false"
+                  [required]="true"
+                  [disabled]="subiendoImagen()"
+                  [uploading]="subiendoImagen()"
+                  [selectedFiles]="archivosImagenPendientes()"
+                  (filesChange)="onArchivoSeleccionado($event)">
+                </app-institutional-file-upload>
               </div>
               @if (slideForm.get('imagenUrl')?.invalid && slideForm.get('imagenUrl')?.touched) {
                 <p class="text-xs text-red-500">La URL de la imagen es obligatoria.</p>

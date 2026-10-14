@@ -32,7 +32,7 @@ describe('GLOBAL_PAGINATION_DESIGN_SYSTEM_GUARD', () => {
 
   it('audita todos los templates y certifica una única superficie visual por grilla', () => {
     const htmlFiles = collectFiles(appRoot, '.html');
-    expect(htmlFiles.length).toBe(28);
+    expect(htmlFiles.length).toBe(29);
 
     let paginationSurfaces = 0;
     let pageSizeSelectors = 0;

@@ -39,7 +39,7 @@ El panel operativo usa `GET /api/matrices-riesgos/monitoreo/evaluaciones/{id}/bl
 
 - `dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore`: PASS, 0 errores.
 - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore`: PASS, 968/968.
-- `npm test -- --watch=false`: PASS, 852/852.
+- `npm test -- --watch=false`: PASS, 858/858, incluyendo pruebas del componente institucional compartido.
 - `npm run lint`, `npm run build`, `npm audit --audit-level=moderate`: PASS; 0 vulnerabilidades.
 - Validadores 82 campos, catálogos, UI Block 7/8 y contrato Block 9: PASS; proyección 82/82, catálogo 14/91, drift 0.
 - `bash -n tools/run_block7_oracle_e2e.sh` y `git diff --check`: PASS.
@@ -51,3 +51,11 @@ El Quality Gates reutiliza el único Oracle XE desechable existente. El host de 
 El cierre final se actualizará sólo después de que el Quality Gates del SHA publicado termine `completed/success` y los logs muestren `BLOCK9_*_ORACLE_INTEGRATION=PASS` y `BLOCK9_BROWSER_API_ORACLE_E2E=PASS` con conteos mayores que cero.
 
 **Seguridad:** no se ejecutó DML/DDL en producción; no se cambió el esquema; la autenticación de prueba sólo existe en el host E2E protegido por flags y el guard de base de datos. `BLOCK8_STATUS=CLOSED`; el bloque siguiente permanece sin iniciar.
+
+## Estándar transversal de carga de archivos
+
+El selector de archivos usado en Monitoreo de Listas se extrajo como `InstitutionalFileUploadComponent`, y Listas, Matrices de Riesgos y Configuración ya consumen la misma interfaz. El componente es sólo selección/presentación: el consumidor mantiene upload, asociación, persistencia, autorización y auditoría. Hay cinco instancias en cuatro templates; no quedan inputs file crudos fuera del componente. Las políticas configurables mantienen las restricciones reales de cada endpoint. El estándar y su inventario se describen en [Estándar institucional de carga de archivos](../0.0%20Documentación/ESTANDAR_INSTITUCIONAL_CARGA_ARCHIVOS.md).
+
+La certificación transversal forma parte de esta misma ejecución del Bloque 9. Verificación local: `SHARED_FILE_UPLOAD_COMPONENT=PASS`, `MONITOREO_LISTAS_USES_SHARED_FILE_UPLOAD=PASS`, `MATRICES_USES_SHARED_FILE_UPLOAD=PASS`, `ALL_USER_FILE_UPLOAD_SURFACES_AUDITED=PASS` (5 instancias en 4 templates), `RAW_FILE_INPUTS_OUTSIDE_SHARED_COMPONENT=0`, `CANONICAL_DROPZONE_TEXT_IMPLEMENTATIONS=1`, `DRAG_DROP=PASS`, `CLICK_TO_SELECT=PASS`, `FILE_UPLOAD_KEYBOARD=PASS`, `FILE_UPLOAD_ACCESSIBILITY=PASS`. El E2E de Monitoreo de Listas pasó 1/1 en Chromium, incluyendo file chooser, retiro, drag/drop y viewport 390×844; Playwright Matrix API→Oracle queda exigido por el CI del SHA final.
+
+El estado continúa `PENDING_CI_ORACLE_BROWSER` hasta que el Quality Gates del SHA publicado termine `completed/success` y los logs muestren las integraciones Oracle y browser Block 9 ejecutadas con conteos mayores que cero. El uploader compartido no añade llamadas HTTP ni cambia las políticas backend.

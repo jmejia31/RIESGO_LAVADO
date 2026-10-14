@@ -15,6 +15,8 @@ import {
 } from '../../models/matrices-riesgos-fase11.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
+import { INSTITUTIONAL_EVIDENCE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
@@ -22,7 +24,7 @@ import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions 
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
   standalone: true,
-  imports: [ActionIconComponent, BoundedSelectComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, BoundedSelectComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-monitoreo-operativo.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -79,6 +81,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   observacionesUgr = '';
   readonly estadoMonitoreoDrafts: Record<number, string> = {};
   readonly efectividadMonitoreoDrafts: Record<number, number | null> = {};
+  readonly archivosPendientesPorControl = signal<Record<number, File[]>>({});
 
   ngOnInit(): void {
     if (this.evaluacionIdInicial && this.evaluacionIdInicial > 0) {
@@ -189,16 +192,20 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     });
   }
 
-  cargarEvidencia(control: ControlMonitoreoMatrizDto, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const archivo = input.files?.[0];
-    input.value = '';
+  cargarEvidencia(control: ControlMonitoreoMatrizDto, archivos: File[]): void {
+    const archivo = archivos[0];
     if (!archivo) return;
+    this.archivosPendientesPorControl.update(pendientes => ({ ...pendientes, [control.controlId]: [archivo] }));
     this.guardando.set(true);
     this.service.cargarEvidencia(archivo).subscribe({
       next: evidencia => this.service.vincularEvidencia({ evidenciaId: evidencia.eviId, tipoEntidad: 'control', entidadId: control.controlId }).subscribe({
         next: () => {
           this.guardando.set(false);
+          this.archivosPendientesPorControl.update(pendientes => {
+            const actualizados = { ...pendientes };
+            delete actualizados[control.controlId];
+            return actualizados;
+          });
           this.mensaje.set('Evidencia cargada y vinculada al control.');
           this.cargarBloque6();
           this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
@@ -207,6 +214,10 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
       }),
       error: error => this.finalizarGuardadoError(error, 'No se pudo cargar la evidencia.')
     });
+  }
+
+  get politicaEvidencias() {
+    return INSTITUTIONAL_EVIDENCE_FILE_POLICY;
   }
 
   desvincularEvidencia(control: ControlMonitoreoMatrizDto, evidenciaId: number): void {

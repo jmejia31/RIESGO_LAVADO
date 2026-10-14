@@ -83,11 +83,12 @@ type InstanciaInternaMonitoreo = {
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
+import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
 
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html'
 })

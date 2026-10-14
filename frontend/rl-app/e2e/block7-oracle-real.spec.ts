@@ -240,7 +240,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   } });
   expect(monitorLatest.status(), await monitorLatest.text()).toBe(200);
   const monitorHistory = await request.get(`${monitoring}/evaluaciones/${evaluation.id}/automonitoreo`);
-  expect((await monitorHistory.json() as { datos: Array<{ monEstadoRiesgo: string }> }).datos[0]?.monEstadoRiesgo).toBe('MITIGADO');
+  expect((await monitorHistory.json() as { datos: Array<{ monEstadoRiesgo: string }> }).datos[0]?.monEstadoRiesgo).toBe('Mitigado');
 
   const monitoringStates = ['SE_MANTIENE', 'NO_SE_MANTIENE', 'SE_MANTIENE', 'NO_SE_MANTIENE'];
   for (let index = 0; index < controlIds.length; index++) {
@@ -324,6 +324,40 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(monitoringProjection.find(field => field.fieldNumber === 80)?.value).toBe('1. block9-evidence-corrective.pdf');
   expect(monitoringProjection.find(field => field.fieldNumber === 81)?.value).toBe('OBS-AREA-BOTH');
   expect(monitoringProjection.find(field => field.fieldNumber === 82)?.value).toBe('OBS-UGR-BOTH');
+
+  const monitoringUiPage = await page.context().newPage();
+  await monitoringUiPage.setViewportSize({ width: 1280, height: 900 });
+  await installNonCriticalFixtures(monitoringUiPage, fixture, evaluation);
+  await monitoringUiPage.goto('/matrices-riesgos');
+  await expect(monitoringUiPage.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  await monitoringUiPage.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
+  const matrixUploader = monitoringUiPage.getByRole('button', { name: `Evidencias del Control #${controlIds[0]}` });
+  await expect(matrixUploader).toBeVisible();
+  await monitoringUiPage.screenshot({ path: testInfo.outputPath('institutional-file-upload-matrices.png'), fullPage: true });
+  const matrixFileChooserPromise = monitoringUiPage.waitForEvent('filechooser');
+  await matrixUploader.click();
+  const matrixFileChooser = await matrixFileChooserPromise;
+  const matrixUploadResponsePromise = monitoringUiPage.waitForResponse(response =>
+    response.request().method() === 'POST'
+    && new URL(response.url()).pathname.endsWith('/evidencias/cargar'));
+  await matrixFileChooser.setFiles({
+    name: 'block9-ui-control-evidence.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4\nBlock 9 browser evidence\n%%EOF'),
+  });
+  const matrixUploadResponse = await matrixUploadResponsePromise;
+  expect(matrixUploadResponse.status(), await matrixUploadResponse.text()).toBe(200);
+  await expect(monitoringUiPage.getByText('block9-ui-control-evidence.pdf')).toBeVisible();
+  const matrixUploadBody = await matrixUploadResponse.json() as { datos: { eviId: number } };
+  const matrixUiEvidenceId = matrixUploadBody.datos.eviId;
+
+  const matrixUiUnlink = await request.delete(`${evidenceApi}/vinculos`, {
+    data: { evidenciaId: matrixUiEvidenceId, tipoEntidad: 'control', entidadId: controlIds[0] },
+  });
+  expect(matrixUiUnlink.status(), await matrixUiUnlink.text()).toBe(200);
+  const matrixUiDelete = await request.delete(`${evidenceApi}/${matrixUiEvidenceId}`);
+  expect(matrixUiDelete.status(), await matrixUiDelete.text()).toBe(200);
+
   for (let index = 0; index < evidenceItems.length; index++) {
     const unlink = await request.delete(`${evidenceApi}/vinculos`, { data: { evidenciaId: evidenceItems[index].eviId, tipoEntidad: 'control', entidadId: controlIds[index] } });
     expect(unlink.status(), await unlink.text()).toBe(200);

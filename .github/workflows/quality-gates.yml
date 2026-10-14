@@ -122,6 +122,9 @@ jobs:
       - name: Validate Block 9 mitigation and monitoring contract
         run: node tools/validate_block9_mitigation_monitoring_contract.js
 
+      - name: Validate institutional shared file upload standard
+        run: node tools/validate_institutional_file_upload_standard.js
+
       - name: Validate exact matrices object inventory
         shell: pwsh
         run: |

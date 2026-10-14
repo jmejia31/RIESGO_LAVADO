@@ -8,11 +8,13 @@ import * as XLSX from '../../../../../core/utils/excel-export.util';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
+import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
+import { LIST_IMPORT_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 
 @Component({
   selector: 'app-cargar-listas',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './cargar-listas.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -27,7 +29,7 @@ export class CargarListasComponent implements OnInit {
   errorTipos = signal<string | null>(null);
   errorResumen = signal<string | null>(null);
 
-  private readonly extensionesPermitidas = ['csv', 'xlsx', 'xml'];
+  readonly politicaCargaListas = LIST_IMPORT_FILE_POLICY;
 
   form!: FormGroup;
 
@@ -85,30 +87,8 @@ export class CargarListasComponent implements OnInit {
 
   readonly archivoSeleccionado = signal<File | null>(null);
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (!file) {
-      this.archivoSeleccionado.set(null);
-      return;
-    }
-
-    const extension = this.obtenerExtension(file.name);
-    if (!this.extensionesPermitidas.includes(extension)) {
-      this.archivoSeleccionado.set(null);
-      event.target.value = '';
-      import('sweetalert2').then((Swal) => {
-        Swal.default.fire({
-          allowOutsideClick: false,
-          title: 'Formato no permitido',
-          text: 'Solo se permiten archivos CSV, XLSX o XML para la carga de listas.',
-          icon: 'warning',
-          confirmButtonColor: '#1e3a8a'
-        });
-      });
-      return;
-    }
-
-    this.archivoSeleccionado.set(file);
+  onArchivoSeleccionado(files: File[]) {
+    this.archivoSeleccionado.set(files[0] ?? null);
   }
 
   cargarArchivo() {
@@ -157,10 +137,6 @@ export class CargarListasComponent implements OnInit {
           // Limpiar archivo seleccionado
           this.archivoSeleccionado.set(null);
           this.form.reset({ tipoListaId: '' });
-          // Restablecer el input file visualmente si es necesario
-          const fileInput = document.getElementById('fileUploadInput') as HTMLInputElement;
-          if (fileInput) fileInput.value = '';
-
           // Actualizar la tabla de resumen
           this.cargarResumen();
         },
@@ -317,11 +293,6 @@ export class CargarListasComponent implements OnInit {
   esInvalido(name: string) {
     const c = this.form.get(name);
     return c ? c.invalid && c.touched : false;
-  }
-
-  private obtenerExtension(nombre: string): string {
-    const partes = nombre.split('.');
-    return partes.length > 1 ? partes.pop()!.toLowerCase() : '';
   }
 
   private nombreArchivoSeguro(nombre: string): string {

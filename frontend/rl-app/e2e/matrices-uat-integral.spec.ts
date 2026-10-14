@@ -412,6 +412,16 @@ test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET 
     }
     await route.fallback();
   });
+  await page.route('**/api/matrices-riesgos/evaluaciones?*', route => route.fulfill({ json: { success: true, datos: {
+    items: [{ evaId: 20, evaRiesgoId: 7, riesgoCodigo: 'R-007', riesgoNombre: 'Riesgo UAT', estado: 'APROBADA', fechaEval: '2026-08-07T12:00:00Z' }],
+    pagina: 1, registrosPorPagina: 200, totalRegistros: 1, totalPaginas: 1,
+  } } }));
+  await page.route('**/api/matrices-riesgos/monitoreo/resumen', route => route.fulfill({ json: { success: true, datos: {
+    fechaGeneracion: '2026-08-07T12:00:00Z', riesgosActivos: 1, evaluacionesActivas: 1, evaluacionesAprobadas: 1,
+    riesgosAltoCritico: 0, alertasActivas: 0, planesAbiertos: 0, actividadesVencidas: 0, automonitoreosUltimos30Dias: 0,
+  } } }));
+  await page.route('**/api/matrices-riesgos/monitoreo/evaluaciones/20/alertas', route => route.fulfill({ json: { success: true, datos: [] } }));
+  await page.route('**/api/matrices-riesgos/monitoreo/evaluaciones/20/automonitoreo', route => route.fulfill({ json: { success: true, datos: [] } }));
   await page.route('**/api/matrices-riesgos/monitoreo/evaluaciones/20/observaciones/**', async route => {
     const path = new URL(route.request().url()).pathname;
     const payload = route.request().postDataJSON() as { texto: string };
@@ -427,37 +437,38 @@ test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET 
     totales: { totalRiesgos: 1, totalConEvaluacionOficial: 1, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 }
   } } }));
   await page.goto('/matrices-riesgos');
-  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
-  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
-  const modal = page.locator('[data-matrix-modal="complete"]');
-  const area = modal.getByRole('textbox', { name: 'Observaciones del Área' });
+  await page.getByRole('button', { name: 'Monitoreo', exact: true }).click();
+  const evaluationSelector = page.getByRole('combobox', { name: 'Evaluación' });
+  await evaluationSelector.click();
+  await page.getByRole('option', { name: /#20/ }).click();
+  const area = page.getByRole('textbox', { name: 'Observaciones del Área' });
   await expect(area).toHaveValue('Área inicial');
   await area.fill('Área persistida por capability');
-  const guardarArea = modal.getByRole('button', { name: 'Guardar Observaciones del Área' });
+  const guardarArea = page.getByRole('button', { name: 'Guardar Observaciones del Área' });
   const areaReload = page.waitForResponse(response => response.url().includes('/bloque6') && response.request().method() === 'GET');
   await guardarArea.click();
   await areaReload;
   await expect(guardarArea).toBeEnabled();
   await expect(area).toHaveValue('Área persistida por capability');
-  await expect(modal.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR inicial');
+  await expect(page.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR inicial');
 
-  const ugr = modal.getByRole('textbox', { name: 'Observaciones UGR' });
+  const ugr = page.getByRole('textbox', { name: 'Observaciones UGR' });
   await ugr.fill('UGR persistida por capability');
-  const guardarUgr = modal.getByRole('button', { name: 'Guardar Observaciones UGR' });
+  const guardarUgr = page.getByRole('button', { name: 'Guardar Observaciones UGR' });
   await expect(guardarUgr).toBeEnabled();
   const ugrReload = page.waitForResponse(response => response.url().includes('/bloque6') && response.request().method() === 'GET');
   await guardarUgr.click();
   await ugrReload;
   await expect(guardarUgr).toBeEnabled();
   await expect(ugr).toHaveValue('UGR persistida por capability');
-  await expect(modal.getByRole('textbox', { name: 'Observaciones del Área' })).toHaveValue('Área persistida por capability');
+  await expect(page.getByRole('textbox', { name: 'Observaciones del Área' })).toHaveValue('Área persistida por capability');
   expect(writes.map(write => write.path.split('/').at(-1))).toEqual(['area', 'ugr']);
   expect(reads).toBeGreaterThanOrEqual(3);
 
-  await modal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
   await page.reload();
-  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
-  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
+  await page.getByRole('button', { name: 'Monitoreo', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Evaluación' }).click();
+  await page.getByRole('option', { name: /#20/ }).click();
   await expect(page.getByRole('textbox', { name: 'Observaciones del Área' })).toHaveValue('Área persistida por capability');
   await expect(page.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR persistida por capability');
 });
@@ -863,7 +874,7 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
     await page.locator('#actividad-responsable').fill(responsible);
     await page.locator('#actividad-fecha-inicio').fill('2026-08-08');
     await page.locator('#actividad-fecha-fin').fill('2026-08-28');
-    await page.locator('#actividad-estado').fill('EN_PROCESO');
+    await page.locator('#actividad-estado').selectOption('EN_PROCESO');
     await page.getByRole('button', { name: 'Guardar nueva actividad', exact: true }).click();
   };
   await addActivity('Revisar controles documentales', 'Analista de Cumplimiento');
