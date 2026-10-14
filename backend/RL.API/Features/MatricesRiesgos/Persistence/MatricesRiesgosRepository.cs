@@ -1839,15 +1839,15 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         EvaluacionId = reader.GetInt64(1),
         VersionFormularioId = reader.GetInt64(2),
         CodigoRiesgo = reader.GetString(3),
-        AreaPrincipal = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(4)),
-        DuenoRiesgo = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(5)),
-        Vri = reader.GetInt32(6),
-        NivelInherente = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(7)),
-        Vrr = reader.GetInt32(8),
-        NivelResidual = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(9)),
-        RespuestaRiesgo = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(10)),
+        AreaPrincipal = reader.IsDBNull(4) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(4)),
+        DuenoRiesgo = reader.IsDBNull(5) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(5)),
+        Vri = reader.IsDBNull(6) ? null : Convert.ToInt32(reader.GetValue(6)),
+        NivelInherente = reader.IsDBNull(7) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(7)),
+        Vrr = reader.IsDBNull(8) ? null : Convert.ToInt32(reader.GetValue(8)),
+        NivelResidual = reader.IsDBNull(9) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(9)),
+        RespuestaRiesgo = reader.IsDBNull(10) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(10)),
         EstadoEvaluacion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(11)),
-        FechaEvaluacion = reader.GetDateTime(12)
+        FechaEvaluacion = reader.IsDBNull(12) ? null : reader.GetDateTime(12)
     };
 
     private static int NormalizarTamanoPagina(int tamanoPagina) =>
@@ -1904,56 +1904,45 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     }
 
     internal static string ConstruirFuenteConsolidado() => @"(
-        SELECT seleccion.*
-          FROM (
-                SELECT candidatas.*,
-                       ROW_NUMBER() OVER (
-                           PARTITION BY candidatas.EVA_RIESGO_ID
-                           ORDER BY candidatas.FLU_FECHA DESC,
-                                    candidatas.FLU_ID DESC,
-                                    candidatas.PROY_EVALUACION_ID DESC) AS CONSOLIDADO_RIESGO_RN
+        SELECT e.EVA_RIESGO_ID,
+               e.EVA_VERSION_ID,
+               e.EVA_ID AS PROY_EVALUACION_ID,
+               NVL(p.PROY_CODIGO_RIESGO, r.RIE_CODIGO) AS PROY_CODIGO_RIESGO,
+               p.PROY_AREA_PRINCIPAL,
+               p.PROY_DUENO_RIESGO,
+               p.PROY_VRI,
+               p.PROY_NIVEL_INHERENTE,
+               p.PROY_VRR,
+               p.PROY_NIVEL_RESIDUAL,
+               p.PROY_RESPUESTA_RIESGO,
+               NVL(f.FLU_ESTADO, 'BORRADOR') AS PROY_ESTADO_EVALUACION,
+               p.PROY_FECHA_EVAL,
+               f.FLU_ID,
+               f.FLU_FECHA
+          FROM RL_MR_EVALUACIONES_RIESGO e
+          JOIN RL_MR_RIESGOS r
+            ON r.RIE_ID = e.EVA_RIESGO_ID
+          LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p
+            ON p.PROY_EVALUACION_ID = e.EVA_ID
+          LEFT JOIN (
+                SELECT estado_actual.FLU_EVALUACION_ID,
+                       estado_actual.FLU_ID,
+                       estado_actual.FLU_ESTADO,
+                       estado_actual.FLU_FECHA
                   FROM (
-                        SELECT e.EVA_RIESGO_ID,
-                               e.EVA_VERSION_ID,
-                               p.PROY_EVALUACION_ID,
-                               p.PROY_CODIGO_RIESGO,
-                               p.PROY_AREA_PRINCIPAL,
-                               p.PROY_DUENO_RIESGO,
-                               p.PROY_VRI,
-                               p.PROY_NIVEL_INHERENTE,
-                               p.PROY_VRR,
-                               p.PROY_NIVEL_RESIDUAL,
-                               p.PROY_RESPUESTA_RIESGO,
-                               f.FLU_ESTADO AS PROY_ESTADO_EVALUACION,
-                               p.PROY_FECHA_EVAL,
-                               f.FLU_ID,
-                               f.FLU_FECHA
-                          FROM RL_MR_PROYECCIONES_EVALUACION p
-                          JOIN RL_MR_EVALUACIONES_RIESGO e
-                            ON e.EVA_ID = p.PROY_EVALUACION_ID
-                          JOIN (
-                                SELECT estado_actual.FLU_EVALUACION_ID,
-                                       estado_actual.FLU_ID,
-                                       estado_actual.FLU_ESTADO,
-                                       estado_actual.FLU_FECHA
-                                  FROM (
-                                        SELECT flujo.FLU_EVALUACION_ID,
-                                               flujo.FLU_ID,
-                                               flujo.FLU_ESTADO,
-                                               flujo.FLU_FECHA,
-                                               ROW_NUMBER() OVER (
-                                                   PARTITION BY flujo.FLU_EVALUACION_ID
-                                                   ORDER BY flujo.FLU_FECHA DESC, flujo.FLU_ID DESC) AS FLUJO_RN
-                                          FROM RL_MR_FLUJOS_EVALUACION flujo
-                                       ) estado_actual
-                                 WHERE estado_actual.FLUJO_RN = 1
-                                   AND estado_actual.FLU_ESTADO = 'APROBADA'
-                               ) f
-                            ON f.FLU_EVALUACION_ID = e.EVA_ID
-                         WHERE e.EVA_ACTIVO = 1
-                       ) candidatas
-               ) seleccion
-         WHERE seleccion.CONSOLIDADO_RIESGO_RN = 1
+                        SELECT flujo.FLU_EVALUACION_ID,
+                               flujo.FLU_ID,
+                               flujo.FLU_ESTADO,
+                               flujo.FLU_FECHA,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY flujo.FLU_EVALUACION_ID
+                                   ORDER BY flujo.FLU_FECHA DESC, flujo.FLU_ID DESC) AS FLUJO_RN
+                          FROM RL_MR_FLUJOS_EVALUACION flujo
+                       ) estado_actual
+                 WHERE estado_actual.FLUJO_RN = 1
+               ) f
+            ON f.FLU_EVALUACION_ID = e.EVA_ID
+         WHERE e.EVA_ACTIVO = 1
     )";
 
     private static string ConstruirOrdenConsolidado(FiltroReporteMatricesDto filtro)

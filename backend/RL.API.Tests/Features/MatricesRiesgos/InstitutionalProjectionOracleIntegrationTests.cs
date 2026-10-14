@@ -33,7 +33,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 {
     [Fact]
     [Trait("Category", "Block8OracleIntegration")]
-    public async Task ConsolidatedApiAndReportUseLatestCurrentApprovedEvaluationPerRisk()
+    public async Task ConsolidatedApiAndReportIncludeEveryActiveEvaluationAndFilterByLatestState()
     {
         if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK8_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase)) return;
         string connectionString = Environment.GetEnvironmentVariable("BLOCK8_ORACLE_CONNECTION_STRING")
@@ -46,9 +46,9 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         await EnsureBlock7FixtureObjectsAsync(seed);
 
         long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 800_000_000 + 100_000_000;
-        long[] riskIds = [stamp + 1, stamp + 2, stamp + 3];
-        long[] evaluationIds = Enumerable.Range(10, 7).Select(offset => stamp + offset).ToArray();
-        long[] flowIds = Enumerable.Range(100, 8).Select(offset => stamp + offset).ToArray();
+        long[] riskIds = [stamp + 1, stamp + 2, stamp + 3, stamp + 4];
+        long[] evaluationIds = Enumerable.Range(10, 9).Select(offset => stamp + offset).ToArray();
+        long[] flowIds = Enumerable.Range(100, 10).Select(offset => stamp + offset).ToArray();
         DateTime t1 = new(2026, 1, 1), t2 = new(2026, 2, 1), t3 = new(2026, 3, 1), tie = new(2026, 4, 1);
         const long userId = 987654;
         try
@@ -57,7 +57,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 await ExecuteAsync(seed, "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,:name,'Fixture Block 8',1,:usr,SYSDATE)",
                     ("id", riskId), ("code", $"B8-{stamp}-{index}"), ("name", $"Block 8 risk {index}"), ("usr", userId));
 
-            // Risk 1: older/newer approvals plus later draft and rejected evaluations.
+            // Risk 1: separate evaluations across approval, draft, review and rejection states.
             await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[0], flowIds[0], "APROBADA", t1, "R1-OLD", userId);
             await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[1], flowIds[1], "APROBADA", t2, "R1-LATEST-APPROVED", userId);
             await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[2], flowIds[2], "BORRADOR", t3, "R1-DRAFT", userId);
@@ -65,10 +65,12 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             // Risk 2: same approval timestamp; larger flow ID is the deterministic winner.
             await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[4], flowIds[4], "APROBADA", tie, "R2-TIE-LOW", userId);
             await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[5], flowIds[5], "APROBADA", tie, "R2-TIE-HIGH", userId);
-            // A later CERRADA state is distinct from APROBADA and is excluded.
+            // The last workflow event is authoritative for this evaluation.
             await InsertConsolidatedFixtureAsync(seed, riskIds[2], evaluationIds[6], flowIds[6], "APROBADA", t2, "R3-CLOSED", userId);
             await ExecuteAsync(seed, "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,'CERRADA','test',:usr,:eventDate)",
                 ("id", flowIds[7]), ("eva", evaluationIds[6]), ("usr", userId), ("eventDate", t3));
+            await InsertDraftWithoutProjectionAsync(seed, riskIds[3], evaluationIds[7], t3.AddDays(2), userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[3], evaluationIds[8], flowIds[8], "EN_REVISION", t3.AddDays(3), "R4-REVIEW", userId);
 
             await using var app = await CreateBlock7ApiAsync(connectionString);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
@@ -77,20 +79,37 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             JsonElement rows = body.RootElement.GetProperty("datos").GetProperty("items");
-            var selectedIds = rows.EnumerateArray().Select(item => item.GetProperty("evaluacionId").GetInt64()).ToArray();
-            Assert.Contains(evaluationIds[1], selectedIds);
-            Assert.Contains(evaluationIds[5], selectedIds);
-            Assert.DoesNotContain(evaluationIds[0], selectedIds);
-            Assert.DoesNotContain(evaluationIds[2], selectedIds);
-            Assert.DoesNotContain(evaluationIds[3], selectedIds);
-            Assert.DoesNotContain(evaluationIds[4], selectedIds);
-            Assert.DoesNotContain(evaluationIds[6], selectedIds);
+            var allIds = rows.EnumerateArray().Select(item => item.GetProperty("evaluacionId").GetInt64()).ToArray();
+            Assert.Equal(evaluationIds.Order(), allIds.Order());
+            Assert.Equal(9, body.RootElement.GetProperty("datos").GetProperty("totalRegistros").GetInt32());
+            JsonElement noProjection = rows.EnumerateArray().Single(item => item.GetProperty("evaluacionId").GetInt64() == evaluationIds[7]);
+            Assert.Equal("BORRADOR", noProjection.GetProperty("estadoEvaluacion").GetString());
+            Assert.Equal($"B8-{stamp}-3", noProjection.GetProperty("codigoRiesgo").GetString());
+            Assert.Equal(JsonValueKind.Null, noProjection.GetProperty("vri").ValueKind);
+            Assert.Equal(JsonValueKind.Null, noProjection.GetProperty("vrr").ValueKind);
+            Assert.Equal(JsonValueKind.Null, noProjection.GetProperty("fechaEvaluacion").ValueKind);
+
+            async Task<long[]> GetIdsByStateAsync(string state)
+            {
+                using HttpResponseMessage filteredResponse = await http.GetAsync($"/api/matrices-riesgos/consolidado/paginado?pagina=1&tamanoPagina=20&estadoEvaluacion={state}");
+                Assert.Equal(System.Net.HttpStatusCode.OK, filteredResponse.StatusCode);
+                using JsonDocument filteredBody = JsonDocument.Parse(await filteredResponse.Content.ReadAsStringAsync());
+                return filteredBody.RootElement.GetProperty("datos").GetProperty("items")
+                    .EnumerateArray().Select(item => item.GetProperty("evaluacionId").GetInt64()).ToArray();
+            }
+
+            Assert.Equal(new[] { evaluationIds[0], evaluationIds[1], evaluationIds[4], evaluationIds[5] }.Order(), (await GetIdsByStateAsync("APROBADA")).Order());
+            Assert.Equal(new[] { evaluationIds[2], evaluationIds[7] }.Order(), (await GetIdsByStateAsync("BORRADOR")).Order());
+            Assert.Equal(new[] { evaluationIds[3] }, await GetIdsByStateAsync("RECHAZADA"));
+            Assert.Equal(new[] { evaluationIds[6] }, await GetIdsByStateAsync("CERRADA"));
+            Assert.Equal(new[] { evaluationIds[8] }, await GetIdsByStateAsync("EN_REVISION"));
+            Assert.Equal(4, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[0]));
 
             using var scope = app.Services.CreateScope();
             IMatricesRiesgosAppService service = scope.ServiceProvider.GetRequiredService<IMatricesRiesgosAppService>();
             var export = await service.ObtenerConsolidadoParaExportacionAsync(new FiltroReporteMatricesDto());
             Assert.True(export.Success);
-            Assert.Equal(selectedIds.Order(), export.Data!.Select(row => row.EvaluacionId).Order());
+            Assert.Equal(allIds.Order(), export.Data!.Select(row => row.EvaluacionId).Order());
         }
         finally
         {
@@ -104,6 +123,11 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
         }
     }
+
+    private static Task InsertDraftWithoutProjectionAsync(OracleConnection connection, long riskId, long evaluationId, DateTime createdAt, long userId) =>
+        ExecuteAsync(connection,
+            "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,'{}','{}',:createdAt,:usr,1,1)",
+            ("id", evaluationId), ("risk", riskId), ("createdAt", createdAt), ("usr", userId));
 
     private static async Task InsertConsolidatedFixtureAsync(
         OracleConnection connection, long riskId, long evaluationId, long flowId,

@@ -77,13 +77,13 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         fila.EvaluacionId,
         fila.VersionFormularioId,
         fila.CodigoRiesgo,
-        TextoVisibleUtf8Normalizer.Normalizar(fila.AreaPrincipal),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.DuenoRiesgo),
+        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.AreaPrincipal),
+        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.DuenoRiesgo),
         fila.Vri,
-        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri),
+        fila.Vri.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri.Value) : null,
         fila.Vrr,
-        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr),
-        MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
+        fila.Vrr.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr.Value) : null,
+        fila.RespuestaRiesgo is null ? null : MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
         TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
         fila.FechaEvaluacion
     };
@@ -94,14 +94,14 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         fila.EvaluacionId.ToString(CultureInfo.InvariantCulture),
         fila.VersionFormularioId.ToString(CultureInfo.InvariantCulture),
         fila.CodigoRiesgo,
-        TextoVisibleUtf8Normalizer.Normalizar(fila.AreaPrincipal),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.DuenoRiesgo),
-        fila.Vri.ToString(CultureInfo.InvariantCulture),
-        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri),
-        fila.Vrr.ToString(CultureInfo.InvariantCulture),
-        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr),
-        MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
+        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.AreaPrincipal) ?? string.Empty,
+        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.DuenoRiesgo) ?? string.Empty,
+        fila.Vri?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+        fila.Vri.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri.Value) : string.Empty,
+        fila.Vrr?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+        fila.Vrr.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr.Value) : string.Empty,
+        fila.RespuestaRiesgo is null ? string.Empty : MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
         TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
-        fila.FechaEvaluacion.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)
+        fila.FechaEvaluacion?.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture) ?? string.Empty
     };
 }

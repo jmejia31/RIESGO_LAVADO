@@ -80,6 +80,33 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
     }
 
     [Fact]
+    public void ExportacionesConEvaluacionSinProyeccion_PreservanValoresNulosSinInventarCeros()
+    {
+        var fila = new RiesgoReporteFilaDto
+        {
+            RiesgoId = 15,
+            EvaluacionId = 87,
+            VersionFormularioId = 3,
+            CodigoRiesgo = "R-015",
+            EstadoEvaluacion = "BORRADOR"
+        };
+
+        ArchivoReporteDto excel = _service.CrearExcelConsolidado([fila]);
+        ArchivoReporteDto pdf = _service.CrearPdfConsolidado([fila]);
+        using var stream = new MemoryStream(excel.Contenido);
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
+        string sheet = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
+        string pdfText = Encoding.Latin1.GetString(pdf.Contenido);
+
+        Assert.Contains("R-015", sheet, StringComparison.Ordinal);
+        Assert.Contains("BORRADOR", sheet, StringComparison.Ordinal);
+        Assert.DoesNotContain("<v>0</v>", sheet, StringComparison.Ordinal);
+        Assert.Contains("R-015", pdfText, StringComparison.Ordinal);
+        Assert.Contains("BORRADOR", pdfText, StringComparison.Ordinal);
+        Assert.DoesNotContain("0.00", pdfText, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ExportacionesConFiltro_ConservanVersionFechaNumericaYMetadata()
     {
         var filas = CrearFilas(1);

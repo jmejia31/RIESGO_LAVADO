@@ -9,15 +9,15 @@ public sealed class RiesgoReporteFilaDto
     public long EvaluacionId { get; set; }
     public long VersionFormularioId { get; set; }
     public string CodigoRiesgo { get; set; } = string.Empty;
-    public string AreaPrincipal { get; set; } = string.Empty;
-    public string DuenoRiesgo { get; set; } = string.Empty;
-    public int Vri { get; set; }
-    public string NivelInherente { get; set; } = string.Empty;
-    public int Vrr { get; set; }
-    public string NivelResidual { get; set; } = string.Empty;
-    public string RespuestaRiesgo { get; set; } = string.Empty;
+    public string? AreaPrincipal { get; set; }
+    public string? DuenoRiesgo { get; set; }
+    public int? Vri { get; set; }
+    public string? NivelInherente { get; set; }
+    public int? Vrr { get; set; }
+    public string? NivelResidual { get; set; }
+    public string? RespuestaRiesgo { get; set; }
     public string EstadoEvaluacion { get; set; } = string.Empty;
-    public DateTime FechaEvaluacion { get; set; }
+    public DateTime? FechaEvaluacion { get; set; }
 }
 
 public sealed class ReporteMatricesPaginadoDto
