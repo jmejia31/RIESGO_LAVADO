@@ -8,6 +8,9 @@ const propiedadesTema = [
   '--ihss-primary-color', '--ihss-accent-color',
   '--ihss-primary-rgb', '--ihss-accent-rgb', '--ihss-on-primary-rgb', '--ihss-on-accent-rgb',
   '--ihss-modal-primary-rgb', '--ihss-modal-accent-rgb', '--ihss-on-modal-rgb', '--modal-close-bg',
+  '--ihss-modal-primary-start-rgb', '--ihss-modal-primary-mid-rgb', '--ihss-modal-primary-end-rgb',
+  '--ihss-modal-secondary-start-rgb', '--ihss-modal-secondary-mid-rgb', '--ihss-modal-secondary-end-rgb',
+  '--ihss-modal-highlight-rgb',
   '--modal-close-bg-hover', '--modal-close-border', '--modal-close-border-hover', '--modal-close-color',
   '--modal-close-color-hover', '--modal-close-focus-rgb',
   ...[50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].flatMap(level => [`--ihss-${level}-rgb`, `--ihss-on-${level}-rgb`])
@@ -49,6 +52,8 @@ describe('ConfiguracionService', () => {
     expect(document.documentElement.style.getPropertyValue('--ihss-50-rgb')).not.toBe('');
     expect(document.documentElement.style.getPropertyValue('--ihss-950-rgb')).not.toBe('');
     expect(document.documentElement.style.getPropertyValue('--ihss-modal-primary-rgb')).toBe('30 58 138');
+    expect(document.documentElement.style.getPropertyValue('--ihss-modal-primary-start-rgb')).not.toBe('');
+    expect(document.documentElement.style.getPropertyValue('--ihss-modal-secondary-end-rgb')).not.toBe('');
   });
 
   it('guarda configuración y actualiza identidad visual local', () => {
