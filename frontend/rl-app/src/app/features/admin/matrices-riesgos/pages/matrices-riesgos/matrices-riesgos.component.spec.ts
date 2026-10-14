@@ -34,6 +34,8 @@ describe('MatricesRiesgosComponent', () => {
     actualizarFamiliaFormulario: ReturnType<typeof vi.fn>;
     desactivarFamiliaFormulario: ReturnType<typeof vi.fn>;
     crearEvaluacion: ReturnType<typeof vi.fn>;
+    guardarBorradorEvaluacion: ReturnType<typeof vi.fn>;
+    actualizarBorradorEvaluacion: ReturnType<typeof vi.fn>;
     actualizarEvaluacion: ReturnType<typeof vi.fn>;
     transicionarEvaluacion: ReturnType<typeof vi.fn>;
     obtenerFlujos: ReturnType<typeof vi.fn>;
@@ -176,6 +178,8 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([])),
       crearEvaluacion: vi.fn().mockReturnValue(of(20)),
+      guardarBorradorEvaluacion: vi.fn().mockReturnValue(of(20)),
+      actualizarBorradorEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       transicionarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       obtenerFlujos: vi.fn().mockReturnValue(of([])),
@@ -793,5 +797,33 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[14])).toBe('Sin dato');
       expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[16])).toBe('Sin dato');
     }
+  });
+
+  it('guarda una evaluación histórica enviando sólo las claves de su versión', () => {
+    component.evaluacionSeleccionada.set({
+      evaId: 87, evaRiesgoId: 5, evaVersionId: 9, evaEstado: 'BORRADOR', evaDataJson: '{}',
+      evaFechaEval: '2026-08-14T00:00:00', evaUsrEval: 1, evaVersionRow: 2, evaActivo: true
+    });
+    component.versionHistorica.set({
+      verId: 9, verFamiliaId: 1, verCodigo: 'FORM_9', verVersion: 1, verJson: '{}', verHash: 'hash',
+      verEstado: 'PUBLISHED', verVigente: false, verFechaCreacion: '2025-01-01', verUsrCreacion: 1
+    });
+    component.metodologiaHistorica.set({
+      versionFormularioId: 9, codigo: 'FORM_9', version: 1,
+      secciones: [{ clave: 'datos', titulo: 'Datos', orden: 1, campos: [{
+        clave: 'campo_historico', etiqueta: 'Campo', tipo: 'texto', obligatorio: false, soloLectura: false
+      }] }],
+      catalogos: [], reglas: []
+    });
+    component.modalEditarAbierto.set(true);
+    component.riesgoId.set(5);
+    component.respuestas.set({ campo_historico: 'actualizado', ordinal: 87, rieCodigo: 'R-087', tipo_riesgo: 'LEGACY' });
+
+    component.guardarBorradorEvaluacion();
+
+    expect(service.actualizarBorradorEvaluacion).toHaveBeenCalledWith(87, expect.objectContaining({
+      evaVersionId: 9,
+      evaDataJson: JSON.stringify({ campo_historico: 'actualizado' })
+    }));
   });
 });

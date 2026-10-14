@@ -36,6 +36,7 @@ import { FamiliaCrearModalComponent } from '../../components/familia-crear-modal
 import { FamiliaEditarModalComponent } from '../../components/familia-editar-modal/familia-editar-modal.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import {
+  construirRespuestasFormularioPersistibles,
   normalizarDefinicionFormulario,
   normalizarMetodologiaFormulario,
   normalizarRespuestasFormulario,
@@ -1441,7 +1442,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       evaRiesgoId: riskId,
       evaVersionId: versionId,
       evaEstado: current?.evaEstado ?? 'BORRADOR',
-      evaDataJson: JSON.stringify(this.respuestas()),
+      evaDataJson: JSON.stringify(this.construirRespuestasFormularioPersistibles()),
       evaDataCalcJson: null,
       evaVri: null,
       evaVrr: null,
@@ -1567,7 +1568,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       evaRiesgoId: this.riesgoId(),
       evaVersionId: versionId,
       evaEstado: 'BORRADOR',
-      evaDataJson: JSON.stringify(this.respuestas()),
+      evaDataJson: JSON.stringify(this.construirRespuestasFormularioPersistibles()),
       evaDataCalcJson: '{}',
       evaVri: null,
       evaVrr: null,
@@ -2508,7 +2509,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       evaRiesgoId: this.riesgoId(),
       evaVersionId: versionIdFinal,
       evaEstado: actual?.evaEstado ?? 'BORRADOR',
-      evaDataJson: JSON.stringify(this.respuestas()),
+      evaDataJson: JSON.stringify(this.construirRespuestasFormularioPersistibles()),
       evaDataCalcJson: actual?.evaDataCalcJson ?? null,
       evaVri: actual?.evaVri ?? null,
       evaVrr: actual?.evaVrr ?? null,
@@ -3053,6 +3054,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   private parsearRespuestas(contenido: string): RespuestasFormulario {
     return normalizarRespuestasFormulario(contenido);
+  }
+
+  private construirRespuestasFormularioPersistibles(): RespuestasFormulario {
+    const secciones = this.modalEditarAbierto() || this.modalNuevaEvaluacionAbierto()
+      ? this.seccionesModal()
+      : this.secciones();
+    return construirRespuestasFormularioPersistibles(this.respuestas(), secciones);
   }
 
   private formatearDefinicion(contenido: string): string {

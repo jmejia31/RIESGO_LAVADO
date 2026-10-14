@@ -3,6 +3,7 @@ import {
   DefinicionFormularioEditable,
   MetodologiaFormulario,
   RespuestasFormulario,
+  SeccionFormulario,
   ValorRespuestaFormulario
 } from '../models/matrices-riesgos.models';
 import { normalizarTextoVisibleUtf8 } from './text-encoding.util';
@@ -355,6 +356,19 @@ export function normalizarRespuestasFormulario(valor: unknown): RespuestasFormul
   }
 
   return respuestas;
+}
+
+export function construirRespuestasFormularioPersistibles(
+  respuestas: RespuestasFormulario,
+  secciones: SeccionFormulario[]
+): RespuestasFormulario {
+  const persistibles: RespuestasFormulario = {};
+  for (const campo of secciones.flatMap(seccion => seccion.campos)) {
+    if (Object.prototype.hasOwnProperty.call(respuestas, campo.clave)) {
+      persistibles[campo.clave] = respuestas[campo.clave];
+    }
+  }
+  return persistibles;
 }
 
 export function tieneValorRespuesta(valor: unknown): boolean {

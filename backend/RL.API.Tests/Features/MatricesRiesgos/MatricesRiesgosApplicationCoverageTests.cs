@@ -335,7 +335,8 @@ public sealed class MatricesRiesgosApplicationCoverageTests
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(persisted));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(new()
         {
-            VerId = 10, VerEstado = "PUBLISHED", VerVigente = true, VerJson = "{\"secciones\":[]}"
+            VerId = 10, VerEstado = "PUBLISHED", VerVigente = true,
+            VerJson = "{\"secciones\":[{\"campos\":[{\"clave\":\"frecuencia_inherente\"},{\"clave\":\"impacto_inherente\"},{\"clave\":\"frecuencia_residual\"},{\"clave\":\"impacto_residual\"}]}]}"
         }));
         validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ => Task.FromResult(new FormularioValidationResult
         {
@@ -354,6 +355,66 @@ public sealed class MatricesRiesgosApplicationCoverageTests
         Assert.True(result.Success);
         Assert.Equal(2, client.EvaVersionRow);
         Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync)));
+    }
+
+    [Fact]
+    public async Task ActualizarBorradorEvaluacion_PreservaClavesHistoricasYValidaSoloCamposDeVersion()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out _);
+        EvaluacionRiesgoDto persisted = EvaluacionBase();
+        persisted.EvaEstado = "BORRADOR";
+        persisted.EvaVersionRow = 2;
+        persisted.EvaDataJson = "{\"frecuencia_inherente\":4,\"ordinal\":87,\"rieCodigo\":\"R-LEGACY\"}";
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(persisted));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(new()
+        {
+            VerId = 10, VerJson = "{\"secciones\":[{\"campos\":[{\"clave\":\"frecuencia_inherente\"}]}]}"
+        }));
+        validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ => Task.FromResult(new FormularioValidationResult
+        {
+            ObligatoriosPendientes = { "campo_pendiente" }
+        }));
+        repo.On(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync), arguments =>
+        {
+            var updated = (EvaluacionRiesgoDto)arguments[0]!;
+            Assert.Contains("\"frecuencia_inherente\":5", updated.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("\"ordinal\":87", updated.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("R-LEGACY", updated.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("\"frecuencia_inherente\":5", validador.CallsTo(nameof(IFormularioValidador.ValidarRespuestasAsync))[0].Arguments[0] as string, StringComparison.Ordinal);
+            return Task.FromResult(true);
+        });
+
+        EvaluacionRiesgoDto client = EvaluacionBase();
+        client.EvaVersionRow = 2;
+        client.EvaDataJson = "{\"frecuencia_inherente\":5}";
+        ServiceResult result = await service.ActualizarBorradorEvaluacionAsync(client, 9, null);
+
+        Assert.True(result.Success);
+    }
+
+    [Theory]
+    [InlineData("{\"frecuencia_inherente\":5,\"hack_field\":\"x\"}")]
+    [InlineData("{\"frecuencia_inherente\":5,\"ordinal\":88}")]
+    public async Task ActualizarBorradorEvaluacion_RechazaInyeccionYMutacionDeClaveHistorica(string payload)
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        EvaluacionRiesgoDto persisted = EvaluacionBase();
+        persisted.EvaEstado = "BORRADOR";
+        persisted.EvaVersionRow = 2;
+        persisted.EvaDataJson = "{\"frecuencia_inherente\":4,\"ordinal\":87}";
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(persisted));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(new()
+        {
+            VerId = 10, VerJson = "{\"secciones\":[{\"campos\":[{\"clave\":\"frecuencia_inherente\"}]}]}"
+        }));
+        EvaluacionRiesgoDto client = EvaluacionBase();
+        client.EvaVersionRow = 2;
+        client.EvaDataJson = payload;
+
+        ServiceResult result = await service.ActualizarBorradorEvaluacionAsync(client, 9, null);
+
+        Assert.Equal(400, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync)));
     }
 
     [Fact]
@@ -679,7 +740,7 @@ public sealed class MatricesRiesgosApplicationCoverageTests
                 VerId = 10,
                 VerEstado = "PUBLISHED",
                 VerVigente = true,
-                VerJson = "{\"secciones\":[]}"
+                VerJson = "{\"secciones\":[{\"campos\":[{\"clave\":\"frecuencia_inherente\"},{\"clave\":\"impacto_inherente\"},{\"clave\":\"frecuencia_residual\"},{\"clave\":\"impacto_residual\"}]}]}"
             }));
     }
 

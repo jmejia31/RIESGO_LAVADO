@@ -221,6 +221,11 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 "SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id AND EVA_RIESGO_ID=:risk AND EVA_VERSION_ID=:version",
                 ("id", evaluationId), ("risk", riskId), ("version", versionId)));
 
+            const string historicalPreimage = "{\"ordinal\":87,\"rieCodigo\":\"R-LEGACY\",\"area_consolidada\":\"Área histórica\"}";
+            await ExecuteAsync(seed,
+                "UPDATE RL_MR_EVALUACIONES_RIESGO SET EVA_DATOS_JSON=:json WHERE EVA_ID=:id",
+                ("json", historicalPreimage), ("id", evaluationId));
+
             using HttpResponseMessage readCreated = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
             Assert.Equal(System.Net.HttpStatusCode.OK, readCreated.StatusCode);
             EvaluacionRiesgoDto persisted = await ReadEvaluationAsync(readCreated);
@@ -284,10 +289,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
             persisted.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object>
             {
-                ["area_principal"] = "Cliente A",
-                ["amenazas_gtic"] = "Amenaza indicada por usuario",
-                ["vulnerabilidades_gtic"] = "Vulnerabilidad indicada por usuario",
-                ["activos_informacion_gtic"] = "Activo indicado por usuario"
+                ["area_principal"] = "Cliente A"
             });
             using HttpResponseMessage updateA = await http.PutAsJsonAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/borrador", persisted);
             Assert.Equal(System.Net.HttpStatusCode.OK, updateA.StatusCode);
@@ -295,9 +297,9 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             EvaluacionRiesgoDto afterA = await ReadEvaluationAsync(readA);
             Assert.Equal(2, afterA.EvaVersionRow);
             Assert.Contains("Cliente A", afterA.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Amenaza indicada por usuario", afterA.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Vulnerabilidad indicada por usuario", afterA.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Activo indicado por usuario", afterA.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("R-LEGACY", afterA.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Área histórica", afterA.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("\"ordinal\":87", afterA.EvaDataJson, StringComparison.Ordinal);
 
             EvaluacionRiesgoDto staleClient = CopyEvaluation(persisted);
             staleClient.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B" });
@@ -307,9 +309,9 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             EvaluacionRiesgoDto afterConflict = await ReadEvaluationAsync(readAfterConflict);
             Assert.Equal(2, afterConflict.EvaVersionRow);
             Assert.Contains("Cliente A", afterConflict.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Amenaza indicada por usuario", afterConflict.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Vulnerabilidad indicada por usuario", afterConflict.EvaDataJson, StringComparison.Ordinal);
-            Assert.Contains("Activo indicado por usuario", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("R-LEGACY", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Área histórica", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("\"ordinal\":87", afterConflict.EvaDataJson, StringComparison.Ordinal);
             Assert.DoesNotContain("Cliente B", afterConflict.EvaDataJson, StringComparison.Ordinal);
 
             afterConflict.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B recargado" });
@@ -319,6 +321,36 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             EvaluacionRiesgoDto afterB = await ReadEvaluationAsync(readB);
             Assert.Equal(3, afterB.EvaVersionRow);
             Assert.Contains("Cliente B recargado", afterB.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("R-LEGACY", afterB.EvaDataJson, StringComparison.Ordinal);
+
+            EvaluacionRiesgoDto injected = CopyEvaluation(afterB);
+            injected.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object>
+            {
+                ["area_principal"] = "Cliente B recargado",
+                ["hack_field"] = "x"
+            });
+            using HttpResponseMessage injection = await http.PutAsJsonAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/borrador", injected);
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, injection.StatusCode);
+            using HttpResponseMessage readAfterInjection = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
+            EvaluacionRiesgoDto afterInjection = await ReadEvaluationAsync(readAfterInjection);
+            Assert.Equal(3, afterInjection.EvaVersionRow);
+            Assert.Contains("Cliente B recargado", afterInjection.EvaDataJson, StringComparison.Ordinal);
+            Assert.DoesNotContain("hack_field", afterInjection.EvaDataJson, StringComparison.Ordinal);
+
+            EvaluacionRiesgoDto derivedMutation = CopyEvaluation(afterInjection);
+            derivedMutation.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object>
+            {
+                ["area_principal"] = "Cliente B recargado",
+                ["ordinal"] = 88,
+                ["rieCodigo"] = "R-LEGACY",
+                ["area_consolidada"] = "Área histórica"
+            });
+            using HttpResponseMessage derived = await http.PutAsJsonAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/borrador", derivedMutation);
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, derived.StatusCode);
+            using HttpResponseMessage readAfterDerived = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
+            EvaluacionRiesgoDto afterDerived = await ReadEvaluationAsync(readAfterDerived);
+            Assert.Equal(3, afterDerived.EvaVersionRow);
+            Assert.Contains("\"ordinal\":87", afterDerived.EvaDataJson, StringComparison.Ordinal);
 
             EvaluacionRiesgoDto manipulatedIdentity = CopyEvaluation(completePreview);
             manipulatedIdentity.EvaRiesgoId = riskId + 1;

@@ -5,6 +5,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RL.API.Features.Auditoria.Persistence;
@@ -465,13 +466,24 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest($"La versión de formulario ID {evaluacionPersistida.EvaVersionId} asociada a la evaluación no existe.");
         }
 
+        if (!PrepararPayloadHistorico(dto, evaluacionPersistida.EvaDataJson, version.VerJson,
+                out string respuestasFormularioJson, out string respuestasPreservadasJson, out string? errorPayload))
+        {
+            return ServiceResult.BadRequest(errorPayload ?? "El payload contiene propiedades no permitidas.");
+        }
+
+        string payloadOriginal = dto.EvaDataJson;
+        dto.EvaDataJson = respuestasFormularioJson;
         IReadOnlyDictionary<string, bool> controlPresence =
             CrearContextoPresenciaControles(await _controlsRepository.ListarControlesAsync(dto.EvaId));
         ServiceResult? validacion = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson, version.VerId, controlPresence);
         if (validacion is not null)
         {
+            dto.EvaDataJson = payloadOriginal;
             return validacion;
         }
+
+        dto.EvaDataJson = respuestasPreservadasJson;
 
         try
         {
@@ -571,18 +583,33 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (version is null)
             return ServiceResult.BadRequest("La versión del formulario asociada al borrador ya no está disponible.");
 
+        if (!PrepararPayloadHistorico(dto, persisted.EvaDataJson, version.VerJson,
+                out string respuestasFormularioJson, out string respuestasPreservadasJson, out string? errorPayload))
+            return ServiceResult.BadRequest(errorPayload ?? "El payload contiene propiedades no permitidas.");
+
+        string payloadOriginal = dto.EvaDataJson;
+        dto.EvaDataJson = respuestasFormularioJson;
+
         FormularioValidationResult validacion = await _validador.ValidarRespuestasAsync(
             dto.EvaDataJson,
             version.VerJson,
             permitirObligatoriosPendientes: true);
-        if (!validacion.Valido) return ServiceResult.BadRequest(FormatearErroresValidacion(validacion));
+        if (!validacion.Valido)
+        {
+            dto.EvaDataJson = payloadOriginal;
+            return ServiceResult.BadRequest(FormatearErroresValidacion(validacion));
+        }
 
         if (validacion.ObligatoriosPendientes.Count == 0)
         {
             IReadOnlyDictionary<string, bool> controlPresence =
                 CrearContextoPresenciaControles(await _controlsRepository.ListarControlesAsync(dto.EvaId));
             ServiceResult? calculo = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson, version.VerId, controlPresence);
-            if (calculo is not null) return calculo;
+            if (calculo is not null)
+            {
+                dto.EvaDataJson = payloadOriginal;
+                return calculo;
+            }
         }
         else
         {
@@ -591,6 +618,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             dto.EvaEtp = null;
             dto.EvaVrr = null;
         }
+
+        dto.EvaDataJson = respuestasPreservadasJson;
 
         try
         {
@@ -605,6 +634,102 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         {
             return ServiceResult.BadRequest(ex.Message);
         }
+    }
+
+    private static bool PrepararPayloadHistorico(
+        EvaluacionRiesgoDto dto,
+        string jsonPersistido,
+        string definicionFormulario,
+        out string respuestasFormularioJson,
+        out string respuestasPreservadasJson,
+        out string? error)
+    {
+        respuestasFormularioJson = "{}";
+        respuestasPreservadasJson = "{}";
+        error = null;
+
+        try
+        {
+            JsonObject persistidas = JsonNode.Parse(string.IsNullOrWhiteSpace(jsonPersistido) ? "{}" : jsonPersistido) as JsonObject
+                ?? throw new JsonException("Las respuestas persistidas deben ser un objeto JSON.");
+            JsonObject recibidas = JsonNode.Parse(string.IsNullOrWhiteSpace(dto.EvaDataJson) ? "{}" : dto.EvaDataJson) as JsonObject
+                ?? throw new JsonException("Las respuestas recibidas deben ser un objeto JSON.");
+            using JsonDocument definicion = JsonDocument.Parse(definicionFormulario);
+            HashSet<string> camposFormulario = ObtenerClavesFormulario(definicion.RootElement);
+            var formulario = new JsonObject();
+            JsonObject combinado = (JsonObject)persistidas.DeepClone();
+
+            foreach ((string clave, JsonNode? valor) in recibidas)
+            {
+                if (camposFormulario.Contains(clave))
+                {
+                    formulario[clave] = valor?.DeepClone();
+                    string clavePersistida = combinado.Select(prop => prop.Key)
+                        .FirstOrDefault(prop => string.Equals(prop, clave, StringComparison.OrdinalIgnoreCase)) ?? clave;
+                    combinado[clavePersistida] = valor?.DeepClone();
+                    continue;
+                }
+
+                KeyValuePair<string, JsonNode?> previa = persistidas.FirstOrDefault(prop =>
+                    string.Equals(prop.Key, clave, StringComparison.OrdinalIgnoreCase));
+                if (previa.Key is null || !JsonNode.DeepEquals(previa.Value, valor))
+                {
+                    error = $"La propiedad '{clave}' no está definida como campo editable y no puede agregarse ni modificarse.";
+                    return false;
+                }
+            }
+
+            // Un campo editable omitido por una versión antigua del cliente conserva su valor previo.
+            foreach ((string clave, JsonNode? valor) in persistidas)
+            {
+                if (camposFormulario.Contains(clave) && !recibidas.Any(prop =>
+                        string.Equals(prop.Key, clave, StringComparison.OrdinalIgnoreCase)))
+                {
+                    formulario[clave] = valor?.DeepClone();
+                    combinado[clave] = valor?.DeepClone();
+                }
+            }
+
+            respuestasFormularioJson = formulario.ToJsonString();
+            respuestasPreservadasJson = combinado.ToJsonString();
+            return true;
+        }
+        catch (JsonException)
+        {
+            error = "Las respuestas de la evaluación no contienen objetos JSON válidos.";
+            return false;
+        }
+    }
+
+    private static HashSet<string> ObtenerClavesFormulario(JsonElement definicion)
+    {
+        var claves = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (definicion.ValueKind != JsonValueKind.Object
+            || !definicion.TryGetProperty("secciones", out JsonElement secciones)
+            || secciones.ValueKind != JsonValueKind.Array)
+            return claves;
+
+        foreach (JsonElement seccion in secciones.EnumerateArray())
+        {
+            if (seccion.ValueKind != JsonValueKind.Object
+                || !seccion.TryGetProperty("campos", out JsonElement campos)
+                || campos.ValueKind != JsonValueKind.Array)
+                continue;
+
+            foreach (JsonElement campo in campos.EnumerateArray())
+            {
+                if (campo.ValueKind != JsonValueKind.Object) continue;
+                foreach (string nombre in new[] { "clave", "rutaDatos", "identificador", "id" })
+                {
+                    if (campo.TryGetProperty(nombre, out JsonElement valor)
+                        && valor.ValueKind == JsonValueKind.String
+                        && !string.IsNullOrWhiteSpace(valor.GetString()))
+                        claves.Add(valor.GetString()!);
+                }
+            }
+        }
+
+        return claves;
     }
 
     private static string FormatearErroresValidacion(FormularioValidationResult validacion)

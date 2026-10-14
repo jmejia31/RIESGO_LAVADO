@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  construirRespuestasFormularioPersistibles,
   formatearValorRespuesta,
   normalizarDefinicionFormulario,
   normalizarMetodologiaFormulario,
@@ -10,6 +11,19 @@ import {
 } from './dynamic-form-renderer.util';
 
 describe('renderer dinámico — casos límite del contrato', () => {
+  it('persiste únicamente las respuestas definidas por la versión activa', () => {
+    const definicion = normalizarDefinicionFormulario({
+      secciones: [{ clave: 's1', titulo: 'S1', campos: [{ clave: 'campo_historico', tipo: 'texto' }] }]
+    });
+
+    expect(construirRespuestasFormularioPersistibles({
+      campo_historico: 'conservar',
+      ordinal: 87,
+      rieCodigo: 'R-87',
+      tipo_riesgo: 'histórico'
+    }, definicion.secciones)).toEqual({ campo_historico: 'conservar' });
+  });
+
   it('normaliza aliases adicionales y conserva el tipo original informado', () => {
     const casos: Array<[unknown, string]> = [
       [' TEXT ', 'texto'],
