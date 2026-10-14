@@ -472,6 +472,11 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest(errorPayload ?? "El payload contiene propiedades no permitidas.");
         }
 
+        dto.EvaDataJson = respuestasPreservadasJson;
+        ServiceResult? normalizacion = NormalizarRespuestaRiesgo(dto);
+        if (normalizacion is not null) return normalizacion;
+        respuestasPreservadasJson = dto.EvaDataJson;
+
         string payloadOriginal = dto.EvaDataJson;
         dto.EvaDataJson = respuestasFormularioJson;
         IReadOnlyDictionary<string, bool> controlPresence =
@@ -586,6 +591,11 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (!PrepararPayloadHistorico(dto, persisted.EvaDataJson, version.VerJson,
                 out string respuestasFormularioJson, out string respuestasPreservadasJson, out string? errorPayload))
             return ServiceResult.BadRequest(errorPayload ?? "El payload contiene propiedades no permitidas.");
+
+        dto.EvaDataJson = respuestasPreservadasJson;
+        ServiceResult? normalizacion = NormalizarRespuestaRiesgo(dto);
+        if (normalizacion is not null) return normalizacion;
+        respuestasPreservadasJson = dto.EvaDataJson;
 
         string payloadOriginal = dto.EvaDataJson;
         dto.EvaDataJson = respuestasFormularioJson;
