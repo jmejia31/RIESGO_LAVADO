@@ -10,6 +10,7 @@ const critical = [
   /^GET \/api\/matrices-riesgos\/evaluaciones\/\d+\/proyeccion-institucional$/,
   /^GET \/api\/matrices-riesgos\/mitigacion\/evaluaciones\/\d+\/controles$/,
   /^GET \/api\/matrices-riesgos\/mitigacion\/evaluaciones\/\d+\/planes$/,
+  /^GET \/api\/matrices-riesgos\/mitigacion\/evaluaciones\/\d+\/bloque4$/,
   /^GET \/api\/matrices-riesgos\/mitigacion\/planes\/\d+\/actividades$/,
   /^POST \/api\/matrices-riesgos\/mitigacion\/(controles|planes|actividades)$/,
 ];
@@ -208,6 +209,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   ]);
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
+  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/mitigacion/evaluaciones/{id}/bloque4'))).toBeTruthy();
 
   const blockNavigation = page.locator('nav[aria-label^="Bloques funcionales"]');
   await expect(blockNavigation.getByRole('button')).toHaveCount(6);
