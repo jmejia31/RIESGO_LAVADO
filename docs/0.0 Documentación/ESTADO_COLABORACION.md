@@ -2480,3 +2480,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Build Angular, lint, `npm audit` (0 vulnerabilidades), tests frontend (858/858), E2E focalizado Monitoreo de Listas (1/1 Chromium) y validadores estructural/DB/docs/contratos/uploader pasaron. El E2E cubre file chooser, retiro local, drag/drop y viewport móvil. El inventario global mantiene 5 instancias en 4 templates, 0 raw file inputs fuera del shared component y una implementación del texto canónico.
 - La expectativa F71 del browser Oracle fue corregida de la etiqueta técnica a la etiqueta canónica. El run `38603747251` sigue registrado como fallo previo; falta ejecutar el nuevo SHA contra el Oracle XE desechable y revisar el nuevo Quality Gates. No se afirma todavía Matrix browser→API→Oracle.
 - `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`. En el siguiente paso stagear sólo los archivos de alcance, publicar en `origin/desarrollo`, inspeccionar el CI y corregir/repetir si falla. Los cambios ajenos de DatabaseEnvironmentGuard, su prueba y tsconfig se preservan fuera del stage.
+
+### Corrección del fixture Oracle/browser (2026-10-14 11:55 -06:00)
+
+- El run `38610346332` del SHA `b7653e3e1106f5ebff63d3d83c64caa85fda0b44` confirmó que la API real rechaza 65–68 porque la efectividad debe pertenecer a la escala canónica del catálogo. Se actualizó el fixture de cuatro controles a 30/50/85/90; backend y catálogo permanecen intactos.
+- Esperar un nuevo Quality Gates y comprobar la parte Oracle/browser. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta `completed/success` del SHA corregido.

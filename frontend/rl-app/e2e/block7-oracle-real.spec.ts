@@ -243,9 +243,10 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await monitorHistory.json() as { datos: Array<{ monEstadoRiesgo: string }> }).datos[0]?.monEstadoRiesgo).toBe('Mitigado');
 
   const monitoringStates = ['SE_MANTIENE', 'NO_SE_MANTIENE', 'SE_MANTIENE', 'NO_SE_MANTIENE'];
+  const monitoringEffectiveness = [30, 50, 85, 90];
   for (let index = 0; index < controlIds.length; index++) {
     const update = await request.put(`${monitoring}/controles/${controlIds[index]}`, { data: {
-      evaluacionId: evaluation.id, estadoMonitoreo: monitoringStates[index], efectividadMonitoreo: 65 + index,
+      evaluacionId: evaluation.id, estadoMonitoreo: monitoringStates[index], efectividadMonitoreo: monitoringEffectiveness[index],
     } });
     expect(update.status(), await update.text()).toBe(200);
   }

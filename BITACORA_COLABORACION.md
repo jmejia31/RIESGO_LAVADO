@@ -8830,3 +8830,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Pasaron validadores de contrato (82/82), catálogos (14/91, drift 0), Blocks 7/8 y contrato Block 9 (12/12; mappings 10/10 y 13/13), más validador global del uploader. También pasaron validadores estructural, de scripts de base de datos y de enlaces de documentación; `git diff --check` no reportó errores.
 - El CI `38603747251` falló en una expectativa obsoleta de etiqueta para F71 (`MITIGADO` frente a `Mitigado`); la aserción corregida ahora es la que ejecutará el siguiente push. Oracle XE no se ejecutó localmente. El E2E Matrix uploader contra Oracle y el resultado de Quality Gates siguen pendientes de CI, por lo que Bloque 9 no se cierra aquí.
 - Se actualizó la documentación del Bloque 9 con las pruebas locales reales. Producción: lectura=NO, DML=0, DDL=0, apply=NO; no se modificó esquema ni se agregó bypass productivo. El cambio ajeno `DatabaseEnvironmentGuard*`, `frontend/rl-app/tsconfig.json` y untracked preexistentes permanecen fuera del stage.
+
+## Corrección del fixture Oracle/browser (COD) — 2026-10-14 11:55 -06:00
+
+- El Quality Gates `38610346332` del commit `b7653e3e1106f5ebff63d3d83c64caa85fda0b44` pasó validadores y compilación, pero el browser real falló al enviar efectividades 65–68. El backend valida contra la escala canónica institucional de efectividad, no cualquier entero entre 0 y 100; el catálogo admite porcentajes como 30, 50, 85 y 90.
+- Se ajustó sólo el fixture del test a cuatro porcentajes canónicos distintos `[30, 50, 85, 90]`. No se relajó el backend ni el contrato. Debe confirmarse Oracle/browser en el nuevo run; el estado continúa `PENDING_CI_ORACLE_BROWSER`.
