@@ -92,6 +92,17 @@ describe('MatricesRiesgosGestionComponent', () => {
     expect(filtros?.querySelector('[aria-label="Limpiar filtros de riesgos"]')).not.toBeNull();
   });
 
+  it('presenta los datos del catálogo con semántica institucional de riesgo', () => {
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('Código de Riesgo');
+    expect(root.textContent).toContain('Riesgo Inherente');
+    expect(root.textContent).toContain('Evaluación');
+    expect(root.querySelector('#riesgos-buscar')?.getAttribute('placeholder')).toBe(
+      'Buscar por Código de Riesgo, Riesgo Inherente o Evaluación...'
+    );
+    expect(root.querySelector('[aria-label="Ver Matriz completa"]')).toBeNull();
+  });
+
   it('maneja error al listar riesgos y propaga mensaje por defecto si no viene del backend', () => {
     service.listarRiesgosPaginados.mockReturnValue(throwError(() => ({})));
     component.cargar();

@@ -206,6 +206,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
+  readonly proyeccionMatrizCompleta = signal<InstitutionalEvaluationProjectionDto | null>(null);
+  readonly proyeccionMatrizCompletaEnCarga = signal(false);
   readonly metodologiaMatrizCompleta = signal<MetodologiaFormulario | null>(null);
   readonly metodologiaMatrizCompletaEnCarga = signal(false);
   readonly metodologiaMatrizCompletaError = signal<string | null>(null);
@@ -1749,6 +1751,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.actualizandoCalculo.set(false);
     this.limpiarAlertas();
     this.evaluacionSeleccionada.set(null);
+    this.proyeccionMatrizCompleta.set(null);
+    this.proyeccionMatrizCompletaEnCarga.set(false);
     this.evaluacionResumenSeleccionada.set(null);
     this.riesgoId.set(0);
     ++this.secuenciaVersionNuevaEvaluacion;
@@ -1913,6 +1917,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.focoRetornoMatrizCompleta = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.evaluacionResumenSeleccionada.set(resumen);
     this.evaluacionSeleccionada.set(null);
+    this.proyeccionMatrizCompleta.set(null);
+    this.proyeccionMatrizCompletaEnCarga.set(true);
     this.metodologiaMatrizCompleta.set(null);
     this.metodologiaMatrizCompletaEnCarga.set(false);
     this.metodologiaMatrizCompletaError.set(null);
@@ -1928,6 +1934,31 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.bloque6MatrizError.set(null);
     this.matrizCompletaEnCarga.set(true);
     this.modalMatrizCompletaAbierto.set(true);
+
+    const projectionRequest = this.solicitarProyeccion(resumen.evaId);
+    if (!projectionRequest) {
+      this.proyeccionMatrizCompletaEnCarga.set(false);
+      this.matrizCompletaError.set('La proyección institucional canónica no está disponible.');
+    } else {
+      projectionRequest.subscribe({
+        next: projection => {
+          if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+          const fieldNumbers = projection.fields.map(field => field.fieldNumber);
+          const expected = Array.from({ length: 82 }, (_, index) => index + 1);
+          if (projection.evaluationId !== resumen.evaId || fieldNumbers.length !== 82 || fieldNumbers.some((number, index) => number !== expected[index])) {
+            this.matrizCompletaError.set('La proyección institucional no corresponde a la evaluación seleccionada o no contiene los 82 campos.');
+          } else {
+            this.proyeccionMatrizCompleta.set(projection);
+          }
+          this.proyeccionMatrizCompletaEnCarga.set(false);
+        },
+        error: error => {
+          if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+          this.matrizCompletaError.set(this.obtenerMensajeError(error, 'No se pudo cargar la proyección institucional canónica.'));
+          this.proyeccionMatrizCompletaEnCarga.set(false);
+        }
+      });
+    }
 
     this.service.obtenerEvaluacion(resumen.evaId).subscribe({
       next: detalle => {
@@ -1992,6 +2023,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     ++this.secuenciaCargaMatrizCompleta;
     this.bloque5DetalleExpandido.set(false);
     this.modalMatrizCompletaAbierto.set(false);
+    this.proyeccionMatrizCompleta.set(null);
+    this.proyeccionMatrizCompletaEnCarga.set(false);
     this.matrizCompletaEnCarga.set(false);
     this.metodologiaMatrizCompletaEnCarga.set(false);
     this.controlesMatrizEnCarga.set(false);
@@ -2006,6 +2039,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   valorCampoMatriz(field: MatrixFieldContract): string {
+    const canonical = this.valorProyeccionMatrizCompleta(field.ordinal);
+    if (canonical !== null) return canonical;
     const evaluacion = this.evaluacionSeleccionada();
     const resumen = this.evaluacionResumenSeleccionada();
     if (!evaluacion || !resumen) return '—';
@@ -2034,6 +2069,29 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return Array.isArray(value) ? value.join(', ') : String(value);
   }
 
+  private valorProyeccionMatrizCompleta(ordinal: number): string | null {
+    const field = this.proyeccionMatrizCompleta()?.fields.find(item => item.fieldNumber === ordinal);
+    if (!field) return null;
+    if (field.value === null || field.value === undefined || field.state === 'LEGIT_BLANK') return '—';
+    if (Array.isArray(field.value)) {
+      return field.value.map((item, index) => {
+        if (item === null || item === undefined || item === '') return `${index + 1}. [Sin dato]`;
+        if (typeof item !== 'object') return `${index + 1}. ${String(item)}`;
+        const record = item as Record<string, unknown>;
+        const ordinalIndex = record['planOrdinalIndex'] ?? record['ordinalIndex'] ?? record['activityOrdinalIndex'];
+        const value = record['value'] ?? record['displayValue'] ?? record['description'] ?? record['text'];
+        const display = value === null || value === undefined || value === '' ? '[Sin dato]' : String(value);
+        return `${ordinalIndex ?? index + 1}. ${display}`;
+      }).join('\n');
+    }
+    if (typeof field.value === 'object') {
+      const record = field.value as Record<string, unknown>;
+      const value = record['value'] ?? record['displayValue'] ?? record['text'];
+      return value === null || value === undefined ? JSON.stringify(field.value) ?? '—' : String(value);
+    }
+    return String(field.value);
+  }
+
   readonly camposMatrizCompleta = MATRIX_BLOCK_1_FIELDS;
   readonly camposControlesMatriz = MATRIX_BLOCK_2_FIELDS;
   readonly camposResidualMatriz = MATRIX_BLOCK_3_FIELDS;
@@ -2048,6 +2106,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   valorCampoResidual(field: MatrixFieldContract): string {
+    const canonical = this.valorProyeccionMatrizCompleta(field.ordinal);
+    if (canonical !== null) return canonical;
     const evaluacion = this.evaluacionSeleccionada();
     const resumen = this.evaluacionResumenSeleccionada();
     if (!evaluacion || !resumen) return '—';
@@ -2140,6 +2200,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   valorCampoBloque5(field: MatrixFieldContract): string {
+    const canonical = this.valorProyeccionMatrizCompleta(field.ordinal);
+    if (canonical !== null) return canonical;
     const evaluacion = this.evaluacionSeleccionada();
     if (!evaluacion || !field.key) return '—';
     const value = this.parsearRespuestas(evaluacion.evaDataCalcJson ?? '{}')[field.key];
@@ -2218,6 +2280,18 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   valorCampoControl(field: MatrixFieldContract): string {
+    const canonical = this.valorProyeccionMatrizCompleta(field.ordinal);
+    if (canonical !== null && [22, 23, 26, 27, 30, 31, 33].includes(field.ordinal)) {
+      const versionNumero = this.evaluacionResumenSeleccionada()?.versionNumero;
+      const esV1 = versionNumero === 1;
+      if ([23, 27, 31].includes(field.ordinal)) {
+        return esV1 ? this.formatearPorcentajeHistorico0A100(canonical) : this.formatearPorcentajeRuntime0A1(canonical);
+      }
+      if (field.ordinal === 33) {
+        return esV1 ? this.formatearPorcentajeHistorico0A100(canonical) : this.formatearPorcentajeRuntime0A1(canonical);
+      }
+      return canonical;
+    }
     const key = field.key;
     if (!key) return '—';
     const versionNumero = this.evaluacionResumenSeleccionada()?.versionNumero;
@@ -2334,25 +2408,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return indexConsolidado >= 0
       ? (this.paginaConsolidado() - 1) * this.registrosPorPaginaConsolidado() + indexConsolidado + 1
       : null;
-  }
-
-  abrirModalVerDesdeConsolidado(fila: RiesgoReporteFila): void {
-    this.abrirModalVer({
-      evaId: fila.evaluacionId,
-      evaRiesgoId: fila.riesgoId,
-      riesgoCodigo: fila.codigoRiesgo,
-      riesgoNombre: fila.codigoRiesgo,
-      evaVersionId: fila.versionFormularioId,
-      versionCodigo: `VERSION_${fila.versionFormularioId}`,
-      versionNumero: 0,
-      estado: fila.estadoEvaluacion,
-      evaEstado: fila.estadoEvaluacion,
-      vri: fila.vri,
-      vrr: fila.vrr,
-      nivelResidual: fila.nivelResidual,
-      fechaEval: fila.fechaEvaluacion,
-      evaFechaEval: fila.fechaEvaluacion
-    });
   }
 
   cerrarModalVer(): void {

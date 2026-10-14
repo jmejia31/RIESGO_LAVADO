@@ -52,8 +52,7 @@
       <article class="rounded-xl border border-rose-100 bg-rose-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-rose-700">Inactivas</p><p class="mt-2 text-3xl font-bold text-rose-700" data-ui-fam-kpi="inactivas">{{ totalFamiliasInactivas() }}</p><p class="text-xs text-rose-700/80">Fuera de uso</p></article>
       <article class="rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-violet-700">Total versiones</p><p class="mt-2 text-3xl font-bold text-violet-700" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p><p class="text-xs text-violet-700/80">Versiones disponibles</p></article>
     } @else if (tab() === 'consolidado') {
-      <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total registros</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ totalesConsolidado().totalRiesgos }}</p><p class="text-xs text-gray-500">Proyección consolidada</p></article>
-      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Con evaluación</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ totalesConsolidado().totalConEvaluacionOficial }}</p><p class="text-xs text-blue-700/80">Registros con estado</p></article>
+      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Con evaluación aprobada</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ totalesConsolidado().totalConEvaluacionOficial }}</p><p class="text-xs text-blue-700/80">Solo evaluaciones con estado vigente APROBADA</p></article>
       <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Nivel alto/crítico</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ totalesConsolidado().totalAltoCritico }}</p><p class="text-xs text-amber-700/80">Según nivel residual</p></article>
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Estados disponibles</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ estadosConsolidado().length }}</p><p class="text-xs text-emerald-700/80">En la consulta actual</p></article>
     }
@@ -132,7 +131,7 @@
           </button>
       </div>
       <div class="matrices-filter-surface flex flex-col sm:flex-row sm:items-end gap-3">
-        <div class="flex-1 min-w-[200px]"><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código, nombre o evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
+      <div class="flex-1 min-w-[200px]"><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por Código de Riesgo, Riesgo Inherente o Evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
         <div class="w-full sm:w-48"><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
         <div class="w-full sm:w-auto">
           <button type="button" title="Limpiar filtros de evaluaciones" aria-label="Limpiar filtros de evaluaciones" class="inline-flex h-10 w-10 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
@@ -146,7 +145,7 @@
           <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
             <tr>
               <th class="px-6 py-3">EVALUACIÓN</th>
-              <th class="px-6 py-3">RIESGO</th>
+              <th class="px-6 py-3">CÓDIGO DE RIESGO / RIESGO INHERENTE</th>
               <th class="px-6 py-3">VERSIÓN</th>
               <th class="px-6 py-3">ESTADO</th>
               <th class="px-6 py-3">VRI</th>
@@ -162,6 +161,7 @@
                 <td class="px-6 py-4 font-bold text-gray-900">#{{ evaluacion.evaId }}</td>
                 <td class="px-6 py-4 font-medium">
                   <div class="font-bold text-gray-900">{{ evaluacion.riesgoCodigo }}</div>
+                  <div class="mt-1 text-xs font-semibold text-gray-500">Riesgo Inherente</div>
                   <div class="text-xs text-gray-500 truncate max-w-[220px]" title="{{ evaluacion.riesgoNombre }}">{{ evaluacion.riesgoNombre }}</div>
                 </td>
                 <td class="px-6 py-4 text-xs font-semibold text-gray-600">
@@ -194,15 +194,6 @@
                             title="Ver evaluación"
                             aria-label="Ver evaluación"
                             (click)="abrirModalVer(evaluacion)">
-                      <app-action-icon action="view"></app-action-icon>
-                    </button>
-
-                    <button type="button"
-                            class="inline-flex items-center justify-center p-1.5 text-ihss-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
-                            title="Ver Matriz completa"
-                            aria-label="Ver Matriz completa"
-                            data-matrix-open="complete"
-                            (click)="abrirMatrizCompleta(evaluacion)">
                       <app-action-icon action="view"></app-action-icon>
                     </button>
 
@@ -284,7 +275,7 @@
       <div class="matrices-table-surface overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[1100px] w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-            <tr><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('codigo')">Código</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('area')">Área</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('dueno')">Dueño</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vri')">VRI</button></th><th class="px-6 py-3">Inherente</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vrr')">VRR</button></th><th class="px-6 py-3">Residual</th><th class="px-6 py-3">Respuesta</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('estado')">Estado</button></th><th class="px-6 py-3">Versión</th><th class="px-6 py-3">Acciones</th></tr>
+            <tr><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('codigo')">Código de Riesgo</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('area')">Área</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('dueno')">Dueño</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vri')">VRI</button></th><th class="px-6 py-3">Riesgo Inherente</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vrr')">VRR</button></th><th class="px-6 py-3">Residual</th><th class="px-6 py-3">Respuesta</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('estado')">Estado</button></th><th class="px-6 py-3">Versión</th><th class="px-6 py-3">Acciones</th></tr>
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
             @for (fila of consolidadoPaginado(); track fila.evaluacionId) {
@@ -302,13 +293,6 @@
                 <td class="px-6 py-4 text-center whitespace-nowrap">
                   <div class="inline-flex flex-nowrap items-center justify-center gap-1.5" data-consolidado-actions>
                     <button type="button"
-                            class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
-                            title="Ver detalle del consolidado"
-                            aria-label="Ver detalle del consolidado"
-                            (click)="abrirModalVerDesdeConsolidado(fila)">
-                      <app-action-icon action="view"></app-action-icon>
-                    </button>
-                    <button type="button"
                             class="inline-flex items-center justify-center p-1.5 text-ihss-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
                             title="Ver Matriz completa"
                             aria-label="Ver Matriz completa"
@@ -319,7 +303,7 @@
                   </div>
                 </td>
               </tr>
-            } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">Sin proyecciones acumuladas.</td></tr> }
+            } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">Sin evaluaciones aprobadas para los filtros seleccionados.</td></tr> }
           </tbody>
         </table>
       </div>
@@ -346,7 +330,7 @@
             <div class="flex justify-end border-b border-gray-100 pb-4">
               @if (evaluacionResumenSeleccionada(); as resumenMatriz) {
                 <dl class="grid grid-cols-2 gap-x-5 gap-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs sm:min-w-[22rem]">
-                  <div><dt class="font-semibold text-gray-500">Código</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.riesgoCodigo }}</dd></div>
+                  <div><dt class="font-semibold text-gray-500">Código de Riesgo</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.riesgoCodigo }}</dd></div>
                   <div><dt class="font-semibold text-gray-500">Estado workflow</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.estado }}</dd></div>
                   <div><dt class="font-semibold text-gray-500">Versión</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.versionCodigo }} · v{{ resumenMatriz.versionNumero }}</dd></div>
                   <div><dt class="font-semibold text-gray-500">Fecha evaluación</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.fechaEval | date:'dd/MM/yyyy HH:mm' }}</dd></div>
@@ -355,7 +339,7 @@
 
             </div>
 
-            @if (matrizCompletaEnCarga()) {
+            @if (matrizCompletaEnCarga() || proyeccionMatrizCompletaEnCarga()) {
               <div class="rounded-xl border border-gray-100 bg-slate-50 p-8 text-center text-sm font-semibold text-gray-600" role="status" aria-live="polite">Cargando la evaluación y su riesgo maestro…</div>
             } @else if (matrizCompletaError(); as errorMatriz) {
               <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{{ errorMatriz }}</div>

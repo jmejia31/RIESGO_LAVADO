@@ -151,6 +151,18 @@ jobs:
           --filter FullyQualifiedName~InstitutionalProjectionOracleIntegrationTests
           --logger "console;verbosity=normal"
 
+      - name: Run Block 8 official consolidated selection against disposable Oracle XE
+        env:
+          RL_BLOCK8_ORACLE_INTEGRATION_REQUIRED: 'true'
+          BLOCK8_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~ConsolidatedApiAndReportUseLatestCurrentApprovedEvaluationPerRisk --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Passed: *1' <<<"$output"
+          echo 'BLOCK8_ORACLE_TESTS_EXECUTED=1'
+          echo 'BLOCK8_CONSOLIDATED_ORACLE_INTEGRATION=PASS'
+
       - name: Validate compose configuration without secrets in repository
         shell: bash
         env:

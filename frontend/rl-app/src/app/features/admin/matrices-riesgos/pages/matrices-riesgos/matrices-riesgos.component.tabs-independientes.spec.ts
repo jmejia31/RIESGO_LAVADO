@@ -272,7 +272,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     component.tab.set('consolidado');
     fixture.detectChanges();
     expect(kpis()).toHaveLength(1);
-    expect(kpis()[0].textContent).toContain('Total registros');
+    expect(kpis()[0].textContent).toContain('Con evaluación aprobada');
     expect(kpis()[0].textContent).not.toContain('Total evaluaciones');
 
     component.tab.set('plantillas');
@@ -348,7 +348,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(root.querySelector('[data-matrix-modal="complete"] .modal-size-workspace')).not.toBeNull();
   });
 
-  it('16. alinea las acciones del Consolidado como grupo horizontal y conserva su orden', () => {
+  it('16. conserva una única acción canónica para abrir la Matriz completa desde el Consolidado', () => {
     component.consolidado.set([{
       riesgoId: 5,
       evaluacionId: 101,
@@ -373,6 +373,8 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(acciones).not.toBeNull();
     expect(acciones?.classList.contains('flex-nowrap')).toBe(true);
     const etiquetas = Array.from(acciones?.querySelectorAll('button') ?? []).map(button => button.getAttribute('aria-label'));
-    expect(etiquetas).toEqual(['Ver detalle del consolidado', 'Ver Matriz completa']);
+    expect(etiquetas).toEqual(['Ver Matriz completa']);
+    expect(root.querySelectorAll('#panel-consolidado [aria-label="Ver detalle del consolidado"]')).toHaveLength(0);
+    expect(root.querySelectorAll('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveLength(0);
   });
 });

@@ -19,15 +19,15 @@
 
   <form class="grid gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-2" (ngSubmit)="guardar()">
     <div>
-      <label for="codigo-riesgo" class="block text-sm font-medium">Código</label>
+      <label for="codigo-riesgo" class="block text-sm font-medium">Código de Riesgo</label>
       <input id="codigo-riesgo" name="codigoRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="codigo" maxlength="30" required>
     </div>
     <div>
-      <label for="nombre-riesgo" class="block text-sm font-medium">Nombre</label>
+      <label for="nombre-riesgo" class="block text-sm font-medium">Riesgo Inherente</label>
       <input id="nombre-riesgo" name="nombreRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nombre" maxlength="250" required>
     </div>
     <div class="md:col-span-2">
-      <label for="descripcion-riesgo" class="block text-sm font-medium">Descripción</label>
+      <label for="descripcion-riesgo" class="block text-sm font-medium">Evaluación</label>
       <textarea id="descripcion-riesgo" name="descripcionRiesgo" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="descripcion" maxlength="2000"></textarea>
     </div>
     <div class="flex items-center gap-2">
@@ -52,7 +52,7 @@
   <div class="matrices-filter-surface flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4 sm:flex-row sm:items-end" data-ui-filter-block="riesgos" data-ui-filter-standard="full">
     <div class="min-w-[220px] flex-1">
       <label for="riesgos-buscar" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Buscar</label>
-      <input id="riesgos-buscar" type="search" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" placeholder="Buscar por código o nombre..." [ngModel]="filtroBuscar()" (ngModelChange)="cambiarBuscar($event)">
+      <input id="riesgos-buscar" type="search" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" placeholder="Buscar por Código de Riesgo, Riesgo Inherente o Evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="cambiarBuscar($event)">
     </div>
     <div class="w-full sm:w-48">
       <label for="riesgos-estado" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Estado</label>
@@ -71,7 +71,7 @@
   </div>
   <div class="overflow-x-auto rounded-xl border border-slate-200">
     <table class="min-w-[760px] w-full divide-y divide-slate-200 text-sm">
-      <thead class="bg-slate-100 text-left text-xs uppercase text-slate-600"><tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Descripción</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acción</th></tr></thead>
+    <thead class="bg-slate-100 text-left text-xs uppercase text-slate-600"><tr><th class="px-4 py-3">Código de Riesgo</th><th class="px-4 py-3">Riesgo Inherente</th><th class="px-4 py-3">Evaluación</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acción</th></tr></thead>
       <tbody class="divide-y divide-slate-100">
         @for (riesgo of riesgos(); track riesgo.rieId) {
           <tr><td class="px-4 py-3 font-semibold">{{ riesgo.rieCodigo }}</td><td class="px-4 py-3">{{ riesgo.rieNombre }}</td><td class="px-4 py-3">{{ riesgo.rieDescripcion || '-' }}</td><td class="px-4 py-3">{{ riesgo.rieActivo ? 'Activo' : 'Inactivo' }}</td><td class="px-4 py-3"><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-blue-700" title="Editar riesgo" aria-label="Editar riesgo" (click)="editar(riesgo)">
