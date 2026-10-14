@@ -1,6 +1,7 @@
 # Bloque 9 — Mitigación y monitoreo
 
-**Estado de implementación:** `PENDING_CI_ORACLE_BROWSER`.
+**Estado:** `BLOCK9_STATUS=CLOSED`.
+**CI final:** Quality Gates `38625179428`, SHA `ea3631bd33af480363cc576efdf037f97f809ebf`, `completed/success`.
 **Rama:** `desarrollo`.
 **Alcance:** ciclo de vida de F40–F49 y F70–F82, evidencias, capacidades Área/UGR y proyección institucional 82/82.
 
@@ -48,7 +49,7 @@ El panel operativo usa `GET /api/matrices-riesgos/monitoreo/evaluaciones/{id}/bl
 
 El Quality Gates reutiliza el único Oracle XE desechable existente. El host de prueba exige entorno `E2E`, opt-in explícito y que `DatabaseEnvironmentGuard` acepte `LOCAL_XE`. En ese host, el test browser real cubre planes y actividades, F41/F43, alertas/duplicados, automonitoreos, los cuatro escenarios de capacidades, CRUD de seguimiento por tipo, carga/vínculo/orden/desvínculo/protección de evidencia, auditoría, F70–F82, Angular y viewport desktop/móvil. Las rutas críticas se dejan pasar a la API real.
 
-El cierre final se actualizará sólo después de que el Quality Gates del SHA publicado termine `completed/success` y los logs muestren `BLOCK9_*_ORACLE_INTEGRATION=PASS` y `BLOCK9_BROWSER_API_ORACLE_E2E=PASS` con conteos mayores que cero.
+Quality Gates confirmó Oracle XE y browser real en la misma ejecución: `BLOCK7_ORACLE_TESTS_EXECUTED=1`, `BLOCK7_ORACLE_WRITE_INTEGRATION=PASS`, `BLOCK7_REAL_BROWSER_TESTS_EXECUTED=1`, `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`, `BLOCK9_CRITICAL_ROUTES_MOCKED=0`, `BLOCK9_MITIGATION_CRUD=PASS`, `BLOCK9_MONITORING_CRUD=PASS`, `BLOCK9_EVIDENCE=PASS` y `BLOCK9_RBAC=PASS`. La integración Block6 pasó 3/3 y Block8 1/1. Los resultados anteriores marcados pendientes en esta bitácora son históricos y quedaron superados por este SHA.
 
 **Seguridad:** no se ejecutó DML/DDL en producción; no se cambió el esquema; la autenticación de prueba sólo existe en el host E2E protegido por flags y el guard de base de datos. `BLOCK8_STATUS=CLOSED`; el bloque siguiente permanece sin iniciar.
 
@@ -56,9 +57,9 @@ El cierre final se actualizará sólo después de que el Quality Gates del SHA p
 
 El selector de archivos usado en Monitoreo de Listas se extrajo como `InstitutionalFileUploadComponent`, y Listas, Matrices de Riesgos y Configuración ya consumen la misma interfaz. El componente es sólo selección/presentación: el consumidor mantiene upload, asociación, persistencia, autorización y auditoría. Hay cinco instancias en cuatro templates; no quedan inputs file crudos fuera del componente. Las políticas configurables mantienen las restricciones reales de cada endpoint. El estándar y su inventario se describen en [Estándar institucional de carga de archivos](../0.0%20Documentación/ESTANDAR_INSTITUCIONAL_CARGA_ARCHIVOS.md).
 
-La certificación transversal forma parte de esta misma ejecución del Bloque 9. Verificación local: `SHARED_FILE_UPLOAD_COMPONENT=PASS`, `MONITOREO_LISTAS_USES_SHARED_FILE_UPLOAD=PASS`, `MATRICES_USES_SHARED_FILE_UPLOAD=PASS`, `ALL_USER_FILE_UPLOAD_SURFACES_AUDITED=PASS` (5 instancias en 4 templates), `RAW_FILE_INPUTS_OUTSIDE_SHARED_COMPONENT=0`, `CANONICAL_DROPZONE_TEXT_IMPLEMENTATIONS=1`, `DRAG_DROP=PASS`, `CLICK_TO_SELECT=PASS`, `FILE_UPLOAD_KEYBOARD=PASS`, `FILE_UPLOAD_ACCESSIBILITY=PASS`. El E2E de Monitoreo de Listas pasó 1/1 en Chromium, incluyendo file chooser, retiro, drag/drop y viewport 390×844; Playwright Matrix API→Oracle queda exigido por el CI del SHA final.
+La certificación transversal forma parte de esta misma ejecución del Bloque 9. `SHARED_FILE_UPLOAD_COMPONENT=PASS`, `MONITOREO_LISTAS_USES_SHARED_FILE_UPLOAD=PASS`, `MATRICES_USES_SHARED_FILE_UPLOAD=PASS`, `ALL_USER_FILE_UPLOAD_SURFACES_AUDITED=PASS` (5 superficies en 4 templates), `RAW_FILE_INPUTS_OUTSIDE_SHARED_COMPONENT=0`, `CANONICAL_DROPZONE_TEXT_IMPLEMENTATIONS=1`, `DRAG_DROP=PASS`, `CLICK_TO_SELECT=PASS`, `FILE_UPLOAD_KEYBOARD=PASS` y `FILE_UPLOAD_ACCESSIBILITY=PASS`. Monitoreo de Listas pasó su E2E de selección, retiro y drag/drop en Chromium; el E2E Matrices→API→Oracle también pasó en Quality Gates y dejó la captura revisada `institutional-file-upload-matrices.png`.
 
-El estado continúa `PENDING_CI_ORACLE_BROWSER` hasta que el Quality Gates del SHA publicado termine `completed/success` y los logs muestren las integraciones Oracle y browser Block 9 ejecutadas con conteos mayores que cero. El uploader compartido no añade llamadas HTTP ni cambia las políticas backend.
+El uploader compartido no añade llamadas HTTP ni cambia las políticas backend. El validador se ejecuta en Quality Gates para impedir inputs de archivo crudos fuera del componente compartido.
 
 ### Corrección de navegación en el browser real
 
@@ -72,4 +73,13 @@ El run `38616285559` avanzó hasta las aserciones de Área/UGR y señaló una am
 
 El Quality Gates `38616972937` terminó `completed/success` en el SHA `6b0d23f4f7d1503a8fe891eea23964e14142371b`: Block7 Oracle write 1/1, browser real 1/1, Block9 mitigación/monitoreo/RBAC/evidencias Oracle y browser PASS sin rutas críticas mockeadas, backend 965/965, frontend 858/858, Playwright 49/49, Block6 Oracle 3/3 y Block8 Oracle 1/1. El artefacto de CI omitió la captura nombrada del uploader Matrix; el E2E ahora la escribe en la raíz de `test-results`, y se ejecutará otra vez antes de fijar el cierre definitivo.
 
-El run `38618732332` confirmó success pero no retuvo ese archivo: la ejecución E2E general limpia `test-results` después de la suite Oracle. El test y `quality-gates.yml` ahora escriben/suben la captura desde `RUNNER_TEMP/block9-browser-evidence`; el siguiente artifact debe incluirla antes de marcar `BLOCK9_STATUS=CLOSED`.
+El run `38618732332` confirmó success pero no retuvo ese archivo: la ejecución E2E general limpia `test-results` después de la suite Oracle. El test y `quality-gates.yml` pasaron a escribir/subir la captura desde `RUNNER_TEMP/block9-browser-evidence`. El run final `38625179428` incluyó la captura; inspección visual confirmó el control, el archivo vinculado y la dropzone institucional.
+
+## Cierre verificado
+
+- Mitigación: planes y actividades reales Oracle; 2 planes y 5 actividades proyectan `F41=2` y `F43=5`; `F40–F49=10/10`; conteos derivados sin autoridad cliente.
+- Monitoreo: `F70–F82=13/13`, alertas, automonitoreo append-only, cuatro controles por tipo y evidencias con orden canónico, vínculo/desvínculo y protección de borrado enlazado.
+- Acceso: módulo 10 requerido; escenarios Área-only, UGR-only, ambos y ninguno; escritura cruzada rechazada con HTTP 403. Observaciones Área/UGR conservan columnas y capacidades independientes.
+- Calidad: backend `965/965`, frontend `858/858`, Playwright `49 passed`, Block6 Oracle `3/3`, Block8 Oracle `1/1`; contrato 82/82, auditoría Block9 `23/23`, checks `12/12`. Quality Gates final `38625179428` terminó `success`.
+- Estándar de archivos: `InstitutionalFileUploadComponent` único, cinco superficies migradas, cero inputs file fuera del shared; Monitoreo de Listas es la referencia visual y Matrices también consume el mismo componente. La guía transversal está en [Estándar institucional de carga de archivos](../0.0%20Documentación/ESTANDAR_INSTITUCIONAL_CARGA_ARCHIVOS.md).
+- Seguridad: producción no fue consultada ni modificada; DML=0, DDL=0, apply=NO, esquema sin cambios y bypass productivo=NO. `BLOCK1_STATUS`–`BLOCK9_STATUS=CLOSED`; `NEXT_BLOCK_STATUS=NOT_STARTED`.

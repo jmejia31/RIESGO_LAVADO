@@ -1,4 +1,14 @@
-# Estado vigente — Bloque 8 cerrado (COD) — 2026-10-14 09:46 -06:00
+# Estado vigente — Bloques 1–9 cerrados (COD) — 2026-10-14 13:52 -06:00
+
+- **Estado:** `BLOCK1_STATUS=CLOSED`, `BLOCK2_STATUS=CLOSED`, `BLOCK3_STATUS=CLOSED`, `BLOCK4_STATUS=CLOSED`, `BLOCK5_STATUS=CLOSED`, `BLOCK6_STATUS=CLOSED`, `BLOCK7_STATUS=CLOSED`, `BLOCK8_STATUS=CLOSED`, `BLOCK9_STATUS=CLOSED`, `NEXT_BLOCK_STATUS=NOT_STARTED`.
+- **Checkout/publicación:** rama `desarrollo`; HEAD funcional `ea3631bd33af480363cc576efdf037f97f809ebf`, publicado en `origin/desarrollo`. Commits de cierre de Bloque 9 y del estándar compartido: `b7653e3e`, `ff74a2ad`, `ea3631bd`; commit documental y su Quality Gates se registran al completar esta intervención.
+- **Bloque 9 — mitigación y monitoreo:** `F40–F49=10/10`, `F70–F82=13/13`; dos planes, cinco actividades y conteos backend `F41=2`, `F43=5`; alertas, automonitoreo, estados/efectividad por cuatro controles y evidencia real por control pasaron con Oracle XE desechable. Área y UGR mantienen columnas, capacidades y 403 directos independientes; RBAC, auditoría y proyección 82/82 PASS.
+- **Browser/Oracle:** Quality Gates `38625179428`, SHA `ea3631bd33af480363cc576efdf037f97f809ebf`, `completed/success`. Block7 Oracle write=1/1, browser Angular→API→Oracle=1/1, Block9 mitigación/monitoreo/evidencia/RBAC PASS, rutas críticas mocked=0; Block6 Oracle=3/3, Block8 Oracle=1/1; backend=965/965, frontend=858/858, Playwright=49 pasados.
+- **Carga de archivos transversal:** `InstitutionalFileUploadComponent` es el único uploader común y Monitoreo de Listas es la referencia visual. 5 superficies en 4 templates migradas (Listas, Monitoreo de Listas, Matrices y Configuración), excepciones=0, inputs crudos fuera del shared=0, texto canónico=1. Drag/drop, selector, teclado, accesibilidad y mobile PASS; el screenshot Matrix del CI fue descargado e inspeccionado.
+- **Validadores:** contrato canónico 82/82; catálogos 14/91, drift 0; UI Block7=82/82; responsabilidades Block8 PASS; contrato Block9 mappings 23/23 y checks 12/12; estándar global de carga PASS.
+- **Seguridad y workspace:** producción no consultada ni modificada; DML=0, DDL=0, apply=NO, esquema sin cambios, bypass de seguridad productiva=NO. Se preservan sin staging los cambios ajenos en `DatabaseEnvironmentGuard.cs`, sus tests y `frontend/rl-app/tsconfig.json`, y los untracked existentes.
+
+## Estado anterior — Bloque 8 cerrado (COD) — 2026-10-14 09:46 -06:00
 
 - **Estado:** `BLOCK1_STATUS=CLOSED`, `BLOCK2_STATUS=CLOSED`, `BLOCK3_STATUS=CLOSED`, `BLOCK4_STATUS=CLOSED`, `BLOCK5_STATUS=CLOSED`, `BLOCK6_STATUS=CLOSED`, `BLOCK7_STATUS=CLOSED`, `BLOCK8_STATUS=CLOSED`, `NEXT_BLOCK_STATUS=NOT_STARTED`.
 - **Checkout:** rama `desarrollo`; inicio `5774c785d880135e71c4d6a5120a0a6b75174c27`; código funcional final `fb7fe02a870d23c52aac000f2890dab594b41dfa` publicado en `origin/desarrollo`. Commits: `d5f8e8b0` responsabilidades/selección consolidada; `dd609bb8` actualización de dependencia de seguridad requerida por advisories; `fb7fe02a` corrección de binds Oracle del fixture.
