@@ -2512,3 +2512,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - El run `38614577297` superó el upload desde Matrices y llegó al conflicto concurrente; terminó fallando porque el test intentó cerrar un diálogo que ya había desaparecido tras guardar exitosamente A.
 - Se cambió el cierre a condicional sobre visibilidad y el botón accesible específico. El próximo CI debe continuar validando el resto del monitoreo, evidencias y cierre de workflow. Bloque 9 sigue pendiente de CI completo.
+
+### Monitoreo y observaciones se prueban en Bloque 6 (2026-10-14 12:33 -06:00)
+
+- El run `38615607010` confirmó upload y escenario de concurrencia antes de encontrar que controles/observaciones no se presentan en el modal `Seguimiento de evaluación` (workflow).
+- El E2E ahora abre `Editar evaluación`, selecciona Bloque 6 y espera el snapshot API real antes de verificar monitoreo y observaciones. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER` hasta completar CI.

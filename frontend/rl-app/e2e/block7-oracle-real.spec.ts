@@ -526,8 +526,14 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   if (await pageAEditDialog.isVisible()) {
     await pageAEditDialog.locator('button[aria-label="Cerrar edición"]').click();
   }
-  await pageA.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
-  await expect(pageA.getByRole('heading', { name: /Seguimiento de Evaluación/ })).toBeVisible();
+  await pageA.locator('button[title^="Editar evaluaci"]').click();
+  const pageAMonitoringBlocks = pageA.locator('nav[aria-label^="Bloques funcionales"]');
+  await expect(pageAMonitoringBlocks.getByRole('button')).toHaveCount(6);
+  const pageABlock6Read = pageA.waitForResponse(response =>
+    response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${evaluation.id}/bloque6`);
+  await pageAMonitoringBlocks.getByRole('button').nth(5).click();
+  expect((await pageABlock6Read).status()).toBe(200);
   await expect(pageA.getByRole('heading', { name: 'Controles monitoreados y evidencias' })).toBeVisible();
   await expect(pageA.getByText('Control E2E A', { exact: true })).toBeVisible();
   await expect(pageA.getByLabel('Observaciones del Área')).toHaveValue('OBS-AREA-BOTH');

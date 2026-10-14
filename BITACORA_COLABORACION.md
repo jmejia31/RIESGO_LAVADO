@@ -8863,3 +8863,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 - El run `38614577297` completó la carga de evidencia en la UI y progresó hasta el escenario de edición concurrente. Falló al intentar cerrar un modal de edición que la aplicación ya había cerrado tras guardar correctamente la edición A; la siguiente acción de seguimiento sólo necesita el modal cerrado, no un segundo click.
 - El E2E ahora verifica si el diálogo de edición sigue visible y sólo entonces usa su botón accesible `Cerrar edición`. Esto conserva el flujo real y evita una espera rígida por un elemento ya retirado. Se repetirá lint y Quality Gates; aún no se declara PASS Oracle/browser.
+
+## Observaciones de monitoreo dentro del Bloque 6 (COD) — 2026-10-14 12:33 -06:00
+
+- El run `38615607010` confirmó que la carga UI de evidencia y el conflicto optimista pasan; la prueba falló al esperar controles/observaciones tras abrir `Seguimiento de evaluación`, que pertenece al modal de workflow.
+- Se corrigió la lectura E2E para abrir el borrador, navegar a Bloque 6 y esperar `GET .../monitoreo/evaluaciones/{id}/bloque6` HTTP 200 antes de comprobar controles y observaciones. La UI de producción mantiene responsabilidades distintas: `Seguimiento` workflow, Bloque 6 controles/observaciones/evidencias.
+- ESLint y la ejecución Oracle/browser del siguiente Quality Gates siguen requeridos. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`.
