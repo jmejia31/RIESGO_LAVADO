@@ -67,8 +67,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[5], flowIds[5], "APROBADA", tie, "R2-TIE-HIGH", userId);
             // A later CERRADA state is distinct from APROBADA and is excluded.
             await InsertConsolidatedFixtureAsync(seed, riskIds[2], evaluationIds[6], flowIds[6], "APROBADA", t2, "R3-CLOSED", userId);
-            await ExecuteAsync(seed, "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,'CERRADA','test',:usr,:date)",
-                ("id", flowIds[7]), ("eva", evaluationIds[6]), ("usr", userId), ("date", t3));
+            await ExecuteAsync(seed, "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,'CERRADA','test',:usr,:eventDate)",
+                ("id", flowIds[7]), ("eva", evaluationIds[6]), ("usr", userId), ("eventDate", t3));
 
             await using var app = await CreateBlock7ApiAsync(connectionString);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
@@ -110,14 +110,14 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         string status, DateTime eventDate, string code, long userId)
     {
         await ExecuteAsync(connection,
-            "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,'{}','{}',:date,:usr,1,1)",
-            ("id", evaluationId), ("risk", riskId), ("date", eventDate), ("usr", userId));
+            "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,'{}','{}',:eventDate,:usr,1,1)",
+            ("id", evaluationId), ("risk", riskId), ("eventDate", eventDate), ("usr", userId));
         await ExecuteAsync(connection,
-            "INSERT INTO RL_MR_PROYECCIONES_EVALUACION (PROY_ID,PROY_EVALUACION_ID,PROY_CODIGO_RIESGO,PROY_AREA_PRINCIPAL,PROY_VRI,PROY_VRR,PROY_NIVEL_INHERENTE,PROY_NIVEL_RESIDUAL,PROY_RESPUESTA_RIESGO,PROY_ESTADO_EVALUACION,PROY_DUENO_RIESGO,PROY_FECHA_EVAL) VALUES (:id,:eva,:code,'Block8',3,2,'BAJO','BAJO','Mitigar',:status,'Fixture',:date)",
-            ("id", evaluationId + 1000), ("eva", evaluationId), ("code", code), ("status", status), ("date", eventDate));
+            "INSERT INTO RL_MR_PROYECCIONES_EVALUACION (PROY_ID,PROY_EVALUACION_ID,PROY_CODIGO_RIESGO,PROY_AREA_PRINCIPAL,PROY_VRI,PROY_VRR,PROY_NIVEL_INHERENTE,PROY_NIVEL_RESIDUAL,PROY_RESPUESTA_RIESGO,PROY_ESTADO_EVALUACION,PROY_DUENO_RIESGO,PROY_FECHA_EVAL) VALUES (:id,:eva,:code,'Block8',3,2,'BAJO','BAJO','Mitigar',:status,'Fixture',:eventDate)",
+            ("id", evaluationId + 1000), ("eva", evaluationId), ("code", code), ("status", status), ("eventDate", eventDate));
         await ExecuteAsync(connection,
-            "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,:status,'test',:usr,:date)",
-            ("id", flowId), ("eva", evaluationId), ("status", status), ("usr", userId), ("date", eventDate));
+            "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,:status,'test',:usr,:eventDate)",
+            ("id", flowId), ("eva", evaluationId), ("status", status), ("usr", userId), ("eventDate", eventDate));
     }
 
     [Fact]
