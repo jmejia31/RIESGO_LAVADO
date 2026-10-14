@@ -522,7 +522,10 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(persistedBody.evaDataJson).toContain('Editor A');
   expect(persistedBody.evaDataJson).not.toContain('Editor B stale');
 
-  await pageA.locator('dialog[aria-labelledby="titulo-modal-editar"] button[aria-label^="Cerrar"]').click();
+  const pageAEditDialog = pageA.locator('dialog[aria-labelledby="titulo-modal-editar"]');
+  if (await pageAEditDialog.isVisible()) {
+    await pageAEditDialog.locator('button[aria-label="Cerrar edición"]').click();
+  }
   await pageA.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
   await expect(pageA.getByRole('heading', { name: /Seguimiento de Evaluación/ })).toBeVisible();
   await expect(pageA.getByRole('heading', { name: 'Controles monitoreados y evidencias' })).toBeVisible();

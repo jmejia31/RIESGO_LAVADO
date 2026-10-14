@@ -2507,3 +2507,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - El run `38613567583` pasó validadores, build/análisis y arranque de API real sobre XE, pero falló al localizar el uploader del control. El test se había quedado en la acción `Seguimiento de evaluación` (workflow); ahora abre `Editar evaluación` y navega al bloque 6, donde reside el uploader.
 - Corregido el E2E en `frontend/rl-app/e2e/block7-oracle-real.spec.ts`. Oracle/browser sigue pendiente de la nueva ejecución en CI; no declarar PASS por este cambio. `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`.
+
+### Modal ya cerrado tras guardar edición A (2026-10-14 12:27 -06:00)
+
+- El run `38614577297` superó el upload desde Matrices y llegó al conflicto concurrente; terminó fallando porque el test intentó cerrar un diálogo que ya había desaparecido tras guardar exitosamente A.
+- Se cambió el cierre a condicional sobre visibilidad y el botón accesible específico. El próximo CI debe continuar validando el resto del monitoreo, evidencias y cierre de workflow. Bloque 9 sigue pendiente de CI completo.

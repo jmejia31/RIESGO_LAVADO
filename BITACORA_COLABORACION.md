@@ -8858,3 +8858,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El Quality Gates `38613567583` del SHA `7d53bdc7e26a715d52e16b4beb7d130eebe18dd7` pasó validadores, análisis, build y preparación Oracle; falló el E2E browser real al buscar el uploader del control. El test abría la acción transaccional `Seguimiento de evaluación`, que muestra workflow y no el editor con Bloque 6. No se observó fallo del componente uploader ni de su endpoint.
 - Se corrigió el test para abrir el borrador con `Editar evaluación` y navegar por teclado/controles al bloque 6 antes de probar el file chooser. Así la prueba sigue recorriendo UI real y conserva la carga contra la API/Oracle XE.
 - `npm run lint` y el Quality Gates del nuevo SHA deben verificarse; el E2E Oracle no se declara aprobado localmente porque no hay Oracle XE opt-in en el checkout. Estado sigue `BLOCK9_STATUS=PENDING_CI_ORACLE_BROWSER`, y se repetirá el workflow publicado.
+
+## Cierre de modal ya automático tras guardar (COD) — 2026-10-14 12:27 -06:00
+
+- El run `38614577297` completó la carga de evidencia en la UI y progresó hasta el escenario de edición concurrente. Falló al intentar cerrar un modal de edición que la aplicación ya había cerrado tras guardar correctamente la edición A; la siguiente acción de seguimiento sólo necesita el modal cerrado, no un segundo click.
+- El E2E ahora verifica si el diálogo de edición sigue visible y sólo entonces usa su botón accesible `Cerrar edición`. Esto conserva el flujo real y evita una espera rígida por un elemento ya retirado. Se repetirá lint y Quality Gates; aún no se declara PASS Oracle/browser.

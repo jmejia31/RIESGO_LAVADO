@@ -63,3 +63,5 @@ El estado continúa `PENDING_CI_ORACLE_BROWSER` hasta que el Quality Gates del S
 ### Corrección de navegación en el browser real
 
 En CI `38613567583`, los gates de build y validación pasaron, pero el test de carga desde Matrices buscó el uploader después de abrir `Seguimiento de evaluación`, acción que corresponde al workflow transaccional. Se corrigió la ruta de prueba para abrir el borrador con `Editar evaluación` y navegar al Bloque 6 antes de seleccionar evidencia. La repetición Oracle/browser es obligatoria; el estado permanece pendiente hasta el CI completo exitoso.
+
+El run `38614577297` pasó la carga de evidencia desde esa ruta y progresó al conflicto concurrente. El test sólo falló al hacer un segundo cierre del modal después de que un guardado exitoso ya lo había cerrado. El cierre del E2E ahora es condicional si el diálogo permanece visible. Hace falta confirmar la repetición íntegra en CI.
