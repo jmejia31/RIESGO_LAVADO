@@ -638,14 +638,14 @@
           </div>
 
           <div class="modal-footer-institutional">
-            <button (click)="exportarExcel()" title="Exportar coincidencias a Excel" aria-label="Exportar coincidencias a Excel" class="inline-flex h-9 w-9 items-center justify-center bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm">
+            <button (click)="exportarExcel()" title="Exportar coincidencias a Excel" aria-label="Exportar coincidencias a Excel" class="modal-action-icon modal-action-icon--success">
             <app-action-icon action="export-excel"></app-action-icon>
           </button>
-            <button (click)="verPdf()" title="Ver reporte PDF" aria-label="Ver reporte PDF" class="inline-flex h-9 w-9 items-center justify-center bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 transition-colors shadow-sm">
+            <button (click)="verPdf()" title="Ver reporte PDF" aria-label="Ver reporte PDF" class="modal-action-icon modal-action-icon--secondary">
             <app-action-icon action="view"></app-action-icon>
           </button>
-            <button (click)="cerrarModal()" title="Cerrar detalle de coincidencias" aria-label="Cerrar detalle de coincidencias" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50">
-            <app-action-icon action="close"></app-action-icon><span>Cerrar</span>
+            <button (click)="cerrarModal()" title="Cerrar detalle de coincidencias" aria-label="Cerrar detalle de coincidencias" class="modal-action-icon modal-action-icon--neutral">
+            <app-action-icon action="close"></app-action-icon>
           </button>
           </div>
 
