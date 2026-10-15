@@ -28,6 +28,7 @@ import { CrearFormulaUsoDto, FormulaVersionSelectorOption } from '../../models/c
 import { normalizarJsonABuilderModel } from '../../models/form-builder.models';
 import { ControlRiesgoDto, MatrizBloque6Dto, MitigacionBloque4Dto, PlanMitigacionDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
 import { DynamicFieldRendererComponent } from '../../components/dynamic-field-renderer/dynamic-field-renderer.component';
@@ -74,6 +75,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly calculoConfig = inject(CalculoConfiguracionService, { optional: true });
   private readonly reportPreview = inject(ReportPreviewService);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
   private readonly applicationRef = inject(ApplicationRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
   private detalleFamiliaRef: ComponentRef<FamiliaDetalleModalComponent> | null = null;
@@ -1801,12 +1803,22 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cerrarModalNuevaEvaluacion(): void {
-    if (this.cambiosSinGuardar() && !window.confirm('Hay cambios sin guardar. ¿Desea descartarlos?')) return;
+    if (this.cambiosSinGuardar()) {
+      void this.confirmarDescarteCambios().then(confirmado => {
+        if (confirmado) this.completarCierreNuevaEvaluacion();
+      });
+      return;
+    }
+    this.completarCierreNuevaEvaluacion();
+  }
+
+  private completarCierreNuevaEvaluacion(): void {
     this.calculoPreviewSubscription?.unsubscribe();
     this.calculoPreviewSubscription = null;
     this.actualizandoCalculo.set(false);
     ++this.secuenciaVersionNuevaEvaluacion;
     this.modalNuevaEvaluacionAbierto.set(false);
+    this.cambiosSinGuardar.set(false);
     this.limpiarAlertasEditor('newEvaluation');
     this.familiaSeleccionada.set('');
     this.versionVigente.set(null);
@@ -2459,10 +2471,31 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cerrarModalEditar(): void {
-    if (this.cambiosSinGuardar() && !window.confirm('Hay cambios sin guardar. ¿Desea descartarlos?')) return;
+    if (this.cambiosSinGuardar()) {
+      void this.confirmarDescarteCambios().then(confirmado => {
+        if (confirmado) this.completarCierreEditar();
+      });
+      return;
+    }
+    this.completarCierreEditar();
+  }
+
+  private completarCierreEditar(): void {
     this.modalEditarAbierto.set(false);
     this.limpiarAlertasEditor('editEvaluation');
     this.cambiosSinGuardar.set(false);
+  }
+
+  private confirmarDescarteCambios(): Promise<boolean> {
+    return this.confirmation.confirm({
+      title: 'Hay cambios sin guardar',
+      message: '¿Desea descartar los cambios y cerrar la evaluación?',
+      confirmLabel: 'Descartar cambios',
+      cancelLabel: 'Continuar editando',
+      confirmIcon: 'reject',
+      confirmVariant: 'danger',
+      icon: 'warning'
+    });
   }
 
   abrirModalSeguimiento(evaluacion: EvaluacionRiesgoResumenDto): void {

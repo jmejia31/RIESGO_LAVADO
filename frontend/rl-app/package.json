@@ -9,7 +9,8 @@
     "test": "ng test --watch=false",
     "test:coverage": "ng test --watch=false --coverage",
     "e2e": "node scripts/run-e2e.mjs",
-    "lint": "eslint src e2e scripts"
+    "lint": "eslint src e2e scripts",
+    "validate:native-dialogs": "node ../../tools/validate_no_native_dialogs.js --self-test"
   },
   "packageManager": "npm@11.12.1",
   "engines": {

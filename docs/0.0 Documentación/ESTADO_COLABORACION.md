@@ -2606,3 +2606,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Límites físicos: zoom de navegador 80/100/125 y doble monitor `NOT_EXECUTED` por no disponer de verificación física. No se falseó PASS; los pasos exactos están en el artefacto manual.
 - Cambios ajenos preservados sin stage ni commit: `DatabaseEnvironmentGuard*`, `login-and-routing.spec.ts`, `modal-shell-lock.spec.ts`, `tsconfig.json` y untracked. Producción no consultada ni modificada; DML=0, DDL=0.
 - **Siguiente punto:** Microfase 4 visual correctiva cerrada para las superficies verificadas; pruebas físicas siguen pendientes de ejecución por el propietario. No iniciar autorización microfases 1–3 ni Block 10.
+
+## Master execution — checkpoint Fase 0 local (COD, 2026-10-15 16:47 -06:00)
+
+- Base actual: rama `desarrollo`, inicio y `origin/desarrollo` en `0966bab2d897f70c10e82e8c0826bd5667e4c4ac`.
+- Correctivo local de interacciones: dos confirmaciones nativas eliminadas; dirty guard de Nueva/Editar Evaluación y CRUD Crear/Editar Riesgo utilizan confirmación/shell institucional. Riesgo ahora se crea/edita en modal large, sin formulario inline y con tabla conservada.
+- Confirmación: servicio compartido medium con `Descartar cambios`/`Continuar editando`, accesibilidad icon-only y foco. La búsqueda también encontró confirmaciones SweetAlert2 directas legacy en Configuración, listas/coincidencias/monitoreo, familias/form builder, ciclo Matrices, usuarios y login; incluyen CRUD/cambios de estado, operaciones con motivo y recuperación/progreso. Se retienen fuera de las rutas nativas y del CRUD Riesgos de este correctivo, sin migración ciega. Diálogos nativos de producción: cero.
+- Pruebas: frontend 895/895; backend 972/972; E2E completo 65 pass/1 skip por requerir Oracle XE CI; E2E focal 3/3; lint/build/audit/validadores y `run_quality_gates.ps1 -SkipE2E` PASS. El anti-native-dialog AST validator ya forma parte de dicho quality gate.
+- Calidad local: frontend coverage 64.01/57.85/60.15/65.02% (statements/branches/functions/lines), backend 38.36/42.71% (lines/branches). UTF-8, enlaces documentación y `git diff --check` PASS.
+- Evidencia externa: `%USERPROFILE%\Documents\RIESGO_LAVADO\MODAL_INTERACTION_CORRECTIVE\20261015_final\after`.
+- Cambios ajenos identificados antes de esta ejecución (`DatabaseEnvironmentGuard*`, `login-and-routing.spec.ts`, `modal-shell-lock.spec.ts`, `tsconfig.json` y untracked) preservados fuera de stage.
+- Estado: `PHASE_0_STATUS=PENDING_CI`; falta commit/push y CI final del SHA. `AUTHORIZATION_MICROPHASE_1=NOT_STARTED`, MF2/MF3 no iniciadas; Block 10 no iniciado. Producción no consultada ni modificada.

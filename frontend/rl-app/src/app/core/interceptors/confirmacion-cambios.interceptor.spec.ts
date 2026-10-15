@@ -2,7 +2,7 @@ import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import Swal from 'sweetalert2';
+import { InstitutionalConfirmationService } from '../../shared/confirmation/institutional-confirmation.service';
 import {
   CONFIRMACION_BOTON_HEADER,
   CONFIRMACION_CAMBIOS_HEADER,
@@ -12,25 +12,23 @@ import {
   confirmacionCambiosInterceptor
 } from './confirmacion-cambios.interceptor';
 
-vi.mock('sweetalert2', () => ({
-  default: { fire: vi.fn() }
-}));
-
 describe('confirmacionCambiosInterceptor', () => {
   let http: HttpClient;
   let testing: HttpTestingController;
-  const fire = vi.mocked(Swal.fire);
+  let confirmation: { confirm: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    confirmation = { confirm: vi.fn().mockResolvedValue(false) };
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([confirmacionCambiosInterceptor])),
-        provideHttpClientTesting()
+        provideHttpClientTesting(),
+        { provide: InstitutionalConfirmationService, useValue: confirmation }
       ]
     });
     http = TestBed.inject(HttpClient);
     testing = TestBed.inject(HttpTestingController);
-    fire.mockReset();
+    confirmation.confirm.mockReset().mockResolvedValue(false);
   });
 
   afterEach(() => {
@@ -41,14 +39,14 @@ describe('confirmacionCambiosInterceptor', () => {
   it('deja pasar consultas GET sin solicitar confirmacion', () => {
     http.get('/api/catalogo').subscribe();
     const request = testing.expectOne('/api/catalogo');
-    expect(fire).not.toHaveBeenCalled();
+    expect(confirmation.confirm).not.toHaveBeenCalled();
     request.flush({ success: true });
   });
 
   it('excluye las operaciones de autenticacion', () => {
     http.post('/api/auth/login', { usuario: 'analista' }).subscribe();
     const request = testing.expectOne('/api/auth/login');
-    expect(fire).not.toHaveBeenCalled();
+    expect(confirmation.confirm).not.toHaveBeenCalled();
     request.flush({ success: true });
   });
 
@@ -71,12 +69,12 @@ describe('confirmacionCambiosInterceptor', () => {
       CONFIRMACION_BOTON_HEADER,
       CONFIRMACION_ICONO_HEADER
     ].forEach(header => expect(request.request.headers.has(header)).toBe(false));
-    expect(fire).not.toHaveBeenCalled();
+    expect(confirmation.confirm).not.toHaveBeenCalled();
     request.flush({ success: true });
   });
 
   it('envia la operacion cuando el usuario confirma y usa los textos configurados', async () => {
-    fire.mockResolvedValue({ isConfirmed: true } as never);
+    confirmation.confirm.mockResolvedValue(true);
     const response = firstValueFrom(http.delete('/api/recurso/9', {
       headers: {
         [CONFIRMACION_TITULO_HEADER]: 'Eliminar evidencia',
@@ -86,13 +84,14 @@ describe('confirmacionCambiosInterceptor', () => {
       }
     }));
 
-    await vi.waitFor(() => expect(fire).toHaveBeenCalledOnce());
-    expect(fire).toHaveBeenCalledWith(expect.objectContaining({
+    await vi.waitFor(() => expect(confirmation.confirm).toHaveBeenCalledOnce());
+    expect(confirmation.confirm).toHaveBeenCalledWith(expect.objectContaining({
       title: 'Eliminar evidencia',
-      text: 'Confirme la eliminacion',
-      confirmButtonText: 'Eliminar ahora',
-      icon: 'warning',
-      confirmButtonColor: '#dc2626'
+      message: 'Confirme la eliminacion',
+      confirmLabel: 'Eliminar ahora',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger',
+      icon: 'warning'
     }));
 
     const request = testing.expectOne('/api/recurso/9');
@@ -102,7 +101,7 @@ describe('confirmacionCambiosInterceptor', () => {
   });
 
   it('cancela localmente la operacion cuando el usuario no confirma', async () => {
-    fire.mockResolvedValue({ isConfirmed: false } as never);
+    confirmation.confirm.mockResolvedValue(false);
 
     await expect(firstValueFrom(http.post('/api/recurso', { nombre: 'Nuevo' })))
       .rejects.toMatchObject({ status: 499, statusText: 'Operacion cancelada' });

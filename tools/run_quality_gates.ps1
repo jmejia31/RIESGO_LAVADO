@@ -94,6 +94,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'ICON_CONTRAST_VALIDATOR=PASS'
 
+$nativeDialogValidator = Join-Path $RepositoryRoot 'tools/validate_no_native_dialogs.js'
+& node $nativeDialogValidator --self-test
+if ($LASTEXITCODE -ne 0) {
+    throw "El uso de dialogos nativos del navegador fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'NATIVE_BROWSER_DIALOG_VALIDATOR=PASS'
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'

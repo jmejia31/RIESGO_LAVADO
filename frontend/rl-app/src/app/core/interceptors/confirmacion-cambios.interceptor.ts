@@ -1,5 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { from, switchMap, throwError } from 'rxjs';
+import { InstitutionalConfirmationService } from '../../shared/confirmation/institutional-confirmation.service';
 
 const HEADER_CONFIRMADO = 'X-RL-Confirmado';
 const HEADER_TITULO = 'X-RL-Confirmacion-Titulo';
@@ -79,26 +81,19 @@ export const confirmacionCambiosInterceptor: HttpInterceptorFn = (req, next) => 
     confirmar: req.headers.get(HEADER_CONFIRMAR) || accionBase.confirmar,
     icono: iconoCabecera === 'warning' ? 'warning' as const : accionBase.icono
   };
+  const confirmation = inject(InstitutionalConfirmationService);
 
-  return from(import('sweetalert2')).pipe(
-    switchMap(Swal => from(Swal.default.fire({
-      allowOutsideClick: false,
-      allowEscapeKey: true,
+  return from(confirmation.confirm({
       title: accion.titulo,
-      text: accion.texto,
-      icon: accion.icono,
-      showCancelButton: true,
-      showDenyButton: true,
-      confirmButtonText: accion.confirmar,
-      denyButtonText: 'No',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: req.method.toUpperCase() === 'DELETE' ? '#dc2626' : '#0f766e',
-      denyButtonColor: '#64748b',
-      cancelButtonColor: '#d1d5db',
-      reverseButtons: true
-    }))),
-    switchMap(result => {
-      if (result.isConfirmed) {
+      message: accion.texto,
+      confirmLabel: accion.confirmar,
+      cancelLabel: 'Cancelar',
+      confirmIcon: req.method.toUpperCase() === 'DELETE' ? 'delete' : 'save',
+      confirmVariant: req.method.toUpperCase() === 'DELETE' ? 'danger' : 'primary',
+      icon: accion.icono
+    })).pipe(
+    switchMap(confirmado => {
+      if (confirmado) {
         return next(reqSinCabeceraInterna);
       }
 

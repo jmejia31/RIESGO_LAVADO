@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { MatricesRiesgosGestionComponent } from './matrices-riesgos-gestion.component';
 
 describe('MatricesRiesgosGestionComponent', () => {
@@ -12,6 +13,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     crearRiesgo: ReturnType<typeof vi.fn>;
     actualizarRiesgo: ReturnType<typeof vi.fn>;
   };
+  let confirmation: { confirm: ReturnType<typeof vi.fn> };
 
   const riesgoActivo = {
     rieId: 7,
@@ -40,9 +42,13 @@ describe('MatricesRiesgosGestionComponent', () => {
       crearRiesgo: vi.fn().mockReturnValue(of(8)),
       actualizarRiesgo: vi.fn().mockReturnValue(of({ success: true }))
     };
+    confirmation = { confirm: vi.fn().mockResolvedValue(false) };
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosGestionComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: InstitutionalConfirmationService, useValue: confirmation }
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(MatricesRiesgosGestionComponent);
     component = fixture.componentInstance;
@@ -135,8 +141,12 @@ describe('MatricesRiesgosGestionComponent', () => {
   });
 
   it('edita y actualiza un riesgo existente', () => {
+    const root = fixture.nativeElement as HTMLElement;
     component.editar(riesgoActivo);
     expect(component.editandoId()).toBe(7);
+    fixture.detectChanges();
+    expect(root.querySelector('[data-risk-crud-modal] .modal-size-lg')).not.toBeNull();
+    expect(root.querySelector('section > form.grid')).toBeNull();
     expect(component.codigo).toBe('R-007');
     expect(component.nombre).toBe('Riesgo UAT');
     expect(component.descripcion).toBe('Descripción UAT');
@@ -160,7 +170,7 @@ describe('MatricesRiesgosGestionComponent', () => {
 
   it('cancela la edición reseteando los campos al llamar a nuevo()', () => {
     component.editar(riesgoActivo);
-    component.nuevo(true);
+    component.nuevo();
 
     expect(component.editandoId()).toBe(0);
     expect(component.codigo).toBe('');
@@ -177,7 +187,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
-    expect(component.error()).toBe('Código y nombre son obligatorios.');
+    expect(component.errorFormulario()).toBe('Código y nombre son obligatorios.');
   });
 
   it('valida longitud máxima de código (>30)', () => {
@@ -186,7 +196,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
-    expect(component.error()).toBe('Revise las longitudes máximas permitidas del riesgo.');
+    expect(component.errorFormulario()).toBe('Revise las longitudes máximas permitidas del riesgo.');
   });
 
   it('valida longitud máxima de nombre (>250)', () => {
@@ -195,7 +205,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
-    expect(component.error()).toBe('Revise las longitudes máximas permitidas del riesgo.');
+    expect(component.errorFormulario()).toBe('Revise las longitudes máximas permitidas del riesgo.');
   });
 
   it('valida longitud máxima de descripción (>2000)', () => {
@@ -205,7 +215,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
-    expect(component.error()).toBe('Revise las longitudes máximas permitidas del riesgo.');
+    expect(component.errorFormulario()).toBe('Revise las longitudes máximas permitidas del riesgo.');
   });
 
   it('maneja error con mensaje fallback cuando falla el guardado', () => {
@@ -214,7 +224,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     component.nombre = 'Riesgo 8';
     component.guardar();
 
-    expect(component.error()).toBe('No se pudo guardar el riesgo.');
+    expect(component.errorFormulario()).toBe('No se pudo guardar el riesgo.');
     expect(component.guardando()).toBe(false);
   });
 
@@ -223,7 +233,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     component.editar(riesgoActivo);
     component.guardar();
 
-    expect(component.error()).toBe('Error de red en servidor');
+    expect(component.errorFormulario()).toBe('Error de red en servidor');
     expect(component.guardando()).toBe(false);
   });
 
@@ -231,11 +241,13 @@ describe('MatricesRiesgosGestionComponent', () => {
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector('[data-ui-action="new-risk"]')?.getAttribute('aria-label')).toBe('Nuevo riesgo');
+    component.nuevo();
+    fixture.detectChanges();
     expect(root.querySelector('[data-ui-action="save-risk"]')?.getAttribute('aria-label')).toBe('Guardar nuevo riesgo');
 
     component.editar(riesgoActivo);
     fixture.detectChanges();
-    expect(root.querySelector('[data-ui-action="save-risk"]')?.getAttribute('aria-label')).toBe('Actualizar riesgo');
+    expect(root.querySelector('[data-ui-action="save-risk"]')?.getAttribute('aria-label')).toBe('Guardar cambios del riesgo');
   });
 
   it('renderiza la lista de riesgos en el DOM y permite accionar el botón de editar', () => {
@@ -250,8 +262,62 @@ describe('MatricesRiesgosGestionComponent', () => {
     expect(botonesEditar.length).toBe(2);
     (botonesEditar[0] as HTMLButtonElement).click();
     expect(component.editandoId()).toBe(7);
+    fixture.detectChanges();
+    expect(element.querySelector('[data-risk-crud-modal] .modal-size-lg')).not.toBeNull();
+    expect(element.querySelector('section > form.grid')).toBeNull();
   });
 
+  it('opens create in a large institutional modal and keeps the table mounted', () => {
+    const root = fixture.nativeElement as HTMLElement;
+    component.nuevo();
+    fixture.detectChanges();
+
+    const modal = root.querySelector('[data-risk-crud-modal]');
+    expect(modal?.querySelector('.modal-size-lg')).not.toBeNull();
+    expect(modal?.querySelector('.modal-header-institutional')).not.toBeNull();
+    expect(modal?.querySelector('.modal-footer-institutional')).not.toBeNull();
+    expect(root.querySelector('table')).not.toBeNull();
+    expect(root.querySelector('section > form.grid')).toBeNull();
+  });
+
+  it('keeps a dirty risk modal open when discard confirmation is cancelled', async () => {
+    const root = fixture.nativeElement as HTMLElement;
+    component.editar(riesgoActivo);
+    component.nombre = 'Unsaved change';
+
+    await component.solicitarCierre();
+
+    expect(confirmation.confirm).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Descartar cambios del riesgo',
+      confirmLabel: 'Descartar cambios',
+      cancelLabel: 'Continuar editando',
+      confirmIcon: 'reject',
+      confirmVariant: 'danger'
+    }));
+    expect(component.modalRiesgoAbierto()).toBe(true);
+    fixture.detectChanges();
+    expect(root.querySelector('[data-risk-crud-modal]')).not.toBeNull();
+  });
+
+  it('discards dirty risk values only after institutional confirmation', async () => {
+    confirmation.confirm.mockResolvedValue(true);
+    component.editar(riesgoActivo);
+    component.nombre = 'Unsaved change';
+
+    await component.solicitarCierre();
+
+    expect(component.modalRiesgoAbierto()).toBe(false);
+    expect(component.nombre).toBe('');
+  });
+
+  it('closes a pristine risk modal without confirmation', async () => {
+    component.editar(riesgoActivo);
+
+    await component.solicitarCierre();
+
+    expect(confirmation.confirm).not.toHaveBeenCalled();
+    expect(component.modalRiesgoAbierto()).toBe(false);
+  });
   it('renderiza mensaje cuando no existen riesgos registrados', () => {
     component.riesgos.set([]);
     fixture.detectChanges();

@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import {
   EvaluacionesPaginadasDto,
@@ -16,6 +17,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
   let serviceMock: any;
   let authServiceMock: any;
   let globalStateMock: any;
+  let confirmationMock: { confirm: ReturnType<typeof vi.fn> };
 
   const mockFamilia: FamiliaFormularioDto = {
     famId: 1,
@@ -114,13 +116,15 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     globalStateMock = {
       limpiarError: vi.fn()
     };
+    confirmationMock = { confirm: vi.fn().mockResolvedValue(false) };
 
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent],
       providers: [
         { provide: MatricesRiesgosService, useValue: serviceMock },
         { provide: AuthService, useValue: authServiceMock },
-        { provide: GlobalHttpStateService, useValue: globalStateMock }
+        { provide: GlobalHttpStateService, useValue: globalStateMock },
+        { provide: InstitutionalConfirmationService, useValue: confirmationMock }
       ]
     }).compileComponents();
 
@@ -419,5 +423,33 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     component.cerrarModalEditar();
     expect(component.errorEdicionEvaluacion()).toBeNull();
     expect(component.error()).toBe('Error genuino de página');
+  });
+  it('uses institutional confirmation for dirty evaluation close and keeps the edit open when cancelled', async () => {
+    component.modalEditarAbierto.set(true);
+    component.cambiosSinGuardar.set(true);
+
+    component.cerrarModalEditar();
+    await Promise.resolve();
+
+    expect(confirmationMock.confirm).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Hay cambios sin guardar',
+      confirmLabel: 'Descartar cambios',
+      cancelLabel: 'Continuar editando',
+      confirmIcon: 'reject'
+    }));
+    expect(component.modalEditarAbierto()).toBe(true);
+    expect(component.cambiosSinGuardar()).toBe(true);
+  });
+
+  it('discards a dirty new evaluation only after institutional confirmation', async () => {
+    confirmationMock.confirm.mockResolvedValue(true);
+    component.modalNuevaEvaluacionAbierto.set(true);
+    component.cambiosSinGuardar.set(true);
+
+    component.cerrarModalNuevaEvaluacion();
+    await Promise.resolve();
+
+    expect(component.modalNuevaEvaluacionAbierto()).toBe(false);
+    expect(component.cambiosSinGuardar()).toBe(false);
   });
 });

@@ -168,6 +168,8 @@ test.beforeEach(async ({ page }) => preparar(page));
 
 test('Nueva Evaluación presenta acciones de footer icon-only, accesibles y visibles', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
+  let browserDialogs = 0;
+  page.on('dialog', async dialog => { browserDialogs++; await dialog.dismiss(); });
   await page.goto('/matrices-riesgos');
   await page.getByRole('button', { name: 'Crear nueva evaluación' }).click();
 
@@ -205,8 +207,30 @@ test('Nueva Evaluación presenta acciones de footer icon-only, accesibles y visi
     await mkdir(artifactDirectory, { recursive: true });
     await modal.screenshot({ path: join(artifactDirectory, 'new-evaluation-footer-blue.png') });
   }
+  await modal.evaluate(element => {
+    const angular = (window as unknown as { ng?: { getComponent?: (node: Element) => { cambiosSinGuardar?: { set: (value: boolean) => void } } | null } }).ng;
+    angular?.getComponent?.(element.closest('app-matrices-riesgos')!)?.cambiosSinGuardar?.set(true);
+  });
   await cancel.click();
+  const confirmation = page.locator('[role="dialog"], [role="alertdialog"]').last();
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation).toHaveClass(/modal-size-md/);
+  if (artifactDirectory) await confirmation.screenshot({ path: join(artifactDirectory, 'new-evaluation-unsaved-confirmation.png') });
+  const continueEditing = confirmation.getByRole('button', { name: 'Continuar editando' });
+  const discardChanges = confirmation.getByRole('button', { name: 'Descartar cambios' });
+  await expect(continueEditing).toHaveAttribute('title', 'Continuar editando');
+  await expect(discardChanges).toHaveAttribute('title', 'Descartar cambios');
+  await expect(continueEditing).toHaveText('');
+  await expect(discardChanges).toHaveText('');
+  await continueEditing.focus();
+  await page.keyboard.press('Enter');
+  await expect(modal).toBeVisible();
+  await modal.locator('button[aria-label^="Cerrar creación"]').click();
+  const confirmDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
+  await confirmDiscard.getByRole('button', { name: 'Descartar cambios' }).focus();
+  await page.keyboard.press('Enter');
   await expect(modal).toHaveCount(0);
+  expect(browserDialogs).toBe(0);
 });
 
 test('Vista de evaluación presenta su acción de cierre de footer icon-only', async ({ page }) => {
@@ -989,27 +1013,152 @@ test('Riesgos usa filtro estándar completo y pagina exactamente 10 registros al
   expect(consultas.at(-1)?.buscar).toBe('proveedor');
 });
 
-test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => {
-  let payload: any;
+test('UAT administra riesgos mediante modales institucionales y conserva el contrato de guardado', async ({ page }) => {
+  let createPayload: any;
+  let updatePayload: any;
+  const registros = [{ ...riesgo }];
+  let browserDialogs = 0;
+  page.on('dialog', async dialog => {
+    browserDialogs++;
+    await dialog.dismiss();
+  });
   await page.route('**/api/matrices-riesgos/riesgos', async route => {
-    if (route.request().method() === 'POST') {
-      payload = route.request().postDataJSON();
+    const method = route.request().method();
+    if (method === 'POST') {
+      createPayload = route.request().postDataJSON();
+      registros.push({ ...createPayload, rieId: 8, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-08T12:00:00Z' });
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 8 }) });
     }
-    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [riesgo] }) });
+    if (method === 'PUT') {
+      updatePayload = route.request().postDataJSON();
+      const id = Number(new URL(route.request().url()).pathname.split('/').at(-1));
+      const index = registros.findIndex(registro => registro.rieId === id);
+      if (index >= 0) registros[index] = { ...registros[index], ...updatePayload };
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: true }) });
+    }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: registros }) });
   });
 
+  await page.route('**/api/matrices-riesgos/riesgos/*', async route => {
+    if (route.request().method() !== 'PUT') return route.fallback();
+    updatePayload = route.request().postDataJSON();
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: true }) });
+  });
   await page.goto('/matrices-riesgos');
   await page.getByRole('button', { name: 'Riesgos', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Gestión de riesgos' })).toBeVisible();
-  await page.getByLabel('Código de Riesgo', { exact: true }).fill('R-008');
-  await page.getByLabel('Riesgo Inherente', { exact: true }).fill('Riesgo integral UAT');
-  await page.getByLabel('Evaluación', { exact: true }).fill('Creado por prueba UAT');
+  await expect(page.locator('#titulo-gestion-riesgos')).toBeVisible();
+  await page.getByRole('button', { name: 'Nuevo riesgo' }).click();
+  const createModal = page.locator('[data-risk-crud-modal]');
+  await expect(createModal).toBeVisible();
+  await expect(createModal.locator('.modal-container-card.modal-size-lg')).toBeVisible();
+  await expect(createModal.locator('.modal-header-institutional')).toBeVisible();
+  await expect(createModal.locator('.modal-footer-institutional button')).toHaveCount(2);
+  expect(await page.locator('app-matrices-riesgos-gestion table').evaluate(element => Boolean(element.closest('[inert]')))).toBe(true);
+  const artifactDirectory = process.env.RL_MODAL_ARTIFACT_DIR;
+  if (artifactDirectory) {
+    await mkdir(artifactDirectory, { recursive: true });
+    await createModal.screenshot({ path: join(artifactDirectory, 'risk-create-modal.png') });
+    await page.screenshot({ path: join(artifactDirectory, 'risk-create-modal-with-table-context.png') });
+  }
+  await expect(createModal.locator('button[aria-label="Cancelar formulario de riesgo"]')).toHaveText('');
+  await expect(createModal.locator('[data-ui-action="save-risk"]')).toHaveText('');
+  await page.locator('#codigo-riesgo').fill('R-008');
+  await page.locator('#nombre-riesgo').fill('Riesgo integral UAT');
+  await page.locator('#descripcion-riesgo').fill('Creado por prueba UAT');
   await page.getByRole('button', { name: 'Guardar nuevo riesgo', exact: true }).click();
-  await expect.poll(() => payload?.rieCodigo).toBe('R-008');
+  await expect.poll(() => createPayload?.rieCodigo).toBe('R-008');
+  expect(createPayload).toEqual({ rieCodigo: 'R-008', rieNombre: 'Riesgo integral UAT', rieDescripcion: 'Creado por prueba UAT', rieActivo: true });
+  await expect(createModal).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Nuevo riesgo' })).toBeFocused();
   await expect(page.getByText('Riesgo creado correctamente.')).toBeVisible();
-});
+  await expect(page.locator('app-matrices-riesgos-gestion table')).toBeVisible();
+  await expect(page.locator('app-matrices-riesgos-gestion section > form')).toHaveCount(0);
 
+  const editButton = page.getByRole('button', { name: 'Editar riesgo' }).first();
+  await editButton.click();
+  const editModal = page.locator('[data-risk-crud-modal]');
+  await expect(editModal).toBeVisible();
+  if (artifactDirectory) await editModal.screenshot({ path: join(artifactDirectory, 'risk-edit-modal.png') });
+  await expect(page.locator('#codigo-riesgo')).toHaveValue('R-007');
+  await page.locator('#nombre-riesgo').fill('Nombre temporal');
+  await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
+  const discardDialog = page.locator('[role="dialog"], [role="alertdialog"]').last();
+  await expect(discardDialog).toBeVisible();
+  await expect(discardDialog).toHaveClass(/modal-size-md/);
+  await expect(discardDialog).toHaveClass(/modal-container-card/);
+  const confirmationStyle = await discardDialog.evaluate(element => ({
+    headerGradient: getComputedStyle(element.querySelector('.institutional-confirmation__header')!).backgroundImage,
+    discardBackground: getComputedStyle(element.querySelector('.swal2-confirm')!).backgroundColor,
+    discardColor: getComputedStyle(element.querySelector('.swal2-confirm')!).color
+  }));
+  expect(confirmationStyle.headerGradient).not.toBe('none');
+  expect(confirmationStyle.discardBackground).toBe('rgb(185, 28, 28)');
+  expect(confirmationStyle.discardColor).toBe('rgb(255, 255, 255)');
+  if (artifactDirectory) await discardDialog.screenshot({ path: join(artifactDirectory, 'risk-unsaved-confirmation.png') });
+  await expect(discardDialog.getByRole('button', { name: 'Descartar cambios' })).toBeVisible();
+  await expect(discardDialog.getByRole('button', { name: 'Continuar editando' })).toBeVisible();
+  await discardDialog.getByRole('button', { name: 'Continuar editando' }).click();
+  await expect(editModal).toBeVisible();
+  await expect(page.locator('#nombre-riesgo')).toHaveValue('Nombre temporal');
+
+  await page.getByRole('button', { name: 'Cerrar formulario de riesgo' }).click();
+  const confirmDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
+  await expect(confirmDiscard.getByRole('button', { name: 'Descartar cambios' })).toBeVisible();
+  await confirmDiscard.getByRole('button', { name: 'Descartar cambios' }).click();
+  await expect(editModal).toBeHidden();
+  expect(browserDialogs).toBe(0);
+
+  await page.getByRole('button', { name: 'Editar riesgo' }).first().click();
+  await page.locator('#nombre-riesgo').fill('Riesgo editado UAT');
+  await page.getByRole('button', { name: 'Guardar cambios del riesgo' }).click();
+  await expect.poll(() => updatePayload?.rieNombre).toBe('Riesgo editado UAT');
+  expect(updatePayload).toEqual({ rieCodigo: 'R-007', rieNombre: 'Riesgo editado UAT', rieDescripcion: 'Base UAT', rieActivo: true });
+  await expect(editModal).toBeHidden();
+  expect(browserDialogs).toBe(0);
+});
+test('CRUD de Riesgos mantiene header, contenido y footer en los viewports institucionales', async ({ page }) => {
+  const artifactDirectory = process.env.RL_MODAL_ARTIFACT_DIR;
+  if (artifactDirectory) await mkdir(artifactDirectory, { recursive: true });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Riesgos', exact: true }).click();
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+    { width: 1536, height: 864 },
+    { width: 1920, height: 1080 },
+    { width: 390, height: 844 }
+  ]) {
+    await page.setViewportSize(viewport);
+    if (viewport.width < 768) {
+      const cerrarMenu = page.locator('button[data-ui-control="navigation"][aria-label]');
+      if (await cerrarMenu.count()) {
+        await cerrarMenu.first().dispatchEvent('click');
+        await expect(page.locator('#navegacion-principal')).toHaveClass(/-translate-x-full/);
+      }
+    }
+    await page.getByRole('button', { name: 'Nuevo riesgo' }).click();
+    const modal = page.locator('[data-risk-crud-modal]');
+    const card = modal.locator('.modal-container-card');
+    const header = card.locator('.modal-header-institutional');
+    const body = card.locator('.modal-body-scrollable');
+    const footer = card.locator('.modal-footer-institutional');
+    await expect(header).toBeVisible();
+    await expect(footer).toBeVisible();
+    await expect(page.locator('#codigo-riesgo')).toBeFocused();
+    if (artifactDirectory && viewport.width === 390) {
+      await page.screenshot({ path: join(artifactDirectory, 'risk-crud-modal-mobile.png') });
+    }
+    const bounds = await card.boundingBox();
+    expect(bounds).not.toBeNull();
+    if (!bounds) throw new Error('Risk CRUD modal bounds are unavailable.');
+    expect(bounds.width).toBeLessThanOrEqual(viewport.width);
+    expect(bounds.height).toBeLessThanOrEqual(viewport.height);
+    expect(await body.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await footer.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
+    await expect(modal).toBeHidden();
+  }
+});
 test('preview de exportaciones consolidado conserva el modal dentro del viewport', async ({ page }) => {
   test.setTimeout(120_000);
   for (const viewport of [

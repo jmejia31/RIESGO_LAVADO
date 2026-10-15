@@ -652,6 +652,49 @@ dialog.modal-backdrop-overlay {
   max-height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
 }
 
+/* SweetAlert is the transport for shared confirmations; its DOM consumes the same modal shell. */
+.institutional-confirmation-overlay { z-index: 1100 !important; }
+.institutional-confirmation.swal2-popup {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgb(var(--ihss-200-rgb, 204 209 225) / 0.82) !important;
+  border-radius: 1.25rem !important;
+  overflow: hidden !important;
+  text-align: left !important;
+}
+.swal2-title.institutional-confirmation__header {
+  display: flex !important;
+  width: 100% !important;
+  max-width: none !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 1rem !important;
+  margin: 0 !important;
+  padding: 1.25rem 1.5rem !important;
+  color: rgb(var(--ihss-on-modal-rgb, 255 255 255)) !important;
+  font-size: 1rem !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+}
+.institutional-confirmation__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+.institutional-confirmation__heading { font-size: 1.25rem; font-weight: 700; line-height: 1.35; }
+.institutional-confirmation__message { color: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.88); font-size: 0.875rem; font-weight: 400; line-height: 1.5; }
+.institutional-confirmation__footer.swal2-actions { width: 100%; margin: 0 !important; justify-content: flex-end !important; }
+
+@media (max-width: 640px) {
+  .swal2-title.institutional-confirmation__header { gap: 0.75rem !important; padding: 1rem !important; }
+}
+
 @media (max-width: 640px) {
   .modal-backdrop-overlay,
   dialog.modal-backdrop-overlay {
