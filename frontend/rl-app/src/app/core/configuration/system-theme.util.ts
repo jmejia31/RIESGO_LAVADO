@@ -128,7 +128,7 @@ function modalToneStops(color: RgbColor): [RgbColor, RgbColor, RgbColor] {
     baseLightness = low;
   }
 
-  let highlightLightness = Math.min(1, baseLightness + 0.12);
+  let highlightLightness = Math.min(1, baseLightness + 0.28);
   if (contrastRatio(hslToRgb({ ...original, l: highlightLightness }), white) < 4.5) {
     let low = baseLightness;
     let high = highlightLightness;
@@ -141,7 +141,7 @@ function modalToneStops(color: RgbColor): [RgbColor, RgbColor, RgbColor] {
   }
 
   return [
-    hslToRgb({ ...original, l: Math.max(0, baseLightness * 0.78) }),
+    hslToRgb({ ...original, l: Math.max(0, baseLightness * 0.48) }),
     hslToRgb({ ...original, l: baseLightness }),
     hslToRgb({ ...original, l: highlightLightness })
   ];

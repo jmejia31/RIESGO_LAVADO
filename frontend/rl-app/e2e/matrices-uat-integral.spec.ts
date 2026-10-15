@@ -345,6 +345,7 @@ test('Editar Evaluación presenta acciones de footer icon-only, accesibles y vis
     await mkdir(artifactDirectory, { recursive: true });
     await writeFile(join(artifactDirectory, 'edit-evaluation-footer-computed.json'), JSON.stringify(runtimeStyles, null, 2), 'utf8');
     await footer.screenshot({ path: join(artifactDirectory, 'edit-evaluation-footer-blue.png') });
+    await modal.screenshot({ path: join(artifactDirectory, 'edit-evaluation-modal-blue.png') });
   }
 
   await cancel.click();

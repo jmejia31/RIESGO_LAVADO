@@ -192,10 +192,10 @@
     overflow: hidden;
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
     background:
-      radial-gradient(ellipse at 88% 2%, rgb(var(--ihss-modal-highlight-rgb) / 0.2), transparent 43%),
+      radial-gradient(ellipse at 88% 2%, rgb(var(--ihss-modal-highlight-rgb) / 0.24), transparent 43%),
       linear-gradient(112deg,
         rgb(var(--ihss-modal-primary-start-rgb)) 0%,
-        rgb(var(--ihss-modal-primary-mid-rgb)) 56%,
+        rgb(var(--ihss-modal-primary-mid-rgb)) 54%,
         rgb(var(--ihss-modal-primary-end-rgb)) 100%) !important;
     padding: 1rem 1.5rem;
     display: flex;
@@ -217,7 +217,7 @@
     z-index: 0;
     pointer-events: none;
     inset: 0;
-    background: radial-gradient(ellipse at 92% 5%, rgb(var(--ihss-modal-highlight-rgb) / 0.12), transparent 44%);
+    background: radial-gradient(ellipse at 92% 5%, rgb(var(--ihss-modal-highlight-rgb) / 0.16), transparent 44%);
   }
   .modal-header-institutional::before,
   .modal-container-card > header::before {
@@ -231,7 +231,7 @@
     right: -8%;
     border-radius: 42%;
     transform: rotate(14deg);
-    background: linear-gradient(135deg, transparent 35%, rgb(var(--ihss-modal-highlight-rgb) / 0.1) 36% 63%, transparent 64%);
+    background: linear-gradient(135deg, transparent 35%, rgb(var(--ihss-modal-highlight-rgb) / 0.14) 36% 63%, transparent 64%);
   }
   .modal-header-institutional > *,
   .modal-container-card > header > * {
@@ -279,11 +279,11 @@
     isolation: isolate;
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
     background:
-      radial-gradient(ellipse at 96% 100%, rgb(var(--ihss-modal-highlight-rgb) / 0.08), transparent 48%),
+      radial-gradient(ellipse at 96% 100%, rgb(var(--ihss-modal-highlight-rgb) / 0.12), transparent 48%),
       linear-gradient(112deg,
         rgb(var(--ihss-modal-primary-start-rgb)) 0%,
-        rgb(var(--ihss-modal-primary-mid-rgb)) 72%,
-        rgb(var(--ihss-modal-primary-start-rgb)) 100%) !important;
+        rgb(var(--ihss-modal-primary-mid-rgb)) 58%,
+        rgb(var(--ihss-modal-primary-end-rgb)) 100%) !important;
     padding: 0.75rem 1.5rem;
     display: flex;
     align-items: center;

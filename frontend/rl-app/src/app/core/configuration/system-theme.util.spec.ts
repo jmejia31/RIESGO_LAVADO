@@ -59,6 +59,7 @@ describe('system-theme.util', () => {
       expect(hueDistance(hue(stops[1]), hue(stops[2]))).toBeLessThanOrEqual(3);
       expect(relativeLuminance(stops[0])).toBeLessThan(relativeLuminance(stops[1]));
       expect(relativeLuminance(stops[1])).toBeLessThan(relativeLuminance(stops[2]));
+      expect(relativeLuminance(stops[2]) - relativeLuminance(stops[0])).toBeGreaterThanOrEqual(0.08);
       expect(stops.every(stop => contrastRatio(stop, white) >= 4.5)).toBe(true);
     }
   });
