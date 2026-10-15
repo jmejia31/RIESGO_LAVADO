@@ -134,6 +134,7 @@ test('modal footer icon primitive stays visible, themed and accessible across va
       expect(contrast(stop, secondaryBoundary)).toBeGreaterThanOrEqual(3);
       expect(contrast(neutralForeground!, [255, 255, 255])).toBeGreaterThanOrEqual(3);
     }
+    await footer.screenshot({ path: `test-results/modal-footer-icon-actions-${theme.name}-desktop.png` });
   }
 
   const primary = footer.getByRole('button', { name: 'primary action' });
@@ -162,4 +163,5 @@ test('modal footer icon primitive stays visible, themed and accessible across va
     expect(button.height).toBeGreaterThanOrEqual(44);
     expect(button.right).toBeLessThanOrEqual(390);
   }
+  await footer.screenshot({ path: 'test-results/modal-footer-icon-actions-light-mobile.png' });
 });
