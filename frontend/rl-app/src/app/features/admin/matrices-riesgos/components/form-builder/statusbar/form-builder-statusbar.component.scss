@@ -64,66 +64,6 @@
   color: #fde68a;
 }
 
-.form-builder-statusbar__cancel,
-.form-builder-statusbar__save {
-  display: inline-flex;
-  min-height: 2.5rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 1px solid transparent;
-  border-radius: 0.75rem;
-  padding: 0.5rem 0.875rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
-  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
-}
-
-.form-builder-statusbar__cancel {
-  border-color: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.48);
-  background: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.12);
-  color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
-}
-
-.form-builder-statusbar__cancel:hover:not(:disabled) {
-  border-color: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.76);
-  background: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.2);
-}
-
-.form-builder-statusbar__save {
-  border-color: rgb(var(--ihss-700-rgb, 30 58 138));
-  background: rgb(var(--ihss-600-rgb, 37 99 235));
-  color: rgb(var(--ihss-on-600-rgb, 255 255 255));
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.16);
-}
-
-.form-builder-statusbar__save:hover:not(:disabled) {
-  background: rgb(var(--ihss-700-rgb, 30 58 138));
-  transform: translateY(-1px);
-}
-
-.form-builder-statusbar__save:disabled {
-  cursor: not-allowed;
-  border-color: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.32);
-  background: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.1);
-  color: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.64);
-  box-shadow: none;
-}
-
-.form-builder-statusbar__cancel:focus-visible,
-.form-builder-statusbar__save:focus-visible {
-  outline: 3px solid rgb(var(--ihss-accent-rgb) / 0.82);
-  outline-offset: 2px;
-}
-
-.form-builder-statusbar__cancel app-action-icon,
-.form-builder-statusbar__save app-action-icon {
-  width: 1rem;
-  height: 1rem;
-  color: currentColor;
-}
-
 @media (max-width: 900px) {
   .form-builder-statusbar__content {
     align-items: flex-start;
@@ -132,12 +72,5 @@
 
   .form-builder-statusbar__actions {
     align-self: flex-end;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .form-builder-statusbar__cancel,
-  .form-builder-statusbar__save {
-    transition: none;
   }
 }

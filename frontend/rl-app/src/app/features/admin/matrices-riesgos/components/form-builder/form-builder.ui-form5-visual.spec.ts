@@ -56,7 +56,7 @@ describe('Form Builder UI-FORM.5 visual state reconciliation', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Publicada · Solo lectura');
   });
 
-  it('declares the statusbar as the institutional footer region and exposes textual actions', () => {
+  it('declares the statusbar as the institutional footer region and exposes accessible icon-only actions', () => {
     const fixture = TestBed.createComponent(FormBuilderStatusbarComponent);
     fixture.componentInstance.soloLectura = false;
     fixture.componentInstance.puedeGuardar = true;
@@ -66,11 +66,21 @@ describe('Form Builder UI-FORM.5 visual state reconciliation', () => {
     const footer = root.querySelector('footer');
     expect(footer?.classList.contains('modal-footer-institutional')).toBe(true);
     expect(footer?.getAttribute('data-modal-shell-region')).toBe('footer');
-    expect(root.querySelector('.form-builder-statusbar__cancel')?.textContent).toContain('Cancelar');
-    expect(root.querySelector('.form-builder-statusbar__save')?.textContent).toContain('Guardar');
+    const cancel = root.querySelector('.form-builder-statusbar__cancel') as HTMLButtonElement;
+    const save = root.querySelector('.form-builder-statusbar__save') as HTMLButtonElement;
+    expect(cancel.classList.contains('modal-action-icon')).toBe(true);
+    expect(save.classList.contains('modal-action-icon')).toBe(true);
+    expect(cancel.getAttribute('aria-label')).toBe('Cancelar cambios');
+    expect(cancel.title).toBe('Cancelar cambios');
+    expect(cancel.textContent?.trim()).toBe('');
+    expect(cancel.querySelector('app-action-icon')).not.toBeNull();
+    expect(save.getAttribute('aria-label')).toBe('Guardar cambios');
+    expect(save.title).toBe('Guardar cambios');
+    expect(save.textContent?.trim()).toBe('');
+    expect(save.querySelector('app-action-icon')).not.toBeNull();
   });
 
-  it('provides a textual close action and no ineffective save action in read-only mode', () => {
+  it('provides an accessible icon-only close action and no ineffective save action in read-only mode', () => {
     const fixture = TestBed.createComponent(FormBuilderStatusbarComponent);
     fixture.componentInstance.soloLectura = true;
     fixture.componentInstance.puedeGuardar = false;
@@ -79,7 +89,10 @@ describe('Form Builder UI-FORM.5 visual state reconciliation', () => {
     const root = fixture.nativeElement as HTMLElement;
     const close = root.querySelector('.form-builder-statusbar__cancel') as HTMLButtonElement;
     expect(close.getAttribute('aria-label')).toBe('Cerrar constructor');
-    expect(close.textContent).toContain('Cerrar');
+    expect(close.title).toBe('Cerrar constructor');
+    expect(close.textContent?.trim()).toBe('');
+    expect(close.classList.contains('modal-action-icon')).toBe(true);
+    expect(close.querySelector('app-action-icon')).not.toBeNull();
     expect(root.querySelector('.form-builder-statusbar__save')).toBeNull();
   });
 

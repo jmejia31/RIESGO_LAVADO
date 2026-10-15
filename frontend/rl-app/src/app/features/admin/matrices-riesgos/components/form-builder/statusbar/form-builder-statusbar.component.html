@@ -10,18 +10,15 @@
     </div>
     <div class="form-builder-statusbar__actions">
       @if (soloLectura) {
-        <button type="button" class="form-builder-statusbar__cancel" title="Cerrar constructor" aria-label="Cerrar constructor" (click)="cancelar.emit()">
+        <button type="button" class="form-builder-statusbar__cancel modal-action-icon modal-action-icon--neutral" title="Cerrar constructor" aria-label="Cerrar constructor" (click)="cancelar.emit()">
           <app-action-icon action="close"></app-action-icon>
-          <span>Cerrar</span>
         </button>
       } @else {
-        <button type="button" class="form-builder-statusbar__cancel" title="Cancelar cambios" aria-label="Cancelar cambios" (click)="cancelar.emit()">
+        <button type="button" class="form-builder-statusbar__cancel modal-action-icon modal-action-icon--neutral" title="Cancelar cambios" aria-label="Cancelar cambios" (click)="cancelar.emit()">
           <app-action-icon action="cancel"></app-action-icon>
-          <span>Cancelar</span>
         </button>
-        <button type="button" class="form-builder-statusbar__save" title="Guardar cambios" aria-label="Guardar cambios" [disabled]="!puedeGuardar" (click)="guardar.emit()">
+        <button type="button" class="form-builder-statusbar__save modal-action-icon modal-action-icon--primary" title="Guardar cambios" aria-label="Guardar cambios" [disabled]="!puedeGuardar" (click)="guardar.emit()">
           <app-action-icon action="save"></app-action-icon>
-          <span>Guardar</span>
         </button>
       }
     </div>

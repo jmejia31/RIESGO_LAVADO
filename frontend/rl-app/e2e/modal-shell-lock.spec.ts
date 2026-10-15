@@ -260,8 +260,18 @@ test('el footer del Form Builder hereda el shell y etiqueta sus acciones según 
   const editable = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const footer = editable.locator('[data-modal-shell-region="footer"]');
   await expect(footer).toHaveClass(/modal-footer-institutional/);
-  await expect(footer.getByRole('button', { name: 'Cancelar cambios' })).toBeVisible();
-  await expect(footer.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
+  const cancelChanges = footer.getByRole('button', { name: 'Cancelar cambios' });
+  const saveChanges = footer.getByRole('button', { name: 'Guardar cambios' });
+  for (const [button, title] of [[cancelChanges, 'Cancelar cambios'], [saveChanges, 'Guardar cambios']] as const) {
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute('title', title);
+    await expect(button).toHaveClass(/modal-action-icon/);
+    await expect(button).toHaveText('');
+    await expect(button.locator('app-action-icon')).toHaveCount(1);
+    const bounds = await button.boundingBox();
+    expect(bounds?.width).toBeGreaterThanOrEqual(44);
+    expect(bounds?.height).toBeGreaterThanOrEqual(44);
+  }
   const editableFooterStyles = await footer.evaluate(element => {
     const css = getComputedStyle(element);
     return { backgroundImage: css.backgroundImage, backgroundColor: css.backgroundColor };
@@ -275,7 +285,12 @@ test('el footer del Form Builder hereda el shell y etiqueta sus acciones según 
   await detalleFamilia.getByRole('button', { name: /Ver detalle de la versi.n/i }).last().click();
   const readonly = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const readonlyFooter = readonly.locator('[data-modal-shell-region="footer"]');
-  await expect(readonlyFooter.getByRole('button', { name: 'Cerrar constructor' })).toBeVisible();
+  const closeReadonly = readonlyFooter.getByRole('button', { name: 'Cerrar constructor' });
+  await expect(closeReadonly).toBeVisible();
+  await expect(closeReadonly).toHaveAttribute('title', 'Cerrar constructor');
+  await expect(closeReadonly).toHaveClass(/modal-action-icon/);
+  await expect(closeReadonly).toHaveText('');
+  await expect(closeReadonly.locator('app-action-icon')).toHaveCount(1);
   await expect(readonlyFooter.locator('.form-builder-statusbar__save')).toHaveCount(0);
   const readonlyGradient = await readonlyFooter.evaluate(element => getComputedStyle(element).backgroundImage);
   expect(readonlyGradient).toContain('gradient');
