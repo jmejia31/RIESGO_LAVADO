@@ -152,6 +152,34 @@ test.beforeEach(async ({ page }) => {
   await stubLecturasBase(page);
 });
 
+test('Crear familia presenta acciones de footer icon-only accesibles y visibles', async ({ page }) => {
+  await abrirGestor(page);
+  await page.getByRole('button', { name: 'Crear una nueva familia' }).click();
+
+  const modal = page.locator('[data-ui-fam-create="modal"]');
+  await expect(modal).toBeVisible();
+  const footer = modal.locator('.modal-footer-institutional');
+  const back = footer.getByRole('button', { name: 'Regresar sin crear la familia' });
+  const create = footer.getByRole('button', { name: 'Crear la familia de formularios' });
+  await expect(footer.locator('button')).toHaveCount(2);
+  for (const [button, title] of [[back, 'Regresar sin crear la familia'],
+    [create, 'Crear la familia de formularios']] as const) {
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute('title', title);
+    await expect(button).toHaveClass(/modal-action-icon/);
+    await expect(button).toHaveText('');
+    await expect(button.locator('app-action-icon')).toHaveCount(1);
+    const bounds = await button.boundingBox();
+    expect(bounds?.width).toBeGreaterThanOrEqual(44);
+    expect(bounds?.height).toBeGreaterThanOrEqual(44);
+  }
+  await expect(back).toBeEnabled();
+  await expect(create).toBeDisabled();
+  await back.click();
+  await expect(modal).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Familias de Formularios' })).toBeVisible();
+});
+
 test('UI-FAM.2 carga el detalle por ID dentro de un único modal XL con sus versiones integradas', async ({ page }) => {
   let lecturasPorId = 0;
   await page.route('**/api/matrices-riesgos/familias/7', route => {
