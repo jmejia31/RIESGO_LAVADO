@@ -333,6 +333,14 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   const modalMatriz = page.locator('[data-matrix-modal="complete"]');
   await expect(modalMatriz).toBeVisible();
   await expect(modalMatriz.locator('.modal-size-workspace')).toBeVisible();
+  const matrixFooterClose = modalMatriz.locator('.modal-footer-institutional').getByRole('button', { name: 'Cerrar Matriz completa' });
+  await expect(matrixFooterClose).toHaveClass(/modal-action-icon/);
+  await expect(matrixFooterClose).toHaveAttribute('title', 'Cerrar Matriz completa');
+  await expect(matrixFooterClose).toHaveText('');
+  await expect(matrixFooterClose.locator('app-action-icon')).toHaveCount(1);
+  const matrixFooterCloseBox = await matrixFooterClose.boundingBox();
+  expect(matrixFooterCloseBox?.width).toBeGreaterThanOrEqual(44);
+  expect(matrixFooterCloseBox?.height).toBeGreaterThanOrEqual(44);
   const view = modalMatriz.locator('[data-matrix-view="complete"]');
   await expect(view.getByRole('heading', { name: '1. Identificación y Riesgo Inherente' })).toBeVisible();
   await expect(view.getByRole('heading', { name: '2. Controles' })).toBeVisible();
