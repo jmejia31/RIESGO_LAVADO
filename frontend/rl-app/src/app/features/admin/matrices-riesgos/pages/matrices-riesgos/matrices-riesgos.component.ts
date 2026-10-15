@@ -51,6 +51,7 @@ type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 type AlertScope = 'page' | 'newEvaluation' | 'editEvaluation';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
@@ -62,7 +63,7 @@ type BloqueEvaluacion = 1 | 2 | 3 | 4 | 5 | 6;
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent, MatricesRiesgosMitigacionComponent, MatricesRiesgosMonitoreoOperativoComponent],
+  imports: [ActionIconComponent, BoundedSelectComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent, MatricesRiesgosMitigacionComponent, MatricesRiesgosMonitoreoOperativoComponent],
   templateUrl: './matrices-riesgos.component.html',
   styleUrl: './matrices-riesgos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -206,6 +207,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
 
   readonly riesgos = signal<RiesgoDto[]>([]);
+  readonly opcionesRiesgoNuevaEvaluacion = computed<BoundedSelectOption[]>(() => this.riesgos().map(riesgo => ({
+    value: riesgo.rieId,
+    label: `${riesgo.rieCodigo} — ${riesgo.rieNombre}`,
+    searchText: `${riesgo.rieCodigo} ${riesgo.rieNombre} ${riesgo.rieDescripcion ?? ''}`
+  })));
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
   readonly totalRegistros = signal(0);
   readonly totalPaginas = signal(0);
@@ -1102,6 +1108,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       },
       error: () => this.riesgos.set([])
     });
+  }
+
+  seleccionarRiesgoNuevaEvaluacion(value: string | number | null): void {
+    const riskId = Number(value);
+    this.riesgoId.set(Number.isFinite(riskId) ? riskId : 0);
   }
 
   cargarMetodologia(): void {

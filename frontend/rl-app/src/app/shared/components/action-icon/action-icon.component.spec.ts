@@ -20,4 +20,12 @@ describe('catálogo global de iconos de acción', () => {
       'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
     ]);
   });
+
+  it('reserva la X simple para cerrar y distingue salir, cancelar y rechazar', () => {
+    expect(ACTION_ICON_PATHS.close).toEqual(['M6 18 18 6M6 6l12 12']);
+    expect(ACTION_ICON_PATHS.exit).not.toEqual(ACTION_ICON_PATHS.close);
+    expect(ACTION_ICON_PATHS.cancel).not.toEqual(ACTION_ICON_PATHS.close);
+    expect(ACTION_ICON_PATHS.reject).not.toEqual(ACTION_ICON_PATHS.close);
+    expect(ACTION_ICON_PATHS.exit).toEqual(ACTION_ICON_PATHS.logout);
+  });
 });

@@ -72,7 +72,7 @@ function isAction(attrs: string): boolean {
   return /\(click\)|\(ngSubmit\)|type\s*=\s*["']submit["']/i.test(attrs);
 }
 
-type SemanticAction = 'edit' | 'view' | 'delete' | 'create' | 'save' | 'close' | 'cancel' | 'refresh' | 'retry' | 'clear-filters' | 'filter' | 'export-excel' | 'export-pdf' | 'upload' | 'download' | 'print' | 'sync';
+type SemanticAction = 'edit' | 'view' | 'delete' | 'create' | 'save' | 'close' | 'exit' | 'cancel' | 'refresh' | 'retry' | 'clear-filters' | 'filter' | 'export-excel' | 'export-pdf' | 'upload' | 'download' | 'print' | 'sync';
 
 const SEMANTIC_ACTION_RULES: Array<{ action: SemanticAction; pattern: RegExp }> = [
   { action: 'close', pattern: /^(?:cerrar|close)\b/i },
@@ -103,16 +103,23 @@ function accessibleActionText(attrs: string): string[] {
   return [...new Set(values.filter(Boolean))];
 }
 
-function expectedSemanticActions(attrs: string): SemanticAction[] {
+function expectedSemanticActions(attrs: string, footerAction = false): SemanticAction[] {
   const expected = new Set<SemanticAction>();
   for (const text of accessibleActionText(attrs)) {
     const normalized = text.replace(/\s+/g, ' ').trim();
     if (/^mostrar u ocultar contrase/i.test(normalized)) continue;
     if (/^ver versiones\b/i.test(normalized)) continue;
     const rule = SEMANTIC_ACTION_RULES.find(candidate => candidate.pattern.test(normalized));
-    if (rule) expected.add(rule.action);
+    if (rule) expected.add(footerAction && rule.action === 'close' ? 'exit' : rule.action);
   }
   return [...expected];
+}
+
+function isModalFooterButton(source: string, offset: number): boolean {
+  const before = source.slice(0, offset);
+  const dialogStart = Math.max(before.lastIndexOf('<dialog'), before.lastIndexOf('role="dialog"'), before.lastIndexOf("role='dialog'"));
+  const currentShell = before.slice(dialogStart >= 0 ? dialogStart : 0);
+  return /\bclass\s*=\s*["'][^"']*\bmodal-footer-institutional\b|\bdata-modal-shell-region\s*=\s*["']footer["']/i.test(currentShell);
 }
 
 function lineAt(source: string, offset: number): number {
@@ -175,9 +182,7 @@ describe('regla global de acciones con icono', () => {
         if (!hasIcon) violations.push(`${location}: missing semantic icon`);
         if (actionIconCount !== 1) violations.push(`${location}: expected exactly one canonical action icon`);
         const label = button.attrs.match(/(?:aria-label|attr\.aria-label)\s*=\s*["']([^"']+)["']/i)?.[1] ?? '';
-        const isModalFooterAction = /modal-footer-institutional|data-modal-shell-region\s*=\s*["']footer["']/i.test(
-          source.slice(Math.max(0, button.offset - 1200), button.offset)
-        );
+        const isModalFooterAction = isModalFooterButton(source, button.offset);
         const usesModalActionPrimitive = /\bmodal-action-icon\b/i.test(button.attrs);
         if (isModalFooterAction && usesModalActionPrimitive && text) {
           violations.push(`${location}: modal footer icon action contains visible text`);
@@ -201,7 +206,8 @@ describe('regla global de acciones con icono', () => {
       if (path.includes('data-pagination.component.ts#inline-template')) continue;
       for (const button of extractButtons(source)) {
         if (!isAction(button.attrs) || isNonActionControl(button.attrs, source, button.offset)) continue;
-        const expected = expectedSemanticActions(button.attrs);
+        const isModalFooterAction = isModalFooterButton(source, button.offset);
+        const expected = expectedSemanticActions(button.attrs, isModalFooterAction);
         if (expected.length === 0) continue;
         const actions = declaredActionIcons(button.body);
         const location = `${relative(workingDirectory, path)}:${lineAt(source, button.offset)}`;

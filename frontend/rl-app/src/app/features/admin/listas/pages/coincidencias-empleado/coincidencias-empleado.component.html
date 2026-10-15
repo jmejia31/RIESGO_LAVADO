@@ -283,7 +283,7 @@
       <div class="modal-footer-institutional flex-wrap justify-between text-xs text-gray-500">
         <app-data-pagination [page]="paginaDetalleActual()" [pageSize]="registrosDetallePorPagina()" [totalRecords]="totalRegistrosDetalle()" itemLabel="registros del detalle" [disabled]="cargandoDetalle()" (pageChange)="cambiarPaginaDetalle($event)" />
          <button (click)="cerrarModal()" title="Cerrar detalle de coincidencias" aria-label="Cerrar detalle de coincidencias" class="modal-action-icon modal-action-icon--neutral">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="exit"></app-action-icon>
           </button>
       </div>
 

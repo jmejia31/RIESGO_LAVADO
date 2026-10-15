@@ -104,6 +104,33 @@
   .card {
     @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
   }
+  .modal-metadata-card {
+    min-width: 0;
+    border: 1px solid rgb(226 232 240 / 0.84);
+    border-radius: 1rem;
+    background: rgb(248 250 252 / 0.88);
+    padding: 1rem;
+  }
+  .modal-metadata-card dt {
+    color: rgb(100 116 139);
+    font-size: 0.6875rem;
+    font-weight: 650;
+    line-height: 1.25rem;
+  }
+  .modal-metadata-card dd {
+    margin-top: 0.125rem;
+    color: rgb(30 41 59);
+    font-size: 0.8125rem;
+    font-weight: 650;
+    line-height: 1.25rem;
+    overflow-wrap: anywhere;
+  }
+  [data-matrix-view="complete"] [data-matrix-field] {
+    border-color: rgb(226 232 240 / 0.84);
+    border-radius: 0.875rem;
+    background: linear-gradient(180deg, #fff 0%, rgb(248 250 252 / 0.74) 100%);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.035);
+  }
   /* ==========================================================================
      SISTEMA INSTITUCIONAL DE MODALES Y OVERLAYS (SGRLA-IHSS)
      Única fuente de verdad canónica para geometría, backdrop, tarjeta y variantes

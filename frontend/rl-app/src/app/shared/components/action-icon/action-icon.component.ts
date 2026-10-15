@@ -18,6 +18,7 @@ export type ActionIconName =
   | 'duplicate'
   | 'edit'
   | 'expand'
+  | 'exit'
   | 'export-excel'
   | 'export-pdf'
   | 'filter'
@@ -60,7 +61,7 @@ export const ACTION_ICON_PATHS: Readonly<Record<ActionIconName, readonly string[
   activate: ['M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
   approve: ['M5 12l4 4L19 6'],
   back: ['M15 19l-7-7 7-7'],
-  cancel: ['M6 18 18 6M6 6l12 12'],
+  cancel: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', 'M5.64 5.64l12.72 12.72'],
   'clear-filters': ['M3 4h18M6 8h12M9 12h6m-3 0v8'],
   close: ['M6 18 18 6M6 6l12 12'],
   collapse: ['m6 9 6 6 6-6'],
@@ -74,6 +75,7 @@ export const ACTION_ICON_PATHS: Readonly<Record<ActionIconName, readonly string[
   duplicate: ['M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2', 'M10 8h8a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-8a2 2 0 012-2z'],
   edit: ['M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
   expand: ['m9 5 7 7-7 7'],
+  exit: ['M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'],
   'export-excel': ['M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z'],
   'export-pdf': ['M7 7h10M7 11h10M7 15h6M5 3h10l4 4v14H5V3z'],
   filter: ['M3 4h18M6 8h12M9 12h6m-3 0v8'],
@@ -96,7 +98,7 @@ export const ACTION_ICON_PATHS: Readonly<Record<ActionIconName, readonly string[
   print: ['M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z'],
   publish: ['M5 12l5 5L20 7'],
   refresh: ['M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7'],
-  reject: ['M6 18 18 6M6 6l12 12'],
+  reject: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', 'M9 9l6 6m0-6-6 6'],
   'reset-password': ['M15 7a2 2 0 012 2m-5-3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2zm-6 3a2 2 0 11-4 0 2 2 0 014 0z'],
   resume: ['M8 5v14l11-7z'],
   retry: ['M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7'],

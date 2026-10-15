@@ -1,3 +1,13 @@
+# Estado vigente — Microfase 4: sistema visual de modales (COD) — 2026-10-15 14:45 -06:00
+
+- **Base:** rama `desarrollo`, `STARTING_HEAD=origin/desarrollo=3afc4bcdf9815ee045169db9b83fe12dddd7200f`. Cambios ajenos preexistentes en `DatabaseEnvironmentGuard*`, `frontend/rl-app/tsconfig.json`, dos E2E y archivos untracked se preservan fuera del staging.
+- **Trabajo:** estructura de Matriz completa alineada al lenguaje del prototipo; iconos centrales separan X de header, salida de footer y cancelar; el selector nativo afectado ahora usa overlay reusable limitado al viewport con scroll interno/posicionamiento adaptativo, conservando puente de valor numérico y `ngModel`. Ver archivos exactos y explicación en la entrada vigente de `BITACORA_COLABORACION.md`.
+- **Pruebas locales:** frontend 887/887; Playwright 64 passed/1 skipped por Oracle XE local no disponible; lint, build, npm audit sin vulnerabilidades, validadores institucional/premium/tema/iconos y fixtures 8/8 PASS. Responsive 1366×768, 1440×900, 1536×864, 1920×1080, 2560×1440 y móvil 390×844 PASS; dropdown resize 360×760 PASS. Zoom y dos monitores físicos NOT_EXECUTED.
+- **Inventario:** 22 shells, 20 footer regions, 38 acciones; footer visible text=0, missing aria/title=0, X en exit/cancel/footer close=0. Selector: `<select>` nativo con popup browser/SO antes; combobox controlado compartido después. Valor numérico preservado en E2E con 40 opciones largas.
+- **Evidencia:** `%USERPROFILE%\Documents\RIESGO_LAVADO\MICROFASE_4\20261015_01`; contiene baseline/after, matriz de fidelidad, inventarios/auditorías y capturas. Los hash se recalculan al actualizar conteo/CI.
+- **Git/seguridad:** HEAD aún es la base indicada; no se hizo commit ni push de esta intervención. `git diff --check` PASS. Producción no consultada/modificada, DML=0, DDL=0. CI de esta intervención pendiente; cierre no declarado.
+- **Punto de continuación:** actualización de artefactos/hashes, revisión final del diff, staging sólo de archivos propios, commit/push normal a `origin/desarrollo`, esperar CI y completar certificación. Microfases de autorización y Bloque 10 no iniciados.
+
 # Estado vigente — Acciones icon-only en footer de modales (COD) — 2026-10-15 12:05 -06:00
 
 - **Inicio/publicación:** intervención iniciada desde `76e057dd6f040778fb3f0e1043aca019d270fbb6` en `desarrollo`, sincronizada con `origin/desarrollo`. Los cambios de código publicados llegan a `c13a8cece62264a82337f4bd60caaaa8e9dc6024`; incluye el primitivo global, migraciones por modal y validador con fixtures negativos/positivos.

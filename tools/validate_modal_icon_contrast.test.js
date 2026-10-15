@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { auditModalFooterActions } = require('./validate_modal_icon_contrast');
+const { auditActionIconSemantics, auditModalFooterActions } = require('./validate_modal_icon_contrast');
 
 function audit(button, footer = '<div class="modal-footer-institutional">') {
   const template = `${footer}${button}</div>`;
@@ -51,4 +51,30 @@ test('recognizes a composite footer region and ignores controls outside it', () 
   const result = audit(outside, '<div class="composite-shell">');
   assert.deepEqual(result.failures, []);
   assert.equal(result.actions, 1);
+});
+
+test('requires X for header close and distinct exit/cancel footer semantics', () => {
+  const template = `
+    <dialog><header class="modal-header-institutional"><button aria-label="Cerrar modal" title="Cerrar modal"><app-action-icon action="close"></app-action-icon></button></header>
+    <footer class="modal-footer-institutional">
+      <button aria-label="Salir de la vista" title="Salir de la vista"><app-action-icon action="exit"></app-action-icon></button>
+      <button aria-label="Cancelar cambios" title="Cancelar cambios"><app-action-icon action="cancel"></app-action-icon></button>
+    </footer></dialog>`;
+  const result = auditActionIconSemantics([['positive.html', template]]);
+  assert.deepEqual(result.failures, []);
+  assert.equal(result.headerClose, 1);
+  assert.equal(result.footerExit, 1);
+  assert.equal(result.footerCancel, 1);
+  assert.equal(result.collisions, 0);
+});
+
+test('rejects X reused for footer exit or cancel', () => {
+  const template = `<footer class="modal-footer-institutional">
+    <button aria-label="Cerrar vista" title="Cerrar vista"><app-action-icon action="close"></app-action-icon></button>
+    <button aria-label="Cancelar cambios" title="Cancelar cambios"><app-action-icon action="close"></app-action-icon></button>
+  </footer>`;
+  const result = auditActionIconSemantics([['negative.html', template]]);
+  assert.equal(result.footerCloseHeaderX, 1);
+  assert.equal(result.collisions, 2);
+  assert.equal(result.failures.length, 2);
 });

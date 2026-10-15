@@ -11,7 +11,7 @@
     <div class="form-builder-statusbar__actions">
       @if (soloLectura) {
         <button type="button" class="form-builder-statusbar__cancel modal-action-icon modal-action-icon--neutral" title="Cerrar constructor" aria-label="Cerrar constructor" (click)="cancelar.emit()">
-          <app-action-icon action="close"></app-action-icon>
+          <app-action-icon action="exit"></app-action-icon>
         </button>
       } @else {
         <button type="button" class="form-builder-statusbar__cancel modal-action-icon modal-action-icon--neutral" title="Cancelar cambios" aria-label="Cancelar cambios" (click)="cancelar.emit()">

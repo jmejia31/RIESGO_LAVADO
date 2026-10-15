@@ -197,6 +197,14 @@ test('Nueva Evaluación presenta acciones de footer icon-only, accesibles y visi
   await expect(cancel).toBeEnabled();
   await expect(save).toBeEnabled();
   await expect(next).toBeEnabled();
+  await expect(cancel.locator('app-action-icon')).toHaveAttribute('action', 'cancel');
+  await expect(save.locator('app-action-icon')).toHaveAttribute('action', 'save');
+  await expect(next.locator('app-action-icon')).toHaveAttribute('action', 'next');
+  const artifactDirectory = process.env.RL_MODAL_ARTIFACT_DIR;
+  if (artifactDirectory) {
+    await mkdir(artifactDirectory, { recursive: true });
+    await modal.screenshot({ path: join(artifactDirectory, 'new-evaluation-footer-blue.png') });
+  }
   await cancel.click();
   await expect(modal).toHaveCount(0);
 });
@@ -221,6 +229,12 @@ test('Vista de evaluación presenta su acción de cierre de footer icon-only', a
   expect(buttonBox?.height).toBeGreaterThanOrEqual(44);
   expect(iconBox?.width).toBe(20);
   expect(iconBox?.height).toBe(20);
+
+  const artifactDirectory = process.env.RL_MODAL_ARTIFACT_DIR;
+  if (artifactDirectory) {
+    await mkdir(artifactDirectory, { recursive: true });
+    await modal.screenshot({ path: join(artifactDirectory, 'view-evaluation-footer.png') });
+  }
 
   await close.click();
   await expect(modal).toHaveCount(0);
@@ -286,6 +300,10 @@ test('Editar Evaluación presenta acciones de footer icon-only, accesibles y vis
   await expect(previous).toBeDisabled();
   await expect(previous).toBeVisible();
   await expect(next).toBeEnabled();
+  await expect(cancel.locator('app-action-icon')).toHaveAttribute('action', 'cancel');
+  await expect(save.locator('app-action-icon')).toHaveAttribute('action', 'save');
+  await expect(previous.locator('app-action-icon')).toHaveAttribute('action', 'back');
+  await expect(next.locator('app-action-icon')).toHaveAttribute('action', 'next');
   const disabledState = await previous.evaluate(button => {
     const style = getComputedStyle(button);
     const iconStyle = getComputedStyle(button.querySelector('app-action-icon')!);
@@ -322,6 +340,12 @@ test('Editar Evaluación presenta acciones de footer icon-only, accesibles y vis
   }));
   await writeFile(join('test-results', 'edit-evaluation-footer-icon-only-blue.json'), JSON.stringify(runtimeStyles, null, 2), 'utf8');
   await footer.screenshot({ path: join('test-results', 'edit-evaluation-footer-icon-only-blue.png') });
+  const artifactDirectory = process.env.RL_MODAL_ARTIFACT_DIR;
+  if (artifactDirectory) {
+    await mkdir(artifactDirectory, { recursive: true });
+    await writeFile(join(artifactDirectory, 'edit-evaluation-footer-computed.json'), JSON.stringify(runtimeStyles, null, 2), 'utf8');
+    await footer.screenshot({ path: join(artifactDirectory, 'edit-evaluation-footer-blue.png') });
+  }
 
   await cancel.click();
   await expect(page.locator('#titulo-modal-editar')).toHaveCount(0);
@@ -364,6 +388,9 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   await expect(matrixFooterClose).toHaveAttribute('title', 'Cerrar Matriz completa');
   await expect(matrixFooterClose).toHaveText('');
   await expect(matrixFooterClose.locator('app-action-icon')).toHaveCount(1);
+  await expect(matrixFooterClose.locator('app-action-icon')).toHaveAttribute('action', 'exit');
+  await expect(modalMatriz.locator('.modal-header-institutional button[aria-label*="Cerrar"] app-action-icon'))
+    .toHaveAttribute('action', 'close');
   const matrixFooterCloseBox = await matrixFooterClose.boundingBox();
   expect(matrixFooterCloseBox?.width).toBeGreaterThanOrEqual(44);
   expect(matrixFooterCloseBox?.height).toBeGreaterThanOrEqual(44);
@@ -587,7 +614,7 @@ test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios d
   const azul = await header.evaluate(element => getComputedStyle(element).backgroundImage);
   expect(azul).toContain('rgb(30, 58, 138)');
 
-  const artifactDir = process.env.RL_BLOCK9_ARTIFACT_DIR;
+  const artifactDir = process.env.RL_MODAL_ARTIFACT_DIR ?? process.env.RL_BLOCK9_ARTIFACT_DIR;
   if (artifactDir) {
     await mkdir(artifactDir, { recursive: true });
     await modal.screenshot({ path: join(artifactDir, 'matriz-completa-theme-blue.png') });
@@ -608,6 +635,42 @@ test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios d
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
   expect(dimensions.card).toBeLessThanOrEqual(390);
   if (artifactDir) await modal.screenshot({ path: join(artifactDir, 'matriz-completa-theme-red-mobile.png') });
+
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+    { width: 1536, height: 864 },
+    { width: 1920, height: 1080 },
+    { width: 2560, height: 1440 }
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect.poll(async () => await modal.locator('.modal-container-card').evaluate(element => element.getBoundingClientRect().height))
+      .toBeLessThanOrEqual(viewport.height);
+    const layout = await page.evaluate(() => {
+      const dialog = document.querySelector('[data-matrix-modal="complete"] .modal-container-card');
+      const headerRegion = document.querySelector('[data-matrix-modal="complete"] .modal-header-institutional');
+      const footerRegion = document.querySelector('[data-matrix-modal="complete"] .modal-footer-institutional');
+      const rect = (element: Element | null) => element?.getBoundingClientRect();
+      return {
+        viewportHeight: window.innerHeight,
+        viewportWidth: document.documentElement.clientWidth,
+        pageWidth: document.documentElement.scrollWidth,
+        cssViewportHeight: getComputedStyle(document.documentElement).height,
+        dialog: rect(dialog),
+        dialogHeight: dialog ? getComputedStyle(dialog).height : null,
+        dialogMaxHeight: dialog ? getComputedStyle(dialog).maxHeight : null,
+        header: rect(headerRegion),
+        footer: rect(footerRegion)
+      };
+    });
+    expect(layout.pageWidth).toBeLessThanOrEqual(layout.viewportWidth);
+    expect(layout.dialog).toBeTruthy();
+    expect(layout.header).toBeTruthy();
+    expect(layout.footer).toBeTruthy();
+    expect(layout.dialog!.height, JSON.stringify(layout)).toBeLessThanOrEqual(layout.viewportHeight);
+    expect(layout.header!.top).toBeGreaterThanOrEqual(0);
+    expect(layout.footer!.bottom).toBeLessThanOrEqual(layout.viewportHeight);
+  }
 });
 
 test('Consolidado muestra todos los estados y abre una matriz BORRADOR por su evaluación', async ({ page }) => {
@@ -717,7 +780,7 @@ test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET 
   await expect(page.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR persistida por capability');
 });
 
-test('selectores de evaluación operativa abren hacia abajo, quedan acotados y usan scroll interno', async ({ page }) => {
+test('selectores operativos quedan dentro del viewport con scroll interno y posición adaptable', async ({ page }) => {
   const items = Array.from({ length: 80 }, (_, index) => ({
     evaId: index + 1,
     evaRiesgoId: 100 + index,
@@ -760,14 +823,120 @@ test('selectores de evaluación operativa abren hacia abajo, quedan acotados y u
     expect(panelBox).not.toBeNull();
     if (!comboBox || !panelBox) throw new Error('No se pudo medir el selector operativo.');
 
-    expect(panelBox.y).toBeGreaterThanOrEqual(comboBox.y + comboBox.height - 1);
-    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(892);
-    expect(await panel.evaluate(element => getComputedStyle(element).position)).toBe('relative');
+    const viewport = page.viewportSize();
+    expect(viewport).not.toBeNull();
+    if (!viewport) throw new Error('El viewport del browser no está disponible.');
+    expect(panelBox.x).toBeGreaterThanOrEqual(0);
+    expect(panelBox.x + panelBox.width).toBeLessThanOrEqual(viewport.width);
+    expect(panelBox.y).toBeGreaterThanOrEqual(0);
+    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(viewport.height);
+    expect(await panel.evaluate(element => getComputedStyle(element).position)).toBe('fixed');
+    const direction = await combo.locator('xpath=..').getAttribute('data-ui-dropdown-direction');
+    expect(['up', 'down']).toContain(direction);
+    if (direction === 'down') expect(panelBox.y).toBeGreaterThanOrEqual(comboBox.y + comboBox.height - 1);
+    else expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(comboBox.y + 1);
+    expect(panelBox.height).toBeLessThanOrEqual(320);
     expect(await scroll.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
 
     await page.keyboard.press('Escape');
     await expect(panel).toBeHidden();
   }
+});
+
+test('selector de riesgo contiene opciones largas, usa scroll interno y conserva el ID numérico', async ({ page }) => {
+  const risks = Array.from({ length: 40 }, (_, index) => ({
+    rieId: 201 + index,
+    rieCodigo: `R-${String(index + 1).padStart(3, '0')}`,
+    rieNombre: `Riesgo institucional de prueba ${index + 1}: ${'descripción extendida para validar el ajuste del texto y el límite del desplegable '.repeat(3)}`,
+    rieDescripcion: 'Fixture de viewport para el selector institucional',
+    rieActivo: true,
+    rieUsrCreacion: 1,
+    rieFechaCreacion: '2026-08-07T12:00:00Z'
+  }));
+  await page.route('**/api/matrices-riesgos/riesgos/paginado*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: { items: risks, pagina: 1, tamanoPagina: 200, totalRegistros: risks.length, totalPaginas: 1 } })
+  }));
+  await page.route('**/api/matrices-riesgos/familias/paginado*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: { items: [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de riesgos LAFT', famActivo: true, tieneVersionVigente: true }], pagina: 1, tamanoPagina: 200, totalRegistros: 1, totalPaginas: 1 } })
+  }));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Crear nueva evaluación' }).click();
+  const modal = page.locator('[data-modal="nueva-evaluacion"]');
+  await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
+  await expect(modal.locator('[data-ui-bounded-select-trigger]')).toBeVisible();
+  const combo = modal.getByRole('combobox', { name: 'Riesgo Institucional a Evaluar' });
+  await combo.click();
+
+  const panel = modal.locator('[data-ui-bounded-select-panel]');
+  const options = panel.locator('[data-ui-bounded-select-scroll]');
+  await expect(panel).toBeVisible();
+  await expect(options.getByRole('option')).toHaveCount(41);
+  const artifactDirectory = process.env.RL_MODAL_ARTIFACT_DIR;
+  if (artifactDirectory) {
+    await mkdir(artifactDirectory, { recursive: true });
+    await modal.screenshot({ path: join(artifactDirectory, 'new-evaluation-long-risk-popup-mobile.png') });
+  }
+  const geometry = await panel.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const body = element.closest('.modal-body-scrollable')?.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height,
+      viewportWidth: window.innerWidth, viewportHeight: window.innerHeight,
+      bodyTop: body?.top ?? 0, bodyBottom: body?.bottom ?? window.innerHeight,
+      position: getComputedStyle(element).position };
+  });
+  expect(geometry.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
+  expect(geometry.top).toBeGreaterThanOrEqual(geometry.bodyTop);
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.bodyBottom);
+  expect(geometry.position).toBe('fixed');
+  expect(geometry.height).toBeLessThanOrEqual(320);
+  expect(await options.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+  const anchorBeforeScroll = await combo.boundingBox();
+  await modal.locator('.modal-body-scrollable').evaluate(element => { element.scrollTop += 40; });
+  await expect.poll(async () => (await combo.boundingBox())?.y ?? Number.POSITIVE_INFINITY)
+    .toBeLessThan((anchorBeforeScroll?.y ?? 0) - 5);
+  await expect.poll(async () => panel.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const body = element.closest('.modal-body-scrollable')?.getBoundingClientRect();
+    return rect.top >= (body?.top ?? 0) && rect.bottom <= (body?.bottom ?? window.innerHeight);
+  })).toBe(true);
+
+  await page.setViewportSize({ width: 360, height: 760 });
+  await expect.poll(async () => panel.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return rect.right <= window.innerWidth && rect.bottom <= window.innerHeight;
+  })).toBe(true);
+
+  await options.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  const selectedOption = options.getByRole('option', { name: /^R-040/ });
+  await expect(selectedOption).toBeVisible();
+  await selectedOption.click();
+  await expect(combo).toContainText('R-040');
+  await expect(page.locator('#modal-selector-riesgo option:checked')).toContainText('R-040');
+
+  if (artifactDirectory) {
+    await modal.screenshot({ path: join(artifactDirectory, 'new-evaluation-long-risk-mobile.png') });
+  }
+
+  expect(await combo.evaluate(element => {
+    const angular = (window as unknown as { ng?: { getComponent?: (node: Element) => { value?: unknown } | null } }).ng;
+    return angular?.getComponent?.(element.closest('app-bounded-select')!)?.value;
+  })).toBe(240);
+
+  const compatibleOption = page.locator('#modal-selector-riesgo option').filter({ hasText: /^R-039/ });
+  await page.locator('#modal-selector-riesgo').selectOption({ label: (await compatibleOption.textContent())!.trim() });
+  await expect(combo).toContainText('R-039');
+  expect(await combo.evaluate(element => {
+    const angular = (window as unknown as { ng?: { getComponent?: (node: Element) => { value?: unknown } | null } }).ng;
+    return angular?.getComponent?.(element.closest('app-bounded-select')!)?.value;
+  })).toBe(239);
 });
 
 test('Riesgos usa filtro estándar completo y pagina exactamente 10 registros al inicio', async ({ page }) => {

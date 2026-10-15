@@ -70,3 +70,17 @@ Las acciones del footer del Form Builder son icon-only. En modo editable se cons
 `node --test tools/validate_institutional_modal_standard.test.js` contiene los casos de modal correcto junto a modal incorrecto, header anidado arbitrario, composite válido, composite sin registro, modal inline y regiones compuestas incompletas. Quality Gates ejecuta esas pruebas y los tres validadores modales.
 
 La causa corregida fue que el wrapper exterior del Form Builder era estándar, pero su toolbar y statusbar anidados conservaban fondos blancos; el token de cierre blanco se aplicaba a la barra blanca. Ahora ambas superficies consumen el shell global, y los tokens de cierre se limitan a regiones institucionales certificadas.
+
+## Alineación estructural de Matriz completa y evaluación
+
+Las vistas de Matriz completa, ver y editar evaluación usan el mismo patrón de identidad del prototipo: tile vectorial de contexto, eyebrow, título dominante, subtítulo y cierre `close` en el header. La metadata de evaluación es una tarjeta contextual de bajo contraste (`modal-metadata-card`); no se presenta como un grupo de inputs. Los datos de Matriz completa conservan su orden canónico y se muestran como tarjetas de información (`data-matrix-field`), con texto largo envolvente y una retícula de una o dos columnas según el ancho. Este patrón no convierte inputs realmente editables en campos de solo lectura.
+
+## Iconografía semántica de acciones
+
+`ACTION_ICON_PATHS` en `action-icon.component.ts` es el registro central de iconos. `close` identifica el cierre convencional del header; `exit` identifica cerrar/salir desde el footer; `cancel` usa una marca de cancelación distinta de la X; `back`/`previous`, `next`, `save` y `reject` conservan sus significados propios. Footer close/exit y cancel no deben reutilizar el glifo `close`. Los botones del footer permanecen icon-only, con `aria-label`, `title`/tooltip, foco visible y su handler original. El validador comprueba las acciones por botón y falla ante colisiones entre X, cancelar y salir.
+
+## Selectores largos limitados al viewport
+
+El campo Riesgo Institucional a Evaluar de Nueva Evaluación usa el componente compartido `app-bounded-select`: un combobox con overlay DOM posicionado contra el campo y limitado al viewport y al cuerpo scrollable del modal. El panel abre arriba o abajo según el espacio, mantiene scroll vertical interno, envuelve nombres largos y se reposiciona en resize/scroll; cierra si el ancla ya no está visible o no queda espacio seguro. La opción conserva el ID numérico de riesgo: la salida del componente se normaliza a número antes de actualizar el estado existente. Se mantiene el select nativo enlazado en forma no visual como puente de compatibilidad del mismo valor para integraciones y pruebas existentes. No se intenta controlar el popup nativo del sistema operativo mediante CSS.
+
+La certificación responsive verifica el modal representativo en 1366x768, 1440x900, 1536x864, 1920x1080 y 2560x1440, además de la selección de un nombre largo en 390x844. La contención se refiere al viewport activo del navegador; solo se declara prueba de dos monitores si se ejecuta en hardware físico con dos pantallas.

@@ -315,10 +315,13 @@
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-matriz-completa" aria-describedby="descripcion-modal-matriz-completa" data-matrix-modal="complete">
       <div class="modal-container-card modal-size-workspace">
         <div class="modal-header-institutional">
-          <div class="min-w-0">
-            <p class="text-xs font-bold uppercase tracking-[0.14em] text-ihss-700">Matriz de Riesgos</p>
-            <h3 id="titulo-modal-matriz-completa" class="mt-1 text-base sm:text-lg font-bold text-gray-900">Matriz completa</h3>
-            <p id="descripcion-modal-matriz-completa" class="mt-1 text-xs text-gray-500">Vista institucional de campos en el orden original de la matriz.</p>
+          <div class="flex min-w-0 items-center gap-4">
+            <div class="modal-header-icon" aria-hidden="true"><app-action-icon action="view"></app-action-icon></div>
+            <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-[0.14em]" data-modal-eyebrow>Matriz de Riesgos</p>
+            <h3 id="titulo-modal-matriz-completa" class="mt-1 text-lg font-bold sm:text-xl">Matriz completa</h3>
+            <p id="descripcion-modal-matriz-completa" class="mt-1 text-sm">Vista institucional de campos en el orden original de la matriz.</p>
+            </div>
           </div>
           <button type="button" autofocus class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Cerrar Matriz completa" title="Cerrar Matriz completa" (click)="cerrarMatrizCompleta()">
             <app-action-icon action="close"></app-action-icon>
@@ -327,9 +330,9 @@
 
         <div class="modal-body-scrollable">
           <section class="space-y-5" data-matrix-view="complete">
-            <div class="flex justify-end border-b border-gray-100 pb-4">
+            <div class="min-w-0">
               @if (evaluacionResumenSeleccionada(); as resumenMatriz) {
-                <dl class="grid grid-cols-2 gap-x-5 gap-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs sm:min-w-[22rem]">
+                <dl class="modal-metadata-card grid grid-cols-2 gap-x-5 gap-y-2 text-xs sm:grid-cols-4" data-modal-metadata-card>
                   <div><dt class="font-semibold text-gray-500">Código de Riesgo</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.riesgoCodigo }}</dd></div>
                   <div><dt class="font-semibold text-gray-500">Estado workflow</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.estado }}</dd></div>
                   <div><dt class="font-semibold text-gray-500">Versión</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.versionCodigo }} · v{{ resumenMatriz.versionNumero }}</dd></div>
@@ -622,7 +625,7 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cerrar Matriz completa" aria-label="Cerrar Matriz completa" (click)="cerrarMatrizCompleta()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="exit"></app-action-icon>
           </button>
         </div>
       </div>
@@ -998,7 +1001,7 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cerrar gestor de familias" aria-label="Cerrar gestor de familias" (click)="cerrarModalGestorFamilias()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="exit"></app-action-icon>
           </button>
         </div>
       </div>
@@ -1071,13 +1074,17 @@
   <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver">
     <div class="modal-container-card modal-size-workspace">
         <div class="modal-header-institutional">
-          <div>
-            <h3 id="titulo-modal-ver" class="text-base sm:text-lg font-bold text-gray-900">
+          <div class="flex min-w-0 items-center gap-4">
+            <div class="modal-header-icon" aria-hidden="true"><app-action-icon action="view"></app-action-icon></div>
+            <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-[0.14em]" data-modal-eyebrow>Evaluación de riesgo</p>
+            <h3 id="titulo-modal-ver" class="mt-1 text-lg font-bold sm:text-xl">
               Evaluación #{{ evaluacionSeleccionada()?.evaId }} · {{ evaluacionResumenSeleccionada()?.riesgoCodigo }}
             </h3>
-            <p class="text-xs text-gray-500">
+            <p class="mt-1 text-sm">
               {{ evaluacionResumenSeleccionada()?.riesgoNombre }} | Versión: <strong>{{ evaluacionResumenSeleccionada()?.versionCodigo }} · v{{ evaluacionResumenSeleccionada()?.versionNumero }}</strong>
             </p>
+            </div>
           </div>
            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar vista" title="Cerrar vista" (click)="cerrarModalVer()">
             <app-action-icon action="close"></app-action-icon>
@@ -1085,7 +1092,7 @@
         </div>
 
         <div class="modal-body-scrollable space-y-5">
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-xs">
+          <div class="modal-metadata-card grid grid-cols-2 gap-3 text-xs sm:grid-cols-4" data-modal-metadata-card>
             <div>
               <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">Estado</span>
               <span class="font-bold text-gray-900">{{ evaluacionSeleccionada()?.evaEstado }}</span>
@@ -1128,7 +1135,7 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cerrar vista de evaluación" aria-label="Cerrar vista de evaluación" (click)="cerrarModalVer()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="exit"></app-action-icon>
           </button>
         </div>
       </div>
@@ -1139,13 +1146,17 @@
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-editar">
       <div class="modal-container-card modal-size-workspace">
         <div class="modal-header-institutional">
-          <div>
-            <h3 id="titulo-modal-editar" class="text-base sm:text-lg font-bold text-gray-900">
+          <div class="flex min-w-0 items-center gap-4">
+            <div class="modal-header-icon" aria-hidden="true"><app-action-icon action="edit"></app-action-icon></div>
+            <div class="min-w-0">
+              <p class="text-xs font-bold uppercase tracking-[0.14em]" data-modal-eyebrow>Evaluación de riesgo</p>
+            <h3 id="titulo-modal-editar" class="mt-1 text-lg font-bold sm:text-xl">
               Editar Evaluación #{{ evaluacionSeleccionada()?.evaId }}
             </h3>
-            <p class="text-xs text-gray-500">
+            <p class="mt-1 text-sm">
               Metodología Histórica: <strong>{{ evaluacionResumenSeleccionada()?.versionCodigo }} · v{{ evaluacionResumenSeleccionada()?.versionNumero }}</strong>
             </p>
+            </div>
           </div>
            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar edición" title="Cerrar edición" (click)="cerrarModalEditar()">
            <app-action-icon action="close"></app-action-icon>
@@ -1373,7 +1384,7 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cerrar seguimiento" aria-label="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="exit"></app-action-icon>
           </button>
         </div>
       </div>
@@ -1406,11 +1417,14 @@
           }
         </nav>
         <div class="modal-header-institutional">
-          <div>
-            <h3 id="titulo-modal-nueva-eval" class="text-base sm:text-lg font-bold text-gray-900">
+          <div class="flex min-w-0 items-center gap-4">
+            <div class="modal-header-icon" aria-hidden="true"><app-action-icon action="create"></app-action-icon></div>
+            <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-[0.14em]" data-modal-eyebrow>Evaluación de riesgo</p>
+            <h3 id="titulo-modal-nueva-eval" class="mt-1 text-lg font-bold sm:text-xl">
               Nueva Evaluación de Riesgo
             </h3>
-            <p class="text-xs text-gray-500">
+            <p class="mt-1 text-sm">
             @if (familiaNuevaSeleccionada()) {
               @if (versionVigente(); as versionNueva) {
                 Versión activa: <strong>v{{ versionNueva.verVersion }}</strong>
@@ -1421,6 +1435,7 @@
               Seleccione una familia para comenzar.
             }
             </p>
+            </div>
           </div>
            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar creación" title="Cerrar creación" (click)="cerrarModalNuevaEvaluacion()">
             <app-action-icon action="close"></app-action-icon>
@@ -1457,18 +1472,24 @@
           </div>
 
           <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-1">
-            <label for="modal-selector-riesgo" class="block text-xs font-bold text-gray-700">
+            <label for="modal-selector-riesgo-combobox" class="block text-xs font-bold text-gray-700">
               Riesgo Institucional a Evaluar <span class="text-red-500">*</span>
             </label>
-            <select id="modal-selector-riesgo"
-                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none"
-                    [ngModel]="riesgoId()"
-                    (ngModelChange)="riesgoId.set(+$event)">
+            <select id="modal-selector-riesgo" class="sr-only" aria-hidden="true" tabindex="-1"
+                    [ngModel]="riesgoId()" (ngModelChange)="seleccionarRiesgoNuevaEvaluacion($event)">
               <option [ngValue]="0">Seleccione un riesgo institucional</option>
               @for (riesgo of riesgos(); track riesgo.rieId) {
                 <option [ngValue]="riesgo.rieId">{{ riesgo.rieCodigo }} — {{ riesgo.rieNombre }}</option>
               }
             </select>
+            <app-bounded-select
+              inputId="modal-selector-riesgo-combobox"
+              ariaLabel="Riesgo Institucional a Evaluar"
+              placeholder="Seleccione un riesgo institucional"
+              [value]="riesgoId()"
+              [emptyValue]="0"
+              [options]="opcionesRiesgoNuevaEvaluacion()"
+              (valueChange)="seleccionarRiesgoNuevaEvaluacion($event)" />
           </div>
             </div>
           </section>
@@ -1536,8 +1557,8 @@
             <h2 id="titulo-confirmar-familia-predeterminada" class="text-base sm:text-lg font-bold text-gray-900">Establecer familia predeterminada</h2>
             <p class="mt-1 text-xs text-gray-500">Confirme el contexto inicial del módulo.</p>
           </div>
-           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Cancelar configuración de familia predeterminada" title="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
-            <app-action-icon action="cancel"></app-action-icon>
+           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Cerrar configuración de familia predeterminada" title="Cerrar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
+            <app-action-icon action="close"></app-action-icon>
           </button>
         </div>
         <div class="modal-body-scrollable space-y-4 text-sm">
