@@ -1,7 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import { Buffer } from 'node:buffer';
 import * as ExcelJS from 'exceljs';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createSystemTheme } from '../src/app/core/configuration/system-theme.util';
 
@@ -165,6 +165,81 @@ async function preparar(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => preparar(page));
+
+test('Editar Evaluación presenta acciones de footer icon-only, accesibles y visibles', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible({ timeout: 15000 });
+  await page.getByRole('button', { name: 'Editar evaluación' }).first().click();
+
+  const modal = page.locator('dialog[open][aria-modal="true"]');
+  const footer = modal.locator('.modal-footer-institutional');
+  const cancel = footer.getByRole('button', { name: 'Cancelar edición de evaluación' });
+  const save = footer.getByRole('button', { name: 'Guardar borrador' });
+  const previous = footer.getByRole('button', { name: 'Ir al bloque anterior' });
+  const next = footer.getByRole('button', { name: 'Continuar al siguiente bloque' });
+  await expect(footer.locator('button')).toHaveCount(4);
+
+  for (const [button, title] of [[cancel, 'Cancelar edición de evaluación'], [save, 'Guardar borrador'],
+    [previous, 'Ir al bloque anterior'], [next, 'Continuar al siguiente bloque']] as const) {
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute('title', title);
+    await expect(button).toHaveClass(/modal-action-icon/);
+    await expect(button.locator('app-action-icon')).toHaveCount(1);
+    await expect(button).toHaveText('');
+    const box = await button.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+    const iconBox = await button.locator('app-action-icon').boundingBox();
+    expect(iconBox?.width).toBe(20);
+    expect(iconBox?.height).toBe(20);
+  }
+
+  await expect(cancel).toBeEnabled();
+  await expect(save).toBeEnabled();
+  await expect(previous).toBeDisabled();
+  await expect(previous).toBeVisible();
+  await expect(next).toBeEnabled();
+  const disabledState = await previous.evaluate(button => {
+    const style = getComputedStyle(button);
+    const iconStyle = getComputedStyle(button.querySelector('app-action-icon')!);
+    const rect = button.getBoundingClientRect();
+    return { display: style.display, visibility: style.visibility, opacity: Number(style.opacity),
+      background: style.backgroundColor, border: style.borderColor, iconColor: iconStyle.color,
+      width: rect.width, height: rect.height };
+  });
+  expect(disabledState.display).not.toBe('none');
+  expect(disabledState.visibility).toBe('visible');
+  expect(disabledState.opacity).toBeGreaterThan(0.7);
+  expect(disabledState.background).not.toBe('rgba(0, 0, 0, 0)');
+  expect(disabledState.width).toBeGreaterThanOrEqual(44);
+  expect(disabledState.height).toBeGreaterThanOrEqual(44);
+
+  await cancel.focus();
+  await page.keyboard.press('Tab');
+  await expect(save).toBeFocused();
+  const focus = await save.evaluate(button => ({ style: getComputedStyle(button).outlineStyle, width: getComputedStyle(button).outlineWidth }));
+  expect(focus.style).toBe('solid');
+  expect(focus.width).toBe('3px');
+  const runtimeStyles = await footer.locator('button').evaluateAll(buttons => buttons.map(button => {
+    const element = button as HTMLButtonElement;
+    const style = getComputedStyle(element);
+    const icon = element.querySelector('app-action-icon');
+    const iconStyle = icon ? getComputedStyle(icon) : null;
+    const rect = element.getBoundingClientRect();
+    const iconRect = icon?.getBoundingClientRect();
+    return { ariaLabel: element.getAttribute('aria-label'), title: element.title, visibleText: element.innerText,
+      disabled: element.disabled, display: style.display, visibility: style.visibility, opacity: style.opacity,
+      backgroundColor: style.backgroundColor, backgroundImage: style.backgroundImage, color: style.color, borderColor: style.borderColor,
+      width: rect.width, height: rect.height, iconColor: iconStyle?.color ?? null,
+      iconWidth: iconRect?.width ?? 0, iconHeight: iconRect?.height ?? 0 };
+  }));
+  await writeFile(join('test-results', 'edit-evaluation-footer-icon-only-blue.json'), JSON.stringify(runtimeStyles, null, 2), 'utf8');
+  await footer.screenshot({ path: join('test-results', 'edit-evaluation-footer-icon-only-blue.png') });
+
+  await cancel.click();
+  await expect(page.locator('#titulo-modal-editar')).toHaveCount(0);
+});
 
 test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegación transaccional', async ({ page }) => {
   test.setTimeout(60000);
