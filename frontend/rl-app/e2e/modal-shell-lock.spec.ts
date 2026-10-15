@@ -1,6 +1,6 @@
 import { expect, Page, test } from '@playwright/test';
 import { Buffer } from 'node:buffer';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { contrastRatio, createSystemTheme, parseHexColor } from '../src/app/core/configuration/system-theme.util';
 
@@ -124,6 +124,225 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await expect(dialogo).toBeHidden();
   await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(false);
   await expect.poll(() => aside.evaluate(el => (el as HTMLElement).inert)).toBe(false);
+});
+
+test('el Form Builder separa su header premium de la navegación neutra del workspace', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  await detalleFamilia.getByRole('button', { name: /Editar definici.n de la versi.n/i }).first().click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const header = dialogo.locator('[data-modal-shell-region="header"]');
+  const workspace = dialogo.locator('.form-builder-toolbar__workspace');
+  await expect(header).toBeVisible();
+  await expect(header).toHaveClass(/modal-header-institutional/);
+  await expect(header.getByRole('heading', { name: /Constructor de Formularios Din.micos/i })).toBeVisible();
+  await expect(workspace).toBeVisible();
+
+  const styles = await page.evaluate(() => {
+    const headerElement = document.querySelector('[data-modal-shell-region="header"]');
+    const workspaceElement = document.querySelector('.form-builder-toolbar__workspace');
+    if (!(headerElement instanceof HTMLElement) || !(workspaceElement instanceof HTMLElement)) return null;
+    const headerCss = getComputedStyle(headerElement);
+    const workspaceCss = getComputedStyle(workspaceElement);
+    return {
+      headerBackgroundImage: headerCss.backgroundImage,
+      headerBackgroundColor: headerCss.backgroundColor,
+      workspaceBackgroundImage: workspaceCss.backgroundImage,
+      workspaceBackgroundColor: workspaceCss.backgroundColor
+    };
+  });
+  expect(styles).not.toBeNull();
+  if (!styles) throw new Error('No se pudieron leer los estilos del shell compuesto.');
+  expect(styles.headerBackgroundImage).toContain('gradient');
+  expect(styles.headerBackgroundColor).not.toBe('rgb(255, 255, 255)');
+  expect(styles.workspaceBackgroundColor).toBe('rgba(248, 250, 252, 0.8)');
+  expect(styles.workspaceBackgroundImage).toBe('none');
+  await writeFile('test-results/form-builder-header-after.json', JSON.stringify(styles, null, 2), 'utf8');
+  await header.screenshot({ path: 'test-results/form-builder-premium-header-stage.png' });
+});
+
+test('la X del Form Builder conserva contraste, foco y cierre por ratón y teclado', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  await detalleFamilia.getByRole('button', { name: /Editar definici.n de la versi.n/i }).first().click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const header = dialogo.locator('[data-modal-shell-region="header"]');
+  const cerrar = header.getByRole('button', { name: 'Cerrar modal de constructor' });
+  await expect(cerrar).toBeVisible();
+  const box = await cerrar.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) throw new Error('El control de cierre del Form Builder no tiene geometría visible.');
+  expect(box.width).toBe(44);
+  expect(box.height).toBe(44);
+
+  const styles = await cerrar.evaluate(element => {
+    const css = getComputedStyle(element);
+    const icon = element.querySelector('app-action-icon[action="close"]') as HTMLElement | null;
+    const iconCss = icon ? getComputedStyle(icon) : null;
+    const root = getComputedStyle(document.documentElement);
+    return {
+      visibility: css.visibility,
+      opacity: css.opacity,
+      foreground: css.color,
+      background: css.backgroundColor,
+      border: css.borderColor,
+      iconVisibility: iconCss?.visibility ?? 'missing',
+      iconOpacity: iconCss?.opacity ?? '0',
+      stops: ['--ihss-modal-primary-start-rgb', '--ihss-modal-primary-mid-rgb', '--ihss-modal-primary-end-rgb'].map(name => root.getPropertyValue(name).trim())
+    };
+  });
+  expect(styles.visibility).toBe('visible');
+  expect(styles.opacity).toBe('1');
+  expect(styles.foreground).toBe('rgb(255, 255, 255)');
+  expect(styles.background).toBe('rgba(255, 255, 255, 0.16)');
+  expect(styles.border).toBe('rgba(255, 255, 255, 0.46)');
+  expect(styles.iconVisibility).toBe('visible');
+  expect(styles.iconOpacity).toBe('1');
+
+  const white = { r: 255, g: 255, b: 255 };
+  const buttonAlpha = 0.16;
+  const contrastByStop = styles.stops.map(stop => {
+    const [r, g, b] = stop.split(/\s+/).map(Number);
+    const composited = {
+      r: Math.round(white.r * buttonAlpha + r * (1 - buttonAlpha)),
+      g: Math.round(white.g * buttonAlpha + g * (1 - buttonAlpha)),
+      b: Math.round(white.b * buttonAlpha + b * (1 - buttonAlpha))
+    };
+    return contrastRatio(white, composited);
+  });
+  expect(Math.min(...contrastByStop)).toBeGreaterThanOrEqual(3);
+  await writeFile('test-results/form-builder-close-after.json', JSON.stringify({ ...styles, contrastByStop, minimumContrast: Math.min(...contrastByStop) }, null, 2), 'utf8');
+
+  await cerrar.focus();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(cerrar).toBeFocused();
+  await expect.poll(() => cerrar.evaluate(element => element.matches(':focus-visible'))).toBe(true);
+  await expect.poll(() => cerrar.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none');
+  await header.screenshot({ path: 'test-results/form-builder-header-close-stage.png' });
+  await cerrar.click();
+  await expect(dialogo).toBeHidden();
+
+  await detalleFamilia.getByRole('button', { name: /Editar definici.n de la versi.n/i }).first().click();
+  const dialogoReabierto = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const cerrarReabierto = dialogoReabierto.locator('[data-modal-shell-region="header"] button[aria-label="Cerrar modal de constructor"]');
+  await cerrarReabierto.focus();
+  await page.keyboard.press('Enter');
+  await expect(dialogoReabierto).toBeHidden();
+
+  await detalleFamilia.getByRole('button', { name: /Editar definici.n de la versi.n/i }).first().click();
+  const dialogoConFoco = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const cerrarConFoco = dialogoConFoco.locator('[data-modal-shell-region="header"] button[aria-label="Cerrar modal de constructor"]');
+  await cerrarConFoco.focus();
+  await page.keyboard.press('Space');
+  await expect(dialogoConFoco).toBeHidden();
+});
+
+test('el footer del Form Builder hereda el shell y etiqueta sus acciones según el modo', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  await detalleFamilia.getByRole('button', { name: /Editar definici.n de la versi.n/i }).first().click();
+
+  const editable = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const footer = editable.locator('[data-modal-shell-region="footer"]');
+  await expect(footer).toHaveClass(/modal-footer-institutional/);
+  await expect(footer.getByRole('button', { name: 'Cancelar cambios' })).toBeVisible();
+  await expect(footer.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
+  const editableFooterStyles = await footer.evaluate(element => {
+    const css = getComputedStyle(element);
+    return { backgroundImage: css.backgroundImage, backgroundColor: css.backgroundColor };
+  });
+  expect(editableFooterStyles.backgroundImage).toContain('gradient');
+  expect(editableFooterStyles.backgroundColor).not.toBe('rgb(255, 255, 255)');
+  await footer.screenshot({ path: 'test-results/form-builder-editable-footer-stage.png' });
+  await footer.getByRole('button', { name: 'Cancelar cambios' }).click();
+  await expect(editable).toBeHidden();
+
+  await detalleFamilia.getByRole('button', { name: /Ver detalle de la versi.n/i }).last().click();
+  const readonly = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const readonlyFooter = readonly.locator('[data-modal-shell-region="footer"]');
+  await expect(readonlyFooter.getByRole('button', { name: 'Cerrar constructor' })).toBeVisible();
+  await expect(readonlyFooter.locator('.form-builder-statusbar__save')).toHaveCount(0);
+  const readonlyGradient = await readonlyFooter.evaluate(element => getComputedStyle(element).backgroundImage);
+  expect(readonlyGradient).toContain('gradient');
+  await writeFile('test-results/form-builder-footer-after.json', JSON.stringify({ editable: editableFooterStyles, readonlyGradient }, null, 2), 'utf8');
+  await readonlyFooter.getByRole('button', { name: 'Cerrar constructor' }).click();
+  await expect(readonly).toBeHidden();
+});
+
+test('el Form Builder conserva su diseño responsive y actualiza el shell durante el cambio de tema', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  await detalleFamilia.getByRole('button', { name: /Editar definici.n de la versi.n/i }).first().click();
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const header = dialogo.locator('[data-modal-shell-region="header"]');
+  const footer = dialogo.locator('[data-modal-shell-region="footer"]');
+  const cerrar = header.getByRole('button', { name: 'Cerrar modal de constructor' });
+  await expect(header).toBeVisible();
+  await expect(cerrar).toBeVisible();
+  await expect(footer.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
+
+  const baseline = await page.evaluate(() => ({
+    width: document.documentElement.scrollWidth,
+    viewport: window.innerWidth,
+    headerBackground: getComputedStyle(document.querySelector('[data-modal-shell-region="header"]')!).backgroundImage,
+    footerBackground: getComputedStyle(document.querySelector('[data-modal-shell-region="footer"]')!).backgroundImage
+  }));
+  expect(baseline.width).toBeLessThanOrEqual(baseline.viewport);
+  expect(baseline.headerBackground).toContain('gradient');
+  expect(baseline.footerBackground).toContain('gradient');
+
+  const redTheme = createSystemTheme('#991b1b', '#dc2626');
+  const red = await page.evaluate(properties => {
+    for (const [name, value] of Object.entries(properties)) document.documentElement.style.setProperty(name, value);
+    return {
+      headerBackground: getComputedStyle(document.querySelector('[data-modal-shell-region="header"]')!).backgroundImage,
+      footerBackground: getComputedStyle(document.querySelector('[data-modal-shell-region="footer"]')!).backgroundImage,
+      closeColor: getComputedStyle(document.querySelector('[data-modal-shell-region="header"] button[aria-label="Cerrar modal de constructor"]')!).color
+    };
+  }, redTheme.properties);
+  expect(red.headerBackground).not.toBe(baseline.headerBackground);
+  expect(red.footerBackground).not.toBe(baseline.footerBackground);
+  expect(red.closeColor).toBe('rgb(255, 255, 255)');
+
+  const lightTheme = createSystemTheme('#fca5a5', '#fecaca');
+  const light = await page.evaluate(properties => {
+    for (const [name, value] of Object.entries(properties)) document.documentElement.style.setProperty(name, value);
+    const root = getComputedStyle(document.documentElement);
+    const close = getComputedStyle(document.querySelector('[data-modal-shell-region="header"] button[aria-label="Cerrar modal de constructor"]')!);
+    return {
+      headerBackground: getComputedStyle(document.querySelector('[data-modal-shell-region="header"]')!).backgroundImage,
+      closeColor: close.color,
+      start: root.getPropertyValue('--ihss-modal-primary-start-rgb').trim(),
+      mid: root.getPropertyValue('--ihss-modal-primary-mid-rgb').trim(),
+      end: root.getPropertyValue('--ihss-modal-primary-end-rgb').trim()
+    };
+  }, lightTheme.properties);
+  expect(light.headerBackground).not.toBe(red.headerBackground);
+  expect(light.closeColor).toBe('rgb(255, 255, 255)');
+  for (const stop of [light.start, light.mid, light.end]) {
+    const [r, g, b] = stop.split(/\s+/).map(Number);
+    expect(contrastRatio({ r: 255, g: 255, b: 255 }, { r, g, b })).toBeGreaterThanOrEqual(4.5);
+  }
+  await page.screenshot({ path: 'test-results/form-builder-premium-mobile-live-theme.png', fullPage: true });
 });
 
 test('el maestro visual de modales muestra una X de cierre legible y consistente', async ({ page }) => {
@@ -365,8 +584,8 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   await expect(editorTab).toHaveAttribute('aria-current', 'page');
   await expect(previewTab).not.toHaveAttribute('aria-current', 'page');
   await expect(dialogo.getByText('Acciones', { exact: false })).toBeVisible();
-  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__cancel')).toBeVisible();
-  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__save')).toBeEnabled();
+  await expect(dialogo.locator('[data-modal-shell-region="footer"] button[aria-label="Cancelar cambios"]')).toBeVisible();
+  await expect(dialogo.locator('[data-modal-shell-region="footer"] button[aria-label="Guardar cambios"]')).toBeEnabled();
   await expect(dialogo.getByText('Modo de visualización y consulta técnica', { exact: false })).toHaveCount(0);
   await dialogo.locator('#summary-acciones-builder').click();
   await expect(dialogo.locator('#btn-agregar-seccion')).toBeVisible();
@@ -393,8 +612,8 @@ test('renderiza la misma identidad visual en solo lectura y oculta acciones muta
   await expect(dialogo.locator('#btn-publicar-builder')).toHaveCount(0);
   await expect(dialogo.locator('#tab-vista-preview')).toBeVisible();
   await expect(dialogo.locator('#tab-configuracion-general')).toHaveCount(0);
-  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__cancel')).toBeVisible();
-  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__save')).toBeDisabled();
+  await expect(dialogo.locator('[data-modal-shell-region="footer"] button[aria-label="Cerrar constructor"]')).toBeVisible();
+  await expect(dialogo.locator('[data-modal-shell-region="footer"] .form-builder-statusbar__save')).toHaveCount(0);
   await page.screenshot({ path: 'test-results/ui-form5-readonly-1536x1024.png', fullPage: true });
 });
 

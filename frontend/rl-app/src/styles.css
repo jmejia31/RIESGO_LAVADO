@@ -274,7 +274,7 @@
     .modal-container-card > .modal-header-institutional,
     .modal-container-card > header,
     .modal-container-card > .modal-footer-institutional,
-    .modal-container-card .form-builder-toolbar__top-actions
+    .modal-container-card [data-modal-shell-region="header"]
   ) button[aria-label*="cerrar" i] {
     display: inline-flex !important;
     width: var(--modal-close-control-size) !important;
@@ -299,7 +299,7 @@
     .modal-container-card > .modal-header-institutional,
     .modal-container-card > header,
     .modal-container-card > .modal-footer-institutional,
-    .modal-container-card .form-builder-toolbar__top-actions
+    .modal-container-card [data-modal-shell-region="header"]
   ) button[aria-label*="cerrar" i]:hover:not(:disabled) {
     background-color: var(--modal-close-bg-hover) !important;
     border-color: var(--modal-close-border-hover) !important;
@@ -312,7 +312,7 @@
     .modal-container-card > .modal-header-institutional,
     .modal-container-card > header,
     .modal-container-card > .modal-footer-institutional,
-    .modal-container-card .form-builder-toolbar__top-actions
+    .modal-container-card [data-modal-shell-region="header"]
   ) button[aria-label*="cerrar" i]:focus-visible {
     outline: 3px solid rgb(var(--modal-close-focus-rgb, var(--ihss-accent-rgb)) / 0.55) !important;
     outline-offset: 2px !important;
@@ -324,7 +324,7 @@
     .modal-container-card > .modal-header-institutional,
     .modal-container-card > header,
     .modal-container-card > .modal-footer-institutional,
-    .modal-container-card .form-builder-toolbar__top-actions
+    .modal-container-card [data-modal-shell-region="header"]
   ) button[aria-label*="cerrar" i] app-action-icon[action="close"] {
     width: var(--modal-close-icon-size) !important;
     height: var(--modal-close-icon-size) !important;
@@ -336,7 +336,7 @@
     .modal-container-card > .modal-header-institutional,
     .modal-container-card > header,
     .modal-container-card > .modal-footer-institutional,
-    .modal-container-card .form-builder-toolbar__top-actions
+    .modal-container-card [data-modal-shell-region="header"]
   ) button[aria-label*="cerrar" i] app-action-icon[action="close"] svg {
     stroke-width: 2.4 !important;
   }
@@ -345,7 +345,7 @@
     .modal-container-card > .modal-header-institutional,
     .modal-container-card > header,
     .modal-container-card > .modal-footer-institutional,
-    .modal-container-card .form-builder-toolbar__top-actions
+    .modal-container-card [data-modal-shell-region="header"]
   ) button[aria-label*="cerrar" i]:disabled {
     opacity: 0.55 !important;
     cursor: not-allowed !important;

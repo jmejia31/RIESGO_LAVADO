@@ -1,4 +1,4 @@
-<footer class="form-builder-statusbar" data-form-builder-region="statusbar">
+<footer class="form-builder-statusbar modal-footer-institutional" data-form-builder-region="statusbar" data-modal-shell-region="footer">
   <div class="form-builder-statusbar__content">
     <div class="form-builder-statusbar__state">
       <span class="form-builder-statusbar__indicator" [class.form-builder-statusbar__indicator--readonly]="soloLectura"></span>
@@ -9,12 +9,21 @@
       <span class="form-builder-statusbar__separator">&middot;</span><span>{{ catalogosCount }} cat&aacute;logo(s)</span>
     </div>
     <div class="form-builder-statusbar__actions">
-      <button type="button" class="form-builder-statusbar__cancel inline-flex h-8 w-8 items-center justify-center" title="Cancelar cambios" aria-label="Cancelar cambios" (click)="cancelar.emit()">
-            <app-action-icon action="cancel"></app-action-icon>
-          </button>
-      <button type="button" class="form-builder-statusbar__save inline-flex h-8 w-8 items-center justify-center" title="Guardar cambios" aria-label="Guardar cambios" [disabled]="!puedeGuardar" (click)="guardar.emit()">
-            <app-action-icon action="save"></app-action-icon>
-          </button>
+      @if (soloLectura) {
+        <button type="button" class="form-builder-statusbar__cancel" title="Cerrar constructor" aria-label="Cerrar constructor" (click)="cancelar.emit()">
+          <app-action-icon action="close"></app-action-icon>
+          <span>Cerrar</span>
+        </button>
+      } @else {
+        <button type="button" class="form-builder-statusbar__cancel" title="Cancelar cambios" aria-label="Cancelar cambios" (click)="cancelar.emit()">
+          <app-action-icon action="cancel"></app-action-icon>
+          <span>Cancelar</span>
+        </button>
+        <button type="button" class="form-builder-statusbar__save" title="Guardar cambios" aria-label="Guardar cambios" [disabled]="!puedeGuardar" (click)="guardar.emit()">
+          <app-action-icon action="save"></app-action-icon>
+          <span>Guardar</span>
+        </button>
+      }
     </div>
   </div>
 </footer>

@@ -20,6 +20,21 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
     component.catalogosCount = 1;
   });
 
+  it('expone la fila de identidad como región de header del shell modal institucional', () => {
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const headerRegion = host.querySelector('[data-modal-shell-region="header"]');
+    const workspace = host.querySelector('.form-builder-toolbar__workspace');
+
+    expect(headerRegion).toBeTruthy();
+    expect(headerRegion?.classList.contains('modal-header-institutional')).toBe(true);
+    expect(headerRegion?.querySelector('#titulo-modal-builder')).toBeTruthy();
+    expect(headerRegion?.querySelector('.modal-header-icon')).toBeTruthy();
+    expect(workspace).toBeTruthy();
+    expect(workspace?.hasAttribute('data-modal-shell-region')).toBe(false);
+  });
+
   describe('1. Renderizado de Badges y Estados Oficiales', () => {
     const matrizEstados: Array<{ estado: EstadoFormulario; soloLectura: boolean; etiquetaEsperada: string }> = [
       { estado: 'DRAFT', soloLectura: false, etiquetaEsperada: 'BORRADOR' },

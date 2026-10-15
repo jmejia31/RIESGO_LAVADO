@@ -5,19 +5,60 @@
 
 .form-builder-toolbar {
   min-width: 0;
-  color: #17233b;
 }
 
-.form-builder-toolbar__top-actions,
-.form-builder-toolbar__secondary-actions,
-.form-builder-toolbar__workspace-tabs {
+.form-builder-toolbar__brand-content,
+.form-builder-toolbar__title-row,
+.form-builder-toolbar__workspace,
+.form-builder-toolbar__workspace-navigation,
+.form-builder-toolbar__view-tabs {
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
-.form-builder-toolbar__top-actions {
-  gap: 0.5rem;
+.form-builder-toolbar__brand-content {
+  gap: 0.875rem;
+}
+
+.form-builder-toolbar__brand-copy {
+  min-width: 0;
+}
+
+.form-builder-toolbar__title-row {
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.form-builder-toolbar__close {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.875rem;
+}
+
+.form-builder-toolbar__workspace {
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  border-top: 1px solid #e2e8f0;
+  background: rgb(248 250 252 / 0.8);
+}
+
+.form-builder-toolbar__workspace-navigation {
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.form-builder-toolbar__secondary-actions,
+.form-builder-toolbar__workspace-tabs,
+.form-builder-toolbar__view-tabs {
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .form-builder-toolbar__workspace-tabs {
@@ -26,6 +67,23 @@
 
 .form-builder-toolbar__secondary-actions {
   gap: 0.75rem;
+}
+
+.form-builder-toolbar__view-tabs {
+  gap: 0.25rem;
+}
+
+.form-builder-toolbar__preview-toggle {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #334155;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
 }
 
 .form-builder-toolbar__actions-menu {
@@ -149,9 +207,22 @@
   color: rgb(var(--ihss-600-rgb));
 }
 
-@media (max-width: 1100px) {
-  .form-builder-toolbar__top-actions,
-  .form-builder-toolbar__secondary-actions {
+@media (max-width: 640px) {
+  .form-builder-toolbar__workspace,
+  .form-builder-toolbar__workspace-navigation {
+    align-items: flex-start;
+  }
+
+  .form-builder-toolbar__workspace-navigation {
+    width: 100%;
+  }
+
+  .form-builder-toolbar__view-tabs {
     flex-wrap: wrap;
+  }
+
+  .form-builder-toolbar__secondary-actions {
+    justify-content: flex-end;
+    width: 100%;
   }
 }

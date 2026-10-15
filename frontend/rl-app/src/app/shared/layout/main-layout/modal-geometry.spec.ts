@@ -185,13 +185,16 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
   });
   it('7. el maestro global hace visible y consistente la X de cierre sin tocar alertas internas', () => {
     const styles = readFileSync(join(cwd(), 'src', 'styles.css'), 'utf8');
+    const toolbar = readFileSync(join(cwd(), 'src', 'app', 'features', 'admin', 'matrices-riesgos', 'components', 'form-builder', 'toolbar', 'form-builder-toolbar.component.html'), 'utf8');
 
     expect(styles).toContain('--modal-close-control-size: 2.75rem');
     expect(styles).toContain('--modal-close-icon-size: 1.25rem');
     expect(styles).toMatch(/\.modal-container-card\s*>\s*\.modal-header-institutional/);
     expect(styles).toMatch(/\.modal-container-card\s*>\s*header/);
     expect(styles).toMatch(/\.modal-container-card\s*>\s*\.modal-footer-institutional/);
-    expect(styles).toContain('.modal-container-card .form-builder-toolbar__top-actions');
+    expect(styles).toContain('.modal-container-card [data-modal-shell-region="header"]');
+    expect(styles).not.toContain('.modal-container-card .form-builder-toolbar__top-actions');
+    expect(toolbar).toMatch(/modal-header-institutional[^>]*data-modal-shell-region="header"/);
     expect(styles).toContain('button[aria-label*="cerrar" i]');
     expect(styles).toContain('app-action-icon[action="close"]');
     expect(styles).toContain('stroke-width: 2.4 !important');

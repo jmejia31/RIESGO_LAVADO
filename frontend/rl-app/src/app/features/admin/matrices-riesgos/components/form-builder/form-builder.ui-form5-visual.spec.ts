@@ -55,4 +55,48 @@ describe('Form Builder UI-FORM.5 visual state reconciliation', () => {
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Publicada · Solo lectura');
   });
+
+  it('declares the statusbar as the institutional footer region and exposes textual actions', () => {
+    const fixture = TestBed.createComponent(FormBuilderStatusbarComponent);
+    fixture.componentInstance.soloLectura = false;
+    fixture.componentInstance.puedeGuardar = true;
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const footer = root.querySelector('footer');
+    expect(footer?.classList.contains('modal-footer-institutional')).toBe(true);
+    expect(footer?.getAttribute('data-modal-shell-region')).toBe('footer');
+    expect(root.querySelector('.form-builder-statusbar__cancel')?.textContent).toContain('Cancelar');
+    expect(root.querySelector('.form-builder-statusbar__save')?.textContent).toContain('Guardar');
+  });
+
+  it('provides a textual close action and no ineffective save action in read-only mode', () => {
+    const fixture = TestBed.createComponent(FormBuilderStatusbarComponent);
+    fixture.componentInstance.soloLectura = true;
+    fixture.componentInstance.puedeGuardar = false;
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const close = root.querySelector('.form-builder-statusbar__cancel') as HTMLButtonElement;
+    expect(close.getAttribute('aria-label')).toBe('Cerrar constructor');
+    expect(close.textContent).toContain('Cerrar');
+    expect(root.querySelector('.form-builder-statusbar__save')).toBeNull();
+  });
+
+  it('preserves Cancelar and Guardar output events in editable mode', () => {
+    const fixture = TestBed.createComponent(FormBuilderStatusbarComponent);
+    fixture.componentInstance.soloLectura = false;
+    fixture.componentInstance.puedeGuardar = true;
+    fixture.detectChanges();
+    let cancelCount = 0;
+    let saveCount = 0;
+    fixture.componentInstance.cancelar.subscribe(() => cancelCount++);
+    fixture.componentInstance.guardar.subscribe(() => saveCount++);
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.form-builder-statusbar__cancel')?.click();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.form-builder-statusbar__save')?.click();
+
+    expect(cancelCount).toBe(1);
+    expect(saveCount).toBe(1);
+  });
 });

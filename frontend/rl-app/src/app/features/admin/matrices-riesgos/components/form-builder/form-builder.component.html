@@ -44,7 +44,7 @@
   </app-form-builder-toolbar>
 
   @if (mostrarJsonAvanzado()) {
-    <div class="form-builder-shell__content flex-1 p-6 bg-slate-50 text-slate-900 flex flex-col gap-4 animate-fade-in overflow-hidden" aria-label="JSON Tecnico del formulario">
+    <div class="form-builder-shell__content flex-1 p-6 bg-slate-50 text-slate-900 flex flex-col gap-4 animate-fade-in overflow-hidden" data-modal-shell-region="body" aria-label="JSON Tecnico del formulario">
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-sm font-semibold text-slate-900">JSON Técnico</h3>
@@ -75,7 +75,7 @@
     </div>
   }
   @else if (vistaActiva() === 'preview') {
-    <div class="form-builder-shell__content flex-1 overflow-y-auto bg-slate-100 p-6" aria-label="Vista previa del formulario">
+    <div class="form-builder-shell__content flex-1 overflow-y-auto bg-slate-100 p-6" data-modal-shell-region="body" aria-label="Vista previa del formulario">
       <div class="mx-auto max-w-6xl space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <header class="border-b border-slate-200 pb-4">
           <h3 class="text-xl font-bold text-slate-950">{{ model().nombreFormulario }}</h3>
@@ -105,7 +105,7 @@
     </div>
   }
   @else if (vistaActiva() === 'catalogos') {
-    <div class="form-builder-shell__content flex-1 flex overflow-hidden bg-slate-100">
+    <div class="form-builder-shell__content flex-1 flex overflow-hidden bg-slate-100" data-modal-shell-region="body">
       <aside aria-label="Lista de catálogos" class="w-80 bg-white border-r border-slate-200 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-shrink-0">
         <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
@@ -243,7 +243,7 @@
     </div>
   }
   @else {
-    <div class="form-builder-shell__body">
+    <div class="form-builder-shell__body" data-modal-shell-region="body">
       <app-form-builder-palette
         [tiposControles]="tiposControles"
         [secciones]="model().secciones"

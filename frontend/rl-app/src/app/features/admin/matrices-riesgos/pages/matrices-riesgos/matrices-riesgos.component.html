@@ -815,6 +815,7 @@
              (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
       <div class="modal-container-card modal-size-workspace">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
+                          data-modal-composite-shell="true"
                           [jsonDefinicion]="definicionTecnica"
                           [soloLectura]="soloLecturaDefinicion()"
                           [esAdministrador]="esAdministrador()"
