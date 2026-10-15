@@ -480,7 +480,7 @@ test('el modal abierto hereda cambios azul, rojo y verde del tema sin alterar ge
   expect(initialTheme.properties['--ihss-primary-rgb']).toBe('30 58 138');
 });
 
-test('Crear Usuario hereda header y footer institucionales del theme sin modificar su template', async ({ page }) => {
+test('Crear Usuario hereda theme institucional y mantiene acciones de footer icon-only visibles', async ({ page }) => {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   const usuariosToken = `${encode({ alg: 'none' })}.${encode({ nameid: '1', uid: 'modal-user-audit', role: 'ADMINISTRADOR', rol_id: '1', modulos: '2,10', exp: Math.floor(Date.now() / 1000) + 3600 })}.`;
   await page.addInitScript(jwt => localStorage.setItem('access_token', jwt), usuariosToken);
@@ -501,8 +501,18 @@ test('Crear Usuario hereda header y footer institucionales del theme sin modific
   const saveButton = modal.getByRole('button', { name: 'Guardar usuario' });
   const cancelButton = modal.getByRole('button', { name: 'Cancelar edición de usuario' });
   await expect(saveButton).toBeVisible();
-  await expect(saveButton).toContainText('Guardar');
-  await expect(cancelButton).toContainText('Cancelar');
+  await expect(saveButton).toHaveAttribute('title', 'Guardar usuario');
+  await expect(cancelButton).toHaveAttribute('title', 'Cancelar edición de usuario');
+  await expect(saveButton).toHaveClass(/modal-action-icon/);
+  await expect(cancelButton).toHaveClass(/modal-action-icon/);
+  await expect(saveButton).toHaveText('');
+  await expect(cancelButton).toHaveText('');
+  const saveButtonBox = await saveButton.boundingBox();
+  const cancelButtonBox = await cancelButton.boundingBox();
+  expect(saveButtonBox?.width).toBeGreaterThanOrEqual(44);
+  expect(saveButtonBox?.height).toBeGreaterThanOrEqual(44);
+  expect(cancelButtonBox?.width).toBeGreaterThanOrEqual(44);
+  expect(cancelButtonBox?.height).toBeGreaterThanOrEqual(44);
   const saveIconMetrics = await saveButton.locator('app-action-icon svg').evaluate(icon => {
     const bounds = icon.getBoundingClientRect();
     const css = getComputedStyle(icon);
@@ -513,7 +523,7 @@ test('Crear Usuario hereda header y footer institucionales del theme sin modific
   expect(saveIconMetrics.visibility).toBe('visible');
   expect(saveIconMetrics.opacity).toBe('1');
   expect(saveIconMetrics.stroke).not.toBe('none');
-  expect(await saveButton.evaluate(element => getComputedStyle(element).opacity)).toBe('0.7');
+  expect(await saveButton.evaluate(element => Number(getComputedStyle(element).opacity))).toBeGreaterThan(0.7);
   const artifactsDir = process.env.RL_BLOCK9_ARTIFACT_DIR;
   if (artifactsDir) {
     await mkdir(artifactsDir, { recursive: true });
