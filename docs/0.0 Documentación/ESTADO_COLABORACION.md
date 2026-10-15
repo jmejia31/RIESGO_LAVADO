@@ -2618,3 +2618,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Cambios ajenos identificados antes de esta ejecución (`DatabaseEnvironmentGuard*`, `login-and-routing.spec.ts`, `modal-shell-lock.spec.ts`, `tsconfig.json` y untracked) preservados fuera de stage.
 - Estado: `PHASE_0_STATUS=PENDING_CI`; falta commit/push y CI final del SHA. `AUTHORIZATION_MICROPHASE_1=NOT_STARTED`, MF2/MF3 no iniciadas; Block 10 no iniciado. Producción no consultada ni modificada.
 - CI `38819743294` falló en el validador contractual Phase 13 porque el título del test E2E de CRUD Riesgos cambió; el flujo pasó localmente. Se restauró sólo el título esperado; validador Phase 13 y E2E focal 1/1 pasan. Esperando Quality Gates de la corrección; MF1 continúa sin iniciar.
+
+
+## Master execution - continuation after authorization Point 3 (COD, 2026-10-15 17:10 -06:00)
+
+- Phase 0 interaction corrective: CI 38820174691 completed/success for SHA 1d59fa67da681b0b75a75f212b5b1e59f5b7fe67. MICROPHASE_4=CLOSED; native dialogs removed from the scoped production paths and Risk create/edit use the institutional large modal.
+- Authorization MF1: PASS, read-only, 25 endpoints inventoried (14 mutations, 11 GET). Effective contract is [Authorize] + [ModuloAuthorize(10)] on CalculoConfiguracionController. No action role gate or AllowAnonymous there; the module guard is role-agnostic and denies absent/unmatched module claims. AuditRequired is a separate audit marker. No code/tests/config/DB changes in MF1.
+- Authorization MF2: PASS. A local HTTP integration test covers all 14 mutations across unauthenticated 401, authenticated without module 10 403 (including missing/invalid claim), and ANALISTA/SUPERVISOR/ADMINISTRADOR with module 10 reaching later model validation (400). Frontend module guard test proves module access does not add a role-only restriction. Production code unchanged.
+- Authorization MF3: PASS. Local quality gate passed: backend 973/973, frontend 896/896, backend and frontend builds, lint, modal/theme/icon/native-dialog validators, diff check. Action-level RBAC added=0; production queried/changed=NO; DML=0, DDL=0.
+- Current work to publish: backend/RL.API.Tests/Features/MatricesRiesgos/CalculoConfiguracionAuthorizationIntegrationTests.cs and frontend/rl-app/src/app/core/guards/guards.spec.ts, plus this status and BITACORA. Final CI on their commit is pending. Previous dirty/untracked files are preexisting and preserved, excluded from staging.
+- Final policy: AUTHENTICATED + module 10 access; writes do not imply Administrator-only. Finding 3 is NOT_A_DEFECT under the agreed institutional module-based authorization policy. Point 3 closure follows the final CI result.
+- Manual physical double-monitor and browser zoom 80/100/125 checks were explicitly approved by the owner before this execution (OWNER_MANUAL_VALIDATION); bounded-select was not changed. Block 10 remains NOT_STARTED and readiness is not evaluated by this scope.

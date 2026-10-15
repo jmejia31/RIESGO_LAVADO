@@ -82,6 +82,16 @@ describe('security guards', () => {
     expect(result).toBe(true);
   });
 
+  it('moduloGuard permite el módulo sin imponer una restricción adicional de rol', () => {
+    auth.usuario.mockReturnValue({ modulosIds: [10] });
+    auth.tieneRol.mockReturnValue(false);
+
+    const result = TestBed.runInInjectionContext(() => moduloGuard(10)(route, state));
+
+    expect(result).toBe(true);
+    expect(auth.tieneRol).not.toHaveBeenCalled();
+  });
+
   it('moduloGuard rechaza un módulo no asignado', () => {
     const result = TestBed.runInInjectionContext(() => moduloGuard(7)(route, state));
     expect(result).toBe(false);
