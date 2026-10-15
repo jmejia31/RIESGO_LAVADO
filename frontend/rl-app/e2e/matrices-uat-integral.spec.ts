@@ -1013,7 +1013,7 @@ test('Riesgos usa filtro estándar completo y pagina exactamente 10 registros al
   expect(consultas.at(-1)?.buscar).toBe('proveedor');
 });
 
-test('UAT administra riesgos mediante modales institucionales y conserva el contrato de guardado', async ({ page }) => {
+test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => {
   let createPayload: any;
   let updatePayload: any;
   const registros = [{ ...riesgo }];

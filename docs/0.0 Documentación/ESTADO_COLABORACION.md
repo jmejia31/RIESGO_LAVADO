@@ -2617,3 +2617,4 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia externa: `%USERPROFILE%\Documents\RIESGO_LAVADO\MODAL_INTERACTION_CORRECTIVE\20261015_final\after`.
 - Cambios ajenos identificados antes de esta ejecución (`DatabaseEnvironmentGuard*`, `login-and-routing.spec.ts`, `modal-shell-lock.spec.ts`, `tsconfig.json` y untracked) preservados fuera de stage.
 - Estado: `PHASE_0_STATUS=PENDING_CI`; falta commit/push y CI final del SHA. `AUTHORIZATION_MICROPHASE_1=NOT_STARTED`, MF2/MF3 no iniciadas; Block 10 no iniciado. Producción no consultada ni modificada.
+- CI `38819743294` falló en el validador contractual Phase 13 porque el título del test E2E de CRUD Riesgos cambió; el flujo pasó localmente. Se restauró sólo el título esperado; validador Phase 13 y E2E focal 1/1 pasan. Esperando Quality Gates de la corrección; MF1 continúa sin iniciar.
