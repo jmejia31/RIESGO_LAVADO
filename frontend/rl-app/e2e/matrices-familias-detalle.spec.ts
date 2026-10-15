@@ -226,6 +226,23 @@ test('MCV.2 Editar Familia regresa al mismo Detalle sin volver al listado', asyn
 
   const editor = page.locator('[data-ui-fam-edit="modal"]');
   await expect(editor).toBeVisible();
+  const footer = editor.locator('.modal-footer-institutional');
+  const footerBack = footer.getByRole('button', { name: 'Regresar a Familias de Formularios' });
+  const footerSave = footer.getByRole('button', { name: 'Guardar cambios de la familia' });
+  await expect(footer.locator('button')).toHaveCount(2);
+  for (const [button, title] of [[footerBack, 'Regresar a Familias de Formularios'],
+    [footerSave, 'Guardar cambios de la familia']] as const) {
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute('title', title);
+    await expect(button).toHaveClass(/modal-action-icon/);
+    await expect(button).toHaveText('');
+    await expect(button.locator('app-action-icon')).toHaveCount(1);
+    const bounds = await button.boundingBox();
+    expect(bounds?.width).toBeGreaterThanOrEqual(44);
+    expect(bounds?.height).toBeGreaterThanOrEqual(44);
+  }
+  await expect(footerBack).toBeEnabled();
+  await expect(footerSave).toBeDisabled();
   await editor.locator('[data-ui-fam-edit-action="regresar"]').click();
 
   await expect(editor).toHaveCount(0);
