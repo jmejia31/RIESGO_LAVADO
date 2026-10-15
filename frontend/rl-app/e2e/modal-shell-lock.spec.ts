@@ -342,7 +342,7 @@ test('el Form Builder conserva su diseño responsive y actualiza el shell durant
     const [r, g, b] = stop.split(/\s+/).map(Number);
     expect(contrastRatio({ r: 255, g: 255, b: 255 }, { r, g, b })).toBeGreaterThanOrEqual(4.5);
   }
-  await page.screenshot({ path: 'test-results/form-builder-premium-mobile-live-theme.png', fullPage: true });
+  await dialogo.screenshot({ path: 'test-results/form-builder-premium-mobile-live-theme.png' });
 });
 
 test('el maestro visual de modales muestra una X de cierre legible y consistente', async ({ page }) => {
