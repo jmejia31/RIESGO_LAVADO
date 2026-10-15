@@ -83,6 +83,11 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host 'PREMIUM_MODAL_VALIDATOR=PASS'
 
 $modalIconValidator = Join-Path $RepositoryRoot 'tools/validate_modal_icon_contrast.js'
+& node --test (Join-Path $RepositoryRoot 'tools/validate_modal_icon_contrast.test.js')
+if ($LASTEXITCODE -ne 0) {
+    throw "Las pruebas del validador de acciones de footer fallaron con codigo $LASTEXITCODE"
+}
+Write-Host 'MODAL_FOOTER_ICON_VALIDATOR_TESTS=PASS'
 & node $modalIconValidator
 if ($LASTEXITCODE -ne 0) {
     throw "El contraste de iconos y acciones modales fallo con codigo $LASTEXITCODE"
