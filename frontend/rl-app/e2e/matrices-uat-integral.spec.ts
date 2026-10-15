@@ -226,6 +226,32 @@ test('Vista de evaluación presenta su acción de cierre de footer icon-only', a
   await expect(modal).toHaveCount(0);
 });
 
+test('Seguimiento de evaluación presenta cierre de footer icon-only', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Seguimiento de evaluación' }).first().click();
+
+  const modal = page.locator('dialog[open][aria-modal="true"]');
+  await expect(modal.getByRole('heading', { name: /Seguimiento de Evaluación #20/ })).toBeVisible();
+  const footer = modal.locator('.modal-footer-institutional');
+  const close = footer.getByRole('button', { name: 'Cerrar seguimiento' });
+  await expect(footer.locator('button')).toHaveCount(1);
+  await expect(close).toBeVisible();
+  await expect(close).toHaveAttribute('title', 'Cerrar seguimiento');
+  await expect(close).toHaveClass(/modal-action-icon/);
+  await expect(close).toHaveText('');
+  await expect(close.locator('app-action-icon')).toHaveCount(1);
+  const buttonBox = await close.boundingBox();
+  const iconBox = await close.locator('app-action-icon').boundingBox();
+  expect(buttonBox?.width).toBeGreaterThanOrEqual(44);
+  expect(buttonBox?.height).toBeGreaterThanOrEqual(44);
+  expect(iconBox?.width).toBe(20);
+  expect(iconBox?.height).toBe(20);
+
+  await close.click();
+  await expect(modal).toHaveCount(0);
+});
+
 test('Editar Evaluación presenta acciones de footer icon-only, accesibles y visibles', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/matrices-riesgos');
