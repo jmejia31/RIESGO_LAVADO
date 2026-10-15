@@ -105,7 +105,7 @@ describe('BoundedSelectComponent', () => {
     expect(component.abierto()).toBe(false);
   });
 
-  it('omite opciones deshabilitadas durante la navegaciÃ³n por teclado', () => {
+  it('omite opciones deshabilitadas durante la navegación por teclado', () => {
     component.options = [
       { value: 1, label: 'Disponible' },
       { value: 2, label: 'No disponible', disabled: true },
@@ -117,7 +117,7 @@ describe('BoundedSelectComponent', () => {
     expect(component.activeOptionIndex()).toBe(2);
   });
 
-  it('abre desde el teclado con ArrowUp y activa la Ãºltima opciÃ³n disponible', () => {
+  it('abre desde el teclado con ArrowUp y activa la última opción disponible', () => {
     component.manejarTeclasCombobox(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
     expect(component.abierto()).toBe(true);
     expect(component.activeOptionIndex()).toBe(component.options.length - 1);
