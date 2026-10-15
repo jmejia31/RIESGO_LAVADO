@@ -10,7 +10,8 @@ const styles = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'sty
 const formBuilderToolbar = fs.readFileSync(path.join(appRoot, 'features', 'admin', 'matrices-riesgos', 'components', 'form-builder', 'toolbar', 'form-builder-toolbar.component.html'), 'utf8');
 const formBuilderStatusbar = fs.readFileSync(path.join(appRoot, 'features', 'admin', 'matrices-riesgos', 'components', 'form-builder', 'statusbar', 'form-builder-statusbar.component.html'), 'utf8');
 const failures = [];
-const footerIconOnlyClosures = [];
+const modalActionContractFailures = [];
+let modalActionButtonCount = 0;
 let iconActionCount = 0;
 
 function walk(directory) {
@@ -42,14 +43,22 @@ for (const file of walk(appRoot).filter(file => file.endsWith('.html'))) {
       if (!/\/\s*>$/.test(tag[0]) && !['input', 'img', 'br', 'hr', 'meta', 'link'].includes(name)) stack.push({ name, footer: isFooter || stack.some(frame => frame.footer) });
       continue;
     }
-    if (name === 'button' && insideFooterButton && buttonStart >= 0) {
-      const buttonHtml = source.slice(buttonStart, tag.index + tag[0].length);
-      const label = buttonAttrs.match(/aria-label=["']([^"']+)["']/i)?.[1] ?? '';
-      const content = buttonHtml.slice(buttonHtml.indexOf('>') + 1, buttonHtml.lastIndexOf('</'));
-      const visibleText = content.replace(/<[^>]+>/g, ' ').replace(/\{\{[\s\S]*?\}\}/g, '').trim();
-      if (/cerrar|cancelar/i.test(label) && /<app-action-icon\b/i.test(content) && !visibleText) {
-        footerIconOnlyClosures.push(`${path.relative(root, file).replaceAll(path.sep, '/')}: ${label}`);
-      }
+      if (name === 'button' && insideFooterButton && buttonStart >= 0) {
+        const buttonHtml = source.slice(buttonStart, tag.index + tag[0].length);
+        const label = buttonAttrs.match(/aria-label=["']([^"']+)["']/i)?.[1] ?? '';
+        const content = buttonHtml.slice(buttonHtml.indexOf('>') + 1, buttonHtml.lastIndexOf('</'));
+        const isModalAction = /\bclass\s*=\s*["'][^"']*\bmodal-action-icon\b/i.test(buttonAttrs);
+        if (isModalAction) {
+          modalActionButtonCount += 1;
+          const tooltip = buttonAttrs.match(/(?:title|data-tooltip)=["']([^"']+)["']/i)?.[1] ?? '';
+          const visibleContent = content.replace(/<[^>]*class=["'][^"']*\bsr-only\b[^"']*["'][^>]*>[\s\S]*?<\/[^>]+>/gi, ' ');
+          const visibleText = visibleContent.replace(/<[^>]+>/g, ' ').replace(/\{\{[\s\S]*?\}\}/g, ' ').trim();
+          const location = `${path.relative(root, file).replaceAll(path.sep, '/')}: ${label || '(missing aria-label)'}`;
+          if (!label.trim()) modalActionContractFailures.push(`${location} has no accessible name`);
+          if (!tooltip.trim()) modalActionContractFailures.push(`${location} has no title or tooltip`);
+          if (!/<app-action-icon\b/i.test(content)) modalActionContractFailures.push(`${location} has no shared ActionIcon`);
+          if (visibleText) modalActionContractFailures.push(`${location} contains visible action text`);
+        }
       buttonStart = -1;
       buttonAttrs = '';
       insideFooterButton = false;
@@ -59,7 +68,7 @@ for (const file of walk(appRoot).filter(file => file.endsWith('.html'))) {
   }
 }
 
-if (footerIconOnlyClosures.length) failures.push(`Footer close/cancel actions lack visible text: ${footerIconOnlyClosures.join(', ')}`);
+failures.push(...modalActionContractFailures);
 if (!styles.includes('--modal-close-color') || !styles.includes('--modal-close-color-hover') || !styles.includes('--modal-close-border')) failures.push('Modal close icon lacks themed foreground/border tokens');
 if (!/button\[aria-label\*="cerrar" i\][\s\S]*?focus-visible/.test(styles)) failures.push('Modal close controls lack a visible keyboard focus treatment');
 if (!styles.includes('.modal-container-card [data-modal-shell-region="header"]')) failures.push('Brand close tokens are not scoped to a certified institutional header region');
@@ -69,8 +78,10 @@ if (!/class="[^"]*modal-header-institutional[^"]*"[^>]*data-modal-shell-region="
   failures.push('Form Builder close control does not live inside its certified brand header region');
 }
 if (!/class="[^"]*modal-footer-institutional[^"]*"[^>]*data-modal-shell-region="footer"/.test(formBuilderStatusbar)
-  || !formBuilderStatusbar.includes('Cancelar') || !formBuilderStatusbar.includes('Guardar') || !formBuilderStatusbar.includes('Cerrar')) {
-  failures.push('Form Builder footer must be institutional and expose textual actions for both modes');
+  || !/aria-label="Cerrar constructor"[\s\S]*?<app-action-icon action="close"/.test(formBuilderStatusbar)
+  || !/aria-label="Cancelar cambios"[\s\S]*?<app-action-icon action="cancel"/.test(formBuilderStatusbar)
+  || !/aria-label="Guardar cambios"[\s\S]*?<app-action-icon action="save"/.test(formBuilderStatusbar)) {
+  failures.push('Form Builder footer must expose accessible close/cancel/save ActionIcon controls');
 }
 if (!styles.includes('currentColor') && !fs.readFileSync(path.join(appRoot, 'shared', 'components', 'action-icon', 'action-icon.component.ts'), 'utf8').includes('currentColor')) {
   failures.push('Action icons must inherit the foreground color');
@@ -81,4 +92,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log(`ICON_CONTRAST_VALIDATOR=PASS FOOTER_ICON_ONLY_CLOSE_ACTIONS=0 ICON_ACTIONS_AUDITED=${iconActionCount}`);
+console.log(`ICON_CONTRAST_VALIDATOR=PASS MODAL_ACTION_ICON_BUTTONS=${modalActionButtonCount} ICON_ACTIONS_AUDITED=${iconActionCount}`);
