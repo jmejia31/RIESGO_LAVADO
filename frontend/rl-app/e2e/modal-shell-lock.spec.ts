@@ -203,7 +203,8 @@ test('el modal abierto hereda cambios azul, rojo y verde del tema sin alterar ge
   const redHeader = await header.evaluate(element => getComputedStyle(element).backgroundImage);
   expect(redHeader).not.toBe(blueHeader);
   expect(redHeader).toContain('rgb(153, 27, 27)');
-  expect(await page.locator('.modal-container-card > header').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('rgb(220, 38, 38)');
+  const redFamilyStops = ['start', 'mid', 'end'].map(stop => `rgb(${redTheme.properties[`--ihss-modal-primary-${stop}-rgb`].split(' ').join(', ')})`);
+  for (const stop of redFamilyStops) expect(redHeader).toContain(stop);
   const redForeground = parseHexColor(`#${redTheme.properties['--ihss-on-modal-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!;
   const redSurface = parseHexColor(`#${redTheme.properties['--ihss-modal-primary-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!;
   expect(contrastRatio(redSurface, redForeground)).toBeGreaterThanOrEqual(4.5);
@@ -246,6 +247,51 @@ test('el modal abierto hereda cambios azul, rojo y verde del tema sin alterar ge
     await page.screenshot({ path: join(artifactsDir, 'modal-theme-blue-mobile.png'), fullPage: true });
   }
   expect(initialTheme.properties['--ihss-primary-rgb']).toBe('30 58 138');
+});
+
+test('Crear Usuario hereda header y footer institucionales del theme sin modificar su template', async ({ page }) => {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  const usuariosToken = `${encode({ alg: 'none' })}.${encode({ nameid: '1', uid: 'modal-user-audit', role: 'ADMINISTRADOR', rol_id: '1', modulos: '2,10', exp: Math.floor(Date.now() / 1000) + 3600 })}.`;
+  await page.addInitScript(jwt => localStorage.setItem('access_token', jwt), usuariosToken);
+  await page.route('**/api/catalogos/modulos', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ moduloId: 2, nombre: 'Usuarios', codigo: 'USUARIOS' }] }) }));
+  await page.route('**/api/catalogos/roles', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ rolId: 1, rolNombre: 'Administrador', rolActivo: true }] }) }));
+  await page.route('**/api/catalogos/dominios', route => route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true,"datos":[]}' }));
+  await page.route('**/api/auth/usuarios/paginado**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 25, totalRegistros: 0, totalPaginas: 0 } }) }));
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/usuarios');
+  await page.getByRole('button', { name: 'Crear nuevo usuario' }).click();
+  const modal = page.locator('dialog[open] .modal-container-card');
+  const header = modal.locator('.modal-header-institutional');
+  const body = modal.locator('.modal-body-scrollable');
+  const footer = modal.locator('.modal-footer-institutional');
+  await expect(header).toBeVisible();
+  await expect(footer).toBeVisible();
+
+  const redTheme = createSystemTheme('#991b1b', '#dc2626');
+  await page.evaluate(properties => {
+    for (const [name, value] of Object.entries(properties)) document.documentElement.style.setProperty(name, value);
+  }, redTheme.properties);
+  const styles = await page.evaluate(() => {
+    const headerElement = document.querySelector('dialog[open] .modal-header-institutional')!;
+    const footerElement = document.querySelector('dialog[open] .modal-footer-institutional')!;
+    const bodyElement = document.querySelector('dialog[open] .modal-body-scrollable')!;
+    const cardElement = document.querySelector('dialog[open] .modal-container-card')!;
+    return { header: getComputedStyle(headerElement).backgroundImage, footer: getComputedStyle(footerElement).backgroundImage, body: getComputedStyle(bodyElement).backgroundColor, card: getComputedStyle(cardElement).backgroundColor };
+  });
+  const stops = ['start', 'mid', 'end'].map(stop => `rgb(${redTheme.properties[`--ihss-modal-primary-${stop}-rgb`].split(' ').join(', ')})`);
+  for (const stop of stops) expect(styles.header).toContain(stop);
+  expect(styles.footer).toContain(stops[0]);
+  expect(styles.footer).toContain(stops[1]);
+  expect(styles.footer).not.toContain('rgb(30, 58, 138)');
+  expect(styles.card).toBe('rgb(255, 255, 255)');
+  expect(['rgb(255, 255, 255)', 'rgba(0, 0, 0, 0)']).toContain(styles.body);
+
+  const artifactsDir = process.env.RL_BLOCK9_ARTIFACT_DIR;
+  if (artifactsDir) {
+    await mkdir(artifactsDir, { recursive: true });
+    await modal.screenshot({ path: join(artifactsDir, 'modal-create-user-premium-red.png') });
+  }
 });
 
 test('captura el estado editable del constructor a 1536x1024', async ({ page }) => {

@@ -427,7 +427,7 @@ test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios d
   const rojo = await header.evaluate(element => getComputedStyle(element).backgroundImage);
   expect(rojo).not.toBe(azul);
   expect(rojo).toContain('rgb(153, 27, 27)');
-  expect(await footer.evaluate(element => getComputedStyle(element).backgroundImage)).toContain('rgb(220, 38, 38)');
+  expect(await footer.evaluate(element => getComputedStyle(element).backgroundImage)).toContain('rgb(153, 27, 27)');
   if (artifactDir) await modal.screenshot({ path: join(artifactDir, 'matriz-completa-theme-red.png') });
 
   await page.setViewportSize({ width: 390, height: 844 });

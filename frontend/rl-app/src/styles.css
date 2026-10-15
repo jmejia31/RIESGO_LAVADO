@@ -140,9 +140,9 @@
     min-height: 0;
     max-height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
     background-color: #ffffff;
-    border: 1px solid rgb(var(--ihss-200-rgb, 204 209 225));
-    border-radius: 1rem;
-    box-shadow: 0 25px 50px -12px rgb(15 23 42 / 0.25);
+    border: 1px solid rgb(var(--ihss-200-rgb, 204 209 225) / 0.82);
+    border-radius: 1.25rem;
+    box-shadow: 0 30px 72px -30px rgb(15 23 42 / 0.48), 0 2px 10px rgb(15 23 42 / 0.08);
     overflow: hidden;
     box-sizing: border-box;
     margin: auto !important;
@@ -158,14 +158,17 @@
     isolation: isolate;
     overflow: hidden;
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
-    background: linear-gradient(120deg,
-      rgb(var(--ihss-modal-primary-rgb, 30 58 138)),
-      rgb(var(--ihss-modal-accent-rgb, 29 78 216))) !important;
+    background:
+      radial-gradient(ellipse at 88% 2%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.2), transparent 43%),
+      linear-gradient(112deg,
+        rgb(var(--ihss-modal-primary-start-rgb, 24 46 110)) 0%,
+        rgb(var(--ihss-modal-primary-mid-rgb, 30 58 138)) 56%,
+        rgb(var(--ihss-modal-primary-end-rgb, 67 91 159)) 100%) !important;
     padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgb(var(--ihss-accent-rgb, 29 78 216) / 0.48);
+    border-bottom: 1px solid rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.42);
     flex-shrink: 0;
   }
   :where([class~="bg-ihss-500"][class~="text-white"]) { color: rgb(var(--ihss-on-500-rgb, 255 255 255)) !important; }
@@ -181,7 +184,21 @@
     z-index: 0;
     pointer-events: none;
     inset: 0;
-    background: radial-gradient(ellipse at 92% 5%, rgb(var(--ihss-accent-rgb, 29 78 216) / 0.28), transparent 44%);
+    background: radial-gradient(ellipse at 92% 5%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.12), transparent 44%);
+  }
+  .modal-header-institutional::before,
+  .modal-container-card > header::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    width: 42%;
+    height: 190%;
+    top: -46%;
+    right: -8%;
+    border-radius: 42%;
+    transform: rotate(14deg);
+    background: linear-gradient(135deg, transparent 35%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.1) 36% 63%, transparent 64%);
   }
   .modal-header-institutional > *,
   .modal-container-card > header > * {
@@ -204,6 +221,19 @@
   .modal-container-card > header small {
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.88) !important;
   }
+  .modal-header-icon {
+    display: inline-flex;
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.26);
+    border-radius: 1rem;
+    background: rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.2);
+    color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
+    box-shadow: inset 0 1px rgb(255 255 255 / 0.12), 0 8px 18px rgb(15 23 42 / 0.12);
+  }
   .modal-body-scrollable {
     flex: 1 1 auto;
     min-height: 0;
@@ -215,15 +245,18 @@
     position: relative;
     isolation: isolate;
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
-    background: linear-gradient(120deg,
-      rgb(var(--ihss-modal-primary-rgb, 30 58 138)),
-      rgb(var(--ihss-modal-accent-rgb, 29 78 216))) !important;
+    background:
+      radial-gradient(ellipse at 96% 100%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.08), transparent 48%),
+      linear-gradient(112deg,
+        rgb(var(--ihss-modal-primary-start-rgb, 24 46 110)) 0%,
+        rgb(var(--ihss-modal-primary-mid-rgb, 30 58 138)) 72%,
+        rgb(var(--ihss-modal-primary-start-rgb, 24 46 110)) 100%) !important;
     padding: 0.75rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 0.625rem;
-    border-top: 1px solid rgb(var(--ihss-accent-rgb, 29 78 216) / 0.48);
+    border-top: 1px solid rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.3);
     flex-shrink: 0;
   }
   .modal-footer-institutional > * { position: relative; z-index: 1; }
