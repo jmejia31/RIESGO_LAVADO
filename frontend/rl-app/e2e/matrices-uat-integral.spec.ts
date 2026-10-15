@@ -166,6 +166,41 @@ async function preparar(page: Page): Promise<void> {
 
 test.beforeEach(async ({ page }) => preparar(page));
 
+test('Nueva Evaluación presenta acciones de footer icon-only, accesibles y visibles', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Crear nueva evaluación' }).click();
+
+  const modal = page.locator('dialog[open][aria-modal="true"]');
+  await expect(modal.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
+  const footer = modal.locator('.modal-footer-institutional');
+  const cancel = footer.getByRole('button', { name: 'Cancelar nueva evaluación' });
+  const save = footer.getByRole('button', { name: 'Guardar borrador' });
+  const next = footer.getByRole('button', { name: 'Continuar al siguiente bloque' });
+  await expect(footer.locator('button')).toHaveCount(3);
+
+  for (const [button, title] of [[cancel, 'Cancelar nueva evaluación'], [save, 'Guardar borrador'],
+    [next, 'Continuar al siguiente bloque']] as const) {
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute('title', title);
+    await expect(button).toHaveClass(/modal-action-icon/);
+    await expect(button.locator('app-action-icon')).toHaveCount(1);
+    await expect(button).toHaveText('');
+    const box = await button.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+    const iconBox = await button.locator('app-action-icon').boundingBox();
+    expect(iconBox?.width).toBe(20);
+    expect(iconBox?.height).toBe(20);
+  }
+
+  await expect(cancel).toBeEnabled();
+  await expect(save).toBeEnabled();
+  await expect(next).toBeEnabled();
+  await cancel.click();
+  await expect(modal).toHaveCount(0);
+});
+
 test('Editar Evaluación presenta acciones de footer icon-only, accesibles y visibles', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/matrices-riesgos');

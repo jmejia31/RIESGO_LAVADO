@@ -1514,15 +1514,15 @@
         </div>
 
         <div class="modal-footer-institutional flex-wrap">
-          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()">
-            <app-action-icon action="cancel"></app-action-icon><span>Cancelar</span>
+          <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()">
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
-          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 disabled:opacity-70" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon><span>Guardar borrador</span></button>
-          <button type="button" title="Continuar" aria-label="Continuar"
-                  class="inline-flex items-center justify-center gap-2 rounded-xl bg-ihss-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-ihss-700 disabled:opacity-70 sm:text-sm"
+          <button type="button" class="modal-action-icon modal-action-icon--secondary" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
+          <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
+                  class="modal-action-icon modal-action-icon--primary"
                   [disabled]="guardando()"
                   (click)="continuarBloqueEvaluacion()">
-                  <app-action-icon action="next"></app-action-icon><span>Continuar</span>
+                  <app-action-icon action="next"></app-action-icon>
           </button>
         </div>
       </div>
