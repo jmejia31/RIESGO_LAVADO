@@ -56,6 +56,12 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host 'INSTITUTIONAL_FILE_UPLOAD_VALIDATOR=PASS'
 
 $modalStandardValidator = Join-Path $RepositoryRoot 'tools/validate_institutional_modal_standard.js'
+$modalStandardTests = Join-Path $RepositoryRoot 'tools/validate_institutional_modal_standard.test.js'
+& node --test $modalStandardTests
+if ($LASTEXITCODE -ne 0) {
+    throw "Las pruebas del validador institucional de modales fallaron con codigo $LASTEXITCODE"
+}
+Write-Host 'MODAL_STANDARD_VALIDATOR_TESTS=PASS'
 & node $modalStandardValidator
 if ($LASTEXITCODE -ne 0) {
     throw "El estandar institucional de modales fallo con codigo $LASTEXITCODE"

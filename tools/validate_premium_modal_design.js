@@ -3,11 +3,13 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { validateCompositeContract } = require('./validate_institutional_modal_standard');
 
 const root = path.resolve(__dirname, '..');
 const stylesPath = path.join(root, 'frontend', 'rl-app', 'src', 'styles.css');
 const styles = fs.readFileSync(stylesPath, 'utf8');
 const failures = [];
+const compositeContract = JSON.parse(fs.readFileSync(path.join(__dirname, 'modal_composite_shell_contract.json'), 'utf8'));
 
 function rule(selectorPattern) {
   const match = styles.match(new RegExp(`${selectorPattern}\\s*\\{([\\s\\S]*?)\\n  }`));
@@ -53,9 +55,19 @@ for (const file of walk(appRoot).filter(file => /\.(?:scss|css)$/.test(file))) {
 }
 if (localOverrides.length) failures.push(`Local modal shell brand overrides found: ${localOverrides.join(', ')}`);
 
+const compositeTemplates = new Map();
+for (const composite of compositeContract.composites ?? []) {
+  for (const file of [composite.hostTemplate, composite.componentTemplate, composite.header.template, composite.footer.template]) {
+    const absolute = path.join(root, file);
+    if (fs.existsSync(absolute)) compositeTemplates.set(file, fs.readFileSync(absolute, 'utf8'));
+  }
+}
+const compositeValidation = validateCompositeContract(compositeTemplates, compositeContract);
+if (compositeValidation.failures.length) failures.push(...compositeValidation.failures);
+
 if (failures.length) {
   console.error('PREMIUM_MODAL_VALIDATOR=FAIL');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log('PREMIUM_MODAL_VALIDATOR=PASS MODAL_HEADER_MULTILAYER=PASS MODAL_FOOTER_GRADIENT=PASS LOCAL_MODAL_BRAND_OVERRIDES=0');
+console.log('PREMIUM_MODAL_VALIDATOR=PASS MODAL_HEADER_MULTILAYER=PASS MODAL_FOOTER_GRADIENT=PASS COMPOSITE_MODAL_REGIONS=PASS LOCAL_MODAL_BRAND_OVERRIDES=0');

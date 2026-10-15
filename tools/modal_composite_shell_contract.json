@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "composites": [
+    {
+      "selector": "app-form-builder",
+      "hostAttribute": "data-modal-composite-shell",
+      "hostTemplate": "frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html",
+      "componentTemplate": "frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.html",
+      "header": {
+        "componentSelector": "app-form-builder-toolbar",
+        "template": "frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.html",
+        "marker": "header",
+        "className": "modal-header-institutional"
+      },
+      "body": {
+        "marker": "body",
+        "minimumInstances": 4
+      },
+      "footer": {
+        "componentSelector": "app-form-builder-statusbar",
+        "template": "frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/statusbar/form-builder-statusbar.component.html",
+        "marker": "footer",
+        "className": "modal-footer-institutional"
+      }
+    }
+  ]
+}

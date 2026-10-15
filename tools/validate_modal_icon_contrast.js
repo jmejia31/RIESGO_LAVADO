@@ -7,6 +7,8 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const appRoot = path.join(root, 'frontend', 'rl-app', 'src', 'app');
 const styles = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'styles.css'), 'utf8');
+const formBuilderToolbar = fs.readFileSync(path.join(appRoot, 'features', 'admin', 'matrices-riesgos', 'components', 'form-builder', 'toolbar', 'form-builder-toolbar.component.html'), 'utf8');
+const formBuilderStatusbar = fs.readFileSync(path.join(appRoot, 'features', 'admin', 'matrices-riesgos', 'components', 'form-builder', 'statusbar', 'form-builder-statusbar.component.html'), 'utf8');
 const failures = [];
 const footerIconOnlyClosures = [];
 let iconActionCount = 0;
@@ -60,6 +62,16 @@ for (const file of walk(appRoot).filter(file => file.endsWith('.html'))) {
 if (footerIconOnlyClosures.length) failures.push(`Footer close/cancel actions lack visible text: ${footerIconOnlyClosures.join(', ')}`);
 if (!styles.includes('--modal-close-color') || !styles.includes('--modal-close-color-hover') || !styles.includes('--modal-close-border')) failures.push('Modal close icon lacks themed foreground/border tokens');
 if (!/button\[aria-label\*="cerrar" i\][\s\S]*?focus-visible/.test(styles)) failures.push('Modal close controls lack a visible keyboard focus treatment');
+if (!styles.includes('.modal-container-card [data-modal-shell-region="header"]')) failures.push('Brand close tokens are not scoped to a certified institutional header region');
+if (styles.includes('.form-builder-toolbar__top-actions')) failures.push('Brand close tokens still target the Form Builder neutral toolbar actions');
+if (!/class="[^"]*modal-header-institutional[^"]*"[^>]*data-modal-shell-region="header"/.test(formBuilderToolbar)
+  || !/<button[^>]*aria-label="Cerrar modal de constructor"/.test(formBuilderToolbar)) {
+  failures.push('Form Builder close control does not live inside its certified brand header region');
+}
+if (!/class="[^"]*modal-footer-institutional[^"]*"[^>]*data-modal-shell-region="footer"/.test(formBuilderStatusbar)
+  || !formBuilderStatusbar.includes('Cancelar') || !formBuilderStatusbar.includes('Guardar') || !formBuilderStatusbar.includes('Cerrar')) {
+  failures.push('Form Builder footer must be institutional and expose textual actions for both modes');
+}
 if (!styles.includes('currentColor') && !fs.readFileSync(path.join(appRoot, 'shared', 'components', 'action-icon', 'action-icon.component.ts'), 'utf8').includes('currentColor')) {
   failures.push('Action icons must inherit the foreground color');
 }
