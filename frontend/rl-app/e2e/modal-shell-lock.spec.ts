@@ -208,6 +208,17 @@ test('el modal abierto hereda cambios azul, rojo y verde del tema sin alterar ge
   const redForeground = parseHexColor(`#${redTheme.properties['--ihss-on-modal-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!;
   const redSurface = parseHexColor(`#${redTheme.properties['--ihss-modal-primary-rgb'].split(' ').map(value => Number(value).toString(16).padStart(2, '0')).join('')}`)!;
   expect(contrastRatio(redSurface, redForeground)).toBeGreaterThanOrEqual(4.5);
+  const subtitle = header.locator('p, small').first();
+  if (await subtitle.count()) {
+    const subtitleColor = await subtitle.evaluate(element => getComputedStyle(element).color);
+    expect(subtitleColor).not.toBe('rgba(255, 255, 255, 0.4)');
+  }
+  const closeStyles = await close.evaluate(element => {
+    const css = getComputedStyle(element);
+    return { visibility: css.visibility, opacity: css.opacity, color: css.color };
+  });
+  expect(closeStyles.visibility).toBe('visible');
+  expect(Number(closeStyles.opacity)).toBeGreaterThanOrEqual(0.9);
   if (artifactsDir) await page.screenshot({ path: join(artifactsDir, 'modal-theme-red-desktop.png'), fullPage: true });
 
   await applyTheme('#fff8b5', '#fef08a');
@@ -217,6 +228,7 @@ test('el modal abierto hereda cambios azul, rojo y verde del tema sin alterar ge
   const lightSurfaceRgb = lightSurface.split(' ').map(Number);
   const lightModalSurface = { r: lightSurfaceRgb[0], g: lightSurfaceRgb[1], b: lightSurfaceRgb[2] };
   expect(contrastRatio(lightModalSurface, parseHexColor('#ffffff')!)).toBeGreaterThanOrEqual(4.5);
+  if (artifactsDir) await page.screenshot({ path: join(artifactsDir, 'modal-theme-light-desktop.png'), fullPage: true });
 
   const greenTheme = await applyTheme('#166534', '#22c55e');
   const greenHeader = await header.evaluate(element => getComputedStyle(element).backgroundImage);
@@ -283,6 +295,11 @@ test('Crear Usuario hereda header y footer institucionales del theme sin modific
   expect(saveIconMetrics.opacity).toBe('1');
   expect(saveIconMetrics.stroke).not.toBe('none');
   expect(await saveButton.evaluate(element => getComputedStyle(element).opacity)).toBe('0.7');
+  const artifactsDir = process.env.RL_BLOCK9_ARTIFACT_DIR;
+  if (artifactsDir) {
+    await mkdir(artifactsDir, { recursive: true });
+    await modal.screenshot({ path: join(artifactsDir, 'modal-create-user-premium-blue.png') });
+  }
 
   const redTheme = createSystemTheme('#991b1b', '#dc2626');
   await page.evaluate(properties => {
@@ -303,9 +320,7 @@ test('Crear Usuario hereda header y footer institucionales del theme sin modific
   expect(styles.card).toBe('rgb(255, 255, 255)');
   expect(['rgb(255, 255, 255)', 'rgba(0, 0, 0, 0)']).toContain(styles.body);
 
-  const artifactsDir = process.env.RL_BLOCK9_ARTIFACT_DIR;
   if (artifactsDir) {
-    await mkdir(artifactsDir, { recursive: true });
     await modal.screenshot({ path: join(artifactsDir, 'modal-create-user-premium-red.png') });
   }
 });
