@@ -10,9 +10,10 @@
 - **E2E local:** suite de 64: 62 passed, 1 omitido por Oracle XE local y 1 timeout con página en blanco bajo seis workers. El caso Nueva Evaluación aislado en un worker pasó 1/1. Las pruebas E2E de los commits anteriores constan como resultados de sus intervenciones inmediatas y no se vuelven a atribuir como ejecutadas en este cierre.
 - **Configuración de slides:** se migró Cancelar/Guardar y el validador acredita ambos. El E2E local intentado se redirigió al login por sesión expirada antes de mostrar el modal; se eliminó ese test fallido y se dejó intacta la autenticación. No se afirma verificación browser local de esa pantalla.
 - **Quality Gates remoto del código:** run `38782452658`, SHA `c13a8cece62264a82337f4bd60caaaa8e9dc6024`, terminó `completed/success`; pasó los gates, Oracle XE desechable y builds de contenedores. El commit documental y su CI final quedan como cierre de esta intervención.
+- **Quality Gates documental:** run `38784093644`, SHA `defa0fb7a0d2c5ebbcb3fec69db69e6348e009cc`, terminó `completed/success`; validó documentación y repitió los gates completos, Oracle y contenedores. Esta anotación de cierre se publica en el commit siguiente y su SHA queda sujeto al CI final.
 - **Artefactos:** `%USERPROFILE%\Documents\RIESGO_LAVADO\MODAL_FOOTER_ICON_STANDARD\20261015_1200\`; CSV con 38 acciones, JSON de auditoría, cinco screenshots del primitivo por tema/viewport y manifiesto de 13 archivos con SHA256 verificado. Baseline visual no capturado en esta intervención y registrado como tal.
 - **Preservación / seguridad:** producción no se consultó ni modificó; DML=0, DDL=0, apply=NO, cambio de esquema=NO. Sin cambios backend. Se preservan sin staging los cambios ajenos en `DatabaseEnvironmentGuard*`, `frontend/rl-app/tsconfig.json`, E2E y todos los untracked observados en precheck; no se usaron reset, clean, stash-all, `git add .` ni force push.
-- **Continuación:** CI del código certificado; publicar los documentos con commit explícito y esperar Quality Gates del SHA documental hasta `completed/success`.
+- **Continuación:** el código y el commit documental `defa0fb7` están certificados. Publicar esta anotación de cierre y esperar Quality Gates del HEAD resultante hasta `completed/success`.
 
 ---
 
