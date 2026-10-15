@@ -46,6 +46,8 @@
   --modal-close-color: rgb(255 255 255);
   --modal-close-color-hover: rgb(255 255 255);
   --modal-close-focus-rgb: var(--ihss-accent-rgb);
+  --modal-action-size: 2.75rem;
+  --modal-action-icon-size: 1.25rem;
 }
 
 @media (max-width: 640px) {
@@ -264,6 +266,127 @@
     flex-shrink: 0;
   }
   .modal-footer-institutional > * { position: relative; z-index: 1; }
+
+  /* Acciones icon-only compartidas por todos los footers modales institucionales. */
+  .modal-footer-institutional .modal-action-icon {
+    display: inline-flex;
+    width: var(--modal-action-size);
+    height: var(--modal-action-size);
+    min-width: var(--modal-action-size);
+    min-height: var(--modal-action-size);
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgb(var(--ihss-200-rgb));
+    border-radius: 0.75rem;
+    background: rgb(var(--ihss-50-rgb));
+    color: rgb(var(--ihss-on-50-rgb));
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.12);
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 150ms ease;
+  }
+
+  .modal-footer-institutional .modal-action-icon app-action-icon,
+  .modal-footer-institutional .modal-action-icon > svg {
+    display: inline-flex;
+    width: var(--modal-action-icon-size);
+    height: var(--modal-action-icon-size);
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--modal-action-icon-size);
+    color: currentColor;
+  }
+
+  .modal-footer-institutional .modal-action-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke-width: 2.25;
+  }
+
+  .modal-footer-institutional .modal-action-icon--primary {
+    border-color: rgb(var(--ihss-100-rgb));
+    background: linear-gradient(145deg, rgb(var(--ihss-50-rgb)), rgb(var(--ihss-200-rgb)));
+    color: rgb(var(--ihss-on-50-rgb));
+    box-shadow: 0 2px 5px rgb(15 23 42 / 0.18), inset 0 1px rgb(255 255 255 / 0.7);
+  }
+
+  .modal-footer-institutional .modal-action-icon--secondary {
+    border-color: rgb(var(--ihss-on-modal-rgb) / 0.62);
+    background: rgb(var(--ihss-on-modal-rgb) / 0.16);
+    color: rgb(var(--ihss-on-modal-rgb));
+  }
+
+  .modal-footer-institutional .modal-action-icon--neutral {
+    border-color: rgb(var(--ihss-200-rgb));
+    background: rgb(var(--ihss-50-rgb));
+    color: rgb(var(--ihss-on-50-rgb));
+  }
+
+  .modal-footer-institutional .modal-action-icon--danger {
+    border-color: rgb(185 28 28);
+    background: rgb(185 28 28);
+    color: rgb(255 255 255);
+  }
+
+  .modal-footer-institutional .modal-action-icon--success {
+    border-color: rgb(21 128 61);
+    background: rgb(21 128 61);
+    color: rgb(255 255 255);
+  }
+
+  .modal-footer-institutional .modal-action-icon:hover:not(:disabled) {
+    border-color: rgb(var(--ihss-300-rgb));
+    background-color: rgb(var(--ihss-100-rgb));
+    box-shadow: 0 4px 10px rgb(15 23 42 / 0.18);
+    transform: translateY(-1px);
+  }
+
+  .modal-footer-institutional .modal-action-icon--primary:hover:not(:disabled) {
+    border-color: rgb(var(--ihss-300-rgb));
+    background: linear-gradient(145deg, rgb(var(--ihss-100-rgb)), rgb(var(--ihss-300-rgb)));
+    color: rgb(var(--ihss-on-100-rgb));
+  }
+
+  .modal-footer-institutional .modal-action-icon--secondary:hover:not(:disabled) {
+    border-color: rgb(var(--ihss-on-modal-rgb) / 0.9);
+    background: rgb(var(--ihss-on-modal-rgb) / 0.28);
+    color: rgb(var(--ihss-on-modal-rgb));
+  }
+
+  .modal-footer-institutional .modal-action-icon--danger:hover:not(:disabled) {
+    border-color: rgb(153 27 27);
+    background: rgb(153 27 27);
+    color: rgb(255 255 255);
+  }
+
+  .modal-footer-institutional .modal-action-icon--success:hover:not(:disabled) {
+    border-color: rgb(22 101 52);
+    background: rgb(22 101 52);
+    color: rgb(255 255 255);
+  }
+
+  .modal-footer-institutional .modal-action-icon:focus-visible {
+    outline: 3px solid rgb(var(--modal-close-focus-rgb, var(--ihss-accent-rgb)));
+    outline-offset: 3px;
+    box-shadow: 0 0 0 2px rgb(var(--ihss-on-modal-rgb) / 0.95);
+  }
+
+  .modal-footer-institutional .modal-action-icon:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .modal-footer-institutional .modal-action-icon:disabled {
+    opacity: 0.78;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal-footer-institutional .modal-action-icon { transition: none; }
+  }
 
   /*
    * CONTROL DE CIERRE INSTITUCIONAL
