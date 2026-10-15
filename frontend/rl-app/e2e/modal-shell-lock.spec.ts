@@ -267,6 +267,22 @@ test('Crear Usuario hereda header y footer institucionales del theme sin modific
   const footer = modal.locator('.modal-footer-institutional');
   await expect(header).toBeVisible();
   await expect(footer).toBeVisible();
+  const saveButton = modal.getByRole('button', { name: 'Guardar usuario' });
+  const cancelButton = modal.getByRole('button', { name: 'Cancelar edición de usuario' });
+  await expect(saveButton).toBeVisible();
+  await expect(saveButton).toContainText('Guardar');
+  await expect(cancelButton).toContainText('Cancelar');
+  const saveIconMetrics = await saveButton.locator('app-action-icon svg').evaluate(icon => {
+    const bounds = icon.getBoundingClientRect();
+    const css = getComputedStyle(icon);
+    return { width: bounds.width, height: bounds.height, visibility: css.visibility, opacity: css.opacity, stroke: css.stroke };
+  });
+  expect(saveIconMetrics.width).toBeGreaterThanOrEqual(14);
+  expect(saveIconMetrics.height).toBeGreaterThanOrEqual(14);
+  expect(saveIconMetrics.visibility).toBe('visible');
+  expect(saveIconMetrics.opacity).toBe('1');
+  expect(saveIconMetrics.stroke).not.toBe('none');
+  expect(await saveButton.evaluate(element => getComputedStyle(element).opacity)).toBe('0.7');
 
   const redTheme = createSystemTheme('#991b1b', '#dc2626');
   await page.evaluate(properties => {

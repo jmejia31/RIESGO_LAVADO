@@ -454,12 +454,12 @@
           </div>
 
           <div class="modal-footer-institutional">
-            <button type="button" (click)="cerrarModalSlide()" title="Cancelar edición del slide" aria-label="Cancelar edición del slide" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors">
-            <app-action-icon action="cancel"></app-action-icon>
+            <button type="button" (click)="cerrarModalSlide()" title="Cancelar edición del slide" aria-label="Cancelar edición del slide" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50">
+            <app-action-icon action="cancel"></app-action-icon><span>Cancelar</span>
           </button>
             <button type="submit" [disabled]="slideForm.invalid || guardandoSlide()" title="Guardar slide" aria-label="Guardar slide"
-              class="px-4 py-2 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
-<app-action-icon action="save" [loading]="guardandoSlide()"></app-action-icon>
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-ihss-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-ihss-700 disabled:opacity-70">
+<app-action-icon action="save" [loading]="guardandoSlide()"></app-action-icon><span>{{ guardandoSlide() ? 'Guardando...' : 'Guardar slide' }}</span>
           </button>
           </div>
         </form>

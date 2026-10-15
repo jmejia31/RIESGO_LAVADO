@@ -621,8 +621,8 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-600/30" title="Cerrar Matriz completa" aria-label="Cerrar Matriz completa" (click)="cerrarMatrizCompleta()">
-            <app-action-icon action="close"></app-action-icon>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-ihss-600/30" title="Cerrar Matriz completa" aria-label="Cerrar Matriz completa" (click)="cerrarMatrizCompleta()">
+            <app-action-icon action="close"></app-action-icon><span>Cerrar</span>
           </button>
         </div>
       </div>
@@ -996,8 +996,8 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cerrar gestor de familias" aria-label="Cerrar gestor de familias" (click)="cerrarModalGestorFamilias()">
-            <app-action-icon action="close"></app-action-icon>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50" title="Cerrar gestor de familias" aria-label="Cerrar gestor de familias" (click)="cerrarModalGestorFamilias()">
+            <app-action-icon action="close"></app-action-icon><span>Cerrar</span>
           </button>
         </div>
       </div>
@@ -1126,8 +1126,8 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cerrar vista de evaluación" aria-label="Cerrar vista de evaluación" (click)="cerrarModalVer()">
-            <app-action-icon action="close"></app-action-icon>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50" title="Cerrar vista de evaluación" aria-label="Cerrar vista de evaluación" (click)="cerrarModalVer()">
+            <app-action-icon action="close"></app-action-icon><span>Cerrar</span>
           </button>
         </div>
       </div>
@@ -1273,17 +1273,17 @@
           }
         </div>
 
-        <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de evaluación" aria-label="Cancelar edición de evaluación" (click)="cerrarModalEditar()">
-            <app-action-icon action="cancel"></app-action-icon>
+        <div class="modal-footer-institutional flex-wrap">
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50" title="Cancelar edición de evaluación" aria-label="Cancelar edición de evaluación" (click)="cerrarModalEditar()">
+            <app-action-icon action="cancel"></app-action-icon><span>Cancelar</span>
           </button>
-          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
-          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Atrás" aria-label="Atrás" [disabled]="guardando() || bloqueEvaluacionActual() <= 1" (click)="volverBloqueEvaluacion()"><app-action-icon action="back"></app-action-icon></button>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 disabled:opacity-70" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon><span>Guardar borrador</span></button>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 disabled:opacity-70" title="Atrás" aria-label="Atrás" [disabled]="guardando() || bloqueEvaluacionActual() <= 1" (click)="volverBloqueEvaluacion()"><app-action-icon action="back"></app-action-icon><span>Anterior</span></button>
           <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
-                  class="px-4 py-2 bg-ihss-600 hover:bg-ihss-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl bg-ihss-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-ihss-700 disabled:opacity-70 sm:text-sm"
                   [disabled]="guardando()"
                   (click)="continuarBloqueEvaluacion()">
-            <app-action-icon action="next"></app-action-icon>
+            <app-action-icon action="next"></app-action-icon><span>Continuar</span>
           </button>
         </div>
       </div>
@@ -1371,8 +1371,8 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cerrar seguimiento" aria-label="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
-            <app-action-icon action="close"></app-action-icon>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50" title="Cerrar seguimiento" aria-label="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
+            <app-action-icon action="close"></app-action-icon><span>Cerrar</span>
           </button>
         </div>
       </div>
@@ -1512,16 +1512,16 @@
           </section>
         </div>
 
-        <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()">
-            <app-action-icon action="cancel"></app-action-icon>
+        <div class="modal-footer-institutional flex-wrap">
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()">
+            <app-action-icon action="cancel"></app-action-icon><span>Cancelar</span>
           </button>
-          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-800 disabled:opacity-70" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon><span>Guardar borrador</span></button>
           <button type="button" title="Continuar" aria-label="Continuar"
-                  class="px-4 py-2 bg-ihss-600 hover:bg-ihss-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl bg-ihss-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-ihss-700 disabled:opacity-70 sm:text-sm"
                   [disabled]="guardando()"
                   (click)="continuarBloqueEvaluacion()">
-                  <app-action-icon action="next"></app-action-icon>
+                  <app-action-icon action="next"></app-action-icon><span>Continuar</span>
           </button>
         </div>
       </div>
@@ -1547,11 +1547,11 @@
           <p class="rounded-xl border border-sky-200 bg-sky-50 p-4 text-xs leading-5 text-sky-900">Esta familia será seleccionada inicialmente al ingresar al módulo y al crear nuevas evaluaciones. Las evaluaciones existentes conservarán su versión histórica.</p>
         </div>
         <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/30" title="Cancelar configuración de familia predeterminada" aria-label="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
-            <app-action-icon action="cancel"></app-action-icon>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/30" title="Cancelar configuración de familia predeterminada" aria-label="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
+            <app-action-icon action="cancel"></app-action-icon><span>Cancelar</span>
           </button>
-          <button id="confirmar-familia-predeterminada" type="button" title="Confirmar familia predeterminada" aria-label="Confirmar familia predeterminada" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-900 text-white transition-colors hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-ihss-600/40 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="operacionPredeterminadaEnCurso()" (click)="confirmarFamiliaPredeterminada()">
-            <app-action-icon action="configure"></app-action-icon>
+          <button id="confirmar-familia-predeterminada" type="button" title="Confirmar familia predeterminada" aria-label="Confirmar familia predeterminada" class="inline-flex items-center justify-center gap-2 rounded-xl bg-ihss-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-ihss-600/40 disabled:cursor-not-allowed disabled:opacity-70" [disabled]="operacionPredeterminadaEnCurso()" (click)="confirmarFamiliaPredeterminada()">
+            <app-action-icon action="configure"></app-action-icon><span>Confirmar</span>
           </button>
         </div>
       </div>

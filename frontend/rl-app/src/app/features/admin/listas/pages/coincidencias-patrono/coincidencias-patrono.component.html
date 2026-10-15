@@ -282,8 +282,8 @@
       <!-- Pie del Modal -->
       <div class="modal-footer-institutional flex-wrap justify-between text-xs text-gray-500">
         <app-data-pagination [page]="paginaDetalleActual()" [pageSize]="registrosDetallePorPagina()" [totalRecords]="totalRegistrosDetalle()" itemLabel="registros del detalle" [disabled]="cargandoDetalle()" (pageChange)="cambiarPaginaDetalle($event)" />
-         <button (click)="cerrarModal()" title="Cerrar detalle de coincidencias" aria-label="Cerrar detalle de coincidencias" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-900 hover:bg-ihss-800 text-white transition-colors">
-            <app-action-icon action="close"></app-action-icon>
+         <button (click)="cerrarModal()" title="Cerrar detalle de coincidencias" aria-label="Cerrar detalle de coincidencias" class="inline-flex items-center justify-center gap-2 rounded-xl bg-ihss-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-ihss-800">
+            <app-action-icon action="close"></app-action-icon><span>Cerrar</span>
           </button>
       </div>
 

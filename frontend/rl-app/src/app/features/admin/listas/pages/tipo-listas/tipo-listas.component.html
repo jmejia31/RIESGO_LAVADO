@@ -144,12 +144,12 @@
           <!-- Botones de Acción -->
           <div class="modal-footer-institutional">
           <button type="button" (click)="cancelar()" [disabled]="guardando()" title="Cancelar edición del tipo de lista" aria-label="Cancelar edición del tipo de lista"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
-            <app-action-icon action="cancel"></app-action-icon>
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-70">
+            <app-action-icon action="cancel"></app-action-icon><span>Cancelar</span>
           </button>
             <button type="submit" [disabled]="guardando() || form.invalid" title="Guardar tipo de lista" aria-label="Guardar tipo de lista"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-600 hover:bg-ihss-700 disabled:opacity-50 text-white transition-colors shadow-sm">
-<app-action-icon action="save" [loading]="guardando()"></app-action-icon>
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-ihss-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-ihss-700 disabled:opacity-70">
+<app-action-icon action="save" [loading]="guardando()"></app-action-icon><span>{{ guardando() ? 'Guardando...' : 'Guardar tipo de lista' }}</span>
           </button>
           </div>
         </form>

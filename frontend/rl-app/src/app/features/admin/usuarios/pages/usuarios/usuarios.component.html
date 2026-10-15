@@ -318,16 +318,15 @@
           <!-- Footer Actions -->
           <div class="modal-footer-institutional">
             <button type="button" (click)="cancelar()" title="Cancelar edición de usuario" aria-label="Cancelar edición de usuario"
-              class="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors">
-            <app-action-icon action="cancel"></app-action-icon>
-          </button>
+              class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors">
+              <app-action-icon action="cancel" class="text-base"></app-action-icon><span>Cancelar</span>
+            </button>
             <button type="submit" title="Guardar usuario" aria-label="Guardar usuario"
               [disabled]="guardando() || form.invalid || estadoAd() === 'verificando' || (esDominio && (estadoAd() === 'no-existe' || estadoAd() === 'bloqueado' || estadoAd() === 'inactivo' || estadoAd() === 'error'))"
-              class="px-5 py-2 bg-ihss-600 text-white rounded-xl text-xs font-semibold hover:bg-ihss-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-              @if (guardando()) {
-              }
-            <app-action-icon action="save"></app-action-icon>
-          </button>
+              class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-ihss-600 text-white rounded-xl text-xs font-semibold hover:bg-ihss-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+              <app-action-icon action="save" [loading]="guardando()" class="text-base"></app-action-icon>
+              <span>{{ guardando() ? 'Guardando...' : 'Guardar' }}</span>
+            </button>
           </div>
         </form>
       </div>
