@@ -152,7 +152,7 @@ function declaredActionIcons(body: string): string[] {
 }
 
 describe('regla global de acciones con icono', () => {
-  it('mantiene iconos canónicos y nombres accesibles; los cierres de pie incluyen texto visible', () => {
+  it('mantiene iconos canónicos y nombres accesibles para acciones icon-only del footer', () => {
     const workingDirectory = cwd();
     const appRoot = join(workingDirectory, 'src', 'app');
     const canonicalActions = canonicalActionNames(appRoot);
@@ -175,11 +175,12 @@ describe('regla global de acciones con icono', () => {
         if (!hasIcon) violations.push(`${location}: missing semantic icon`);
         if (actionIconCount !== 1) violations.push(`${location}: expected exactly one canonical action icon`);
         const label = button.attrs.match(/(?:aria-label|attr\.aria-label)\s*=\s*["']([^"']+)["']/i)?.[1] ?? '';
-        const previousHeader = source.lastIndexOf('modal-header-institutional', button.offset);
-        const previousFooter = source.lastIndexOf('modal-footer-institutional', button.offset);
-        const currentDialog = source.lastIndexOf('<dialog', button.offset);
-        if (/cerrar|cancelar/i.test(label) && previousFooter > previousHeader && previousFooter > currentDialog && !text) {
-          violations.push(`${location}: footer close/cancel action requires visible text`);
+        const isModalFooterAction = /modal-footer-institutional|data-modal-shell-region\s*=\s*["']footer["']/i.test(
+          source.slice(Math.max(0, button.offset - 1200), button.offset)
+        );
+        const usesModalActionPrimitive = /\bmodal-action-icon\b/i.test(button.attrs);
+        if (isModalFooterAction && usesModalActionPrimitive && text) {
+          violations.push(`${location}: modal footer icon action contains visible text`);
         }
         for (const action of actionIcons) {
           if (!canonicalActions.has(action)) violations.push(`${location}: action "${action}" is not registered in the canonical icon catalog`);
