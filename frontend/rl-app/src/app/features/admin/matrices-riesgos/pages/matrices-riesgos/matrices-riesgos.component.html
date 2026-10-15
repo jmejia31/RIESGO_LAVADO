@@ -1055,8 +1055,8 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de familia" aria-label="Cancelar edición de familia" (click)="cerrarModalFamilia()">
-            <app-action-icon action="cancel"></app-action-icon>
+          <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50" title="Cancelar edición de familia" aria-label="Cancelar edición de familia" (click)="cerrarModalFamilia()">
+            <app-action-icon action="cancel"></app-action-icon><span>Cancelar</span>
           </button>
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-ihss-600 hover:bg-ihss-700 text-white rounded-xl transition-all shadow-sm disabled:opacity-50" title="Guardar familia" aria-label="Guardar familia" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">
             <app-action-icon action="save"></app-action-icon>
