@@ -1,3 +1,21 @@
+## Hotfix de acciones icon-only en footer de modales — COD
+
+- **Fecha/hora local:** 2026-10-15 12:00 -06:00 (America/Tegucigalpa).
+- **Autor:** COD (Codex).
+- **Rama / HEAD inicial:** `desarrollo`; `STARTING_HEAD=76e057dd6f040778fb3f0e1043aca019d270fbb6`; `origin/desarrollo` coincidía tras `git fetch`.
+- **Objetivo:** reemplazar las etiquetas visibles de acciones interactivas en footer por iconos canónicos con surface global, variante theme-driven, `aria-label`, `title`/tooltip, disabled distinguible y focus/hover; mantener handlers y negocio.
+- **Commits publicados en orden:** `f6ed197e` primitivo global; `ae7f9d3a` edición evaluación; `c1e3b783` y `858c98e1` validación compatible; `ccda4e97` nueva evaluación; `a6a12974` vista evaluación; `7287e903` usuarios; `fb986652` matriz completa; `2eca1c89` seguimiento evaluación; `5621a99b` previews; `52e6cd7b` Form Builder; `062aa0b3`, `869c2bcf`, `96cbf959`, `81cc6467`, `966c0a35` familias; `f6b87acb` Tipo Listas; `80e512da`, `48a52679`, `bb0c597d` Monitoreo; `c3efb86a` slides de Configuración; `982baa5e`, `b9783b8e` Coincidencias; `f2756a96` validador y fixtures; `36082e37` E2E responsive; `c13a8cec` capturas de tema/responsive. Cada commit se publicó con push normal, sin force.
+- **Archivos propios de esta intervención:** `frontend/rl-app/src/styles.css` (estándar ya añadido en el primer commit); templates de evaluación, Matrices, Usuarios, reportes, Form Builder, Familias, Tipo Listas, Monitoreo, Coincidencias y Configuración; `frontend/rl-app/e2e/modal-footer-icon-actions.spec.ts`; `tools/validate_modal_icon_contrast.js`, fixture `tools/validate_modal_icon_contrast.test.js`, `.github/workflows/quality-gates.yml`, `tools/run_quality_gates.ps1`; estándar de tema/modal, documento Block9, estado y esta bitácora.
+- **Gates locales ejecutados:** auditoría estática=38 acciones; icon-only=38; texto visible=0; aria faltante=0; tooltip faltante=0. Fixtures del validador=6/6. Playwright primitivo global=1/1, temas azul/rojo/verde/claro y viewport móvil. Frontend unitarias=881/881; lint/build PASS; build emitió únicamente warnings de presupuestos SCSS existentes; `npm audit`=0 vulnerabilidades.
+- **E2E local:** suite de 64: 62 passed, 1 omitido por Oracle XE local y 1 timeout con página en blanco bajo seis workers. El caso Nueva Evaluación aislado en un worker pasó 1/1. Las pruebas E2E de los commits anteriores constan como resultados de sus intervenciones inmediatas y no se vuelven a atribuir como ejecutadas en este cierre.
+- **Configuración de slides:** se migró Cancelar/Guardar y el validador acredita ambos. El E2E local intentado se redirigió al login por sesión expirada antes de mostrar el modal; se eliminó ese test fallido y se dejó intacta la autenticación. No se afirma verificación browser local de esa pantalla.
+- **Quality Gates remoto del código:** run `38782452658`, SHA `c13a8cece62264a82337f4bd60caaaa8e9dc6024`, terminó `completed/success`; pasó los gates, Oracle XE desechable y builds de contenedores. El commit documental y su CI final quedan como cierre de esta intervención.
+- **Artefactos:** `%USERPROFILE%\Documents\RIESGO_LAVADO\MODAL_FOOTER_ICON_STANDARD\20261015_1200\`; CSV con 38 acciones, JSON de auditoría, cinco screenshots del primitivo por tema/viewport y manifiesto de 13 archivos con SHA256 verificado. Baseline visual no capturado en esta intervención y registrado como tal.
+- **Preservación / seguridad:** producción no se consultó ni modificó; DML=0, DDL=0, apply=NO, cambio de esquema=NO. Sin cambios backend. Se preservan sin staging los cambios ajenos en `DatabaseEnvironmentGuard*`, `frontend/rl-app/tsconfig.json`, E2E y todos los untracked observados en precheck; no se usaron reset, clean, stash-all, `git add .` ni force push.
+- **Continuación:** CI del código certificado; publicar los documentos con commit explícito y esperar Quality Gates del SHA documental hasta `completed/success`.
+
+---
+
 ## Verificación CI de la enmienda de tema dinámico — Bloque 9 (COD)
 
 - **Fecha/hora local:** 2026-10-14 15:09 -06:00 (America/Tegucigalpa).

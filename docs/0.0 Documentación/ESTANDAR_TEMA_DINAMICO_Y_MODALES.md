@@ -23,7 +23,9 @@ No crear un sistema paralelo. Las clases canónicas son:
 - `modal-footer-institutional`
 - `modal-size-sm`, `modal-size-md`, `modal-size-lg`, `modal-size-xl`, `modal-size-workspace`
 
-Un modal nuevo debe usar esas clases y no definir colores de marca ni gradientes locales. El header aplica highlight radial, gradiente primario de tres tonos y geometría CSS discreta; el footer usa un gradiente más calmado de la misma familia. Header, footer, cierre, botón primario, foco y acentos heredan el tema global. El cuerpo, backdrop y sombras conservan sus superficies neutras; error, éxito y advertencia mantienen su semántica. Los cierres y cancelaciones del footer incluyen texto visible; las acciones conservan su icono canónico, nombre accesible y jerarquía.
+Un modal nuevo debe usar esas clases y no definir colores de marca ni gradientes locales. El header aplica highlight radial, gradiente primario de tres tonos y geometría CSS discreta; el footer usa un gradiente más calmado de la misma familia. Header, footer, cierre, botón primario, foco y acentos heredan el tema global. El cuerpo, backdrop y sombras conservan sus superficies neutras; error, éxito y advertencia mantienen su semántica. **Toda acción interactiva del footer usa un botón icon-only** con `app-action-icon`, una variante `modal-action-icon--*`, `aria-label` y `title`/tooltip; no muestra texto de acción permanente. El texto `sr-only` es opcional y no reemplaza esos atributos. Esto incluye cerrar, cancelar, guardar, navegar, descargar, aprobar y rechazar. Los textos informativos y metadatos del footer no son acciones y permanecen legibles.
+
+Las variantes globales son `primary`, `secondary`, `neutral`, `danger` y `success`. Los controles miden 44×44 px, conservan un icono de 20 px, superficie y borde identificables en estado disabled, hover y foco visible. Las superficies y foregrounds consumen el tema dinámico; los templates no deben añadir utilitarios locales de color ni estilos inline de marca.
 
 Los templates con header estándar no requieren cambios para cambiar de tema. Los shells antiguos que usaban un header distinto deben migrar una vez a la clase canónica; el resto de su estructura, bindings, eventos, tamaños y scroll se conserva. La Matriz completa no tiene override de color propio.
 
@@ -39,10 +41,11 @@ Quality Gates ejecuta:
 node tools/validate_institutional_modal_standard.js
 node tools/validate_dynamic_system_theme.js
 node tools/validate_premium_modal_design.js
+node --test tools/validate_modal_icon_contrast.test.js
 node tools/validate_modal_icon_contrast.js
 ```
 
-También se ejecutan desde `tools/run_quality_gates.ps1`. Los validadores comprueban shell único, herencia de tokens, gradientes multicapa, ausencia de overrides locales y cierre icon-only en pies. Los tests del servicio verifican carga, guardado, recarga y fallback; Playwright verifica cambio de tema en un modal abierto, Matriz completa, Crear Usuario, contraste, geometría, móvil y desktop.
+También se ejecutan desde `tools/run_quality_gates.ps1`. Los validadores comprueban shell único, herencia de tokens, gradientes multicapa, ausencia de overrides locales y acciones icon-only por cada botón del footer. Los fixtures prueban texto visible, falta de aria, falta de tooltip, botón solo de texto, override de marca, `sr-only` y región compuesta. Playwright mide superficie, icono, contraste, disabled, foco y cambio de tema; las regresiones de los modales comprueban que cerrar, guardar y navegar preservan sus handlers.
 
 ## Tono y contraste del estándar premium
 
@@ -58,7 +61,7 @@ Un shell puede estar dividido entre una plantilla de página y componentes hijos
 
 El Form Builder declara `data-modal-composite-shell="true"` en su host dentro del diálogo. Su toolbar publica la región `header` con `modal-header-institutional`; las cuatro variantes del contenido declaran la región `body`; el statusbar publica la región `footer` con `modal-footer-institutional`. La fila de título/versión hereda el gradiente dinámico; la navegación del workspace permanece neutra. El botón de cierre usa los tokens globales sólo dentro de un header institucional marcado.
 
-Las acciones del footer del Form Builder muestran texto. En modo editable se conservan `Cancelar` y `Guardar` con sus mismos outputs; en solo lectura se muestra `Cerrar` y se omite el botón Guardar que no puede actuar. El header conserva su cierre icon-only accesible.
+Las acciones del footer del Form Builder son icon-only. En modo editable se conservan los botones Cancelar y Guardar con sus mismos outputs; en solo lectura se muestra Cerrar y se omite Guardar, que no puede actuar. Cada botón tiene nombre accesible y tooltip; los textos de estado (solo lectura, versión y conteos) siguen visibles. El header conserva su cierre icon-only accesible.
 
 ### Contrato y validación por instancia
 
