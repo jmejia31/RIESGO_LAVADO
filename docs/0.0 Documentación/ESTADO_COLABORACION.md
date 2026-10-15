@@ -1,4 +1,15 @@
-# Estado vigente — Bloques 1–9 cerrados; enmienda de tema dinámico certificada (COD) — 2026-10-14 15:09 -06:00
+# Estado vigente — hotfix funcional aprobado; refinamiento premium de modales esperando CI final (COD) — 2026-10-14 18:24 -06:00
+
+- **Secuencia activa:** hotfix funcional iniciado desde `9c01a37c49c505fd747d2aba0a3a3fa674a56ff3`, terminado en `4d68b31982f4dc264ec71e275cadff8c5e5a97a5`; Quality Gates `38654102982` completed/success. Sólo después se inició la fase visual premium. No se abrió otro bloque.
+- **Tema modal:** 22 modales auditados, todos con shell institucional; outliers=0, overrides locales=0. Los gradientes usan tonos monocromáticos calculados desde el primario; el secundario es accent controlado. Live switch azul/rojo/verde/claro, contraste AA, desktop 1280×900 y móvil 390×844 pasaron en Playwright.
+- **Acciones:** etiquetas de footer visibles para cierres/cancelaciones; iconografía canónica y acciones accesibles. 286 iconos auditados; cierres icon-only de pie=0. Crear Usuario Guardar permanece visible en estado disabled de validación y se distingue de acciones enabled.
+- **Validadores incorporados:** `validate_institutional_modal_standard.js`, `validate_dynamic_system_theme.js`, `validate_premium_modal_design.js`, `validate_modal_icon_contrast.js`, integrados al workflow y al gate local. Resultado local: 4/4 PASS.
+- **Regresión local:** backend 972/972; frontend 877/877; Playwright 53 passed y un test Oracle XE omitido localmente; lint/build/npm audit PASS. El bloque Oracle/browser permanece respaldado por el Quality Gates funcional `38654102982`; el CI final de los cambios visuales/documentales está pendiente de push.
+- **Artefactos:** `%USERPROFILE%\Documents\RIESGO_LAVADO\UI_MODAL_PREMIUM_STANDARD\20261014_173649\` contiene capturas, inventario modal/tema, contraste, gradientes, responsive, iconos y resumen. Actualizar SHA256SUMS tras fijar el resultado CI final.
+- **Git:** local `desarrollo` en `c64a503a` antes de los commits documentales; remoto sigue en `4d68b319`. Conservar sin stage las modificaciones ajenas y untracked que lista la bitácora. Siguiente paso: terminar docs, validar diff, commit focalizado, fetch/confirmar base, push normal, esperar CI y actualizar aquí SHA/run/conclusión. No cerrar con CI pendiente.
+- **Seguridad:** producción no se consultó ni modificó; DML=0, DDL=0, apply=NO, schema change=NO, bypass productivo=NO. Bloques 1–9 permanecen cerrados por sus certificaciones; `NEXT_BLOCK_STATUS=NOT_STARTED`.
+
+## Estado anterior — verificación de tema dinámico (COD) — 2026-10-14 15:09 -06:00
 
 - **Estados:** BLOCK1–BLOCK9=CLOSED; NEXT_BLOCK_STATUS=NOT_STARTED. La enmienda de tema dinámico de modales forma parte del mismo Bloque 9 y no reabre los demás bloques.
 - **Publicación de código:** rama desarrollo; commit funcional `7180b0950142542356ba15a2d2d7de2b2ef529ae`, igual a `origin/desarrollo` en el run. Quality Gates `38636545241` para ese SHA terminó `completed/success` en 9m28s. El registro documental actual se publicará en un commit separado y su propio CI se verificará antes del handoff.

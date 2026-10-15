@@ -10,7 +10,7 @@ Los valores de respaldo son `#1e3a8a` y `#1d4ed8`. Un HEX inválido conserva el 
 
 `system-theme.util.ts` genera de forma determinista los once niveles `ihss-50` a `ihss-950` mezclando el primario configurado con blanco o negro en proporciones fijas por nivel. Los tonos `on-*` seleccionan el foreground negro o blanco con mayor contraste. Tailwind consume tokens CSS, no hex azules fijos.
 
-Las superficies de header y footer modal conservan el matiz institucional y se oscurecen sólo cuando hace falta para mantener texto claro con contraste WCAG AA de al menos 4.5:1. `colorSecundario` participa en el segundo extremo del gradiente y en los tokens de foco/acento. Las pruebas incluyen azul, rojo, verde, claro, oscuro e inválido.
+Las superficies del header y footer modal usan tonos calculados de la misma familia cromática del primario. El generador ajusta luminosidad en HSL y conserva el matiz; el contraste de texto se calcula con luminancia relativa. `colorSecundario` genera su propia escala y alimenta el acento, el highlight y el foco cuando la combinación es armónica. Si primario y secundario difieren mucho, el gradiente principal permanece en la familia primaria y el secundario no introduce un salto de matiz. Las pruebas incluyen azul, rojo, verde, claro, oscuro e inválido.
 
 ## Estándar modal existente
 
@@ -23,7 +23,7 @@ No crear un sistema paralelo. Las clases canónicas son:
 - `modal-footer-institutional`
 - `modal-size-sm`, `modal-size-md`, `modal-size-lg`, `modal-size-xl`, `modal-size-workspace`
 
-Un modal nuevo debe usar esas clases y no definir colores de marca. Header, footer, cierre, botón primario, foco y acentos heredan el tema global. El cuerpo, backdrop y sombras conservan sus superficies neutras; error, éxito y advertencia mantienen su semántica. Los controles existentes y la jerarquía de acciones de los footers no se sustituyen.
+Un modal nuevo debe usar esas clases y no definir colores de marca ni gradientes locales. El header aplica highlight radial, gradiente primario de tres tonos y geometría CSS discreta; el footer usa un gradiente más calmado de la misma familia. Header, footer, cierre, botón primario, foco y acentos heredan el tema global. El cuerpo, backdrop y sombras conservan sus superficies neutras; error, éxito y advertencia mantienen su semántica. Los cierres y cancelaciones del footer incluyen texto visible; las acciones conservan su icono canónico, nombre accesible y jerarquía.
 
 Los templates con header estándar no requieren cambios para cambiar de tema. Los shells antiguos que usaban un header distinto deben migrar una vez a la clase canónica; el resto de su estructura, bindings, eventos, tamaños y scroll se conserva. La Matriz completa no tiene override de color propio.
 
@@ -38,6 +38,16 @@ Quality Gates ejecuta:
 ```powershell
 node tools/validate_institutional_modal_standard.js
 node tools/validate_dynamic_system_theme.js
+node tools/validate_premium_modal_design.js
+node tools/validate_modal_icon_contrast.js
 ```
 
-También se ejecutan desde `tools/run_quality_gates.ps1`. Los tests del servicio verifican carga, guardado, recarga y fallback; los E2E verifican cambio de tema en un modal abierto, Matriz completa, contraste, geometría, móvil y desktop.
+También se ejecutan desde `tools/run_quality_gates.ps1`. Los validadores comprueban shell único, herencia de tokens, gradientes multicapa, ausencia de overrides locales y cierre icon-only en pies. Los tests del servicio verifican carga, guardado, recarga y fallback; Playwright verifica cambio de tema en un modal abierto, Matriz completa, Crear Usuario, contraste, geometría, móvil y desktop.
+
+## Tono y contraste del estándar premium
+
+Los tokens `--ihss-modal-primary-start-rgb`, `--ihss-modal-primary-mid-rgb` y `--ihss-modal-primary-end-rgb` se generan desde `colorPrimario`; `--ihss-modal-secondary-*` se genera desde `colorSecundario`. `--ihss-modal-highlight-rgb` sólo usa el secundario si su matiz queda dentro del umbral armónico configurado. Los valores iniciales de respaldo viven en `:root`; las reglas del shell consumen tokens y no copian hex ni RGB de marca.
+
+El texto del header usa foreground dinámico con contraste normal mínimo de 4.5:1; el borde y el botón de cierre mantienen contraste de interfaz visible. Los estados de error, éxito y advertencia conservan color semántico. El cuerpo de contenido permanece blanco/neutro y los tamaños, scroll, capas y handlers no cambian al cambiar tema.
+
+La auditoría actual contó 22 modales, todos con shell institucional; no quedan shells no estándar ni overrides locales de marca. Los valores azul, rojo, verde y claro pasaron los cálculos de contraste y las pruebas de actualización en vivo. Un modal ya conforme hereda el diseño sin cambios de template.

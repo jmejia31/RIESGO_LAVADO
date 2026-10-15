@@ -99,3 +99,19 @@ El run `38618732332` confirmó success pero no retuvo ese archivo: la ejecución
 - Calidad: backend `965/965`, frontend `858/858`, Playwright `49 passed`, Block6 Oracle `3/3`, Block8 Oracle `1/1`; contrato 82/82, auditoría Block9 `23/23`, checks `12/12`. Quality Gates final `38625179428` terminó `success`.
 - Estándar de archivos: `InstitutionalFileUploadComponent` único, cinco superficies migradas, cero inputs file fuera del shared; Monitoreo de Listas es la referencia visual y Matrices también consume el mismo componente. La guía transversal está en [Estándar institucional de carga de archivos](../0.0%20Documentación/ESTANDAR_INSTITUCIONAL_CARGA_ARCHIVOS.md).
 - Seguridad: producción no fue consultada ni modificada; DML=0, DDL=0, apply=NO, esquema sin cambios y bypass productivo=NO. `BLOCK1_STATUS`–`BLOCK9_STATUS=CLOSED`; `NEXT_BLOCK_STATUS=NOT_STARTED`.
+
+## Refinamiento premium del tema modal — ejecución consolidada
+
+La enmienda mantiene un solo shell institucional. `colorPrimario` genera el gradiente principal monocromático en tonos oscuro/medio/claro; `colorSecundario` genera su familia propia y sólo aporta highlight/foco cuando la transición es armónica. Los selectores del shell consumen tokens centrales; los valores de reserva viven en `:root`. No hay gradientes ni colores de marca por modal.
+
+El header combina highlight radial, gradiente multicapa y geometría CSS con `pointer-events:none`. El footer usa una gradación más calmada de la familia primaria. El cuerpo sigue neutro; cierre, foco, botones de marca e iconos heredan tokens. Cierres y cancelaciones de pie presentan texto visible y conservan el icono de catálogo. La geometría, scroll, formularios y handlers se mantienen.
+
+Inventario actual: 22 modales, 22 con shell canónico, cero outliers y cero overrides locales. Playwright verificó cambio en vivo azul→rojo→claro→verde en el mismo modal, consistencia de geometría y 390×844 sin overflow. Crear Usuario comprobó etiqueta Guardar, estado disabled diferenciable y SVG del botón con 16 px, visible y opacidad propia 1. Matriz completa pasó el cambio azul/rojo. Contraste calculado con luminancia relativa: título, subtítulo y acciones ≥4.5:1; control de cierre ≥3:1 en los cuatro temas.
+
+Validadores en Quality Gates: `validate_institutional_modal_standard.js`, `validate_dynamic_system_theme.js`, `validate_premium_modal_design.js` y `validate_modal_icon_contrast.js`. En esta corrida: shell 22/22, 286 usos del icono canónico auditados y cero cierres icon-only de pie.
+
+Artefactos fuera de Git: `%USERPROFILE%\Documents\RIESGO_LAVADO\UI_MODAL_PREMIUM_STANDARD\20261014_173649\`. Incluye inventario global, auditoría de tema/gradiente/contraste/responsive, capturas azul/roja/clara y hashes. Verificación local de esta corrida: backend 972/972, frontend 877/877, lint/build/audit PASS, Playwright 53 passed y 1 Oracle XE omitido localmente; el workflow CI final aún debe verificar el SHA que incorpore esta documentación.
+
+La suite funcional completa sigue certificada por el checkpoint CI anterior; consolidado mantiene todos los estados, los errores editoriales no contaminan la página y la edición histórica conserva claves legacy. No se reabren los Bloques 1–9 ni se inicia el siguiente bloque.
+
+Seguridad de esta corrida: producción no se consultó ni modificó; DML=0, DDL=0, apply=NO, sin cambio de esquema ni bypass de autenticación.
