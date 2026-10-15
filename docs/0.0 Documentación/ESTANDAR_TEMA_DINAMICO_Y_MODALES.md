@@ -51,3 +51,19 @@ Los tokens `--ihss-modal-primary-start-rgb`, `--ihss-modal-primary-mid-rgb` y `-
 El texto del header usa foreground dinámico con contraste normal mínimo de 4.5:1; el borde y el botón de cierre mantienen contraste de interfaz visible. Los estados de error, éxito y advertencia conservan color semántico. El cuerpo de contenido permanece blanco/neutro y los tamaños, scroll, capas y handlers no cambian al cambiar tema.
 
 La auditoría actual contó 22 modales, todos con shell institucional; no quedan shells no estándar ni overrides locales de marca. Los valores azul, rojo, verde y claro pasaron los cálculos de contraste y las pruebas de actualización en vivo. Un modal ya conforme hereda el diseño sin cambios de template.
+
+## Shells modales compuestos
+
+Un shell puede estar dividido entre una plantilla de página y componentes hijos. Cada región delegada debe declararse con `data-modal-shell-region` y consumir las clases canónicas; una etiqueta `<header>` arbitraria nunca acredita un header institucional.
+
+El Form Builder declara `data-modal-composite-shell="true"` en su host dentro del diálogo. Su toolbar publica la región `header` con `modal-header-institutional`; las cuatro variantes del contenido declaran la región `body`; el statusbar publica la región `footer` con `modal-footer-institutional`. La fila de título/versión hereda el gradiente dinámico; la navegación del workspace permanece neutra. El botón de cierre usa los tokens globales sólo dentro de un header institucional marcado.
+
+Las acciones del footer del Form Builder muestran texto. En modo editable se conservan `Cancelar` y `Guardar` con sus mismos outputs; en solo lectura se muestra `Cerrar` y se omite el botón Guardar que no puede actuar. El header conserva su cierre icon-only accesible.
+
+### Contrato y validación por instancia
+
+`tools/modal_composite_shell_contract.json` registra el selector compuesto y las plantillas que deben probar su header, body y footer. El validador comprueba cada instancia modal por separado y resuelve componentes compuestos únicamente si están marcados y registrados. No considera un `<header>` genérico ni la presencia de una clase en otra parte del archivo como evidencia.
+
+`node --test tools/validate_institutional_modal_standard.test.js` contiene los casos de modal correcto junto a modal incorrecto, header anidado arbitrario, composite válido, composite sin registro, modal inline y regiones compuestas incompletas. Quality Gates ejecuta esas pruebas y los tres validadores modales.
+
+La causa corregida fue que el wrapper exterior del Form Builder era estándar, pero su toolbar y statusbar anidados conservaban fondos blancos; el token de cierre blanco se aplicaba a la barra blanca. Ahora ambas superficies consumen el shell global, y los tokens de cierre se limitan a regiones institucionales certificadas.
