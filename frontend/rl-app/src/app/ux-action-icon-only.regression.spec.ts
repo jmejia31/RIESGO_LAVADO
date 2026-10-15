@@ -151,8 +151,8 @@ function declaredActionIcons(body: string): string[] {
   });
 }
 
-describe('regla global de acciones icon-only', () => {
-  it('mantiene acciones productivas sin texto visible y con nombre/tooltip accesibles', () => {
+describe('regla global de acciones con icono', () => {
+  it('mantiene iconos canónicos y nombres accesibles; los cierres de pie incluyen texto visible', () => {
     const workingDirectory = cwd();
     const appRoot = join(workingDirectory, 'src', 'app');
     const canonicalActions = canonicalActionNames(appRoot);
@@ -170,11 +170,17 @@ describe('regla global de acciones icon-only', () => {
         const actionIcons = declaredActionIcons(button.body);
         const hasIcon = /<app-action-icon\b/i.test(button.body);
         const location = `${relative(workingDirectory, path)}:${lineAt(source, button.offset)}`;
-        if (text) violations.push(`${location}: visible text "${text}"`);
         if (!hasAriaLabel) violations.push(`${location}: missing aria-label`);
         if (!hasTooltip) violations.push(`${location}: missing title/tooltip`);
         if (!hasIcon) violations.push(`${location}: missing semantic icon`);
         if (actionIconCount !== 1) violations.push(`${location}: expected exactly one canonical action icon`);
+        const label = button.attrs.match(/(?:aria-label|attr\.aria-label)\s*=\s*["']([^"']+)["']/i)?.[1] ?? '';
+        const previousHeader = source.lastIndexOf('modal-header-institutional', button.offset);
+        const previousFooter = source.lastIndexOf('modal-footer-institutional', button.offset);
+        const currentDialog = source.lastIndexOf('<dialog', button.offset);
+        if (/cerrar|cancelar/i.test(label) && previousFooter > previousHeader && previousFooter > currentDialog && !text) {
+          violations.push(`${location}: footer close/cancel action requires visible text`);
+        }
         for (const action of actionIcons) {
           if (!canonicalActions.has(action)) violations.push(`${location}: action "${action}" is not registered in the canonical icon catalog`);
         }
