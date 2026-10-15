@@ -107,6 +107,7 @@ test('modal footer icon primitive stays visible, themed and accessible across va
       expect(button.iconHeight).toBe(20);
       if (!button.disabled) expect(button.opacity).toBe('1');
     }
+    await expect(footer.locator('button')).toHaveText(['', '', '', '', '', '']);
     expect(primary.backgroundImage).toContain('linear-gradient');
     expect(primary.color).not.toBe(secondary.color);
     expect(danger.color).toBe('rgb(255, 255, 255)');
@@ -145,4 +146,20 @@ test('modal footer icon primitive stays visible, themed and accessible across va
   const focus = await primary.evaluate(button => ({ style: getComputedStyle(button).outlineStyle, width: getComputedStyle(button).outlineWidth }));
   expect(focus.style).toBe('solid');
   expect(focus.width).toBe('3px');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobile = await footer.evaluate(element => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    buttons: Array.from(element.querySelectorAll('button'), button => {
+      const rect = button.getBoundingClientRect();
+      return { width: rect.width, height: rect.height, right: rect.right };
+    })
+  }));
+  expect(mobile.scrollWidth).toBeLessThanOrEqual(mobile.clientWidth);
+  for (const button of mobile.buttons) {
+    expect(button.width).toBeGreaterThanOrEqual(44);
+    expect(button.height).toBeGreaterThanOrEqual(44);
+    expect(button.right).toBeLessThanOrEqual(390);
+  }
 });
