@@ -110,7 +110,7 @@ Inventario actual: 22 modales, 22 con shell canónico, cero outliers y cero over
 
 Validadores en Quality Gates: `validate_institutional_modal_standard.js`, `validate_dynamic_system_theme.js`, `validate_premium_modal_design.js` y `validate_modal_icon_contrast.js`. En esta corrida: shell 22/22, 286 usos del icono canónico auditados y cero cierres icon-only de pie.
 
-Artefactos fuera de Git: `%USERPROFILE%\Documents\RIESGO_LAVADO\UI_MODAL_PREMIUM_STANDARD\20261014_173649\`. Incluye inventario global, auditoría de tema/gradiente/contraste/responsive, capturas azul/roja/clara y hashes. Verificación local de esta corrida: backend 972/972, frontend 877/877, lint/build/audit PASS, Playwright 53 passed y 1 Oracle XE omitido localmente; el workflow CI final aún debe verificar el SHA que incorpore esta documentación.
+Artefactos fuera de Git: `%USERPROFILE%\Documents\RIESGO_LAVADO\UI_MODAL_PREMIUM_STANDARD\20261014_173649\`. Incluye inventario global, auditoría de tema/gradiente/contraste/responsive, capturas azul/roja/clara y hashes. Verificación local de esta corrida: backend 972/972, frontend 877/877, lint/build/audit PASS, Playwright 53 passed y 1 Oracle XE omitido localmente. Quality Gates `38660281773` terminó `completed/success` para `e2f6c2ed49460bb9a508159ffab4de47d75af818`; Block7 Oracle/browser=1/1, mitigación/monitoreo/RBAC/evidencia Oracle PASS, rutas críticas mocked=0, Oracle XE Block6/Block8 PASS, contenedores PASS.
 
 La suite funcional completa sigue certificada por el checkpoint CI anterior; consolidado mantiene todos los estados, los errores editoriales no contaminan la página y la edición histórica conserva claves legacy. No se reabren los Bloques 1–9 ni se inicia el siguiente bloque.
 
