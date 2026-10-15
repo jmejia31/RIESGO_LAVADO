@@ -2594,3 +2594,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El run `38618732332` confirmó success de todos los gates; también mostró que una ejecución E2E posterior limpia `test-results`, así que no preservó el screenshot Matrix nombrado.
 - El E2E exporta ahora la captura a `RUNNER_TEMP/block9-browser-evidence` y el workflow sube esa carpeta junto a Playwright results. Falta verificar descarga y hashes del artifact en el CI actualizado.
 # Estado vigente — Bloques 1–9 cerrados (COD) — 2026-10-14 14:04 -06:00
+
+## Correctivo visual de Microfase 4 — resultado y continuación (COD, 2026-10-15 15:37 -06:00)
+
+- `d110b156` → commit `d4d24915f623b19533d15caa7ca6bd9c63f01da6` (`fix(ui): deepen dynamic institutional modal gradients`), publicado en `origin/desarrollo`; Quality Gates `38810127682` concluyó `completed/success` sobre el SHA exacto.
+- El ajuste cambió tokens derivados por `colorPrimario/colorSecundario` y capas globales; misma familia cromática, sin nuevo color institucional fijo. Comparación visual del mismo modal: header antes `#172D6D/#203D8B/#2F53BB`, después `#0F1D45/#1F3A89/#3F63CB/#456BD6`; la variación se distingue a simple vista. Stops del header mantienen contraste de texto blanco muestreado ≥4.85:1. Footer también es más perceptible y usa start/mid/end dinámicos; acciones se asientan en superficies de contraste propio.
+- Verificación local: frontend 887/887; lint/build PASS; npm audit 0; E2E focalizados 10 ejecuciones PASS; institutional modal 22/22; premium/theme validators PASS; fixtures iconos 8/8 y modales 6/6; UTF-8 y `git diff --check` PASS.
+- Browser visual verificado: Matriz completa, evaluación nueva/editar/vista, Form Builder, usuarios, configuración de slides, tipo de lista, detalle Familia/Catálogo y confirmación. Configuración de slides pudo abrirse con sesión y API mocks en Chromium. Las superficies read-only ajenas a las migradas se inventariaron de forma estática; sin conversión masiva, requieren revisión visual individual si entran a alcance.
+- Ruta de estilos globales confirmada: `frontend/rl-app/src/styles.css`; `frontend/rl-app/src/app/styles.css` no existe. El error estaba sólo en el reporte anterior.
+- Artefactos externos: `%USERPROFILE%\Documents\RIESGO_LAVADO\MICROFASE_4\20261015_02`; `SHA256SUMS_VERIFIED=PASS` (23 archivos). Incluye comparación de gradiente, prototipo, screenshots before/after, CSV de superficies/read-only y pasos manuales de doble monitor.
+- Límites físicos: zoom de navegador 80/100/125 y doble monitor `NOT_EXECUTED` por no disponer de verificación física. No se falseó PASS; los pasos exactos están en el artefacto manual.
+- Cambios ajenos preservados sin stage ni commit: `DatabaseEnvironmentGuard*`, `login-and-routing.spec.ts`, `modal-shell-lock.spec.ts`, `tsconfig.json` y untracked. Producción no consultada ni modificada; DML=0, DDL=0.
+- **Siguiente punto:** Microfase 4 visual correctiva cerrada para las superficies verificadas; pruebas físicas siguen pendientes de ejecución por el propietario. No iniciar autorización microfases 1–3 ni Block 10.
