@@ -858,7 +858,20 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     await page.getByRole('button', { name: 'Generar reporte PDF de la matriz consolidada' }).click();
     const preview = page.locator('[data-report-preview]');
     await expect(preview).toBeVisible();
-    await expect(preview.getByRole('button', { name: 'Descargar reporte revisado' })).toBeVisible();
+    const pdfFooter = preview.locator('.modal-footer-institutional');
+    const pdfClose = pdfFooter.getByRole('button', { name: 'Cerrar vista previa' });
+    const pdfDownload = pdfFooter.getByRole('button', { name: 'Descargar reporte revisado' });
+    await expect(pdfFooter.locator('button')).toHaveCount(2);
+    for (const [button, title] of [[pdfClose, 'Cerrar vista previa'], [pdfDownload, 'Descargar reporte revisado']] as const) {
+      await expect(button).toBeVisible();
+      await expect(button).toHaveAttribute('title', title);
+      await expect(button).toHaveClass(/modal-action-icon/);
+      await expect(button).toHaveText('');
+      await expect(button.locator('app-action-icon')).toHaveCount(1);
+      const bounds = await button.boundingBox();
+      expect(bounds?.width).toBeGreaterThanOrEqual(44);
+      expect(bounds?.height).toBeGreaterThanOrEqual(44);
+    }
     const box = await preview.locator('.modal-container-card').boundingBox();
     expect(box).not.toBeNull();
     if (!box) throw new Error('No se pudo medir el preview PDF.');
@@ -868,11 +881,21 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
       expect(box.width).toBeGreaterThanOrEqual(Math.min(viewport.width * 0.9, 1510 * 0.9));
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await preview.getByRole('button', { name: 'Cerrar vista previa' }).first().click();
+    await pdfClose.click();
     await expect(preview).toBeHidden();
 
     await page.getByRole('button', { name: 'Exportar matriz consolidada a Excel' }).click();
     await expect(preview).toBeVisible();
+    const excelFooter = preview.locator('.modal-footer-institutional');
+    const excelClose = excelFooter.getByRole('button', { name: 'Cerrar vista previa' });
+    const excelDownload = excelFooter.getByRole('button', { name: 'Descargar reporte revisado' });
+    await expect(excelFooter.locator('button')).toHaveCount(2);
+    await expect(excelClose).toHaveText('');
+    await expect(excelDownload).toHaveText('');
+    await expect(excelClose).toHaveClass(/modal-action-icon/);
+    await expect(excelDownload).toHaveClass(/modal-action-icon/);
+    await expect(excelClose.locator('app-action-icon')).toHaveCount(1);
+    await expect(excelDownload.locator('app-action-icon')).toHaveCount(1);
     await expect(preview.locator('[data-excel-preview-table]')).toBeVisible();
     await expect(preview.getByText('Coincidencias', { exact: true })).toBeVisible();
     await expect(preview.getByRole('columnheader', { name: 'Código' })).toBeVisible();
@@ -881,7 +904,7 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     const downloadPromise = page.waitForEvent('download');
     await preview.getByRole('button', { name: 'Descargar reporte revisado' }).click();
     expect((await downloadPromise).suggestedFilename()).toBe('Matriz_Riesgos.xlsx');
-    await preview.getByRole('button', { name: 'Cerrar vista previa' }).first().click();
+    await excelClose.click();
   }
 });
 
