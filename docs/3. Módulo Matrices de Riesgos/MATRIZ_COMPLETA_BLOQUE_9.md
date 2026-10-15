@@ -114,4 +114,6 @@ Artefactos fuera de Git: `%USERPROFILE%\Documents\RIESGO_LAVADO\UI_MODAL_PREMIUM
 
 La suite funcional completa sigue certificada por el checkpoint CI anterior; consolidado mantiene todos los estados, los errores editoriales no contaminan la página y la edición histórica conserva claves legacy. No se reabren los Bloques 1–9 ni se inicia el siguiente bloque.
 
+El commit documental final `208b8e2ca010ae9704b87b8cf99893e283b8c156` también pasó Quality Gates en el run `38661183895` (`completed/success`). La ejecución final repitió los validadores, E2E, Oracle XE de Bloques 6/8, pasos Oracle/browser de Bloques 7/9 y builds de contenedores.
+
 Seguridad de esta corrida: producción no se consultó ni modificó; DML=0, DDL=0, apply=NO, sin cambio de esquema ni bypass de autenticación.

@@ -1,4 +1,6 @@
-# Estado vigente — hotfix funcional y estándar premium certificados en CI (COD) — 2026-10-14 18:38 -06:00
+# Estado vigente — hotfix funcional y estándar premium certificados en CI (COD) — 2026-10-14 18:47 -06:00
+
+- **Cierre remoto final:** `HEAD=origin/desarrollo=208b8e2ca010ae9704b87b8cf99893e283b8c156`, rama `desarrollo`; Quality Gates `38661183895` para ese SHA terminó `completed/success`. Oracle XE de Bloques 6/8 y los pasos Oracle/browser de Bloques 7/9, validadores modales, pruebas, E2E y contenedores pasaron. Se preservaron cambios ajenos sin stage. Producción DML=0, DDL=0, apply=NO; Bloques 1–9 cerrados, siguiente bloque no iniciado.
 
 - **Secuencia activa:** hotfix funcional iniciado desde `9c01a37c49c505fd747d2aba0a3a3fa674a56ff3`, terminado en `4d68b31982f4dc264ec71e275cadff8c5e5a97a5`; Quality Gates `38654102982` completed/success. Sólo después se inició la fase visual premium. No se abrió otro bloque.
 - **Tema modal:** 22 modales auditados, todos con shell institucional; outliers=0, overrides locales=0. Los gradientes usan tonos monocromáticos calculados desde el primario; el secundario es accent controlado. Live switch azul/rojo/verde/claro, contraste AA, desktop 1280×900 y móvil 390×844 pasaron en Playwright.
