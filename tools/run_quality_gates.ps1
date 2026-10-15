@@ -69,6 +69,20 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'DYNAMIC_THEME_VALIDATOR=PASS'
 
+$premiumModalValidator = Join-Path $RepositoryRoot 'tools/validate_premium_modal_design.js'
+& node $premiumModalValidator
+if ($LASTEXITCODE -ne 0) {
+    throw "El diseno premium institucional de modales fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'PREMIUM_MODAL_VALIDATOR=PASS'
+
+$modalIconValidator = Join-Path $RepositoryRoot 'tools/validate_modal_icon_contrast.js'
+& node $modalIconValidator
+if ($LASTEXITCODE -ne 0) {
+    throw "El contraste de iconos y acciones modales fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'ICON_CONTRAST_VALIDATOR=PASS'
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'

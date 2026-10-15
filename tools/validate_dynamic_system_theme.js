@@ -62,7 +62,7 @@ for (const level of levels) {
 if (!service.includes('config.colorPrimario') || !service.includes('config.colorSecundario')) failures.push('Configuración no aplica ambos colores fuente');
 if ((service.match(/this\.aplicarTemaSistema\(/g) || []).length !== 2) failures.push('Carga y guardado no comparten el único método de aplicación del tema');
 if (!theme.includes('relativeLuminance') || !theme.includes('contrastRatio') || !theme.includes('darkSurfaceWithWhiteContrast')) failures.push('Falta generación central y accesible de superficies/contraste');
-if (!styles.includes('rgb(var(--ihss-modal-primary-rgb') || !styles.includes('rgb(var(--ihss-modal-accent-rgb')) failures.push('El shell modal no consume los tokens primario y secundario');
+if (!styles.includes('rgb(var(--ihss-modal-primary-start-rgb') || !styles.includes('rgb(var(--ihss-modal-primary-mid-rgb') || !styles.includes('rgb(var(--ihss-modal-primary-end-rgb') || !styles.includes('rgb(var(--ihss-modal-highlight-rgb')) failures.push('El shell modal no consume el gradiente primario y el accent dinámico controlado');
 if (!styles.includes('rgb(var(--ihss-on-modal-rgb')) failures.push('El shell modal no usa foreground dinámico');
 if (!styles.includes('--modal-close-focus-rgb: var(--ihss-accent-rgb)')) failures.push('El foco del control de cierre no hereda el accent configurado');
 if (!/\.btn-primary[\s\S]*?color:\s*rgb\(var\(--ihss-on-700-rgb/.test(styles)) failures.push('El botón primario no consume foreground de contraste de su superficie dinámica');

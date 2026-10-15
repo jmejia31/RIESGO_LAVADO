@@ -9,6 +9,10 @@
   --ihss-on-accent-rgb: 255 255 255;
   --ihss-modal-primary-rgb: 30 58 138;
   --ihss-modal-accent-rgb: 29 78 216;
+  --ihss-modal-primary-start-rgb: 24 46 110;
+  --ihss-modal-primary-mid-rgb: 30 58 138;
+  --ihss-modal-primary-end-rgb: 67 91 159;
+  --ihss-modal-highlight-rgb: 29 78 216;
   --ihss-on-modal-rgb: 255 255 255;
   --ihss-50-rgb: 246 247 251;
   --ihss-on-50-rgb: 15 23 42;
@@ -159,16 +163,16 @@
     overflow: hidden;
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
     background:
-      radial-gradient(ellipse at 88% 2%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.2), transparent 43%),
+      radial-gradient(ellipse at 88% 2%, rgb(var(--ihss-modal-highlight-rgb) / 0.2), transparent 43%),
       linear-gradient(112deg,
-        rgb(var(--ihss-modal-primary-start-rgb, 24 46 110)) 0%,
-        rgb(var(--ihss-modal-primary-mid-rgb, 30 58 138)) 56%,
-        rgb(var(--ihss-modal-primary-end-rgb, 67 91 159)) 100%) !important;
+        rgb(var(--ihss-modal-primary-start-rgb)) 0%,
+        rgb(var(--ihss-modal-primary-mid-rgb)) 56%,
+        rgb(var(--ihss-modal-primary-end-rgb)) 100%) !important;
     padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.42);
+    border-bottom: 1px solid rgb(var(--ihss-modal-highlight-rgb) / 0.42);
     flex-shrink: 0;
   }
   :where([class~="bg-ihss-500"][class~="text-white"]) { color: rgb(var(--ihss-on-500-rgb, 255 255 255)) !important; }
@@ -184,7 +188,7 @@
     z-index: 0;
     pointer-events: none;
     inset: 0;
-    background: radial-gradient(ellipse at 92% 5%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.12), transparent 44%);
+    background: radial-gradient(ellipse at 92% 5%, rgb(var(--ihss-modal-highlight-rgb) / 0.12), transparent 44%);
   }
   .modal-header-institutional::before,
   .modal-container-card > header::before {
@@ -198,7 +202,7 @@
     right: -8%;
     border-radius: 42%;
     transform: rotate(14deg);
-    background: linear-gradient(135deg, transparent 35%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.1) 36% 63%, transparent 64%);
+    background: linear-gradient(135deg, transparent 35%, rgb(var(--ihss-modal-highlight-rgb) / 0.1) 36% 63%, transparent 64%);
   }
   .modal-header-institutional > *,
   .modal-container-card > header > * {
@@ -228,9 +232,9 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgb(var(--ihss-on-modal-rgb, 255 255 255) / 0.26);
+    border: 1px solid rgb(var(--ihss-on-modal-rgb) / 0.26);
     border-radius: 1rem;
-    background: rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.2);
+    background: rgb(var(--ihss-modal-highlight-rgb) / 0.2);
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
     box-shadow: inset 0 1px rgb(255 255 255 / 0.12), 0 8px 18px rgb(15 23 42 / 0.12);
   }
@@ -246,17 +250,17 @@
     isolation: isolate;
     color: rgb(var(--ihss-on-modal-rgb, 255 255 255));
     background:
-      radial-gradient(ellipse at 96% 100%, rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.08), transparent 48%),
+      radial-gradient(ellipse at 96% 100%, rgb(var(--ihss-modal-highlight-rgb) / 0.08), transparent 48%),
       linear-gradient(112deg,
-        rgb(var(--ihss-modal-primary-start-rgb, 24 46 110)) 0%,
-        rgb(var(--ihss-modal-primary-mid-rgb, 30 58 138)) 72%,
-        rgb(var(--ihss-modal-primary-start-rgb, 24 46 110)) 100%) !important;
+        rgb(var(--ihss-modal-primary-start-rgb)) 0%,
+        rgb(var(--ihss-modal-primary-mid-rgb)) 72%,
+        rgb(var(--ihss-modal-primary-start-rgb)) 100%) !important;
     padding: 0.75rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 0.625rem;
-    border-top: 1px solid rgb(var(--ihss-modal-highlight-rgb, 29 78 216) / 0.3);
+    border-top: 1px solid rgb(var(--ihss-modal-highlight-rgb) / 0.3);
     flex-shrink: 0;
   }
   .modal-footer-institutional > * { position: relative; z-index: 1; }

@@ -129,6 +129,8 @@ jobs:
         run: |
           node tools/validate_institutional_modal_standard.js
           node tools/validate_dynamic_system_theme.js
+          node tools/validate_premium_modal_design.js
+          node tools/validate_modal_icon_contrast.js
 
       - name: Validate exact matrices object inventory
         shell: pwsh

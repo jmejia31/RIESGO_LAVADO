@@ -50,10 +50,11 @@ for (const file of htmlFiles) {
   if (!headerCount && !(customHeaderCount && containerCount)) failures.push(`${relative} carece de header institucional o header de shell reconocido`);
 }
 
-const canonicalHeader = styles.match(/\.modal-header-institutional[\s\S]*?\n  }/);
-const canonicalFooter = styles.match(/\.modal-footer-institutional[\s\S]*?\n  }/);
-if (!canonicalHeader || !canonicalHeader[0].includes('--ihss-modal-primary-rgb') || !canonicalHeader[0].includes('--ihss-modal-accent-rgb')) failures.push('Header institucional no consume tema dinámico');
-if (!canonicalFooter || !canonicalFooter[0].includes('--ihss-modal-primary-rgb') || !canonicalFooter[0].includes('--ihss-modal-accent-rgb')) failures.push('Footer institucional no consume tema dinámico');
+const canonicalHeader = styles.match(/\.modal-header-institutional,[\s\S]*?\n  }/);
+const canonicalFooter = styles.match(/\.modal-footer-institutional\s*\{[\s\S]*?\n  }/);
+const requiredPrimaryStops = ['--ihss-modal-primary-start-rgb', '--ihss-modal-primary-mid-rgb', '--ihss-modal-primary-end-rgb'];
+if (!canonicalHeader || !canonicalHeader[0].includes('linear-gradient') || !requiredPrimaryStops.every(token => canonicalHeader[0].includes(token)) || !canonicalHeader[0].includes('--ihss-modal-highlight-rgb')) failures.push('Header institucional no consume los tonos dinámicos del primario');
+if (!canonicalFooter || !canonicalFooter[0].includes('linear-gradient') || !canonicalFooter[0].includes('--ihss-modal-primary-start-rgb') || !canonicalFooter[0].includes('--ihss-modal-primary-mid-rgb') || !canonicalFooter[0].includes('--ihss-modal-highlight-rgb')) failures.push('Footer institucional no consume tonos dinámicos del primario');
 if (canonicalHeader && /background(?:-color)?\s*:\s*(?:#fff(?:fff)?\b|white\b)/i.test(canonicalHeader[0])) failures.push('Header institucional conserva fondo blanco hardcodeado');
 if (canonicalFooter && /background(?:-color)?\s*:\s*(?:#fff(?:fff)?\b|white\b)/i.test(canonicalFooter[0])) failures.push('Footer institucional conserva fondo blanco hardcodeado');
 if (!styles.includes('.modal-container-card > header')) failures.push('El header directo de tarjeta modal no hereda el estándar');
