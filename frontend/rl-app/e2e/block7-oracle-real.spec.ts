@@ -589,7 +589,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await page.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
   const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
   await expect(followUpModal).toBeVisible();
-  await expect(followUpModal.getByText('Borrador', { exact: true })).toBeVisible();
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
   const firstDestinations = followUpModal.locator('#seg-nuevo-estado option');
   await expect(firstDestinations).toHaveCount(1);
   await expect(firstDestinations.first()).toHaveValue('EN_REVISION');
@@ -603,7 +603,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const reviewState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
   expect(reviewState.ok()).toBeTruthy();
   expect((await reviewState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('EN_REVISION');
-  await expect(followUpModal.getByText('En revisión', { exact: true })).toBeVisible();
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('En revisión');
   const reviewDestinations = followUpModal.locator('#seg-nuevo-estado option');
   await expect(reviewDestinations).toHaveCount(3);
   await expect(reviewDestinations).not.toContainText('En revisión');
@@ -618,7 +618,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   evaluation.state = 'OBSERVADA';
   const observedState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
   expect((await observedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
-  await expect(followUpModal.getByText('Observada', { exact: true })).toBeVisible();
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Observada');
   await expect(followUpModal.locator('#seg-nuevo-estado option')).toHaveCount(1);
   await expect(followUpModal.locator('#seg-nuevo-estado option').first()).toHaveValue('BORRADOR');
 
