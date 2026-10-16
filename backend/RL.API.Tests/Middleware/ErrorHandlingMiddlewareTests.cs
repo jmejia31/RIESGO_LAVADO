@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using RL.API.Exceptions;
 using RL.API.Middleware;
@@ -10,6 +13,37 @@ namespace RL.API.Tests.Middleware;
 [SupportedOSPlatform("windows")]
 public sealed class ErrorHandlingMiddlewareTests
 {
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Production")]
+    public async Task Invoke_ExcepcionTecnicaEnCualquierEntorno_DevuelveContratoSeguroYConservaLog(string environmentName)
+    {
+        const string detalleSensible = "ORA-00942 | SELECT * FROM SECRET_TABLE | C:\\internal\\secret.config | Server=internal-db | Password=FakeSecretForTest | Internal.Namespace.SecretRepository";
+        const string traceId = "trace-safe-error-500";
+        var exception = new InvalidOperationException(detalleSensible);
+        var logger = new CapturingLogger<ErrorHandlingMiddleware>();
+        var environment = new TestHostEnvironment(environmentName);
+
+        var (context, body) = await EjecutarAsync(exception, traceId, environment, logger);
+        using var response = System.Text.Json.JsonDocument.Parse(body);
+
+        Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+        Assert.Equal("application/problem+json", context.Response.ContentType);
+        Assert.Equal(StatusCodes.Status500InternalServerError, response.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal("Ocurrió un error interno en el servidor. Por favor intente más tarde.", response.RootElement.GetProperty("detail").GetString());
+        Assert.Equal(traceId, response.RootElement.GetProperty("traceId").GetString());
+        Assert.DoesNotContain(detalleSensible, body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ORA-00942", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SELECT * FROM SECRET_TABLE", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("C:\\internal\\secret.config", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Password=FakeSecretForTest", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Internal.Namespace.SecretRepository", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("StackTrace", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("InnerException", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Same(exception, logger.Exception);
+        Assert.Contains(traceId, logger.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Invoke_ExcepcionNoControlada_OcultaDetalleYDevuelveTraceId()
     {
@@ -97,11 +131,16 @@ public sealed class ErrorHandlingMiddlewareTests
         Assert.DoesNotContain(mensajeInterno, body, StringComparison.Ordinal);
     }
 
-    private static async Task<(DefaultHttpContext Context, string Body)> EjecutarAsync(Exception exception, string traceId)
+    private static async Task<(DefaultHttpContext Context, string Body)> EjecutarAsync(
+        Exception exception,
+        string traceId,
+        IHostEnvironment? environment = null,
+        ILogger<ErrorHandlingMiddleware>? logger = null)
     {
         var middleware = new ErrorHandlingMiddleware(
             _ => throw exception,
-            NullLogger<ErrorHandlingMiddleware>.Instance);
+            logger ?? NullLogger<ErrorHandlingMiddleware>.Instance,
+            environment);
         var context = new DefaultHttpContext
         {
             TraceIdentifier = traceId,
@@ -114,5 +153,29 @@ public sealed class ErrorHandlingMiddlewareTests
         using var reader = new StreamReader(context.Response.Body);
         var body = await reader.ReadToEndAsync();
         return (context, body);
+    }
+
+    private sealed class TestHostEnvironment(string environmentName) : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = environmentName;
+        public string ApplicationName { get; set; } = nameof(ErrorHandlingMiddlewareTests);
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public Exception? Exception { get; private set; }
+        public string? Message { get; private set; }
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => NullLogger<T>.Instance.BeginScope(state);
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Exception = exception;
+            Message = formatter(state, exception);
+        }
     }
 }

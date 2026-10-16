@@ -83,14 +83,12 @@ public class ErrorHandlingMiddleware
                 break;
 
             // InvalidOperationException y cualquier excepción técnica no clasificada son 500.
-            // En Development se conserva el detalle para diagnóstico local; Producción/Staging reciben fallback fijo.
+            // El detalle se conserva en logs; ningún entorno lo devuelve al cliente.
             default:
                 statusCode = StatusCodes.Status500InternalServerError;
                 title = "Error interno del servidor";
                 type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
-                detail = env != null && env.IsDevelopment()
-                    ? exception.Message
-                    : DefaultInternalErrorMessage;
+                detail = DefaultInternalErrorMessage;
                 break;
         }
 
