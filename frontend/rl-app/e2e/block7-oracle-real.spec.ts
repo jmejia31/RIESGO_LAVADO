@@ -592,7 +592,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
   const firstDestinations = followUpModal.locator('#seg-nuevo-estado option');
   await expect(firstDestinations).toHaveCount(1);
-  await expect(firstDestinations.first()).toHaveValue('EN_REVISION');
+  await expect(followUpModal.locator('#seg-nuevo-estado')).toHaveValue('EN_REVISION');
   await page.locator('#seg-motivo').fill('Envío a revisión de prueba');
   await page.locator('#seg-nuevo-estado').selectOption('EN_REVISION');
   const draftToReview = page.waitForResponse(response => response.request().method() === 'POST'
