@@ -9,6 +9,7 @@ using RL.API.Features.Listas.Contracts;
 using RL.API.Infrastructure.Caching;
 using RL.API.Infrastructure.Database;
 using RL.API.Infrastructure.Http;
+using RL.API.Infrastructure.Files;
 using RL.API.Shared.Results;
 
 namespace RL.API.Features.Listas.Persistence
@@ -1984,38 +1985,25 @@ namespace RL.API.Features.Listas.Persistence
             cmd.Parameters.Add(new OracleParameter("id", tipoListaCautelaId));
 
             string? tipoArchivoEsperado = null;
-
             await using var reader = await cmd.ExecuteReaderAsync();
             if (await reader.ReadAsync())
-            {
                 tipoArchivoEsperado = reader["TIPO_ARCHIVO"]?.ToString();
-            }
 
             if (string.IsNullOrWhiteSpace(tipoArchivoEsperado))
-            {
                 return (false, "No se encontró la configuración del tipo de lista de cautela.");
-            }
 
-            var extension = System.IO.Path.GetExtension(archivo.FileName).ToLowerInvariant();
+            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
             var tipoEsperadoNormalizado = tipoArchivoEsperado.ToLowerInvariant().Replace(".", "");
             var extNormalizada = extension.Replace(".", "");
-
-            // Permitir variaciones de excel
-            if (tipoEsperadoNormalizado == "xls" || tipoEsperadoNormalizado == "xlsx")
-            {
-                if (extNormalizada != "xls" && extNormalizada != "xlsx")
-                {
-                    return (false, $"El tipo de archivo ({extension}) no coincide con el formato de Excel esperado.");
-                }
-            }
-            else if (extNormalizada != tipoEsperadoNormalizado)
-            {
+            var excelEsperado = tipoEsperadoNormalizado is "xls" or "xlsx";
+            if (excelEsperado ? extNormalizada is not ("xls" or "xlsx") : extNormalizada != tipoEsperadoNormalizado)
                 return (false, $"El tipo de archivo ({extension}) no coincide con el formato esperado (.{tipoEsperadoNormalizado}).");
-            }
 
-            return (true, "El archivo es válido.");
+            var validationError = FileUploadPolicyValidator.Validate(archivo, FileUploadPolicies.ListImport());
+            return validationError is null
+                ? (true, "El archivo es válido.")
+                : (false, validationError);
         }
-
         private string GetNacionalidadOFAC(string str)
         {
             if (!string.IsNullOrEmpty(str))

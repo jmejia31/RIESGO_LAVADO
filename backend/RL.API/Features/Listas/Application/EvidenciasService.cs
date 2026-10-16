@@ -3,8 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Features.Listas.Persistence;
+using RL.API.Infrastructure.Files;
 using RL.API.Shared.Results;
-using System.IO.Compression;
 
 namespace RL.API.Features.Listas.Application;
 
@@ -26,18 +26,6 @@ public sealed class EvidenciasService : IEvidenciasService
         [".docx"] = new[] { "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/octet-stream" },
         [".xls"] = new[] { "application/vnd.ms-excel", "application/octet-stream" },
         [".xlsx"] = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip", "application/octet-stream" }
-    };
-
-    private static readonly Dictionary<string, byte[][]> EvidenceSignatures = new(StringComparer.OrdinalIgnoreCase)
-    {
-        [".pdf"] = new[] { new byte[] { 0x25, 0x50, 0x44, 0x46 } },
-        [".png"] = new[] { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A } },
-        [".jpg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
-        [".jpeg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
-        [".doc"] = new[] { new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 } },
-        [".xls"] = new[] { new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 } },
-        [".docx"] = new[] { new byte[] { 0x50, 0x4B, 0x03, 0x04 }, new byte[] { 0x50, 0x4B, 0x05, 0x06 }, new byte[] { 0x50, 0x4B, 0x07, 0x08 } },
-        [".xlsx"] = new[] { new byte[] { 0x50, 0x4B, 0x03, 0x04 }, new byte[] { 0x50, 0x4B, 0x05, 0x06 }, new byte[] { 0x50, 0x4B, 0x07, 0x08 } }
     };
 
     private readonly IListasRepository _repo;
@@ -64,48 +52,17 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public string? ValidarArchivos(List<IFormFile>? archivos)
     {
-        // Proceso de validación documental: controla nombre, tamaño, extensión,
-        // MIME y firma real del archivo antes de permitir su almacenamiento.
         if (archivos == null || archivos.Count == 0) return null;
 
-        var maximoMb = ObtenerMaximoMb();
-        var maximoBytes = ObtenerMaximoBytes();
-        var mimeTypesPermitidos = ObtenerMimeTypesPermitidos();
-
+        var policy = FileUploadPolicies.Evidence(ObtenerMaximoBytes(), ObtenerMimeTypesPermitidos());
         foreach (var file in archivos)
         {
-            var nombreOriginal = Path.GetFileName(file.FileName);
-            if (string.IsNullOrWhiteSpace(nombreOriginal))
-                return "El nombre del archivo de evidencia no es válido.";
-
-            if (nombreOriginal.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-                return $"El archivo {nombreOriginal} contiene caracteres no permitidos en el nombre.";
-
-            if (file.Length <= 0)
-                return $"El archivo {nombreOriginal} está vacío.";
-
-            if (file.Length > maximoBytes)
-                return $"El archivo {nombreOriginal} supera el límite de {maximoMb} MB.";
-
-            var extension = Path.GetExtension(nombreOriginal);
-            if (string.IsNullOrWhiteSpace(extension) || !mimeTypesPermitidos.TryGetValue(extension, out var mimeTypes))
-                return $"El archivo {nombreOriginal} tiene una extensión no permitida.";
-
-            extension = extension.ToLowerInvariant();
-            var contentType = file.ContentType?.Trim();
-            if (string.IsNullOrWhiteSpace(contentType))
-                return $"No se pudo identificar el tipo de contenido del archivo {nombreOriginal}.";
-
-            if (!Array.Exists(mimeTypes, mime => string.Equals(mime, contentType, StringComparison.OrdinalIgnoreCase)))
-                return $"El archivo {nombreOriginal} tiene un tipo de contenido no permitido ({contentType}).";
-
-            if (DebeValidarFirmaArchivo() && !TieneFirmaPermitida(file, extension))
-                return $"El archivo {nombreOriginal} no coincide con la firma real esperada para {extension}.";
+            var error = FileUploadPolicyValidator.Validate(file, policy);
+            if (error is not null) return error;
         }
 
         return null;
     }
-
     public async Task GuardarArchivosAsync(long detalleId, List<IFormFile>? archivos, long usuarioId)
     {
         // Proceso de almacenamiento seguro: conserva el nombre original en metadata
@@ -318,60 +275,4 @@ public sealed class EvidenciasService : IEvidenciasService
             : null;
     }
 
-    private bool DebeValidarFirmaArchivo()
-    {
-        return _configuration.GetValue<bool?>("Evidencias:ValidateFileSignature") ?? true;
-    }
-
-    private static bool TieneFirmaPermitida(IFormFile file, string extension)
-    {
-        if (!EvidenceSignatures.TryGetValue(extension, out var signatures))
-            return false;
-
-        Span<byte> buffer = stackalloc byte[8];
-        using var stream = file.OpenReadStream();
-        var bytesRead = stream.Read(buffer);
-        if (bytesRead == 0) return false;
-
-        foreach (var signature in signatures)
-        {
-            if (bytesRead < signature.Length) continue;
-
-            var match = true;
-            for (var i = 0; i < signature.Length; i++)
-            {
-                if (buffer[i] != signature[i])
-                {
-                    match = false;
-                    break;
-                }
-            }
-
-            if (match) return TieneEstructuraOfficeOpenXml(file, extension);
-        }
-
-        return false;
-    }
-
-    private static bool TieneEstructuraOfficeOpenXml(IFormFile file, string extension)
-    {
-        if (extension != ".docx" && extension != ".xlsx")
-            return true;
-
-        try
-        {
-            using var stream = file.OpenReadStream();
-            using var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
-            var hasContentTypes = zip.GetEntry("[Content_Types].xml") != null;
-            var hasExpectedEntry = extension == ".docx"
-                ? zip.GetEntry("word/document.xml") != null
-                : zip.GetEntry("xl/workbook.xml") != null;
-
-            return hasContentTypes && hasExpectedEntry;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 }

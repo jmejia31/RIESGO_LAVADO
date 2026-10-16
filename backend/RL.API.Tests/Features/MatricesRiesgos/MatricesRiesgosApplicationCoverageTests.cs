@@ -607,8 +607,11 @@ public sealed class MatricesRiesgosApplicationCoverageTests
         repo.On(nameof(IMatricesRiesgosRepository.RegistrarEvidenciaFisicaAsync), _ => Task.FromResult(33L));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ =>
             Task.FromResult<EvidenciaDto?>(new EvidenciaDto { EviId = 33, EviNombreArchivo = "prueba.pdf" }));
-        var contenido = new MemoryStream(Encoding.UTF8.GetBytes("evidencia"));
-        var archivo = new FormFile(contenido, 0, contenido.Length, "archivo", "prueba.pdf");
+        var contenido = new MemoryStream(Encoding.UTF8.GetBytes("%PDF-1.4\n%%EOF"));
+        var archivo = new FormFile(contenido, 0, contenido.Length, "archivo", "prueba.pdf")
+        {
+            Headers = new HeaderDictionary { ["Content-Type"] = "application/pdf" }
+        };
 
         ServiceResult<EvidenciaDto> result = await service.CargarArchivoEvidenciaFisicaAsync(archivo, 9);
 
@@ -623,8 +626,11 @@ public sealed class MatricesRiesgosApplicationCoverageTests
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
         repo.On(nameof(IMatricesRiesgosRepository.RegistrarEvidenciaFisicaAsync), _ =>
             throw new InvalidOperationException("Fallo de persistencia"));
-        var contenido = new MemoryStream(Encoding.UTF8.GetBytes("evidencia"));
-        var archivo = new FormFile(contenido, 0, contenido.Length, "archivo", "fallo.pdf");
+        var contenido = new MemoryStream(Encoding.UTF8.GetBytes("%PDF-1.4\n%%EOF"));
+        var archivo = new FormFile(contenido, 0, contenido.Length, "archivo", "fallo.pdf")
+        {
+            Headers = new HeaderDictionary { ["Content-Type"] = "application/pdf" }
+        };
 
         ServiceResult<EvidenciaDto> result = await service.CargarArchivoEvidenciaFisicaAsync(archivo, 9);
 

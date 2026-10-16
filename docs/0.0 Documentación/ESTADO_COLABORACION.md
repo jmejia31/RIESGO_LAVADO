@@ -2698,3 +2698,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Cambios propios: `auth.interceptor.ts` elimina solo el manejo global del 403; sus specs comprueban propagación sin navegación; `matrices-authorization.spec.ts` comprueba que un 403 del clonado da feedback dentro del modal y que una ruta sin módulo redirige a Acceso Denegado.
 - Verificación ejecutada: specs focales de interceptor/guards/AuthService 26/26; E2E Chromium de autorización 3/3 (incluye guard de módulo y 403 local); suite frontend 919/919; ESLint PASS; build PASS; `git diff --check` PASS. La build mantiene cuatro advertencias preexistentes de presupuesto SCSS y una dependencia CommonJS `exceljs`; ninguna proviene de los archivos P0-B.
 - 401 conserva el flujo existente de renovación de sesión; no se modificó backend, contrato API, roles ni autorización por acción. No se detectó redirección general de 403 en interceptores. `P0_B_STATUS=PENDING_CI`; falta publicar este cambio con Quality Gates del SHA exacto. P0-C no iniciado hasta concluir CI. Producción no consultada/modificada; DML=0, DDL=0; Block 10 no iniciado.
+
+## PRE-BLOQUE 10 - estado vigente de P0-C (COD) - 2026-10-16 10:10 -06:00
+
+- P0-A PASS; P0-B PASS en Quality Gates `38926101031`, SHA `da08e1338e06bb724d9cd409898c6c116420d236`. Fase 0 sigue cerrada, no reabierta.
+- P0-C implementa una politica backend compartida para las cinco rutas `IFormFile` encontradas. Se validaron firmas/estructura, MIME declarado por allowlist, extension, tamano y nombre/ruta segura. Evidencia: tests focales 94/94, backend 994/994, build Release PASS, validadores de uploads/estructura/docs PASS, diff-check PASS. Build reporta 939 warnings de analyzers en la solucion; no hubo warnings en archivos de produccion P0-C ni en los nuevos archivos de prueba.
+- P0-C esta `PENDING_CI`, cambios locales aun no publicados. No iniciar P0-D hasta CI de SHA exacto success. La decodificacion completa y archivos de imagen truncados se verifican en P0-D.
+- Cambios preexistentes tracked/untracked siguen preservados y fuera de staging. Produccion no consultada/modificada; DML=0, DDL=0; Block 10 no iniciado.

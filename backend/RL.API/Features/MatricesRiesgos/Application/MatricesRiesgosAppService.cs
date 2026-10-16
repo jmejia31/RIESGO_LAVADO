@@ -12,18 +12,13 @@ using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
+using RL.API.Infrastructure.Files;
 using RL.API.Shared.Results;
 
 namespace RL.API.Features.MatricesRiesgos.Application;
 
 public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 {
-    private const long MaxEvidenceBytes = 10L * 1024L * 1024L;
-    private static readonly HashSet<string> AllowedEvidenceExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".pdf", ".png", ".jpg", ".jpeg", ".doc", ".docx", ".xls", ".xlsx"
-    };
-
     private readonly IMatricesRiesgosRepository _repo;
     private readonly IFormularioValidador _validador;
     private readonly IMatricesRiesgoService _calculador;
@@ -834,34 +829,18 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
     public async Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId)
     {
-        if (archivo is null || archivo.Length == 0)
-        {
-            return ServiceResult<EvidenciaDto>.BadRequest("El archivo cargado está vacío.");
-        }
+        var validationError = FileUploadPolicyValidator.Validate(archivo, FileUploadPolicies.Evidence());
+        if (validationError is not null)
+            return ServiceResult<EvidenciaDto>.BadRequest(validationError);
 
         string nombreOriginal = Path.GetFileName(archivo.FileName);
-        if (string.IsNullOrWhiteSpace(nombreOriginal)
-            || !string.Equals(nombreOriginal, archivo.FileName, StringComparison.Ordinal)
-            || nombreOriginal.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-        {
-            return ServiceResult<EvidenciaDto>.BadRequest("El nombre del archivo de evidencia no es válido.");
-        }
-
-        if (archivo.Length > MaxEvidenceBytes)
-        {
-            return ServiceResult<EvidenciaDto>.BadRequest("El archivo de evidencia supera el límite de 10 MB.");
-        }
-
         string extension = Path.GetExtension(nombreOriginal).ToLowerInvariant();
-        if (!AllowedEvidenceExtensions.Contains(extension))
-        {
-            return ServiceResult<EvidenciaDto>.BadRequest("La extensión del archivo de evidencia no está permitida.");
-        }
-
         string uploadsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias");
         Directory.CreateDirectory(uploadsPath);
         string nombreFisico = $"{Guid.NewGuid()}{extension}";
-        string rutaCompleta = Path.Combine(uploadsPath, nombreFisico);
+        string? rutaCompleta = FileUploadPolicyValidator.ResolveSafePath(uploadsPath, nombreFisico);
+        if (rutaCompleta is null)
+            return ServiceResult<EvidenciaDto>.BadRequest("No se pudo resolver una ruta segura para guardar la evidencia.");
 
         try
         {
@@ -902,7 +881,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return new ServiceResult<EvidenciaDto>(false, null, $"No se pudo cargar la evidencia: {ex.Message}", 500);
         }
     }
-
     public async Task<ServiceResult<EvidenciaDto>> ObtenerEvidenciaFisicaAsync(long evidenciaId)
     {
         EvidenciaDto? evidencia = await _repo.ObtenerEvidenciaFisicaAsync(evidenciaId);

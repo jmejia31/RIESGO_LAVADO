@@ -4,6 +4,7 @@ using RL.API.Features.Configuracion.Application;
 using RL.API.Features.Configuracion.Contracts;
 using RL.API.Core.Security;
 using RL.API.Infrastructure.Http;
+using RL.API.Infrastructure.Files;
 using System.Security.Claims;
 
 namespace RL.API.Features.Configuracion;
@@ -124,31 +125,27 @@ public class ConfiguracionController : ControllerBase
     [AuditRequired("Carga de imagen de configuracion")]
     public async Task<IActionResult> SubirImagen(IFormFile archivo)
     {
-        if (archivo == null || archivo.Length == 0)
-            return BadRequest(new { success = false, mensaje = "No se ha seleccionado ningún archivo o el archivo está vacío" });
+        var validationError = FileUploadPolicyValidator.Validate(archivo, FileUploadPolicies.Images());
+        if (validationError is not null)
+            return BadRequest(new { success = false, mensaje = validationError });
 
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-        var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
-        if (!allowedExtensions.Contains(extension))
-            return BadRequest(new { success = false, mensaje = "Tipo de archivo no permitido. Solo se permiten imágenes (jpg, jpeg, png, gif, webp)" });
-
+        var extension = Path.GetExtension(Path.GetFileName(archivo.FileName)).ToLowerInvariant();
         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        if (!Directory.Exists(uploadsFolder))
-        {
-            Directory.CreateDirectory(uploadsFolder);
-        }
+        Directory.CreateDirectory(uploadsFolder);
 
         var nombreUnico = $"{Guid.NewGuid()}{extension}";
-        var rutaCompleta = Path.Combine(uploadsFolder, nombreUnico);
+        var rutaCompleta = FileUploadPolicyValidator.ResolveSafePath(uploadsFolder, nombreUnico);
+        if (rutaCompleta is null)
+            return BadRequest(new { success = false, mensaje = "No se pudo resolver una ruta segura para guardar la imagen." });
 
-        using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+        await using (var stream = new FileStream(rutaCompleta, FileMode.CreateNew, FileAccess.Write, FileShare.None))
         {
             await archivo.CopyToAsync(stream);
         }
 
         var urlRelativa = $"/uploads/{nombreUnico}";
         await _service.RegistrarCargaImagenAsync(
-            archivo.FileName,
+            Path.GetFileName(archivo.FileName),
             nombreUnico,
             urlRelativa,
             archivo.ContentType,
@@ -158,7 +155,6 @@ public class ConfiguracionController : ControllerBase
 
         return Ok(new { success = true, url = urlRelativa });
     }
-
     private long ObtenerUsuarioId()
     {
         return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

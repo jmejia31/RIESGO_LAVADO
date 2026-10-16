@@ -30,3 +30,15 @@ El HTML contiene cinco instancias de carga de usuario en esos cuatro templates. 
 ## Validación automática
 
 `node tools/validate_institutional_file_upload_standard.js` escanea TypeScript y templates Angular, falla ante un input de archivo crudo fuera del componente, exige un solo componente declarado y una sola implementación del texto canónico `Arrastra archivos aquí o haz clic`, y verifica los consumidores de Listas y Matrices. Quality Gates y el quality gate local ejecutan el validador para impedir regresiones.
+
+## Validacion backend compartida
+
+`backend/RL.API/Infrastructure/Files/FileUploadPolicy.cs` centraliza allowlists y validacion por familia; cada endpoint conserva sus reglas de negocio y delega aqui los controles comunes. La extension y el MIME declarado se contrastan con una allowlist, y el contenido se verifica mediante firma o estructura del formato. El backend no confia en que el nombre o el `Content-Type` enviado por el navegador prueben el formato real.
+
+| Familia | Superficies | Extensiones y limite | Validacion de contenido |
+|---|---|---|---|
+| Evidencias | Seguimientos de Listas y evidencia fisica de Matrices | PDF, PNG, JPG/JPEG, DOC/DOCX, XLS/XLSX; 10 MB por archivo, salvo limite configurado para evidencias de Listas | Firmas PDF, PNG, JPEG y OLE; estructura ZIP/XML de DOCX/XLSX con DTD prohibido |
+| Importacion de listas | Cautela | CSV, XML, XLS/XLSX; tope de aplicacion de 128 MiB (el servidor HTTP puede imponer un limite menor) | texto CSV sin bytes de control, XML con DTD prohibido y estructura de paquete para XLSX; el parser existente conserva la validacion funcional |
+| Imagenes | Slides de Configuracion | JPG/JPEG, PNG, GIF, WebP; 10 MiB | firmas y terminadores/longitud del formato; la verificacion de decodificacion de imagen se certifica en la politica especifica de Configuracion |
+
+Los nombres de archivo deben ser simples, sin separadores de ruta; los nombres persistidos se generan en el servidor y las rutas se resuelven dentro del directorio permitido. En Evidencias, la validacion de firma es obligatoria y ya no existe una opcion de configuracion para desactivarla. La carga de archivos de Configuracion tiene una certificacion especifica posterior para cubrir decodificacion y archivos truncados.
