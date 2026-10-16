@@ -428,9 +428,9 @@ test('abre Matrices de Riesgos con una sesión autenticada y contratos dinámico
   await page.goto('/matrices-riesgos');
 
   await expect(page).toHaveURL(/\/matrices-riesgos$/);
-  await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
+  await expect(page.locator('#titulo-matrices')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
-  await expect(page.getByText('BORRADOR', { exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Borrador', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Nueva evaluación' })).toBeVisible();
 });
 
@@ -439,7 +439,7 @@ test('crea y recarga un borrador parcial antes de avanzar por bloques', async ({
   await page.goto('/matrices-riesgos');
 
   await expect(page).toHaveURL(/\/matrices-riesgos$/);
-  await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
+  await expect(page.locator('#titulo-matrices')).toBeVisible();
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
   await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
   await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');

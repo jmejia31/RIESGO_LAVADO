@@ -827,6 +827,18 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
     public async Task<ServiceResult<List<FlujoEvaluacionDto>>> ObtenerFlujosEvaluacionAsync(long evaId) =>
         ServiceResult<List<FlujoEvaluacionDto>>.Ok(await _repo.ObtenerFlujosEvaluacionAsync(evaId));
 
+    public async Task<ServiceResult<TransicionesEvaluacionDto>> ObtenerTransicionesEvaluacionAsync(long evaId)
+    {
+        EvaluacionRiesgoDto? evaluacion = await _repo.ObtenerEvaluacionAsync(evaId);
+        if (evaluacion is null)
+            return ServiceResult<TransicionesEvaluacionDto>.NotFound($"No se encontró la evaluación ID {evaId}.");
+
+        string estadoActual = evaluacion.EvaEstado.Trim().ToUpperInvariant();
+        return ServiceResult<TransicionesEvaluacionDto>.Ok(new(
+            estadoActual,
+            EvaluacionWorkflow.ObtenerDestinosPermitidos(estadoActual)));
+    }
+
     public async Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId)
     {
         var validationError = FileUploadPolicyValidator.Validate(archivo, FileUploadPolicies.Evidence());

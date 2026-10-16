@@ -16,6 +16,7 @@ import {
   FamiliaPredeterminadaDto,
   FiltroReporteMatrices,
   FlujoEvaluacionDto,
+  TransicionesEvaluacionDto,
   MetodologiaFormulario,
   RespuestasFormulario,
   RiesgoReporteFila,
@@ -306,6 +307,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   motivoTransicion = '';
   nuevoEstado = 'EN_REVISION';
+  readonly errorSeguimiento = signal<string | null>(null);
+  readonly transicionesPermitidas = signal<string[]>([]);
   archivoEvidencia: File | null = null;
 
   readonly versionEditando = signal<VersionFormularioDto | null>(null);
@@ -2421,7 +2424,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   editarEvaluacion(evaluacion: EvaluacionRiesgoResumenDto): void {
     if ((evaluacion.estado || '').toUpperCase() !== 'BORRADOR') {
-      this.mostrarError('Solo se permite editar evaluaciones en estado BORRADOR.');
+      this.mostrarError('Solo se permite editar evaluaciones en estado Borrador.');
       return;
     }
 
@@ -2500,9 +2503,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   abrirModalSeguimiento(evaluacion: EvaluacionRiesgoResumenDto): void {
     this.limpiarAlertas();
+    this.errorSeguimiento.set(null);
     this.evaluacionResumenSeleccionada.set(evaluacion);
     this.motivoTransicion = '';
-    this.nuevoEstado = this.obtenerTransicionPorDefecto(evaluacion.estado);
+    this.transicionesPermitidas.set([]);
+    this.nuevoEstado = '';
+    this.cargarTransiciones(evaluacion.evaId);
     this.cargarFlujos(evaluacion.evaId);
     this.modalSeguimientoAbierto.set(true);
   }
@@ -2512,24 +2518,43 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.globalState.limpiarError();
   }
 
-  obtenerTransicionesValidas(estadoActual: string): string[] {
-    switch ((estadoActual || '').toUpperCase()) {
-      case 'BORRADOR':
-        return ['EN_REVISION'];
-      case 'EN_REVISION':
-        return ['OBSERVADA', 'APROBADA', 'RECHAZADA'];
-      case 'OBSERVADA':
-        return ['BORRADOR'];
-      case 'APROBADA':
-        return ['CERRADA'];
-      default:
-        return [];
-    }
+  obtenerTransicionesValidas(_estadoActual?: string): string[] {
+    return this.transicionesPermitidas();
   }
 
-  obtenerTransicionPorDefecto(estadoActual: string): string {
-    const validas = this.obtenerTransicionesValidas(estadoActual);
+  etiquetaEstadoEvaluacion(estado: string | null | undefined): string {
+    const etiquetas: Record<string, string> = {
+      BORRADOR: 'Borrador',
+      EN_REVISION: 'En revisión',
+      OBSERVADA: 'Observada',
+      APROBADA: 'Aprobada',
+      RECHAZADA: 'Rechazada',
+      CERRADA: 'Cerrada'
+    };
+    return etiquetas[(estado ?? '').trim().toUpperCase()] ?? 'Estado no reconocido';
+  }
+
+  obtenerTransicionPorDefecto(_estadoActual?: string): string {
+    const validas = this.transicionesPermitidas();
     return validas.length > 0 ? validas[0] : '';
+  }
+
+  cargarTransiciones(evaluacionId: number): void {
+    this.service.obtenerTransicionesEvaluacion(evaluacionId).subscribe({
+      next: (transiciones: TransicionesEvaluacionDto) => {
+        this.transicionesPermitidas.set(transiciones.destinosPermitidos);
+        this.nuevoEstado = this.obtenerTransicionPorDefecto();
+        const actual = this.evaluacionResumenSeleccionada();
+        if (actual?.evaId === evaluacionId) {
+          this.evaluacionResumenSeleccionada.set({ ...actual, estado: transiciones.estadoActual });
+        }
+      },
+      error: error => {
+        this.transicionesPermitidas.set([]);
+        this.nuevoEstado = '';
+        this.errorSeguimiento.set(this.obtenerMensajeError(error, 'No se pudieron consultar las transiciones permitidas.'));
+      }
+    });
   }
 
   guardarEvaluacion(): void {
@@ -2615,9 +2640,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const resumen = this.evaluacionResumenSeleccionada();
     if (!resumen) return;
 
-    this.limpiarAlertas();
+    this.errorSeguimiento.set(null);
     if (!this.nuevoEstado.trim()) {
-      this.mostrarError('Seleccione un estado de destino válido.');
+      this.errorSeguimiento.set('Seleccione un estado de destino válido.');
       return;
     }
 
@@ -2626,19 +2651,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: () => {
         this.guardando.set(false);
         this.globalState.limpiarError();
-        this.mostrarMensaje(`Estado de la evaluación #${resumen.evaId} actualizado a ${this.nuevoEstado} correctamente.`);
+        this.mostrarMensaje(`Estado de la evaluación #${resumen.evaId} actualizado a ${this.etiquetaEstadoEvaluacion(this.nuevoEstado)} correctamente.`);
         this.motivoTransicion = '';
         this.cargarEvaluaciones();
         this.cargarFlujos(resumen.evaId);
-        this.evaluacionResumenSeleccionada.set({
-          ...resumen,
-          estado: this.nuevoEstado
-        });
-        this.nuevoEstado = this.obtenerTransicionPorDefecto(this.nuevoEstado);
+        this.cargarTransiciones(resumen.evaId);
       },
       error: error => {
         this.guardando.set(false);
-        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo realizar la transición de estado.'));
+        this.errorSeguimiento.set(this.obtenerMensajeError(error, 'No se pudo realizar la transición de estado.'));
       }
     });
   }
@@ -2646,7 +2667,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cargarFlujos(evaluacionId: number): void {
     this.service.obtenerFlujos(evaluacionId).subscribe({
       next: flujos => this.flujos.set(flujos),
-      error: () => this.flujos.set([])
+      error: error => {
+        this.flujos.set([]);
+        this.errorSeguimiento.set(this.obtenerMensajeError(error, 'No se pudo cargar el historial de estados.'));
+      }
     });
   }
 

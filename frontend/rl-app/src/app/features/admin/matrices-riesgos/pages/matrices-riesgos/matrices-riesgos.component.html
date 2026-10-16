@@ -175,7 +175,7 @@
                         [class.bg-emerald-50]="evaluacion.estado === 'APROBADA'" [class.text-emerald-700]="evaluacion.estado === 'APROBADA'"
                         [class.bg-red-50]="evaluacion.estado === 'RECHAZADA'" [class.text-red-700]="evaluacion.estado === 'RECHAZADA'"
                         [class.bg-gray-100]="evaluacion.estado === 'CERRADA'" [class.text-gray-700]="evaluacion.estado === 'CERRADA'">
-                    {{ evaluacion.estado }}
+                    {{ etiquetaEstadoEvaluacion(evaluacion.estado) }}
                   </span>
                 </td>
                 <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.vri ?? '-' }}</td>
@@ -264,7 +264,7 @@
           <label for="consolidado-estado" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Estado</label>
           <select id="consolidado-estado" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoConsolidado()" (ngModelChange)="cambiarEstadoConsolidado($event)">
             <option value="TODOS">Todos los estados</option>
-            @for (estado of estadosConsolidado(); track estado) { <option [value]="estado">{{ estado }}</option> }
+            @for (estado of estadosConsolidado(); track estado) { <option [value]="estado">{{ etiquetaEstadoEvaluacion(estado) }}</option> }
           </select>
         </div>
         <app-page-size-selector [value]="registrosPorPaginaConsolidado()" [options]="opcionesRegistrosPorPagina" ariaLabel="Consolidado por página" (valueChange)="cambiarRegistrosPorPaginaConsolidado($event)" />
@@ -288,7 +288,7 @@
                 <td class="px-6 py-4 font-mono font-bold">{{ fila.vrr }}</td>
                 <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ etiquetaNivelRiesgo(fila.vrr) }}</span></td>
                 <td class="px-6 py-4">{{ etiquetaRespuestaRiesgo(fila.respuestaRiesgo) }}</td>
-                <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-ihss-50 text-ihss-700">{{ fila.estadoEvaluacion }}</span></td>
+                <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-ihss-50 text-ihss-700">{{ etiquetaEstadoEvaluacion(fila.estadoEvaluacion) }}</span></td>
                 <td class="px-6 py-4 font-mono">{{ fila.versionFormularioId }}</td>
                 <td class="px-6 py-4 text-center whitespace-nowrap">
                   <div class="inline-flex flex-nowrap items-center justify-center gap-1.5" data-consolidado-actions>
@@ -334,7 +334,7 @@
               @if (evaluacionResumenSeleccionada(); as resumenMatriz) {
                 <dl class="modal-metadata-card grid grid-cols-2 gap-x-5 gap-y-2 text-xs sm:grid-cols-4" data-modal-metadata-card>
                   <div><dt class="font-semibold text-gray-500">Código de Riesgo</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.riesgoCodigo }}</dd></div>
-                  <div><dt class="font-semibold text-gray-500">Estado workflow</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.estado }}</dd></div>
+                  <div><dt class="font-semibold text-gray-500">Estado workflow</dt><dd class="mt-0.5 font-bold text-gray-900">{{ etiquetaEstadoEvaluacion(resumenMatriz.estado) }}</dd></div>
                   <div><dt class="font-semibold text-gray-500">Versión</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.versionCodigo }} · v{{ resumenMatriz.versionNumero }}</dd></div>
                   <div><dt class="font-semibold text-gray-500">Fecha evaluación</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.fechaEval | date:'dd/MM/yyyy HH:mm' }}</dd></div>
                 </dl>
@@ -1095,7 +1095,7 @@
           <div class="modal-metadata-card grid grid-cols-2 gap-3 text-xs sm:grid-cols-4" data-modal-metadata-card>
             <div>
               <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">Estado</span>
-              <span class="font-bold text-gray-900">{{ evaluacionSeleccionada()?.evaEstado }}</span>
+              <span class="font-bold text-gray-900">{{ etiquetaEstadoEvaluacion(evaluacionSeleccionada()?.evaEstado) }}</span>
             </div>
             <div>
               <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">VRI (Inherente)</span>
@@ -1199,7 +1199,7 @@
               <span class="text-gray-500 font-semibold">Riesgo Institucional:</span>
               <span class="ml-1.5 font-bold text-gray-900">{{ evaluacionResumenSeleccionada()?.riesgoCodigo }} — {{ evaluacionResumenSeleccionada()?.riesgoNombre }}</span>
             </div>
-            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">BORRADOR</span>
+            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">{{ etiquetaEstadoEvaluacion(evaluacionResumenSeleccionada()?.estado) }}</span>
           </div>
           @if (actualizandoCalculo()) { <p class="text-xs text-ihss-700" role="status">Actualizando cálculo institucional…</p> }
           @if (errorCalculoPreview()) { <p class="text-xs text-red-700" role="alert">{{ errorCalculoPreview() }}</p> }
@@ -1311,7 +1311,7 @@
               Seguimiento de Evaluación #{{ evaluacionResumenSeleccionada()?.evaId }}
             </h3>
             <p class="text-xs text-gray-500">
-              {{ evaluacionResumenSeleccionada()?.riesgoCodigo }} · Estado Actual: <strong class="text-gray-900">{{ evaluacionResumenSeleccionada()?.estado }}</strong>
+              {{ evaluacionResumenSeleccionada()?.riesgoCodigo }} · Estado Actual: <strong class="text-gray-900">{{ etiquetaEstadoEvaluacion(evaluacionResumenSeleccionada()?.estado) }}</strong>
             </p>
           </div>
            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar seguimiento" title="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
@@ -1320,6 +1320,9 @@
         </div>
 
         <div class="modal-body-scrollable space-y-6">
+          @if (errorSeguimiento(); as errorWorkflow) {
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">{{ errorWorkflow }}</div>
+          }
           @if (actualizandoCalculo()) { <p class="text-xs text-ihss-700" role="status">Actualizando cálculo institucional…</p> }
           @if (errorCalculoPreview()) { <p class="text-xs text-red-700" role="alert">{{ errorCalculoPreview() }}</p> }
           @if (obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || '').length > 0) {
@@ -1332,7 +1335,7 @@
                           class="w-full border border-gray-200 rounded-xl px-3 py-2 bg-white font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600"
                           [(ngModel)]="nuevoEstado">
                     @for (estadoDest of obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || ''); track estadoDest) {
-                      <option [value]="estadoDest">{{ estadoDest }}</option>
+                      <option [value]="estadoDest">{{ etiquetaEstadoEvaluacion(estadoDest) }}</option>
                     }
                   </select>
                 </div>
@@ -1356,7 +1359,7 @@
             </section>
           } @else {
             <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs text-gray-500 text-center">
-              Esta evaluación se encuentra en un estado terminal y no admite transiciones automáticas.
+              No hay transiciones pendientes para el estado actual.
             </div>
           }
 
@@ -1368,7 +1371,7 @@
                   <span class="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-ihss-600"></span>
                   <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm text-xs space-y-1">
                     <div class="flex items-center justify-between">
-                      <span class="font-bold text-gray-900">{{ flujo.fluEstado }}</span>
+                      <span class="font-bold text-gray-900">{{ etiquetaEstadoEvaluacion(flujo.fluEstado) }}</span>
                       <span class="text-gray-400 text-[11px]">{{ flujo.fluFecha | date:'dd/MM/yyyy HH:mm:ss' }}</span>
                     </div>
                     <p class="text-gray-600">{{ flujo.fluMotivo || 'Sin motivo especificado' }}</p>

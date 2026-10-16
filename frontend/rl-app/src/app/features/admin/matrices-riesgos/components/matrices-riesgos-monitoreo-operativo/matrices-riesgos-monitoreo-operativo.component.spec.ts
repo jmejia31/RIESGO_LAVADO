@@ -109,6 +109,11 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
+  it('muestra etiquetas amigables del estado de evaluación en el selector', () => {
+    expect(component.opcionesEvaluacion[0].label).toBe('#20 · Riesgo 7 · Aprobada');
+    expect(component.etiquetaEstadoEvaluacion('EN_REVISION')).toBe('En revisión');
+  });
+
   it('lee el snapshot F70-F82 y persiste el seguimiento posterior por control', () => {
     const control = { controlId: 31, tipo: 'PREVENTIVO' as const, descripcion: 'Control test', estadoMonitoreo: null, efectividadMonitoreo: null, evidencias: [] };
     service['obtenerBloque6'].mockReturnValue(of({

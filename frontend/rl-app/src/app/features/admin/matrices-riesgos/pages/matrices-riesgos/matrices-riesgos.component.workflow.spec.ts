@@ -99,6 +99,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       crearEvaluacion: vi.fn().mockReturnValue(of({ success: true, datos: 20 })),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       transicionarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
+      obtenerTransicionesEvaluacion: vi.fn().mockReturnValue(of({ estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] })),
       obtenerFlujos: vi.fn().mockReturnValue(of([{ fluId: 1, fluEstado: 'BORRADOR', fluFecha: '2026-08-05T10:00:00Z', fluUsrId: 1, fluMotivo: 'Registro' }])),
       cargarEvidencia: vi.fn().mockReturnValue(of({ eviId: 88 })),
       vincularEvidencia: vi.fn().mockReturnValue(of({ success: true })),
@@ -124,10 +125,18 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     fixture.detectChanges();
   });
 
-  it('carga el historial de flujos al abrir seguimiento de una evaluación', () => {
+  it('carga historial y destinos válidos del backend al abrir seguimiento', () => {
     component.abrirModalSeguimiento(evaluacionResumen);
     expect(service['obtenerFlujos']).toHaveBeenCalledWith(15);
     expect(component.flujos()).toHaveLength(1);
+    expect(service['obtenerTransicionesEvaluacion']).toHaveBeenCalledWith(15);
+    expect(component.transicionesPermitidas()).toEqual(['EN_REVISION']);
+  });
+
+  it('presenta etiquetas institucionales en lugar de códigos internos', () => {
+    expect(component.etiquetaEstadoEvaluacion('EN_REVISION')).toBe('En revisión');
+    expect(component.etiquetaEstadoEvaluacion('RECHAZADA')).toBe('Rechazada');
+    expect(component.etiquetaEstadoEvaluacion('DESCONOCIDO')).toBe('Estado no reconocido');
   });
 
   it('descarta respuestas JSON que no sean un objeto durante la edición', () => {
@@ -137,6 +146,9 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
   });
 
   it('transiciona, limpia el motivo y recarga evaluación e historial', () => {
+    service['obtenerTransicionesEvaluacion']
+      .mockReturnValueOnce(of({ estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] }))
+      .mockReturnValueOnce(of({ estadoActual: 'EN_REVISION', destinosPermitidos: ['OBSERVADA', 'APROBADA', 'RECHAZADA'] }));
     component.abrirModalSeguimiento(evaluacionResumen);
     component.nuevoEstado = 'EN_REVISION';
     component.motivoTransicion = 'Revisión técnica';
@@ -144,7 +156,10 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
     expect(service['transicionarEvaluacion']).toHaveBeenCalledWith(15, 'EN_REVISION', 'Revisión técnica');
     expect(component.motivoTransicion).toBe('');
-    expect(component.mensaje()).toBe('Estado de la evaluación #15 actualizado a EN_REVISION correctamente.');
+    expect(component.mensaje()).toBe('Estado de la evaluación #15 actualizado a En revisión correctamente.');
+    expect(component.evaluacionResumenSeleccionada()?.estado).toBe('EN_REVISION');
+    expect(component.transicionesPermitidas()).toEqual(['OBSERVADA', 'APROBADA', 'RECHAZADA']);
+    expect(component.transicionesPermitidas()).not.toContain('EN_REVISION');
   });
 
   it('muestra el mensaje funcional cuando la transición falla', () => {
@@ -156,7 +171,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.nuevoEstado = 'APROBADA';
     component.transicionarEvaluacionModal();
 
-    expect(component.error()).toBe('Transición inválida desde el estado actual.');
+    expect(component.errorSeguimiento()).toBe('Transición inválida desde el estado actual.');
   });
 
   it('carga y vincula una evidencia con el contrato único', () => {
@@ -182,11 +197,12 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.error()).toBe('No se pudo vincular la evidencia al expediente.');
   });
 
-  it('vacía el historial cuando no puede consultar los flujos', () => {
+  it('muestra error contextual cuando no puede consultar los flujos', () => {
     service['obtenerFlujos'].mockReturnValue(throwError(() => new Error('Error flujos')));
     component.abrirModalSeguimiento(evaluacionResumen);
 
     expect(component.flujos()).toEqual([]);
+    expect(component.errorSeguimiento()).toBe('No se pudo cargar el historial de estados.');
   });
 
   it('rechaza una definición técnica con JSON inválido sin llamar al backend', () => {

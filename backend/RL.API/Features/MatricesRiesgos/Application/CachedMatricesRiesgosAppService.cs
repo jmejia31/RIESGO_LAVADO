@@ -184,6 +184,9 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
     public Task<ServiceResult<List<FlujoEvaluacionDto>>> ObtenerFlujosEvaluacionAsync(long evaId) =>
         _inner.ObtenerFlujosEvaluacionAsync(evaId);
 
+    public Task<ServiceResult<TransicionesEvaluacionDto>> ObtenerTransicionesEvaluacionAsync(long evaId) =>
+        _inner.ObtenerTransicionesEvaluacionAsync(evaId);
+
     public Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId) =>
         _inner.CargarArchivoEvidenciaFisicaAsync(archivo, usuarioId);
 

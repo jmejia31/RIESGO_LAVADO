@@ -102,6 +102,11 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.planSeleccionadoId).toBe(0);
   });
 
+  it('muestra etiquetas amigables del estado de evaluación en el selector', () => {
+    expect(component.opcionesEvaluacion[0].label).toBe('#20 · Riesgo 7 · Borrador');
+    expect(component.etiquetaEstadoEvaluacion('EN_REVISION')).toBe('En revisión');
+  });
+
   it('maneja error al listar controles y actualiza estado', () => {
     service['listarControles'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Error controles' } })));
     component.seleccionarEvaluacion(20);

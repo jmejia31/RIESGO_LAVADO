@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
+import { HTTP_ERROR_SCOPE } from '../../../../core/http/http-error-scope';
 import { MatricesRiesgosService } from './matrices-riesgos.service';
 
 describe('MatricesRiesgosService cobertura complementaria', () => {
@@ -130,8 +131,20 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     service.obtenerFlujos(15).subscribe(observer);
 
     const request = http.expectOne(`${apiUrl}/evaluaciones/15/flujos`);
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     request.flush({ success: true, datos: [{ fluId: 1, fluEstado: 'APROBADA' }] });
     expect(observer).toHaveBeenCalledWith([{ fluId: 1, fluEstado: 'APROBADA' }]);
+  });
+
+  it('consulta estado y destinos permitidos desde el backend con scope local', () => {
+    const observer = vi.fn();
+    service.obtenerTransicionesEvaluacion(15).subscribe(observer);
+
+    const request = http.expectOne(`${apiUrl}/evaluaciones/15/transiciones-permitidas`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    request.flush({ success: true, datos: { estadoActual: 'EN_REVISION', destinosPermitidos: ['OBSERVADA', 'APROBADA', 'RECHAZADA'] } });
+    expect(observer).toHaveBeenCalledWith({ estadoActual: 'EN_REVISION', destinosPermitidos: ['OBSERVADA', 'APROBADA', 'RECHAZADA'] });
   });
 
   it('vincula evidencia con el contrato unico', () => {

@@ -530,11 +530,13 @@ public sealed class MatricesRiesgosControllersContractTests
         stub.On(nameof(IMatricesRiesgosAppService.ActualizarEvaluacionAsync), _ => Task.FromResult(ServiceResult.Ok("Actualizada")));
         stub.On(nameof(IMatricesRiesgosAppService.TransicionarEstadoEvaluacionAsync), _ => Task.FromResult(ServiceResult.Ok("Transición completada")));
         stub.On(nameof(IMatricesRiesgosAppService.ObtenerFlujosEvaluacionAsync), _ => Task.FromResult(ServiceResult<List<FlujoEvaluacionDto>>.Ok(new List<FlujoEvaluacionDto>())));
+        stub.On(nameof(IMatricesRiesgosAppService.ObtenerTransicionesEvaluacionAsync), _ => Task.FromResult(ServiceResult<TransicionesEvaluacionDto>.Ok(new("BORRADOR", new[] { "EN_REVISION" }))));
 
         Assert.IsType<OkObjectResult>(await controller.ObtenerEvaluacion(5));
         Assert.IsType<OkObjectResult>(await controller.ActualizarEvaluacion(5, new EvaluacionRiesgoDto { EvaId = 5 }));
         Assert.IsType<OkObjectResult>(await controller.TransicionarEstadoEvaluacion(5, "REVISADA", "Aprobado"));
         Assert.IsType<OkObjectResult>(await controller.ObtenerFlujosEvaluacion(5));
+        Assert.IsType<OkObjectResult>(await controller.ObtenerTransicionesEvaluacion(5));
 
         // Exceptions
         stub.On(nameof(IMatricesRiesgosAppService.ObtenerEvaluacionAsync), _ => throw new InvalidOperationException("Error"));

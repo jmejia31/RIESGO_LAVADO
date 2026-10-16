@@ -70,6 +70,7 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
       obtenerResumenEvaluacion: vi.fn().mockReturnValue(of(null)),
       obtenerFlujoEvaluacion: vi.fn().mockReturnValue(of([])),
       obtenerFlujos: vi.fn().mockReturnValue(of([])),
+      obtenerTransicionesEvaluacion: vi.fn().mockReturnValue(of({ estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] })),
       obtenerMetodologiaVigente: vi.fn().mockReturnValue(of(null)),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(null)),
       metodologiaVigente: vi.fn().mockReturnValue(of({

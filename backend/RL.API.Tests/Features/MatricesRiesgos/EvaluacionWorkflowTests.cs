@@ -20,4 +20,14 @@ public sealed class EvaluacionWorkflowTests
     [InlineData("", "APROBADA")]
     public void RechazaTransicionesNoDefinidas(string actual, string destino) =>
         Assert.False(EvaluacionWorkflow.EsTransicionPermitida(actual, destino));
+
+    [Theory]
+    [InlineData("BORRADOR", new[] { "EN_REVISION" })]
+    [InlineData("EN_REVISION", new[] { "APROBADA", "OBSERVADA", "RECHAZADA" })]
+    [InlineData("OBSERVADA", new[] { "BORRADOR" })]
+    [InlineData("APROBADA", new[] { "CERRADA" })]
+    [InlineData("RECHAZADA", new string[0])]
+    [InlineData("CERRADA", new string[0])]
+    public void ExponeLaMismaMatrizDeDestinosQueProtegeElBackend(string actual, string[] esperado) =>
+        Assert.Equal(esperado, EvaluacionWorkflow.ObtenerDestinosPermitidos(actual));
 }

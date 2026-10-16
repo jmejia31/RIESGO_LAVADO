@@ -247,6 +247,31 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.Equal("APROBADA", result.Data![0].FluEstado);
     }
 
+    [Fact]
+    public async Task ObtenerTransiciones_DevuelveEstadoPersistidoYDestinosDeLaPoliticaBackend()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(new() { EvaId = 11, EvaEstado = "EN_REVISION" }));
+
+        ServiceResult<TransicionesEvaluacionDto> result = await service.ObtenerTransicionesEvaluacionAsync(11);
+
+        Assert.True(result.Success);
+        Assert.Equal("EN_REVISION", result.Data!.EstadoActual);
+        Assert.Equal(new[] { "APROBADA", "OBSERVADA", "RECHAZADA" }, result.Data.DestinosPermitidos);
+    }
+
+    [Fact]
+    public async Task ObtenerTransiciones_EvaluacionInexistenteRetornaNotFound()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(null));
+
+        ServiceResult<TransicionesEvaluacionDto> result = await service.ObtenerTransicionesEvaluacionAsync(999);
+
+        Assert.False(result.Success);
+        Assert.Equal(404, result.StatusCode);
+    }
+
     private static MatricesRiesgosAppService CrearServicio(
         out InterfaceStub repoStub,
         out InterfaceStub validadorStub,

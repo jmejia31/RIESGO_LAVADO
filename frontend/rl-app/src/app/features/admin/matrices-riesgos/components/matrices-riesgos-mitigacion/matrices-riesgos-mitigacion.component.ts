@@ -55,10 +55,22 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
     return '';
   }
 
+  etiquetaEstadoEvaluacion(estado: string): string {
+    const etiquetas: Record<string, string> = {
+      BORRADOR: 'Borrador',
+      EN_REVISION: 'En revisión',
+      OBSERVADA: 'Observada',
+      APROBADA: 'Aprobada',
+      RECHAZADA: 'Rechazada',
+      CERRADA: 'Cerrada'
+    };
+    return etiquetas[estado.trim().toUpperCase()] ?? estado;
+  }
+
   get opcionesEvaluacion(): BoundedSelectOption[] {
     return this.evaluaciones.map(evaluacion => ({
       value: evaluacion.evaId,
-      label: `#${evaluacion.evaId} · Riesgo ${evaluacion.evaRiesgoId} · ${this.obtenerEstadoEvaluacion(evaluacion)}`,
+      label: `#${evaluacion.evaId} · Riesgo ${evaluacion.evaRiesgoId} · ${this.etiquetaEstadoEvaluacion(this.obtenerEstadoEvaluacion(evaluacion))}`,
       searchText: this.textoBusquedaEvaluacion(evaluacion)
     }));
   }

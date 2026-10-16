@@ -38,6 +38,7 @@ describe('MatricesRiesgosComponent', () => {
     actualizarBorradorEvaluacion: ReturnType<typeof vi.fn>;
     actualizarEvaluacion: ReturnType<typeof vi.fn>;
     transicionarEvaluacion: ReturnType<typeof vi.fn>;
+    obtenerTransicionesEvaluacion: ReturnType<typeof vi.fn>;
     obtenerFlujos: ReturnType<typeof vi.fn>;
     crearBorradorFormulario: ReturnType<typeof vi.fn>;
     actualizarBorradorFormulario: ReturnType<typeof vi.fn>;
@@ -182,6 +183,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       actualizarBorradorEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       transicionarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
+      obtenerTransicionesEvaluacion: vi.fn().mockReturnValue(of({ estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] })),
       obtenerFlujos: vi.fn().mockReturnValue(of([])),
       crearBorradorFormulario: vi.fn().mockReturnValue(of(21)),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
@@ -607,7 +609,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.nuevoEstado = '   ';
     component.transicionarEvaluacionModal();
     expect(service.transicionarEvaluacion).not.toHaveBeenCalled();
-    expect(component.error()).toContain('Seleccione un estado');
+    expect(component.errorSeguimiento()).toContain('Seleccione un estado');
   });
 
   it('extrae definición con fallback seguro cuando verJson está corrupto o es nulo', () => {

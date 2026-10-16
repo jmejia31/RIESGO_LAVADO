@@ -17,4 +17,9 @@ public static class EvaluacionWorkflow
         !string.IsNullOrWhiteSpace(estadoDestino) &&
         Transiciones.TryGetValue(estadoActual.Trim(), out var destinos) &&
         destinos.Contains(estadoDestino.Trim());
+
+    public static IReadOnlyList<string> ObtenerDestinosPermitidos(string estadoActual) =>
+        !string.IsNullOrWhiteSpace(estadoActual) && Transiciones.TryGetValue(estadoActual.Trim(), out var destinos)
+            ? destinos.OrderBy(destino => destino, StringComparer.Ordinal).ToArray()
+            : Array.Empty<string>();
 }

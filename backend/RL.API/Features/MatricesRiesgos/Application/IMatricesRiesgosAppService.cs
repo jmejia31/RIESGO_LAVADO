@@ -34,6 +34,7 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult> ActualizarBorradorEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
     Task<ServiceResult<CalculoPreviewEvaluacionDto>> PrevisualizarCalculoEvaluacionAsync(EvaluacionRiesgoDto dto);
     Task<ServiceResult> TransicionarEstadoEvaluacionAsync(long evaId, string nuevoEstado, string? motivo, long usuarioId, string? ip);
+    Task<ServiceResult<TransicionesEvaluacionDto>> ObtenerTransicionesEvaluacionAsync(long evaId);
     Task<ServiceResult<List<FlujoEvaluacionDto>>> ObtenerFlujosEvaluacionAsync(long evaId);
 
     Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId);

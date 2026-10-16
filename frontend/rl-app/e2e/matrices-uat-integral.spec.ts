@@ -732,12 +732,12 @@ test('Consolidado muestra todos los estados y abre una matriz BORRADOR por su ev
   await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
   const tableRows = page.locator('#panel-consolidado tbody tr');
   await expect(tableRows).toHaveCount(5);
-  for (const status of ['BORRADOR', 'EN_REVISION', 'APROBADA', 'RECHAZADA', 'CERRADA']) await expect(page.locator('#panel-consolidado tbody')).toContainText(status);
+  for (const status of ['Borrador', 'En revisión', 'Aprobada', 'Rechazada', 'Cerrada']) await expect(page.locator('#panel-consolidado tbody')).toContainText(status);
   await expect(page.locator('[data-kpi="matrices-registradas"]')).toHaveText('5');
 
   await page.getByLabel('Estado', { exact: true }).selectOption('BORRADOR');
   await expect(tableRows).toHaveCount(1);
-  await expect(tableRows.first()).toContainText('BORRADOR');
+  await expect(tableRows.first()).toContainText('Borrador');
   await page.getByRole('button', { name: 'Ver Matriz completa' }).click();
   await expect(page.locator('[data-matrix-modal="complete"]')).toBeVisible();
 });
@@ -1388,7 +1388,7 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await page.getByRole('button', { name: 'Mitigación', exact: true }).click();
   const selectorEvaluacionMitigacion = page.getByRole('combobox', { name: 'Evaluación', exact: true });
   await selectorEvaluacionMitigacion.click();
-  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · Borrador/ }).click();
   await expect(page.locator('#control-estado')).toHaveValue('ACTIVO');
   await expect(page.locator('#control-estado option')).toHaveCount(2);
   await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
@@ -1435,7 +1435,7 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
   await page.getByRole('button', { name: 'Monitoreo', exact: true }).click();
   const selectorEvaluacionMonitoreo = page.getByRole('combobox', { name: 'Evaluación', exact: true });
   await selectorEvaluacionMonitoreo.click();
-  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · Borrador/ }).click();
   await page.getByLabel('Código', { exact: true }).fill('ALE-UAT');
   await page.getByLabel('Indicador', { exact: true }).fill('Umbral operativo UAT');
   await page.getByRole('button', { name: 'Registrar alerta' }).click();
@@ -1546,7 +1546,7 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await page.getByRole('button', { name: 'Mitigación', exact: true }).click();
   const evaluationPicker = page.getByRole('combobox', { name: 'Evaluación', exact: true });
   await evaluationPicker.click();
-  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · Borrador/ }).click();
 
   const savePlan = async (description: string, monitoring: string, managers: string, resources: string, budget: string, start: string, end: string): Promise<void> => {
     await page.locator('#plan-descripcion').fill(description);
@@ -1589,7 +1589,7 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await page.getByRole('button', { name: 'Matriz y evaluaciones', exact: true }).click();
   await page.getByRole('button', { name: 'Mitigación', exact: true }).click();
   await evaluationPicker.click();
-  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · Borrador/ }).click();
   await page.getByRole('button', { name: 'Editar plan y actividades' }).first().click();
   await expect(page.locator('#plan-recursos')).toHaveValue('Personal especializado y herramienta de monitoreo');
   await expect(page.locator('#plan-responsables')).toHaveValue('Unidad de Cumplimiento y Jefatura Operativa');

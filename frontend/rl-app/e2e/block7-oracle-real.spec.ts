@@ -5,6 +5,9 @@ type Fixture = { riskId: number; riskCode: string; versionId: number; versionCod
 const critical = [
   /^POST \/api\/matrices-riesgos\/evaluaciones\/borrador$/,
   /^PUT \/api\/matrices-riesgos\/evaluaciones\/\d+\/borrador$/,
+  /^GET \/api\/matrices-riesgos\/evaluaciones\/\d+\/transiciones-permitidas$/,
+  /^GET \/api\/matrices-riesgos\/evaluaciones\/\d+\/flujos$/,
+  /^POST \/api\/matrices-riesgos\/evaluaciones\/\d+\/transiciones$/,
   /^POST \/api\/matrices-riesgos\/evaluaciones\/calculo-preview$/,
   /^GET \/api\/matrices-riesgos\/evaluaciones\/\d+$/,
   /^GET \/api\/matrices-riesgos\/evaluaciones\/\d+\/proyeccion-institucional$/,
@@ -26,7 +29,7 @@ function unsignedTestToken(): string {
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({ nameid: '987654', uid: 'block7-e2e', modulos: '10', exp: Math.floor(Date.now() / 1000) + 3600 })}.`;
 }
 
-async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluation: { id?: number; data?: Record<string, unknown> }) {
+async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluation: { id?: number; data?: Record<string, unknown>; state?: string }) {
   const token = unsignedTestToken();
   await page.addInitScript(accessToken => {
     localStorage.setItem('access_token', accessToken);
@@ -72,7 +75,7 @@ async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluati
     else if (path.endsWith('/riesgos/paginado')) datos = { items: [{ rieId: fixture.riskId, rieCodigo: fixture.riskCode, rieNombre: 'Riesgo E2E de prueba', rieDescripcion: 'Riesgo desechable Oracle', rieActivo: true }], pagina: 1, tamanoPagina: 200, totalRegistros: 1, totalPaginas: 1 };
     else if (path.endsWith('/riesgos') && method === 'GET') datos = [{ rieId: fixture.riskId, rieCodigo: fixture.riskCode, rieNombre: 'Riesgo E2E de prueba', rieDescripcion: 'Riesgo desechable Oracle', rieActivo: true }];
     else if (path.endsWith('/evaluaciones') && method === 'GET') datos = {
-      items: evaluation.id ? [{ evaId: evaluation.id, evaRiesgoId: fixture.riskId, riesgoCodigo: fixture.riskCode, riesgoNombre: 'Riesgo E2E de prueba', evaVersionId: fixture.versionId, versionCodigo: fixture.versionCode, versionNumero: 1, estado: 'BORRADOR', fechaEval: new Date().toISOString() }] : [],
+      items: evaluation.id ? [{ evaId: evaluation.id, evaRiesgoId: fixture.riskId, riesgoCodigo: fixture.riskCode, riesgoNombre: 'Riesgo E2E de prueba', evaVersionId: fixture.versionId, versionCodigo: fixture.versionCode, versionNumero: 1, estado: evaluation.state ?? 'BORRADOR', fechaEval: new Date().toISOString() }] : [],
       pagina: 1, registrosPorPagina: 10, totalRegistros: evaluation.id ? 1 : 0, totalPaginas: 1,
     };
     else if (path.endsWith('/formularios/historial')) datos = [version];
@@ -92,7 +95,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/fixture');
   expect(fixtureResponse.ok()).toBeTruthy();
   const fixture = await fixtureResponse.json() as Fixture;
-  const evaluation: { id?: number; data?: Record<string, unknown> } = {};
+  const evaluation: { id?: number; data?: Record<string, unknown>; state?: string } = {};
   const criticalResponses = new Set<string>();
   page.on('response', response => {
     const url = new URL(response.url());
@@ -442,6 +445,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   }
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
+  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/transiciones-permitidas'))).toBeTruthy();
+  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/flujos'))).toBeTruthy();
+  expect([...criticalResponses].some(value => value.startsWith('POST /api/matrices-riesgos/evaluaciones/{id}/transiciones'))).toBeTruthy();
 
   const blockNavigation = pageA.locator('nav[aria-label^="Bloques funcionales"]');
   await expect(blockNavigation.getByRole('button')).toHaveCount(6);
@@ -570,6 +576,61 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await pageA.screenshot({ path: testInfo.outputPath('monitoring-mobile.png'), fullPage: true });
   const mobileOverflow = await pageA.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(mobileOverflow).toBeLessThanOrEqual(0);
+
+  await page.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
+  const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
+  await expect(followUpModal).toBeVisible();
+  await expect(followUpModal.getByText('Borrador', { exact: true })).toBeVisible();
+  const firstDestinations = followUpModal.locator('#seg-nuevo-estado option');
+  await expect(firstDestinations).toHaveCount(1);
+  await expect(firstDestinations.first()).toHaveValue('EN_REVISION');
+  await page.locator('#seg-motivo').fill('Envío a revisión de prueba');
+  await page.locator('#seg-nuevo-estado').selectOption('EN_REVISION');
+  const draftToReview = page.waitForResponse(response => response.request().method() === 'POST'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones`);
+  await followUpModal.getByRole('button', { name: 'Aplicar transición de estado' }).click();
+  expect((await draftToReview).status()).toBe(200);
+  evaluation.state = 'EN_REVISION';
+  const reviewState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect(reviewState.ok()).toBeTruthy();
+  expect((await reviewState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('EN_REVISION');
+  await expect(followUpModal.getByText('En revisión', { exact: true })).toBeVisible();
+  const reviewDestinations = followUpModal.locator('#seg-nuevo-estado option');
+  await expect(reviewDestinations).toHaveCount(3);
+  await expect(reviewDestinations).not.toContainText('En revisión');
+  await expect(reviewDestinations).toContainText(['Observada', 'Aprobada', 'Rechazada']);
+
+  await page.locator('#seg-motivo').fill('Observación de prueba');
+  await page.locator('#seg-nuevo-estado').selectOption('OBSERVADA');
+  const reviewToObserved = page.waitForResponse(response => response.request().method() === 'POST'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones`);
+  await followUpModal.getByRole('button', { name: 'Aplicar transición de estado' }).click();
+  expect((await reviewToObserved).status()).toBe(200);
+  evaluation.state = 'OBSERVADA';
+  const observedState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect((await observedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
+  await expect(followUpModal.getByText('Observada', { exact: true })).toBeVisible();
+  await expect(followUpModal.locator('#seg-nuevo-estado option')).toHaveCount(1);
+  await expect(followUpModal.locator('#seg-nuevo-estado option').first()).toHaveValue('BORRADOR');
+
+  const historyResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/flujos`);
+  expect(historyResponse.ok()).toBeTruthy();
+  const flowStates = (await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado);
+  expect(flowStates).toContain('EN_REVISION');
+  expect(flowStates).toContain('OBSERVADA');
+  const invalidTransition = await request.post(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones?nuevoEstado=CERRADA`);
+  expect(invalidTransition.status()).toBe(400);
+  const unchangedState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect((await unchangedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
+  await expect(page.locator('#panel-evaluaciones')).toContainText('Observada');
+  await page.screenshot({ path: testInfo.outputPath('evaluation-follow-up-workflow.png'), fullPage: true });
+
+  const filterRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === '/api/matrices-riesgos/evaluaciones');
+  await page.locator('#filtro-estado').selectOption('BORRADOR');
+  await filterRequest;
+  const afterFilter = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect((await afterFilter.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
   await concurrencyA.close();
   await pageB.close();
   console.log('BLOCK7_MATRIX_API_ROUTES_MOCKED=0');

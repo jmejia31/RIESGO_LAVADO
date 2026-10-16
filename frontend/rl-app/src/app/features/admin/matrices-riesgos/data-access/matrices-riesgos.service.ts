@@ -21,6 +21,7 @@ import {
   FamiliaPredeterminadaDto,
   FiltroReporteMatrices,
   FlujoEvaluacionDto,
+  TransicionesEvaluacionDto,
   MetodologiaFormulario,
   ReporteMatricesPaginado,
   RiesgoReporteFila,
@@ -339,7 +340,13 @@ export class MatricesRiesgosService {
 
   obtenerFlujos(id: number): Observable<FlujoEvaluacionDto[]> {
     return this.http
-      .get<ApiResponse<FlujoEvaluacionDto[]>>(`${this.apiUrl}/evaluaciones/${id}/flujos`)
+      .get<ApiResponse<FlujoEvaluacionDto[]>>(`${this.apiUrl}/evaluaciones/${id}/flujos`, { context: createHttpErrorScopeContext('local') })
+      .pipe(map(response => response.datos));
+  }
+
+  obtenerTransicionesEvaluacion(id: number): Observable<TransicionesEvaluacionDto> {
+    return this.http
+      .get<ApiResponse<TransicionesEvaluacionDto>>(`${this.apiUrl}/evaluaciones/${id}/transiciones-permitidas`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 

@@ -246,6 +246,11 @@ export interface RiesgoReporteFila {
   fechaEvaluacion: string | null;
 }
 
+export interface TransicionesEvaluacionDto {
+  estadoActual: string;
+  destinosPermitidos: string[];
+}
+
 export interface ReporteMatricesTotales {
   totalRiesgos: number;
   totalConEvaluacionOficial: number;

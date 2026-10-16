@@ -123,6 +123,7 @@ describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
       })),
       obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({})),
       obtenerFlujos: vi.fn().mockReturnValue(of([])),
+      obtenerTransicionesEvaluacion: vi.fn().mockReturnValue(of({ estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] })),
 obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([]))
@@ -206,7 +207,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       const acciones = Array.from(fila.querySelectorAll('td:nth-child(9) button')) as HTMLButtonElement[];
       const etiquetas = acciones.map(boton => boton.getAttribute('aria-label'));
 
-      expect(fila.querySelector('td:nth-child(4)')?.textContent).toContain(estado);
+      expect(fila.querySelector('td:nth-child(4)')?.textContent).toContain(component.etiquetaEstadoEvaluacion(estado));
       expect(etiquetas).toContain('Ver evaluación');
       expect(etiquetas).toContain('Seguimiento de evaluación');
       expect(etiquetas).not.toContain('Ver Matriz completa');
