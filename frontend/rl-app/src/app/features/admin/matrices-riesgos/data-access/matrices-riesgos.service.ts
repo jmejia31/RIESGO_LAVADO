@@ -1,8 +1,9 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
+import { HTTP_ERROR_SCOPE } from '../../../../core/http/http-error-scope';
 import {
   ActualizarFamiliaFormularioDto,
   ConsultaEvaluacionPaginadaDto,
@@ -252,12 +253,18 @@ export class MatricesRiesgosService {
 
   crearRiesgo(dto: RiesgoGuardarDto): Observable<number> {
     return this.http
-      .post<ApiResponse<number>>(`${this.apiUrl}/riesgos`, dto, this.confirmado)
+      .post<ApiResponse<number>>(`${this.apiUrl}/riesgos`, dto, {
+        ...this.confirmado,
+        context: new HttpContext().set(HTTP_ERROR_SCOPE, 'local')
+      })
       .pipe(map(response => response.datos));
   }
 
   actualizarRiesgo(id: number, dto: RiesgoGuardarDto): Observable<ApiMessage> {
-    return this.http.put<ApiMessage>(`${this.apiUrl}/riesgos/${id}`, dto, this.confirmado);
+    return this.http.put<ApiMessage>(`${this.apiUrl}/riesgos/${id}`, dto, {
+      ...this.confirmado,
+      context: new HttpContext().set(HTTP_ERROR_SCOPE, 'local')
+    });
   }
 
   listarEvaluaciones(

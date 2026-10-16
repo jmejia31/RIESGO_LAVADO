@@ -1,6 +1,7 @@
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, HttpContext, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
 import { GlobalHttpStateService } from '../services/global-http-state.service';
 import { httpResilienceInterceptor } from './http-resilience.interceptor';
 
@@ -158,6 +159,35 @@ describe('httpResilienceInterceptor', () => {
     expect(errorRecibido?.status).toBe(400);
     expect(globalState.ultimoError()).toBe('Datos inválidos en el formulario');
     expect(globalState.cargando()).toBe(false);
+  });
+
+  it.each([400, 409, 422])('deja status %s en el formulario local sin contaminar el banner global', status => {
+    let receivedStatus: number | undefined;
+    client.post('/api/modal-save', {}, {
+      context: new HttpContext().set(HTTP_ERROR_SCOPE, 'local')
+    }).subscribe({ error: error => receivedStatus = (error as { status: number }).status });
+
+    controller.expectOne('/api/modal-save').flush(
+      { mensaje: `Error local ${status}` },
+      { status, statusText: 'Controlled operation error' }
+    );
+
+    expect(receivedStatus).toBe(status);
+    expect(globalState.ultimoError()).toBeNull();
+    expect(globalState.cargando()).toBe(false);
+  });
+
+  it('mantiene los fallos globales visibles y permite limpiarlos explícitamente', () => {
+    client.get('/api/global-failure').subscribe({ error: () => undefined });
+
+    controller.expectOne('/api/global-failure').flush(
+      { detail: 'Fallo global de servicio' },
+      { status: 500, statusText: 'Internal Server Error' }
+    );
+
+    expect(globalState.ultimoError()).toBe('Fallo global de servicio');
+    globalState.limpiarError();
+    expect(globalState.ultimoError()).toBeNull();
   });
 
   it('debe mantener cargando=true hasta finalizar todas las peticiones concurrentes', () => {

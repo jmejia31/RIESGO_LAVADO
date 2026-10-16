@@ -1016,6 +1016,8 @@ test('Riesgos usa filtro estándar completo y pagina exactamente 10 registros al
 test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => {
   let createPayload: any;
   let updatePayload: any;
+  let nextCreateFailure: number | null = null;
+  let nextUpdateFailure: number | null = null;
   const registros = [{ ...riesgo }];
   let browserDialogs = 0;
   page.on('dialog', async dialog => {
@@ -1026,6 +1028,11 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
     const method = route.request().method();
     if (method === 'POST') {
       createPayload = route.request().postDataJSON();
+      if (nextCreateFailure !== null) {
+        const status = nextCreateFailure;
+        nextCreateFailure = null;
+        return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ mensaje: `Error local HTTP ${status}` }) });
+      }
       registros.push({ ...createPayload, rieId: 8, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-08T12:00:00Z' });
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 8 }) });
     }
@@ -1042,6 +1049,11 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await page.route('**/api/matrices-riesgos/riesgos/*', async route => {
     if (route.request().method() !== 'PUT') return route.fallback();
     updatePayload = route.request().postDataJSON();
+    if (nextUpdateFailure !== null) {
+      const status = nextUpdateFailure;
+      nextUpdateFailure = null;
+      return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ mensaje: `Error local HTTP ${status}` }) });
+    }
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: true }) });
   });
   await page.goto('/matrices-riesgos');
@@ -1169,6 +1181,32 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await page.getByRole('button', { name: 'Guardar cambios del riesgo' }).click();
   await expect.poll(() => updatePayload?.rieNombre).toBe('Riesgo editado UAT');
   expect(updatePayload).toEqual({ rieCodigo: 'R-007', rieNombre: 'Riesgo editado UAT', rieDescripcion: 'Base UAT', rieActivo: true });
+  await expect(editModal).toBeHidden();
+  expect(browserDialogs).toBe(0);
+
+  for (const status of [400, 422]) {
+    await page.getByRole('button', { name: 'Nuevo riesgo' }).click();
+    nextCreateFailure = status;
+    await page.locator('#codigo-riesgo').fill(`R-LOCAL-${status}`);
+    await page.locator('#nombre-riesgo').fill(`Prueba local ${status}`);
+    await page.getByRole('button', { name: 'Guardar nuevo riesgo' }).click();
+    await expect(createModal.getByRole('alert')).toContainText(`Error local HTTP ${status}`);
+    await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
+    const localDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
+    await localDiscard.getByRole('button', { name: 'Descartar cambios' }).click();
+    await expect(createModal).toBeHidden();
+  }
+
+  await page.getByRole('button', { name: 'Editar riesgo' }).first().click();
+  await page.locator('#nombre-riesgo').fill('Conflicto local de actualización');
+  nextUpdateFailure = 409;
+  await page.getByRole('button', { name: 'Guardar cambios del riesgo' }).click();
+  await expect(editModal.getByRole('alert')).toContainText('Error local HTTP 409');
+  await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
+  const conflictDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
+  await conflictDiscard.getByRole('button', { name: 'Descartar cambios' }).click();
   await expect(editModal).toBeHidden();
   expect(browserDialogs).toBe(0);
 });

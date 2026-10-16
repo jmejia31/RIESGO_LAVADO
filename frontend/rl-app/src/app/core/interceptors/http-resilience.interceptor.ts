@@ -1,6 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { finalize, retry, tap, throwError, timer } from 'rxjs';
+import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
 import { GlobalHttpStateService } from '../services/global-http-state.service';
 
 const MAX_GET_RETRIES = 2;
@@ -35,7 +36,9 @@ export const httpResilienceInterceptor: HttpInterceptorFn = (req, next) => {
     }),
     tap({
       error: (error: HttpErrorResponse) => {
-        globalState.notificarError(error);
+        if (req.context.get(HTTP_ERROR_SCOPE) === 'global') {
+          globalState.notificarError(error);
+        }
       }
     }),
     finalize(() => {

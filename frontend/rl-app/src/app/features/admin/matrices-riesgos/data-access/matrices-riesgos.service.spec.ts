@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
+import { HTTP_ERROR_SCOPE } from '../../../../core/http/http-error-scope';
 import { MatricesRiesgosService } from './matrices-riesgos.service';
 
 describe('MatricesRiesgosService', () => {
@@ -114,7 +115,16 @@ describe('MatricesRiesgosService', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(dto);
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     request.flush({ success: true, datos: 1 });
+  });
+
+  it('actualiza riesgo maestro con alcance de error local', () => {
+    service.actualizarRiesgo(7, { rieCodigo: 'R-007', rieNombre: 'Riesgo', rieDescripcion: null, rieActivo: true }).subscribe();
+    const request = http.expectOne(`${apiUrl}/riesgos/7`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    request.flush({ success: true, datos: true });
   });
 
   it('lista evaluaciones con paginación compatible con el backend', () => {
