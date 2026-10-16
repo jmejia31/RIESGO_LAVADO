@@ -421,7 +421,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
       pagina: 1,
       limite: 100,
       tabla: 'RL_MR_FAMILIAS_FORMULARIO'
-    }).subscribe({
+    }, 'local').subscribe({
       next: respuesta => {
         this.cargandoActividad.set(false);
         this.auditoria.set((respuesta?.datos || []).filter(item => String(item.registroId) === String(familia.famId)));

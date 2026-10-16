@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
 import { ConfiguracionService } from './configuracion.service';
 import { ConfigSistema } from './configuracion.models';
 
@@ -38,6 +39,7 @@ describe('ConfiguracionService', () => {
     let resultado: ConfigSistema | undefined;
     service.CargarConfiguracion().subscribe(value => resultado = value);
     const request = http.expectOne('http://localhost:5043/api/configuracion/sistema');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     request.flush({
       success: true,
       datos: { nombreInstitucion: 'IHSS', nombreSistema: 'SGRLA', timeoutSesion: 0 }
@@ -64,6 +66,7 @@ describe('ConfiguracionService', () => {
     service.GuardarConfiguracion(config).subscribe();
     const request = http.expectOne('http://localhost:5043/api/configuracion/sistema');
     expect(request.request.method).toBe('PUT');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     expect(request.request.body).toEqual(config);
     request.flush({ success: true, mensaje: 'Actualizada' });
 
@@ -72,6 +75,29 @@ describe('ConfiguracionService', () => {
     expect(document.documentElement.style.getPropertyValue('--ihss-accent-rgb')).toBe('171 205 239');
     expect(document.documentElement.style.getPropertyValue('--ihss-700-rgb')).toBe('17 34 51');
     expect(document.documentElement.style.getPropertyValue('--ihss-modal-accent-rgb')).not.toBe('171 205 239');
+  });
+
+  it('mantiene local el feedback de operaciones administrativas de slides', () => {
+    const slide = { id: 1, imagenUrl: '/uploads/slide.png', titulo: 'Slide', descripcion: '', imagenIcono: '', orden: 1, activo: true };
+    service.getTodosSlides().subscribe();
+    const list = http.expectOne('http://localhost:5043/api/configuracion/slides');
+    expect(list.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    list.flush({ success: true, datos: [] });
+
+    service.crearSlide(slide).subscribe();
+    const create = http.expectOne('http://localhost:5043/api/configuracion/slides');
+    expect(create.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    create.flush({ success: true, mensaje: 'ok' });
+
+    service.actualizarSlide(1, slide).subscribe();
+    const update = http.expectOne('http://localhost:5043/api/configuracion/slides/1');
+    expect(update.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    update.flush({ success: true, mensaje: 'ok' });
+
+    service.eliminarSlide(1).subscribe();
+    const remove = http.expectOne('http://localhost:5043/api/configuracion/slides/1');
+    expect(remove.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    remove.flush({ success: true, mensaje: 'ok' });
   });
 
   it('conserva el último tema válido si la configuración recibida trae HEX inválido', () => {

@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { map, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
 import { createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
+import { createHttpErrorScopeContext } from '../http/http-error-scope';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +19,9 @@ export class ConfiguracionService {
   private ultimoColorSecundarioValido = DEFAULT_SYSTEM_ACCENT;
 
   CargarConfiguracion() {
-    return this.http.get<{ success: boolean, datos: ConfigSistema }>(`${this.apiUrl}/sistema`)
+    return this.http.get<{ success: boolean, datos: ConfigSistema }>(`${this.apiUrl}/sistema`, {
+      context: createHttpErrorScopeContext('local')
+    })
       .pipe(
         map(res => {
           const cfg = res.datos;
@@ -43,7 +46,9 @@ export class ConfiguracionService {
   }
 
   GuardarConfiguracion(config: ConfigSistema) {
-    return this.http.put<{ success: boolean, mensaje: string }>(`${this.apiUrl}/sistema`, config)
+    return this.http.put<{ success: boolean, mensaje: string }>(`${this.apiUrl}/sistema`, config, {
+      context: createHttpErrorScopeContext('local')
+    })
       .pipe(
         tap(() => {
           this.configSistema.set(config);
@@ -60,28 +65,38 @@ export class ConfiguracionService {
   }
 
   getTodosSlides() {
-    return this.http.get<{ success: boolean, datos: LoginSlide[] }>(`${this.apiUrl}/slides`)
+    return this.http.get<{ success: boolean, datos: LoginSlide[] }>(`${this.apiUrl}/slides`, {
+      context: createHttpErrorScopeContext('local')
+    })
       .pipe(
         map(res => res.datos)
       );
   }
 
   crearSlide(slide: LoginSlide) {
-    return this.http.post<{ success: boolean, mensaje: string }>(`${this.apiUrl}/slides`, slide);
+    return this.http.post<{ success: boolean, mensaje: string }>(`${this.apiUrl}/slides`, slide, {
+      context: createHttpErrorScopeContext('local')
+    });
   }
 
   actualizarSlide(id: number, slide: LoginSlide) {
-    return this.http.put<{ success: boolean, mensaje: string }>(`${this.apiUrl}/slides/${id}`, slide);
+    return this.http.put<{ success: boolean, mensaje: string }>(`${this.apiUrl}/slides/${id}`, slide, {
+      context: createHttpErrorScopeContext('local')
+    });
   }
 
   eliminarSlide(id: number) {
-    return this.http.delete<{ success: boolean, mensaje: string }>(`${this.apiUrl}/slides/${id}`);
+    return this.http.delete<{ success: boolean, mensaje: string }>(`${this.apiUrl}/slides/${id}`, {
+      context: createHttpErrorScopeContext('local')
+    });
   }
 
   subirImagen(file: File) {
     const formData = new FormData();
     formData.append('archivo', file);
-    return this.http.post<{ success: boolean, url: string }>(`${this.apiUrl}/slides/upload`, formData);
+    return this.http.post<{ success: boolean, url: string }>(`${this.apiUrl}/slides/upload`, formData, {
+      context: createHttpErrorScopeContext('local')
+    });
   }
 
   resolverUrlImagen(url?: string): string {

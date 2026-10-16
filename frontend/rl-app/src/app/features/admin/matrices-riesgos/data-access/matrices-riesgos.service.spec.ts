@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { Observable } from 'rxjs';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
 import { HTTP_ERROR_SCOPE } from '../../../../core/http/http-error-scope';
 import { MatricesRiesgosService } from './matrices-riesgos.service';
@@ -47,6 +48,27 @@ describe('MatricesRiesgosService', () => {
     expect(request.request.method).toBe('GET');
     request.flush({ success: true, datos: { configurada: false, tieneVersionVigente: false } });
     expect(resultado).toHaveBeenCalledWith({ configurada: false, tieneVersionVigente: false });
+  });
+
+  it('mantiene en alcance local las operaciones de familia y versiones con feedback local', () => {
+    const requests: Array<{ run: () => Observable<unknown>; url: string; method: string }> = [
+      { run: () => service.obtenerFamiliaFormularioPorId(7), url: `${apiUrl}/familias/7`, method: 'GET' },
+      { run: () => service.crearFamiliaFormulario({ famCodigo: 'FAM_A', famNombre: 'Familia A', famDescripcion: null }), url: `${apiUrl}/familias`, method: 'POST' },
+      { run: () => service.actualizarFamiliaFormulario(7, { famNombre: 'Familia A', famDescripcion: null, famActivo: true }), url: `${apiUrl}/familias/7`, method: 'PUT' },
+      { run: () => service.desactivarFamiliaFormulario(7), url: `${apiUrl}/familias/7/desactivar`, method: 'PUT' },
+      { run: () => service.activarFamiliaFormulario(7), url: `${apiUrl}/familias/7/activar`, method: 'PUT' },
+      { run: () => service.eliminarFamiliaFormulario(7), url: `${apiUrl}/familias/7`, method: 'DELETE' },
+      { run: () => service.listarHistorialVersionesFormulario('FAM_A'), url: `${apiUrl}/formularios/historial`, method: 'GET' },
+      { run: () => service.clonarVersionFormulario(10), url: `${apiUrl}/formularios/10/clonar`, method: 'POST' }
+    ];
+
+    for (const item of requests) {
+      item.run().subscribe();
+      const request = http.expectOne(req => req.urlWithParams.startsWith(item.url));
+      expect(request.request.method).toBe(item.method);
+      expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+      request.flush({ success: true, datos: item.method === 'GET' ? [] : true });
+    }
   });
 
   it('consulta metodología por el ID exacto de versión de la evaluación', () => {

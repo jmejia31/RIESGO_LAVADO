@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { Observable } from 'rxjs';
 import { AuditoriaDto, AuditoriaPaginado } from '../models/auditoria.models';
+import { createHttpErrorScopeContext, HttpErrorScope } from '../../../../core/http/http-error-scope';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +21,7 @@ export class AuditoriaService {
     tabla?: string;
     fechaInicio?: string;
     fechaFin?: string;
-  }): Observable<AuditoriaPaginado> {
+  }, errorScope: HttpErrorScope = 'global'): Observable<AuditoriaPaginado> {
     let httpParams = new HttpParams()
       .set('pagina', params.pagina.toString())
       .set('limite', params.limite.toString());
@@ -32,6 +33,9 @@ export class AuditoriaService {
     if (params.fechaInicio) httpParams = httpParams.set('fechaInicio', params.fechaInicio);
     if (params.fechaFin) httpParams = httpParams.set('fechaFin', params.fechaFin);
 
-    return this.http.get<AuditoriaPaginado>(this.apiUrl, { params: httpParams });
+    return this.http.get<AuditoriaPaginado>(this.apiUrl, {
+      params: httpParams,
+      context: createHttpErrorScopeContext(errorScope)
+    });
   }
 }
