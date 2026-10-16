@@ -2705,3 +2705,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - P0-C implementa una politica backend compartida para las cinco rutas `IFormFile` encontradas. Se validaron firmas/estructura, MIME declarado por allowlist, extension, tamano y nombre/ruta segura. Evidencia: tests focales 94/94, backend 994/994, build Release PASS, validadores de uploads/estructura/docs PASS, diff-check PASS. Build reporta 939 warnings de analyzers en la solucion; no hubo warnings en archivos de produccion P0-C ni en los nuevos archivos de prueba.
 - P0-C esta `PENDING_CI`, cambios locales aun no publicados. No iniciar P0-D hasta CI de SHA exacto success. La decodificacion completa y archivos de imagen truncados se verifican en P0-D.
 - Cambios preexistentes tracked/untracked siguen preservados y fuera de staging. Produccion no consultada/modificada; DML=0, DDL=0; Block 10 no iniciado.
+## PRE-BLOQUE 10 - checkpoint P0-C PASS / siguiente P0-D (COD) - 2026-10-16 10:23 -06:00
+
+- P0-C PASS. SHA de codigo `0ee5de1bbe84da506e818eb521cf9234b15de944`; Quality Gates `38930569651` completed/success para el SHA exacto. P0-A y P0-B siguen PASS; Fase 0 cerrada, no reabierta.
+- Validacion local final: focal 94/94, backend 994/994, build Release PASS, upload validator PASS, estructura PASS, enlaces documental PASS, git diff check PASS. Las cinco rutas backend de carga utilizan politica compartida; no se modificaron contratos de negocio/DB.
+- Siguiente: P0-D - comprobar decodificacion de imagenes, spoofing, tamano, ruta segura, formato valido, archivo vacio/truncado y compatibilidad de Configuracion. Continuidad autorizada. Block 10 sigue NOT_STARTED.
+- Esta actualizacion documental de checkpoint se publicara en commit separado; se esperara su CI exacto antes de iniciar P0-D.
