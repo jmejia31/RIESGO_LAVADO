@@ -17,7 +17,7 @@ const versionPublicada = {
   verUsrCreacion: 1
 };
 
-function tokenAdministradorModulo10(): string {
+function tokenAdministrador(modulos = '10'): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
     nameid: '1',
@@ -27,18 +27,18 @@ function tokenAdministradorModulo10(): string {
     family_name: 'E2E',
     role: 'ADMINISTRADOR',
     rol_id: '1',
-    modulos: '10',
+    modulos,
     debe_cambiar_pass: '0',
     exp: Math.floor(Date.now() / 1000) + 3600
   })}.`;
 }
 
-async function prepararSesion(page: Page): Promise<void> {
+async function prepararSesion(page: Page, modulos = '10'): Promise<void> {
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
     localStorage.setItem('refresh_token', 'refresh-local-e2e');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
-  }, tokenAdministradorModulo10());
+  }, tokenAdministrador(modulos));
 
   await page.route('**/api/configuracion/sistema', route => route.fulfill({
     status: 200,
@@ -126,8 +126,9 @@ async function abrirVersionesDeLaFamilia(page: Page): Promise<void> {
   await expect(detalle.getByText('MATRIZ_RIESGOS_LAFT_V1')).toBeVisible();
 }
 
-test.beforeEach(async ({ page }) => {
-  await prepararSesion(page);
+test.beforeEach(async ({ page }, testInfo) => {
+  const modulos = testInfo.title.includes('sin acceso al módulo') ? '2' : '10';
+  await prepararSesion(page, modulos);
   await stubLecturasMatrices(page);
 });
 
@@ -151,16 +152,24 @@ test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado'
   await expect(page).not.toHaveURL(/\/sin-acceso/);
 });
 
-test('un 403 real del Backend conserva la protección y redirige a Acceso Denegado', async ({ page }) => {
+test('un 403 de operación se muestra dentro del modal sin abandonar el módulo', async ({ page }) => {
   await page.route('**/api/matrices-riesgos/formularios/10/clonar', route => route.fulfill({
     status: 403,
     contentType: 'application/json',
-    body: JSON.stringify({ success: false, mensaje: 'No tiene permiso para realizar esta acción.' })
+    body: JSON.stringify({ success: false, mensaje: 'No tiene permiso para clonar esta versión.' })
   }));
 
   await page.goto('/matrices-riesgos');
   await abrirVersionesDeLaFamilia(page);
   await page.getByRole('button', { name: 'Clonar versión' }).click();
+
+  await expect(page).toHaveURL(/\/matrices-riesgos(?:\?.*)?$/);
+  await expect(page.locator('[data-ui-fam-detail="modal"]')).toBeVisible();
+  await expect(page.getByText('No tiene permiso para clonar esta versión.')).toBeVisible();
+});
+
+test('una ruta sin acceso al módulo redirige a Acceso Denegado', async ({ page }) => {
+  await page.goto('/matrices-riesgos');
 
   await expect(page).toHaveURL(/\/sin-acceso(?:\?.*)?$/);
   await expect(page.getByRole('heading', { name: 'Acceso Denegado' })).toBeVisible();

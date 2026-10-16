@@ -82,20 +82,17 @@ describe('authInterceptor', () => {
     expect(router.navigate).not.toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
   });
 
-  it('mantiene la sesión y redirige a sin acceso ante 403', () => {
+  it('mantiene la ruta actual y propaga al consumidor un 403 de una operación API', () => {
     const error = vi.fn();
     http.get('/api/restringido').subscribe({ error });
     const request = testing.expectOne('/api/restringido');
     request.flush({ mensaje: 'Módulo no autorizado' }, { status: 403, statusText: 'Forbidden' });
 
-    expect(router.navigate).toHaveBeenCalledWith(['/sin-acceso'], {
-      queryParams: { mensaje: 'Módulo no autorizado' },
-      replaceUrl: true
-    });
+    expect(router.navigate).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalledOnce();
   });
 
-  it('mantiene la pantalla cuando la auditoría opcional responde 403', () => {
+  it('mantiene la ruta actual cuando auditoría responde 403', () => {
     const error = vi.fn();
     http.get('/api/auditoria?tabla=RL_MR_FAMILIAS_FORMULARIO').subscribe({ error });
     const request = testing.expectOne('/api/auditoria?tabla=RL_MR_FAMILIAS_FORMULARIO');
