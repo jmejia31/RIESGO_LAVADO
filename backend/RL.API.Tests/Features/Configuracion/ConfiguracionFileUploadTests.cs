@@ -28,6 +28,65 @@ public sealed class ConfiguracionFileUploadTests
         Assert.Empty(serviceStub.CallsTo(nameof(IConfiguracionService.RegistrarCargaImagenAsync)));
     }
 
+    [Theory]
+    [InlineData("fake.png", "image/png", "not a PNG")]
+    [InlineData("fake.jpg", "image/jpeg", "not a JPEG")]
+    [InlineData("unsupported.bmp", "image/bmp", "BM-fake")]
+    public async Task SubirImagenRechazaFormatoFalsoOExtensionNoPermitida(string name, string mime, string payload)
+    {
+        var service = InterfaceStub.Create<IConfiguracionService>(out InterfaceStub serviceStub);
+        var controller = CreateController(service);
+        var bytes = Encoding.UTF8.GetBytes(payload);
+        var file = CreateFile(name, mime, bytes);
+
+        IActionResult result = await controller.SubirImagen(file);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Empty(serviceStub.CallsTo(nameof(IConfiguracionService.RegistrarCargaImagenAsync)));
+    }
+
+    [Fact]
+    public async Task SubirImagenRechazaArchivoMayorAlLimiteAntesDeGuardar()
+    {
+        var service = InterfaceStub.Create<IConfiguracionService>(out InterfaceStub serviceStub);
+        var controller = CreateController(service);
+        var bytes = new byte[10 * 1024 * 1024 + 1];
+        var file = CreateFile("oversized.png", "image/png", bytes);
+
+        IActionResult result = await controller.SubirImagen(file);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Empty(serviceStub.CallsTo(nameof(IConfiguracionService.RegistrarCargaImagenAsync)));
+    }
+
+    [Theory]
+    [InlineData("../escape.png")]
+    [InlineData("..\\escape.png")]
+    public async Task SubirImagenRechazaNombresConTraversal(string name)
+    {
+        var service = InterfaceStub.Create<IConfiguracionService>(out InterfaceStub serviceStub);
+        var controller = CreateController(service);
+        var file = CreateFile(name, "image/png", [0x89, 0x50, 0x4E, 0x47]);
+
+        IActionResult result = await controller.SubirImagen(file);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Empty(serviceStub.CallsTo(nameof(IConfiguracionService.RegistrarCargaImagenAsync)));
+    }
+
+    [Fact]
+    public async Task SubirImagenRechazaArchivoVacio()
+    {
+        var service = InterfaceStub.Create<IConfiguracionService>(out InterfaceStub serviceStub);
+        var controller = CreateController(service);
+        var file = CreateFile("empty.png", "image/png", []);
+
+        IActionResult result = await controller.SubirImagen(file);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Empty(serviceStub.CallsTo(nameof(IConfiguracionService.RegistrarCargaImagenAsync)));
+    }
+
     private static ConfiguracionController CreateController(IConfiguracionService service)
     {
         var controller = new ConfiguracionController(service)
@@ -44,4 +103,10 @@ public sealed class ConfiguracionFileUploadTests
 
         return controller;
     }
+
+    private static FormFile CreateFile(string name, string mime, byte[] bytes) =>
+        new(new MemoryStream(bytes), 0, bytes.Length, "archivo", name)
+        {
+            Headers = new HeaderDictionary { ["Content-Type"] = mime }
+        };
 }

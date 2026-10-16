@@ -2711,3 +2711,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Validacion local final: focal 94/94, backend 994/994, build Release PASS, upload validator PASS, estructura PASS, enlaces documental PASS, git diff check PASS. Las cinco rutas backend de carga utilizan politica compartida; no se modificaron contratos de negocio/DB.
 - Siguiente: P0-D - comprobar decodificacion de imagenes, spoofing, tamano, ruta segura, formato valido, archivo vacio/truncado y compatibilidad de Configuracion. Continuidad autorizada. Block 10 sigue NOT_STARTED.
 - Esta actualizacion documental de checkpoint se publicara en commit separado; se esperara su CI exacto antes de iniciar P0-D.
+
+## PRE-BLOQUE 10 - checkpoint P0-D pendiente CI (COD) - 2026-10-16 10:49 -06:00
+
+- Baseline verificado: `desarrollo`, HEAD/origin `e505785a4debe56725ac64e0601ec00480444a82`. Fase 0 no se reabre; P0-A, P0-B y P0-C conservan sus certificaciones anteriores. Trabajo vigente: P0-D, validacion estructural server-side para imagenes de slides de Configuracion.
+- Se reemplazo la aceptacion por firma/terminador por validacion estructural para PNG/JPEG/GIF/WebP y rechazo de fixtures falsas/truncadas; limite de 10 MiB, MIME/extensiones permitidas, filename/path seguro y flujo de persistencia se conservan. No hay decoder raster en dependencias actuales; no se agrega uno y no se afirma decodificacion completa.
+- Evidencia local: tests focales 27/27; backend 1002/1002; build Release correcto con 1405 warnings de analyzers observados; no se observaron warnings en los archivos P0-D y no se atribuye el total contra baseline sin comparacion; validador de uploads PASS; estructura 118 rutas/1092 archivos PASS; links 179 Markdown/204 enlaces PASS; diff-check PASS. No aplica E2E por cambio backend de validacion previo al almacenamiento.
+- `P0_D_STATUS=PENDING_CI`. Debe publicarse exclusivamente el conjunto P0-D y esperar Quality Gates del SHA exacto. Solo si ese CI finaliza success se registrara P0-D PASS y continuara P0-E. Cambios ajenos existentes estan preservados y fuera del commit. Produccion no consultada/modificada (DML=0, DDL=0); Bloque 10 no iniciado.

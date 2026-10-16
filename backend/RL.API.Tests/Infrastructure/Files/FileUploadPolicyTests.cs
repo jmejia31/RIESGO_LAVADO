@@ -42,14 +42,36 @@ public sealed class FileUploadPolicyTests
     {
         var policy = FileUploadPolicies.Images();
         var png = CreateFile("image.png", "image/png", ValidPng());
-        var jpeg = CreateFile("image.jpg", "image/jpeg", [0xFF, 0xD8, 0xFF, 0x00, 0xFF, 0xD9]);
-        var gif = CreateFile("image.gif", "image/gif", "GIF89a;"u8.ToArray());
-        var webp = CreateFile("image.webp", "image/webp", [0x52, 0x49, 0x46, 0x46, 0x04, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50]);
+        var interlacedPng = CreateFile("interlaced.png", "image/png", ValidPng(interlace: 1));
+        var jpeg = CreateFile("image.jpg", "image/jpeg", ValidJpegStructure());
+        var gif = CreateFile("image.gif", "image/gif", Convert.FromBase64String("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"));
+        var webp = CreateFile("image.webp", "image/webp", Convert.FromBase64String("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v89"));
 
         Assert.Null(FileUploadPolicyValidator.Validate(png, policy));
+        Assert.Null(FileUploadPolicyValidator.Validate(interlacedPng, policy));
         Assert.Null(FileUploadPolicyValidator.Validate(jpeg, policy));
         Assert.Null(FileUploadPolicyValidator.Validate(gif, policy));
         Assert.Null(FileUploadPolicyValidator.Validate(webp, policy));
+    }
+
+    [Fact]
+    public void ImagePolicyRejectsSignatureSpoofAndTruncatedImageFixtures()
+    {
+        var policy = FileUploadPolicies.Images();
+        var fakePng = CreateFile("fake.png", "image/png", [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0x49, 0x45, 0x4E, 0x44]);
+        var fakeJpeg = CreateFile("fake.jpg", "image/jpeg", [0xFF, 0xD8, 0xFF, 0xD9]);
+        var validPng = ValidPng();
+        var validJpeg = ValidJpegStructure();
+        var validGif = Convert.FromBase64String("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+        var validWebp = Convert.FromBase64String("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v89");
+
+        Assert.NotNull(FileUploadPolicyValidator.Validate(fakePng, policy));
+        Assert.NotNull(FileUploadPolicyValidator.Validate(fakeJpeg, policy));
+        Assert.NotNull(FileUploadPolicyValidator.Validate(CreateFile("header-only.webp", "image/webp", WebpExtendedHeaderOnly()), policy));
+        Assert.NotNull(FileUploadPolicyValidator.Validate(CreateFile("truncated.png", "image/png", validPng[..^10]), policy));
+        Assert.NotNull(FileUploadPolicyValidator.Validate(CreateFile("truncated.jpg", "image/jpeg", validJpeg[..^2]), policy));
+        Assert.NotNull(FileUploadPolicyValidator.Validate(CreateFile("truncated.gif", "image/gif", validGif[..^1]), policy));
+        Assert.NotNull(FileUploadPolicyValidator.Validate(CreateFile("truncated.webp", "image/webp", validWebp[..^1]), policy));
     }
 
     [Theory]
@@ -165,14 +187,54 @@ public sealed class FileUploadPolicyTests
         return CreateFile("list.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", stream.ToArray());
     }
 
-    private static byte[] ValidPng()
+    private static byte[] ValidPng(byte interlace = 0)
     {
-        return [
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-            0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52,
-            0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0, 0x49, 0x45, 0x4E, 0x44, 0, 0, 0, 0
-        ];
+        using var stream = new MemoryStream();
+        stream.Write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+        WritePngChunk(stream, "IHDR", [0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, interlace]);
+        using var compressed = new MemoryStream();
+        using (var zlib = new ZLibStream(compressed, CompressionMode.Compress, leaveOpen: true))
+            zlib.Write([0, 0, 0, 0, 0]);
+        WritePngChunk(stream, "IDAT", compressed.ToArray());
+        WritePngChunk(stream, "IEND", []);
+        return stream.ToArray();
+    }
+
+    private static void WritePngChunk(Stream stream, string type, byte[] data)
+    {
+        Span<byte> length = stackalloc byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(length, (uint)data.Length);
+        stream.Write(length);
+        var typeAndData = Encoding.ASCII.GetBytes(type).Concat(data).ToArray();
+        stream.Write(typeAndData);
+        Span<byte> crc = stackalloc byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(crc, CalculatePngCrc(typeAndData));
+        stream.Write(crc);
+    }
+
+    private static uint CalculatePngCrc(byte[] data)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var value in data)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320u : crc >> 1;
+        }
+        return ~crc;
+    }
+
+    private static byte[] ValidJpegStructure() => Convert.FromBase64String("/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD896KKK/1TPhz/2Q==");
+    private static byte[] WebpExtendedHeaderOnly()
+    {
+        using var stream = new MemoryStream();
+        using var writer = new BinaryWriter(stream, Encoding.ASCII, leaveOpen: true);
+        writer.Write(Encoding.ASCII.GetBytes("RIFF"));
+        writer.Write(30u);
+        writer.Write(Encoding.ASCII.GetBytes("WEBP"));
+        writer.Write(Encoding.ASCII.GetBytes("VP8X"));
+        writer.Write(10u);
+        writer.Write(new byte[10]);
+        return stream.ToArray();
     }
 }
