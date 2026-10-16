@@ -2637,3 +2637,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - The authorization HTTP test and frontend guard test passed in that SHA; HEAD matched origin/desarrollo. MF1, MF2 and MF3 checkpoints are certified; Point 3 is CLOSED under the module-based authorization policy.
 - This final documentation-only update will receive its own Quality Gates run before handoff closure.
 - Next: no further feature work. Block 10 and other pre-Block10 findings remain outside scope; physical double-monitor/zoom checks were owner-approved. Preexisting worktree changes remain untouched and excluded from commits.
+
+## PRE-BLOQUE 10 — checkpoint Fase 0 modal Large (COD, 2026-10-15 20:16 -06:00)
+
+- Baseline real: `desarrollo`, HEAD/origin `13c48afb46414ef5c96770258b9e8dc61397251b`. Cambios previos ajenos y untracked permanecen intactos y fuera de stage.
+- Causa raíz visual: token global `.modal-size-lg` terminaba en 56rem/896px. Ajuste central a `--modal-size-lg-max-width: 64rem`/1024px; Medium 36rem y XL 72rem permanecen diferenciados. Confirmaciones no cambiaron de talla.
+- Browser Chromium comprobó Crear y Editar a 1366×768, 1440×900, 1536×864, 1920×1080 y 390×844: desktop 1024px frente a Medium 576px; textarea 966px; en móvil tarjeta 366px, viewport 390px, sin overflow, header visible y footer alcanzable.
+- Pruebas ejecutadas: E2E focal 1/1; CRUD component 24/24; modal geometry 8/8; confirmación 2/2; frontend quality gate 897/897; backend 973/973; lint/build y validadores de modal/theme/iconos PASS; `git diff --check` PASS. El build reporta warnings existentes de SCSS budget y CommonJS.
+- Evidencia fuera de Git: `%USERPROFILE%\Documents\RIESGO_LAVADO\PREBLOCK10_MODAL_LARGE\20261015_baseline` y `...\20261015_after`.
+- Fase 0 está PASS en local; CI del nuevo SHA pendiente. P0-A permanece NOT_STARTED hasta CI success. No tocar producción; no iniciar Bloque 10.

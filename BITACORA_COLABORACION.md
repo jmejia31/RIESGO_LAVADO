@@ -9045,6 +9045,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Arquitectura final: autenticacion + acceso al modulo 10; no se requiere ni se anadio action-RBAC/solo-Administrador. Pruebas fisicas de doble monitor y zoom 80/100/125 fueron aprobadas previamente por el propietario (OWNER_MANUAL_VALIDATION); bounded-select no se toco.
 - Continuacion: revisar diff, stage solo test backend, spec frontend y estos dos documentos; commit/push normal a origin/desarrollo, esperar Quality Gates del SHA final. Bloque 10 no iniciado.
 
+## Pre-Bloque 10 — Fase 0 modal Large efectivo (COD) — 2026-10-15 20:16 -06:00
+
+- **Baseline:** rama `desarrollo`; inicio `13c48afb46414ef5c96770258b9e8dc61397251b`, igual a `origin/desarrollo`. Se preservaron sin modificar ni stagear los cambios tracked/untracked preexistentes (`DatabaseEnvironmentGuard*`, specs E2E/tsconfig, `.vscode`, artefactos y scratch).
+- **Auditoría:** el shell compartido declara Medium=36rem/576px, Large=56rem/896px y XL=72rem/1152px. El modal Riesgo ya tenía `.modal-size-lg`, pero la captura Chromium a 1280×720 mostraba el límite efectivo de 896px. Otros consumidores del token Large: motivo de monitoreo, detalle de bitácora y otro modal de Matrices.
+- **Corrección mínima:** `frontend/rl-app/src/styles.css` centraliza `--modal-size-lg-max-width: 64rem` (1024px), conservando Medium, XL, separación de viewport, altura máxima y scroll interno. No se alteró el formulario ni sus handlers/payload/validaciones. Confirmaciones continúan Medium.
+- **Regresión:** `modal-geometry.spec.ts` protege el orden de tamaños; E2E `UAT administra un riesgo desde la interfaz integral` mide Crear y Editar en 1366×768, 1440×900, 1536×864, 1920×1080 y 390×844, comparando Large contra Medium en escritorio y comprobando textarea, header/footer y overflow. Un primer intento de medición usó el `<dialog>` overlay y falló por medir el viewport completo; se corrigió el helper para medir la tarjeta y el retest pasó.
+- **Resultados verificados:** geometría E2E 1/1; componente CRUD 24/24; modal geometry 8/8; confirmación 2/2; suite frontend del gate 897/897; backend 973/973; lint/build PASS; validadores institucional/premium/iconos PASS; `git diff --check` PASS. Build mantiene warnings SCSS budget y CommonJS preexistentes. Locales: desktop 1024px vs Medium 576px, textarea 966px; móvil 366px y page width 390px.
+- **Evidencia externa:** `%USERPROFILE%\Documents\RIESGO_LAVADO\PREBLOCK10_MODAL_LARGE\20261015_baseline` y `...\20261015_after`, con capturas Crear/Editar antes/después y JSON geométrico por ambos modales.
+- **Checkpoint:** Fase 0 técnicamente PASS local, pendiente commit/push y CI del SHA propio. Fase P0-A aún no iniciada hasta que Quality Gates del checkpoint concluya success. Producción no consultada/modificada; DML=0, DDL=0; Block 10 no iniciado.
+
 
 ### CI final del checkpoint de autorizacion (COD, 2026-10-15 17:20 -06:00)
 

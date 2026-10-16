@@ -37,6 +37,7 @@
   --ihss-950-rgb: 18 35 83;
   --ihss-on-950-rgb: 255 255 255;
   --modal-viewport-gap: 1.5rem;   /* Separación institucional uniforme respecto al viewport */
+  --modal-size-lg-max-width: 64rem;
   --modal-close-control-size: 2.75rem;
   --modal-close-icon-size: 1.25rem;
   --modal-close-bg: rgb(255 255 255 / 0.16);
@@ -628,7 +629,7 @@ dialog.modal-backdrop-overlay {
 
 .modal-size-lg {
   width: 100% !important;
-  max-width: 56rem !important; /* 896px (max-w-3xl / max-w-4xl / max-w-5xl) */
+  max-width: var(--modal-size-lg-max-width) !important; /* 1024px: formularios amplios con margen al viewport */
 }
 
 .modal-size-xl {

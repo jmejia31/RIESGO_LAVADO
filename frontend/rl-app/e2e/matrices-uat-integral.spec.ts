@@ -1060,6 +1060,61 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
     await createModal.screenshot({ path: join(artifactDirectory, 'risk-create-modal.png') });
     await page.screenshot({ path: join(artifactDirectory, 'risk-create-modal-with-table-context.png') });
   }
+  const originalViewport = page.viewportSize();
+  expect(originalViewport).not.toBeNull();
+  const measureRiskModal = async (modal: ReturnType<Page['locator']>, label: string) => {
+    const measurements: Array<Record<string, number>> = [];
+    for (const viewport of [
+      { width: 1366, height: 768 },
+      { width: 1440, height: 900 },
+      { width: 1536, height: 864 },
+      { width: 1920, height: 1080 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const measurement = await modal.evaluate(element => {
+        const card = element.querySelector('.modal-container-card');
+        if (!card) throw new Error('Risk modal card is missing.');
+        const probe = document.createElement('div');
+        probe.className = 'modal-container-card modal-size-md';
+        probe.style.cssText = 'position:fixed;left:-10000px;top:0;visibility:hidden';
+        document.body.append(probe);
+        const modalRect = card.getBoundingClientRect();
+        const mediumRect = probe.getBoundingClientRect();
+        const textareaRect = card.querySelector('textarea')?.getBoundingClientRect();
+        const headerRect = card.querySelector('header')?.getBoundingClientRect();
+        const footerRect = card.querySelector('footer')?.getBoundingClientRect();
+        probe.remove();
+        return {
+          modalWidth: modalRect.width,
+          mediumWidth: mediumRect.width,
+          textareaWidth: textareaRect?.width ?? 0,
+          headerTop: headerRect?.top ?? -1,
+          footerBottom: footerRect?.bottom ?? Number.POSITIVE_INFINITY,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          pageWidth: document.documentElement.scrollWidth,
+        };
+      });
+      expect(measurement.modalWidth).toBeGreaterThan(0);
+      expect(measurement.modalWidth).toBeLessThanOrEqual(viewport.width - 20);
+      expect(measurement.textareaWidth).toBeGreaterThan(measurement.modalWidth * 0.7);
+      expect(measurement.headerTop).toBeGreaterThanOrEqual(0);
+      expect(measurement.footerBottom).toBeLessThanOrEqual(viewport.height);
+      expect(measurement.pageWidth).toBeLessThanOrEqual(viewport.width);
+      if (viewport.width >= 1366) expect(measurement.modalWidth).toBeGreaterThan(measurement.mediumWidth);
+      measurements.push(measurement);
+    }
+    await page.setViewportSize(originalViewport!);
+    if (artifactDirectory) {
+      await writeFile(join(artifactDirectory, `${label}-geometry.json`), JSON.stringify(measurements, null, 2));
+    }
+    await test.info().attach(`${label}-geometry.json`, {
+      body: Buffer.from(JSON.stringify(measurements, null, 2)),
+      contentType: 'application/json',
+    });
+  };
+  await measureRiskModal(createModal, 'create-risk-modal');
   await expect(createModal.locator('button[aria-label="Cancelar formulario de riesgo"]')).toHaveText('');
   await expect(createModal.locator('[data-ui-action="save-risk"]')).toHaveText('');
   await page.locator('#codigo-riesgo').fill('R-008');
@@ -1079,6 +1134,7 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   const editModal = page.locator('[data-risk-crud-modal]');
   await expect(editModal).toBeVisible();
   if (artifactDirectory) await editModal.screenshot({ path: join(artifactDirectory, 'risk-edit-modal.png') });
+  await measureRiskModal(editModal, 'edit-risk-modal');
   await expect(page.locator('#codigo-riesgo')).toHaveValue('R-007');
   await page.locator('#nombre-riesgo').fill('Nombre temporal');
   await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();

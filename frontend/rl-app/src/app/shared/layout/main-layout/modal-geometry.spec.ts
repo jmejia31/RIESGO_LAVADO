@@ -125,6 +125,14 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
     }
   });
 
+  it('large conserva un ancho institucional distinto de medium y debajo de xl', () => {
+    const styles = readFileSync(join(cwd(), 'src', 'styles.css'), 'utf8');
+    expect(styles).toContain('--modal-size-lg-max-width: 64rem');
+    expect(styles).toMatch(/\.modal-size-md\s*\{[^}]*max-width:\s*36rem/s);
+    expect(styles).toMatch(/\.modal-size-lg\s*\{[^}]*max-width:\s*var\(--modal-size-lg-max-width\)/s);
+    expect(styles).toMatch(/\.modal-size-xl\s*\{[^}]*max-width:\s*72rem/s);
+  });
+
   it('4. todas las superficies productivas usan tamaño canónico y no fijan alturas de documento en píxeles', () => {
     const appRoot = join(cwd(), 'src', 'app');
     const sources: Array<{ path: string; source: string }> = [];
