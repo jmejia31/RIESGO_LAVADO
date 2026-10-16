@@ -73,6 +73,33 @@ describe('MatricesRiesgosService', () => {
     }
   });
 
+  it('marks contextual evaluation, mitigation and report operations as local without changing request contracts', () => {
+    const requests: Array<{ run: () => Observable<unknown>; url: string; method: string }> = [
+      { run: () => service.crearEvaluacion({ evaId: 0, evaRiesgoId: 1, evaVersionId: 1, evaEstado: 'BORRADOR', evaDataJson: '{}', evaDataCalcJson: null, evaVri: null, evaVrr: null, evaFechaEval: '2026-10-16T00:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true }), url: `${apiUrl}/evaluaciones`, method: 'POST' },
+      { run: () => service.actualizarEvaluacion(1, { evaId: 1, evaRiesgoId: 1, evaVersionId: 1, evaEstado: 'BORRADOR', evaDataJson: '{}', evaDataCalcJson: null, evaVri: null, evaVrr: null, evaFechaEval: '2026-10-16T00:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true }), url: `${apiUrl}/evaluaciones/1`, method: 'PUT' },
+      { run: () => service.guardarBorradorEvaluacion({ evaId: 0, evaRiesgoId: 1, evaVersionId: 1, evaEstado: 'BORRADOR', evaDataJson: '{}', evaDataCalcJson: null, evaVri: null, evaVrr: null, evaFechaEval: '2026-10-16T00:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true }), url: `${apiUrl}/evaluaciones/borrador`, method: 'POST' },
+      { run: () => service.actualizarBorradorEvaluacion(1, { evaId: 1, evaRiesgoId: 1, evaVersionId: 1, evaEstado: 'BORRADOR', evaDataJson: '{}', evaDataCalcJson: null, evaVri: null, evaVrr: null, evaFechaEval: '2026-10-16T00:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true }), url: `${apiUrl}/evaluaciones/1/borrador`, method: 'PUT' },
+      { run: () => service.crearControl({ conEvaluacionId: 1, conTipo: 'PREVENTIVO', conDescripcion: 'Control', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }), url: `${apiUrl}/mitigacion/controles`, method: 'POST' },
+      { run: () => service.actualizarControl(1, { conEvaluacionId: 1, conTipo: 'PREVENTIVO', conDescripcion: 'Control', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }), url: `${apiUrl}/mitigacion/controles/1`, method: 'PUT' },
+      { run: () => service.crearPlan({ plaEvaluacionId: 1, plaDescripcion: 'Plan', plaAvance: 0, plaPresupuesto: 0, plaFechaInicio: '2026-10-16', plaFechaFin: '2026-10-17', plaEstado: 'PENDIENTE', plaMonitoreoSeguimiento: null, plaResponsables: null, plaRecursos: null }), url: `${apiUrl}/mitigacion/planes`, method: 'POST' },
+      { run: () => service.actualizarPlan(1, { plaEvaluacionId: 1, plaDescripcion: 'Plan', plaAvance: 0, plaPresupuesto: 0, plaFechaInicio: '2026-10-16', plaFechaFin: '2026-10-17', plaEstado: 'PENDIENTE', plaMonitoreoSeguimiento: null, plaResponsables: null, plaRecursos: null }), url: `${apiUrl}/mitigacion/planes/1`, method: 'PUT' },
+      { run: () => service.crearActividad({ actPlanId: 1, actDescripcion: 'Actividad', actResponsable: 'Unidad', actAvance: 0, actFechaInicio: '2026-10-16', actFechaFin: '2026-10-17', actEstado: 'PENDIENTE' }), url: `${apiUrl}/mitigacion/actividades`, method: 'POST' },
+      { run: () => service.actualizarActividad(1, { actPlanId: 1, actDescripcion: 'Actividad', actResponsable: 'Unidad', actAvance: 0, actFechaInicio: '2026-10-16', actFechaFin: '2026-10-17', actEstado: 'PENDIENTE' }), url: `${apiUrl}/mitigacion/actividades/1`, method: 'PUT' },
+      { run: () => service.actualizarObservacionArea(1, 'Observación'), url: `${apiUrl}/monitoreo/evaluaciones/1/observaciones/area`, method: 'PUT' },
+      { run: () => service.actualizarObservacionUgr(1, 'Observación'), url: `${apiUrl}/monitoreo/evaluaciones/1/observaciones/ugr`, method: 'PUT' },
+      { run: () => service.descargarConsolidadoExcel(), url: `${apiUrl}/reportes/consolidado.xlsx`, method: 'GET' },
+      { run: () => service.descargarConsolidadoPdf(), url: `${apiUrl}/reportes/consolidado.pdf`, method: 'GET' }
+    ];
+
+    for (const item of requests) {
+      item.run().subscribe();
+      const request = http.expectOne(item.url);
+      expect(request.request.method).toBe(item.method);
+      expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+      request.flush(item.method === 'GET' ? new Blob(['report']) : { success: true, datos: 1 });
+    }
+  });
+
   it('consulta metodología por el ID exacto de versión de la evaluación', () => {
     const resultado = vi.fn();
     const metodologia = { versionFormularioId: 63, codigo: 'FORM_63', version: 1, secciones: [], catalogos: [], reglas: [] };
@@ -178,6 +205,7 @@ describe('MatricesRiesgosService', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(dto);
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     request.flush({ success: true, datos: 15 });
   });
 
@@ -215,6 +243,7 @@ describe('MatricesRiesgosService', () => {
     const control = http.expectOne(`${apiUrl}/mitigacion/controles`);
     expect(control.request.method).toBe('POST');
     expect(control.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    expect(control.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     control.flush({ success: true, datos: 9 });
 
     service.crearPlan({
@@ -232,6 +261,7 @@ describe('MatricesRiesgosService', () => {
     const plan = http.expectOne(`${apiUrl}/mitigacion/planes`);
     expect(plan.request.method).toBe('POST');
     expect(plan.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    expect(plan.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     expect(plan.request.body.plaRecursos).toBe('Equipo especializado');
     plan.flush({ success: true, datos: 4 });
   });

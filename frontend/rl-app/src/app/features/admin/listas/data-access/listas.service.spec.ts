@@ -65,6 +65,25 @@ describe('ListasService', () => {
     localTypes.flush({ success: true, datos: [] });
   });
 
+  it('uses local scope for list exports and contextual mutations with local error feedback', () => {
+    const requests = [
+      { run: () => service.getJuridicasParaExportar({ pagina: 1, tamanoPagina: 10 }), url: `${apiUrl}/juridicas/exportar`, method: 'GET' },
+      { run: () => service.getNaturalesParaExportar({ pagina: 1, tamanoPagina: 10 }), url: `${apiUrl}/naturales/exportar`, method: 'GET' },
+      { run: () => service.getEmpleadosParaExportar({ pagina: 1, tamanoPagina: 10 }), url: `${apiUrl}/empleados/exportar`, method: 'GET' },
+      { run: () => service.actualizarSeguimiento(4, 'Actualización', []), url: `${apiUrl}/seguimientos/4`, method: 'PUT' },
+      { run: () => service.crearTipoListaCautela('Tipo', null, null), url: `${apiUrl}/tipos-listas-cautela`, method: 'POST' },
+      { run: () => service.actualizarTipoListaCautela(4, 'Tipo', null, null), url: `${apiUrl}/tipos-listas-cautela/4`, method: 'PUT' }
+    ];
+
+    for (const item of requests) {
+      item.run().subscribe();
+      const request = http.expectOne(req => req.url === item.url);
+      expect(request.request.method).toBe(item.method);
+      expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+      request.flush(item.method === 'GET' ? { success: true, datos: [] } : { success: true, mensaje: 'ok' });
+    }
+  });
+
   it('construye el formulario documental y configura la confirmacion del seguimiento', () => {
     const evidencia = new File(['contenido'], 'evidencia.txt', { type: 'text/plain' });
     service.registrarSeguimiento('0801', 'Revision mensual', [evidencia]).subscribe();

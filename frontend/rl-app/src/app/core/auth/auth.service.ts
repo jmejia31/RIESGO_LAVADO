@@ -65,13 +65,13 @@ export class AuthService {
 
   recuperarPassword(email: string) {
     return this.http.post<{ success: boolean; mensaje: string }>(
-      `${this.API}/recuperar-password`, { email }
+      `${this.API}/recuperar-password`, { email }, { context: createHttpErrorScopeContext('local') }
     );
   }
 
   cambiarPassword(passwordActual: string, nuevoPassword: string) {
     return this.http.put<{ success: boolean; mensaje: string }>(
-      `${this.API}/password`, { passwordActual, nuevoPassword }
+      `${this.API}/password`, { passwordActual, nuevoPassword }, { context: createHttpErrorScopeContext('local') }
     );
   }
 

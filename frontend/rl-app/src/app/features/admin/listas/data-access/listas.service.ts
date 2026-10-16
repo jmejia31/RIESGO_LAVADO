@@ -47,7 +47,7 @@ export class ListasService {
   }
 
   getJuridicasParaExportar(consulta: ConsultaMonitoreoPaginada): Observable<CoincidenciaJuridica[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaJuridica[] }>(`${this.apiUrl}/juridicas/exportar`, { params: this.toMonitoringParams(consulta) })
+    return this.http.get<{ success: boolean; datos: CoincidenciaJuridica[] }>(`${this.apiUrl}/juridicas/exportar`, { params: this.toMonitoringParams(consulta), context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.datos));
   }
 
@@ -57,7 +57,7 @@ export class ListasService {
   }
 
   getNaturalesParaExportar(consulta: ConsultaMonitoreoPaginada): Observable<CoincidenciaNatural[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaNatural[] }>(`${this.apiUrl}/naturales/exportar`, { params: this.toMonitoringParams(consulta) })
+    return this.http.get<{ success: boolean; datos: CoincidenciaNatural[] }>(`${this.apiUrl}/naturales/exportar`, { params: this.toMonitoringParams(consulta), context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.datos));
   }
 
@@ -67,7 +67,7 @@ export class ListasService {
   }
 
   getEmpleadosParaExportar(consulta: ConsultaMonitoreoPaginada): Observable<CoincidenciaEmpleado[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/exportar`, { params: this.toMonitoringParams(consulta) })
+    return this.http.get<{ success: boolean; datos: CoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/exportar`, { params: this.toMonitoringParams(consulta), context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.datos));
   }
 
@@ -192,7 +192,8 @@ export class ListasService {
         [CONFIRMACION_TITULO_HEADER]: 'Confirmar cambios del seguimiento',
         [CONFIRMACION_TEXTO_HEADER]: '¿Desea actualizar la nota de seguimiento y conservar el historial de auditoría?',
         [CONFIRMACION_BOTON_HEADER]: 'Sí, actualizar'
-      }
+      },
+      context: createHttpErrorScopeContext('local')
     });
   }
 
@@ -233,11 +234,11 @@ export class ListasService {
   }
 
   crearTipoListaCautela(descripcion: string, tipoArchivo: string | null, cantidadColumnas: number | null): Observable<any> {
-    return this.http.post<{ success: boolean; mensaje: string; datos: any }>(`${this.apiUrl}/tipos-listas-cautela`, { descripcion, tipoArchivo, cantidadColumnas });
+    return this.http.post<{ success: boolean; mensaje: string; datos: any }>(`${this.apiUrl}/tipos-listas-cautela`, { descripcion, tipoArchivo, cantidadColumnas }, { context: createHttpErrorScopeContext('local') });
   }
 
   actualizarTipoListaCautela(id: number, descripcion: string, tipoArchivo: string | null, cantidadColumnas: number | null): Observable<any> {
-    return this.http.put<{ success: boolean; mensaje: string }>(`${this.apiUrl}/tipos-listas-cautela/${id}`, { descripcion, tipoArchivo, cantidadColumnas });
+    return this.http.put<{ success: boolean; mensaje: string }>(`${this.apiUrl}/tipos-listas-cautela/${id}`, { descripcion, tipoArchivo, cantidadColumnas }, { context: createHttpErrorScopeContext('local') });
   }
 
   eliminarTipoListaCautela(id: number): Observable<any> {
