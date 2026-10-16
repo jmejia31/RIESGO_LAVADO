@@ -606,8 +606,10 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('En revisión');
   const reviewDestinations = followUpModal.locator('#seg-nuevo-estado option');
   await expect(reviewDestinations).toHaveCount(3);
-  await expect(reviewDestinations).not.toContainText('En revisión');
-  await expect(reviewDestinations).toContainText(['Observada', 'Aprobada', 'Rechazada']);
+  const reviewDestinationValues = await reviewDestinations.evaluateAll(options =>
+    options.map(option => (option as HTMLOptionElement).value));
+  expect(reviewDestinationValues).toEqual(['APROBADA', 'OBSERVADA', 'RECHAZADA']);
+  await expect(reviewDestinations).toHaveText(['Aprobada', 'Observada', 'Rechazada']);
 
   await page.locator('#seg-motivo').fill('Observación de prueba');
   await page.locator('#seg-nuevo-estado').selectOption('OBSERVADA');
