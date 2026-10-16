@@ -77,7 +77,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   readonly errorVersiones = signal<string | null>(null);
   readonly errorActividad = signal<string | null>(null);
   readonly noEncontrada = signal(false);
-  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
+  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
   readonly etiquetaRegresar = computed(() => this.origen === 'nueva-evaluacion' ? 'Regresar a Nueva Evaluación' : 'Regresar a Familias de Formularios');
 
   readonly versionesOrdenadas = computed(() =>

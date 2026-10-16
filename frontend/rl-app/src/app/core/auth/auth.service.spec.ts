@@ -55,6 +55,15 @@ describe('AuthService', () => {
     expect(service.tieneRol(['administrador'])).toBe(true);
   });
 
+  it('no equipara ADMIN al rol canónico ADMINISTRADOR', () => {
+    const response = crearLoginResponse('access-admin-alias', 'refresh-admin-alias', undefined, 'ADMIN');
+
+    service.login({ email: 'ana@ihss.hn', password: 'ClaveSegura123!' }).subscribe();
+    http.expectOne('http://localhost:5043/api/auth/login').flush({ success: true, datos: response });
+
+    expect(service.tieneRol(['ADMINISTRADOR'])).toBe(false);
+  });
+
   it('mantiene la sesión cuando existe actividad antes de completar 30 minutos de inactividad', () => {
     iniciarSesionActiva();
 
@@ -215,7 +224,8 @@ describe('AuthService', () => {
   function crearLoginResponse(
     accessLabel: string,
     refreshToken: string,
-    expiresAt = '2099-12-31T23:59:59Z'
+    expiresAt = '2099-12-31T23:59:59Z',
+    role = 'ADMINISTRADOR'
   ): LoginResponse {
     const payload = {
       nameid: '27',
@@ -223,7 +233,7 @@ describe('AuthService', () => {
       email: 'ana@ihss.hn',
       given_name: 'Ana',
       family_name: 'Pérez',
-      role: 'ADMINISTRADOR',
+      role,
       rol_id: '1',
       es_dom: '0',
       modulos: '2,5,invalido,9',

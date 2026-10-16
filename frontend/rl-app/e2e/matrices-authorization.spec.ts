@@ -17,7 +17,7 @@ const versionPublicada = {
   verUsrCreacion: 1
 };
 
-function tokenAdministrador(modulos = '10'): string {
+function tokenAdministrador(modulos = '10', role = 'ADMINISTRADOR'): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
     nameid: '1',
@@ -25,7 +25,7 @@ function tokenAdministrador(modulos = '10'): string {
     email: 'admin.e2e@ihss.hn',
     given_name: 'Administrador',
     family_name: 'E2E',
-    role: 'ADMINISTRADOR',
+    role,
     rol_id: '1',
     modulos,
     debe_cambiar_pass: '0',
@@ -33,12 +33,12 @@ function tokenAdministrador(modulos = '10'): string {
   })}.`;
 }
 
-async function prepararSesion(page: Page, modulos = '10'): Promise<void> {
+async function prepararSesion(page: Page, modulos = '10', role = 'ADMINISTRADOR'): Promise<void> {
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
     localStorage.setItem('refresh_token', 'refresh-local-e2e');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
-  }, tokenAdministrador(modulos));
+  }, tokenAdministrador(modulos, role));
 
   await page.route('**/api/configuracion/sistema', route => route.fulfill({
     status: 200,
@@ -128,7 +128,8 @@ async function abrirVersionesDeLaFamilia(page: Page): Promise<void> {
 
 test.beforeEach(async ({ page }, testInfo) => {
   const modulos = testInfo.title.includes('sin acceso al módulo') ? '2' : '10';
-  await prepararSesion(page, modulos);
+  const role = testInfo.title.includes('alias ADMIN') ? 'ADMIN' : 'ADMINISTRADOR';
+  await prepararSesion(page, modulos, role);
   await stubLecturasMatrices(page);
 });
 
@@ -150,6 +151,13 @@ test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado'
 
   await expect.poll(() => clonaciones).toBe(1);
   await expect(page).not.toHaveURL(/\/sin-acceso/);
+});
+
+test('alias ADMIN no habilita acciones reservadas a ADMINISTRADOR', async ({ page }) => {
+  await page.goto('/matrices-riesgos');
+  await abrirVersionesDeLaFamilia(page);
+
+  await expect(page.getByRole('button', { name: /Clonar/ })).toHaveCount(0);
 });
 
 test('un 403 de operación se muestra dentro del modal sin abandonar el módulo', async ({ page }) => {

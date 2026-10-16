@@ -64,7 +64,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly noEncontrada = signal(false);
-  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
+  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
 
   nombre = '';
   descripcion = '';

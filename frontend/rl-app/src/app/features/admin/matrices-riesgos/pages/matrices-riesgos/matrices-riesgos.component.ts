@@ -101,7 +101,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private secuenciaCargaFamilias = 0;
   private secuenciaCargaConsolidado = 0;
 
-  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
+  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
 
   readonly tab = signal<TabMatrices>('evaluaciones');
   readonly cargando = signal(false);
@@ -1862,7 +1862,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   usuarioEsAdministrador(): boolean {
-    return this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']);
+    return this.authService.tieneRol(['ADMINISTRADOR']);
   }
 
   cancelarConfirmacionFamiliaPredeterminada(): void {

@@ -331,6 +331,7 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     authMock.tieneRol.mockReturnValue(false);
     const componenteSinPermiso = TestBed.runInInjectionContext(() => new MatricesRiesgosComponent());
     expect(componenteSinPermiso.esAdministrador()).toBe(false);
+    expect(authMock.tieneRol).toHaveBeenCalledWith(['ADMINISTRADOR']);
 
     Object.defineProperty(component, 'esAdministrador', {
       configurable: true,
