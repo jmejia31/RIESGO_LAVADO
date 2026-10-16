@@ -178,6 +178,21 @@ jobs:
           echo 'BLOCK8_ORACLE_TESTS_EXECUTED=1'
           echo 'BLOCK8_CONSOLIDATED_ORACLE_INTEGRATION=PASS'
 
+      - name: Verify user and module assignment rollback against disposable Oracle XE
+        env:
+          RL_P0F_ORACLE_INTEGRATION_REQUIRED: 'true'
+          P0F_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~UsuarioRepositoryAtomicityOracleIntegrationTests --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Passed: *1' <<<"$output"
+          grep -Eq 'Skipped: *0' <<<"$output"
+          grep -q 'P0F_CREATE_NTH_MODULE_ROLLBACK=PASS' <<<"$output"
+          grep -q 'P0F_UPDATE_NTH_MODULE_ROLLBACK=PASS' <<<"$output"
+          echo 'P0F_ORACLE_TESTS_EXECUTED=1'
+          echo 'P0F_USER_MODULE_ATOMICITY=PASS'
+
       - name: Validate compose configuration without secrets in repository
         shell: bash
         env:

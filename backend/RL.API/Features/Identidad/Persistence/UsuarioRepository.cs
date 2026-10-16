@@ -102,8 +102,12 @@ public class UsuarioRepository : IUsuarioRepository
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
+        await using var transaction = conn.BeginTransaction();
+        try
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.CommandText = @"
             INSERT INTO RL_USUARIOS (
                 USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL,
                 USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID, USR_EMPLEADO_ID,
@@ -117,54 +121,66 @@ public class UsuarioRepository : IUsuarioRepository
             )
             RETURNING USR_ID INTO :new_id";
 
-        cmd.Parameters.Add(new OracleParameter("nombre",   dto.Nombre));
-        cmd.Parameters.Add(new OracleParameter("apellido", dto.Apellido));
-        cmd.Parameters.Add(new OracleParameter("email",    dto.Email));
-        cmd.Parameters.Add(new OracleParameter("hash",     hash));
-        cmd.Parameters.Add(new OracleParameter("salt",     salt));
-        cmd.Parameters.Add(new OracleParameter("rol_id",   dto.RolId));
-        cmd.Parameters.Add(new OracleParameter("emp_id",   (object?)dto.EmpleadoId ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("u_dni",    (object?)dto.Dni ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("u_es_dom", dto.EsUsuarioDominio));
-        cmd.Parameters.Add(new OracleParameter("u_dom_user", (object?)dto.UsuarioDominio ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("u_dom_id", (object?)dto.DominioId ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("debe_cambiar", dto.EsUsuarioDominio == 0 ? 1 : 0));
-        cmd.Parameters.Add(new OracleParameter("fecha_temp", dto.EsUsuarioDominio == 0 ? (object)DateTime.Now : DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("nombre", dto.Nombre));
+            cmd.Parameters.Add(new OracleParameter("apellido", dto.Apellido));
+            cmd.Parameters.Add(new OracleParameter("email", dto.Email));
+            cmd.Parameters.Add(new OracleParameter("hash", hash));
+            cmd.Parameters.Add(new OracleParameter("salt", salt));
+            cmd.Parameters.Add(new OracleParameter("rol_id", dto.RolId));
+            cmd.Parameters.Add(new OracleParameter("emp_id", (object?)dto.EmpleadoId ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("u_dni", (object?)dto.Dni ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("u_es_dom", dto.EsUsuarioDominio));
+            cmd.Parameters.Add(new OracleParameter("u_dom_user", (object?)dto.UsuarioDominio ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("u_dom_id", (object?)dto.DominioId ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("debe_cambiar", dto.EsUsuarioDominio == 0 ? 1 : 0));
+            cmd.Parameters.Add(new OracleParameter("fecha_temp", dto.EsUsuarioDominio == 0 ? (object)DateTime.Now : DBNull.Value));
 
-        var pNewId = new OracleParameter("new_id", OracleDbType.Int64)
+            var pNewId = new OracleParameter("new_id", OracleDbType.Int64)
             { Direction = System.Data.ParameterDirection.Output };
-        cmd.Parameters.Add(pNewId);
+            cmd.Parameters.Add(pNewId);
 
-        await cmd.ExecuteNonQueryAsync();
-        var rawVal = pNewId.Value;
-        long newId = rawVal is Oracle.ManagedDataAccess.Types.OracleDecimal od
-            ? (long)od.Value
-            : Convert.ToInt64(rawVal.ToString());
+            await cmd.ExecuteNonQueryAsync();
+            var rawVal = pNewId.Value;
+            long newId = rawVal is Oracle.ManagedDataAccess.Types.OracleDecimal od
+                ? (long)od.Value
+                : Convert.ToInt64(rawVal.ToString());
 
-        if (dto.ModulosIds != null && dto.ModulosIds.Count > 0)
-        {
-            foreach (var modId in dto.ModulosIds)
+            if (dto.ModulosIds != null && dto.ModulosIds.Count > 0)
             {
-                await using var mCmd = conn.CreateCommand();
-                mCmd.CommandText = "INSERT INTO RL_USUARIO_MODULOS (USM_USR_ID, USM_MOD_ID) VALUES (:usr_id, :mod_id)";
-                mCmd.Parameters.Add(new OracleParameter("usr_id", newId));
-                mCmd.Parameters.Add(new OracleParameter("mod_id", modId));
-                await mCmd.ExecuteNonQueryAsync();
+                foreach (var modId in dto.ModulosIds)
+                {
+                    await using var mCmd = conn.CreateCommand();
+                    mCmd.Transaction = transaction;
+                    mCmd.CommandText = "INSERT INTO RL_USUARIO_MODULOS (USM_USR_ID, USM_MOD_ID) VALUES (:usr_id, :mod_id)";
+                    mCmd.Parameters.Add(new OracleParameter("usr_id", newId));
+                    mCmd.Parameters.Add(new OracleParameter("mod_id", modId));
+                    await mCmd.ExecuteNonQueryAsync();
+                }
             }
-        }
 
-        return newId;
+            await transaction.CommitAsync();
+            return newId;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<bool> ActualizarAsync(long id, ActualizarUsuarioDto dto, string? hash, string? salt)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
+        await using var transaction = conn.BeginTransaction();
 
-        await using var cmd = conn.CreateCommand();
-        cmd.BindByName = true;
+        try
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.BindByName = true;
 
-        string sql = @"
+            string sql = @"
             UPDATE RL_USUARIOS SET 
                 USR_NOMBRE = :nombre, 
                 USR_APELLIDO = :apellido, 
@@ -176,51 +192,60 @@ public class UsuarioRepository : IUsuarioRepository
                 USR_DOM_ID = :u_dom_id, 
                 USR_FECHA_MODIFICACION = SYSDATE";
 
-        if (!string.IsNullOrEmpty(hash))
-        {
-            sql += @", 
+            if (!string.IsNullOrEmpty(hash))
+            {
+                sql += "," + @"
                 USR_PASSWORD_HASH = :hash, 
                 USR_PASSWORD_SALT = :salt";
-            cmd.Parameters.Add(new OracleParameter("hash", hash));
-            cmd.Parameters.Add(new OracleParameter("salt", (object?)salt ?? DBNull.Value));
-        }
+                cmd.Parameters.Add(new OracleParameter("hash", hash));
+                cmd.Parameters.Add(new OracleParameter("salt", (object?)salt ?? DBNull.Value));
+            }
 
-        sql += " WHERE USR_ID = :id";
-        cmd.CommandText = sql;
+            sql += " WHERE USR_ID = :id";
+            cmd.CommandText = sql;
 
-        cmd.Parameters.Add(new OracleParameter("nombre",   dto.Nombre));
-        cmd.Parameters.Add(new OracleParameter("apellido", dto.Apellido));
-        cmd.Parameters.Add(new OracleParameter("email",    dto.Email));
-        cmd.Parameters.Add(new OracleParameter("rol_id",   dto.RolId));
-        cmd.Parameters.Add(new OracleParameter("u_dni",    (object?)dto.Dni ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("u_es_dom", dto.EsUsuarioDominio));
-        cmd.Parameters.Add(new OracleParameter("u_dom_user", (object?)dto.UsuarioDominio ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("u_dom_id", (object?)dto.DominioId ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("id",       id));
+            cmd.Parameters.Add(new OracleParameter("nombre", dto.Nombre));
+            cmd.Parameters.Add(new OracleParameter("apellido", dto.Apellido));
+            cmd.Parameters.Add(new OracleParameter("email", dto.Email));
+            cmd.Parameters.Add(new OracleParameter("rol_id", dto.RolId));
+            cmd.Parameters.Add(new OracleParameter("u_dni", (object?)dto.Dni ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("u_es_dom", dto.EsUsuarioDominio));
+            cmd.Parameters.Add(new OracleParameter("u_dom_user", (object?)dto.UsuarioDominio ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("u_dom_id", (object?)dto.DominioId ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("id", id));
 
-        var rows = await cmd.ExecuteNonQueryAsync();
-        if (rows > 0)
-        {
-            // Clear existing modules
-            await using var delCmd = conn.CreateCommand();
-            delCmd.CommandText = "DELETE FROM RL_USUARIO_MODULOS WHERE USM_USR_ID = :usr_id";
-            delCmd.Parameters.Add(new OracleParameter("usr_id", id));
-            await delCmd.ExecuteNonQueryAsync();
-
-            // Insert new modules
-            if (dto.ModulosIds != null && dto.ModulosIds.Count > 0)
+            var rows = await cmd.ExecuteNonQueryAsync();
+            if (rows > 0)
             {
-                foreach (var modId in dto.ModulosIds)
+                // Clear existing modules
+                await using var delCmd = conn.CreateCommand();
+                delCmd.Transaction = transaction;
+                delCmd.CommandText = "DELETE FROM RL_USUARIO_MODULOS WHERE USM_USR_ID = :usr_id";
+                delCmd.Parameters.Add(new OracleParameter("usr_id", id));
+                await delCmd.ExecuteNonQueryAsync();
+
+                // Insert new modules
+                if (dto.ModulosIds != null && dto.ModulosIds.Count > 0)
                 {
-                    await using var insCmd = conn.CreateCommand();
-                    insCmd.CommandText = "INSERT INTO RL_USUARIO_MODULOS (USM_USR_ID, USM_MOD_ID) VALUES (:usr_id, :mod_id)";
-                    insCmd.Parameters.Add(new OracleParameter("usr_id", id));
-                    insCmd.Parameters.Add(new OracleParameter("mod_id", modId));
-                    await insCmd.ExecuteNonQueryAsync();
+                    foreach (var modId in dto.ModulosIds)
+                    {
+                        await using var insCmd = conn.CreateCommand();
+                        insCmd.Transaction = transaction;
+                        insCmd.CommandText = "INSERT INTO RL_USUARIO_MODULOS (USM_USR_ID, USM_MOD_ID) VALUES (:usr_id, :mod_id)";
+                        insCmd.Parameters.Add(new OracleParameter("usr_id", id));
+                        insCmd.Parameters.Add(new OracleParameter("mod_id", modId));
+                        await insCmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
+            await transaction.CommitAsync();
+            return rows > 0;
         }
-        return rows > 0;
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<bool> ActualizarPasswordAsync(long usrId, string hash, string salt)
