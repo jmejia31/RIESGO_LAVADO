@@ -425,8 +425,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await transitionResponsePromise).status()).toBe(200);
   expect((await refreshedOptionsResponsePromise).status()).toBe(200);
   await expect(transitionDialog).toContainText('Estado Actual: En revisión');
-  await expect(transitionDialog.getByLabel('Estado de Destino')).toHaveValue('OBSERVADA');
-  await expect(transitionDialog.getByLabel('Estado de Destino').locator('option')).toHaveCount(3);
+  const refreshedDestinations = await transitionDialog.getByLabel('Estado de Destino').locator('option')
+    .evaluateAll(options => options.map(option => (option as HTMLOptionElement).value));
+  expect(refreshedDestinations).toEqual(['APROBADA', 'OBSERVADA', 'RECHAZADA']);
   const projectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   const projectionBody = await projectionResponse.text();
   expect(projectionResponse.ok(), `Projection HTTP ${projectionResponse.status()}: ${projectionBody.slice(0, 1000)}`).toBeTruthy();
