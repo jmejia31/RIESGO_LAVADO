@@ -155,8 +155,9 @@ jobs:
         shell: bash
         run: |
           output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~UsuarioRepositoryAtomicityOracleIntegrationTests --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Total tests: *1' <<<"$output"
           grep -Eq 'Passed: *1' <<<"$output"
-          grep -Eq 'Skipped: *0' <<<"$output"
+          ! grep -Eq 'Skipped: *[1-9]' <<<"$output"
           grep -q 'P0F_CREATE_NTH_MODULE_ROLLBACK=PASS' <<<"$output"
           grep -q 'P0F_UPDATE_NTH_MODULE_ROLLBACK=PASS' <<<"$output"
           grep -q 'P0F_OLD_MODULE_STATE_RESTORED=PASS' <<<"$output"
