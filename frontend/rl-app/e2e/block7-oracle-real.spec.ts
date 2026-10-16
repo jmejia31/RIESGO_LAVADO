@@ -396,11 +396,37 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await page.reload();
   const pageA = await page.context().newPage();
   await installNonCriticalFixtures(pageA, fixture, evaluation);
+  pageA.on('response', response => {
+    const url = new URL(response.url());
+    if (url.port !== '5043' || !['localhost', '127.0.0.1'].includes(url.hostname)) return;
+    const key = `${response.request().method()} ${url.pathname}`;
+    if (critical.some(pattern => pattern.test(key)) && response.status() < 500) criticalResponses.add(key.replace(/\/\d+(?=\/|$)/g, '/{id}'));
+  });
   await pageA.goto('/matrices-riesgos');
   await expect(pageA.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
   await expect(pageA.locator('button[title^="Editar evaluaci"]')).toBeVisible();
   await pageA.locator('button[title^="Editar evaluaci"]').click();
   await expect(pageA.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
+  await pageA.locator('dialog[open][aria-modal="true"] button[aria-label^="Cancelar edici"]').click();
+  await expect(pageA.locator('dialog[open][aria-modal="true"]')).toHaveCount(0);
+  const transitionOptionsResponsePromise = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones-permitidas`);
+  await pageA.locator('button[title^="Seguimiento de evaluaci"]').click();
+  const transitionOptionsResponse = await transitionOptionsResponsePromise;
+  expect(transitionOptionsResponse.status()).toBe(200);
+  const transitionDialog = pageA.locator('dialog[open][aria-modal="true"]');
+  await expect(transitionDialog.getByLabel('Estado de Destino')).toHaveValue('EN_REVISION');
+  await transitionDialog.getByLabel('Motivo / JustificaciÃ³n').fill('RevisiÃ³n inicial completada por E2E Oracle.');
+  const transitionResponsePromise = pageA.waitForResponse(response => response.request().method() === 'POST'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones`);
+  const refreshedOptionsResponsePromise = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones-permitidas`);
+  await transitionDialog.locator('button[title^="Aplicar transici"]').click();
+  expect((await transitionResponsePromise).status()).toBe(200);
+  expect((await refreshedOptionsResponsePromise).status()).toBe(200);
+  await expect(transitionDialog).toContainText('Estado Actual: En revisiÃ³n');
+  await expect(transitionDialog.getByLabel('Estado de Destino')).toHaveValue('OBSERVADA');
+  await expect(transitionDialog.getByLabel('Estado de Destino').locator('option')).toHaveCount(3);
   const projectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   const projectionBody = await projectionResponse.text();
   expect(projectionResponse.ok(), `Projection HTTP ${projectionResponse.status()}: ${projectionBody.slice(0, 1000)}`).toBeTruthy();
