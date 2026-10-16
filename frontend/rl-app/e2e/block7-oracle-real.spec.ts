@@ -453,7 +453,6 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   }
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
-  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/flujos'))).toBeTruthy();
 
   const blockNavigation = pageA.locator('nav[aria-label^="Bloques funcionales"]');
   await expect(blockNavigation.getByRole('button')).toHaveCount(6);
@@ -630,6 +629,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await unchangedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/transiciones-permitidas'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('POST /api/matrices-riesgos/evaluaciones/{id}/transiciones'))).toBeTruthy();
+  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/flujos'))).toBeTruthy();
   await expect(page.locator('#panel-evaluaciones')).toContainText('Observada');
   await page.screenshot({ path: testInfo.outputPath('evaluation-follow-up-workflow.png'), fullPage: true });
 
