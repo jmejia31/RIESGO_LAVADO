@@ -1328,9 +1328,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await using var cmdProyeccion = CrearComando(sqlProyeccion, conn, trans);
             cmdProyeccion.Parameters.Add(new OracleParameter("estado", estado));
             cmdProyeccion.Parameters.Add(new OracleParameter("evaId", evaId));
-            if (await cmdProyeccion.ExecuteNonQueryAsync() != 1)
+            int proyeccionesActualizadas = await cmdProyeccion.ExecuteNonQueryAsync();
+            if (proyeccionesActualizadas > 1)
             {
-                throw new InvalidOperationException($"No se encontró una proyección única para la evaluación {evaId}.");
+                throw new InvalidOperationException($"La evaluación {evaId} contiene más de una proyección.");
             }
 
             await InsertarFlujoAsync(conn, trans, evaId, estado, motivo, usuarioId);
