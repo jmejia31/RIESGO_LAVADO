@@ -681,7 +681,7 @@
               }
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div data-testid="positive-reason-identity-row" class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
               <!-- Documento / Identificación -->
               <div>
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Documento / Identificación</label>
@@ -712,39 +712,41 @@
               </div>
             </div>
 
-            <!-- Tipo de Documento Catálogo -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tipo de Documento</label>
-              <select [ngModel]="formTipoDocId()" (ngModelChange)="formTipoDocId.set(+$event || null)"
-                class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
-                <option [value]="null" disabled selected>Seleccione un tipo de documento...</option>
-                @for (doc of listaTiposDocumento(); track doc.tipoDocumentoId) {
-                  <option [value]="doc.tipoDocumentoId">{{ doc.descripcion }}</option>
-                }
-              </select>
-            </div>
+            <div data-testid="positive-reason-catalog-row" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0">
+              <!-- Tipo de Documento Catálogo -->
+              <div class="min-w-0">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tipo de Documento</label>
+                <select [ngModel]="formTipoDocId()" (ngModelChange)="formTipoDocId.set(+$event || null)"
+                  class="w-full min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
+                  <option [value]="null" disabled selected>Seleccione un tipo de documento...</option>
+                  @for (doc of listaTiposDocumento(); track doc.tipoDocumentoId) {
+                    <option [value]="doc.tipoDocumentoId">{{ doc.descripcion }}</option>
+                  }
+                </select>
+              </div>
 
-            <!-- Tipo de Lista de Cautela -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tipo de Lista de Cautela</label>
-              <select [ngModel]="formTipoListaCautelaId()" (ngModelChange)="formTipoListaCautelaId.set(+$event || null)"
-                class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
-                <option [value]="null" disabled selected>Seleccione un tipo de lista de cautela...</option>
-                @for (cautela of listaTiposListasCautela(); track cautela.tipoListaCautelaId) {
-                  <option [value]="cautela.tipoListaCautelaId">{{ cautela.descripcion }}</option>
-                }
-              </select>
-            </div>
+              <!-- Tipo de Lista de Cautela -->
+              <div class="min-w-0">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tipo de Lista de Cautela</label>
+                <select [ngModel]="formTipoListaCautelaId()" (ngModelChange)="formTipoListaCautelaId.set(+$event || null)"
+                  class="w-full min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
+                  <option [value]="null" disabled selected>Seleccione un tipo de lista de cautela...</option>
+                  @for (cautela of listaTiposListasCautela(); track cautela.tipoListaCautelaId) {
+                    <option [value]="cautela.tipoListaCautelaId">{{ cautela.descripcion }}</option>
+                  }
+                </select>
+              </div>
 
-            <!-- Origen del Registro -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Origen del Registro</label>
-              <select [ngModel]="formOrigenRegistro()" (ngModelChange)="formOrigenRegistro.set($event)"
-                class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
-                @for (origen of origenesRegistro; track origen.valor) {
-                  <option [value]="origen.valor">{{ origen.etiqueta }}</option>
-                }
-              </select>
+              <!-- Origen del Registro -->
+              <div class="min-w-0">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Origen del Registro</label>
+                <select [ngModel]="formOrigenRegistro()" (ngModelChange)="formOrigenRegistro.set($event)"
+                  class="w-full min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
+                  @for (origen of origenesRegistro; track origen.valor) {
+                    <option [value]="origen.valor">{{ origen.etiqueta }}</option>
+                  }
+                </select>
+              </div>
             </div>
 
             <!-- Motivo de Ingreso -->
