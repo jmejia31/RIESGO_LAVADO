@@ -85,12 +85,8 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
         }
         finally
         {
-            await ExecuteAsync(connection,
-                "DELETE FROM RL_USUARIO_MODULOS WHERE USM_USR_ID IN (SELECT USR_ID FROM RL_USUARIOS WHERE USR_EMAIL IN (:createEmail,:updateEmail))",
-                ("createEmail", failedCreateEmail), ("updateEmail", updateEmail));
-            await ExecuteAsync(connection,
-                "DELETE FROM RL_USUARIOS WHERE USR_EMAIL IN (:createEmail,:updateEmail)",
-                ("createEmail", failedCreateEmail), ("updateEmail", updateEmail));
+            await DeleteUserByEmailAsync(connection, failedCreateEmail);
+            await DeleteUserByEmailAsync(connection, updateEmail);
             if (fixture.CreatedModuleId.HasValue)
                 await ExecuteAsync(connection, "DELETE FROM RL_MODULOS WHERE MOD_ID = :id", ("id", fixture.CreatedModuleId.Value));
             await DropFixtureObjectsAsync(connection, fixture);
@@ -188,6 +184,19 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
         foreach ((string name, object value) in parameters)
             command.Parameters.Add(new OracleParameter(name, value));
         await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task DeleteUserByEmailAsync(OracleConnection connection, string email)
+    {
+        long userId = await ScalarAsync(connection,
+            "SELECT NVL(MAX(USR_ID), 0) FROM RL_USUARIOS WHERE USR_EMAIL = :email", ("email", email));
+        if (userId == 0)
+            return;
+
+        await ExecuteAsync(connection,
+            "DELETE FROM RL_USUARIO_MODULOS WHERE USM_USR_ID = :id", ("id", userId));
+        await ExecuteAsync(connection,
+            "DELETE FROM RL_USUARIOS WHERE USR_ID = :id", ("id", userId));
     }
 
     private sealed record Fixture(bool CreatedUsers, bool CreatedModules, bool CreatedAssignments, bool CreatedSequence, long? CreatedModuleId, int RoleId, int ModuleId);

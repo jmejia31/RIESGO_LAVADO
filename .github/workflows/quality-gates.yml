@@ -190,6 +190,7 @@ jobs:
           grep -Eq 'Skipped: *0' <<<"$output"
           grep -q 'P0F_CREATE_NTH_MODULE_ROLLBACK=PASS' <<<"$output"
           grep -q 'P0F_UPDATE_NTH_MODULE_ROLLBACK=PASS' <<<"$output"
+          grep -q 'P0F_OLD_MODULE_STATE_RESTORED=PASS' <<<"$output"
           echo 'P0F_ORACLE_TESTS_EXECUTED=1'
           echo 'P0F_USER_MODULE_ATOMICITY=PASS'
 
