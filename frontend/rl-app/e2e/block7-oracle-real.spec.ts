@@ -454,6 +454,10 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
 
+  const pageAEditRead = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  await pageA.locator('button[title^="Editar evaluaci"]').click();
+  expect((await pageAEditRead).status()).toBe(200);
   const blockNavigation = pageA.locator('nav[aria-label^="Bloques funcionales"]');
   await expect(blockNavigation.getByRole('button')).toHaveCount(6);
   const firstBlock = blockNavigation.getByRole('button').first();
