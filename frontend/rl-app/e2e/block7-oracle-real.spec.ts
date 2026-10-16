@@ -622,7 +622,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await observedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Observada');
   await expect(followUpModal.locator('#seg-nuevo-estado option')).toHaveCount(1);
-  await expect(followUpModal.locator('#seg-nuevo-estado option').first()).toHaveValue('BORRADOR');
+  await expect(followUpModal.locator('#seg-nuevo-estado')).toHaveValue('BORRADOR');
 
   const historyResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/flujos`);
   expect(historyResponse.ok()).toBeTruthy();
