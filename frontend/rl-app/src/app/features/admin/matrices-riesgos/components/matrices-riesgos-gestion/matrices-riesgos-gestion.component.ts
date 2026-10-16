@@ -73,7 +73,8 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
       this.pagina(),
       this.tamanoPagina(),
       this.filtroBuscar(),
-      activo
+      activo,
+      'local'
     ).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCarga) return;

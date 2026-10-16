@@ -235,10 +235,10 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     vi.spyOn(service, 'activarFamiliaFormulario').mockReturnValue(of(true));
 
     component.desactivarFamilia(mockFamilias[0]);
-    expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(1);
+    expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(1, 'local');
 
     component.activarFamilia(mockFamilias[2]);
-    expect(service.activarFamiliaFormulario).toHaveBeenCalledWith(3);
+    expect(service.activarFamiliaFormulario).toHaveBeenCalledWith(3, 'local');
   });
 
   it('10. Manejo de error cuando backend rechaza desactivar o eliminar', () => {
@@ -403,7 +403,7 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   it('23. cubre activar y eliminar familia en éxito y error', () => {
     const activar = vi.spyOn(service, 'activarFamiliaFormulario').mockReturnValue(of(true));
     component.activarFamilia(mockFamilias[2]);
-    expect(activar).toHaveBeenCalledWith(3);
+    expect(activar).toHaveBeenCalledWith(3, 'local');
     expect(component.guardando()).toBe(false);
 
     const eliminar = vi.spyOn(service, 'eliminarFamiliaFormulario').mockReturnValue(throwError(() => ({ error: { detail: 'No se puede eliminar.' } })));

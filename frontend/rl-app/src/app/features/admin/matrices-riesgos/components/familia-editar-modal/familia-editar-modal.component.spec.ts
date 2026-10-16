@@ -189,7 +189,7 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
     component['cambiarEstado']('ACTIVADA');
     await estabilizarVista();
 
-    expect(service.activarFamiliaFormulario).toHaveBeenCalledWith(10);
+    expect(service.activarFamiliaFormulario).toHaveBeenCalledWith(10, 'local');
     expect(service.desactivarFamiliaFormulario).not.toHaveBeenCalled();
     expect(component.detalle()?.famActivo).toBe(true);
     expect(component.mensaje()).toBe('Familia activada correctamente.');
@@ -206,7 +206,7 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
     component['cambiarEstado']('DESACTIVADA');
     await estabilizarVista();
 
-    expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(7);
+    expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(7, 'local');
     expect(service.actualizarFamiliaFormulario).not.toHaveBeenCalled();
     expect(component.detalle()?.famActivo).toBe(false);
     expect(component.nombre).toBe('Nombre aún no guardado');

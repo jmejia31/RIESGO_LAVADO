@@ -56,7 +56,7 @@ describe('MatricesRiesgosGestionComponent', () => {
   });
 
   it('carga riesgos activos e inactivos al inicializar', () => {
-    expect(service.listarRiesgosPaginados).toHaveBeenCalledWith(true, 1, 10, '', undefined);
+    expect(service.listarRiesgosPaginados).toHaveBeenCalledWith(true, 1, 10, '', undefined, 'local');
     expect(component.riesgos()).toHaveLength(2);
     expect(component.cargando()).toBe(false);
     expect(component.error()).toBeNull();
@@ -68,15 +68,15 @@ describe('MatricesRiesgosGestionComponent', () => {
 
     component.cambiarBuscar('proveedor');
     vi.advanceTimersByTime(300);
-    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, 'proveedor', undefined);
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, 'proveedor', undefined, 'local');
 
     component.cambiarEstadoFiltro('INACTIVOS');
-    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, 'proveedor', false);
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, 'proveedor', false, 'local');
 
     component.limpiarFiltros();
     expect(component.filtroBuscar()).toBe('');
     expect(component.filtroEstado()).toBe('TODOS');
-    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, '', undefined);
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, '', undefined, 'local');
     vi.useRealTimers();
   });
 
@@ -84,7 +84,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     service.listarRiesgosPaginados.mockClear();
     component.cambiarTamanoPagina(25);
 
-    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 25, '', undefined);
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 25, '', undefined, 'local');
     expect(component.tamanoPagina()).toBe(25);
   });
 

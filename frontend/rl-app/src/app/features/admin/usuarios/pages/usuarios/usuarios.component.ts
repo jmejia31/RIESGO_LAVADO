@@ -15,6 +15,7 @@ type EstadoAd = 'idle' | 'verificando' | 'valido' | 'no-existe' | 'bloqueado' | 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
+import { createHttpErrorScopeContext } from '../../../../../core/http/http-error-scope';
 
 @Component({
   selector:    'app-usuarios',
@@ -74,7 +75,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
         this.errorCatalogos.set('Error al cargar la lista de dominios.');
       }
     });
-    this.cat.modulos().subscribe({
+    this.cat.modulos('local').subscribe({
       next: m => this.listaModulos.set(m),
       error: e => {
         console.error('Error cargando módulos:', e);
@@ -168,7 +169,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.errorListado.set(null);
     this.http.get<{ success: boolean; datos: { items: UsuarioInfoDto[]; pagina: number; tamanoPagina: number; totalRegistros: number; totalPaginas: number } }>(`${environment.apiUrl}/auth/usuarios/paginado`, {
       params: { pagina: this.paginaActual(), tamanoPagina: this.registrosPorPagina(), buscar: this.buscar() }
-    })
+    , context: createHttpErrorScopeContext('local')})
       .subscribe({
         next:  r => { if (solicitudId !== this.secuenciaCarga) return; this.usuarios.set(r.datos.items); this.totalRegistros.set(r.datos.totalRegistros); this.paginaActual.set(r.datos.pagina); this.cargando.set(false); },
         error: (err) => {
@@ -254,8 +255,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
 
     const obs = this.editando() 
-        ? this.http.put<{ success: boolean; mensaje: string }>(`${environment.apiUrl}/auth/usuarios/${this.usuarioUidParaEditar()}`, this.form.value)
-        : this.http.post<{ success: boolean; mensaje: string }>(`${environment.apiUrl}/auth/usuarios`, this.form.value);
+        ? this.http.put<{ success: boolean; mensaje: string }>(`${environment.apiUrl}/auth/usuarios/${this.usuarioUidParaEditar()}`, this.form.value, { context: createHttpErrorScopeContext('local') })
+        : this.http.post<{ success: boolean; mensaje: string }>(`${environment.apiUrl}/auth/usuarios`, this.form.value, { context: createHttpErrorScopeContext('local') });
 
     obs.subscribe({
       next:  () => {
@@ -304,7 +305,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
           this.http.post<{ success: boolean; mensaje: string }>(
             `${environment.apiUrl}/auth/recuperar-password`, 
             { email: u.email }
-          ).subscribe({
+          , { context: createHttpErrorScopeContext('local') }).subscribe({
             next: (resp) => {
               Swal.default.fire({
                 allowOutsideClick: false,

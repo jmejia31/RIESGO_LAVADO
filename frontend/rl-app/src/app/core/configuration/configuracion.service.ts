@@ -4,7 +4,7 @@ import { environment } from '../../../environments/environment';
 import { map, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
 import { createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
-import { createHttpErrorScopeContext } from '../http/http-error-scope';
+import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
 
 @Injectable({
   providedIn: 'root'
@@ -18,9 +18,9 @@ export class ConfiguracionService {
   private ultimoColorPrimarioValido = DEFAULT_SYSTEM_PRIMARY;
   private ultimoColorSecundarioValido = DEFAULT_SYSTEM_ACCENT;
 
-  CargarConfiguracion() {
+  CargarConfiguracion(errorScope: HttpErrorScope = 'global') {
     return this.http.get<{ success: boolean, datos: ConfigSistema }>(`${this.apiUrl}/sistema`, {
-      context: createHttpErrorScopeContext('local')
+      context: createHttpErrorScopeContext(errorScope)
     })
       .pipe(
         map(res => {
@@ -58,7 +58,9 @@ export class ConfiguracionService {
   }
 
   ObtenerSlides() {
-    return this.http.get<{ success: boolean, datos: LoginSlide[] }>(`${this.apiUrl}/login`)
+    return this.http.get<{ success: boolean, datos: LoginSlide[] }>(`${this.apiUrl}/login`, {
+      context: createHttpErrorScopeContext('local')
+    })
       .pipe(
         map(res => res.datos)
       );

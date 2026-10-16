@@ -619,6 +619,21 @@ test('Configuración de cálculo muestra referencias institucionales F01, F15 y 
   expect(pageErrors).toHaveLength(0);
 });
 
+test('Configuracion de calculo conserva un 422 en el feedback local sin contaminar el shell', async ({ page }) => {
+  await page.route('**/api/matrices-riesgos/configuracion-calculo/formulas*', route => route.fulfill({
+    status: 422,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: false, mensaje: 'Error local P0-A 422.' })
+  }));
+
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: /Configuraci.n de c.lculo/ }).click();
+  await expect(page.getByRole('heading', { name: /Configuraci.n de c.lculo/ })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('Error local P0-A 422.');
+  await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/matrices-riesgos/);
+});
+
 test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios de template', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/matrices-riesgos');

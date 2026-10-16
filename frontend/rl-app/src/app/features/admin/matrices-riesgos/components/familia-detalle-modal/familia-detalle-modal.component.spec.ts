@@ -282,7 +282,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     const spyDesactivar = vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(of(true));
     const fixture = crearComponente();
     return fixture.componentInstance.cambiarEstadoFamilia().then(() => {
-      expect(spyDesactivar).toHaveBeenCalledWith(7);
+      expect(spyDesactivar).toHaveBeenCalledWith(7, 'local');
     });
   });
 

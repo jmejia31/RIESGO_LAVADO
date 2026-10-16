@@ -119,7 +119,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
     forkJoin({
-      formulas: this.config.listarFormulas(this.incluirInactivas()),
+      formulas: this.config.listarFormulas(this.incluirInactivas(), 'local'),
       funciones: this.config.listarFunciones(this.incluirInactivas()),
       parametros: this.config.listarParametros(this.incluirInactivas()),
       metodologia: this.matrices.metodologiaVigente()
@@ -164,7 +164,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
       this.formulaSeleccionada.set(item);
       this.modoFormula.set('none');
     });
-    forkJoin({ versiones: this.config.listarFormulaVersiones(item.id), usos: this.config.listarFormulaUsages(item.id) }).subscribe({
+    forkJoin({ versiones: this.config.listarFormulaVersiones(item.id, 'local'), usos: this.config.listarFormulaUsages(item.id) }).subscribe({
       next: data => { this.formulaVersiones.set(data.versiones); this.formulaUsages.set(data.usos); },
       error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar el detalle de la fórmula.'))
     });

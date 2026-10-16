@@ -443,7 +443,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.personaSeleccionada.set(row);
     this.modalDetalleAbierto.set(true);
     this.detalleCargando.set(true);
-    this.listasService.getDetalleNatural(row.numeroIdentificacion).subscribe({
+    this.listasService.getDetalleNatural(row.numeroIdentificacion, 'local').subscribe({
       next: (res) => {
         this.detallesNatural.set(res);
         this.detalleCargando.set(false);
@@ -459,7 +459,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.personaSeleccionadaEmpleado.set(row);
     this.modalDetalleAbierto.set(true);
     this.detalleCargando.set(true);
-    this.listasService.getDetalleEmpleado(row.identidad).subscribe({
+    this.listasService.getDetalleEmpleado(row.identidad, 'local').subscribe({
       next: (res) => {
         this.detallesEmpleado.set(res);
         this.detalleCargando.set(false);
@@ -2203,7 +2203,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       this.listasService.registrarPositivo(dto).subscribe({
         next: (resp) => {
           if (comentarioSeg) {
-            this.listasService.registrarSeguimiento(noDocumento, comentarioSeg, archivosSeg).subscribe({
+    this.listasService.registrarSeguimiento(noDocumento, comentarioSeg, archivosSeg).subscribe({
               next: () => {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();

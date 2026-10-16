@@ -954,7 +954,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   desactivarFamilia(fam: FamiliaFormularioDto): void {
     this.guardando.set(true);
     this.limpiarAlertas();
-    this.service.desactivarFamiliaFormulario(fam.famId).subscribe({
+    this.service.desactivarFamiliaFormulario(fam.famId, 'local').subscribe({
       next: () => {
         this.guardando.set(false);
         this.globalState.limpiarError();
@@ -990,7 +990,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   activarFamilia(fam: FamiliaFormularioDto): void {
     this.guardando.set(true);
     this.limpiarAlertas();
-    this.service.activarFamiliaFormulario(fam.famId).subscribe({
+    this.service.activarFamiliaFormulario(fam.famId, 'local').subscribe({
       next: () => {
         this.guardando.set(false);
         this.globalState.limpiarError();

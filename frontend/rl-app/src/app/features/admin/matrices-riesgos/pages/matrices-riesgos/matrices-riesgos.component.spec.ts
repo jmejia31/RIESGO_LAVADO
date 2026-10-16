@@ -358,7 +358,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(document.body.querySelector('app-familia-editar-modal')).toBeNull();
 
     component.desactivarFamilia(familia);
-    expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(1);
+    expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(1, 'local');
   });
 
   it('navega por pestanas con teclado y carga el consolidado al activarlo', () => {

@@ -6,6 +6,7 @@ import { LoginRequest, LoginResponse, UsuarioInfo } from './auth.models';
 import { environment } from '../../../environments/environment';
 import { jwtDecode }   from 'jwt-decode';
 import { ConfiguracionService } from '../configuration/configuracion.service';
+import { createHttpErrorScopeContext } from '../http/http-error-scope';
 
 type RefreshResponse = { success: boolean; datos: LoginResponse };
 
@@ -53,7 +54,7 @@ export class AuthService {
     // Autenticación frontend: envía credenciales y guarda tokens solo cuando backend confirma éxito.
     return this.http.post<{ success: boolean; datos: LoginResponse }>(
       `${this.API}/login`, dto
-    ).pipe(
+    , { context: createHttpErrorScopeContext('local') }).pipe(
       tap(res => {
         if (res.success) {
           this.guardarSesion(res.datos);

@@ -39,7 +39,7 @@ describe('ConfiguracionService', () => {
     let resultado: ConfigSistema | undefined;
     service.CargarConfiguracion().subscribe(value => resultado = value);
     const request = http.expectOne('http://localhost:5043/api/configuracion/sistema');
-    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('global');
     request.flush({
       success: true,
       datos: { nombreInstitucion: 'IHSS', nombreSistema: 'SGRLA', timeoutSesion: 0 }
@@ -75,6 +75,18 @@ describe('ConfiguracionService', () => {
     expect(document.documentElement.style.getPropertyValue('--ihss-accent-rgb')).toBe('171 205 239');
     expect(document.documentElement.style.getPropertyValue('--ihss-700-rgb')).toBe('17 34 51');
     expect(document.documentElement.style.getPropertyValue('--ihss-modal-accent-rgb')).not.toBe('171 205 239');
+  });
+
+  it('permite scope local por consumidor sin cambiar el default global', () => {
+    service.CargarConfiguracion('local').subscribe();
+    const localRequest = http.expectOne('http://localhost:5043/api/configuracion/sistema');
+    expect(localRequest.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    localRequest.flush({ success: true, datos: { nombreInstitucion: 'IHSS', nombreSistema: 'SGRLA', timeoutSesion: 30 } });
+
+    service.ObtenerSlides().subscribe();
+    const slidesRequest = http.expectOne('http://localhost:5043/api/configuracion/login');
+    expect(slidesRequest.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    slidesRequest.flush({ success: true, datos: [] });
   });
 
   it('mantiene local el feedback de operaciones administrativas de slides', () => {

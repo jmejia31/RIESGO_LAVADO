@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { HTTP_ERROR_SCOPE } from '../../../../core/http/http-error-scope';
 import {
   CONFIRMACION_BOTON_HEADER,
   CONFIRMACION_CAMBIOS_HEADER,
@@ -47,6 +48,23 @@ describe('ListasService', () => {
     request.flush({ success: true, datos: [] });
   });
 
+  it('preserves global default and local overrides for shared detail queries', () => {
+    service.getDetalleNatural('0801').subscribe();
+    const globalDetail = http.expectOne(`${apiUrl}/naturales/0801/detalle`);
+    expect(globalDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('global');
+    globalDetail.flush({ success: true, datos: [] });
+
+    service.getDetalleNatural('0801', 'local').subscribe();
+    const localDetail = http.expectOne(`${apiUrl}/naturales/0801/detalle`);
+    expect(localDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    localDetail.flush({ success: true, datos: [] });
+
+    service.getTiposListasCautela('local').subscribe();
+    const localTypes = http.expectOne(`${apiUrl}/tipos-listas-cautela`);
+    expect(localTypes.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    localTypes.flush({ success: true, datos: [] });
+  });
+
   it('construye el formulario documental y configura la confirmacion del seguimiento', () => {
     const evidencia = new File(['contenido'], 'evidencia.txt', { type: 'text/plain' });
     service.registrarSeguimiento('0801', 'Revision mensual', [evidencia]).subscribe();
@@ -54,6 +72,7 @@ describe('ListasService', () => {
     const request = http.expectOne(`${apiUrl}/positivos/0801/seguimientos`);
     const formData = request.request.body as FormData;
     expect(request.request.method).toBe('POST');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     expect(formData.get('motivoIngreso')).toBe('Revision mensual');
     expect((formData.get('archivos') as File).name).toBe('evidencia.txt');
     expect(request.request.headers.get(CONFIRMACION_TITULO_HEADER)).toBe('Confirmar seguimiento');

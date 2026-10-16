@@ -81,7 +81,7 @@ export class ConfiguracionComponent implements OnInit {
     if (config) {
       this.form.patchValue(config);
     } else {
-      this.configService.CargarConfiguracion().subscribe({
+      this.configService.CargarConfiguracion('local').subscribe({
         next: (cfg) => this.form.patchValue(cfg),
         error: () => this.mostrarError('Error al cargar la configuración desde el servidor.')
       });

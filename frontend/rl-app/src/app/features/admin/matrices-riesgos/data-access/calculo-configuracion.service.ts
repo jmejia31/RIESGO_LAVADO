@@ -23,6 +23,7 @@ import {
   ParametroDto,
   ParametroVersionDto
 } from '../models/calculo-configuracion.models';
+import { createHttpErrorScopeContext, HttpErrorScope } from '../../../../core/http/http-error-scope';
 
 interface ApiResponse<T> { success: boolean; datos: T; mensaje?: string; }
 interface ApiMessage { success: boolean; mensaje?: string; }
@@ -34,8 +35,8 @@ export class CalculoConfiguracionService {
   private readonly confirmado = { headers: new HttpHeaders({ [CONFIRMACION_CAMBIOS_HEADER]: '1' }) };
   private readonly confirmadoJson = { headers: new HttpHeaders({ [CONFIRMACION_CAMBIOS_HEADER]: '1', 'Content-Type': 'application/json' }) };
 
-  listarFormulas(incluirInactivas = true): Observable<FormulaDto[]> {
-    return this.http.get<ApiResponse<FormulaDto[]>>(`${this.apiUrl}/formulas`, { params: this.allParams(incluirInactivas) }).pipe(map(r => r.datos ?? []));
+  listarFormulas(incluirInactivas = true, errorScope: HttpErrorScope = 'global'): Observable<FormulaDto[]> {
+    return this.http.get<ApiResponse<FormulaDto[]>>(`${this.apiUrl}/formulas`, { params: this.allParams(incluirInactivas) , context: createHttpErrorScopeContext(errorScope)}).pipe(map(r => r.datos ?? []));
   }
 
   obtenerFormula(id: number): Observable<FormulaDto> {
@@ -43,23 +44,23 @@ export class CalculoConfiguracionService {
   }
 
   crearFormula(dto: CrearFormulaDto): Observable<number> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/formulas`, dto, this.confirmadoJson).pipe(map(r => r.datos));
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/formulas`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos));
   }
 
   crearFormulaVersion(formulaId: number, dto: { expresion: string; tipoResultado: string }): Observable<number> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/formulas/${formulaId}/versiones`, dto, this.confirmadoJson).pipe(map(r => r.datos));
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/formulas/${formulaId}/versiones`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos));
   }
 
   actualizarFormulaBorrador(versionId: number, dto: ActualizarFormulaBorradorDto): Observable<ApiMessage> {
-    return this.http.put<ApiMessage>(`${this.apiUrl}/formula-versiones/${versionId}`, dto, this.confirmadoJson);
+    return this.http.put<ApiMessage>(`${this.apiUrl}/formula-versiones/${versionId}`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
-  listarFormulaVersiones(formulaId: number): Observable<FormulaVersionDto[]> {
-    return this.http.get<ApiResponse<FormulaVersionDto[]>>(`${this.apiUrl}/formulas/${formulaId}/versiones`).pipe(map(r => r.datos ?? []));
+  listarFormulaVersiones(formulaId: number, errorScope: HttpErrorScope = 'global'): Observable<FormulaVersionDto[]> {
+    return this.http.get<ApiResponse<FormulaVersionDto[]>>(`${this.apiUrl}/formulas/${formulaId}/versiones`, { context: createHttpErrorScopeContext(errorScope) }).pipe(map(r => r.datos ?? []));
   }
 
   listarFormulaUsages(formulaId: number): Observable<FormulaUsageDto[]> {
-    return this.http.get<ApiResponse<FormulaUsageDto[]>>(`${this.apiUrl}/formulas/${formulaId}/usos`).pipe(map(r => r.datos ?? []));
+    return this.http.get<ApiResponse<FormulaUsageDto[]>>(`${this.apiUrl}/formulas/${formulaId}/usos`, { context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos ?? []));
   }
 
   crearFormulaUso(dto: CrearFormulaUsoDto): Observable<ApiMessage> {
@@ -67,15 +68,15 @@ export class CalculoConfiguracionService {
   }
 
   reemplazarFormulaUsos(versionFormularioId: number, usos: CrearFormulaUsoDto[]): Observable<ApiMessage> {
-    return this.http.put<ApiMessage>(`${this.apiUrl}/formula-usos/versiones-formulario/${versionFormularioId}`, { usos }, this.confirmadoJson);
+    return this.http.put<ApiMessage>(`${this.apiUrl}/formula-usos/versiones-formulario/${versionFormularioId}`, { usos }, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
   cambiarEstadoFormula(id: number, dto: CambiarEstadoConfiguracionDto): Observable<ApiMessage> {
-    return this.http.patch<ApiMessage>(`${this.apiUrl}/formulas/${id}/estado`, dto, this.confirmadoJson);
+    return this.http.patch<ApiMessage>(`${this.apiUrl}/formulas/${id}/estado`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
   listarFunciones(incluirInactivas = true): Observable<FuncionDto[]> {
-    return this.http.get<ApiResponse<FuncionDto[]>>(`${this.apiUrl}/funciones`, { params: this.allParams(incluirInactivas) }).pipe(map(r => r.datos ?? []));
+    return this.http.get<ApiResponse<FuncionDto[]>>(`${this.apiUrl}/funciones`, { params: this.allParams(incluirInactivas) , context: createHttpErrorScopeContext('local')}).pipe(map(r => r.datos ?? []));
   }
 
   obtenerFuncion(id: number): Observable<FuncionDto> {
@@ -83,31 +84,31 @@ export class CalculoConfiguracionService {
   }
 
   crearFuncion(dto: CrearFuncionDto): Observable<number> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/funciones`, dto, this.confirmadoJson).pipe(map(r => r.datos));
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/funciones`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos));
   }
 
   crearFuncionVersion(funcionId: number, dto: CrearFuncionVersionDto): Observable<number> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/funciones/${funcionId}/versiones`, dto, this.confirmadoJson).pipe(map(r => r.datos));
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/funciones/${funcionId}/versiones`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos));
   }
 
   actualizarFuncionBorrador(versionId: number, dto: ActualizarFuncionBorradorDto): Observable<ApiMessage> {
-    return this.http.put<ApiMessage>(`${this.apiUrl}/funcion-versiones/${versionId}`, dto, this.confirmadoJson);
+    return this.http.put<ApiMessage>(`${this.apiUrl}/funcion-versiones/${versionId}`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
   listarFuncionVersiones(funcionId: number): Observable<FuncionVersionDto[]> {
-    return this.http.get<ApiResponse<FuncionVersionDto[]>>(`${this.apiUrl}/funciones/${funcionId}/versiones`).pipe(map(r => r.datos ?? []));
+    return this.http.get<ApiResponse<FuncionVersionDto[]>>(`${this.apiUrl}/funciones/${funcionId}/versiones`, { context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos ?? []));
   }
 
   listarFuncionArgumentos(versionId: number): Observable<FuncionArgumentoDto[]> {
-    return this.http.get<ApiResponse<FuncionArgumentoDto[]>>(`${this.apiUrl}/funcion-versiones/${versionId}/argumentos`).pipe(map(r => r.datos ?? []));
+    return this.http.get<ApiResponse<FuncionArgumentoDto[]>>(`${this.apiUrl}/funcion-versiones/${versionId}/argumentos`, { context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos ?? []));
   }
 
   cambiarEstadoFuncionVersion(id: number, dto: CambiarEstadoConfiguracionDto): Observable<ApiMessage> {
-    return this.http.patch<ApiMessage>(`${this.apiUrl}/funcion-versiones/${id}/estado`, dto, this.confirmadoJson);
+    return this.http.patch<ApiMessage>(`${this.apiUrl}/funcion-versiones/${id}/estado`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
   listarParametros(incluirInactivas = true): Observable<ParametroDto[]> {
-    return this.http.get<ApiResponse<ParametroDto[]>>(`${this.apiUrl}/parametros`, { params: this.allParams(incluirInactivas) }).pipe(map(r => r.datos ?? []));
+    return this.http.get<ApiResponse<ParametroDto[]>>(`${this.apiUrl}/parametros`, { params: this.allParams(incluirInactivas) , context: createHttpErrorScopeContext('local')}).pipe(map(r => r.datos ?? []));
   }
 
   obtenerParametro(id: number): Observable<ParametroDto> {
@@ -115,23 +116,23 @@ export class CalculoConfiguracionService {
   }
 
   crearParametro(dto: CrearParametroDto): Observable<number> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/parametros`, dto, this.confirmadoJson).pipe(map(r => r.datos));
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/parametros`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos));
   }
 
   crearParametroVersion(parametroId: number, dto: CrearParametroVersionDto): Observable<number> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/parametros/${parametroId}/versiones`, dto, this.confirmadoJson).pipe(map(r => r.datos));
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/parametros/${parametroId}/versiones`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos));
   }
 
   actualizarParametroBorrador(versionId: number, dto: ActualizarParametroBorradorDto): Observable<ApiMessage> {
-    return this.http.put<ApiMessage>(`${this.apiUrl}/parametro-versiones/${versionId}`, dto, this.confirmadoJson);
+    return this.http.put<ApiMessage>(`${this.apiUrl}/parametro-versiones/${versionId}`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
   listarParametroVersiones(parametroId: number): Observable<ParametroVersionDto[]> {
-    return this.http.get<ApiResponse<ParametroVersionDto[]>>(`${this.apiUrl}/parametros/${parametroId}/versiones`).pipe(map(r => r.datos ?? []));
+    return this.http.get<ApiResponse<ParametroVersionDto[]>>(`${this.apiUrl}/parametros/${parametroId}/versiones`, { context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos ?? []));
   }
 
   cambiarEstadoParametroVersion(id: number, dto: CambiarEstadoConfiguracionDto): Observable<ApiMessage> {
-    return this.http.patch<ApiMessage>(`${this.apiUrl}/parametro-versiones/${id}/estado`, dto, this.confirmadoJson);
+    return this.http.patch<ApiMessage>(`${this.apiUrl}/parametro-versiones/${id}/estado`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
   private allParams(incluirInactivas: boolean): HttpParams {

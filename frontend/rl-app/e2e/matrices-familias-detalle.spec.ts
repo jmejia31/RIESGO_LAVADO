@@ -368,6 +368,8 @@ test('UI-FAM.2 permite reintentar un fallo temporal sin cerrar el modal', async 
 
   const modal = page.locator('[data-ui-fam-detail="modal"]');
   await expect(modal.getByText('Falla temporal UI-FAM.2.')).toBeVisible();
+  await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/matrices-riesgos/);
   await modal.getByRole('button', { name: 'Reintentar' }).click();
 
   await expect.poll(() => intentos).toBe(2);

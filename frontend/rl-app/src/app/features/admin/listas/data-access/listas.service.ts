@@ -28,6 +28,7 @@ import {
   Paginado,
   MonitoreoPaginado
 } from '../models/listas.models';
+import { createHttpErrorScopeContext, HttpErrorScope } from '../../../../core/http/http-error-scope';
 
 @Injectable({
   providedIn: 'root'
@@ -71,19 +72,19 @@ export class ListasService {
   }
 
   getResumenCoincidenciasPatronoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoResumen>> {
-    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoResumen> }>(`${this.apiUrl}/coincidencias-patrono/resumen/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoResumen> }>(`${this.apiUrl}/coincidencias-patrono/resumen/paginado`, { params: this.toCoincidenciasParams(consulta) , context: createHttpErrorScopeContext('local')}).pipe(map(res => res.datos));
   }
 
   getDetalleCoincidenciasPatronoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoDetalle>> {
-    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoDetalle> }>(`${this.apiUrl}/coincidencias-patrono/detalle/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoDetalle> }>(`${this.apiUrl}/coincidencias-patrono/detalle/paginado`, { params: this.toCoincidenciasParams(consulta) , context: createHttpErrorScopeContext('local')}).pipe(map(res => res.datos));
   }
 
   getResumenCoincidenciasEmpleadoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoResumen>> {
-    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoResumen> }>(`${this.apiUrl}/coincidencias-empleado/resumen/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoResumen> }>(`${this.apiUrl}/coincidencias-empleado/resumen/paginado`, { params: this.toCoincidenciasParams(consulta) , context: createHttpErrorScopeContext('local')}).pipe(map(res => res.datos));
   }
 
   getDetalleCoincidenciasEmpleadoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoDetalle>> {
-    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoDetalle> }>(`${this.apiUrl}/coincidencias-empleado/detalle/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoDetalle> }>(`${this.apiUrl}/coincidencias-empleado/detalle/paginado`, { params: this.toCoincidenciasParams(consulta) , context: createHttpErrorScopeContext('local')}).pipe(map(res => res.datos));
   }
 
   private toMonitoringParams(consulta: ConsultaMonitoreoPaginada): HttpParams {
@@ -103,13 +104,17 @@ export class ListasService {
     return params;
   }
 
-  getDetalleNatural(numeroIdentificacion: string): Observable<DetalleCoincidenciaNatural[]> {
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/${numeroIdentificacion}/detalle`)
+  getDetalleNatural(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaNatural[]> {
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/${numeroIdentificacion}/detalle`, {
+      context: createHttpErrorScopeContext(errorScope)
+    })
       .pipe(map(res => res.datos));
   }
 
-  getDetalleEmpleado(numeroIdentificacion: string): Observable<DetalleCoincidenciaEmpleado[]> {
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/${numeroIdentificacion}/detalle`)
+  getDetalleEmpleado(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaEmpleado[]> {
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/${numeroIdentificacion}/detalle`, {
+      context: createHttpErrorScopeContext(errorScope)
+    })
       .pipe(map(res => res.datos));
   }
 
@@ -118,8 +123,8 @@ export class ListasService {
       .pipe(map(res => res.datos));
   }
 
-  getTiposListasCautela(): Observable<TipoListaCautela[]> {
-    return this.http.get<{ success: boolean; datos: TipoListaCautela[] }>(`${this.apiUrl}/tipos-listas-cautela`)
+  getTiposListasCautela(errorScope: HttpErrorScope = 'global'): Observable<TipoListaCautela[]> {
+    return this.http.get<{ success: boolean; datos: TipoListaCautela[] }>(`${this.apiUrl}/tipos-listas-cautela`, { context: createHttpErrorScopeContext(errorScope) })
       .pipe(map(res => res.datos));
   }
 
@@ -130,7 +135,7 @@ export class ListasService {
         [CONFIRMACION_TEXTO_HEADER]: '¿Desea guardar el motivo de ingreso y registrar el control en lista de positivos?',
         [CONFIRMACION_BOTON_HEADER]: 'Sí, guardar motivo'
       }
-    });
+    , context: createHttpErrorScopeContext('local')});
   }
 
   getPositivoPorDocumento(noDocumento: string): Observable<ExistingPositivo | null> {
@@ -167,7 +172,7 @@ export class ListasService {
         [CONFIRMACION_TEXTO_HEADER]: '¿Desea guardar la nota de seguimiento y sus evidencias?',
         [CONFIRMACION_BOTON_HEADER]: 'Sí, guardar seguimiento'
       }
-    });
+    , context: createHttpErrorScopeContext('local')});
   }
 
   getDescargaEvidenciaUrl(evidenciaId: number): string {
@@ -195,24 +200,24 @@ export class ListasService {
     return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/evidencias/${evidenciaId}`, {
       body: { motivoEliminacion },
       headers: this.sinConfirmacion
-    });
+    , context: createHttpErrorScopeContext('local')});
   }
 
   descargarEvidenciaBlob(evidenciaId: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/evidencias/${evidenciaId}`, { responseType: 'blob' });
+    return this.http.get(`${this.apiUrl}/evidencias/${evidenciaId}`, { responseType: 'blob' , context: createHttpErrorScopeContext('local')});
   }
 
   eliminarSeguimiento(detalleId: number, motivoEliminacion: string): Observable<any> {
     return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos/${detalleId}`, {
       body: { motivoEliminacion },
       headers: this.sinConfirmacion
-    });
+    , context: createHttpErrorScopeContext('local')});
   }
 
   registrarAuditoriaImpresion(noDocumento: string, data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/positivos/${noDocumento}/reporte-impreso`, data, {
       headers: this.sinConfirmacion
-    });
+    , context: createHttpErrorScopeContext('local')});
   }
 
   registrarAuditoriaExportacion(tabla: string, registroId: string, modulo: string, detalle: any): Observable<any> {
@@ -224,7 +229,7 @@ export class ListasService {
       detalle
     }, {
       headers: this.sinConfirmacion
-    });
+    , context: createHttpErrorScopeContext('local')});
   }
 
   crearTipoListaCautela(descripcion: string, tipoArchivo: string | null, cantidadColumnas: number | null): Observable<any> {
@@ -236,45 +241,45 @@ export class ListasService {
   }
 
   eliminarTipoListaCautela(id: number): Observable<any> {
-    return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/tipos-listas-cautela/${id}`);
+    return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/tipos-listas-cautela/${id}`, { context: createHttpErrorScopeContext('local') });
   }
 
   getResumenListas(): Observable<ResumenLista[]> {
-    return this.http.get<{ success: boolean; datos: ResumenLista[] }>(`${this.apiUrl}/resumen`)
+    return this.http.get<{ success: boolean; datos: ResumenLista[] }>(`${this.apiUrl}/resumen`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.datos));
   }
 
   exportarLista(id: number): Observable<any[]> {
-    return this.http.get<{ success: boolean; datos: any[] }>(`${this.apiUrl}/${id}/exportar`)
+    return this.http.get<{ success: boolean; datos: any[] }>(`${this.apiUrl}/${id}/exportar`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.datos));
   }
 
   getDetalleCoincidenciasPatronoParaExportar(fecha: string): Observable<CoincidenciaPatronoDetalle[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-patrono/detalle/exportar?fecha=${fecha}`)
+    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-patrono/detalle/exportar?fecha=${fecha}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.datos));
   }
 
   calificarCoincidencia(id: number, tipoCalificacionId: number): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/coincidencias-patrono/${id}/calificar`, { tipoCalificacionId });
+    return this.http.put<any>(`${this.apiUrl}/coincidencias-patrono/${id}/calificar`, { tipoCalificacionId }, { context: createHttpErrorScopeContext('local') });
   }
 
   getResumenMatchLista(dataId: number, nombre: string): Observable<string> {
-    return this.http.get<{ success: boolean; detalle: string }>(`${this.apiUrl}/coincidencias-patrono/resumen-match?dataId=${dataId}&nombre=${encodeURIComponent(nombre)}`)
+    return this.http.get<{ success: boolean; detalle: string }>(`${this.apiUrl}/coincidencias-patrono/resumen-match?dataId=${dataId}&nombre=${encodeURIComponent(nombre)}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.detalle));
   }
 
   getResumenMatchListaEmpleado(dataId: number, nombre: string): Observable<string> {
-    return this.http.get<{ success: boolean; detalle: string }>(`${this.apiUrl}/coincidencias-empleado/resumen-match?dataId=${dataId}&nombre=${encodeURIComponent(nombre)}`)
+    return this.http.get<{ success: boolean; detalle: string }>(`${this.apiUrl}/coincidencias-empleado/resumen-match?dataId=${dataId}&nombre=${encodeURIComponent(nombre)}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.detalle));
   }
 
   getDetalleCoincidenciasEmpleadoParaExportar(fecha: string): Observable<CoincidenciaPatronoDetalle[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-empleado/detalle/exportar?fecha=${fecha}`)
+    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-empleado/detalle/exportar?fecha=${fecha}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(res => res.datos));
   }
 
   calificarCoincidenciaEmpleado(id: number, tipoCalificacionId: number): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/coincidencias-empleado/${id}/calificar`, { tipoCalificacionId });
+    return this.http.put<any>(`${this.apiUrl}/coincidencias-empleado/${id}/calificar`, { tipoCalificacionId }, { context: createHttpErrorScopeContext('local') });
   }
 
   uploadListaCautela(file: File, tipoListaCautelaId: number): Observable<any> {
@@ -282,6 +287,6 @@ export class ListasService {
     formData.append('archivo', file);
     formData.append('tipoListaCautelaId', tipoListaCautelaId.toString());
 
-    return this.http.post<any>(`${this.apiUrl}/cautela/upload`, formData);
+    return this.http.post<any>(`${this.apiUrl}/cautela/upload`, formData, { context: createHttpErrorScopeContext('local') });
   }
 }

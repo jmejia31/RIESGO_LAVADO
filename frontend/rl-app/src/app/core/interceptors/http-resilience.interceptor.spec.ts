@@ -161,18 +161,21 @@ describe('httpResilienceInterceptor', () => {
     expect(globalState.cargando()).toBe(false);
   });
 
-  it.each([400, 409, 422])('deja status %s en el formulario local sin contaminar el banner global', status => {
-    let receivedStatus: number | undefined;
+  it.each([400, 404, 409, 422, 500])('propaga status %s local sin contaminar el banner global', status => {
+    let receivedError: { status: number; statusText: string; error: unknown } | undefined;
     client.post('/api/modal-save', {}, {
       context: new HttpContext().set(HTTP_ERROR_SCOPE, 'local')
-    }).subscribe({ error: error => receivedStatus = (error as { status: number }).status });
+    }).subscribe({ error: error => receivedError = error as typeof receivedError });
 
+    const responseBody = { mensaje: `Error local ${status}` };
     controller.expectOne('/api/modal-save').flush(
-      { mensaje: `Error local ${status}` },
+      responseBody,
       { status, statusText: 'Controlled operation error' }
     );
 
-    expect(receivedStatus).toBe(status);
+    expect(receivedError?.status).toBe(status);
+    expect(receivedError?.statusText).toBe('Controlled operation error');
+    expect(receivedError?.error).toBe(responseBody);
     expect(globalState.ultimoError()).toBeNull();
     expect(globalState.cargando()).toBe(false);
   });

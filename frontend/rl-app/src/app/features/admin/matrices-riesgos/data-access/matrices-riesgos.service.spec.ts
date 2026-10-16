@@ -50,23 +50,25 @@ describe('MatricesRiesgosService', () => {
     expect(resultado).toHaveBeenCalledWith({ configurada: false, tieneVersionVigente: false });
   });
 
-  it('mantiene en alcance local las operaciones de familia y versiones con feedback local', () => {
-    const requests: Array<{ run: () => Observable<unknown>; url: string; method: string }> = [
-      { run: () => service.obtenerFamiliaFormularioPorId(7), url: `${apiUrl}/familias/7`, method: 'GET' },
-      { run: () => service.crearFamiliaFormulario({ famCodigo: 'FAM_A', famNombre: 'Familia A', famDescripcion: null }), url: `${apiUrl}/familias`, method: 'POST' },
-      { run: () => service.actualizarFamiliaFormulario(7, { famNombre: 'Familia A', famDescripcion: null, famActivo: true }), url: `${apiUrl}/familias/7`, method: 'PUT' },
-      { run: () => service.desactivarFamiliaFormulario(7), url: `${apiUrl}/familias/7/desactivar`, method: 'PUT' },
-      { run: () => service.activarFamiliaFormulario(7), url: `${apiUrl}/familias/7/activar`, method: 'PUT' },
-      { run: () => service.eliminarFamiliaFormulario(7), url: `${apiUrl}/familias/7`, method: 'DELETE' },
-      { run: () => service.listarHistorialVersionesFormulario('FAM_A'), url: `${apiUrl}/formularios/historial`, method: 'GET' },
-      { run: () => service.clonarVersionFormulario(10), url: `${apiUrl}/formularios/10/clonar`, method: 'POST' }
+  it('preserves local family operations and global defaults for shared state methods', () => {
+    const requests: Array<{ run: () => Observable<unknown>; url: string; method: string; scope: 'local' | 'global' }> = [
+      { run: () => service.obtenerFamiliaFormularioPorId(7), url: `${apiUrl}/familias/7`, method: 'GET', scope: 'local' },
+      { run: () => service.crearFamiliaFormulario({ famCodigo: 'FAM_A', famNombre: 'Familia A', famDescripcion: null }), url: `${apiUrl}/familias`, method: 'POST', scope: 'local' },
+      { run: () => service.actualizarFamiliaFormulario(7, { famNombre: 'Familia A', famDescripcion: null, famActivo: true }), url: `${apiUrl}/familias/7`, method: 'PUT', scope: 'local' },
+      { run: () => service.desactivarFamiliaFormulario(7), url: `${apiUrl}/familias/7/desactivar`, method: 'PUT', scope: 'global' },
+      { run: () => service.activarFamiliaFormulario(7), url: `${apiUrl}/familias/7/activar`, method: 'PUT', scope: 'global' },
+      { run: () => service.desactivarFamiliaFormulario(7, 'local'), url: `${apiUrl}/familias/7/desactivar`, method: 'PUT', scope: 'local' },
+      { run: () => service.activarFamiliaFormulario(7, 'local'), url: `${apiUrl}/familias/7/activar`, method: 'PUT', scope: 'local' },
+      { run: () => service.eliminarFamiliaFormulario(7), url: `${apiUrl}/familias/7`, method: 'DELETE', scope: 'local' },
+      { run: () => service.listarHistorialVersionesFormulario('FAM_A'), url: `${apiUrl}/formularios/historial`, method: 'GET', scope: 'local' },
+      { run: () => service.clonarVersionFormulario(10), url: `${apiUrl}/formularios/10/clonar`, method: 'POST', scope: 'local' }
     ];
 
     for (const item of requests) {
       item.run().subscribe();
       const request = http.expectOne(req => req.urlWithParams.startsWith(item.url));
       expect(request.request.method).toBe(item.method);
-      expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+      expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe(item.scope);
       request.flush({ success: true, datos: item.method === 'GET' ? [] : true });
     }
   });

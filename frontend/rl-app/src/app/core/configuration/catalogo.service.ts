@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Rol, Dominio, Modulo, CatalogoMatrices, ElementoCatalogoMatrices } from './catalogo.models';
+import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
 
 @Injectable({
   providedIn: 'root'
@@ -17,12 +18,12 @@ export class CatalogoService {
     );
   }
   dominios(): Observable<Dominio[]> {
-    return this.http.get<{ success: boolean, datos: Dominio[] }>(`${this.apiUrl}/dominios`).pipe(
+    return this.http.get<{ success: boolean, datos: Dominio[] }>(`${this.apiUrl}/dominios`, { context: createHttpErrorScopeContext('local') }).pipe(
       map(res => res.datos)
     );
   }
-  modulos(): Observable<Modulo[]> {
-    return this.http.get<{ success: boolean, datos: Modulo[] }>(`${this.apiUrl}/modulos`).pipe(
+  modulos(errorScope: HttpErrorScope = 'global'): Observable<Modulo[]> {
+    return this.http.get<{ success: boolean, datos: Modulo[] }>(`${this.apiUrl}/modulos`, { context: createHttpErrorScopeContext(errorScope) }).pipe(
       map(res => res.datos)
     );
   }

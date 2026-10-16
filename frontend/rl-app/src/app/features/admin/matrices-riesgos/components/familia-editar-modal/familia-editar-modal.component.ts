@@ -347,8 +347,8 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     this.mensaje.set(null);
     this.suscripcionOperacion?.unsubscribe();
     const solicitud = accion === 'ACTIVADA'
-      ? this.service.activarFamiliaFormulario(familia.famId)
-      : this.service.desactivarFamiliaFormulario(familia.famId);
+      ? this.service.activarFamiliaFormulario(familia.famId, 'local')
+      : this.service.desactivarFamiliaFormulario(familia.famId, 'local');
 
     this.suscripcionOperacion = solicitud.subscribe({
       next: () => {

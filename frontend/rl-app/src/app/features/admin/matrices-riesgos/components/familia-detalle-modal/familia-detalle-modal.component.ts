@@ -286,8 +286,8 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     this.operando.set(true);
     this.error.set(null);
     const operacion = familia.famActivo
-      ? this.service.desactivarFamiliaFormulario(familia.famId)
-      : this.service.activarFamiliaFormulario(familia.famId);
+      ? this.service.desactivarFamiliaFormulario(familia.famId, 'local')
+      : this.service.activarFamiliaFormulario(familia.famId, 'local');
 
     operacion.subscribe({
       next: () => {

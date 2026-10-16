@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
-import { createHttpErrorScopeContext } from '../../../../core/http/http-error-scope';
+import { createHttpErrorScopeContext, HttpErrorScope } from '../../../../core/http/http-error-scope';
 import {
   ActualizarFamiliaFormularioDto,
   ConsultaEvaluacionPaginadaDto,
@@ -68,19 +68,19 @@ export class MatricesRiesgosService {
 
   metodologiaVigente(): Observable<MetodologiaFormulario> {
     return this.http
-      .get<ApiResponse<MetodologiaFormulario>>(`${this.apiUrl}/metodologia/vigente`)
+      .get<ApiResponse<MetodologiaFormulario>>(`${this.apiUrl}/metodologia/vigente`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   metodologiaPorVersion(versionId: number): Observable<MetodologiaFormulario> {
     return this.http
-      .get<ApiResponse<MetodologiaFormulario>>(`${this.apiUrl}/metodologia/version/${versionId}`)
+      .get<ApiResponse<MetodologiaFormulario>>(`${this.apiUrl}/metodologia/version/${versionId}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   obtenerConsolidadoPaginado(filtro: FiltroReporteMatrices): Observable<ReporteMatricesPaginado> {
     return this.http
-      .get<ApiResponse<ReporteMatricesPaginado>>(`${this.apiUrl}/consolidado/paginado`, { params: this.parametrosReporte(filtro) })
+      .get<ApiResponse<ReporteMatricesPaginado>>(`${this.apiUrl}/consolidado/paginado`, { params: this.parametrosReporte(filtro) , context: createHttpErrorScopeContext('local')})
       .pipe(map(response => response.datos));
   }
 
@@ -92,19 +92,19 @@ export class MatricesRiesgosService {
       .set('vigencia', filtro.vigencia ?? 'TODAS');
     if (filtro.buscar?.trim()) params = params.set('buscar', filtro.buscar.trim());
     return this.http
-      .get<ApiResponse<FamiliasFormularioPaginadasDto>>(`${this.apiUrl}/familias/paginado`, { params })
+      .get<ApiResponse<FamiliasFormularioPaginadasDto>>(`${this.apiUrl}/familias/paginado`, { params , context: createHttpErrorScopeContext('local')})
       .pipe(map(response => response.datos));
   }
 
   obtenerFamiliaPredeterminada(): Observable<FamiliaPredeterminadaDto> {
     return this.http
-      .get<ApiResponse<FamiliaPredeterminadaDto>>(`${this.apiUrl}/familias/predeterminada`)
+      .get<ApiResponse<FamiliaPredeterminadaDto>>(`${this.apiUrl}/familias/predeterminada`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   establecerFamiliaPredeterminada(id: number): Observable<boolean> {
     return this.http
-      .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/predeterminada`, {}, this.confirmado)
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/predeterminada`, {}, { ...this.confirmado, context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.success));
   }
 
@@ -134,20 +134,20 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.success));
   }
 
-  desactivarFamiliaFormulario(id: number): Observable<boolean> {
+  desactivarFamiliaFormulario(id: number, errorScope: HttpErrorScope = 'global'): Observable<boolean> {
     return this.http
       .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/desactivar`, {}, {
         ...this.confirmado,
-        context: createHttpErrorScopeContext('local')
+        context: createHttpErrorScopeContext(errorScope)
       })
       .pipe(map(response => response.success));
   }
 
-  activarFamiliaFormulario(id: number): Observable<boolean> {
+  activarFamiliaFormulario(id: number, errorScope: HttpErrorScope = 'global'): Observable<boolean> {
     return this.http
       .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/activar`, {}, {
         ...this.confirmado,
-        context: createHttpErrorScopeContext('local')
+        context: createHttpErrorScopeContext(errorScope)
       })
       .pipe(map(response => response.success));
   }
@@ -161,20 +161,18 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.success));
   }
 
-  obtenerVersionVigenteFormulario(
-    familiaCodigo?: string
-  ): Observable<VersionFormularioDto> {
+  obtenerVersionVigenteFormulario(familiaCodigo?: string): Observable<VersionFormularioDto> {
     const params = familiaCodigo?.trim()
       ? new HttpParams().set('familiaCodigo', familiaCodigo.trim())
       : undefined;
     return this.http
-      .get<ApiResponse<VersionFormularioDto>>(`${this.apiUrl}/formulario/version-vigente`, { params })
+      .get<ApiResponse<VersionFormularioDto>>(`${this.apiUrl}/formulario/version-vigente`, { params, context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   obtenerVersionFormulario(id: number): Observable<VersionFormularioDto> {
     return this.http
-      .get<ApiResponse<VersionFormularioDto>>(`${this.apiUrl}/formularios/${id}`)
+      .get<ApiResponse<VersionFormularioDto>>(`${this.apiUrl}/formularios/${id}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -204,7 +202,7 @@ export class MatricesRiesgosService {
       .post<ApiResponse<number>>(`${this.apiUrl}/formularios/borrador`, cuerpo, {
         params,
         ...this.confirmadoJson
-      })
+      , context: createHttpErrorScopeContext('local')})
       .pipe(map(response => response.datos));
   }
 
@@ -222,7 +220,7 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(
       `${this.apiUrl}/formularios/${id}`,
       cuerpo,
-      this.confirmadoJson
+      { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }
     );
   }
 
@@ -230,7 +228,7 @@ export class MatricesRiesgosService {
     return this.http.post<ApiMessage>(
       `${this.apiUrl}/formularios/${id}/publicar`,
       {},
-      this.confirmado
+      { ...this.confirmado, context: createHttpErrorScopeContext('local') }
     );
   }
 
@@ -239,14 +237,14 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(
       `${this.apiUrl}/formularios/${id}/estado`,
       {},
-      { params, ...this.confirmado }
+      { params, ...this.confirmado , context: createHttpErrorScopeContext('local')}
     );
   }
 
   eliminarVersionFormulario(id: number): Observable<ApiMessage> {
     return this.http.delete<ApiMessage>(
       `${this.apiUrl}/formularios/${id}`,
-      this.confirmado
+      { ...this.confirmado, context: createHttpErrorScopeContext('local') }
     );
   }
 
@@ -255,7 +253,7 @@ export class MatricesRiesgosService {
     pagina = 1,
     tamanoPagina = 25,
     buscar = '',
-    activo?: boolean
+    activo?: boolean, errorScope: HttpErrorScope = 'global'
   ): Observable<RiesgosPaginadosDto> {
     let params = new HttpParams()
       .set('incluirInactivos', String(incluirInactivos))
@@ -264,13 +262,13 @@ export class MatricesRiesgosService {
     if (buscar.trim()) params = params.set('buscar', buscar.trim());
     if (activo !== undefined) params = params.set('activo', String(activo));
     return this.http
-      .get<ApiResponse<RiesgosPaginadosDto>>(`${this.apiUrl}/riesgos/paginado`, { params })
+      .get<ApiResponse<RiesgosPaginadosDto>>(`${this.apiUrl}/riesgos/paginado`, { params , context: createHttpErrorScopeContext(errorScope)})
       .pipe(map(response => response.datos));
   }
 
   obtenerRiesgo(id: number): Observable<RiesgoDto> {
     return this.http
-      .get<ApiResponse<RiesgoDto>>(`${this.apiUrl}/riesgos/${id}`)
+      .get<ApiResponse<RiesgoDto>>(`${this.apiUrl}/riesgos/${id}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -296,13 +294,13 @@ export class MatricesRiesgosService {
     return this.http
       .get<ApiResponse<EvaluacionesPaginadasDto>>(`${this.apiUrl}/evaluaciones`, {
         params: this.construirParams(filtro)
-      })
+      , context: createHttpErrorScopeContext('local')})
       .pipe(map(response => response.datos));
   }
 
   obtenerEvaluacion(id: number): Observable<EvaluacionRiesgoDto> {
     return this.http
-      .get<ApiResponse<EvaluacionRiesgoDto>>(`${this.apiUrl}/evaluaciones/${id}`)
+      .get<ApiResponse<EvaluacionRiesgoDto>>(`${this.apiUrl}/evaluaciones/${id}`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -335,7 +333,7 @@ export class MatricesRiesgosService {
     return this.http.post<ApiMessage>(
       `${this.apiUrl}/evaluaciones/${id}/transiciones`,
       {},
-      { params, ...this.confirmado }
+      { params, ...this.confirmado , context: createHttpErrorScopeContext('local')}
     );
   }
 
@@ -347,7 +345,7 @@ export class MatricesRiesgosService {
 
   listarControles(evaluacionId: number): Observable<ControlRiesgoDto[]> {
     return this.http
-      .get<ApiResponse<ControlRiesgoDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/controles`)
+      .get<ApiResponse<ControlRiesgoDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/controles`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -363,19 +361,19 @@ export class MatricesRiesgosService {
 
   listarEvaluacionesControl(controlId: number): Observable<EvaluacionControlDto[]> {
     return this.http
-      .get<ApiResponse<EvaluacionControlDto[]>>(`${this.apiUrl}/mitigacion/controles/${controlId}/evaluaciones`)
+      .get<ApiResponse<EvaluacionControlDto[]>>(`${this.apiUrl}/mitigacion/controles/${controlId}/evaluaciones`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   evaluarControl(controlId: number, dto: EvaluacionControlGuardarDto): Observable<number> {
     return this.http
-      .post<ApiResponse<number>>(`${this.apiUrl}/mitigacion/controles/${controlId}/evaluaciones`, dto, this.confirmado)
+      .post<ApiResponse<number>>(`${this.apiUrl}/mitigacion/controles/${controlId}/evaluaciones`, dto, { ...this.confirmado, context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   listarPlanes(evaluacionId: number): Observable<PlanMitigacionDto[]> {
     return this.http
-      .get<ApiResponse<PlanMitigacionDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/planes`)
+      .get<ApiResponse<PlanMitigacionDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/planes`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -391,19 +389,19 @@ export class MatricesRiesgosService {
 
   obtenerProyeccionInstitucional(id: number): Observable<InstitutionalEvaluationProjectionDto> {
     return this.http
-      .get<ApiResponse<InstitutionalEvaluationProjectionDto>>(`${this.apiUrl}/evaluaciones/${id}/proyeccion-institucional`)
+      .get<ApiResponse<InstitutionalEvaluationProjectionDto>>(`${this.apiUrl}/evaluaciones/${id}/proyeccion-institucional`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   previsualizarCalculoEvaluacion(dto: EvaluacionRiesgoDto): Observable<CalculoPreviewEvaluacionDto> {
     return this.http
-      .post<ApiResponse<CalculoPreviewEvaluacionDto>>(`${this.apiUrl}/evaluaciones/calculo-preview`, dto, this.confirmado)
+      .post<ApiResponse<CalculoPreviewEvaluacionDto>>(`${this.apiUrl}/evaluaciones/calculo-preview`, dto, { ...this.confirmado, context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   obtenerMitigacionBloque4(evaluacionId: number): Observable<MitigacionBloque4Dto> {
     return this.http
-      .get<ApiResponse<MitigacionBloque4Dto>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/bloque4`)
+      .get<ApiResponse<MitigacionBloque4Dto>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/bloque4`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -419,7 +417,7 @@ export class MatricesRiesgosService {
 
   listarActividades(planId: number): Observable<ActividadPlanDto[]> {
     return this.http
-      .get<ApiResponse<ActividadPlanDto[]>>(`${this.apiUrl}/mitigacion/planes/${planId}/actividades`)
+      .get<ApiResponse<ActividadPlanDto[]>>(`${this.apiUrl}/mitigacion/planes/${planId}/actividades`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -435,13 +433,13 @@ export class MatricesRiesgosService {
 
   listarAlertas(evaluacionId: number): Observable<SenalAlertaDto[]> {
     return this.http
-      .get<ApiResponse<SenalAlertaDto[]>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/alertas`)
+      .get<ApiResponse<SenalAlertaDto[]>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/alertas`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   crearAlerta(dto: SenalAlertaGuardarDto): Observable<number> {
     return this.http
-      .post<ApiResponse<number>>(`${this.apiUrl}/monitoreo/alertas`, dto, this.confirmado)
+      .post<ApiResponse<number>>(`${this.apiUrl}/monitoreo/alertas`, dto, { ...this.confirmado, context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -449,24 +447,24 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(
       `${this.apiUrl}/monitoreo/alertas/${id}/estado`,
       { aleEstado: estado },
-      this.confirmado
+      { ...this.confirmado, context: createHttpErrorScopeContext('local') }
     );
   }
 
   listarAutomonitoreo(evaluacionId: number): Observable<AutomonitoreoDto[]> {
     return this.http
-      .get<ApiResponse<AutomonitoreoDto[]>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/automonitoreo`)
+      .get<ApiResponse<AutomonitoreoDto[]>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/automonitoreo`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   obtenerBloque6(evaluacionId: number): Observable<MatrizBloque6Dto> {
     return this.http
-      .get<ApiResponse<MatrizBloque6Dto>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/bloque6`)
+      .get<ApiResponse<MatrizBloque6Dto>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/bloque6`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   actualizarMonitoreoControl(controlId: number, dto: ControlMonitoreoActualizarDto): Observable<ApiMessage> {
-    return this.http.put<ApiMessage>(`${this.apiUrl}/monitoreo/controles/${controlId}`, dto, this.confirmado);
+    return this.http.put<ApiMessage>(`${this.apiUrl}/monitoreo/controles/${controlId}`, dto, { ...this.confirmado, context: createHttpErrorScopeContext('local') });
   }
 
   actualizarObservacionArea(evaluacionId: number, texto: string): Observable<ApiMessage> {
@@ -479,13 +477,13 @@ export class MatricesRiesgosService {
 
   registrarAutomonitoreo(dto: AutomonitoreoGuardarDto): Observable<number> {
     return this.http
-      .post<ApiResponse<number>>(`${this.apiUrl}/monitoreo/automonitoreo`, dto, this.confirmado)
+      .post<ApiResponse<number>>(`${this.apiUrl}/monitoreo/automonitoreo`, dto, { ...this.confirmado, context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   obtenerResumenOperativo(): Observable<ResumenMatricesOperativoDto> {
     return this.http
-      .get<ApiResponse<ResumenMatricesOperativoDto>>(`${this.apiUrl}/monitoreo/resumen`)
+      .get<ApiResponse<ResumenMatricesOperativoDto>>(`${this.apiUrl}/monitoreo/resumen`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
@@ -525,16 +523,16 @@ export class MatricesRiesgosService {
     const form = new FormData();
     form.append('archivo', archivo);
     return this.http
-      .post<ApiResponse<EvidenciaDto>>(`${this.apiUrl}/evidencias/cargar`, form, this.confirmado)
+      .post<ApiResponse<EvidenciaDto>>(`${this.apiUrl}/evidencias/cargar`, form, { ...this.confirmado, context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
   }
 
   vincularEvidencia(dto: VincularEvidenciaDto): Observable<ApiMessage> {
-    return this.http.post<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, dto, this.confirmado);
+    return this.http.post<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, dto, { ...this.confirmado, context: createHttpErrorScopeContext('local') });
   }
 
   desvincularEvidencia(dto: DesvincularEvidenciaDto): Observable<ApiMessage> {
-    return this.http.delete<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, { ...this.confirmado, body: dto });
+    return this.http.delete<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, { ...this.confirmado, body: dto , context: createHttpErrorScopeContext('local')});
   }
 
   eliminarEvidenciaHuerfana(id: number): Observable<ApiMessage> {

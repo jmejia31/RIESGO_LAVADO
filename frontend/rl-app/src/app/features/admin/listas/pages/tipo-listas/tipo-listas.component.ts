@@ -46,7 +46,7 @@ export class TipoListasComponent implements OnInit {
   cargar() {
     this.cargando.set(true);
     this.errorCarga.set(null);
-    this.listasService.getTiposListasCautela().subscribe({
+    this.listasService.getTiposListasCautela('local').subscribe({
       next: (datos) => {
         this.listas.set(datos);
         this.cargando.set(false);
