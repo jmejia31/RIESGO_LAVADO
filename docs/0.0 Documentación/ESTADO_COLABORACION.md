@@ -2777,3 +2777,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificación local: backend completo `1012 passed / 0 failed / 1 skipped`; el skip es la prueba Oracle P0-F porque no hay XE local. Build Release estricto `0 errors` (941 warnings de analizadores en la solución; ninguno en los archivos propios P0-F). CI aporta la ejecución Oracle obligatoria.
 - Cambios ajenos previamente existentes continúan preservados y sin stage/commit. Producción NO consultada/modificada (DML=0, DDL=0); no deployment; Bloque 10 no iniciado.
 - `P0_F_STATUS=PASS`; siguiente paso: iniciar P0-G — autorización de maestros/catálogos. P0-H, Hardening, regresión global y certificación final continúan NOT_STARTED; detenerse si cualquier gate secuencial falla.
+
+## Estado vigente - PRE-BLOQUE 10 / P0-G certificado (2026-10-16 17:00 -06:00)
+
+- `P0_G_STATUS=PASS`. Se inventariaron 156 rutas en 15 controladores: 7 públicas intencionales, 149 autenticadas, 145 con autorización de módulo y 23 con restricción adicional de rol (estos conteos se superponen); cuatro rutas autenticadas no requieren módulo. No hay gaps inexplicados ni seguridad sólo frontend. Backend sigue siendo autoridad.
+- La política se contrastó con `API.md`, roles canónicos `SystemRoles.cs`, seed Oracle y plan funcional de capacitación Matrices. Se corrigió el alias UI `ADMIN` no reconocido por backend/seed; tres superficies de Matrices ahora usan `ADMINISTRADOR`. No cambió autorización backend ni se añadió action-RBAC.
+- Código publicado: `6d03b8b8ad5e41e7b0279bd8b7924b76b04adc3e`; Quality Gates `38978187300=success`, SHA exacto. Local: frontend focal 137/137, E2E Chromium 4/4, lint/build/diff-check PASS; build conserva cinco warnings SCSS/CommonJS preexistentes. CI ejecutó Quality Gates, Oracle XE P0-F, Oracle Bloques 6/8 y builds de contenedores.
+- Cambios ajenos del worktree se preservaron fuera del commit. Producción NO consultada/modificada (DML=0, DDL=0); no deployment. P0-A/B/C/D/E/F, Workflow, Monitoreo y superficies congeladas siguen PASS sin reabrirse. Bloque 10 no iniciado.
+- Continuación exacta: iniciar P0-H — auditar diálogos nativos, SweetAlert independiente y estándar institucional. Hardening/regresión/certificación final continúan NOT_STARTED y deben ejecutarse secuencialmente sólo tras PASS.
