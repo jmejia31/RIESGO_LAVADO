@@ -10,6 +10,14 @@ export interface InstitutionalConfirmationOptions {
   confirmIcon: ActionIconName;
   confirmVariant?: 'primary' | 'danger' | 'success';
   icon?: SweetAlertIcon;
+  allowEscapeKey?: boolean;
+}
+
+export interface InstitutionalConfirmationInputOptions extends InstitutionalConfirmationOptions {
+  inputLabel: string;
+  inputPlaceholder: string;
+  inputMaxLength: number;
+  inputValidator: (value: string) => string | null | Promise<string | null>;
 }
 
 export interface InstitutionalConfirmationDialog {
@@ -36,16 +44,40 @@ export class InstitutionalConfirmationService {
   constructor(@Inject(INSTITUTIONAL_CONFIRMATION_DIALOG) private readonly dialog: InstitutionalConfirmationDialog) {}
 
   async confirm(options: InstitutionalConfirmationOptions): Promise<boolean> {
+    const result = await this.dialog.fire(this.createDialogOptions(options));
+    return result.isConfirmed;
+  }
+
+  async confirmWithInput(options: InstitutionalConfirmationInputOptions): Promise<string | null> {
+    const result = await this.dialog.fire({
+      ...this.createDialogOptions(options),
+      input: 'textarea',
+      inputLabel: options.inputLabel,
+      inputPlaceholder: options.inputPlaceholder,
+      inputAttributes: {
+        maxlength: String(options.inputMaxLength),
+        'aria-label': options.inputLabel
+      },
+      inputValidator: options.inputValidator
+    });
+
+    if (!result.isConfirmed || typeof result.value !== 'string') return null;
+    const value = result.value.trim();
+    return value.length > 0 ? value : null;
+  }
+
+  private createDialogOptions(options: InstitutionalConfirmationOptions): SweetAlertOptions {
     const confirmVariant = options.confirmVariant ?? 'primary';
     const encabezado = options.icon === 'warning' ? 'Confirmación requerida' : 'Confirmación institucional';
-    const result = await this.dialog.fire({
+    return {
       title: `<span class="modal-header-icon" aria-hidden="true">${renderActionIconSvg(options.confirmIcon)}</span><span class="institutional-confirmation__copy"><span data-modal-eyebrow>${encabezado}</span><span class="institutional-confirmation__heading">${escapeHtml(options.title)}</span><span class="institutional-confirmation__message">${escapeHtml(options.message)}</span></span>`,
       showCancelButton: true,
       showDenyButton: false,
       showCloseButton: false,
       buttonsStyling: false,
       allowOutsideClick: false,
-      allowEscapeKey: true,
+      allowEscapeKey: options.allowEscapeKey ?? true,
+      returnFocus: true,
       focusCancel: true,
       reverseButtons: true,
       confirmButtonText: renderActionIconSvg(options.confirmIcon),
@@ -72,8 +104,6 @@ export class InstitutionalConfirmationService {
           cancelButton.title = options.cancelLabel;
         }
       }
-    });
-
-    return result.isConfirmed;
+    };
   }
 }

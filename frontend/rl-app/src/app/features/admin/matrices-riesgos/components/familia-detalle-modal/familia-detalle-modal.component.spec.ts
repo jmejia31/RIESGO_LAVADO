@@ -5,6 +5,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { AuditoriaService } from '../../../bitacora/data-access/auditoria.service';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { FamiliaDetalleModalComponent } from './familia-detalle-modal.component';
 
 vi.mock('sweetalert2', () => ({
@@ -289,21 +290,18 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
   it('12b. cancelar la confirmacion institucional no ejecuta la operacion ni cambia el estado', async () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
     const spyDesactivar = vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(of(true));
-    const Swal = await import('sweetalert2');
-    vi.mocked(Swal.default.fire).mockResolvedValueOnce({ isConfirmed: false } as Awaited<ReturnType<typeof Swal.default.fire>>);
+    const confirmation = TestBed.inject(InstitutionalConfirmationService);
+    const confirmar = vi.spyOn(confirmation, 'confirm').mockResolvedValue(false);
     const fixture = crearComponente();
 
     await fixture.componentInstance.cambiarEstadoFamilia();
 
     expect(spyDesactivar).not.toHaveBeenCalled();
     expect(fixture.componentInstance.detalle()?.famActivo).toBe(true);
-    expect(Swal.default.fire).toHaveBeenCalledWith(expect.objectContaining({
-      showCancelButton: true,
-      focusCancel: true,
+    expect(confirmar).toHaveBeenCalledWith(expect.objectContaining({
       allowEscapeKey: false,
-      allowOutsideClick: false,
-      returnFocus: true,
-      cancelButtonText: 'Cancelar'
+      confirmIcon: 'deactivate',
+      cancelLabel: 'Cancelar'
     }));
   });
 

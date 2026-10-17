@@ -101,6 +101,18 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'NATIVE_BROWSER_DIALOG_VALIDATOR=PASS'
 
+$confirmationBypassTests = Join-Path $RepositoryRoot 'tools/validate_no_parallel_confirmations.test.js'
+$confirmationBypassValidator = Join-Path $RepositoryRoot 'tools/validate_no_parallel_confirmations.js'
+& node --test $confirmationBypassTests
+if ($LASTEXITCODE -ne 0) {
+    throw "Las pruebas del validador de confirmaciones institucionales fallaron con codigo $LASTEXITCODE"
+}
+& node $confirmationBypassValidator
+if ($LASTEXITCODE -ne 0) {
+    throw "Se detectaron confirmaciones SweetAlert2 paralelas o sin clasificar"
+}
+Write-Host 'INSTITUTIONAL_CONFIRMATION_BYPASS_VALIDATOR=PASS'
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'

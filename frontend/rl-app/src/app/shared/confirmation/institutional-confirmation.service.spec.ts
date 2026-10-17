@@ -49,4 +49,59 @@ describe('InstitutionalConfirmationService', () => {
       confirmIcon: 'reject'
     })).resolves.toBe(true);
   });
+
+  it('mantiene la política de Escape explícita sólo cuando la opción lo solicita', async () => {
+    await service.confirm({
+      title: 'Desactivar familia',
+      message: 'Se conservará el historial.',
+      confirmLabel: 'Desactivar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'deactivate',
+      allowEscapeKey: false
+    });
+
+    expect(dialog.fire).toHaveBeenCalledWith(expect.objectContaining({
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      focusCancel: true
+    }));
+  });
+
+  it('devuelve el motivo recortado sólo tras confirmar y valida dentro del adaptador', async () => {
+    dialog.fire.mockResolvedValue({ isConfirmed: true, value: '  Motivo aprobado  ' });
+    await expect(service.confirmWithInput({
+      title: 'Eliminar evidencia',
+      message: 'La evidencia se eliminará lógicamente.',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger',
+      inputLabel: 'Motivo de eliminación',
+      inputPlaceholder: 'Escriba el motivo',
+      inputMaxLength: 1000,
+      inputValidator: value => value.trim() ? null : 'Debe ingresar un motivo.'
+    })).resolves.toBe('Motivo aprobado');
+
+    expect(dialog.fire).toHaveBeenCalledWith(expect.objectContaining({
+      input: 'textarea',
+      inputLabel: 'Motivo de eliminación',
+      inputAttributes: expect.objectContaining({ maxlength: '1000', 'aria-label': 'Motivo de eliminación' }),
+      confirmButtonAriaLabel: 'Sí, eliminar'
+    }));
+  });
+
+  it('no entrega valor cuando se cancela una confirmación con entrada', async () => {
+    dialog.fire.mockResolvedValue({ isConfirmed: false, value: 'No debe continuar' });
+    await expect(service.confirmWithInput({
+      title: 'Eliminar',
+      message: 'Motivo requerido.',
+      confirmLabel: 'Eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      inputLabel: 'Motivo',
+      inputPlaceholder: 'Escriba el motivo',
+      inputMaxLength: 1000,
+      inputValidator: () => null
+    })).resolves.toBeNull();
+  });
 });

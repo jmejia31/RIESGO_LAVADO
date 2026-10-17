@@ -16,6 +16,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { createHttpErrorScopeContext } from '../../../../../core/http/http-error-scope';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 @Component({
   selector:    'app-usuarios',
@@ -59,7 +60,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private cat:  CatalogoService,
     private fb:   FormBuilder,
-    private ad:   ActiveDirectorioService
+    private ad:   ActiveDirectorioService,
+    private confirmation: InstitutionalConfirmationService
   ) {}
 
   ngOnInit() {
@@ -281,18 +283,17 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   }
 
   reiniciarPassword(u: UsuarioInfoDto) {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: '¿Reiniciar contraseña?',
-        text: `Se generará una nueva contraseña provisional y se enviará por correo electrónico a ${u.email}.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: 'var(--ihss-primary-color)',
-        cancelButtonColor: '#d1d5db',
-        confirmButtonText: 'Sí, reiniciar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
+    void this.confirmation.confirm({
+      title: '¿Reiniciar contraseña?',
+      message: `Se generará una nueva contraseña provisional y se enviará por correo electrónico a ${u.email}.`,
+      icon: 'warning',
+      confirmLabel: 'Sí, reiniciar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'lock',
+      confirmVariant: 'primary'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      import('sweetalert2').then(Swal => {
           Swal.default.fire({
             title: 'Procesando...',
             text: 'Por favor, espere.',
@@ -325,7 +326,6 @@ export class UsuariosComponent implements OnInit, OnDestroy {
               });
             }
           });
-        }
       });
     });
   }

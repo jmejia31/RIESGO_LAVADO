@@ -270,6 +270,17 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component.model().secciones).toHaveLength(1);
   });
 
+  it('cancelar la eliminación de sección no modifica el borrador', async () => {
+    vi.spyOn(Swal, 'fire').mockResolvedValueOnce({ isConfirmed: false } as Awaited<ReturnType<typeof Swal.fire>>);
+    const sectionId = component.model().secciones[0].id;
+    const before = component.model();
+
+    await component.eliminarSeccion(sectionId);
+
+    expect(component.model()).toEqual(before);
+    expect(component.seccionEnConfirmacion()).toBeNull();
+  });
+
   it('configura controles con catalogo y formula con valores seguros por defecto', () => {
     const seccionId = component.model().secciones[0].id;
     const catalogo = component.tiposControles.find(t => t.tipo === 'selector-catalogo')!;

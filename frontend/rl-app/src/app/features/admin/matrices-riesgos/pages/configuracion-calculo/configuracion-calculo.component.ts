@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import Swal from 'sweetalert2';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
 import {
@@ -77,6 +77,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 export class ConfiguracionCalculoComponent implements OnInit {
   private readonly config = inject(CalculoConfiguracionService);
   private readonly matrices = inject(MatricesRiesgosService);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
 
   readonly tab = signal<ConfigTab>('formulas');
   readonly cargando = signal(true);
@@ -390,7 +391,16 @@ export class ConfiguracionCalculoComponent implements OnInit {
   private finalizar(texto: string): void { this.guardando.set(false); this.mensaje.set(texto); this.cargar(); }
   private fallar(error: unknown, fallback: string): void { this.guardando.set(false); this.error.set(this.mensajeError(error, fallback)); }
   private mensajeError(error: unknown, fallback: string): string { const value = error as { error?: { mensaje?: string }; message?: string }; return value?.error?.mensaje || value?.message || fallback; }
-  private confirmar(text: string): Promise<boolean> { return Swal.fire({ title: 'Confirmar cambio', text, icon: 'warning', showCancelButton: true, confirmButtonText: 'Continuar', cancelButtonText: 'Cancelar', reverseButtons: true, focusCancel: true }).then(result => result.isConfirmed); }
+  private confirmar(text: string): Promise<boolean> {
+    return this.confirmation.confirm({
+      title: 'Confirmar cambio',
+      message: text,
+      icon: 'warning',
+      confirmLabel: 'Continuar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'confirm'
+    });
+  }
   private nuevaFormulaForm(): FormulaDraftForm { return { codigo: '', nombre: '', descripcion: '', expresion: '', tipoResultado: 'DECIMAL' }; }
   private nuevaFuncionForm(): FunctionDraftForm { return { codigo: '', nombre: '', descripcion: '', categoria: 'CALCULO', tipo: 'NATIVE', tipoResultado: 'DECIMAL', handlerKey: '', definicionDsl: '', minArity: 1, maxArity: 1 }; }
   private nuevoParametroForm(): ParameterDraftForm { return { codigo: '', nombre: '', descripcion: '', tipo: 'DECIMAL', valorEntero: null, valorDecimal: null, valorBooleano: null, valorTexto: '', valorFecha: '' }; }

@@ -21,6 +21,7 @@ import { AuditoriaService } from '../../../bitacora/data-access/auditoria.servic
 import { AuditoriaDto } from '../../../bitacora/models/auditoria.models';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EstadoFormulario, FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 interface ActividadFamiliaViewModel {
   id: string;
@@ -44,6 +45,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   private readonly service = inject(MatricesRiesgosService);
   private readonly auditoriaService = inject(AuditoriaService);
   private readonly authService = inject(AuthService);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
   private readonly host = inject(ElementRef<HTMLElement>);
 
   private suscripcionDetalle: Subscription | null = null;
@@ -264,24 +266,19 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     if (!familia || !this.esAdministrador() || this.operando()) return;
 
     const accion = familia.famActivo ? 'desactivar' : 'activar';
-    const Swal = await import('sweetalert2');
-    const resultado = await Swal.default.fire({
+    const confirmed = await this.confirmation.confirm({
       title: familia.famActivo ? `¿Desactivar la familia ${familia.famNombre}?` : `¿Activar la familia ${familia.famNombre}?`,
-      html: familia.famActivo
-        ? '<p class="text-sm text-gray-700">Sus versiones e historial se conservarán.</p>'
-        : '<p class="text-sm text-gray-700">La familia volverá a estar disponible para nuevas operaciones.</p>',
+      message: familia.famActivo
+        ? 'Sus versiones e historial se conservarán.'
+        : 'La familia volverá a estar disponible para nuevas operaciones.',
       icon: familia.famActivo ? 'warning' : 'question',
-      showCancelButton: true,
-      confirmButtonColor: familia.famActivo ? '#d97706' : '#059669',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: familia.famActivo ? 'Desactivar' : 'Sí, activar',
-      cancelButtonText: 'Cancelar',
-      focusCancel: true,
-      allowEscapeKey: false,
-      allowOutsideClick: false,
-      returnFocus: true
+      confirmLabel: familia.famActivo ? 'Desactivar' : 'Sí, activar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: familia.famActivo ? 'deactivate' : 'activate',
+      confirmVariant: familia.famActivo ? 'danger' : 'success',
+      allowEscapeKey: false
     });
-    if (!resultado.isConfirmed) return;
+    if (!confirmed) return;
 
     this.operando.set(true);
     this.error.set(null);

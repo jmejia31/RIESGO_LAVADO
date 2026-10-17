@@ -20,6 +20,7 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { FamiliaFormularioDto } from '../../models/matrices-riesgos.models';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 export interface FamiliaEstadoCambiadoEvent {
   familia: FamiliaFormularioDto;
@@ -38,6 +39,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
   private readonly authService = inject(AuthService);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   private suscripcionDetalle: Subscription | null = null;
@@ -251,20 +253,16 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     const familia = this.detalle();
     if (!familia || !this.puedeActivar()) return;
 
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: 'Activar familia',
-        text: `¿Desea activar la familia ${familia.famNombre}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#059669',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, activar',
-        cancelButtonText: 'Cancelar',
-        focusCancel: true
-      }).then(result => {
-        if (result.isConfirmed) this.cambiarEstado('ACTIVADA');
-      });
+    void this.confirmation.confirm({
+      title: 'Activar familia',
+      message: `¿Desea activar la familia ${familia.famNombre}?`,
+      icon: 'question',
+      confirmLabel: 'Sí, activar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'activate',
+      confirmVariant: 'success'
+    }).then(confirmed => {
+      if (confirmed) this.cambiarEstado('ACTIVADA');
     });
   }
 
@@ -278,20 +276,16 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     }
     if (!this.puedeDesactivar()) return;
 
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: 'Desactivar familia',
-        text: `¿Desea desactivar la familia ${familia.famNombre}? Sus versiones e historial se conservarán.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d97706',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, desactivar',
-        cancelButtonText: 'Cancelar',
-        focusCancel: true
-      }).then(result => {
-        if (result.isConfirmed) this.cambiarEstado('DESACTIVADA');
-      });
+    void this.confirmation.confirm({
+      title: 'Desactivar familia',
+      message: `¿Desea desactivar la familia ${familia.famNombre}? Sus versiones e historial se conservarán.`,
+      icon: 'warning',
+      confirmLabel: 'Sí, desactivar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'deactivate',
+      confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (confirmed) this.cambiarEstado('DESACTIVADA');
     });
   }
 
@@ -305,35 +299,31 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     }
     if (!this.puedeEliminar()) return;
 
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: 'Eliminar familia',
-        text: `¿Desea eliminar permanentemente la familia ${familia.famCodigo}? Esta acción no se puede deshacer.`,
-        icon: 'error',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Eliminar',
-        cancelButtonText: 'Cancelar',
-        focusCancel: true
-      }).then(result => {
-        if (!result.isConfirmed) return;
+    void this.confirmation.confirm({
+      title: 'Eliminar familia',
+      message: `¿Desea eliminar permanentemente la familia ${familia.famCodigo}? Esta acción no se puede deshacer.`,
+      icon: 'error',
+      confirmLabel: 'Eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
 
-        this.operando.set(true);
-        this.error.set(null);
-        this.suscripcionOperacion?.unsubscribe();
-        this.suscripcionOperacion = this.service.eliminarFamiliaFormulario(familia.famId).subscribe({
-          next: () => {
-            this.operando.set(false);
-            this.eliminada.emit(familia);
-          },
-          error: error => {
-            this.operando.set(false);
-            const mensajeError = this.obtenerMensajeError(error, 'No se pudo eliminar la familia.');
-            this.cargarDetalle(true);
-            this.error.set(mensajeError);
-          }
-        });
+      this.operando.set(true);
+      this.error.set(null);
+      this.suscripcionOperacion?.unsubscribe();
+      this.suscripcionOperacion = this.service.eliminarFamiliaFormulario(familia.famId).subscribe({
+        next: () => {
+          this.operando.set(false);
+          this.eliminada.emit(familia);
+        },
+        error: error => {
+          this.operando.set(false);
+          const mensajeError = this.obtenerMensajeError(error, 'No se pudo eliminar la familia.');
+          this.cargarDetalle(true);
+          this.error.set(mensajeError);
+        }
       });
     });
   }

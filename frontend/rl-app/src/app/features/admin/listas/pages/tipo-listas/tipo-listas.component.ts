@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
 import { TipoListaCautela } from '../../models/listas.models';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 
@@ -27,7 +28,8 @@ export class TipoListasComponent implements OnInit {
 
   constructor(
     private listasService: ListasService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private confirmation: InstitutionalConfirmationService
   ) {}
 
   ngOnInit() {
@@ -134,41 +136,38 @@ export class TipoListasComponent implements OnInit {
   }
 
   eliminar(item: TipoListaCautela) {
-    import('sweetalert2').then((Swal) => {
-      Swal.default.fire({
-        allowOutsideClick: false,
-        title: '¿Estás seguro?',
-        text: `Se eliminará el tipo de lista "${item.descripcion}". Esta acción no se puede deshacer.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.listasService.eliminarTipoListaCautela(item.tipoListaCautelaId).subscribe({
-            next: (res) => {
-              this.cargar();
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Eliminado',
-                text: res.mensaje || 'El tipo de lista ha sido eliminado.',
-                icon: 'success',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
-            },
-            error: (err) => {
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Error',
-                text: err.error?.mensaje || 'No se pudo eliminar el tipo de lista.',
-                icon: 'error',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
-            }
-          });
-        }
+    void this.confirmation.confirm({
+      title: '¿Estás seguro?',
+      message: `Se eliminará el tipo de lista "${item.descripcion}". Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      import('sweetalert2').then(Swal => {
+        this.listasService.eliminarTipoListaCautela(item.tipoListaCautelaId).subscribe({
+          next: (res) => {
+            this.cargar();
+            Swal.default.fire({
+              allowOutsideClick: false,
+              title: 'Eliminado',
+              text: res.mensaje || 'El tipo de lista ha sido eliminado.',
+              icon: 'success',
+              confirmButtonColor: 'var(--ihss-primary-color)'
+            });
+          },
+          error: (err) => {
+            Swal.default.fire({
+              allowOutsideClick: false,
+              title: 'Error',
+              text: err.error?.mensaje || 'No se pudo eliminar el tipo de lista.',
+              icon: 'error',
+              confirmButtonColor: 'var(--ihss-primary-color)'
+            });
+          }
+        });
       });
     });
   }

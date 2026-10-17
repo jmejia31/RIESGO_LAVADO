@@ -8,6 +8,7 @@ import { DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY } from '../../../../../co
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
 import { LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 @Component({
   selector: 'app-configuracion',
@@ -19,6 +20,7 @@ import { LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/
 export class ConfiguracionComponent implements OnInit {
   private fb = inject(FormBuilder);
   public configService = inject(ConfiguracionService);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
 
   activeTab = signal<'sistema' | 'slides'>('sistema');
   readonly maxTextoTextarea = 1000;
@@ -187,31 +189,27 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   eliminarSlide(id: number) {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        allowOutsideClick: false,
-        title: '¿Está seguro de eliminar el slide?',
-        text: 'Esta acción no se puede deshacer y el slide se removerá del carrusel de login.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280'
-      }).then(res => {
-        if (res.isConfirmed) {
-          this.configService.eliminarSlide(id).subscribe({
-            next: () => {
-              this.mostrarExito('Slide eliminado de la base de datos');
-              this.cargarSlides();
-            },
-            error: (err) => {
-              const msg = err?.error?.mensaje || 'No se pudo eliminar el slide.';
-              this.mostrarError(msg);
-            }
-          });
-        }
-      });
+    void this.confirmation.confirm({
+      title: '¿Está seguro de eliminar el slide?',
+      message: 'Esta acción no se puede deshacer y el slide se removerá del carrusel de login.',
+      icon: 'warning',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.configService.eliminarSlide(id).subscribe({
+          next: () => {
+            this.mostrarExito('Slide eliminado de la base de datos');
+            this.cargarSlides();
+          },
+          error: (err) => {
+            const msg = err?.error?.mensaje || 'No se pudo eliminar el slide.';
+            this.mostrarError(msg);
+          }
+        });
+      }
     });
   }
 

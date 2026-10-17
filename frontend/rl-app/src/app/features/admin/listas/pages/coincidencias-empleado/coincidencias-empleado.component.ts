@@ -10,6 +10,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 @Component({
   selector: 'app-coincidencias-empleado',
@@ -50,7 +51,8 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
 
   constructor(
     private listasService: ListasService,
-    private authService: AuthService
+    private authService: AuthService,
+    private confirmation: InstitutionalConfirmationService
   ) {}
 
   ngOnInit() {
@@ -372,18 +374,17 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
 
   calificar(r: CoincidenciaEmpleadoDetalle, tipoCalificacionId: number) {
     const desc = tipoCalificacionId === 1 ? 'Positivo' : 'Falso Positivo';
-    import('sweetalert2').then((Swal) => {
-      Swal.default.fire({
-        title: '¿Está seguro?',
-        text: `Desea calificar este registro con ID ${r.reporteCoincidenciaId} como "${desc}"?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: 'var(--ihss-primary-color)',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, calificar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
+    void this.confirmation.confirm({
+      title: '¿Está seguro?',
+      message: `Desea calificar este registro con ID ${r.reporteCoincidenciaId} como "${desc}"?`,
+      icon: 'warning',
+      confirmLabel: 'Sí, calificar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'confirm',
+      confirmVariant: 'primary'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      import('sweetalert2').then(Swal => {
           Swal.default.fire({
             title: 'Procesando',
             text: 'Guardando calificación...',
@@ -419,7 +420,6 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               });
             }
           });
-        }
       });
     });
   }

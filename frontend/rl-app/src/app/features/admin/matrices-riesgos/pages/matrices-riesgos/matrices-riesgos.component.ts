@@ -935,22 +935,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   confirmarDesactivarFamilia(fam: FamiliaFormularioDto): void {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: `¿Desactivar la familia ${fam.famNombre}?`,
-        html: `<p class="text-sm text-gray-700 mb-2">La familia dejará de estar disponible para nuevas operaciones.</p>
-               <p class="text-xs text-gray-500">No se eliminarán sus versiones ni información histórica.</p>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d97706',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Desactivar',
-        cancelButtonText: 'Cancelar'
-      }).then(result => {
-        if (result.isConfirmed) {
-          this.desactivarFamilia(fam);
-        }
-      });
+    void this.confirmation.confirm({
+      title: `¿Desactivar la familia ${fam.famNombre}?`,
+      message: 'La familia dejará de estar disponible para nuevas operaciones. No se eliminarán sus versiones ni información histórica.',
+      icon: 'warning',
+      confirmLabel: 'Desactivar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'deactivate',
+      confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (confirmed) this.desactivarFamilia(fam);
     });
   }
 
@@ -973,20 +967,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   confirmarActivarFamilia(fam: FamiliaFormularioDto): void {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: `¿Activar nuevamente la familia ${fam.famNombre}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#059669',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, activar',
-        cancelButtonText: 'Cancelar'
-      }).then(result => {
-        if (result.isConfirmed) {
-          this.activarFamilia(fam);
-        }
-      });
+    void this.confirmation.confirm({
+      title: `¿Activar nuevamente la familia ${fam.famNombre}?`,
+      message: 'La familia volverá a estar disponible para nuevas operaciones.',
+      icon: 'question',
+      confirmLabel: 'Sí, activar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'activate',
+      confirmVariant: 'success'
+    }).then(confirmed => {
+      if (confirmed) this.activarFamilia(fam);
     });
   }
 
@@ -1009,22 +999,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   confirmarEliminarFamilia(fam: FamiliaFormularioDto): void {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: `Eliminar familia ${fam.famCodigo}`,
-        html: `<p class="text-sm text-gray-700 mb-2">Esta operación eliminará permanentemente esta familia.</p>
-               <p class="text-xs text-gray-500">Solo es posible porque actualmente no posee versiones asociadas.</p>`,
-        icon: 'error',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then(result => {
-        if (result.isConfirmed) {
-          this.eliminarFamilia(fam);
-        }
-      });
+    void this.confirmation.confirm({
+      title: `Eliminar familia ${fam.famCodigo}`,
+      message: 'Esta operación eliminará permanentemente esta familia. Solo es posible porque actualmente no posee versiones asociadas.',
+      icon: 'error',
+      confirmLabel: 'Eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (confirmed) this.eliminarFamilia(fam);
     });
   }
 
@@ -2861,24 +2845,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   publicarVersion(version: VersionFormularioDto): void {
     if (!this.esAdministrador()) return;
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: '¿Publicar versión oficial?',
-        html: `<p class="text-sm text-gray-700 mb-2">Al publicar la versión <strong>ID #${version.verId}</strong> (${version.verCodigo} v${version.verVersion}) de la familia <strong>${this.familiaSeleccionada()}</strong>:</p>
-               <ul class="text-xs text-gray-600 text-left list-disc pl-5 space-y-1 mb-2">
-                 <li>Se convertirá en la versión <strong>vigente</strong> de la familia.</li>
-                 <li>La versión vigente anterior quedará como <strong>histórica</strong>.</li>
-                 <li>Esta versión quedará bloqueada en <strong>solo lectura</strong>.</li>
-                 <li>Para cambios futuros deberá clonarla a un nuevo borrador.</li>
-               </ul>`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: 'var(--ihss-primary-color)',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, publicar versión',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
+    void this.confirmation.confirm({
+      title: '¿Publicar versión oficial?',
+      message: `Al publicar la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion}) de la familia ${this.familiaSeleccionada()}, se convertirá en la versión vigente, la versión vigente anterior quedará como histórica, esta versión quedará bloqueada en solo lectura y para cambios futuros deberá clonarla a un nuevo borrador.`,
+      icon: 'question',
+      confirmLabel: 'Sí, publicar versión',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'publish',
+      confirmVariant: 'primary'
+    }).then(confirmed => {
+      if (confirmed) {
           this.guardando.set(true);
           this.operacionBuilderEnCurso.set('publicar');
           this.service.publicarVersionFormulario(version.verId).subscribe({
@@ -2917,29 +2893,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               this.mostrarError(this.obtenerMensajeError(error, 'No se pudo publicar la versión del formulario.'));
             }
           });
-        } else {
+      } else {
           this.guardando.set(false);
           this.operacionBuilderEnCurso.set(null);
-        }
-      });
+      }
     });
   }
 
   cambiarVigenciaVersion(version: VersionFormularioDto, vigente: boolean): void {
     if (!this.esAdministrador()) return;
     const accion = vigente ? 'activar' : 'desactivar';
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: vigente ? '¿Activar versión?' : '¿Desactivar versión?',
-        text: `¿Está seguro de ${accion} la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: vigente ? '#059669' : '#d97706',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: vigente ? 'Sí, activar' : 'Sí, desactivar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
+    void this.confirmation.confirm({
+      title: vigente ? '¿Activar versión?' : '¿Desactivar versión?',
+      message: `¿Está seguro de ${accion} la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`,
+      icon: 'warning',
+      confirmLabel: vigente ? 'Sí, activar' : 'Sí, desactivar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: vigente ? 'activate' : 'deactivate',
+      confirmVariant: vigente ? 'success' : 'danger'
+    }).then(confirmed => {
+      if (confirmed) {
           this.guardando.set(true);
           this.service.cambiarVigenciaFormulario(version.verId, vigente).subscribe({
             next: () => {
@@ -2954,8 +2927,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la vigencia de la versión.'));
             }
           });
-        }
-      });
+      }
     });
   }
 
@@ -2966,19 +2938,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: '¿Eliminar versión?',
-        text: `¿Está seguro de eliminar permanentemente la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        focusCancel: true
-      }).then((result) => {
-        if (result.isConfirmed) {
+    void this.confirmation.confirm({
+      title: '¿Eliminar versión?',
+      message: `¿Está seguro de eliminar permanentemente la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`,
+      icon: 'warning',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (confirmed) {
           this.guardando.set(true);
           this.service.eliminarVersionFormulario(version.verId).subscribe({
             next: () => {
@@ -2992,8 +2961,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               this.mostrarError(this.obtenerMensajeError(error, 'No se pudo eliminar la versión del formulario.'));
             }
           });
-        }
-      });
+      }
     });
   }
 

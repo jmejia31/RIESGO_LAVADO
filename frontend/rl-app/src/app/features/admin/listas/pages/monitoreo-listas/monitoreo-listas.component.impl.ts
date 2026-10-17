@@ -15,6 +15,7 @@ import { PageSizeSelectorComponent } from '../../../../../shared/components/page
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
 import { INSTITUTIONAL_EVIDENCE_FILE_POLICY, InstitutionalFileUploadPolicy } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
 type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
@@ -39,6 +40,7 @@ type RespuestaMonitoreo = {
 })
 export class MonitoreoListasComponent implements OnInit, OnDestroy {
   protected readonly reportPreview = inject(ReportPreviewService);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
   private configService = inject(ConfiguracionService);
   private filtroSeguimientoTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly solicitudesMonitoreo$ = new Subject<SolicitudMonitoreo>();
@@ -2389,39 +2391,30 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   // Centraliza el motivo obligatorio para eliminaciones lógicas de monitoreo.
-  private async solicitarMotivoEliminacion(Swal: any, title: string, text: string): Promise<string | null> {
-    const result = await Swal.default.fire({
-      allowOutsideClick: false,
+  private solicitarMotivoEliminacion(title: string, text: string): Promise<string | null> {
+    return this.confirmation.confirmWithInput({
       title,
-      text,
+      message: text,
       icon: 'warning',
-      input: 'textarea',
+      confirmLabel: 'Sí, eliminar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger',
       inputLabel: 'Motivo de eliminación',
       inputPlaceholder: 'Escriba el motivo de la eliminación...',
-      inputAttributes: {
-        maxlength: String(this.maxTextoTextarea),
-        'aria-label': 'Motivo de eliminación'
-      },
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      inputValidator: (value: string) => {
+      inputMaxLength: this.maxTextoTextarea,
+      inputValidator: value => {
         const motivo = value?.trim();
         if (!motivo) return 'Debe ingresar un motivo de eliminación.';
-        if (motivo.length > 1000) return 'El motivo no debe superar los 1000 caracteres.';
+        if (motivo.length > this.maxTextoTextarea) return `El motivo no debe superar los ${this.maxTextoTextarea} caracteres.`;
         return null;
       }
     });
-
-    return result.isConfirmed ? String(result.value).trim() : null;
   }
 
   eliminarEvidenciaExistente(evi: Evidencia) {
     import('sweetalert2').then(async Swal => {
       const motivoEliminacion = await this.solicitarMotivoEliminacion(
-        Swal,
         '¿Eliminar evidencia?',
         `Se eliminará lógicamente el archivo ${evi.nombreArchivo}.`
       );
@@ -2574,7 +2567,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   eliminarSeguimiento(seg: Seguimiento) {
     import('sweetalert2').then(async Swal => {
       const motivoEliminacion = await this.solicitarMotivoEliminacion(
-        Swal,
         '¿Eliminar seguimiento?',
         'Esta acción realizará una eliminación lógica de la nota de seguimiento.'
       );

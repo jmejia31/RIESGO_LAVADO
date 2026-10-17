@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { ListasService } from '../../data-access/listas.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { MonitoreoListasComponent } from './monitoreo-listas.component';
 
 vi.mock('sweetalert2', () => ({
@@ -14,6 +15,7 @@ describe('MonitoreoListasComponent', () => {
   let fixture: ComponentFixture<MonitoreoListasComponent>;
   let component: MonitoreoListasComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
+  let confirmation: { confirmWithInput: ReturnType<typeof vi.fn> };
   const fire = vi.mocked(Swal.fire);
   const close = vi.mocked(Swal.close);
   let createObjectUrl: ReturnType<typeof vi.fn>;
@@ -52,6 +54,7 @@ describe('MonitoreoListasComponent', () => {
     };
     fire.mockReset();
     close.mockReset();
+    confirmation = { confirmWithInput: vi.fn().mockResolvedValue(null) };
     createObjectUrl = vi.fn(() => 'blob:evidencia-prueba');
     revokeObjectUrl = vi.fn();
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectUrl });
@@ -61,6 +64,7 @@ describe('MonitoreoListasComponent', () => {
       imports: [MonitoreoListasComponent],
       providers: [
         { provide: ListasService, useValue: service },
+        { provide: InstitutionalConfirmationService, useValue: confirmation },
         { provide: ConfiguracionService, useValue: { configSistema: vi.fn(() => null) } },
         { provide: DomSanitizer, useValue: { bypassSecurityTrustResourceUrl: vi.fn(value => value) } }
       ]
@@ -264,11 +268,11 @@ describe('MonitoreoListasComponent', () => {
   });
 
   it('cancela la eliminacion de evidencia sin invocar el servicio', async () => {
-    fire.mockResolvedValueOnce({ isConfirmed: false } as never);
+    confirmation.confirmWithInput.mockResolvedValueOnce(null);
 
     component.eliminarEvidenciaExistente({ evidenciaId: 8, nombreArchivo: 'soporte.pdf' } as never);
 
-    await vi.waitFor(() => expect(fire).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(confirmation.confirmWithInput).toHaveBeenCalledOnce());
     expect(service['eliminarEvidencia']).not.toHaveBeenCalled();
   });
 
@@ -279,12 +283,18 @@ describe('MonitoreoListasComponent', () => {
     component.listaSeguimientos.set([{
       detalleListaId: 4, motivoIngreso: 'Revision', evidencias: [eliminada, conservada]
     }] as never);
-    fire.mockResolvedValueOnce({ isConfirmed: true, value: 'Archivo duplicado' } as never);
+    confirmation.confirmWithInput.mockResolvedValueOnce('Archivo duplicado');
 
     component.eliminarEvidenciaExistente(eliminada as never);
 
     await vi.waitFor(() => expect(service['eliminarEvidencia']).toHaveBeenCalledOnce());
     expect(service['eliminarEvidencia']).toHaveBeenCalledWith(8, 'Archivo duplicado');
+    expect(confirmation.confirmWithInput).toHaveBeenCalledWith(expect.objectContaining({
+      confirmIcon: 'delete',
+      confirmVariant: 'danger',
+      inputLabel: 'Motivo de eliminación',
+      inputMaxLength: 1000
+    }));
     expect(component.evidenciasExistentes()).toEqual([conservada]);
     expect(component.listaSeguimientos()[0].evidencias).toEqual([conservada]);
     expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Eliminado' }));
@@ -295,7 +305,7 @@ describe('MonitoreoListasComponent', () => {
     component.entidadSeleccionada.set({ noDocumento: '0801', nombreCompleto: 'Ana', tipoPositivoId: 2 });
     component.modoEdicion.set(true);
     component.seguimientoEditandoId.set(44);
-    fire.mockResolvedValueOnce({ isConfirmed: true, value: 'Registro sustituido' } as never);
+    confirmation.confirmWithInput.mockResolvedValueOnce('Registro sustituido');
 
     component.eliminarSeguimiento(seguimiento as never);
 
@@ -311,7 +321,7 @@ describe('MonitoreoListasComponent', () => {
     const seguimiento = { detalleListaId: 55, motivoIngreso: 'Nota protegida' };
     component.modoEdicion.set(true);
     component.seguimientoEditandoId.set(55);
-    fire.mockResolvedValueOnce({ isConfirmed: true, value: 'Depuracion' } as never);
+    confirmation.confirmWithInput.mockResolvedValueOnce('Depuracion');
 
     component.eliminarSeguimiento(seguimiento as never);
 

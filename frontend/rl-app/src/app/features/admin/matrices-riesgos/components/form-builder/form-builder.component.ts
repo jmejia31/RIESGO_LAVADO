@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -22,7 +22,7 @@ import { FormBuilderCanvasComponent } from './canvas/form-builder-canvas.compone
 import { FormBuilderInspectorComponent } from './inspector/form-builder-inspector.component';
 import { FormBuilderStatusbarComponent } from './statusbar/form-builder-statusbar.component';
 import { DynamicFieldRendererComponent, OpcionCampoRenderer } from '../dynamic-field-renderer/dynamic-field-renderer.component';
-import Swal from 'sweetalert2';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 export interface CatalogoEdicionForm {
   codigoOriginal: string | null;
@@ -63,6 +63,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
   styleUrls: ['./form-builder.component.scss']
 })
 export class FormBuilderComponent implements OnInit {
+  private readonly confirmation = inject(InstitutionalConfirmationService);
   @Input() jsonDefinicion: string = '';
   @Input() soloLectura: boolean = false;
   @Input() esAdministrador: boolean = false;
@@ -178,18 +179,17 @@ export class FormBuilderComponent implements OnInit {
     const seccion = current.secciones.find(item => item.id === seccionId);
     if (!seccion) return;
     this.seccionEnConfirmacion.set(seccionId);
-    const resultado = await Swal.fire({
+    const confirmed = await this.confirmation.confirm({
       title: '¿Eliminar sección?',
-      text: `Se eliminará «${seccion.titulo}» del borrador actual. Esta acción no se enviará al backend hasta guardar.`,
+      message: `Se eliminará «${seccion.titulo}» del borrador actual. Esta acción no se enviará al backend hasta guardar.`,
       icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Eliminar sección',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusCancel: true
+      confirmLabel: 'Eliminar sección',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'delete',
+      confirmVariant: 'danger'
     });
     this.seccionEnConfirmacion.set(null);
-    if (!resultado.isConfirmed || this.bloqueadoParaMutacion) return;
+    if (!confirmed || this.bloqueadoParaMutacion) return;
     const filtradas = current.secciones.filter((s: SeccionBuilderModel) => s.id !== seccionId);
     this.model.set({ ...current, secciones: filtradas.map((s, index) => ({ ...s, orden: index + 1 })) });
     if (this.seccionActivaId() === seccionId && filtradas.length > 0) this.seccionActivaId.set(filtradas[0].id);

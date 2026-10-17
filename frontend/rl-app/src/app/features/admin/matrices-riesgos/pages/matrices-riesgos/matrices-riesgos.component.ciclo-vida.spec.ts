@@ -182,12 +182,12 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     expect(fireMock).toHaveBeenCalledTimes(1);
-    const opciones = fireMock.mock.calls[0]?.[0] as unknown as { html?: string } | undefined;
-    const html = String(opciones?.html ?? '');
-    expect(html).toContain('versión <strong>vigente</strong>');
-    expect(html).toContain('vigente anterior quedará como <strong>histórica</strong>');
-    expect(html).toContain('bloqueada en <strong>solo lectura</strong>');
-    expect(html).toContain('clonarla a un nuevo borrador');
+    const opciones = fireMock.mock.calls[0]?.[0] as unknown as { title?: string } | undefined;
+    const contenido = String(opciones?.title ?? '');
+    expect(contenido).toContain('versión vigente');
+    expect(contenido).toContain('vigente anterior quedará como histórica');
+    expect(contenido).toContain('bloqueada en solo lectura');
+    expect(contenido).toContain('clonarla a un nuevo borrador');
 
     expect(serviceMock.publicarVersionFormulario).toHaveBeenCalledWith(101);
     expect(component.mensaje()).toBe('Versión publicada y establecida como vigente correctamente.');

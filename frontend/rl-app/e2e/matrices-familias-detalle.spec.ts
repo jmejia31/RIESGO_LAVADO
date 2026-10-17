@@ -212,6 +212,52 @@ test('UI-FAM.2 carga el detalle por ID dentro de un único modal XL con sus vers
   await expect(disparador).toBeFocused();
 });
 
+test('P0-H Familia Detalle conserva Cancelar, foco, teclado y ejecuta una sola transición al confirmar', async ({ page }) => {
+  let familiaActual = { ...familiaDetalle };
+  const cambiosEstado: string[] = [];
+  await page.route('**/api/matrices-riesgos/familias/7', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: familiaActual })
+  }));
+  await page.route('**/api/matrices-riesgos/familias/7/desactivar', async route => {
+    cambiosEstado.push(route.request().method());
+    familiaActual = { ...familiaActual, famActivo: false };
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: true }) });
+  });
+
+  await abrirGestor(page);
+  await abrirDetalle(page);
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  const trigger = detalle.getByRole('button', { name: 'Desactivar familia' });
+  await trigger.click();
+
+  const confirmacion = page.locator('.institutional-confirmation');
+  await expect(confirmacion).toBeVisible();
+  await expect(confirmacion).toHaveAttribute('role', 'dialog');
+  const cancel = confirmacion.getByRole('button', { name: 'Cancelar' });
+  const accept = confirmacion.getByRole('button', { name: 'Desactivar' });
+  await expect(cancel).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(accept).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(cancel).toBeFocused();
+  await cancel.click();
+
+  await expect(confirmacion).toBeHidden();
+  await expect(trigger).toBeFocused();
+  expect(cambiosEstado).toHaveLength(0);
+  await expect(detalle.getByRole('button', { name: 'Desactivar familia' })).toBeVisible();
+
+  await trigger.click();
+  await expect(confirmacion).toBeVisible();
+  await confirmacion.getByRole('button', { name: 'Desactivar' }).press('Enter');
+
+  await expect.poll(() => cambiosEstado.length).toBe(1);
+  await expect(detalle.getByRole('button', { name: 'Activar familia' })).toBeVisible();
+  expect(cambiosEstado).toEqual(['PUT']);
+});
+
 test('MCV.1 Escape conserva gestor y detalle abiertos hasta el cierre explicito', async ({ page }) => {
   await abrirGestor(page);
   await page.keyboard.press('Escape');
