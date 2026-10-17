@@ -4,17 +4,13 @@ import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto }
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
-
-vi.mock('sweetalert2', () => ({
-  default: {
-    fire: vi.fn().mockResolvedValue({ isConfirmed: true })
-  }
-}));
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosComponent flujos y evidencias', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
+  let confirmationMock: { confirm: ReturnType<typeof vi.fn> };
 
   const version: VersionFormularioDto = {
     verId: 10,
@@ -60,6 +56,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
   };
 
   beforeEach(async () => {
+    confirmationMock = { confirm: vi.fn().mockResolvedValue(true) };
     service = {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
@@ -116,7 +113,8 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       imports: [MatricesRiesgosComponent],
       providers: [
         { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
-        { provide: MatricesRiesgosService, useValue: service }
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: InstitutionalConfirmationService, useValue: confirmationMock }
       ]
     }).compileComponents();
 
@@ -216,7 +214,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.error()).toContain('La definición JSON no es válida');
   });
 
-  it('publica una versión no vigente mediante SweetAlert2 de confirmación', async () => {
+  it('publica una versión no vigente tras la confirmación institucional', async () => {
     const draftVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
     component.publicarVersion(draftVersion);
 
@@ -226,7 +224,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.mensaje()).toBe('Versión publicada y establecida como vigente correctamente.');
   });
 
-  it('cambia la vigencia de una versión (activar / desactivar) mediante SweetAlert2', async () => {
+  it('cambia la vigencia de una versión (activar / desactivar) tras la confirmación institucional', async () => {
     const draftVersion = { ...version, verVigente: false };
     component.cambiarVigenciaVersion(draftVersion, true);
 
@@ -240,7 +238,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.mensaje()).toBe('Versión desactivada.');
   });
 
-  it('elimina permanentemente una versión inactiva mediante SweetAlert2', async () => {
+  it('elimina permanentemente una versión inactiva tras la confirmación institucional', async () => {
     const inactivaVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
     component.eliminarVersionFormulario(inactivaVersion);
 

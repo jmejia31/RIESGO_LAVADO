@@ -4,13 +4,8 @@ import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { FamiliaFormularioDto } from '../../models/matrices-riesgos.models';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { FamiliaEditarModalComponent } from './familia-editar-modal.component';
-
-vi.mock('sweetalert2', () => ({
-  default: {
-    fire: vi.fn(() => Promise.resolve({ isConfirmed: true }))
-  }
-}));
 
 const familiaBase: FamiliaFormularioDto = {
   famId: 7,
@@ -38,6 +33,9 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
   const auth = {
     tieneRol: vi.fn(() => true)
   };
+  const confirmation = {
+    confirm: vi.fn(() => Promise.resolve(true))
+  };
 
   async function estabilizarVista(): Promise<void> {
     await fixture.whenStable();
@@ -58,12 +56,14 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
     service.activarFamiliaFormulario.mockReturnValue(of(true));
     service.desactivarFamiliaFormulario.mockReturnValue(of(true));
     service.eliminarFamiliaFormulario.mockReturnValue(of(true));
+    confirmation.confirm.mockResolvedValue(true);
 
     await TestBed.configureTestingModule({
       imports: [FamiliaEditarModalComponent],
       providers: [
         { provide: MatricesRiesgosService, useValue: service },
-        { provide: AuthService, useValue: auth }
+        { provide: AuthService, useValue: auth },
+        { provide: InstitutionalConfirmationService, useValue: confirmation }
       ]
     }).compileComponents();
 

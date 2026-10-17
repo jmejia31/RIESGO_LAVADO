@@ -5,20 +5,14 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { EstadoFormulario, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-let mockSwalResult = { isConfirmed: true };
-
-vi.mock('sweetalert2', () => ({
-  default: {
-    fire: vi.fn().mockImplementation(() => Promise.resolve(mockSwalResult))
-  }
-}));
 
 describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
   let authServiceMock: { tieneRol: ReturnType<typeof vi.fn> };
+  let confirmationMock: { confirm: ReturnType<typeof vi.fn> };
   let service: {
     obtenerVersionFormulario: ReturnType<typeof vi.fn>;
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
@@ -67,7 +61,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
   };
 
   beforeEach(async () => {
-    mockSwalResult = { isConfirmed: true };
+    confirmationMock = { confirm: vi.fn().mockResolvedValue(true) };
     authServiceMock = {
       tieneRol: vi.fn().mockReturnValue(true)
     };
@@ -98,6 +92,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       imports: [MatricesRiesgosComponent],
       providers: [
         { provide: AuthService, useValue: authServiceMock },
+        { provide: InstitutionalConfirmationService, useValue: confirmationMock },
         { provide: MatricesRiesgosService, useValue: service },
         { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } }
       ]
@@ -263,7 +258,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     });
 
     it('si el usuario cancela el diálogo de publicación, operacionBuilderEnCurso sigue en null y no hay requests', async () => {
-      mockSwalResult = { isConfirmed: false };
+      confirmationMock.confirm.mockResolvedValueOnce(false);
 
       component.publicarVersion(baseVersion);
       await new Promise(resolve => setTimeout(resolve, 50));

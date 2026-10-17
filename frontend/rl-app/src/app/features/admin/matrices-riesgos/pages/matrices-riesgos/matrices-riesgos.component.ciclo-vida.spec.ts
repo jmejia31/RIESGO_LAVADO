@@ -5,12 +5,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
-
-vi.mock('sweetalert2', () => ({
-  default: {
-    fire: vi.fn().mockResolvedValue({ isConfirmed: true })
-  }
-}));
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
   let component: MatricesRiesgosComponent;
@@ -18,6 +13,7 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
   let serviceMock: any;
   let globalStateMock: any;
   let authServiceMock: any;
+  let confirmationMock: { confirm: ReturnType<typeof vi.fn> };
 
   const versionDraftNoVigente: VersionFormularioDto = {
     verId: 101,
@@ -89,13 +85,15 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
     authServiceMock = {
       tieneRol: vi.fn().mockReturnValue(true)
     };
+    confirmationMock = { confirm: vi.fn().mockResolvedValue(true) };
 
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent],
       providers: [
         { provide: MatricesRiesgosService, useValue: serviceMock },
         { provide: GlobalHttpStateService, useValue: globalStateMock },
-        { provide: AuthService, useValue: authServiceMock }
+        { provide: AuthService, useValue: authServiceMock },
+        { provide: InstitutionalConfirmationService, useValue: confirmationMock }
       ]
     }).compileComponents();
 
@@ -172,18 +170,15 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
   });
 
   it('advierte sustitución, historial e inmutabilidad antes de publicar y refresca ambas fuentes', async () => {
-    const Swal = await import('sweetalert2');
-    const fireMock = vi.mocked(Swal.default.fire);
-    fireMock.mockClear();
     const refrescarHistorial = vi.spyOn(component, 'cargarVersiones');
     const refrescarVigente = vi.spyOn(component, 'cargarVersionVigentePorFamilia');
 
     component.publicarVersion(versionDraftNoVigente);
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    expect(fireMock).toHaveBeenCalledTimes(1);
-    const opciones = fireMock.mock.calls[0]?.[0] as unknown as { title?: string } | undefined;
-    const contenido = String(opciones?.title ?? '');
+    expect(confirmationMock.confirm).toHaveBeenCalledTimes(1);
+    const opciones = confirmationMock.confirm.mock.calls[0]?.[0] as { title?: string; message?: string } | undefined;
+    const contenido = `${opciones?.title ?? ''} ${opciones?.message ?? ''}`;
     expect(contenido).toContain('versión vigente');
     expect(contenido).toContain('vigente anterior quedará como histórica');
     expect(contenido).toContain('bloqueada en solo lectura');

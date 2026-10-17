@@ -8,12 +8,6 @@ import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrice
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { FamiliaDetalleModalComponent } from './familia-detalle-modal.component';
 
-vi.mock('sweetalert2', () => ({
-  default: {
-    fire: vi.fn().mockResolvedValue({ isConfirmed: true })
-  }
-}));
-
 describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
   let service: MatricesRiesgosService;
   let auditoriaService: AuditoriaService;
@@ -86,6 +80,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
   ];
 
   beforeEach(async () => {
+    const confirmation = { confirm: vi.fn().mockResolvedValue(true) };
     await TestBed.configureTestingModule({
       imports: [FamiliaDetalleModalComponent, HttpClientTestingModule],
       providers: [
@@ -94,7 +89,8 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
         {
           provide: AuthService,
           useValue: { tieneRol: () => true }
-        }
+        },
+        { provide: InstitutionalConfirmationService, useValue: confirmation }
       ]
     }).compileComponents();
 
