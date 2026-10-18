@@ -28,19 +28,6 @@ function Assert-Minimum {
     }
 }
 
-if ($env:RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED -eq 'true') {
-    if ([string]::IsNullOrWhiteSpace($env:BLOCK7_ORACLE_CONNECTION_STRING)) {
-        throw 'La certificacion Oracle/browser de Bloque 7 requiere la conexion Oracle XE desechable'
-    }
-
-    Write-Host '=== Certificacion real Bloque 7: Oracle + Browser/API ===' -ForegroundColor Cyan
-    $block7OracleScript = Join-Path $RepositoryRoot 'tools/run_block7_oracle_e2e.sh'
-    & bash $block7OracleScript
-    if ($LASTEXITCODE -ne 0) {
-        throw "La certificacion Oracle/browser del Bloque 7 fallo con codigo $LASTEXITCODE"
-    }
-}
-
 $block9ContractValidator = Join-Path $RepositoryRoot 'tools/validate_block9_mitigation_monitoring_contract.js'
 & node $block9ContractValidator
 if ($LASTEXITCODE -ne 0) {
@@ -144,6 +131,22 @@ $backendBranchPct = 100.0 * [double]$backendRoot.'branches-covered' / [double]$b
 
 Assert-Minimum 'Backend lineas' $backendLinePct $backendThresholds.Lines
 Assert-Minimum 'Backend ramas' $backendBranchPct $backendThresholds.Branches
+
+# Run the Block 7 disposable Oracle/browser fixture only after backend tests.
+# Its minimal RL_USUARIOS table is intentionally sufficient for that host but
+# would shadow the richer P0-F Oracle fixture if created before coverage tests.
+if ($env:RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED -eq 'true') {
+    if ([string]::IsNullOrWhiteSpace($env:BLOCK7_ORACLE_CONNECTION_STRING)) {
+        throw 'La certificacion Oracle/browser de Bloque 7 requiere la conexion Oracle XE desechable'
+    }
+
+    Write-Host '=== Certificacion real Bloque 7: Oracle + Browser/API ===' -ForegroundColor Cyan
+    $block7OracleScript = Join-Path $RepositoryRoot 'tools/run_block7_oracle_e2e.sh'
+    & bash $block7OracleScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "La certificacion Oracle/browser del Bloque 7 fallo con codigo $LASTEXITCODE"
+    }
+}
 
 Write-Host '=== Cobertura Frontend ===' -ForegroundColor Cyan
 Push-Location $frontendRoot
