@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
@@ -79,7 +80,7 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.Equal("1", token.Claims.Single(c => c.Type == "debe_cambiar_pass").Value);
         Assert.InRange(response.ExpiresAt, inicio.AddMinutes(29), inicio.AddMinutes(31));
         Assert.Equal(response.RefreshToken, repository.RefreshTokenGuardado);
-        Assert.InRange(repository.RefreshTokenExpira!.Value, inicio.AddDays(4.9), inicio.AddDays(5.1));
+        Assert.Equal(5d, repository.RefreshTokenExpirationDays);
         Assert.Contains(auditoria.Registros, item => item.Accion == "LOGIN" && item.DatosNuevos!.Contains("EXITOSO", StringComparison.Ordinal));
     }
 
@@ -137,6 +138,7 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.NotNull(response);
         Assert.Equal(new[] { tokenAnterior }, repository.TokensRevocados);
         Assert.Equal(response.RefreshToken, repository.RefreshTokenGuardado);
+        Assert.Equal(5d, repository.RefreshTokenExpirationDays);
         Assert.NotEqual(tokenAnterior, response.RefreshToken);
         Assert.Equal(usuario.UsrId, response.Usuario.Id);
     }
@@ -152,6 +154,58 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.Null(response);
         Assert.Empty(repository.TokensRevocados);
         Assert.Null(repository.RefreshTokenGuardado);
+    }
+
+    [Fact]
+    public async Task RefreshRotationLossReturnsNoTokens()
+    {
+        const string tokenAnterior = "refresh-token-anterior";
+        var usuario = CrearUsuarioLocal("ClaveSegura123!");
+        var repository = new UsuarioRepositoryFake
+        {
+            UsuarioIdPorRefreshToken = usuario.UsrId,
+            RefreshTokenValido = tokenAnterior,
+            UsuarioPorId = usuario,
+            RotationSucceeds = false
+        };
+        var service = CrearServicio(repository, new AuditoriaRepositoryFake(), new ConfiguracionRepositoryFake());
+
+        var response = await service.RefreshTokenAsync(tokenAnterior, "127.0.0.13");
+
+        Assert.Null(response);
+        Assert.Empty(repository.TokensRevocados);
+        Assert.Null(repository.RefreshTokenGuardado);
+    }
+
+    [Fact]
+    public async Task TokenExpirationsUseInvariantCulture()
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("es-HN");
+            var usuario = CrearUsuarioLocal("ClaveSegura123!");
+            var repository = new UsuarioRepositoryFake { UsuarioPorLogin = usuario };
+            var service = CrearServicio(
+                repository,
+                new AuditoriaRepositoryFake(),
+                new ConfiguracionRepositoryFake(),
+                accessTokenMinutes: "30.5",
+                refreshTokenExpirationDays: "5.5");
+
+            var inicio = DateTime.UtcNow;
+            var response = await service.LoginAsync(
+                new LoginRequestDto { Email = usuario.UsrEmail, Password = "ClaveSegura123!" },
+                "127.0.0.14");
+
+            Assert.NotNull(response);
+            Assert.InRange(response.ExpiresAt, inicio.AddMinutes(29.5), inicio.AddMinutes(31.5));
+            Assert.Equal(5.5d, repository.RefreshTokenExpirationDays);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     [Fact]
@@ -184,15 +238,20 @@ public sealed class IdentidadModuleCharacterizationTests
         return controller;
     }
 
-    private static AuthService CrearServicio(IUsuarioRepository usuarios, IAuditoriaRepository auditoria, IConfiguracionRepository configuracion)
+    private static AuthService CrearServicio(
+        IUsuarioRepository usuarios,
+        IAuditoriaRepository auditoria,
+        IConfiguracionRepository configuracion,
+        string accessTokenMinutes = "30",
+        string refreshTokenExpirationDays = "5")
     {
         var values = new Dictionary<string, string?>
         {
             ["Jwt:SecretKey"] = "clave-de-prueba-segura-con-32-caracteres-minimo-2026",
             ["Jwt:Issuer"] = "sgrla-tests",
             ["Jwt:Audience"] = "sgrla-client",
-            ["Jwt:AccessTokenExpirationMinutes"] = "30",
-            ["Jwt:RefreshTokenExpirationDays"] = "5"
+            ["Jwt:AccessTokenExpirationMinutes"] = accessTokenMinutes,
+            ["Jwt:RefreshTokenExpirationDays"] = refreshTokenExpirationDays
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
         return new AuthService(usuarios, auditoria, configuration, new ActivoDirectorioServiceFake(), configuracion, new EmailServiceFake());
@@ -264,7 +323,8 @@ public sealed class IdentidadModuleCharacterizationTests
         public long? UsuarioIdPorRefreshToken { get; init; }
         public string? RefreshTokenValido { get; init; }
         public string? RefreshTokenGuardado { get; private set; }
-        public DateTime? RefreshTokenExpira { get; private set; }
+        public double RefreshTokenExpirationDays { get; private set; }
+        public bool RotationSucceeds { get; init; } = true;
         public (int Intentos, DateTime? Bloqueo)? UltimoIntentoFallido { get; private set; }
         public List<string> TokensRevocados { get; } = new();
 
@@ -276,7 +336,15 @@ public sealed class IdentidadModuleCharacterizationTests
         public Task<bool> ForzarCambioPasswordAsync(long usrId, string hash, string salt) => Task.FromResult(false);
         public Task<long?> BuscarUsuarioIdPorRefreshTokenAsync(string token) => Task.FromResult(UsuarioIdPorRefreshToken);
         public Task<string?> ObtenerRefreshTokenAsync(long usrId, string token) => Task.FromResult(token == RefreshTokenValido ? token : null);
-        public Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip) { RefreshTokenGuardado = token; RefreshTokenExpira = expira; return Task.CompletedTask; }
+        public Task GuardarRefreshTokenAsync(long usrId, string token, double expirationDays, string? ip) { RefreshTokenGuardado = token; RefreshTokenExpirationDays = expirationDays; return Task.CompletedTask; }
+        public Task<bool> RotarRefreshTokenAsync(long usrId, string tokenActual, string tokenNuevo, double expirationDays, string? ip)
+        {
+            if (!RotationSucceeds) return Task.FromResult(false);
+            TokensRevocados.Add(tokenActual);
+            RefreshTokenGuardado = tokenNuevo;
+            RefreshTokenExpirationDays = expirationDays;
+            return Task.FromResult(true);
+        }
         public Task RevocarRefreshTokenAsync(string token) { TokensRevocados.Add(token); return Task.CompletedTask; }
         public Task RevocarTodosTokensAsync(long usrId) => Task.CompletedTask;
         public Task<UsuariosPaginadosDto> ListarPaginadoAsync(ConsultaUsuariosPaginadaDto dto) => Task.FromResult(new UsuariosPaginadosDto { Pagina = 1, TamanoPagina = dto.TamanoPagina, TotalRegistros = 0, TotalPaginas = 0 });

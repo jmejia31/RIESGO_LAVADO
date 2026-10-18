@@ -338,7 +338,7 @@ public class UsuarioRepository : IUsuarioRepository
         return null;
     }
 
-    public async Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip)
+    public async Task GuardarRefreshTokenAsync(long usrId, string token, double expirationDays, string? ip)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
@@ -348,14 +348,65 @@ public class UsuarioRepository : IUsuarioRepository
             INSERT INTO RL_REFRESH_TOKENS
                 (RFT_ID, RFT_USR_ID, RFT_TOKEN, RFT_EXPIRA, RFT_IP_ORIGEN)
             VALUES
-                (SEQ_RL_REFRESH_TOKENS.NEXTVAL, :usr_id, :token, :expira, :ip)";
+                (SEQ_RL_REFRESH_TOKENS.NEXTVAL, :usr_id, :token, SYSDATE + :expiration_days, :ip)";
 
         cmd.Parameters.Add(new OracleParameter("usr_id", usrId));
         cmd.Parameters.Add(new OracleParameter("token",  RefreshTokenSecurity.Hash(token)));
-        cmd.Parameters.Add(new OracleParameter("expira", expira));
+        cmd.Parameters.Add(new OracleParameter("expiration_days", expirationDays));
         cmd.Parameters.Add(new OracleParameter("ip",     (object?)ip ?? DBNull.Value));
 
         await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<bool> RotarRefreshTokenAsync(long usrId, string tokenActual, string tokenNuevo, double expirationDays, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var transaction = conn.BeginTransaction();
+
+        try
+        {
+            await using var revoke = conn.CreateCommand();
+            revoke.Transaction = transaction;
+            revoke.CommandText = @"
+                UPDATE RL_REFRESH_TOKENS
+                SET RFT_REVOCADO = 1
+                WHERE RFT_USR_ID = :usr_id
+                  AND RFT_REVOCADO = 0
+                  AND RFT_EXPIRA > SYSDATE
+                  AND (RFT_TOKEN = :token OR RFT_TOKEN = :hash)";
+            revoke.Parameters.Add(new OracleParameter("usr_id", usrId));
+            revoke.Parameters.Add(new OracleParameter("token", tokenActual));
+            revoke.Parameters.Add(new OracleParameter("hash", RefreshTokenSecurity.Hash(tokenActual)));
+
+            var revokedRows = await revoke.ExecuteNonQueryAsync();
+            if (revokedRows != 1)
+            {
+                await transaction.RollbackAsync();
+                return false;
+            }
+
+            await using var insert = conn.CreateCommand();
+            insert.Transaction = transaction;
+            insert.CommandText = @"
+                INSERT INTO RL_REFRESH_TOKENS
+                    (RFT_ID, RFT_USR_ID, RFT_TOKEN, RFT_EXPIRA, RFT_IP_ORIGEN)
+                VALUES
+                    (SEQ_RL_REFRESH_TOKENS.NEXTVAL, :usr_id, :token, SYSDATE + :expiration_days, :ip)";
+            insert.Parameters.Add(new OracleParameter("usr_id", usrId));
+            insert.Parameters.Add(new OracleParameter("token", RefreshTokenSecurity.Hash(tokenNuevo)));
+            insert.Parameters.Add(new OracleParameter("expiration_days", expirationDays));
+            insert.Parameters.Add(new OracleParameter("ip", (object?)ip ?? DBNull.Value));
+            await insert.ExecuteNonQueryAsync();
+
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task RevocarRefreshTokenAsync(string token)

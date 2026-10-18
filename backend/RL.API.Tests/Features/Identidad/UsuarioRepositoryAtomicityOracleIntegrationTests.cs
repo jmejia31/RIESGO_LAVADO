@@ -25,6 +25,7 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
         var repository = new UsuarioRepository(new OracleDbContext(connectionString));
         string failedCreateEmail = $"P0F_CREATE_{Guid.NewGuid():N}@example.invalid";
         string updateEmail = $"P0F_UPDATE_{Guid.NewGuid():N}@example.invalid";
+        string refreshEmail = $"P0F_REFRESH_{Guid.NewGuid():N}@example.invalid";
         long? updateUserId = null;
 
         try
@@ -81,12 +82,46 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
                 "SELECT COUNT(*) FROM RL_USUARIO_MODULOS WHERE USM_USR_ID = :id",
                 ("id", updateUserId.Value)));
 
-            Console.WriteLine("P0F_CREATE_NTH_MODULE_ROLLBACK=PASS; P0F_UPDATE_NTH_MODULE_ROLLBACK=PASS; P0F_OLD_MODULE_STATE_RESTORED=PASS");
+            var refreshUser = await repository.CrearAsync(new CrearUsuarioDto
+            {
+                Nombre = "Rotacion refresh",
+                Apellido = "Prueba",
+                Email = refreshEmail,
+                RolId = fixture.RoleId,
+                EsUsuarioDominio = 0
+            }, "synthetic-hash", "BCRYPT");
+            const string currentRefreshToken = "synthetic-current-refresh-token";
+            await repository.GuardarRefreshTokenAsync(refreshUser, currentRefreshToken, 5.5, "127.0.0.1");
+            Assert.Equal(RL.API.Features.Identidad.Domain.RefreshTokenSecurity.Hash(currentRefreshToken), await ScalarStringAsync(connection,
+                "SELECT RFT_TOKEN FROM RL_REFRESH_TOKENS WHERE RFT_USR_ID = :id AND RFT_REVOCADO = 0",
+                ("id", refreshUser)));
+
+            var rotations = await Task.WhenAll(
+                repository.RotarRefreshTokenAsync(refreshUser, currentRefreshToken, "synthetic-next-refresh-token-a", 5.5, "127.0.0.1"),
+                repository.RotarRefreshTokenAsync(refreshUser, currentRefreshToken, "synthetic-next-refresh-token-b", 5.5, "127.0.0.1"));
+
+            Assert.Single(rotations, rotated => rotated);
+            Assert.Equal(1, await ScalarAsync(connection,
+                "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE RFT_USR_ID = :id AND RFT_REVOCADO = 0",
+                ("id", refreshUser)));
+            Assert.Equal(1, await ScalarAsync(connection,
+                "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE RFT_USR_ID = :id AND RFT_TOKEN = :token AND RFT_REVOCADO = 1",
+                ("id", refreshUser), ("token", RL.API.Features.Identidad.Domain.RefreshTokenSecurity.Hash(currentRefreshToken))));
+            Assert.InRange(await ScalarAsync(connection,
+                "SELECT ROUND((MIN(RFT_EXPIRA) - SYSDATE) * 24) FROM RL_REFRESH_TOKENS WHERE RFT_USR_ID = :id AND RFT_REVOCADO = 0",
+                ("id", refreshUser)), 131, 133);
+
+            bool replayAccepted = await repository.RotarRefreshTokenAsync(
+                refreshUser, currentRefreshToken, "synthetic-replay-refresh-token", 5.5, "127.0.0.1");
+            Assert.False(replayAccepted);
+
+            Console.WriteLine("P0F_CREATE_NTH_MODULE_ROLLBACK=PASS; P0F_UPDATE_NTH_MODULE_ROLLBACK=PASS; P0F_OLD_MODULE_STATE_RESTORED=PASS; REFRESH_TOKEN_ROTATION_ATOMIC=PASS; REFRESH_TOKEN_REPLAY_REJECTED=PASS; REFRESH_TOKEN_DB_CLOCK_EXPIRY=PASS");
         }
         finally
         {
             await DeleteUserByEmailAsync(connection, failedCreateEmail);
             await DeleteUserByEmailAsync(connection, updateEmail);
+            await DeleteUserByEmailAsync(connection, refreshEmail);
             if (fixture.CreatedModuleId.HasValue)
                 await ExecuteAsync(connection, "DELETE FROM RL_MODULOS WHERE MOD_ID = :id", ("id", fixture.CreatedModuleId.Value));
             await DropFixtureObjectsAsync(connection, fixture);
@@ -110,6 +145,8 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
         bool createdModules = !await TableExistsAsync(connection, "RL_MODULOS");
         bool createdAssignments = !await TableExistsAsync(connection, "RL_USUARIO_MODULOS");
         bool createdSequence = !await SequenceExistsAsync(connection, "SEQ_RL_USUARIOS");
+        bool createdRefreshTokens = !await TableExistsAsync(connection, "RL_REFRESH_TOKENS");
+        bool createdRefreshSequence = !await SequenceExistsAsync(connection, "SEQ_RL_REFRESH_TOKENS");
 
         if (createdUsers)
             await ExecuteAsync(connection, "CREATE TABLE RL_USUARIOS (USR_ID NUMBER(10) PRIMARY KEY, USR_NOMBRE VARCHAR2(100) NOT NULL, USR_APELLIDO VARCHAR2(100) NOT NULL, USR_EMAIL VARCHAR2(150) NOT NULL UNIQUE, USR_PASSWORD_HASH VARCHAR2(256) NOT NULL, USR_PASSWORD_SALT VARCHAR2(256) NOT NULL, USR_ROL_ID NUMBER(3) NOT NULL, USR_EMPLEADO_ID VARCHAR2(20), USR_DNI VARCHAR2(25), ES_USUARIO_DOMINIO NUMBER(1), USUARIO_DOMINIO VARCHAR2(500), USR_DOM_ID NUMBER(5), USR_DEBE_CAMBIAR_PASS NUMBER(1), USR_FECHA_CLAVE_TEMP DATE, USR_ACTIVO NUMBER(1) DEFAULT 1 NOT NULL, USR_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL)");
@@ -117,8 +154,12 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
             await ExecuteAsync(connection, "CREATE TABLE RL_MODULOS (MOD_ID NUMBER(5) PRIMARY KEY)");
         if (createdAssignments)
             await ExecuteAsync(connection, "CREATE TABLE RL_USUARIO_MODULOS (USM_USR_ID NUMBER(10) NOT NULL, USM_MOD_ID NUMBER(5) NOT NULL, CONSTRAINT PK_P0F_USUARIO_MODULOS PRIMARY KEY (USM_USR_ID, USM_MOD_ID), CONSTRAINT FK_P0F_USM_USUARIO FOREIGN KEY (USM_USR_ID) REFERENCES RL_USUARIOS(USR_ID), CONSTRAINT FK_P0F_USM_MODULO FOREIGN KEY (USM_MOD_ID) REFERENCES RL_MODULOS(MOD_ID))");
+        if (createdRefreshTokens)
+            await ExecuteAsync(connection, "CREATE TABLE RL_REFRESH_TOKENS (RFT_ID NUMBER(15) NOT NULL PRIMARY KEY, RFT_USR_ID NUMBER(10) NOT NULL REFERENCES RL_USUARIOS(USR_ID), RFT_TOKEN VARCHAR2(500) NOT NULL, RFT_EXPIRA DATE NOT NULL, RFT_REVOCADO NUMBER(1) DEFAULT 0 NOT NULL, RFT_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL, RFT_IP_ORIGEN VARCHAR2(45))");
         if (createdSequence)
             await ExecuteAsync(connection, "CREATE SEQUENCE SEQ_RL_USUARIOS START WITH 9000000000 INCREMENT BY 1 NOCACHE");
+        if (createdRefreshSequence)
+            await ExecuteAsync(connection, "CREATE SEQUENCE SEQ_RL_REFRESH_TOKENS START WITH 9000000000 INCREMENT BY 1 NOCACHE");
 
         long moduleId = await ScalarAsync(connection, "SELECT NVL(MIN(MOD_ID), 0) FROM RL_MODULOS");
         long? createdModuleId = null;
@@ -142,11 +183,13 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
                 roleId = Convert.ToInt32(roleValue, CultureInfo.InvariantCulture);
         }
 
-        return new Fixture(createdUsers, createdModules, createdAssignments, createdSequence, createdModuleId, roleId, checked((int)moduleId));
+        return new Fixture(createdUsers, createdModules, createdAssignments, createdSequence, createdRefreshTokens, createdRefreshSequence, createdModuleId, roleId, checked((int)moduleId));
     }
 
     private static async Task DropFixtureObjectsAsync(OracleConnection connection, Fixture fixture)
     {
+        if (fixture.CreatedRefreshTokens) await ExecuteAsync(connection, "DROP TABLE RL_REFRESH_TOKENS PURGE");
+        if (fixture.CreatedRefreshSequence) await ExecuteAsync(connection, "DROP SEQUENCE SEQ_RL_REFRESH_TOKENS");
         if (fixture.CreatedAssignments) await ExecuteAsync(connection, "DROP TABLE RL_USUARIO_MODULOS PURGE");
         if (fixture.CreatedModules) await ExecuteAsync(connection, "DROP TABLE RL_MODULOS PURGE");
         if (fixture.CreatedUsers) await ExecuteAsync(connection, "DROP TABLE RL_USUARIOS PURGE");
@@ -194,12 +237,14 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
             return;
 
         await ExecuteAsync(connection,
+            "DELETE FROM RL_REFRESH_TOKENS WHERE RFT_USR_ID = :id", ("id", userId));
+        await ExecuteAsync(connection,
             "DELETE FROM RL_USUARIO_MODULOS WHERE USM_USR_ID = :id", ("id", userId));
         await ExecuteAsync(connection,
             "DELETE FROM RL_USUARIOS WHERE USR_ID = :id", ("id", userId));
     }
 
-    private sealed record Fixture(bool CreatedUsers, bool CreatedModules, bool CreatedAssignments, bool CreatedSequence, long? CreatedModuleId, int RoleId, int ModuleId);
+    private sealed record Fixture(bool CreatedUsers, bool CreatedModules, bool CreatedAssignments, bool CreatedSequence, bool CreatedRefreshTokens, bool CreatedRefreshSequence, long? CreatedModuleId, int RoleId, int ModuleId);
 }
 
 [AttributeUsage(AttributeTargets.Method)]

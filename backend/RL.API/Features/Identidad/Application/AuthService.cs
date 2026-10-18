@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Globalization;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -289,6 +290,16 @@ public class AuthService : IAuthService
 
     private async Task<LoginResponseDto> GenerarTokensParaUsuarioAsync(Usuario usuario, string ip)
     {
+        var (accessToken, expires) = CrearAccessToken(usuario);
+        string refreshToken = GenerarRefreshToken();
+
+        await _usuarioRepo.GuardarRefreshTokenAsync(usuario.UsrId, refreshToken, ObtenerDiasExpiracionRefresh(), ip);
+
+        return CrearLoginResponse(usuario, accessToken, refreshToken, expires);
+    }
+
+    private (string AccessToken, DateTime ExpiresAt) CrearAccessToken(Usuario usuario)
+    {
         var secretKey = Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!);
         var claims = new[]
         {
@@ -308,7 +319,11 @@ public class AuthService : IAuthService
             new Claim("debe_cambiar_pass", usuario.UsrDebeCambiarPass.ToString())
         };
 
-        var expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_config["Jwt:AccessTokenExpirationMinutes"] ?? "60"));
+        var accessTokenMinutes = double.Parse(
+            _config["Jwt:AccessTokenExpirationMinutes"] ?? "60",
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture);
+        var expires = DateTime.UtcNow.AddMinutes(accessTokenMinutes);
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
@@ -318,19 +333,22 @@ public class AuthService : IAuthService
         );
 
         string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-        string refreshToken = GenerarRefreshToken();
+        return (accessToken, expires);
+    }
 
-        var refExp = DateTime.UtcNow.AddDays(Convert.ToDouble(_config["Jwt:RefreshTokenExpirationDays"] ?? "7"));
-        await _usuarioRepo.GuardarRefreshTokenAsync(usuario.UsrId, refreshToken, refExp, ip);
+    private double ObtenerDiasExpiracionRefresh() => double.Parse(
+        _config["Jwt:RefreshTokenExpirationDays"] ?? "7",
+        NumberStyles.Float,
+        CultureInfo.InvariantCulture);
 
-        return new LoginResponseDto
+    private static LoginResponseDto CrearLoginResponse(Usuario usuario, string accessToken, string refreshToken, DateTime expires) =>
+        new()
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiresAt = expires,
             Usuario = MapToDto(usuario)
         };
-    }
 
     public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip)
     {
@@ -348,11 +366,18 @@ public class AuthService : IAuthService
             return null;
         }
 
-        // Revocar token actual
-        await _usuarioRepo.RevocarRefreshTokenAsync(refreshToken);
+        var (accessToken, expires) = CrearAccessToken(usuario);
+        var refreshTokenNuevo = GenerarRefreshToken();
+        var rotado = await _usuarioRepo.RotarRefreshTokenAsync(
+            usrId.Value,
+            refreshToken,
+            refreshTokenNuevo,
+            ObtenerDiasExpiracionRefresh(),
+            ip);
 
-        // Generar nuevos tokens
-        return await GenerarTokensParaUsuarioAsync(usuario, ip);
+        return rotado
+            ? CrearLoginResponse(usuario, accessToken, refreshTokenNuevo, expires)
+            : null;
     }
 
     private static string GenerarRefreshToken()

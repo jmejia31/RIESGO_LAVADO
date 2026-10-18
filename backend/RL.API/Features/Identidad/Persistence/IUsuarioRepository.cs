@@ -13,7 +13,8 @@ public interface IUsuarioRepository
     Task<bool> ForzarCambioPasswordAsync(long usrId, string hash, string salt);
     Task<long?> BuscarUsuarioIdPorRefreshTokenAsync(string token);
     Task<string?> ObtenerRefreshTokenAsync(long usrId, string token);
-    Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip);
+    Task GuardarRefreshTokenAsync(long usrId, string token, double expirationDays, string? ip);
+    Task<bool> RotarRefreshTokenAsync(long usrId, string tokenActual, string tokenNuevo, double expirationDays, string? ip);
     Task RevocarRefreshTokenAsync(string token);
     Task RevocarTodosTokensAsync(long usrId);
     Task<UsuariosPaginadosDto> ListarPaginadoAsync(ConsultaUsuariosPaginadaDto consulta);
