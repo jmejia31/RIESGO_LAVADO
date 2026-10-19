@@ -139,10 +139,9 @@ app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
             long evaluationId = riskId + 800_000_100 + index;
             long flowId = riskId + 850_000_100 + index;
             var calculatedValues = new Dictionary<int, object?>();
-            for (int formulaOrdinal = 1; formulaOrdinal <= projectedFields.Length; formulaOrdinal++)
+            foreach (int fieldNumber in projectedFields)
             {
-                int fieldNumber = projectedFields[formulaOrdinal - 1];
-                WorkbookFormulaResult formula = formulaResults[(risk.Code, formulaOrdinal)];
+                WorkbookFormulaResult formula = formulaResults[(risk.Code, fieldNumber)];
                 if (formula.IsError) throw new InvalidOperationException($"Independent workbook formula error at {risk.Code}/F{fieldNumber}.");
                 calculatedValues[fieldNumber] = NoControlExpected(workbook, risk.Ordinal + 1, fieldNumber) ?? formula.ExpectedValue;
             }
