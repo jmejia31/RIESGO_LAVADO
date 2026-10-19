@@ -966,7 +966,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "No se pudo poner en cuarentena la evidencia {EvidenciaId} antes del commit Oracle.", evidenciaId);
+                System.Diagnostics.Trace.TraceError("No se pudo poner en cuarentena la evidencia {0} antes del commit Oracle ({1}).", evidenciaId, ex.GetType().Name);
                 return Task.FromResult(false);
             }
         };
@@ -984,7 +984,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex, "No se pudo restaurar la evidencia {EvidenciaId} después de fallar el commit Oracle.", evidenciaId);
+                System.Diagnostics.Trace.TraceError("No se pudo restaurar la evidencia {0} después de fallar el commit Oracle ({1}).", evidenciaId, ex.GetType().Name);
                 return false;
             }
         }
@@ -1001,7 +1001,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         catch (Exception ex)
         {
             await RestaurarArchivoAsync();
-            _logger.LogError(ex, "Falló la eliminación de evidencia {EvidenciaId}; se restauró el archivo cuando fue posible.", evidenciaId);
+            System.Diagnostics.Trace.TraceError("Falló la eliminación de evidencia {0}; se restauró el archivo cuando fue posible ({1}).", evidenciaId, ex.GetType().Name);
             return new ServiceResult(false, "No se pudo eliminar la evidencia.", 500);
         }
 
@@ -1014,7 +1014,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "La evidencia {EvidenciaId} se eliminó de Oracle, pero su archivo en cuarentena requiere limpieza.", evidenciaId);
+                System.Diagnostics.Trace.TraceError("La evidencia {0} se eliminó de Oracle, pero su archivo en cuarentena requiere limpieza ({1}).", evidenciaId, ex.GetType().Name);
             }
         }
         else if (resultado != ResultadoEliminacionEvidencia.Exito)
