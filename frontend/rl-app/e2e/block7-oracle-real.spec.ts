@@ -103,6 +103,12 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     maxCount: 8,
     reason: 'The lifecycle fixture intentionally omits calculation inputs.',
   });
+  expectHttpResponse({
+    status: 409,
+    method: 'PUT',
+    pathIncludes: '/borrador',
+    reason: 'The stale concurrent browser editor is expected to be rejected.',
+  });
   const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true'
     && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
   test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');
