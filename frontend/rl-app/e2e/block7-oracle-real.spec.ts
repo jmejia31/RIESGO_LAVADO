@@ -837,7 +837,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
       expect(displayed, `${item.riskCode}/F${fieldNumber} differs in Full Matrix UI`).toBe(expectedDisplay);
       uiCalculationValues++;
     }
-    await page.getByRole('button', { name: 'Cerrar Matriz completa' }).click();
+    await matrixModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
   }
 
   expect(uiCalculationValues).toBe(2006);
