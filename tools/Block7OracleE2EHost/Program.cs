@@ -172,7 +172,7 @@ app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
                 string description = workbook.GetText(risk.Ordinal + 1, descriptionColumn).Trim();
                 if (description.Length == 0 || new[] { "NO HAY", "INEXISTENTE", "0", "0%" }.Contains(description, StringComparer.OrdinalIgnoreCase)) continue;
                 await ExecuteAsync(fullChainSeed,
-                    "INSERT INTO RL_MR_CONTROLES_RIESGO (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION) VALUES (:id,:evaluation,:type,:description)",
+                    "INSERT INTO RL_MR_CONTROLES_RIESGO (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO) VALUES (:id,:evaluation,:type,:description,'MANUAL','ACTIVO')",
                     ("id", evaluationId + 200_000_000 + index * controlSources.Length + controlIndex), ("evaluation", evaluationId), ("type", controlType), ("description", "Block 12 disposable canonical control fixture"));
             }
             fullChainUiFixtures.Add(new
