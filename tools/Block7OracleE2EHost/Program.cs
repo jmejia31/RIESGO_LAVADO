@@ -133,6 +133,13 @@ app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
         var formulaResults = workbook.EvaluateFormulaCells().ToDictionary(result => (result.RiskCode, result.FieldNumber));
         if (formulaResults.Count != 2006) throw new InvalidOperationException("The independent workbook formula source must provide all 2006 expected values.");
         await using var fullChainSeed = await OpenOracleWithRetryAsync(connectionString);
+        long firstEvaluationId = riskId + 800_000_100;
+        long lastEvaluationId = firstEvaluationId + canonicalRisks.Length - 1;
+        await ExecuteAsync(fullChainSeed, "DELETE FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID BETWEEN :first AND :last", ("first", firstEvaluationId), ("last", lastEvaluationId));
+        await ExecuteAsync(fullChainSeed, "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID BETWEEN :first AND :last", ("first", firstEvaluationId), ("last", lastEvaluationId));
+        await ExecuteAsync(fullChainSeed, "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID BETWEEN :first AND :last", ("first", firstEvaluationId), ("last", lastEvaluationId));
+        await ExecuteAsync(fullChainSeed, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID BETWEEN :first AND :last", ("first", firstEvaluationId), ("last", lastEvaluationId));
+        fullChainUiFixtures.Clear();
         for (int index = 0; index < canonicalRisks.Length; index++)
         {
             var risk = canonicalRisks[index];
@@ -166,7 +173,7 @@ app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
                 if (description.Length == 0 || new[] { "NO HAY", "INEXISTENTE", "0", "0%" }.Contains(description, StringComparer.OrdinalIgnoreCase)) continue;
                 await ExecuteAsync(fullChainSeed,
                     "INSERT INTO RL_MR_CONTROLES_RIESGO (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION) VALUES (:id,:evaluation,:type,:description)",
-                    ("id", evaluationId + 200_000_000 + index * controlSources.Length + controlIndex), ("evaluation", evaluationId), ("type", controlType), ("description", description));
+                    ("id", evaluationId + 200_000_000 + index * controlSources.Length + controlIndex), ("evaluation", evaluationId), ("type", controlType), ("description", "Block 12 disposable canonical control fixture"));
             }
             fullChainUiFixtures.Add(new
             {
