@@ -2833,3 +2833,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - SonarCloud permanece `FAIL_NON_BLOCKING` bajo la decisión vigente; no se modificó por este bloque. `SAST_STATUS=NOT_REQUIRED` según decisión de gobierno previa.
 - Cambios ajenos tracked/untracked siguen preservados fuera de commits. Producción `PRODUCTION_QUERIED=NO`, DML=0, DDL=0. No iniciar actividades institucionales posteriores (capacitación, Unicode físico preproducción, deployment o aceptación final).
 - Siguiente paso: validar `git diff --check`, publicar sólo estos cambios documentales, esperar Quality Gates del HEAD documental exacto y entonces registrar/emitir la certificación final de Bloque 10.
+
+## Actualización final - BLOQUE 10 cerrado (COD) - 2026-10-18 22:08 -06:00
+
+- `BLOCK10_STATUS=PASS`, `BLOCK10_CLOSED=YES`. Código `99466bf6bf3cd21893b7b67d7f9ae835bb6cf342`, Quality Gates run `39196311816=completed/success`, SHA exacto. Documentación previa `1e0f827f5f7a09f8e8a150c32475b240a00aa175`, run `39197157471=completed/success`, SHA exacto.
+- Certificado: contrato canónico 82/82, Matriz Completa, consolidado latest-approved, proyección batch, Excel/PDF reales 82 campos y paridad según pruebas; Oracle Bloque 10 ejecutado contra XE desechable; regresión de Monitoreo Bloque 8 y gates generales completados en CI. Sonar `FAIL_NON_BLOCKING`; no fue gate.
+- El commit de esta actualización documental requiere y recibirá CI del HEAD exacto conforme al flujo obligatorio. No iniciar capacitación, correctivo físico Unicode preproducción, despliegue productivo ni aceptación institucional.
+- Preservar los cambios ajenos tracked/untracked que siguen en el worktree y fuera del stage/commit. Producción `PRODUCTION_QUERIED=NO`, `PRODUCTION_DML=0`, `PRODUCTION_DDL=0`.
