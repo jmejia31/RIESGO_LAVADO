@@ -70,6 +70,58 @@ public sealed class InstitutionalProjectionMapperTests
     }
 
     [Fact]
+    public void Map_PreservesExplicitBlankFormulaResultWhenControlExists()
+    {
+        InstitutionalProjectionSource source = CreateSource();
+        JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
+        calculations[FormulaKey(22)] = string.Empty;
+        calculations[FormulaKey(33)] = 0.3m;
+        source = source with
+        {
+            Evaluation = WithCalculations(source.Evaluation, calculations),
+            Controls = [new ControlRiesgoDto
+            {
+                ConId = 1,
+                ConEvaluacionId = source.Evaluation.EvaId,
+                ConTipo = "PREVENTIVO",
+                ConDescripcion = "Control preventivo",
+                ConAutomatizacion = "MANUAL"
+            }]
+        };
+
+        InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
+
+        Assert.Null(result.Fields[21].Value);
+        Assert.Equal("LEGIT_FORMULA_BLANK", result.Fields[21].State);
+    }
+
+    [Fact]
+    public void Map_FailsClosedWhenRequiredFormulaKeyIsMissingForExistingControl()
+    {
+        InstitutionalProjectionSource source = CreateSource();
+        JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
+        calculations.Remove(FormulaKey(22));
+        calculations[FormulaKey(33)] = 0.3m;
+        source = source with
+        {
+            Evaluation = WithCalculations(source.Evaluation, calculations),
+            Controls = [new ControlRiesgoDto
+            {
+                ConId = 1,
+                ConEvaluacionId = source.Evaluation.EvaId,
+                ConTipo = "PREVENTIVO",
+                ConDescripcion = "Control preventivo",
+                ConAutomatizacion = "MANUAL"
+            }]
+        };
+
+        InstitutionalProjectionException exception = Assert.Throws<InstitutionalProjectionException>(
+            () => new InstitutionalProjectionMapper().Map(source));
+
+        Assert.Contains(FormulaKey(22), exception.Message);
+    }
+
+    [Fact]
     public void Map_PreservesRepeatedControlDescriptionsAndPlanActivityCounts()
     {
         InstitutionalProjectionMapper mapper = new();
@@ -261,6 +313,18 @@ public sealed class InstitutionalProjectionMapperTests
             EvaVrr = source.EvaVrr
         };
     }
+
+    private static EvaluacionRiesgoDto WithCalculations(EvaluacionRiesgoDto source, JsonObject calculations) => new()
+    {
+        EvaId = source.EvaId,
+        EvaRiesgoId = source.EvaRiesgoId,
+        EvaVersionId = source.EvaVersionId,
+        EvaEstado = source.EvaEstado,
+        EvaDataJson = source.EvaDataJson,
+        EvaDataCalcJson = calculations.ToJsonString(),
+        EvaVri = source.EvaVri,
+        EvaVrr = source.EvaVrr
+    };
 
     private static string FindRepositoryRoot()
     {

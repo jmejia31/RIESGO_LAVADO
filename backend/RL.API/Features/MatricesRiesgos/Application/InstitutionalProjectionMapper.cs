@@ -111,7 +111,7 @@ public sealed class InstitutionalProjectionMapper
         {
             string type = field.Number switch { 22 or 23 => "PREVENTIVO", 26 or 27 => "DETECTIVO", _ => "CORRECTIVO" };
             if (!OrderedControls(source, type).Any()) return (field.Number is 22 or 26 or 30 ? 0 : 0m, "ABSENT_CONTROL_PROJECTED");
-            return FromJson(calculations, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, CalculationPendingState));
+            return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
         }
         if (field.Number == 32)
         {
@@ -122,7 +122,7 @@ public sealed class InstitutionalProjectionMapper
         if (field.Number == 33)
         {
             if (OrderedControls(source).Count == 0 && !calculations.ContainsKey(JsonKey(field))) return (null, "LEGIT_FORMULA_BLANK");
-            return FromJson(calculations, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, CalculationPendingState));
+            return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
         }
         if (field.Number == 39)
         {
@@ -148,7 +148,7 @@ public sealed class InstitutionalProjectionMapper
         if (field.Number is 81 or 82)
             return Optional(field.Number == 81 ? source.Monitoring.ObservacionesArea : source.Monitoring.ObservacionesUgr, "MONITORING");
         if (field.Source.Equals("EXCEL_FORMULA", StringComparison.Ordinal))
-            return FromJson(calculations, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, CalculationPendingState));
+            return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
         if (field.Number is 17 or 18 or 19)
             return IsGtic(source, answers)
                 ? FromJson(answers, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, DraftInputPendingState))
@@ -269,6 +269,19 @@ public sealed class InstitutionalProjectionMapper
 
     private static string? MissingDraftState(InstitutionalProjectionSource source, string pendingState) =>
         string.Equals(source.Evaluation.EvaEstado, "BORRADOR", StringComparison.OrdinalIgnoreCase) ? pendingState : null;
+
+    private static (object? Value, string State) FromFormulaJson(
+        IReadOnlyDictionary<string, JsonElement> source,
+        string key,
+        string? missingDraftState)
+    {
+        if (source.TryGetValue(key, out JsonElement value)
+            && value.ValueKind == JsonValueKind.String
+            && string.IsNullOrWhiteSpace(value.GetString()))
+            return (null, "LEGIT_FORMULA_BLANK");
+
+        return FromJson(source, key, optional: false, missingDraftState: missingDraftState);
+    }
 
     private static (object? Value, string State) FromJson(IReadOnlyDictionary<string, JsonElement> source, string key, bool optional, string? missingDraftState = null)
     {
