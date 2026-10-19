@@ -241,8 +241,8 @@ jobs:
         shell: bash
         run: |
           output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~ChildProcessCrashesAreReconciledAgainstDisposableOracleState --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Total tests: *1' <<<"$output"
           grep -Eq 'Passed: *1' <<<"$output"
-          grep -Eq 'Skipped: *0' <<<"$output"
           echo 'BLOCK12_DB_FILESYSTEM_PROCESS_CRASH_RECOVERY=PASS'
           echo 'BLOCK12_DB_FILESYSTEM_AMBIGUOUS_COMMIT_RECONCILIATION=PASS'
           echo 'BLOCK12_DB_FILESYSTEM_ORACLE_XE=PASS'
