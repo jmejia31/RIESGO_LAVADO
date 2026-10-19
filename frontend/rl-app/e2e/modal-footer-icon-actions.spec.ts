@@ -34,7 +34,19 @@ const themes = [
 
 test('modal footer icon primitive stays visible, themed and accessible across variants', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
+  for (const [path, datos] of [
+    ['/api/configuracion/sistema', { nombreSistema: 'SGRLA-IHSS', nombreInstitucion: 'IHSS', colorPrimario: '#1e3a8a', colorSecundario: '#1d4ed8', timeoutSesion: 30 }],
+    ['/api/configuracion/login', []],
+    ['/api/catalogos/modulos', []],
+  ] as const) {
+    await page.route(`**${path}`, route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, datos }),
+    }));
+  }
   await page.goto('/login');
+  await page.waitForLoadState('networkidle');
   await page.locator('body').evaluate(body => {
     const footer = document.createElement('div');
     footer.className = 'modal-footer-institutional';

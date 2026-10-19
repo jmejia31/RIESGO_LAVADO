@@ -66,7 +66,7 @@ export const test = base.extend<{ browserTelemetry: void }>({
         if (resourceStatus) telemetry.browserResourceErrors.push(Number(resourceStatus[1]));
         else telemetry.consoleErrors.push(safeConsoleMessage(message.text()));
       });
-      page.on('pageerror', error => telemetry.pageErrors.push(safeConsoleMessage(error.message)));
+      page.on('pageerror', error => telemetry.pageErrors.push(safeConsoleMessage(error.stack || error.message)));
       page.on('requestfailed', request => {
         telemetry.requestFailures.push(`${request.method()} ${safePath(request.url())} (${request.failure()?.errorText ?? 'unknown'})`);
       });

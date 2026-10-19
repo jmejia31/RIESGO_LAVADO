@@ -1,4 +1,4 @@
-import { expect, Locator, Page, test, expectHttpStatuses } from './support/telemetry-test';
+import { expect, Locator, Page, test, expectHttpStatuses, expectHttpResponse } from './support/telemetry-test';
 
 const versionPublicada = {
   verId: 10,
@@ -284,7 +284,13 @@ test('fallo HTTP al consultar transiciones no se presenta como éxito vacío', a
 });
 
 test('fallo al consultar historial muestra error y no afirma que está vacío', async ({ page }) => {
-  expectHttpStatuses(503);
+  expectHttpResponse({
+    status: 503,
+    method: 'GET',
+    path: '/api/matrices-riesgos/evaluaciones/87/flujos',
+    count: 2,
+    reason: 'The configured transient retry is answered with the controlled history outage.',
+  });
   await prepararSeguimientoEvaluacion(
     page,
     'BORRADOR',

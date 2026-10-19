@@ -620,6 +620,14 @@ test('Configuración de cálculo muestra referencias institucionales F01, F15 y 
 
 test('Configuracion de calculo conserva un 422 en el feedback local sin contaminar el shell', async ({ page }) => {
   expectHttpStatuses(422);
+  const supportingReads = [
+    page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === '/api/matrices-riesgos/configuracion-calculo/funciones'),
+    page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === '/api/matrices-riesgos/configuracion-calculo/parametros'),
+    page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === '/api/matrices-riesgos/metodologia/vigente'),
+  ];
   await page.route('**/api/matrices-riesgos/configuracion-calculo/formulas*', route => route.fulfill({
     status: 422,
     contentType: 'application/json',
@@ -632,6 +640,7 @@ test('Configuracion de calculo conserva un 422 en el feedback local sin contamin
   await expect(page.getByRole('alert')).toContainText('Error local P0-A 422.');
   await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
   await expect(page).toHaveURL(/\/matrices-riesgos/);
+  expect((await Promise.all(supportingReads)).map(response => response.status())).toEqual([200, 200, 200]);
 });
 
 test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios de template', async ({ page }) => {
@@ -1271,6 +1280,8 @@ test('CRUD de Riesgos mantiene header, contenido y footer en los viewports insti
 });
 test('preview de exportaciones consolidado conserva el modal dentro del viewport', async ({ page }) => {
   test.setTimeout(120_000);
+  const pageErrors: string[] = [];
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
   for (const viewport of [
     { width: 320, height: 568 },
     { width: 375, height: 812 },
@@ -1337,6 +1348,7 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     expect((await downloadPromise).suggestedFilename()).toBe('Matriz_Riesgos.xlsx');
     await excelClose.click();
   }
+  expect(pageErrors).toEqual([]);
 });
 
 test('UAT registra control, efectividad, plan y actividad', async ({ page }) => {
