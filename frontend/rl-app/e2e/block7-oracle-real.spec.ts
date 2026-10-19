@@ -1,4 +1,4 @@
-import { expect, Page, test } from './support/telemetry-test';
+import { expect, Page, test, expectHttpStatuses } from './support/telemetry-test';
 
 type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
 
@@ -87,6 +87,7 @@ async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluati
 }
 
 test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidence against Oracle', async ({ page, request }, testInfo) => {
+  expectHttpStatuses(409);
   const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true'
     && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
   test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');

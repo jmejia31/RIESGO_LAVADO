@@ -80,10 +80,10 @@ export const test = base.extend<{ browserTelemetry: void }>({
       contentType: 'application/json',
     });
 
+    expect(unexpectedHttpErrors, 'Unexpected browser HTTP 4xx/5xx responses').toEqual([]);
     expect(telemetry.consoleErrors, 'Unexpected browser console.error entries').toEqual([]);
     expect(telemetry.pageErrors, 'Unexpected uncaught browser page errors').toEqual([]);
     expect(telemetry.requestFailures, 'Unexpected browser request failures').toEqual([]);
-    expect(unexpectedHttpErrors, 'Unexpected browser HTTP 4xx/5xx responses').toEqual([]);
   }, { auto: true }],
 });
 
