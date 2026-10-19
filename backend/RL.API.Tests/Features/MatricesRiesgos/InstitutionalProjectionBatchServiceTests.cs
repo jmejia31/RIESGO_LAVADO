@@ -45,7 +45,7 @@ public sealed class InstitutionalProjectionBatchServiceTests
     private static InstitutionalProjectionSnapshot CreateSnapshot(long evaluationId, long riskId, string value)
     {
         InstitutionalProjectionSource source = MatricesRiesgos.InstitutionalProjectionMapperTests.CreateSource();
-        string json = source.Evaluation.EvaDataJson.Replace("SecciÃ³n de Cumplimiento", value, StringComparison.Ordinal);
+        string json = source.Evaluation.EvaDataJson.Replace("Secci\u00f3n de Cumplimiento", value, StringComparison.Ordinal);
         var evaluation = new EvaluacionRiesgoDto
         {
             EvaId=evaluationId, EvaRiesgoId=riskId, EvaVersionId=source.Evaluation.EvaVersionId,
