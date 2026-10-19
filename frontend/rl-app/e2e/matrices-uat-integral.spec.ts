@@ -631,7 +631,7 @@ test('Configuracion de calculo conserva un 422 en el feedback local sin contamin
     '/api/matrices-riesgos/configuracion-calculo/parametros',
     '/api/matrices-riesgos/metodologia/vigente',
   ]) {
-    await page.route(`**${path}**`, route => route.fulfill({
+    await page.route(url => url.pathname === path, route => route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ success: true, datos: [] }),
@@ -645,11 +645,15 @@ test('Configuracion de calculo conserva un 422 en el feedback local sin contamin
     page.waitForResponse(response => response.request().method() === 'GET'
       && new URL(response.url()).pathname === '/api/matrices-riesgos/metodologia/vigente'),
   ];
-  await page.route('**/api/matrices-riesgos/configuracion-calculo/formulas*', route => route.fulfill({
-    status: 422,
-    contentType: 'application/json',
-    body: JSON.stringify({ success: false, mensaje: 'Error local P0-A 422.' })
-  }));
+  const supportingReadsPromise = Promise.all(supportingReads);
+  await page.route(url => url.pathname === '/api/matrices-riesgos/configuracion-calculo/formulas', async route => {
+    await supportingReadsPromise;
+    return route.fulfill({
+      status: 422,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: false, mensaje: 'Error local P0-A 422.' })
+    });
+  });
 
   await page.goto('/matrices-riesgos');
   await page.getByRole('button', { name: /Configuraci.n de c.lculo/ }).click();
@@ -657,7 +661,7 @@ test('Configuracion de calculo conserva un 422 en el feedback local sin contamin
   await expect(page.getByRole('alert')).toContainText('Error local P0-A 422.');
   await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
   await expect(page).toHaveURL(/\/matrices-riesgos/);
-  expect((await Promise.all(supportingReads)).map(response => response.status())).toEqual([200, 200, 200]);
+  expect((await supportingReadsPromise).map(response => response.status())).toEqual([200, 200, 200]);
 });
 
 test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios de template', async ({ page }) => {

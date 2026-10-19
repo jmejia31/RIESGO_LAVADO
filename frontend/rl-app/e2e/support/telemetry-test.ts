@@ -1,4 +1,4 @@
-import { expect, test as base, type Page } from '@playwright/test';
+import { expect, test as base, type Page, type Request, type Response } from '@playwright/test';
 
 type BrowserTelemetry = {
   consoleErrors: string[];
@@ -66,24 +66,28 @@ export const test = base.extend<{ browserTelemetry: void }>({
         else telemetry.consoleErrors.push(safeConsoleMessage(message.text()));
       });
       page.on('pageerror', error => telemetry.pageErrors.push(safeConsoleMessage(error.stack || error.message)));
-      page.on('requestfailed', request => {
-        telemetry.requestFailures.push(`${request.method()} ${safePath(request.url())} (${request.failure()?.errorText ?? 'unknown'})`);
-      });
-      page.on('response', response => {
-        if (response.status() >= 400) {
-          telemetry.httpErrors.push({
-            status: response.status(),
-            method: response.request().method(),
-            url: safePath(response.url()),
-          });
-        }
-      });
+    };
+    const observeRequestFailure = (request: Request): void => {
+      telemetry.requestFailures.push(`${request.method()} ${safePath(request.url())} (${request.failure()?.errorText ?? 'unknown'})`);
+    };
+    const observeResponse = (response: Response): void => {
+      if (response.status() >= 400) {
+        telemetry.httpErrors.push({
+          status: response.status(),
+          method: response.request().method(),
+          url: safePath(response.url()),
+        });
+      }
     };
 
     context.pages().forEach(observePage);
     context.on('page', observePage);
+    context.on('requestfailed', observeRequestFailure);
+    context.on('response', observeResponse);
     await use();
     context.off('page', observePage);
+    context.off('requestfailed', observeRequestFailure);
+    context.off('response', observeResponse);
 
     const expectedResponses: Array<ExpectedHttpResponse & { remaining: number; observed: number; maximum: number }> = testInfo.annotations
       .filter(annotation => annotation.type === 'expected-http-status' || annotation.type === 'expected-http-response')
