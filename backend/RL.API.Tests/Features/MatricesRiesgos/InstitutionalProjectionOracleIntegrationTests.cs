@@ -572,16 +572,23 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.True(expected is null && actual is null, message);
             return;
         }
-        bool expectedNumeric = expected is byte or short or int or long or float or double or decimal;
-        bool actualNumeric = actual is byte or short or int or long or float or double or decimal;
-        if (expectedNumeric && actualNumeric)
+        try
         {
-            Assert.Equal(Convert.ToDouble(expected, System.Globalization.CultureInfo.InvariantCulture),
-                Convert.ToDouble(actual, System.Globalization.CultureInfo.InvariantCulture), 10);
-            return;
+            bool expectedNumeric = expected is byte or short or int or long or float or double or decimal;
+            bool actualNumeric = actual is byte or short or int or long or float or double or decimal;
+            if (expectedNumeric && actualNumeric)
+            {
+                Assert.Equal(Convert.ToDouble(expected, System.Globalization.CultureInfo.InvariantCulture),
+                    Convert.ToDouble(actual, System.Globalization.CultureInfo.InvariantCulture), 10);
+                return;
+            }
+            Assert.Equal(Convert.ToString(expected, System.Globalization.CultureInfo.InvariantCulture),
+                Convert.ToString(actual, System.Globalization.CultureInfo.InvariantCulture));
         }
-        Assert.Equal(Convert.ToString(expected, System.Globalization.CultureInfo.InvariantCulture),
-            Convert.ToString(actual, System.Globalization.CultureInfo.InvariantCulture));
+        catch (Xunit.Sdk.XunitException exception)
+        {
+            throw new Xunit.Sdk.XunitException($"{message} {exception.Message}");
+        }
     }
 
     private static string EscapePdfString(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal)
