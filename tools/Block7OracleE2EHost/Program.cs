@@ -147,10 +147,11 @@ app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
             }
             var calculations = calculatedValues.ToDictionary(pair => calculationKeys[pair.Key], pair => pair.Value, StringComparer.Ordinal);
             string calculationsJson = JsonSerializer.Serialize(calculations);
+            string evaluationDataJson = JsonSerializer.Serialize(new { area_principal = "Block12" });
             DateTime evaluatedAt = new DateTime(2026, 9, 1).AddMinutes(index);
             await ExecuteAsync(fullChainSeed,
-                "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,'{}',:calculations,:eventDate,:usr,1,1)",
-                ("id", evaluationId), ("risk", canonicalRiskIds[index]), ("version", versionId), ("calculations", calculationsJson), ("eventDate", evaluatedAt), ("usr", userId));
+                "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,:data,:calculations,:eventDate,:usr,1,1)",
+                ("id", evaluationId), ("risk", canonicalRiskIds[index]), ("version", versionId), ("data", evaluationDataJson), ("calculations", calculationsJson), ("eventDate", evaluatedAt), ("usr", userId));
             await ExecuteAsync(fullChainSeed,
                 "INSERT INTO RL_MR_PROYECCIONES_EVALUACION (PROY_ID,PROY_EVALUACION_ID,PROY_CODIGO_RIESGO,PROY_AREA_PRINCIPAL,PROY_VRI,PROY_VRR,PROY_NIVEL_INHERENTE,PROY_NIVEL_RESIDUAL,PROY_RESPUESTA_RIESGO,PROY_ESTADO_EVALUACION,PROY_DUENO_RIESGO,PROY_FECHA_EVAL) VALUES (:id,:eva,:code,'Block12',3,1,'BAJO','NO SIGNIFICATIVO','Mitigar','APROBADA','Fixture',:eventDate)",
                 ("id", evaluationId + 100_000_000), ("eva", evaluationId), ("code", risk.Code), ("eventDate", evaluatedAt));
