@@ -321,8 +321,11 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
       datos = null;
     } else if (path.endsWith('/evaluaciones/calculo-preview') && method === 'POST') {
       datos = { listo: true, evaDataCalcJson: '{}', evaVri: null, evaEtp: null, evaVrr: null, obligatoriosPendientes: [] };
-    } else if (path.endsWith('/evaluaciones/301/proyeccion-institucional') && method === 'GET') {
-      datos = draftProjection;
+    } else if (/\/evaluaciones\/\d+\/proyeccion-institucional$/.test(path) && method === 'GET') {
+      const evaluationId = Number(path.match(/\/evaluaciones\/(\d+)\/proyeccion-institucional$/)?.[1]);
+      datos = evaluationId === 301
+        ? draftProjection
+        : { ...draftProjection, evaluationId, riskCode: 'R-501' };
     } else if (path.endsWith('/evaluaciones') && method === 'POST') {
       datos = 201;
     } else if (/\/evaluaciones\/\d+$/.test(path) && method === 'PUT') {
