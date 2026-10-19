@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using RL.API.Infrastructure.Files;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
@@ -710,7 +711,7 @@ public sealed class MatricesRiesgosApplicationCoverageTests
     }
 
     [Fact]
-    public async Task EliminarEvidencia_FalloCommitOracle_RestauraArchivoOriginal()
+    public async Task EliminarEvidencia_FalloCommitOracle_ReconciliacionDurableRestauraArchivo()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
         string directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias");
@@ -736,6 +737,15 @@ public sealed class MatricesRiesgosApplicationCoverageTests
             ServiceResult result = await service.EliminarEvidenciaAsync(412, 9, null);
 
             Assert.Equal(500, result.StatusCode);
+            Assert.False(File.Exists(fullPath));
+            Assert.NotEmpty(Directory.GetFiles(directory, fileName + ".pending-delete-*"));
+
+            var journal = new DurableFileOperationJournal(directory);
+            int recovered = await journal.RecoverPendingAsync(
+                (_, _) => Task.FromResult(true),
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+
+            Assert.Equal(1, recovered);
             Assert.True(File.Exists(fullPath));
             Assert.Equal("controlled evidence fixture", await File.ReadAllTextAsync(fullPath));
             Assert.Empty(Directory.GetFiles(directory, fileName + ".pending-delete-*"));
