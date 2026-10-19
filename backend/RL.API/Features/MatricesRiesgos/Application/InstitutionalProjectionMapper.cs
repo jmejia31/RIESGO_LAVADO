@@ -110,7 +110,14 @@ public sealed class InstitutionalProjectionMapper
         if (field.Number is 22 or 23 or 26 or 27 or 30 or 31)
         {
             string type = field.Number switch { 22 or 23 => "PREVENTIVO", 26 or 27 => "DETECTIVO", _ => "CORRECTIVO" };
-            if (!OrderedControls(source, type).Any()) return (field.Number is 22 or 26 or 30 ? 0 : 0m, "ABSENT_CONTROL_PROJECTED");
+            if (!OrderedControls(source, type).Any())
+            {
+                string key = JsonKey(field);
+                bool hasFormulaValue = calculations.TryGetValue(key, out JsonElement formulaValue)
+                    && formulaValue.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined)
+                    && !(formulaValue.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(formulaValue.GetString()));
+                if (!hasFormulaValue) return (field.Number is 22 or 26 or 30 ? 0 : 0m, "ABSENT_CONTROL_PROJECTED");
+            }
             return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
         }
         if (field.Number == 32)

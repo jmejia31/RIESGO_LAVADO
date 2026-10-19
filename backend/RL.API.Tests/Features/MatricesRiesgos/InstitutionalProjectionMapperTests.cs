@@ -122,6 +122,34 @@ public sealed class InstitutionalProjectionMapperTests
     }
 
     [Fact]
+    public void Map_PreservesWorkbookFormulaValueWhenControlDescriptionIsAbsentButScaleProducesAValue()
+    {
+        InstitutionalProjectionSource source = CreateSource();
+        JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
+        calculations[FormulaKey(30)] = 1;
+        source = source with { Evaluation = WithCalculations(source.Evaluation, calculations) };
+
+        InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
+
+        Assert.Equal(1L, result.Fields[29].Value);
+        Assert.Equal("VALUE", result.Fields[29].State);
+    }
+
+    [Fact]
+    public void Map_ProjectsZeroForAbsentControlWhenItsFormulaResultIsBlank()
+    {
+        InstitutionalProjectionSource source = CreateSource();
+        JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
+        calculations[FormulaKey(30)] = string.Empty;
+        source = source with { Evaluation = WithCalculations(source.Evaluation, calculations) };
+
+        InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
+
+        Assert.Equal(0m, Convert.ToDecimal(result.Fields[29].Value));
+        Assert.Equal("ABSENT_CONTROL_PROJECTED", result.Fields[29].State);
+    }
+
+    [Fact]
     public void Map_PreservesRepeatedControlDescriptionsAndPlanActivityCounts()
     {
         InstitutionalProjectionMapper mapper = new();
