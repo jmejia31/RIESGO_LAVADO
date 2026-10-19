@@ -110,6 +110,21 @@ public sealed class ConfiguracionModuleCharacterizationTests
         Assert.NotNull(registro.DatosNuevos);
     }
 
+    [Fact]
+    public async Task ConfiguracionService_CargaImagen_UsaAccionPermitidaPorAuditoriaOracle()
+    {
+        var auditoria = new AuditoriaRepositoryFake();
+        var service = new ConfiguracionService(new ConfiguracionRepositoryFake(), auditoria);
+
+        await service.RegistrarCargaImagenAsync("original.png", "stored.png", "/uploads/stored.png", "image/png", 128, 27, "127.0.0.1");
+
+        var registro = Assert.Single(auditoria.Registros);
+        Assert.Equal("RL_LOGIN_SLIDES", registro.Tabla);
+        Assert.Equal("stored.png", registro.RegistroId);
+        Assert.Equal("INSERT", registro.Accion);
+        Assert.Equal("Configuracion", registro.Modulo);
+    }
+
     private static ConfigSistema CrearConfiguracion() => new()
     {
         SfsId = 1,

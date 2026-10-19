@@ -232,6 +232,22 @@ jobs:
           echo 'BLOCK12_ORACLE_59_IDENTITY_CLEANUP=PASS'
           echo 'BLOCK12_ORACLE_FILESYSTEM_FAILURE_ROLLBACK=PASS'
 
+      - name: Verify durable database/filesystem recovery across child-process termination on Oracle XE
+        env:
+          RL_BLOCK12_FILE_RECOVERY_REQUIRED: 'true'
+          Database__Profile: LOCAL_XE
+          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~ChildProcessCrashesAreReconciledAgainstDisposableOracleState --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Passed: *1' <<<"$output"
+          grep -Eq 'Skipped: *0' <<<"$output"
+          echo 'BLOCK12_DB_FILESYSTEM_PROCESS_CRASH_RECOVERY=PASS'
+          echo 'BLOCK12_DB_FILESYSTEM_AMBIGUOUS_COMMIT_RECONCILIATION=PASS'
+          echo 'BLOCK12_DB_FILESYSTEM_ORACLE_XE=PASS'
+          echo 'BLOCK12_DB_FILESYSTEM_TEMP_FILESYSTEM=PASS'
+
       - name: Certify all 34 workbook calculations against the independent oracle
         shell: bash
         run: |

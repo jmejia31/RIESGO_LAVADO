@@ -81,12 +81,22 @@ public sealed class EvidenciasService : IEvidenciasService
             if (filePath == null)
                 throw new InvalidOperationException("No se pudo resolver una ruta segura para guardar la evidencia.");
 
-            await using (var stream = new FileStream(filePath, FileMode.Create))
+            var journal = new DurableFileOperationJournal(uploadDir);
+            await using var operation = await journal.BeginAsync(
+                DurableFileOperationType.ListEvidenceUpload,
+                uniqueName,
+                uniqueName);
+            await using (var stream = new FileStream(operation.PendingPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.WriteThrough))
             {
                 await file.CopyToAsync(stream);
+                stream.Flush(flushToDisk: true);
             }
 
             await _repo.GuardarEvidenciaMetaAsync(detalleId, nombreOriginal, file.ContentType.Trim(), uniqueName, usuarioId);
+            if (File.Exists(filePath))
+                throw new IOException("The generated evidence path is already occupied.");
+            File.Move(operation.PendingPath, filePath);
+            await operation.CompleteAsync();
         }
     }
 

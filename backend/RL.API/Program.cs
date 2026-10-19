@@ -6,6 +6,7 @@ using Serilog;
 using System.Text;
 using RL.API.Infrastructure.Caching;
 using RL.API.Infrastructure.Database;
+using RL.API.Infrastructure.Files;
 using RL.API.Infrastructure.Health;
 using RL.API.Infrastructure.Http;
 using RL.API.Infrastructure.RateLimiting;
@@ -49,6 +50,9 @@ builder.Services.AddControllers()
         opts.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
         opts.SerializerSettings.NullValueHandling     = Newtonsoft.Json.NullValueHandling.Ignore;
     });
+
+// Reconciles any evidence file journal entries left by a terminated request or ambiguous Oracle commit.
+builder.Services.AddHostedService<DurableFileOperationRecoveryHostedService>();
 
 builder.Services.AddEndpointsApiExplorer();
 

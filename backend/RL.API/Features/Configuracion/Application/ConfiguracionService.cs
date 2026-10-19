@@ -92,7 +92,7 @@ public class ConfiguracionService : IConfiguracionService
         _auditoriaRepository.RegistrarAsync(
             "RL_LOGIN_SLIDES",
             nombreGuardado,
-            "UPLOAD",
+            "INSERT",
             null,
             JsonConvert.SerializeObject(new
             {

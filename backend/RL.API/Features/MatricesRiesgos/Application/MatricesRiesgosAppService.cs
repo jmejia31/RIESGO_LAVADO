@@ -854,16 +854,25 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (rutaCompleta is null)
             return ServiceResult<EvidenciaDto>.BadRequest("No se pudo resolver una ruta segura para guardar la evidencia.");
 
+        string rutaRelativa = Path.Combine("App_Data", "Evidencias", nombreFisico);
+        var journal = new DurableFileOperationJournal(uploadsPath);
+        DurableFileOperationJournal.Lease? operation = null;
         try
         {
-            await using (var stream = new FileStream(rutaCompleta, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            operation = await journal.BeginAsync(
+                DurableFileOperationType.MatrixEvidenceUpload,
+                nombreFisico,
+                rutaRelativa);
+
+            await using (var stream = new FileStream(operation.PendingPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.WriteThrough))
             {
                 await archivo.CopyToAsync(stream);
+                stream.Flush(flushToDisk: true);
             }
 
             string hash;
             using (var sha = SHA256.Create())
-            await using (var stream = File.OpenRead(rutaCompleta))
+            await using (var stream = File.OpenRead(operation.PendingPath))
             {
                 hash = Convert.ToHexString(await sha.ComputeHashAsync(stream)).ToLowerInvariant();
             }
@@ -874,11 +883,16 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
                 EviExtension = extension.TrimStart('.'),
                 EviTamano = archivo.Length,
                 EviHash = hash,
-                EviRuta = Path.Combine("App_Data", "Evidencias", nombreFisico),
+                EviRuta = rutaRelativa,
                 EviUsrCreacion = usuarioId
             };
 
             long id = await _repo.RegistrarEvidenciaFisicaAsync(dto, usuarioId);
+            if (File.Exists(operation.TargetPath))
+                throw new IOException("The generated evidence path is already occupied.");
+            File.Move(operation.PendingPath, operation.TargetPath);
+            await operation.CompleteAsync();
+
             EvidenciaDto? evidencia = await _repo.ObtenerEvidenciaFisicaAsync(id);
             return evidencia is null
                 ? new ServiceResult<EvidenciaDto>(false, null, "La evidencia fue registrada pero no pudo recuperarse.", 500)
@@ -886,11 +900,14 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         }
         catch (Exception ex)
         {
-            if (File.Exists(rutaCompleta))
-            {
-                try { File.Delete(rutaCompleta); } catch { }
-            }
-            return new ServiceResult<EvidenciaDto>(false, null, $"No se pudo cargar la evidencia: {ex.Message}", 500);
+            System.Diagnostics.Trace.TraceError("No se pudo cargar la evidencia física para el usuario {0} ({1}).", usuarioId, ex.GetType().Name);
+            // Leave the flushed journal and pending payload for Oracle-backed recovery.
+            return new ServiceResult<EvidenciaDto>(false, null, "No se pudo cargar la evidencia.", 500);
+        }
+        finally
+        {
+            if (operation is not null)
+                await operation.DisposeAsync();
         }
     }
     public async Task<ServiceResult<EvidenciaDto>> ObtenerEvidenciaFisicaAsync(long evidenciaId)
@@ -941,53 +958,41 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.Ok("La evidencia no existe o ya fue eliminada.");
         }
 
-        string? rutaArchivo = null;
+        DurableFileOperationJournal.Lease? operation = null;
+        string raizEvidencias = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias"));
         string? rutaEnCuarentena = null;
-        Func<Task<bool>> prepararEliminacionArchivo = () =>
+        Func<Task<bool>> prepararEliminacionArchivo = async () =>
         {
             try
             {
                 if (!string.IsNullOrWhiteSpace(evidencia.EviRuta))
                 {
-                    string raizEvidencias = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias"));
                     string ruta = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, evidencia.EviRuta));
                     string prefijoRaiz = raizEvidencias.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
                     if (!ruta.StartsWith(prefijoRaiz, StringComparison.OrdinalIgnoreCase))
-                        return Task.FromResult(false);
+                        return false;
 
-                    rutaArchivo = ruta;
+                    string rutaRelativa = Path.GetRelativePath(raizEvidencias, ruta);
+                    operation = await new DurableFileOperationJournal(raizEvidencias).BeginAsync(
+                        DurableFileOperationType.MatrixEvidenceDelete,
+                        rutaRelativa,
+                        evidencia.EviRuta,
+                        evidenciaId,
+                        File.Exists(ruta));
+                    rutaEnCuarentena = operation.PendingPath;
                     if (File.Exists(ruta))
                     {
-                        rutaEnCuarentena = ruta + ".pending-delete-" + Guid.NewGuid().ToString("N");
                         File.Move(ruta, rutaEnCuarentena);
                     }
                 }
-                return Task.FromResult(true);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Trace.TraceError("No se pudo poner en cuarentena la evidencia {0} antes del commit Oracle ({1}).", evidenciaId, ex.GetType().Name);
-                return Task.FromResult(false);
-            }
-        };
-
-        async Task<bool> RestaurarArchivoAsync()
-        {
-            if (rutaArchivo is null || rutaEnCuarentena is null || !File.Exists(rutaEnCuarentena)) return true;
-            try
-            {
-                if (File.Exists(rutaArchivo))
-                    throw new IOException("The original evidence path is already occupied; automatic restoration was not performed.");
-                File.Move(rutaEnCuarentena, rutaArchivo);
-                rutaEnCuarentena = null;
                 return true;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.TraceError("No se pudo restaurar la evidencia {0} después de fallar el commit Oracle ({1}).", evidenciaId, ex.GetType().Name);
+                System.Diagnostics.Trace.TraceError("No se pudo poner en cuarentena la evidencia {0} antes del commit Oracle ({1}).", evidenciaId, ex.GetType().Name);
                 return false;
             }
-        }
+        };
 
         ResultadoEliminacionEvidencia resultado;
         try
@@ -1000,8 +1005,9 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         }
         catch (Exception ex)
         {
-            await RestaurarArchivoAsync();
-            System.Diagnostics.Trace.TraceError("Falló la eliminación de evidencia {0}; se restauró el archivo cuando fue posible ({1}).", evidenciaId, ex.GetType().Name);
+            if (operation is not null)
+                await operation.DisposeAsync();
+            System.Diagnostics.Trace.TraceError("Falló la eliminación de evidencia {0}; el journal durable resolverá el estado Oracle al recuperarse ({1}).", evidenciaId, ex.GetType().Name);
             return new ServiceResult(false, "No se pudo eliminar la evidencia.", 500);
         }
 
@@ -1011,16 +1017,17 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             {
                 File.Delete(rutaEnCuarentena);
                 rutaEnCuarentena = null;
+                if (operation is not null)
+                    await operation.CompleteAsync();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Trace.TraceError("La evidencia {0} se eliminó de Oracle, pero su archivo en cuarentena requiere limpieza ({1}).", evidenciaId, ex.GetType().Name);
             }
         }
-        else if (resultado != ResultadoEliminacionEvidencia.Exito)
-        {
-            await RestaurarArchivoAsync();
-        }
+
+        if (operation is not null)
+            await operation.DisposeAsync();
 
         switch (resultado)
         {
@@ -1047,7 +1054,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
                     "RL_MR_EVIDENCIAS",
                     evidenciaId.ToString(),
                     "ERROR_COMPENSACION_EVIDENCIA",
-                    $"Falló el commit Oracle al eliminar {evidencia.EviNombreArchivo}; el archivo original fue restaurado cuando fue posible.",
+                    $"Falló la confirmación Oracle al eliminar {evidencia.EviNombreArchivo}; la reconciliación durable resolverá el archivo según el estado persistido.",
                     null,
                     usuarioId,
                     null,

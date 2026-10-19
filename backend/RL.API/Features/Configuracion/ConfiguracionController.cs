@@ -138,9 +138,16 @@ public class ConfiguracionController : ControllerBase
         if (rutaCompleta is null)
             return BadRequest(new { success = false, mensaje = "No se pudo resolver una ruta segura para guardar la imagen." });
 
-        await using (var stream = new FileStream(rutaCompleta, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+        string journalPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias", ".configuration-image-operations");
+        var journal = new DurableFileOperationJournal(uploadsFolder, journalPath);
+        await using var operation = await journal.BeginAsync(
+            DurableFileOperationType.ConfigurationImageUpload,
+            nombreUnico,
+            nombreUnico);
+        await using (var stream = new FileStream(operation.PendingPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.WriteThrough))
         {
             await archivo.CopyToAsync(stream);
+            stream.Flush(flushToDisk: true);
         }
 
         var urlRelativa = $"/uploads/{nombreUnico}";
@@ -152,6 +159,11 @@ public class ConfiguracionController : ControllerBase
             archivo.Length,
             ObtenerUsuarioId(),
             ObtenerIp());
+
+        if (System.IO.File.Exists(rutaCompleta))
+            throw new IOException("The generated configuration image path is already occupied.");
+        System.IO.File.Move(operation.PendingPath, rutaCompleta);
+        await operation.CompleteAsync();
 
         return Ok(new { success = true, url = urlRelativa });
     }
