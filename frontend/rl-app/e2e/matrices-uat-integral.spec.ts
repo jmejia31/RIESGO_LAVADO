@@ -60,9 +60,15 @@ const canonicalMatrixProjection = {
 
 async function preparar(page: Page): Promise<void> {
   await page.addInitScript(token => {
-    localStorage.setItem('access_token', token);
-    localStorage.setItem('refresh_token', 'uat-refresh');
-    localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
+    try {
+      const storage = window.localStorage;
+      if (!storage) return;
+      storage.setItem('access_token', token);
+      storage.setItem('refresh_token', 'uat-refresh');
+      storage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
+    } catch {
+      // Opaque documents such as PDF/blob previews do not need the app auth fixture.
+    }
   }, tokenAdministrador());
 
   await page.route('**/api/configuracion/sistema', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { nombreSistema: 'SGRLA-IHSS', nombreInstitucion: 'IHSS', colorPrimario: '#1e3a8a', colorSecundario: '#1d4ed8', timeoutSesion: 30 } }) }));
@@ -620,6 +626,17 @@ test('Configuración de cálculo muestra referencias institucionales F01, F15 y 
 
 test('Configuracion de calculo conserva un 422 en el feedback local sin contaminar el shell', async ({ page }) => {
   expectHttpStatuses(422);
+  for (const path of [
+    '/api/matrices-riesgos/configuracion-calculo/funciones',
+    '/api/matrices-riesgos/configuracion-calculo/parametros',
+    '/api/matrices-riesgos/metodologia/vigente',
+  ]) {
+    await page.route(`**${path}`, route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, datos: [] }),
+    }));
+  }
   const supportingReads = [
     page.waitForResponse(response => response.request().method() === 'GET'
       && new URL(response.url()).pathname === '/api/matrices-riesgos/configuracion-calculo/funciones'),

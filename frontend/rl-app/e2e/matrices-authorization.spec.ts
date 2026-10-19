@@ -288,8 +288,8 @@ test('fallo al consultar historial muestra error y no afirma que está vacío', 
     status: 503,
     method: 'GET',
     path: '/api/matrices-riesgos/evaluaciones/87/flujos',
-    count: 2,
-    reason: 'The configured transient retry is answered with the controlled history outage.',
+    count: 3,
+    reason: 'The controlled history outage is returned for the initial GET and both configured retries.',
   });
   await prepararSeguimientoEvaluacion(
     page,
