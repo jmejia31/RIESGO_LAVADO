@@ -838,6 +838,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
       uiCalculationValues++;
     }
     await matrixModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+    await expect(matrixModal).toBeHidden();
   }
 
   expect(uiCalculationValues).toBe(2006);
