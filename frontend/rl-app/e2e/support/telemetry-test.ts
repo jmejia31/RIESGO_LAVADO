@@ -26,10 +26,7 @@ export function expectHttpStatuses(...statuses: number[]): void {
 }
 
 export function expectHttpResponse(response: ExpectedHttpResponse): void {
-  const count = response.count ?? 1;
-  for (let index = 0; index < count; index++) {
-    base.info().annotations.push({ type: 'expected-http-response', description: JSON.stringify(response) });
-  }
+  base.info().annotations.push({ type: 'expected-http-response', description: JSON.stringify(response) });
 }
 
 function safePath(rawUrl: string): string {
