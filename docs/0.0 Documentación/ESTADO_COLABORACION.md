@@ -1,3 +1,21 @@
+# Estado vigente - Bloque 12: CI integral aislado aprobado; deuda y smoke productivo abiertos (COD) - 2026-10-19 13:20 -06:00
+
+## Continuidad Bloque 12 - certificación aislada y bloqueos restantes
+
+- **Baseline/publicación:** rama `desarrollo`; el checkpoint solicitado `1eed356e5d3c0b30df5a1dc219d2843bf50733bd` ya había avanzado por commits publicados. El código más reciente es `b223ac9e554db6fed94cd7f8fb041a6f73c227d4`; `origin/desarrollo` coincide. Quality Gates `39308384158` completó `success` para ese SHA exacto.
+- **Preservación:** al inicio de esta continuación se reportaron 7 archivos tracked y 23 grupos/rutas untracked ajenos. El worktree actual conserva 5 archivos tracked modificados y 23 grupos/rutas untracked, sin incluirlos en los commits de esta intervención. No se ejecutaron reset, clean, restore global ni force push.
+- **Riesgos:** el paso Oracle XE desechable sembró y verificó 59 identidades contra el mapa canónico, endpoints API y proyección del Consolidado, incluyendo IDs de riesgo/evaluación; `59/59`, sin duplicados/missing/extra en ese fixture, y limpieza `PASS`. El alcance no demuestra 59 identidades reales de UI ni producción.
+- **Cálculos:** el oráculo independiente del workbook certificó 34 ordinales y 2,006 resultados frente a FormulaEngine; regresión dedicada `ROP-CUMP-54=34/34`. Esto no certifica la persistencia y paridad de los 2,006 resultados a través de Oracle, UI, Excel y PDF como un único flujo integral. Contrato de 82 campos/labels/orden sigue cubierto por sus validadores/CI.
+- **Calidad CI:** backend Release `1018 passed / 0 skipped / 0 failed`; frontend `935 passed` (91 archivos); E2E Playwright `74 passed`, más un paso browser/API/Oracle real `1 passed`. Build, lint, npm audit según configuración del repo y validadores del workflow pasaron. La instrumentación E2E no reportó errores que activaran sus aserciones; no se presenta como contador global de errores Oracle del servidor.
+- **Compensación DB/archivo:** pruebas de inyección Oracle XE de fallo de callback/filesystem y rollback pasaron. Sigue sin demostrarse recuperación durable tras interrupción abrupta o resultado ambiguo de commit Oracle; `DB_FILESYSTEM_COMPENSATION` permanece abierta y no se declara consistencia absoluta ante esos escenarios.
+- **Histórico 27/28 y deuda:** `VER_ID_27_28_HISTORICAL_REVIEW` continúa sin evidencia de cierre; los antecedentes indican reconstrucción determinística imposible y prohíben mutación histórica. Issue #22 conserva deuda reportada (incluidas auditoría DB links y granularidad RBAC). Por tanto deuda cero no está certificada; no se borra ni reclasifica como cerrada.
+- **Riesgo aceptado Block 11:** `CREDENTIAL_SCOPE=UNKNOWN`; `PRODUCTION_SECRET_ROTATED=NO`, waiver del propietario y aceptación de riesgo residual vigentes. Se conserva separado de los hallazgos técnicos anteriores.
+- **Oracle local:** integración local no autenticó (`ORA-01017`) antes de fixtures. No se intentaron credenciales ni se copiaron secretos CI. La cobertura Oracle nueva se ejecutó en el XE disposable del CI.
+- **Workflow/Seguimiento:** estados frontend ERROR/EMPTY y casos E2E asociados están cubiertos en el código publicado. El API local observado anteriormente era obsoleto; el request autenticado y el estado persistido de la evaluación #87 siguen sin verificarse contra un runtime actualizado y perfil conocido.
+- **Producción:** autorización de smoke, runbook, SHA desplegado y registro de prueba autorizado no encontrados. No se hizo login, consulta de datos, deployment, DML ni DDL productivo. Smoke productivo no ejecutado; requiere autorización externa y evidencia de despliegue antes de considerarse.
+- **Estado:** Bloque 12 permanece `BLOCKED`, no cerrado. Bloqueos conocidos: reconciliar/cerrar la deuda DB-filesystem ante fallos crash/commit ambiguo si el gate exige cierre absoluto; evidencia/decisión institucional para VER_ID 27/28 y otros ítems de issue #22; y autorización/runbook/SHA productivo para smoke. La certificación CI aislada del SHA indicado sí está aprobada.
+
+---
 # Estado vigente - Bloque 12: identidad 59 y compensación en progreso; CI nuevo pendiente (COD) - 2026-10-19 10:30 -06:00
 
 ## Continuidad activa - Bloque 12
