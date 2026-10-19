@@ -14,6 +14,8 @@ type ExpectedHttpResponse = {
   path?: string;
   pathIncludes?: string;
   count?: number;
+  minCount?: number;
+  maxCount?: number;
   reason?: string;
 };
 
@@ -86,19 +88,29 @@ export const test = base.extend<{ browserTelemetry: void }>({
     await use();
     context.off('page', observePage);
 
-    const expectedResponses: Array<ExpectedHttpResponse & { remaining: number }> = testInfo.annotations
+    const expectedResponses: Array<ExpectedHttpResponse & { remaining: number; observed: number; maximum: number }> = testInfo.annotations
       .filter(annotation => annotation.type === 'expected-http-status' || annotation.type === 'expected-http-response')
       .map(annotation => annotation.type === 'expected-http-status'
-        ? { status: Number(annotation.description), remaining: 1 }
-        : { ...JSON.parse(annotation.description!) as ExpectedHttpResponse, remaining: 1 });
+        ? { status: Number(annotation.description), remaining: 1, observed: 0, maximum: 1 }
+        : (() => {
+          const expected = JSON.parse(annotation.description!) as ExpectedHttpResponse;
+          return {
+            ...expected,
+            remaining: expected.minCount ?? expected.count ?? 1,
+            observed: 0,
+            maximum: expected.maxCount ?? expected.count ?? 1,
+          };
+        })());
     const unexpectedHttpErrors = telemetry.httpErrors.filter(error => {
-      const expectedIndex = expectedResponses.findIndex(expected => expected.remaining > 0
+      const expectedIndex = expectedResponses.findIndex(expected => expected.observed < expected.maximum
         && expected.status === error.status
         && (!expected.method || expected.method === error.method)
         && (!expected.path || expected.path === error.url)
         && (!expected.pathIncludes || error.url.includes(expected.pathIncludes)));
       if (expectedIndex < 0) return true;
-      expectedResponses[expectedIndex].remaining--;
+      const expected = expectedResponses[expectedIndex];
+      expected.observed++;
+      expected.remaining = Math.max(0, expected.remaining - 1);
       return false;
     });
     const unobservedExpectedResponses = expectedResponses.filter(expected => expected.remaining > 0);

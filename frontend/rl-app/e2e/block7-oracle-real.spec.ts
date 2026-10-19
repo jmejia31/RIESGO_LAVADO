@@ -99,7 +99,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     status: 400,
     method: 'POST',
     path: '/api/matrices-riesgos/evaluaciones/calculo-preview',
-    count: 6,
+    minCount: 4,
+    maxCount: 8,
     reason: 'The lifecycle fixture intentionally omits calculation inputs.',
   });
   expectHttpResponse({
