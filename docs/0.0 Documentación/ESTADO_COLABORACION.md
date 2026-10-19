@@ -1,3 +1,16 @@
+# Estado vigente - BLOQUE 11 cerrado por aceptación explícita de riesgo residual (COD) - 2026-10-19 08:08 -06:00
+
+## Decisión de cierre del propietario
+
+- `OWNER_DECISION_DATE=2026-10-19`. El propietario acepta explícitamente el riesgo de la credencial histórica cuyo alcance administrativo sigue sin determinarse y dispensa su rotación como gate de Bloque 11. `CREDENTIAL_ROTATION_WAIVED_BY_OWNER=YES`, `OWNER_RISK_ACCEPTANCE=YES`, `RESIDUAL_SECRET_RISK_ACCEPTED=YES`.
+- Se preserva la verdad técnica: `CREDENTIAL_SCOPE=UNKNOWN`, `EXPOSED_CREDENTIAL_ENVIRONMENT=UNKNOWN`, `EXPOSED_CREDENTIAL_PRODUCTION_ACCESS=UNKNOWN`, cuenta y secret store productivo=`UNKNOWN`. `PRODUCTION_SECRET_ROTATED=NO`; no se declara rotación ni acceso/no-acceso productivo. El destino legacy local observado sigue siendo remoto/no-XE; la clave genérica no participa en el resolver vigente.
+- Gobierno actualizado: `PRODUCTION_SECRET_ROTATION_REQUIRED_FOR_BLOCK11=NO`, `PRODUCTION_SECRET_ROTATION_WAIVED_BY_OWNER=YES`, `PRODUCTION_SECRET_ROTATION_STATUS=WAIVED_WITH_RESIDUAL_RISK_ACCEPTED`, `PRODUCTION_SECRET_ROTATION_BLOCKING=NO`, `RESIDUAL_SECRET_RISK=ACCEPTED_NON_BLOCKING`. No se modifica la configuración ignorada local ni se publica secreto.
+- Cierre técnico reutilizado sin cambios de código: runtime explícito, no-fallback, no tracked secrets, QA Oracle XE y guard están certificados en `4b34855d7211106993d941e785341de401e506a0` / CI `39204751409=success`; el estado documental previo `5bd7e64f5e517bf18e48f4c9ffb474d92899c7e8` tiene CI `39217999738=success`. Guard técnico PASS; atribución personal histórica permanece `UNVERIFIED_NON_BLOCKING`.
+- Esta decisión cierra el gate de rotación únicamente por aceptación expresa del propietario, no porque el alcance sea de desarrollo ni porque la contraseña haya sido rotada. `CODE_CHANGED=NO`; no se reabren runtime, guard ni Bloque 10. No se consultó ni modificó producción.
+- `BLOCK11_STATUS=PASS`, `BLOCK11_CLOSED=YES` sujeto a CI exitoso del commit documental de esta decisión. `REMAINING_BLOCK11_P0=0`, `REMAINING_BLOCK11_P1=0`, `REMAINING_BLOCK11_P2_BLOCKING=0`, `EXTERNAL_OWNER_ACTION_REQUIRED=NO`.
+
+---
+
 # Estado vigente - BLOQUE 11: clasificación de credencial sin evidencia concluyente (COD) - 2026-10-19 01:43 -06:00
 
 ## Revisión de reclasificación solicitada por el propietario
