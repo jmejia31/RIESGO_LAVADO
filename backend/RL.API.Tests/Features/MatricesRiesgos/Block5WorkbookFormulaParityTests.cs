@@ -163,8 +163,7 @@ public sealed class Block5WorkbookFormulaParityTests
             string riskCode = oracle.GetText(row, 2);
             foreach (int fieldNumber in Fields)
             {
-                int formulaNumber = SourceFieldToFormulaNumber[fieldNumber];
-                Assert.True(byFormula.TryGetValue((riskCode, formulaNumber), out WorkbookFormulaResult? result),
+                Assert.True(byFormula.TryGetValue((riskCode, fieldNumber), out WorkbookFormulaResult? result),
                     $"The independent workbook source has no value for {riskCode}/F{fieldNumber}.");
                 Assert.False(result!.IsError, $"The independent workbook source has a formula error for {riskCode}/F{fieldNumber}.");
                 object? value = ExpectedInstitutionalNoControlValue(oracle, row, fieldNumber) ?? result.ExpectedValue;
@@ -174,6 +173,17 @@ public sealed class Block5WorkbookFormulaParityTests
 
         Assert.Equal(2006, expected.Count);
         return expected;
+    }
+
+    [Fact]
+    public void IndependentProjectionExpectations_UseWorkbookFieldNumbersForAllRisks()
+    {
+        WorkbookFormulaOracle oracle = WorkbookFormulaOracle.Load(FindWorkbook());
+
+        IReadOnlyDictionary<(string RiskCode, int FieldNumber), object?> expected = BuildIndependentProjectionExpectations(oracle);
+
+        Assert.Equal(2006, expected.Count);
+        Assert.Contains(("ROTR-AFIL-1", 12), expected.Keys);
     }
 
     [Theory]
