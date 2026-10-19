@@ -486,6 +486,9 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
         builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
         builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
+        builder.Services.AddScoped<InstitutionalProjectionMapper>();
+        builder.Services.AddScoped<IInstitutionalProjectionReadRepository, InstitutionalProjectionReadRepository>();
+        builder.Services.AddScoped<IInstitutionalProjectionService, InstitutionalProjectionService>();
         builder.Services.AddScoped<IFormularioValidador, FormularioValidador>();
         builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
         builder.Services.AddScoped(_ => DispatchProxy.Create<ICalculoConfiguracionRepository, EmptyCalculationConfigurationProxy>());
