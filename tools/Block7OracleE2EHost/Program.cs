@@ -24,7 +24,7 @@ string configuredConnection = Environment.GetEnvironmentVariable("ConnectionStri
     ?? throw new InvalidOperationException("The disposable LOCAL_XE connection is required.");
 var guardConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
 {
-    ["DATABASE_PROFILE"] = "LOCAL_XE",
+    [DatabaseProfileResolver.ProfileConfigurationKey] = DatabaseProfileResolver.LocalXeProfileName,
     ["ConnectionStrings:OracleDB_LocalXE"] = configuredConnection
 }).Build();
 string connectionString = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(configuredConnection, guardConfiguration);

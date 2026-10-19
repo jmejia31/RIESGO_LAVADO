@@ -6,10 +6,34 @@ param(
 
 $ErrorActionPreference = "Stop"
 $config = Get-Content -Raw -LiteralPath $ConfigPath | ConvertFrom-Json
-$connectionText = $config.ConnectionStrings.OracleDB
+$apiProjectPath = Join-Path $PSScriptRoot '..\..\backend\RL.API\RL.API.csproj'
+$apiProject = [xml](Get-Content -Raw -LiteralPath $apiProjectPath)
+$userSecretsId = [string]$apiProject.Project.PropertyGroup.UserSecretsId
+$userSecretsPath = Join-Path (Join-Path $env:APPDATA 'Microsoft\UserSecrets') (Join-Path $userSecretsId 'secrets.json')
+$userSecrets = if (Test-Path -LiteralPath $userSecretsPath) { Get-Content -Raw -LiteralPath $userSecretsPath | ConvertFrom-Json } else { $null }
+$profile = if (![string]::IsNullOrWhiteSpace($env:Database__Profile)) { $env:Database__Profile } elseif (![string]::IsNullOrWhiteSpace($userSecrets.Database.Profile)) { [string]$userSecrets.Database.Profile } else { [string]$config.Database.Profile }
+$connectionName = switch ($profile.Trim().ToUpperInvariant()) {
+    'PRODUCTION' { 'OracleDB_Production' }
+    'LOCAL_XE' { 'OracleDB_LocalXE' }
+    default { throw 'Database:Profile debe ser PRODUCTION o LOCAL_XE; no se infiere ni se usa un valor por defecto.' }
+}
+$connectionText = [string]$config.ConnectionStrings.$connectionName
+$connectionText = if (![string]::IsNullOrWhiteSpace($userSecrets.ConnectionStrings.$connectionName)) { [string]$userSecrets.ConnectionStrings.$connectionName } else { $connectionText }
+$environmentConnectionName = "ConnectionStrings__$connectionName"
+if (![string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($environmentConnectionName))) {
+    $connectionText = [Environment]::GetEnvironmentVariable($environmentConnectionName)
+}
 $login = [regex]::Match($connectionText, 'User Id=([^;]+)').Groups[1].Value
-$secret = [regex]::Match($connectionText, 'Password=([^;]+)').Groups[1].Value
 $source = ($connectionText -replace '^.*?Data Source=', '') -replace ';User Id=.*$', ''
+if ([string]::IsNullOrWhiteSpace($login) -or [string]::IsNullOrWhiteSpace($source) -or $connectionText -match '(?i)<set-through|YOUR_|CHANGE_ME|REPLACE_') {
+    throw "The ignored local Oracle configuration is missing a required connection component."
+}
+if ($profile -eq 'LOCAL_XE' -and ($source -notmatch '(?i)HOST\s*=\s*(localhost|127\.0\.0\.1|::1)' -or $source -notmatch '(?i)SERVICE_NAME\s*=\s*XE')) {
+    throw 'LOCAL_XE accepts only loopback and the XE service.'
+}
+if ($profile -eq 'PRODUCTION' -and ($source -match '(?i)HOST\s*=\s*(localhost|127\.0\.0\.1|::1)' -or $source -match '(?i)SERVICE_NAME\s*=\s*XE')) {
+    throw 'PRODUCTION cannot target local XE.'
+}
 
 $sql = @"
 set echo off
@@ -19,7 +43,7 @@ set linesize 240
 set trimspool on
 set feedback on
 set long 200000
-connect $login/$secret@$source
+connect $login@$source
 
 prompt === NATURALES_FUNCTIONAL_EQUIVALENCE ===
 WITH ACTUAL AS (

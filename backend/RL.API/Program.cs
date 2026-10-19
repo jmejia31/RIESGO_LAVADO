@@ -154,16 +154,11 @@ builder.Services.AddCors(options =>
 });
 
 // Proceso de infraestructura: registra la conexión Oracle usada por repositorios y servicios.
-var oracleConnectionString = builder.Configuration.GetConnectionString("OracleDB") ?? string.Empty;
-if (builder.Environment.IsDevelopment())
-{
-    oracleConnectionString = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(
-        oracleConnectionString,
-        builder.Configuration);
-}
+var databaseConnection = DatabaseProfileResolver.Resolve(builder.Configuration);
+Log.Information("DatabaseProfile={DatabaseProfile}", databaseConnection.ProfileName);
 
 builder.Services.AddSingleton<OracleDbContext>(sp =>
-    new OracleDbContext(oracleConnectionString));
+    new OracleDbContext(databaseConnection.ConnectionString));
 
 // BE-03: registra readiness con timeout acotado. /healthz no depende de Oracle;
 // /readyz usa una consulta mínima de solo lectura y devuelve únicamente estado agregado.

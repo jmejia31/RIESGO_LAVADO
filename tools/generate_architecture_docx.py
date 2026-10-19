@@ -319,7 +319,7 @@ def main() -> None:
             ["Controllers", "Auth, Catalogos, Configuracion, Auditoria, Listas", "Endpoints REST agrupados por dominio funcional."],
             ["Services", "AuthService, ActiveDirectorioService, CatalogoService, EmailService", "Reglas de autenticación, AD, catálogos y envío de correos."],
             ["Repositories", "Usuario, Catalogo, Configuracion, Auditoria, Listas", "Acceso directo a Oracle con comandos parametrizados y transacciones."],
-            ["Infrastructure", "OracleDbContext", "Fábrica de conexiones Oracle basada en ConnectionStrings:OracleDB."],
+            ["Infrastructure", "OracleDbContext", "Fábrica Oracle seleccionada mediante Database:Profile y claves de conexión con nombre."],
             ["Security", "ModuloAuthorizeAttribute", "Filtro backend que valida el claim modulos del JWT contra los módulos requeridos por endpoint."],
             ["Middleware", "ErrorHandlingMiddleware", "Captura excepciones no controladas y responde JSON estándar."],
         ],

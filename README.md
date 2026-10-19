@@ -30,9 +30,10 @@ El navegador consume `/api`; la API aplica autenticación/autorización y delega
 
 ## Configuración
 
-1. Copie `backend/RL.API/appsettings.example.json` como `backend/RL.API/appsettings.json`.
-2. Reemplace únicamente los marcadores locales de Oracle, JWT, Active Directory y SMTP. `appsettings.json` está ignorado y nunca debe confirmarse en Git.
-3. Para desarrollo, el frontend usa `http://localhost:5043/api`; producción usa `/api` mediante `src/environments/environment.prod.ts`.
+1. Copie `backend/RL.API/appsettings.example.json` como `backend/RL.API/appsettings.json` solo para configuración no secreta. `appsettings.json` está ignorado y nunca debe confirmarse en Git.
+2. Seleccione explícitamente `Database:Profile=PRODUCTION` para el runtime diario institucional o `Database:Profile=LOCAL_XE` para QA/E2E aislado. Cada perfil requiere su propia clave `ConnectionStrings:OracleDB_Production` o `ConnectionStrings:OracleDB_LocalXE`; el API no usa `OracleDB` genérico ni cambia de destino ante fallos.
+3. Suministre la cadena completa y demás secretos mediante User Secrets local o el secret store aprobado. No escriba credenciales reales en comandos, archivos tracked, documentación o logs. Perfil, cadena o credencial faltantes detienen el arranque.
+4. Para desarrollo, el frontend usa `http://localhost:5043/api`; producción usa `/api` mediante `src/environments/environment.prod.ts`.
 
 No se requieren archivos `.env` actualmente. Si se incorporan, versionar solo `.env.example` sin secretos.
 
@@ -42,8 +43,12 @@ Backend:
 
 ```powershell
 dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config
+dotnet user-secrets set "Database:Profile" "PRODUCTION"
+# Configure ConnectionStrings:OracleDB_Production únicamente por el secret store aprobado.
 dotnet run --project backend/RL.API/RL.API.csproj
 ```
+
+Para QA/E2E seleccione `LOCAL_XE` y configure solo `ConnectionStrings:OracleDB_LocalXE`. Los workflows institucionales definen este perfil explícitamente y no requieren credenciales productivas.
 
 Frontend, en otra terminal:
 

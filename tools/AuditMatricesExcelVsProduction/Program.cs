@@ -167,14 +167,11 @@ public static class Program
             .AddEnvironmentVariables()
             .Build();
 
-        Environment.SetEnvironmentVariable("DATABASE_PROFILE", "PRODUCTION");
+        var selectedDatabase = DatabaseProfileResolver.Resolve(config);
+        if (selectedDatabase.Profile != DatabaseProfile.Production)
+            throw new InvalidOperationException("La auditoría requiere Database:Profile=PRODUCTION seleccionado explícitamente.");
 
-        string? rawConn = config.GetConnectionString("OracleDB_Production")
-                       ?? config["ConnectionStrings:OracleDB_Production"]
-                       ?? config.GetConnectionString("OracleDB_Prod")
-                       ?? config.GetConnectionString("OracleDB");
-
-        string resolvedConn = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(rawConn!, config);
+        string resolvedConn = selectedDatabase.ConnectionString;
 
         var hostMatch = Regex.Match(resolvedConn, @"(?i)HOST\s*=\s*([^\)\s;]+)");
         var serviceMatch = Regex.Match(resolvedConn, @"(?i)SERVICE_NAME\s*=\s*([^\)\s;]+)");
@@ -1341,7 +1338,7 @@ public static class Program
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("C. PRODUCCIÓN");
         Console.WriteLine("----------------------------------------------------------------");
-        Console.WriteLine("DATABASE_PROFILE=PRODUCTION");
+        Console.WriteLine("Database:Profile=PRODUCTION");
         Console.WriteLine("DATABASE_TARGET_CLASS=PRODUCTION");
         Console.WriteLine($"DB_NAME={dbName}");
         Console.WriteLine($"SERVICE_NAME={serviceName}");

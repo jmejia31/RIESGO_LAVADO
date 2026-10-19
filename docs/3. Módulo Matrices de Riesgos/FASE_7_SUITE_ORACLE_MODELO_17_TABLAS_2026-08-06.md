@@ -105,7 +105,7 @@ La suite permanece deshabilitada por defecto y solo intenta conectarse cuando:
 RL_ORACLE_INTEGRATION_REQUIRED=true
 ```
 
-La conexión debe proceder de `ConnectionStrings__OracleDB` o User Secrets. Antes de ejecutar se exige:
+La conexión debe proceder de `Database:Profile=LOCAL_XE` y `ConnectionStrings:OracleDB_LocalXE` mediante entorno o User Secrets. No usar credenciales productivas para esta suite. Antes de ejecutar se exige:
 
 ```text
 CURRENT_SCHEMA = RIESGO_LAVADO

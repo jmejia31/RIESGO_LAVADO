@@ -3,6 +3,7 @@ using System.Globalization;
 using RL.API.Features.Identidad.Contracts;
 using RL.API.Features.Identidad.Persistence;
 using RL.API.Infrastructure.Database;
+using RL.API.Tests.Support;
 using Xunit;
 
 namespace RL.API.Tests.Features.Identidad;
@@ -14,8 +15,8 @@ public sealed class UsuarioRepositoryAtomicityOracleIntegrationTests
     [Trait("Category", "P0FOracleIntegration")]
     public async Task UserAndModuleWritesRollbackWhenNthAssignmentFails()
     {
-        string connectionString = Environment.GetEnvironmentVariable("P0F_ORACLE_CONNECTION_STRING")
-            ?? throw new InvalidOperationException("P0F_ORACLE_CONNECTION_STRING is required when P0-F Oracle integration is mandatory.");
+        string connectionString = OracleTestDatabaseProfile.RequireLocalXeConnection(
+            Environment.GetEnvironmentVariable("P0F_ORACLE_CONNECTION_STRING"));
         ValidarDestinoDisposableXe(connectionString);
 
         OracleConnection.ClearAllPools();

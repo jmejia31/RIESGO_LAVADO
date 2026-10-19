@@ -3,12 +3,18 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Oracle.ManagedDataAccess.Client;
+using Microsoft.Extensions.Configuration;
+using RL.API.Infrastructure.Database;
 using RL.API.Features.MatricesRiesgos.Domain;
 
 const string settingsPath = "backend/RL.API/appsettings.json";
-var settings = JObject.Parse(File.ReadAllText(settingsPath));
-var connectionString = (string?)settings["ConnectionStrings"]?["OracleDB"]
-    ?? throw new InvalidOperationException("Oracle connection configuration is incomplete.");
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile(settingsPath, optional: true)
+    .AddUserSecrets<OracleDbContext>(optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+var selectedDatabase = DatabaseProfileResolver.Resolve(configuration);
+var connectionString = selectedDatabase.ConnectionString;
 
 connectionString += ";Connection Timeout=30";
 await using var connection = new OracleConnection(connectionString);
@@ -18,7 +24,7 @@ try
 }
 catch (OracleException ex)
 {
-    Console.Error.WriteLine($"ORACLE_SEMANTIC_AUDIT=EXTERNAL_BLOCKER; ERROR={ex.Number}; MESSAGE={ex.Message}");
+    Console.Error.WriteLine($"ORACLE_SEMANTIC_AUDIT=EXTERNAL_BLOCKER; ERROR={ex.Number}; DatabaseProfile={selectedDatabase.ProfileName}");
     Environment.ExitCode = 2;
     return;
 }

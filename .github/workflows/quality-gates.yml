@@ -150,7 +150,8 @@ jobs:
       - name: Verify user and module assignment rollback against disposable Oracle XE
         env:
           RL_P0F_ORACLE_INTEGRATION_REQUIRED: 'true'
-          P0F_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          P0F_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          Database__Profile: LOCAL_XE
           TZ: UTC
         shell: bash
         run: |
@@ -172,17 +173,19 @@ jobs:
         shell: pwsh
         env:
           RL_P0F_ORACLE_INTEGRATION_REQUIRED: 'true'
-          P0F_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          P0F_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
           TZ: UTC
+          Database__Profile: LOCAL_XE
           RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED: 'true'
-          BLOCK7_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          BLOCK7_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
           ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;Pooling=true;Min Pool Size=0;Max Pool Size=5;
         run: ./tools/run_quality_gates.ps1
 
       - name: Run Block 6 canonical projection against disposable Oracle XE
         env:
           RL_BLOCK6_ORACLE_INTEGRATION_REQUIRED: 'true'
-          BLOCK6_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          BLOCK6_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          Database__Profile: LOCAL_XE
           TZ: UTC
         run: >-
           dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
@@ -200,7 +203,8 @@ jobs:
       - name: Run Block 10 latest approved consolidated selection against disposable Oracle XE
         env:
           RL_BLOCK10_ORACLE_INTEGRATION_REQUIRED: 'true'
-          BLOCK10_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          BLOCK10_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          Database__Profile: LOCAL_XE
           TZ: UTC
         shell: bash
         run: |

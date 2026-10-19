@@ -26,6 +26,7 @@ using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Shared.Results;
 using RL.API.Infrastructure.Database;
+using RL.API.Tests.Support;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -48,8 +49,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             return;
         }
         _output.WriteLine("BLOCK10_ORACLE_INTEGRATION_EXECUTED=YES");
-        string connectionString = Environment.GetEnvironmentVariable("BLOCK10_ORACLE_CONNECTION_STRING")
-            ?? throw new InvalidOperationException("BLOCK10_ORACLE_CONNECTION_STRING is required when Block 10 Oracle integration is mandatory.");
+        string connectionString = OracleTestDatabaseProfile.RequireLocalXeConnection(
+            Environment.GetEnvironmentVariable("BLOCK10_ORACLE_CONNECTION_STRING"));
 
         OracleConnection.ClearAllPools();
         await using var seed = CreateConnection(connectionString);
@@ -253,8 +254,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     public async Task DraftEndpoints_CreateReadUpdatePreviewAndRejectStaleVersionAgainstOracle()
     {
         if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK7_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase)) return;
-        string connectionString = Environment.GetEnvironmentVariable("BLOCK7_ORACLE_CONNECTION_STRING")
-            ?? throw new InvalidOperationException("BLOCK7_ORACLE_CONNECTION_STRING is required when Block 7 Oracle integration is mandatory.");
+        string connectionString = OracleTestDatabaseProfile.RequireLocalXeConnection(
+            Environment.GetEnvironmentVariable("BLOCK7_ORACLE_CONNECTION_STRING"));
 
         // Start this opt-in fixture with isolated ODP.NET pools.
         OracleConnection.ClearAllPools();
@@ -591,8 +592,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     public async Task GetProjection_ReadsOneOracleSnapshotAndSerializesAligned82Fields()
     {
         if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK6_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase)) return;
-        string connectionString = Environment.GetEnvironmentVariable("BLOCK6_ORACLE_CONNECTION_STRING")
-            ?? throw new InvalidOperationException("BLOCK6_ORACLE_CONNECTION_STRING is required for the isolated Block 6 Oracle test.");
+        string connectionString = OracleTestDatabaseProfile.RequireLocalXeConnection(
+            Environment.GetEnvironmentVariable("BLOCK6_ORACLE_CONNECTION_STRING"));
         await using var connection = CreateConnection(connectionString);
         await OpenWithRetryAsync(connection);
         await EnsureFixtureTablesAsync(connection);

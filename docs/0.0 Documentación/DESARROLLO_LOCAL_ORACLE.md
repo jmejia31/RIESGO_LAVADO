@@ -1,9 +1,9 @@
 # Guía de Entorno de Desarrollo Local con Oracle XE y Hardening de Seguridad
 
 > [!IMPORTANT]
-> **POLÍTICA DE AISLAMIENTO ESTRICTO DE DESARROLLO**
-> El entorno de desarrollo (`ASPNETCORE_ENVIRONMENT=Development`) tiene prohibido por diseño conectarse a bases de datos de producción o remotas no autorizadas.
-> `DatabaseEnvironmentGuard` ejecuta una política positiva fail-closed que solo admite conexiones hacia `localhost` o `127.0.0.1` y el servicio `XE`. Cualquier intento de apuntar a hosts remotos o servicios productivos (e.g. `hpprod1`) detiene el arranque de la API (`STARTUP_REFUSED`).
+> **PERFIL DE BASE DE DATOS EXPLÍCITO**
+> El entorno no determina por sí solo el destino. `Database:Profile` debe ser `PRODUCTION` o `LOCAL_XE`, y cada perfil usa únicamente su cadena nombrada. Perfil o cadena ausentes, valores desconocidos y errores de conexión fallan sin probar otro destino.
+> QA, Oracle integration y E2E deben usar `LOCAL_XE`. El uso diario institucional selecciona `PRODUCTION` explícitamente; ese perfil no es un fallback de las pruebas.
 
 ---
 
@@ -37,16 +37,23 @@ Este script:
 
 ---
 
-## 3. Configuración de Secretos sin Versionar (User Secrets)
+## 3. Perfil y secretos sin versionar
 
-Las contraseñas **NUNCA** deben guardarse en archivos rastreados por Git (`appsettings.json`, `appsettings.Development.json`, etc.). En su lugar, el backend utiliza el almacén de secretos de usuario de .NET (`dotnet user-secrets`).
+Las contraseñas **NUNCA** deben guardarse en archivos rastreados por Git. Para desarrollo local puede usarse el almacén .NET User Secrets; producción debe recibir su cadena exclusivamente del secret store/environment source aprobado por la institución. No pasar contraseñas literales en comandos, terminales compartidas o logs.
 
-### Configurar ConnectionString en la máquina local:
+### Seleccionar LOCAL_XE en la máquina local:
 
 ```powershell
 cd backend/RL.API
-dotnet user-secrets set "ConnectionStrings:OracleDB" "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=XE)));User Id=RIESGO_LAVADO;Password=<TU_CONTRASENA_LOCAL>;"
+dotnet user-secrets set "Database:Profile" "LOCAL_XE"
+dotnet user-secrets set "ConnectionStrings:OracleDB_LocalXE" "<set-through-approved-secret-source>"
 ```
+
+El segundo valor es la cadena local completa y debe ingresarse por el mecanismo local aprobado; no publicar el valor real en documentación, shell history o Git.
+
+### Runtime diario institucional
+
+Para iniciar la API local con Oracle de producción, seleccionar `Database:Profile=PRODUCTION` y suministrar `ConnectionStrings:OracleDB_Production` desde el secret store aprobado. No reutilizar el perfil `LOCAL_XE`. Si falta cualquiera de los dos valores, la API debe detener el arranque con un error de configuración sin mostrar credenciales.
 
 ### Plantilla de Referencia
 
@@ -70,9 +77,9 @@ dotnet run --no-build
 El backend estará escuchando en `http://localhost:5043`.
 
 Verifique que el backend arranque con:
-- `Hosting environment: Development`
-- Conexión exclusiva a `127.0.0.1:1521/XE`.
-- `0` conexiones hacia IPs o servidores remotos.
+- `Hosting environment: Development`.
+- Log de perfil `DatabaseProfile=LOCAL_XE`.
+- El resolver solo puede seleccionar `ConnectionStrings:OracleDB_LocalXE`; su destino debe ser localhost/127.0.0.1 con servicio XE.
 
 ### 4.3 Frontend Angular (rl-app)
 ```powershell
@@ -85,16 +92,16 @@ El frontend estará escuchando en `http://localhost:4200`.
 
 ## 5. Verificación y Pruebas E2E
 
-### Ejecución de Pruebas Unitarias del Guard:
+### Ejecución de pruebas unitarias de perfiles:
 ```powershell
 dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter "FullyQualifiedName~DatabaseEnvironmentGuardTests"
 ```
 
-### Ejecución de la Suite Completa de Pruebas E2E (Playwright):
-Con Oracle XE, Backend y Frontend en ejecución:
+### Ejecución de E2E con Oracle XE:
+Inicie Oracle XE, establezca `Database__Profile=LOCAL_XE` y configure la cadena local aprobada antes de levantar API y frontend:
 ```powershell
 cd frontend/rl-app
 npm run e2e -- --workers 1
 ```
 
-Todas las 45 pruebas deben resultar en `passed` sin errores de base de datos ni `ORA-00904`.
+Los tests Oracle/E2E requeridos deben ejecutarse con el perfil `LOCAL_XE`. Una indisponibilidad de XE debe fallar la ejecución; no debe cambiar a producción.

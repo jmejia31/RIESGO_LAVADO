@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ExcelDataReader;
 using Microsoft.Extensions.Configuration;
+using RL.API.Infrastructure.Database;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.MatricesRiesgos.Domain;
 
@@ -135,19 +136,13 @@ public static class Program
 
         // 3. Ejecutar Migración / verificación en Oracle
         string appSettingsPath = Path.Combine(repoRoot, "backend", "RL.API", "appsettings.json");
-        var config = new ConfigurationBuilder().AddJsonFile(appSettingsPath, optional: true).Build();
-        string? connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__OracleDB");
-
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            connectionString = config.GetConnectionString("OracleDB");
-        }
-
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException(
-                "No se encontró la cadena OracleDB. Defina ConnectionStrings__OracleDB en el entorno o configure backend/RL.API/appsettings.json.");
-        }
+        var config = new ConfigurationBuilder()
+            .AddJsonFile(appSettingsPath, optional: true)
+            .AddUserSecrets<OracleDbContext>(optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+        var selectedDatabase = DatabaseProfileResolver.Resolve(config);
+        string connectionString = selectedDatabase.ConnectionString;
 
         await using var connection = new OracleConnection(connectionString);
         connection.ConnectionString = new OracleConnectionStringBuilder(connectionString)

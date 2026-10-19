@@ -163,5 +163,6 @@ Write-Host "LOCAL_ORACLE_BOOTSTRAP_REPRODUCIBLE=PASS"
 Write-Host ""
 Write-Host "Instrucción de configuración segura para el desarrollador:"
 Write-Host "  cd backend/RL.API"
-Write-Host '  dotnet user-secrets set "ConnectionStrings:OracleDB" "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=XE)));User Id=RIESGO_LAVADO;Password=<TU_CONTRASENA_LOCAL>;"'
+Write-Host '  dotnet user-secrets set "Database:Profile" "LOCAL_XE"'
+Write-Host '  dotnet user-secrets set "ConnectionStrings:OracleDB_LocalXE" "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=XE)));User Id=RIESGO_LAVADO;Password=<set-through-approved-secret-source>"'
 Write-Host "=========================================================="

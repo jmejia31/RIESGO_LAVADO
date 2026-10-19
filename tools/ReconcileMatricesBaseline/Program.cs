@@ -4636,40 +4636,33 @@ public static class Program
             .AddEnvironmentVariables()
             .Build();
 
-        Environment.SetEnvironmentVariable("DATABASE_PROFILE", "PRODUCTION");
-        string? rawProd = config.GetConnectionString("OracleDB_Production")
-                       ?? config["ConnectionStrings:OracleDB_Production"]
-                       ?? config.GetConnectionString("OracleDB_Prod")
-                       ?? config.GetConnectionString("OracleDB");
-        string prodConn = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(rawProd!, config);
+        var selectedProduction = DatabaseProfileResolver.Resolve(config);
+        if (selectedProduction.Profile != DatabaseProfile.Production)
+            throw new InvalidOperationException("La reconciliación requiere Database:Profile=PRODUCTION seleccionado explícitamente.");
 
-        Environment.SetEnvironmentVariable("DATABASE_PROFILE", "LOCAL_XE");
-        string? rawXe = config.GetConnectionString("OracleDB_LocalXE")
-                     ?? config["ConnectionStrings:OracleDB_LocalXE"]
-                     ?? config.GetConnectionString("OracleDB_XE")
-                     ?? config.GetConnectionString("OracleDB");
-        string xeConn = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(rawXe!, config);
-
-        Environment.SetEnvironmentVariable("DATABASE_PROFILE", "PRODUCTION");
-        return (prodConn, xeConn);
+        IConfiguration localXeConfiguration = new ConfigurationBuilder()
+            .AddConfiguration(config)
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [DatabaseProfileResolver.ProfileConfigurationKey] = DatabaseProfileResolver.LocalXeProfileName
+            })
+            .Build();
+        var selectedLocalXe = DatabaseProfileResolver.Resolve(localXeConfiguration);
+        return (selectedProduction.ConnectionString, selectedLocalXe.ConnectionString);
     }
 
     private static string ResolveProductionConnectionString(string repoRoot)
     {
-        Environment.SetEnvironmentVariable("DATABASE_PROFILE", "PRODUCTION");
         string appSettingsPath = Path.Combine(repoRoot, "backend", "RL.API", "appsettings.json");
         var config = new ConfigurationBuilder()
             .AddJsonFile(appSettingsPath, optional: true)
             .AddUserSecrets<OracleDbContext>(optional: true)
             .AddEnvironmentVariables()
             .Build();
-        string? raw = config.GetConnectionString("OracleDB_Production")
-                   ?? config["ConnectionStrings:OracleDB_Production"]
-                   ?? config.GetConnectionString("OracleDB_Prod")
-                   ?? config.GetConnectionString("OracleDB");
-        if (string.IsNullOrWhiteSpace(raw))
-            throw new InvalidOperationException("PRODUCTION_CONNECTION_CONFIGURATION_MISSING");
-        return DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(raw, config);
+        var selectedDatabase = DatabaseProfileResolver.Resolve(config);
+        if (selectedDatabase.Profile != DatabaseProfile.Production)
+            throw new InvalidOperationException("La operación de producción requiere Database:Profile=PRODUCTION seleccionado explícitamente.");
+        return selectedDatabase.ConnectionString;
     }
 
     private static async Task VerifyProductionBusinessInputDefaultsAsync(string connectionString, BusinessCreationRules rules)

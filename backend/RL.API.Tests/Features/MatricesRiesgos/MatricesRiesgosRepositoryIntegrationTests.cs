@@ -11,6 +11,7 @@ using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Infrastructure.Database;
+using RL.API.Tests.Support;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,7 +23,7 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 /// La ejecución ordinaria NO abre conexiones Oracle. Solo se habilita cuando un
 /// operador autorizado configura simultáneamente:
 ///   RL_ORACLE_INTEGRATION_REQUIRED=true
-///   ConnectionStrings__OracleDB mediante variable de entorno o User Secrets.
+///   Database__Profile=LOCAL_XE y ConnectionStrings__OracleDB_LocalXE mediante variable de entorno o User Secrets.
 ///
 /// La suite no ejecuta DDL, no ejecuta los scripts 05 o 06 y no modifica el
 /// esquema. Únicamente certifica objetos existentes y utiliza registros aislados
@@ -192,16 +193,18 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
         IConfiguration configuration = new ConfigurationBuilder()
             .AddUserSecrets<MatricesRiesgosRepositoryIntegrationTests>(optional: true)
+            .AddUserSecrets<OracleDbContext>(optional: true)
             .AddEnvironmentVariables()
             .Build();
-
-        _connectionString = configuration.GetConnectionString("OracleDB")
-            ?? configuration["ConnectionStrings:OracleDB"];
 
         _integrationRequired = string.Equals(
             Environment.GetEnvironmentVariable("RL_ORACLE_INTEGRATION_REQUIRED"),
             "true",
             StringComparison.OrdinalIgnoreCase);
+
+        _connectionString = OracleTestDatabaseProfile.TryResolveConfiguredLocalXe(configuration, out string? localXe)
+            ? localXe
+            : null;
     }
 
     [Fact]
@@ -577,7 +580,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         if (string.IsNullOrWhiteSpace(_connectionString))
         {
             Assert.Fail(
-                "RL_ORACLE_INTEGRATION_REQUIRED=true, pero no existe una cadena Oracle segura en variables de entorno o User Secrets.");
+                "RL_ORACLE_INTEGRATION_REQUIRED=true, pero Database:Profile=LOCAL_XE y ConnectionStrings:OracleDB_LocalXE deben estar configurados.");
             return false;
         }
 

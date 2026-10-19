@@ -3,15 +3,21 @@ using System.Data.Common;
 using System.Text.Json;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Identidad.Domain;
+using RL.API.Infrastructure.Database;
+using Microsoft.Extensions.Configuration;
 
 const string settingsPath = "backend/RL.API/appsettings.json";
 bool migrate = args.Any(a => string.Equals(a, "--migrate", StringComparison.OrdinalIgnoreCase));
-var settings = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(settingsPath));
-string raw = settings.GetProperty("ConnectionStrings").GetProperty("OracleDB").GetString() ?? throw new InvalidOperationException("Oracle connection configuration is incomplete.");
-string user = Extract(raw, "User Id");
-string password = Extract(raw, "Password");
-string dataSource = Extract(raw, "Data Source");
-string connectionString = $"User Id={user};Password={password};Data Source={dataSource};Connection Timeout=30";
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile(settingsPath, optional: true)
+    .AddUserSecrets<OracleDbContext>(optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+var selectedDatabase = DatabaseProfileResolver.Resolve(configuration);
+string connectionString = new OracleConnectionStringBuilder(selectedDatabase.ConnectionString)
+{
+    ConnectionTimeout = 30
+}.ConnectionString;
 
 await using var connection = new OracleConnection(connectionString);
 await connection.OpenAsync();

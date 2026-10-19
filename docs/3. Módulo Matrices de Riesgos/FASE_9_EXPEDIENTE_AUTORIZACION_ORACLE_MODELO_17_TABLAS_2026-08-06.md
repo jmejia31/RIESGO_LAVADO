@@ -262,7 +262,8 @@ No se autoriza:
 La conexión de la suite se suministrará únicamente mediante:
 
 ```text
-ConnectionStrings__OracleDB
+Database__Profile=LOCAL_XE
+ConnectionStrings__OracleDB_LocalXE
 ```
 
 como variable de entorno o User Secrets.

@@ -12,6 +12,7 @@ if [[ -z "${BLOCK7_ORACLE_CONNECTION_STRING:-}" \
   echo "Block 7 Oracle certification requires the disposable Oracle XE connection." >&2
   exit 1
 fi
+export Database__Profile=LOCAL_XE
 
 cd "$repo_root"
 export RL_BLOCK7_ORACLE_INTEGRATION_REQUIRED=true
@@ -39,7 +40,6 @@ fi
 export ASPNETCORE_ENVIRONMENT=E2E
 export RL_BLOCK7_REAL_E2E_REQUIRED=true
 export RL_BLOCK9_REAL_E2E_REQUIRED=true
-export DATABASE_PROFILE=LOCAL_XE
 dotnet "$api_dll" >"$api_log" 2>&1 &
 api_pid=$!
 cleanup() {

@@ -12,7 +12,7 @@
 
 | COMPONENT | PATH | VERSION_SOURCE | DEPLOYMENT_METHOD | DEPENDENCIES | ENVIRONMENT_VARIABLES | SECRETS_REQUIRED | INSTALL_ORDER | ROLLBACK_METHOD | VALIDATION_METHOD |
 |---|---|---|---|---|---|---|---|---|---|
-| Backend API | `backend/RL.API` | `RL.API.csproj`, `net10.0` | Dockerfile o `dotnet publish` | Oracle, ASP.NET runtime | `ConnectionStrings__OracleDB`, `Jwt__*`, `Cors__AllowedOrigins__0` | Oracle connection, JWT secret | 4 | Redeploy imagen anterior | `/healthz`, `/readyz`, smoke |
+| Backend API | `backend/RL.API` | `RL.API.csproj`, `net10.0` | Dockerfile o `dotnet publish` | Oracle, ASP.NET runtime | `Database__Profile`, perfil Oracle con nombre, `Jwt__*`, `Cors__AllowedOrigins__0` | Oracle connection, JWT secret | 4 | Redeploy imagen anterior | `/healthz`, `/readyz`, smoke |
 | Frontend | `frontend/rl-app` | `package-lock.json`, Angular CLI | Dockerfile/nginx | Node 24.18.0 durante build | API base URL por environment | Ninguno en cliente | 5 | Redeploy imagen anterior | `/healthz`, route fallback |
 | Oracle modelo | `database/19_matrices_riesgos` | SQL versionado | SQL*Plus/cliente DBA | `RL_USUARIOS`, `RL_AUDITORIA` | Alias institucional, schema | Credencial DBA fuera del repositorio | 1 | Rollback lógico; nunca borrar V1 | pre/postflight |
 | Semillas | `fase11/01_semillas_datos_iniciales_modelo_17_tablas.sql` | Script idempotente autorizado | SQL*Plus con autorización | Modelo Oracle instalado | Schema | Credencial DBA fuera del repositorio | 2 | Transacción/backup institucional | validadores de catálogos |

@@ -219,7 +219,8 @@ RL_ORACLE_INTEGRATION_REQUIRED=true
 La cadena debe proceder de:
 
 ```text
-ConnectionStrings__OracleDB
+Database__Profile=LOCAL_XE
+ConnectionStrings__OracleDB_LocalXE
 ```
 
 mediante variable de entorno o User Secrets.

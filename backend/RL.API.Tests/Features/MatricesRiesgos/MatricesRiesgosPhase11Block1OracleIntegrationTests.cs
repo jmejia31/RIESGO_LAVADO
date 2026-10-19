@@ -7,6 +7,7 @@ using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Infrastructure.Database;
+using RL.API.Tests.Support;
 using Xunit;
 
 namespace RL.API.Tests.Features.MatricesRiesgos;
@@ -27,8 +28,9 @@ public sealed class MatricesRiesgosPhase11Block1OracleIntegrationTests
     public async Task SemillasOficiales_ExistenSonIntegrasYElBackendLasDeserializa()
     {
         IConfiguration configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
             .AddUserSecrets<MatricesRiesgosPhase11Block1OracleIntegrationTests>(optional: true)
+            .AddUserSecrets<OracleDbContext>(optional: true)
+            .AddEnvironmentVariables()
             .Build();
 
         bool requerido = string.Equals(
@@ -40,8 +42,8 @@ public sealed class MatricesRiesgosPhase11Block1OracleIntegrationTests
             return;
         }
 
-        string? connectionString = configuration.GetConnectionString("OracleDB")
-            ?? configuration["ConnectionStrings:OracleDB"];
+        Assert.True(OracleTestDatabaseProfile.TryResolveConfiguredLocalXe(configuration, out string? connectionString),
+            "Oracle integration requires Database:Profile=LOCAL_XE and ConnectionStrings:OracleDB_LocalXE.");
         Assert.False(string.IsNullOrWhiteSpace(connectionString));
 
         // El runner puede encadenar suites Oracle en el mismo proceso. Limpiar
