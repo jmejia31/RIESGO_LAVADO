@@ -86,8 +86,11 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         foreach (RiesgoReporteFilaDto row in filas)
         {
             InstitutionalEvaluationProjectionDto projection = proyecciones[row.EvaluacionId];
+            // RiskCode in the consolidated row is a historical projection snapshot, while the
+            // canonical 82-field model uses the current risk master code. Risk/evaluation IDs
+            // are the stable identity and must match; requiring the display codes to match
+            // would reject valid exports after a risk code change.
             if (projection.EvaluationId != row.EvaluacionId || projection.RiskId != row.RiesgoId
-                || !string.Equals(projection.RiskCode, row.CodigoRiesgo, StringComparison.Ordinal)
                 || projection.Fields.Count != catalog.Count)
                 throw new InvalidOperationException("La proyección 82 no coincide con el riesgo/evaluación o el conteo canónico.");
             for (int index = 0; index < catalog.Count; index++)
