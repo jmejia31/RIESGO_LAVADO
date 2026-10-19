@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page, test, expectHttpStatuses } from './support/telemetry-test';
 import { Buffer } from 'node:buffer';
 
 const familiaListado = {
@@ -376,6 +376,7 @@ test('MCV.3 Editar definición de borrador abre el Constructor desde el Detalle'
 });
 
 test('UI-FAM.2 presenta un 404 como Familia no encontrada sin inventar contenido', async ({ page }) => {
+  expectHttpStatuses(404);
   await page.route('**/api/matrices-riesgos/familias/7', route => route.fulfill({
     status: 404,
     contentType: 'application/problem+json',
@@ -391,6 +392,7 @@ test('UI-FAM.2 presenta un 404 como Familia no encontrada sin inventar contenido
 });
 
 test('UI-FAM.2 permite reintentar un fallo temporal sin cerrar el modal', async ({ page }) => {
+  expectHttpStatuses(500);
   let intentos = 0;
   await page.route('**/api/matrices-riesgos/familias/7', route => {
     intentos++;

@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page, test, expectHttpStatuses } from './support/telemetry-test';
 import { Buffer } from 'node:buffer';
 import * as ExcelJS from 'exceljs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -619,6 +619,7 @@ test('Configuración de cálculo muestra referencias institucionales F01, F15 y 
 });
 
 test('Configuracion de calculo conserva un 422 en el feedback local sin contaminar el shell', async ({ page }) => {
+  expectHttpStatuses(422);
   await page.route('**/api/matrices-riesgos/configuracion-calculo/formulas*', route => route.fulfill({
     status: 422,
     contentType: 'application/json',
@@ -1028,6 +1029,7 @@ test('Riesgos usa filtro estándar completo y pagina exactamente 10 registros al
 });
 
 test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => {
+  expectHttpStatuses(400, 422, 409);
   let createPayload: any;
   let updatePayload: any;
   let nextCreateFailure: number | null = null;

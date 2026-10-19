@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page, test } from './support/telemetry-test';
 
 type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
 

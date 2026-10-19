@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/telemetry-test';
 import { createSystemTheme } from '../src/app/core/configuration/system-theme.util';
 
 type Rgb = [number, number, number];

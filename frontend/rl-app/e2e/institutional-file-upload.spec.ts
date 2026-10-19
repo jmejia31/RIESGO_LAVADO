@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/telemetry-test';
 
 function token(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');

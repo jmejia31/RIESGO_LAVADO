@@ -1,4 +1,4 @@
-import { expect, Locator, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test, expectHttpStatuses } from './support/telemetry-test';
 
 const versionPublicada = {
   verId: 10,
@@ -161,6 +161,7 @@ test('alias ADMIN no habilita acciones reservadas a ADMINISTRADOR', async ({ pag
 });
 
 test('un 403 de operación se muestra dentro del modal sin abandonar el módulo', async ({ page }) => {
+  expectHttpStatuses(403);
   await page.route('**/api/matrices-riesgos/formularios/10/clonar', route => route.fulfill({
     status: 403,
     contentType: 'application/json',
@@ -268,6 +269,7 @@ test('seguimiento de BORRADOR muestra EN_REVISION y trata historial 200 vacío c
 });
 
 test('fallo HTTP al consultar transiciones no se presenta como éxito vacío', async ({ page }) => {
+  expectHttpStatuses(404);
   await prepararSeguimientoEvaluacion(
     page,
     'BORRADOR',
@@ -282,6 +284,7 @@ test('fallo HTTP al consultar transiciones no se presenta como éxito vacío', a
 });
 
 test('fallo al consultar historial muestra error y no afirma que está vacío', async ({ page }) => {
+  expectHttpStatuses(503);
   await prepararSeguimientoEvaluacion(
     page,
     'BORRADOR',

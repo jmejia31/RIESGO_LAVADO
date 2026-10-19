@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page, test } from './support/telemetry-test';
 
 const systemConfiguration = {
   success: true,

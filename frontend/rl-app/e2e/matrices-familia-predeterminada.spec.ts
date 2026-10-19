@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Page, test } from './support/telemetry-test';
 import { Buffer } from 'node:buffer';
 
 const familia = {
