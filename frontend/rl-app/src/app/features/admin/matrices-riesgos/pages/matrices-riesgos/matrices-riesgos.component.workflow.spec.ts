@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
@@ -127,8 +127,60 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.abrirModalSeguimiento(evaluacionResumen);
     expect(service['obtenerFlujos']).toHaveBeenCalledWith(15);
     expect(component.flujos()).toHaveLength(1);
+    expect(component.estadoFlujos()).toBe('SUCCESS_WITH_DATA');
     expect(service['obtenerTransicionesEvaluacion']).toHaveBeenCalledWith(15);
     expect(component.transicionesPermitidas()).toEqual(['EN_REVISION']);
+    expect(component.estadoTransiciones()).toBe('SUCCESS_WITH_DATA');
+  });
+
+  it('mantiene ambas consultas en LOADING hasta que responden', () => {
+    const transitions = new Subject<{ estadoActual: string; destinosPermitidos: string[] }>();
+    const history = new Subject<Array<{ fluId: number; fluEstado: string; fluFecha: string; fluUsrId: number; fluMotivo: string }>>();
+    service['obtenerTransicionesEvaluacion'].mockReturnValue(transitions);
+    service['obtenerFlujos'].mockReturnValue(history);
+
+    component.abrirModalSeguimiento(evaluacionResumen);
+    fixture.detectChanges();
+
+    expect(component.estadoTransiciones()).toBe('LOADING');
+    expect(component.estadoFlujos()).toBe('LOADING');
+    expect(fixture.nativeElement.textContent).toContain('Consultando transiciones permitidas');
+    expect(fixture.nativeElement.textContent).toContain('Cargando historial de estados');
+    expect(fixture.nativeElement.textContent).not.toContain('No hay transiciones pendientes');
+    expect(fixture.nativeElement.textContent).not.toContain('Sin historial de flujo registrado');
+
+    transitions.next({ estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] });
+    history.next([]);
+    fixture.detectChanges();
+    expect(component.estadoTransiciones()).toBe('SUCCESS_WITH_DATA');
+    expect(component.estadoFlujos()).toBe('SUCCESS_EMPTY');
+  });
+
+  it('distingue una respuesta exitosa sin transiciones de una carga fallida', () => {
+    service['obtenerTransicionesEvaluacion'].mockReturnValue(of({ estadoActual: 'CERRADA', destinosPermitidos: [] }));
+    service['obtenerFlujos'].mockReturnValue(of([]));
+    component.abrirModalSeguimiento({ ...evaluacionResumen, estado: 'CERRADA' });
+    fixture.detectChanges();
+
+    expect(component.estadoTransiciones()).toBe('SUCCESS_EMPTY');
+    expect(component.estadoFlujos()).toBe('SUCCESS_EMPTY');
+    expect(fixture.nativeElement.textContent).toContain('No hay transiciones pendientes para el estado actual.');
+    expect(fixture.nativeElement.textContent).toContain('Sin historial de flujo registrado.');
+    expect(fixture.nativeElement.textContent).not.toContain('No se pudieron consultar las transiciones permitidas.');
+    expect(fixture.nativeElement.textContent).not.toContain('No se pudo cargar el historial de estados.');
+  });
+
+  it('no convierte el error de transiciones en éxito vacío', () => {
+    service['obtenerTransicionesEvaluacion'].mockReturnValue(throwError(() => ({ status: 404 })));
+    service['obtenerFlujos'].mockReturnValue(of([]));
+    component.abrirModalSeguimiento(evaluacionResumen);
+    fixture.detectChanges();
+
+    expect(component.estadoTransiciones()).toBe('ERROR');
+    expect(component.errorTransiciones()).toBe('No se pudieron consultar las transiciones permitidas.');
+    expect(component.estadoFlujos()).toBe('SUCCESS_EMPTY');
+    expect(fixture.nativeElement.textContent).toContain('No se pudieron consultar las transiciones permitidas.');
+    expect(fixture.nativeElement.textContent).not.toContain('No hay transiciones pendientes para el estado actual.');
   });
 
   it('presenta etiquetas institucionales en lugar de códigos internos', () => {
@@ -195,12 +247,16 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.error()).toBe('No se pudo vincular la evidencia al expediente.');
   });
 
-  it('muestra error contextual cuando no puede consultar los flujos', () => {
+  it('no convierte el error de historial en un historial vacío', () => {
     service['obtenerFlujos'].mockReturnValue(throwError(() => new Error('Error flujos')));
     component.abrirModalSeguimiento(evaluacionResumen);
+    fixture.detectChanges();
 
     expect(component.flujos()).toEqual([]);
-    expect(component.errorSeguimiento()).toBe('No se pudo cargar el historial de estados.');
+    expect(component.estadoFlujos()).toBe('ERROR');
+    expect(component.errorFlujos()).toBe('No se pudo cargar el historial de estados.');
+    expect(fixture.nativeElement.textContent).toContain('No se pudo cargar el historial de estados.');
+    expect(fixture.nativeElement.textContent).not.toContain('Sin historial de flujo registrado.');
   });
 
   it('rechaza una definición técnica con JSON inválido sin llamar al backend', () => {

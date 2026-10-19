@@ -61,6 +61,7 @@ import { MatricesRiesgosMitigacionComponent } from '../../components/matrices-ri
 import { MatricesRiesgosMonitoreoOperativoComponent } from '../../components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component';
 
 type BloqueEvaluacion = 1 | 2 | 3 | 4 | 5 | 6;
+type EstadoCargaWorkflow = 'LOADING' | 'SUCCESS_WITH_DATA' | 'SUCCESS_EMPTY' | 'ERROR';
 
 @Component({
   selector: 'app-matrices-riesgos',
@@ -309,6 +310,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   nuevoEstado = 'EN_REVISION';
   readonly errorSeguimiento = signal<string | null>(null);
   readonly transicionesPermitidas = signal<string[]>([]);
+  readonly estadoTransiciones = signal<EstadoCargaWorkflow>('LOADING');
+  readonly errorTransiciones = signal<string | null>(null);
+  readonly estadoFlujos = signal<EstadoCargaWorkflow>('LOADING');
+  readonly errorFlujos = signal<string | null>(null);
   archivoEvidencia: File | null = null;
 
   readonly versionEditando = signal<VersionFormularioDto | null>(null);
@@ -2495,9 +2500,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   abrirModalSeguimiento(evaluacion: EvaluacionRiesgoResumenDto): void {
     this.limpiarAlertas();
     this.errorSeguimiento.set(null);
+    this.errorTransiciones.set(null);
+    this.errorFlujos.set(null);
     this.evaluacionResumenSeleccionada.set(evaluacion);
     this.motivoTransicion = '';
     this.transicionesPermitidas.set([]);
+    this.flujos.set([]);
     this.nuevoEstado = '';
     this.cargarTransiciones(evaluacion.evaId);
     this.cargarFlujos(evaluacion.evaId);
@@ -2531,9 +2539,22 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarTransiciones(evaluacionId: number): void {
+    this.estadoTransiciones.set('LOADING');
+    this.errorTransiciones.set(null);
+    this.transicionesPermitidas.set([]);
+    this.nuevoEstado = '';
     this.service.obtenerTransicionesEvaluacion(evaluacionId).subscribe({
       next: (transiciones: TransicionesEvaluacionDto) => {
-        this.transicionesPermitidas.set(transiciones.destinosPermitidos);
+        if (this.evaluacionResumenSeleccionada()?.evaId !== evaluacionId) return;
+        if (!Array.isArray(transiciones?.destinosPermitidos) || !transiciones.estadoActual) {
+          this.errorTransiciones.set('La respuesta de transiciones permitidas no tiene el formato esperado.');
+          this.estadoTransiciones.set('ERROR');
+          return;
+        }
+
+        const destinos = [...transiciones.destinosPermitidos];
+        this.transicionesPermitidas.set(destinos);
+        this.estadoTransiciones.set(destinos.length > 0 ? 'SUCCESS_WITH_DATA' : 'SUCCESS_EMPTY');
         this.nuevoEstado = this.obtenerTransicionPorDefecto();
         const actual = this.evaluacionResumenSeleccionada();
         if (actual?.evaId === evaluacionId) {
@@ -2541,9 +2562,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         }
       },
       error: error => {
+        if (this.evaluacionResumenSeleccionada()?.evaId !== evaluacionId) return;
         this.transicionesPermitidas.set([]);
         this.nuevoEstado = '';
-        this.errorSeguimiento.set(this.obtenerMensajeError(error, 'No se pudieron consultar las transiciones permitidas.'));
+        this.errorTransiciones.set(this.obtenerMensajeError(error, 'No se pudieron consultar las transiciones permitidas.'));
+        this.estadoTransiciones.set('ERROR');
       }
     });
   }
@@ -2656,11 +2679,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarFlujos(evaluacionId: number): void {
+    this.estadoFlujos.set('LOADING');
+    this.errorFlujos.set(null);
+    this.flujos.set([]);
     this.service.obtenerFlujos(evaluacionId).subscribe({
-      next: flujos => this.flujos.set(flujos),
+      next: flujos => {
+        if (this.evaluacionResumenSeleccionada()?.evaId !== evaluacionId) return;
+        if (!Array.isArray(flujos)) {
+          this.errorFlujos.set('La respuesta del historial de estados no tiene el formato esperado.');
+          this.estadoFlujos.set('ERROR');
+          return;
+        }
+
+        this.flujos.set(flujos);
+        this.estadoFlujos.set(flujos.length > 0 ? 'SUCCESS_WITH_DATA' : 'SUCCESS_EMPTY');
+      },
       error: error => {
+        if (this.evaluacionResumenSeleccionada()?.evaId !== evaluacionId) return;
         this.flujos.set([]);
-        this.errorSeguimiento.set(this.obtenerMensajeError(error, 'No se pudo cargar el historial de estados.'));
+        this.errorFlujos.set(this.obtenerMensajeError(error, 'No se pudo cargar el historial de estados.'));
+        this.estadoFlujos.set('ERROR');
       }
     });
   }

@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 
 const versionPublicada = {
   verId: 10,
@@ -181,4 +181,130 @@ test('una ruta sin acceso al módulo redirige a Acceso Denegado', async ({ page 
 
   await expect(page).toHaveURL(/\/sin-acceso(?:\?.*)?$/);
   await expect(page.getByRole('heading', { name: 'Acceso Denegado' })).toBeVisible();
+});
+
+type WorkflowResponse = { status: number; datos?: unknown; mensaje?: string };
+
+async function prepararSeguimientoEvaluacion(
+  page: Page,
+  estado: string,
+  transiciones: WorkflowResponse,
+  flujos: WorkflowResponse
+): Promise<void> {
+  await page.route('**/api/matrices-riesgos/**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+
+    if (request.method() === 'GET' && path === '/api/matrices-riesgos/evaluaciones') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          datos: {
+            items: [{
+              evaId: 87,
+              evaRiesgoId: 5,
+              riesgoCodigo: 'RIE-005',
+              riesgoNombre: 'Riesgo de prueba E2E',
+              evaVersionId: 10,
+              versionCodigo: 'MATRIZ_RIESGOS_LAFT_V1',
+              versionNumero: 1,
+              estado,
+              vri: 0,
+              vrr: 0,
+              nivelResidual: 'BAJO',
+              fechaEval: '2026-10-19T10:00:00Z'
+            }],
+            pagina: 1,
+            registrosPorPagina: 10,
+            totalRegistros: 1,
+            totalPaginas: 1
+          }
+        })
+      });
+    }
+
+    const isTransitions = request.method() === 'GET' && path.endsWith('/evaluaciones/87/transiciones-permitidas');
+    const isHistory = request.method() === 'GET' && path.endsWith('/evaluaciones/87/flujos');
+    const response = isTransitions ? transiciones : isHistory ? flujos : null;
+    if (!response) return route.fallback();
+
+    return route.fulfill({
+      status: response.status,
+      contentType: 'application/json',
+      body: JSON.stringify(response.status < 400
+        ? { success: true, datos: response.datos }
+        : { success: false, mensaje: response.mensaje ?? 'La consulta del flujo falló.' })
+    });
+  });
+}
+
+async function abrirSeguimiento(page: Page): Promise<Locator> {
+  await page.goto('/matrices-riesgos');
+  const button = page.getByRole('button', { name: 'Seguimiento de evaluación' });
+  await expect(button).toBeVisible();
+  await button.click();
+  const dialog = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText('Seguimiento de Evaluación #87');
+  return dialog;
+}
+
+test('seguimiento de BORRADOR muestra EN_REVISION y trata historial 200 vacío como vacío legítimo', async ({ page }) => {
+  await prepararSeguimientoEvaluacion(
+    page,
+    'BORRADOR',
+    { status: 200, datos: { estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] } },
+    { status: 200, datos: [] }
+  );
+
+  const dialog = await abrirSeguimiento(page);
+  await expect(dialog.locator('#seg-nuevo-estado')).toHaveValue('EN_REVISION');
+  await expect(dialog.locator('#seg-nuevo-estado option')).toHaveCount(1);
+  await expect(dialog.getByText('No hay transiciones pendientes para el estado actual.')).toHaveCount(0);
+  await expect(dialog.getByText('Sin historial de flujo registrado.')).toBeVisible();
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
+});
+
+test('fallo HTTP al consultar transiciones no se presenta como éxito vacío', async ({ page }) => {
+  await prepararSeguimientoEvaluacion(
+    page,
+    'BORRADOR',
+    { status: 404, mensaje: 'Ruta de transiciones no disponible en el API activo.' },
+    { status: 200, datos: [] }
+  );
+
+  const dialog = await abrirSeguimiento(page);
+  await expect(dialog.getByText('Ruta de transiciones no disponible en el API activo.')).toBeVisible();
+  await expect(dialog.getByText('No hay transiciones pendientes para el estado actual.')).toHaveCount(0);
+  await expect(dialog.getByText('Sin historial de flujo registrado.')).toBeVisible();
+});
+
+test('fallo al consultar historial muestra error y no afirma que está vacío', async ({ page }) => {
+  await prepararSeguimientoEvaluacion(
+    page,
+    'BORRADOR',
+    { status: 200, datos: { estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] } },
+    { status: 503, mensaje: 'Servicio de historial no disponible.' }
+  );
+
+  const dialog = await abrirSeguimiento(page);
+  await expect(dialog.locator('#seg-nuevo-estado')).toHaveValue('EN_REVISION');
+  await expect(dialog.getByText('Servicio de historial no disponible.')).toBeVisible();
+  await expect(dialog.getByText('Sin historial de flujo registrado.')).toHaveCount(0);
+});
+
+test('estado sin destinos devuelve éxito vacío y muestra el mensaje funcional', async ({ page }) => {
+  await prepararSeguimientoEvaluacion(
+    page,
+    'CERRADA',
+    { status: 200, datos: { estadoActual: 'CERRADA', destinosPermitidos: [] } },
+    { status: 200, datos: [] }
+  );
+
+  const dialog = await abrirSeguimiento(page);
+  await expect(dialog.getByText('No hay transiciones pendientes para el estado actual.')).toBeVisible();
+  await expect(dialog.getByText('Sin historial de flujo registrado.')).toBeVisible();
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
 });

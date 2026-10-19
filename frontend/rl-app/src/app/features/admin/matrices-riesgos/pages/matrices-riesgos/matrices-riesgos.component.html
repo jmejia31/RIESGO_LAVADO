@@ -1325,7 +1325,11 @@
           }
           @if (actualizandoCalculo()) { <p class="text-xs text-ihss-700" role="status">Actualizando cálculo institucional…</p> }
           @if (errorCalculoPreview()) { <p class="text-xs text-red-700" role="alert">{{ errorCalculoPreview() }}</p> }
-          @if (obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || '').length > 0) {
+          @if (estadoTransiciones() === 'LOADING') {
+            <p class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center text-xs text-slate-600" role="status">Consultando transiciones permitidas…</p>
+          } @else if (estadoTransiciones() === 'ERROR') {
+            <div class="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800" role="alert" aria-live="assertive">{{ errorTransiciones() }}</div>
+          } @else if (estadoTransiciones() === 'SUCCESS_WITH_DATA') {
             <section class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
               <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700">Gestionar Transición de Estado</h4>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -1357,7 +1361,7 @@
           </button>
               </div>
             </section>
-          } @else {
+          } @else if (estadoTransiciones() === 'SUCCESS_EMPTY') {
             <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs text-gray-500 text-center">
               No hay transiciones pendientes para el estado actual.
             </div>
@@ -1366,7 +1370,14 @@
           <section class="space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700">Línea de Tiempo de Auditoría</h4>
             <div class="relative border-l-2 border-gray-200 ml-4 space-y-4 py-1">
-              @for (flujo of flujos(); track flujo.fluId) {
+              @if (estadoFlujos() === 'LOADING') {
+                <p class="pl-6 text-xs text-slate-600" role="status">Cargando historial de estados…</p>
+              } @else if (estadoFlujos() === 'ERROR') {
+                <p class="pl-6 text-xs text-red-700" role="alert" aria-live="assertive">{{ errorFlujos() }}</p>
+              } @else if (estadoFlujos() === 'SUCCESS_EMPTY') {
+                <p class="pl-6 text-xs text-gray-400">Sin historial de flujo registrado.</p>
+              } @else if (estadoFlujos() === 'SUCCESS_WITH_DATA') {
+                @for (flujo of flujos(); track flujo.fluId) {
                 <div class="relative pl-6">
                   <span class="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-ihss-600"></span>
                   <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm text-xs space-y-1">
@@ -1378,8 +1389,7 @@
                     <p class="text-gray-400 text-[10px]">Usuario ID: {{ flujo.fluUsrId }}</p>
                   </div>
                 </div>
-              } @empty {
-                <p class="text-xs text-gray-400 pl-6">Sin historial de flujo registrado.</p>
+                }
               }
             </div>
           </section>
