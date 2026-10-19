@@ -831,9 +831,11 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
       const ordinal = fieldNumber.padStart(2, '0');
       const displayed = (await matrixModal.locator(`[data-matrix-field="${ordinal}"] dd`).innerText()).trim();
       const percentField = [23, 27, 31, 33].includes(Number(fieldNumber));
-      const expectedDisplay = percentField && typeof expected === 'number'
-        ? `${new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(expected)}%`
-        : String(expected);
+      const expectedDisplay = expected === null || expected === ''
+        ? 'Sin dato'
+        : percentField && typeof expected === 'number'
+          ? `${new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(expected)}%`
+          : String(expected);
       expect(displayed, `${item.riskCode}/F${fieldNumber} differs in Full Matrix UI`).toBe(expectedDisplay);
       uiCalculationValues++;
     }
