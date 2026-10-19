@@ -941,28 +941,86 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.Ok("La evidencia no existe o ya fue eliminada.");
         }
 
-        Func<Task<bool>> eliminarArchivo = () =>
+        string? rutaArchivo = null;
+        string? rutaEnCuarentena = null;
+        Func<Task<bool>> prepararEliminacionArchivo = () =>
         {
             try
             {
                 if (!string.IsNullOrWhiteSpace(evidencia.EviRuta))
                 {
-                    string ruta = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, evidencia.EviRuta);
-                    if (File.Exists(ruta)) File.Delete(ruta);
+                    string raizEvidencias = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias"));
+                    string ruta = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, evidencia.EviRuta));
+                    string prefijoRaiz = raizEvidencias.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                    if (!ruta.StartsWith(prefijoRaiz, StringComparison.OrdinalIgnoreCase))
+                        return Task.FromResult(false);
+
+                    rutaArchivo = ruta;
+                    if (File.Exists(ruta))
+                    {
+                        rutaEnCuarentena = ruta + ".pending-delete-" + Guid.NewGuid().ToString("N");
+                        File.Move(ruta, rutaEnCuarentena);
+                    }
                 }
                 return Task.FromResult(true);
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "No se pudo poner en cuarentena la evidencia {EvidenciaId} antes del commit Oracle.", evidenciaId);
                 return Task.FromResult(false);
             }
         };
 
-        ResultadoEliminacionEvidencia resultado = await _repo.EliminarEvidenciaSeguraAsync(
-            evidenciaId,
-            eliminarArchivo,
-            usuarioId,
-            ip);
+        async Task<bool> RestaurarArchivoAsync()
+        {
+            if (rutaArchivo is null || rutaEnCuarentena is null || !File.Exists(rutaEnCuarentena)) return true;
+            try
+            {
+                if (File.Exists(rutaArchivo))
+                    throw new IOException("The original evidence path is already occupied; automatic restoration was not performed.");
+                File.Move(rutaEnCuarentena, rutaArchivo);
+                rutaEnCuarentena = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "No se pudo restaurar la evidencia {EvidenciaId} después de fallar el commit Oracle.", evidenciaId);
+                return false;
+            }
+        }
+
+        ResultadoEliminacionEvidencia resultado;
+        try
+        {
+            resultado = await _repo.EliminarEvidenciaSeguraAsync(
+                evidenciaId,
+                prepararEliminacionArchivo,
+                usuarioId,
+                ip);
+        }
+        catch (Exception ex)
+        {
+            await RestaurarArchivoAsync();
+            _logger.LogError(ex, "Falló la eliminación de evidencia {EvidenciaId}; se restauró el archivo cuando fue posible.", evidenciaId);
+            return new ServiceResult(false, "No se pudo eliminar la evidencia.", 500);
+        }
+
+        if (resultado == ResultadoEliminacionEvidencia.Exito && rutaEnCuarentena is not null)
+        {
+            try
+            {
+                File.Delete(rutaEnCuarentena);
+                rutaEnCuarentena = null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "La evidencia {EvidenciaId} se eliminó de Oracle, pero su archivo en cuarentena requiere limpieza.", evidenciaId);
+            }
+        }
+        else if (resultado != ResultadoEliminacionEvidencia.Exito)
+        {
+            await RestaurarArchivoAsync();
+        }
 
         switch (resultado)
         {
@@ -989,13 +1047,13 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
                     "RL_MR_EVIDENCIAS",
                     evidenciaId.ToString(),
                     "ERROR_COMPENSACION_EVIDENCIA",
-                    $"El archivo {evidencia.EviNombreArchivo} fue eliminado, pero falló el commit Oracle.",
+                    $"Falló el commit Oracle al eliminar {evidencia.EviNombreArchivo}; el archivo original fue restaurado cuando fue posible.",
                     null,
                     usuarioId,
                     null,
                     ip,
                     "MatricesRiesgos");
-                return new ServiceResult(false, "Falló la confirmación Oracle después de eliminar el archivo físico.", 500);
+                return new ServiceResult(false, "Falló la confirmación Oracle al eliminar la evidencia.", 500);
             default:
                 return ServiceResult.BadRequest("Resultado de eliminación desconocido.");
         }

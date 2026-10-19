@@ -1584,6 +1584,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
             catch
             {
+                await trans.RollbackAsync();
                 return ResultadoEliminacionEvidencia.FalloCommit;
             }
         }

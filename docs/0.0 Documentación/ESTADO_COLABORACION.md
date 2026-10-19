@@ -1,3 +1,21 @@
+# Estado vigente - Bloque 12: identidad 59 y compensación en progreso; CI nuevo pendiente (COD) - 2026-10-19 10:30 -06:00
+
+## Continuidad activa - Bloque 12
+
+- **Inicio real:** `desarrollo`, `START_HEAD=origin/desarrollo=67f09e4790ffe7e643b9a76767381656102d6692`; el checkpoint `1eed356e...` avanzó por la corrección Workflow/Seguimiento publicada antes de esta intervención. Al inicio se preservaron 7 archivos tracked ajenos y 23 grupos/rutas untracked ajenos; continúan fuera del staging.
+- **59 identidades:** se agregó `Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection`, opt-in para Oracle XE disposable. Compara el orden/código del workbook contra el ordinal map, siembra 59 identidades y 59 evaluaciones aprobadas controladas, lee cada identidad por el endpoint API real y compara riesgo/evaluación/código del Consolidado; limpia filas en `finally`. Se cableó un paso CI explícito. Está compilado, pero el test Oracle real queda pendiente de ejecución del nuevo CI; no se reporta aún 59/59 de DB/API/Consolidado.
+- **34 cálculos:** el test de oráculo independiente del workbook compara 2,006 resultados (59 riesgos x 34 campos) con FormulaEngine; ejecución local fresca PASS. Se añadió aserción dedicada `ROP-CUMP-54=34/34`, PASS local. Esto valida workbook/backend, pero no afirma persistencia/XE/UI/exports para los 2,006 resultados.
+- **Compensación DB/filesystem:** el borrado de evidencia ahora renombra el archivo a cuarentena en el mismo directorio antes del commit Oracle; en fallo del commit/excepción restaura el original. El repositorio intenta rollback si falla el commit. Se agregó failure-injection de commit fallido y se corrigió el test que usaba una ruta fuera del root de evidencias. Backend Release full fresco: 1017 PASS / 1 SKIP / 0 FAIL. La prueba de proceso interrumpido y resultado de commit de Oracle ambiguo todavía no tienen recuperación durable demostrada; `DB_FILESYSTEM_COMPENSATION` no se declara CLOSED.
+- **Fuentes/contratos:** workbook validator PASS 82 campos/labels/orden, 34 campos calculados, 48 no calculados y mapa ordinal histórico 59; catálogo PASS. No se hicieron consultas a XE local tras `ORA-01017`; no se adivinaron credenciales ni se tocó producción.
+- **Deuda:** `VER_ID_27_28_HISTORICAL_REVIEW` permanece sin cierre posterior verificable; el documento funcional describe que el histórico no se puede reconstruir determinísticamente y prohíbe mutarlo. No se inventa cierre. Riesgo Block 11 `CREDENTIAL_SCOPE=UNKNOWN` con aceptación expresa permanece separado como riesgo residual aceptado.
+- **Skips:** el único skip backend es la integración Oracle P0-F, ejecutada en un paso CI desechable dedicado. El skip del E2E general `block7-oracle-real` se cubre con `tools/run_block7_oracle_e2e.sh`, que habilita el browser/API Oracle real de Bloques 7/9 en CI. No se cuentan como skips Oracle requeridos pendientes.
+- **Producción:** autorización smoke/runbook/SHA desplegado/registro autorizado siguen no encontrados según artefactos de issue #22 y checkpoint; no hubo login/consulta, DML ni DDL.
+- **CI:** Quality Gates `39280987447` pasó para el SHA `67f09e4790ffe7e643b9a76767381656102d6692`, antes de los cambios de esta intervención. El CI del nuevo SHA que pruebe la integración Block 12 aún está pendiente.
+- **Oracle rollback real:** el test XE nuevo también invoca el repositorio con un registro de evidencia fixture y callback de filesystem fallido; exige rollback Oracle y fila preservada. Este assertion solo se reportará PASS si el paso explícito del nuevo CI completa y emite su marcador.
+- **Estado:** Bloque 12 sigue abierto. El nuevo test Oracle, reparación DB/filesystem y reconciliación documental de deuda requieren revisión final y CI; la reconciliación histórica VER_ID 27/28 y la certificación de deuda cero no están demostradas. Producción permanece sin autorización y no se tocó.
+
+---
+
 # Estado vigente - Regresión Workflow/Seguimiento corregida en UI; validar con API LOCAL_XE reiniciado y CI pendiente (COD) - 2026-10-19 09:48 -06:00
 
 ## Continuidad activa - Workflow / Seguimiento de evaluación

@@ -6,6 +6,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Xml.Linq;
 using System.Net.Http.Json;
+using Block5WorkbookFormulaOracle;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -38,6 +39,120 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     private readonly ITestOutputHelper _output;
 
     public InstitutionalProjectionOracleIntegrationTests(ITestOutputHelper output) => _output = output;
+
+    [Fact]
+    [Trait("Category", "Block12OracleIntegration")]
+    public async Task Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK12_ORACLE_CERTIFICATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            _output.WriteLine("BLOCK12_ORACLE_59_IDENTITY_EXECUTED=NO (Oracle disposable not configured)");
+            return;
+        }
+
+        string connectionString = OracleTestDatabaseProfile.RequireLocalXeConnection(
+            Environment.GetEnvironmentVariable("BLOCK12_ORACLE_CONNECTION_STRING"));
+        OracleConnection.ClearAllPools();
+        await using var seed = CreateConnection(connectionString);
+        await OpenWithRetryAsync(seed);
+        await EnsureFixtureTablesAsync(seed);
+        await EnsureBlock7FixtureObjectsAsync(seed);
+
+        WorkbookFormulaOracle workbook = WorkbookFormulaOracle.Load(FindOfficialWorkbook());
+        var canonical = Enumerable.Range(2, 59)
+            .Select(row => new { Ordinal = row - 1, Code = workbook.GetText(row, 2), Name = workbook.GetText(row, 3) })
+            .ToArray();
+        string ordinalMapPath = Path.Combine(FindRepositoryRoot(), "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "block6_risk_ordinal_map.json");
+        using JsonDocument ordinalMap = JsonDocument.Parse(await File.ReadAllTextAsync(ordinalMapPath));
+        var mappedCodes = ordinalMap.RootElement.GetProperty("entries").EnumerateArray()
+            .Select(entry => new { Ordinal = entry.GetProperty("riskNo").GetInt32(), Code = entry.GetProperty("riskCode").GetString()! })
+            .OrderBy(entry => entry.Ordinal).ToArray();
+        Assert.Equal(canonical.Select(risk => (risk.Ordinal, risk.Code)), mappedCodes.Select(entry => (entry.Ordinal, entry.Code)));
+        Assert.Equal(59, canonical.Select(risk => risk.Code).Distinct(StringComparer.Ordinal).Count());
+        Assert.All(canonical, risk => Assert.False(string.IsNullOrWhiteSpace(risk.Code)));
+        Assert.All(canonical, risk => Assert.False(string.IsNullOrWhiteSpace(risk.Name)));
+
+        long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 800_000_000 + 100_000_000;
+        long[] riskIds = Enumerable.Range(1, 59).Select(offset => stamp + offset).ToArray();
+        long[] evaluationIds = Enumerable.Range(101, 59).Select(offset => stamp + offset).ToArray();
+        long[] flowIds = Enumerable.Range(201, 59).Select(offset => stamp + offset).ToArray();
+        long evidenceId = stamp + 401;
+        const long userId = 987654;
+        DateTime approvedAt = new(2026, 8, 1);
+        try
+        {
+            for (int index = 0; index < canonical.Length; index++)
+            {
+                var risk = canonical[index];
+                await ExecuteAsync(seed,
+                    "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,:name,'Block 12 disposable canonical identity',1,:usr,SYSDATE)",
+                    ("id", riskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
+                await InsertConsolidatedFixtureAsync(seed, riskIds[index], evaluationIds[index], flowIds[index],
+                    "APROBADA", approvedAt.AddMinutes(index), risk.Code, userId);
+            }
+
+            await using var app = await CreateBlock7ApiAsync(connectionString);
+            string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+            using var http = new HttpClient { BaseAddress = new Uri(address) };
+            int matchedRiskApi = 0;
+            int matchedConsolidated = 0;
+            for (int index = 0; index < canonical.Length; index++)
+            {
+                var expected = canonical[index];
+                string search = Uri.EscapeDataString(expected.Code);
+                using HttpResponseMessage riskResponse = await http.GetAsync($"/api/matrices-riesgos/riesgos/paginado?pagina=1&tamanoPagina=10&buscar={search}");
+                Assert.Equal(System.Net.HttpStatusCode.OK, riskResponse.StatusCode);
+                using JsonDocument riskBody = JsonDocument.Parse(await riskResponse.Content.ReadAsStringAsync());
+                JsonElement riskItems = riskBody.RootElement.GetProperty("datos").GetProperty("items");
+                JsonElement apiRisk = Assert.Single(riskItems.EnumerateArray());
+                Assert.Equal(riskIds[index], apiRisk.GetProperty("rieId").GetInt64());
+                Assert.Equal(expected.Code, apiRisk.GetProperty("rieCodigo").GetString());
+                Assert.Equal(expected.Name, apiRisk.GetProperty("rieNombre").GetString());
+                matchedRiskApi++;
+
+                using HttpResponseMessage consolidatedResponse = await http.GetAsync(
+                    $"/api/matrices-riesgos/consolidado/paginado?pagina=1&tamanoPagina=10&buscar={search}");
+                Assert.Equal(System.Net.HttpStatusCode.OK, consolidatedResponse.StatusCode);
+                using JsonDocument consolidatedBody = JsonDocument.Parse(await consolidatedResponse.Content.ReadAsStringAsync());
+                JsonElement consolidatedItems = consolidatedBody.RootElement.GetProperty("datos").GetProperty("items");
+                JsonElement consolidatedRisk = Assert.Single(consolidatedItems.EnumerateArray());
+                Assert.Equal(riskIds[index], consolidatedRisk.GetProperty("riesgoId").GetInt64());
+                Assert.Equal(evaluationIds[index], consolidatedRisk.GetProperty("evaluacionId").GetInt64());
+                Assert.Equal(expected.Code, consolidatedRisk.GetProperty("codigoRiesgo").GetString());
+                Assert.Equal("APROBADA", consolidatedRisk.GetProperty("estadoEvaluacion").GetString());
+                matchedConsolidated++;
+            }
+
+            Assert.Equal(59, matchedRiskApi);
+            Assert.Equal(59, matchedConsolidated);
+            _output.WriteLine("BLOCK12_ORACLE_59_IDENTITY_DB_API_CONSOLIDATED=59/59");
+
+            await ExecuteAsync(seed,
+                "INSERT INTO RL_MR_EVIDENCIAS (EVI_ID,EVI_NOMBRE_ARCHIVO,EVI_EXTENSION,EVI_TAMANO,EVI_HASH,EVI_RUTA,EVI_USR_CREACION) VALUES (:id,'Block12 fixture.pdf','pdf',1,'BLOCK12-FIXTURE','App_Data/Evidencias/block12-fixture.pdf',:usr)",
+                ("id", evidenceId), ("usr", userId));
+            IAuditoriaRepository audit = InterfaceStub.Create<IAuditoriaRepository>(out _);
+            var evidenceRepository = new MatricesRiesgosRepository(new OracleDbContext(WithoutPooling(connectionString)), audit);
+            ResultadoEliminacionEvidencia deleteResult = await evidenceRepository.EliminarEvidenciaSeguraAsync(
+                evidenceId, () => Task.FromResult(false), userId, null);
+            Assert.Equal(ResultadoEliminacionEvidencia.FalloDisco, deleteResult);
+            Assert.Equal(1, await ScalarLongAsync(seed, "SELECT COUNT(*) FROM RL_MR_EVIDENCIAS WHERE EVI_ID=:id", ("id", evidenceId)));
+            await ExecuteAsync(seed, "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID=:id", ("id", evidenceId));
+            _output.WriteLine("BLOCK12_ORACLE_FILESYSTEM_FAILURE_ROLLBACK=PASS");
+        }
+        finally
+        {
+            await ExecuteAsync(seed, "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID=:id", ("id", evidenceId));
+            foreach (long evaluationId in evaluationIds)
+            {
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+            }
+            foreach (long riskId in riskIds)
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+            _output.WriteLine("BLOCK12_ORACLE_59_IDENTITY_CLEANUP=PASS");
+        }
+    }
 
     [Fact]
     [Trait("Category", "Block10OracleIntegration")]
@@ -486,6 +601,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         builder.Services.AddSingleton(new OracleDbContext(WithoutPooling(connectionString)));
         builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
         builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
+        builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGestionRepository>();
+        builder.Services.AddScoped<IMatricesRiesgosGestionService, MatricesRiesgosGestionService>();
         builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
         builder.Services.AddScoped<InstitutionalProjectionMapper>();
         builder.Services.AddScoped<IInstitutionalProjectionReadRepository, InstitutionalProjectionReadRepository>();
@@ -727,6 +844,18 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Pooling = false
         };
         return builder.ConnectionString;
+    }
+
+    private static string FindOfficialWorkbook()
+    {
+        return Path.Combine(FindRepositoryRoot(), "Matrices de Riesgos.xlsx");
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        for (DirectoryInfo? directory = new(Directory.GetCurrentDirectory()); directory is not null; directory = directory.Parent)
+            if (File.Exists(Path.Combine(directory.FullName, "AGENTS.md"))) return directory.FullName;
+        throw new DirectoryNotFoundException("Repository root was not found for the Oracle integration test.");
     }
 
     private static async Task EnsureFixtureTablesAsync(OracleConnection connection)

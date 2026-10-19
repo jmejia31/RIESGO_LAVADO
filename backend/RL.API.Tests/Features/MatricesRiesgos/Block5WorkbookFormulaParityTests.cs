@@ -86,6 +86,8 @@ public sealed class Block5WorkbookFormulaParityTests
         FormulaEngine engine = new();
         FormulaRuntimeOptions options = BuildOptions();
         int positionsCompared = 0;
+        int ropCump54Positions = 0;
+        int ropCump54Mismatches = 0;
         var differences = new List<string>();
         var errors = new List<string>();
         var parityRows = new List<string> { "RISK_CODE,RISK_NO,FIELD_NUMBER,FIELD_LABEL,SOURCE_CELL,REFERENCE_KIND,RAW_FORMULA,REFERENCE_EXPECTED,BACKEND_ACTUAL,MATCH,DIFFERENCE,ROOT_CAUSE" };
@@ -123,6 +125,11 @@ public sealed class Block5WorkbookFormulaParityTests
                 backend.Values.TryGetValue(target, out object? actual);
                 bool matches = Equivalent(expected, actual);
                 if (!matches) differences.Add($"{riskCode}|F{field}|expected={Format(expected)}|actual={Format(actual)}");
+                if (riskCode == "ROP-CUMP-54")
+                {
+                    ropCump54Positions++;
+                    if (!matches) ropCump54Mismatches++;
+                }
                 if (riskCode == "ROP-CUMP-59" && GoldenValues.TryGetValue(field, out object? golden) && !Equivalent(golden, actual))
                     differences.Add($"ROP-CUMP-59_GOLDEN|F{field}|expected={Format(golden)}|actual={Format(actual)}");
                 referenceByKey.TryGetValue((riskCode, field), out WorkbookFormulaResult? paritySource);
@@ -135,6 +142,8 @@ public sealed class Block5WorkbookFormulaParityTests
 
         Assert.Empty(errors);
         Assert.Equal(2006, positionsCompared);
+        Assert.Equal(34, ropCump54Positions);
+        Assert.Equal(0, ropCump54Mismatches);
         string? artifactDirectory = Environment.GetEnvironmentVariable("BLOCK5_ARTIFACT_DIR");
         if (!string.IsNullOrWhiteSpace(artifactDirectory))
         {

@@ -218,6 +218,20 @@ jobs:
           echo 'BLOCK10_ORACLE_TESTS_EXECUTED=1'
           echo 'BLOCK10_LATEST_APPROVED_ORACLE_INTEGRATION=PASS'
 
+      - name: Reconcile all 59 canonical risk identities through Oracle XE API and consolidated projection
+        env:
+          RL_BLOCK12_ORACLE_CERTIFICATION_REQUIRED: 'true'
+          BLOCK12_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          Database__Profile: LOCAL_XE
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Passed: *1' <<<"$output"
+          grep -F 'BLOCK12_ORACLE_59_IDENTITY_DB_API_CONSOLIDATED=59/59' <<<"$output"
+          grep -F 'BLOCK12_ORACLE_59_IDENTITY_CLEANUP=PASS' <<<"$output"
+          grep -F 'BLOCK12_ORACLE_FILESYSTEM_FAILURE_ROLLBACK=PASS' <<<"$output"
+
       - name: Validate compose configuration without secrets in repository
         shell: bash
         env:

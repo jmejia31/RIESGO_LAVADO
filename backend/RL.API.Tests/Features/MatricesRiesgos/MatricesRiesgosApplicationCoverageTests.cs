@@ -710,6 +710,44 @@ public sealed class MatricesRiesgosApplicationCoverageTests
     }
 
     [Fact]
+    public async Task EliminarEvidencia_FalloCommitOracle_RestauraArchivoOriginal()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        string directory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias");
+        Directory.CreateDirectory(directory);
+        string fileName = $"block12-{Guid.NewGuid():N}.pdf";
+        string relativePath = Path.Combine("App_Data", "Evidencias", fileName);
+        string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativePath);
+        await File.WriteAllTextAsync(fullPath, "controlled evidence fixture");
+
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ =>
+            Task.FromResult<EvidenciaDto?>(new EvidenciaDto { EviId = 412, EviNombreArchivo = fileName, EviRuta = relativePath }));
+        repo.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), arguments => CommitAfterQuarantineAsync(arguments));
+
+        async Task<ResultadoEliminacionEvidencia> CommitAfterQuarantineAsync(object?[] arguments)
+        {
+            var quarantine = (Func<Task<bool>>)arguments[1]!;
+            bool staged = await quarantine();
+            return staged ? ResultadoEliminacionEvidencia.FalloCommit : ResultadoEliminacionEvidencia.FalloDisco;
+        }
+
+        try
+        {
+            ServiceResult result = await service.EliminarEvidenciaAsync(412, 9, null);
+
+            Assert.Equal(500, result.StatusCode);
+            Assert.True(File.Exists(fullPath));
+            Assert.Equal("controlled evidence fixture", await File.ReadAllTextAsync(fullPath));
+            Assert.Empty(Directory.GetFiles(directory, fileName + ".pending-delete-*"));
+        }
+        finally
+        {
+            if (File.Exists(fullPath)) File.Delete(fullPath);
+            foreach (string quarantined in Directory.GetFiles(directory, fileName + ".pending-delete-*")) File.Delete(quarantined);
+        }
+    }
+
+    [Fact]
     public async Task MetodologiaInexistente_Retorna404()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
