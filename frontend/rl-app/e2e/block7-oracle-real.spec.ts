@@ -24,6 +24,14 @@ const critical = [
   /^DELETE \/api\/matrices-riesgos\/evidencias\/(vinculos|\d+)$/,
 ];
 
+async function fillAndWaitForIncompleteCalculation(page: Page, action: () => Promise<void>): Promise<void> {
+  const responsePromise = page.waitForResponse(response =>
+    response.request().method() === 'POST'
+    && new URL(response.url()).pathname === '/api/matrices-riesgos/evaluaciones/calculo-preview');
+  await action();
+  expect((await responsePromise).status()).toBe(400);
+}
+
 function unsignedTestToken(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({ nameid: '987654', uid: 'block7-e2e', modulos: '10', exp: Math.floor(Date.now() / 1000) + 3600 })}.`;
@@ -91,7 +99,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     status: 400,
     method: 'POST',
     path: '/api/matrices-riesgos/evaluaciones/calculo-preview',
-    count: 7,
+    count: 8,
     reason: 'The lifecycle fixture intentionally omits calculation inputs.',
   });
   expectHttpResponse({
@@ -125,7 +133,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const riskOption = page.locator('#modal-selector-riesgo option').filter({ hasText: fixture.riskCode }).last();
   await expect(riskOption).toHaveCount(1);
   await page.locator('#modal-selector-riesgo').selectOption({ label: (await riskOption.textContent())!.trim() });
-  await page.getByLabel('Área principal').fill('Área Oracle Browser');
+  await fillAndWaitForIncompleteCalculation(page, () => page.getByLabel('Área principal').fill('Área Oracle Browser'));
 
   const createResponsePromise = page.waitForResponse(response =>
     response.request().method() === 'POST'
@@ -400,7 +408,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await page.getByTitle('Editar evaluación').click();
   await expect(page.getByLabel('Área principal')).toHaveValue('Área Oracle Browser');
 
-  await page.getByLabel('Área principal').fill('Área Oracle editada');
+  await fillAndWaitForIncompleteCalculation(page, () => page.getByLabel('Área principal').fill('Área Oracle editada'));
   const updateResponsePromise = page.waitForResponse(response =>
     response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
@@ -536,13 +544,13 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(pageB.locator('dialog[aria-labelledby="titulo-modal-editar"]')).toBeVisible();
   await expect(pageB.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
 
-  await concurrencyA.getByLabel('Área principal').fill('Editor A');
+  await fillAndWaitForIncompleteCalculation(concurrencyA, () => concurrencyA.getByLabel('Área principal').fill('Editor A'));
   const saveA = concurrencyA.waitForResponse(response => response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
   await concurrencyA.getByRole('button', { name: 'Guardar borrador' }).click();
   expect((await saveA).status()).toBe(200);
 
-  await pageB.getByLabel('Área principal').fill('Editor B stale');
+  await fillAndWaitForIncompleteCalculation(pageB, () => pageB.getByLabel('Área principal').fill('Editor B stale'));
   const saveB = pageB.waitForResponse(response => response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
   await pageB.getByRole('button', { name: 'Guardar borrador' }).click();
