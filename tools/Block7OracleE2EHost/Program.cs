@@ -158,6 +158,16 @@ app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
             await ExecuteAsync(fullChainSeed,
                 "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,'APROBADA','Block 12 disposable full-chain fixture',:usr,:eventDate)",
                 ("id", flowId), ("eva", evaluationId), ("usr", userId), ("eventDate", evaluatedAt));
+            (string Type, int DescriptionColumn)[] controlSources = [("PREVENTIVO", 20), ("DETECTIVO", 24), ("CORRECTIVO", 28)];
+            for (int controlIndex = 0; controlIndex < controlSources.Length; controlIndex++)
+            {
+                (string controlType, int descriptionColumn) = controlSources[controlIndex];
+                string description = workbook.GetText(risk.Ordinal + 1, descriptionColumn).Trim();
+                if (description.Length == 0 || new[] { "NO HAY", "INEXISTENTE", "0", "0%" }.Contains(description, StringComparer.OrdinalIgnoreCase)) continue;
+                await ExecuteAsync(fullChainSeed,
+                    "INSERT INTO RL_MR_CONTROLES_RIESGO (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION) VALUES (:id,:evaluation,:type,:description)",
+                    ("id", evaluationId + 200_000_000 + controlIndex), ("evaluation", evaluationId), ("type", controlType), ("description", description));
+            }
             fullChainUiFixtures.Add(new
             {
                 ordinal = risk.Ordinal,
