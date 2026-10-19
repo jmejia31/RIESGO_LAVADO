@@ -37,7 +37,12 @@ function unsignedTestToken(): string {
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({ nameid: '987654', uid: 'block7-e2e', modulos: '10', exp: Math.floor(Date.now() / 1000) + 3600 })}.`;
 }
 
-async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluation: { id?: number; data?: Record<string, unknown>; state?: string }) {
+async function installNonCriticalFixtures(
+  page: Page,
+  fixture: Fixture,
+  evaluation: { id?: number; data?: Record<string, unknown>; state?: string },
+  options: { useRealRiskList?: boolean } = {},
+) {
   const token = unsignedTestToken();
   await page.addInitScript(accessToken => {
     localStorage.setItem('access_token', accessToken);
@@ -56,6 +61,10 @@ async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluati
     const path = new URL(request.url()).pathname;
     const method = request.method();
     const key = `${method} ${path}`;
+    if (options.useRealRiskList && method === 'GET' && path.endsWith('/riesgos/paginado')) {
+      await route.continue();
+      return;
+    }
     if (critical.some(pattern => pattern.test(key))) {
       await route.continue();
       return;
@@ -687,4 +696,79 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   console.log('BLOCK9_AUDIT_TRAIL=PASS');
   console.log('BLOCK9_PROJECTION_70_82=PASS');
   console.log('BLOCK9_RESPONSIVE_1280_390=PASS');
+});
+
+test('Block 12 UI renders all 59 workbook risk identities from Oracle XE API', async ({ page, request }) => {
+  const required = process.env['RL_BLOCK12_RISKS_UI_ORACLE_REQUIRED'] === 'true';
+  test.skip(!required, 'The 59-risk UI parity test requires the disposable Oracle XE browser host.');
+
+  const canonicalResponse = await request.get('http://127.0.0.1:5043/__e2e/risk-identities');
+  expect(canonicalResponse.ok()).toBeTruthy();
+  const canonical = await canonicalResponse.json() as Array<{
+    ordinal: number;
+    riskId: number;
+    riskCode: string;
+    riskName: string;
+  }>;
+  expect(canonical).toHaveLength(59);
+  expect(canonical.map(risk => risk.ordinal)).toEqual(Array.from({ length: 59 }, (_, index) => index + 1));
+  expect(new Set(canonical.map(risk => risk.riskCode)).size).toBe(59);
+
+  const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/fixture');
+  expect(fixtureResponse.ok()).toBeTruthy();
+  const fixture = await fixtureResponse.json() as Fixture;
+  const riskResponsePromise = page.waitForResponse(response =>
+    response.request().method() === 'GET'
+    && new URL(response.url()).pathname === '/api/matrices-riesgos/riesgos/paginado');
+
+  await installNonCriticalFixtures(page, fixture, {}, { useRealRiskList: true });
+  await page.goto('/matrices-riesgos');
+  await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+
+  const riskResponse = await riskResponsePromise;
+  expect(riskResponse.status()).toBe(200);
+  const riskBody = await riskResponse.json() as {
+    datos: {
+      items: Array<{ rieId: number; rieCodigo: string; rieNombre: string }>;
+      totalRegistros: number;
+    };
+  };
+  expect(riskBody.datos.totalRegistros).toBe(59);
+  expect(riskBody.datos.items).toHaveLength(59);
+
+  const apiIdentities = riskBody.datos.items.map(risk => ({
+    riskId: risk.rieId,
+    riskCode: risk.rieCodigo,
+    riskName: risk.rieNombre,
+  }));
+  const expectedIdentities = canonical.map(risk => ({
+    riskId: risk.riskId,
+    riskCode: risk.riskCode,
+    riskName: risk.riskName,
+  }));
+  const byCode = (left: { riskCode: string }, right: { riskCode: string }) => left.riskCode.localeCompare(right.riskCode);
+  expect([...apiIdentities].sort(byCode)).toEqual([...expectedIdentities].sort(byCode));
+
+  await page.getByRole('button', { name: 'Nueva evaluación' }).click();
+  const riskCombobox = page.getByRole('combobox', { name: 'Riesgo Institucional a Evaluar' });
+  await riskCombobox.click();
+  const riskListbox = page.getByRole('listbox', { name: 'Riesgo Institucional a Evaluar' });
+  const rendered = await riskListbox.getByRole('option').evaluateAll(options => options
+    .filter(option => !option.id.endsWith('-option-placeholder'))
+    .map(option => ({
+      riskId: Number(option.id.match(/-option-(\d+)$/)?.[1]),
+      label: option.textContent?.trim() ?? '',
+    })));
+  expect(rendered).toHaveLength(59);
+  const renderedIdentities = rendered.map(option => {
+    const expected = expectedIdentities.find(risk => risk.riskId === option.riskId);
+    return { riskId: option.riskId, riskCode: expected?.riskCode ?? '', riskName: option.label };
+  });
+  expect([...renderedIdentities].sort(byCode)).toEqual([...expectedIdentities.map(risk => ({
+    riskId: risk.riskId,
+    riskCode: risk.riskCode,
+    riskName: `${risk.riskCode} — ${risk.riskName}`,
+  }))].sort(byCode));
+  console.log('BLOCK12_ORACLE_XE_API_RISK_IDENTITIES=59/59');
+  console.log('BLOCK12_ORACLE_XE_UI_RISK_IDENTITIES=59/59');
 });

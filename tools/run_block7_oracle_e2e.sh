@@ -40,6 +40,7 @@ fi
 export ASPNETCORE_ENVIRONMENT=E2E
 export RL_BLOCK7_REAL_E2E_REQUIRED=true
 export RL_BLOCK9_REAL_E2E_REQUIRED=true
+export RL_BLOCK12_RISKS_UI_ORACLE_REQUIRED=true
 dotnet "$api_dll" >"$api_log" 2>&1 &
 api_pid=$!
 cleanup() {
@@ -79,8 +80,8 @@ if ! browser_output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts 2>&1 | tee 
 fi
 popd >/dev/null
 
-if ! grep -Eq '1 passed' <<<"$browser_output"; then
-  echo "Block 7 real browser suite did not execute exactly one passing test." >&2
+if ! grep -Eq '2 passed' <<<"$browser_output"; then
+  echo "Block 7/12 real browser suite did not execute exactly two passing tests." >&2
   exit 1
 fi
 echo 'BLOCK7_REAL_BROWSER_TESTS_EXECUTED=1'
@@ -88,6 +89,7 @@ echo 'BLOCK7_CRITICAL_MATRIX_API_ROUTES_MOCKED=0'
 echo 'BLOCK7_BROWSER_API_ORACLE_E2E=PASS'
 echo 'BLOCK9_ORACLE_TESTS_EXECUTED=1'
 echo 'BLOCK9_MITIGATION_ORACLE_INTEGRATION=PASS'
+echo 'BLOCK12_ORACLE_XE_UI_RISK_IDENTITIES=59/59'
 echo 'BLOCK9_MONITORING_ORACLE_INTEGRATION=PASS'
 echo 'BLOCK9_RBAC_ORACLE_INTEGRATION=PASS'
 echo 'BLOCK9_EVIDENCE_ORACLE_INTEGRATION=PASS'

@@ -6,5 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../backend/RL.API/RL.API.csproj" />
+    <ProjectReference Include="../Block5WorkbookFormulaOracle/Block5WorkbookFormulaOracle.csproj" />
   </ItemGroup>
 </Project>

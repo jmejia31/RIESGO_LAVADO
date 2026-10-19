@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Block5WorkbookFormulaOracle;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Options;
@@ -31,18 +32,32 @@ string connectionString = DatabaseEnvironmentGuard.ValidateAndResolveDevelopment
 
 await using var oracle = await OpenOracleWithRetryAsync(connectionString);
 await EnsureFixtureAsync(oracle);
+WorkbookFormulaOracle workbook = WorkbookFormulaOracle.Load(FindOfficialWorkbook());
+var canonicalRisks = Enumerable.Range(2, 59)
+    .Select(row => new { Ordinal = row - 1, Code = workbook.GetText(row, 2), Name = workbook.GetText(row, 3) })
+    .ToArray();
+if (canonicalRisks.Length != 59
+    || canonicalRisks.Any(risk => string.IsNullOrWhiteSpace(risk.Code) || string.IsNullOrWhiteSpace(risk.Name))
+    || canonicalRisks.Select(risk => risk.Code).Distinct(StringComparer.Ordinal).Count() != 59)
+    throw new InvalidOperationException("The official workbook must provide 59 unique, named risk identities for the Block 12 browser fixture.");
 long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 800_000_000;
 long riskId = stamp + 700_000_000;
+long[] canonicalRiskIds = Enumerable.Range(0, canonicalRisks.Length).Select(index => riskId + index).ToArray();
 long versionId = stamp + 700_000_001;
 long userId = 987654;
 long areaOnlyUserId = stamp + 10;
 long ugrOnlyUserId = stamp + 11;
 long bothUserId = stamp + 12;
 long neitherUserId = stamp + 13;
-string riskCode = $"B7-E2E-{stamp}";
+string riskCode = canonicalRisks[0].Code;
 string ruleCode = $"B7-E2E-RULE-{stamp}";
 string definition = CreateDefinition(ruleCode);
-await ExecuteAsync(oracle, "INSERT INTO RL_MR_RIESGOS (RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION) VALUES (:id,:code,'Block 7 E2E risk','Disposable browser integration risk',1,:usr,SYSDATE)", ("id", riskId), ("code", riskCode), ("usr", userId));
+for (int index = 0; index < canonicalRisks.Length; index++)
+{
+    var risk = canonicalRisks[index];
+    await ExecuteAsync(oracle, "INSERT INTO RL_MR_RIESGOS (RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION) VALUES (:id,:code,:name,'Block 12 disposable canonical identity',1,:usr,SYSDATE)",
+        ("id", canonicalRiskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
+}
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_E2E',1,:json,RPAD('B',64,'B'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable browser rule','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
 foreach (long id in new[] { userId, areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId })
@@ -96,6 +111,13 @@ app.MapGet("/__e2e/readyz", async (OracleDbContext db, CancellationToken cancell
     return Results.Ok(new { status = "ready" });
 });
 app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId, definition = JsonDocument.Parse(definition).RootElement.Clone() }));
+app.MapGet("/__e2e/risk-identities", () => Results.Ok(canonicalRisks.Select((risk, index) => new
+{
+    ordinal = risk.Ordinal,
+    riskId = canonicalRiskIds[index],
+    riskCode = risk.Code,
+    riskName = risk.Name
+})));
 app.MapGet("/__e2e/audit", async (OracleDbContext db, CancellationToken cancellationToken) =>
 {
     await using var connection = db.CreateConnection();
@@ -115,7 +137,51 @@ app.MapGet("/__e2e/audit", async (OracleDbContext db, CancellationToken cancella
     while (await reader.ReadAsync(cancellationToken)) entries.Add(new { table = reader.GetString(0), action = reader.GetString(1), count = Convert.ToInt32(reader.GetValue(2)) });
     return Results.Ok(entries);
 });
-await app.RunAsync();
+try
+{
+    await app.RunAsync();
+}
+finally
+{
+    await using var cleanup = await OpenOracleWithRetryAsync(connectionString);
+    await ExecuteAsync(cleanup, @"DELETE FROM RL_MR_EVIDENCIAS_VINCULOS
+        WHERE (EVV_ENTIDAD_ID IN (
+            SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO
+             WHERE CON_EVALUACION_ID IN (
+                SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))
+          AND EVV_TIPO_ENTIDAD='control')
+           OR EVV_EVIDENCIA_ID IN (
+            SELECT EVI_ID FROM RL_MR_EVIDENCIAS
+             WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE 'block9-%')",
+        ("riskId", riskId), ("userId", userId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE 'block9-%'", ("userId", userId));
+    await ExecuteAsync(cleanup, @"DELETE FROM RL_MR_ACTIVIDADES
+        WHERE ACT_PLAN_ID IN (
+            SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (
+                SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))", ("riskId", riskId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_SENALES_ALERTA WHERE ALE_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_AUTOMONITOREO WHERE MON_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId", ("riskId", riskId));
+    foreach (long id in canonicalRiskIds)
+        await ExecuteAsync(cleanup, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", id));
+}
+
+static string FindOfficialWorkbook()
+{
+    DirectoryInfo? directory = new DirectoryInfo(Directory.GetCurrentDirectory());
+    while (directory is not null)
+    {
+        string candidate = Path.Combine(directory.FullName, "Matrices de Riesgos.xlsx");
+        if (File.Exists(candidate)) return candidate;
+        directory = directory.Parent;
+    }
+
+    throw new FileNotFoundException("The official risk workbook was not found from the repository working directory.");
+}
 
 static async Task<OracleConnection> OpenOracleWithRetryAsync(string connectionString)
 {
