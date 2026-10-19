@@ -82,6 +82,8 @@ builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosContr
 builder.Services.AddSingleton(new OracleDbContext(connectionString));
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
+builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGestionRepository>();
+builder.Services.AddScoped<IMatricesRiesgosGestionService, MatricesRiesgosGestionService>();
 builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
 builder.Services.AddScoped<IMatricesRiesgosMitigacionService, MatricesRiesgosMitigacionService>();
 builder.Services.AddScoped<IMatricesRiesgosMonitoreoRepository, MatricesRiesgosMonitoreoRepository>();
