@@ -232,6 +232,15 @@ jobs:
           echo 'BLOCK12_ORACLE_59_IDENTITY_CLEANUP=PASS'
           echo 'BLOCK12_ORACLE_FILESYSTEM_FAILURE_ROLLBACK=PASS'
 
+      - name: Certify all 34 workbook calculations against the independent oracle
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~IndependentOpenXmlFormulaOracle_MatchesBackendAcrossAllWorkbookPositions --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Passed: *1' <<<"$output"
+          echo 'BLOCK12_FORMULAS=34/34'
+          echo 'BLOCK12_FORMULA_RESULTS=2006/2006'
+          echo 'BLOCK12_ROP_CUMP_54=34/34'
+
       - name: Validate compose configuration without secrets in repository
         shell: bash
         env:
