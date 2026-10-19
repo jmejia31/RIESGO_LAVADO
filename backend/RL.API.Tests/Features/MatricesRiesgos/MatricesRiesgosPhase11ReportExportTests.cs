@@ -1,9 +1,9 @@
-using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using Xunit;
 
 namespace RL.API.Tests.Features.MatricesRiesgos;
@@ -13,205 +13,112 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
     private readonly MatricesRiesgosReportExportService _service = new();
 
     [Fact]
-    public void ExcelConsolidado_GeneraXlsxOpenXmlValidoConTodosLosRegistros()
+    public void ExcelConsolidado_GeneraXlsxValidoCon82ColumnasPorCadaRiesgo()
     {
-        ArchivoReporteDto archivo = _service.CrearExcelConsolidado(CrearFilas(35));
+        IReadOnlyList<RiesgoReporteFilaDto> rows = CreateRows(35);
+        Dictionary<long, InstitutionalEvaluationProjectionDto> projections = CreateProjections(rows);
+        ArchivoReporteDto file = _service.CrearExcelMatrizCompleta(rows, projections, "Estado=APROBADA");
 
-        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", archivo.ContentType);
-        Assert.EndsWith(".xlsx", archivo.NombreArchivo, StringComparison.OrdinalIgnoreCase);
-        Assert.True(archivo.Contenido.Length > 1000);
-        Assert.Equal((byte)'P', archivo.Contenido[0]);
-        Assert.Equal((byte)'K', archivo.Contenido[1]);
-
-        using var stream = new MemoryStream(archivo.Contenido);
+        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", file.ContentType);
+        Assert.EndsWith(".xlsx", file.NombreArchivo, StringComparison.OrdinalIgnoreCase);
+        using var stream = new MemoryStream(file.Contenido);
         using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
         Assert.NotNull(zip.GetEntry("[Content_Types].xml"));
-        Assert.NotNull(zip.GetEntry("xl/workbook.xml"));
-        ZipArchiveEntry? hoja = zip.GetEntry("xl/worksheets/sheet1.xml");
-        Assert.NotNull(hoja);
-        using var reader = new StreamReader(hoja!.Open(), Encoding.UTF8);
-        string xml = reader.ReadToEnd();
-        Assert.Contains("R-035", xml, StringComparison.Ordinal);
-        string workbook = LeerEntrada(zip, "xl/workbook.xml");
-        string styles = LeerEntrada(zip, "xl/styles.xml");
-        string sheet = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
-        Assert.Contains("Matriz Consolidada", workbook, StringComparison.Ordinal);
-        Assert.Contains("INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL", sheet, StringComparison.Ordinal);
-        Assert.Contains("orientation=\"landscape\"", sheet, StringComparison.Ordinal);
-        Assert.Contains("fitToWidth=\"1\"", sheet, StringComparison.Ordinal);
-        Assert.Contains("&amp;LSGRLA-IHSS", sheet, StringComparison.Ordinal);
-        Assert.Contains("numFmtId=\"165\"", styles, StringComparison.Ordinal);
-        Assert.Contains("Riesgo Alto", sheet, StringComparison.Ordinal);
-        Assert.Contains("Riesgo bajo", sheet, StringComparison.Ordinal);
-        Assert.Contains("Mitigar", sheet, StringComparison.Ordinal);
+        XDocument sheet = XDocument.Load(zip.GetEntry("xl/worksheets/sheet1.xml")!.Open());
+        XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        XElement[] rowsInSheet = sheet.Descendants(ns + "row").ToArray();
+        string[] expectedHeaders = new InstitutionalProjectionMapper().GetFieldCatalog().Select(field => field.FieldLabel).ToArray();
+        string[] headers = rowsInSheet.Single(row => (string?)row.Attribute("r") == "4")
+            .Elements(ns + "c").Select(cell => (string?)cell.Element(ns + "is")?.Element(ns + "t") ?? string.Empty).ToArray();
+
+        Assert.Equal(82, headers.Length);
+        Assert.Equal(expectedHeaders, headers);
+        Assert.Equal(35, rowsInSheet.Count(row => int.TryParse((string?)row.Attribute("r"), out int number) && number >= 5));
+        Assert.All(rowsInSheet.Where(row => int.TryParse((string?)row.Attribute("r"), out int number) && number >= 5),
+            row => Assert.Equal(82, row.Elements(ns + "c").Count()));
+        Assert.Contains("Estado=APROBADA", sheet.ToString(SaveOptions.DisableFormatting), StringComparison.Ordinal);
+        Assert.Contains("R-035", sheet.ToString(SaveOptions.DisableFormatting), StringComparison.Ordinal);
     }
 
     [Fact]
-    public void PdfConsolidado_GeneraPdfPaginadoYCompleto()
+    public void PdfConsolidado_GeneraPdfCompletoConCamposCanonicosEnOrden()
     {
-        ArchivoReporteDto archivo = _service.CrearPdfConsolidado(CrearFilas(60));
+        IReadOnlyList<RiesgoReporteFilaDto> rows = CreateRows(3);
+        Dictionary<long, InstitutionalEvaluationProjectionDto> projections = CreateProjections(rows);
+        ArchivoReporteDto file = _service.CrearPdfMatrizCompleta(rows, projections, "Estado=APROBADA");
 
-        Assert.Equal("application/pdf", archivo.ContentType);
-        Assert.EndsWith(".pdf", archivo.NombreArchivo, StringComparison.OrdinalIgnoreCase);
-        string texto = Encoding.Latin1.GetString(archivo.Contenido);
-        Assert.StartsWith("%PDF-1.4", texto, StringComparison.Ordinal);
-        Assert.Contains("/Count ", texto, StringComparison.Ordinal);
-        Assert.Contains("/MediaBox [0 0 841.89 595.28]", texto, StringComparison.Ordinal);
-        Assert.Contains("INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL", texto, StringComparison.Ordinal);
-        Assert.Contains("SGRLA-IHSS", texto, StringComparison.Ordinal);
-        Assert.Contains("Página 1 de", texto, StringComparison.Ordinal);
-        Assert.Contains("Riesgo Alto", texto, StringComparison.Ordinal);
-        Assert.Contains("Riesgo bajo", texto, StringComparison.Ordinal);
-        Assert.Contains("Mitigar", texto, StringComparison.Ordinal);
-        Assert.Contains("R-060", texto, StringComparison.Ordinal);
-        Assert.EndsWith("%%EOF", texto, StringComparison.Ordinal);
-    }
+        Assert.Equal("application/pdf", file.ContentType);
+        string content = Encoding.Latin1.GetString(file.Contenido);
+        Assert.StartsWith("%PDF-1.4", content, StringComparison.Ordinal);
+        Assert.Contains("/Count ", content, StringComparison.Ordinal);
+        Assert.Contains("R-003", content, StringComparison.Ordinal);
+        Assert.Contains("Estado=APROBADA", content, StringComparison.Ordinal);
+        Assert.EndsWith("%%EOF", content, StringComparison.Ordinal);
 
-    [Fact]
-    public void ReportesVacios_SiguenGenerandoArchivosValidos()
-    {
-        ArchivoReporteDto excel = _service.CrearExcelConsolidado(Array.Empty<RiesgoReporteFilaDto>());
-        ArchivoReporteDto pdf = _service.CrearPdfConsolidado(Array.Empty<RiesgoReporteFilaDto>());
-        Assert.True(excel.Contenido.Length > 0);
-        string pdfTexto = Encoding.Latin1.GetString(pdf.Contenido);
-        Assert.Contains("(Sin)", pdfTexto, StringComparison.Ordinal);
-        Assert.Contains("(informaci)", pdfTexto, StringComparison.Ordinal);
-        Assert.Contains("(ón)", pdfTexto, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void ExportacionesConEvaluacionSinProyeccion_PreservanValoresNulosSinInventarCeros()
-    {
-        var fila = new RiesgoReporteFilaDto
+        string[] labels = new InstitutionalProjectionMapper().GetFieldCatalog().Select(field => field.FieldLabel).ToArray();
+        int previous = -1;
+        foreach (string label in labels)
         {
-            RiesgoId = 15,
-            EvaluacionId = 87,
-            VersionFormularioId = 3,
-            CodigoRiesgo = "R-015",
-            EstadoEvaluacion = "BORRADOR"
-        };
-
-        ArchivoReporteDto excel = _service.CrearExcelConsolidado([fila]);
-        ArchivoReporteDto pdf = _service.CrearPdfConsolidado([fila]);
-        using var stream = new MemoryStream(excel.Contenido);
-        using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
-        string sheet = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
-        string pdfText = Encoding.Latin1.GetString(pdf.Contenido);
-
-        Assert.Contains("R-015", sheet, StringComparison.Ordinal);
-        Assert.Contains("BORRADOR", sheet, StringComparison.Ordinal);
-        Assert.DoesNotContain("<v>0</v>", sheet, StringComparison.Ordinal);
-        Assert.Contains("R-015", pdfText, StringComparison.Ordinal);
-        Assert.Contains("BORRADOR", pdfText, StringComparison.Ordinal);
-        Assert.DoesNotContain("0.00", pdfText, StringComparison.Ordinal);
+            int index = content.IndexOf(EscapePdfString(label), StringComparison.Ordinal);
+            Assert.True(index > previous, $"PDF canonical field missing or out of order: {label}");
+            previous = index;
+        }
+        Assert.Contains("valor-82", content, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ExportacionesConFiltro_ConservanVersionFechaNumericaYMetadata()
+    public void ReportesVacios_ConservanWorkbookDe82ColumnasYDocumentoPdfValido()
     {
-        var filas = CrearFilas(1);
-        ArchivoReporteDto excel = _service.CrearExcelConsolidado(filas, "Estado=APROBADA");
-        ArchivoReporteDto pdf = _service.CrearPdfConsolidado(filas, "Estado=APROBADA");
+        IReadOnlyList<RiesgoReporteFilaDto> rows = Array.Empty<RiesgoReporteFilaDto>();
+        var projections = new Dictionary<long, InstitutionalEvaluationProjectionDto>();
+        ArchivoReporteDto excel = _service.CrearExcelMatrizCompleta(rows, projections);
+        ArchivoReporteDto pdf = _service.CrearPdfMatrizCompleta(rows, projections);
 
         using var stream = new MemoryStream(excel.Contenido);
         using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
-        string hoja = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
-        string estilos = LeerEntrada(zip, "xl/styles.xml");
-        string pdfTexto = Encoding.Latin1.GetString(pdf.Contenido);
-        Assert.Contains("r=\"M5\" s=\"13\"", hoja, StringComparison.Ordinal);
-        Assert.Contains("<v>1</v>", hoja, StringComparison.Ordinal);
-        Assert.Contains("Filtros aplicados: Estado=APROBADA", hoja, StringComparison.Ordinal);
-        Assert.Contains("dd/mm/yyyy hh:mm", estilos, StringComparison.Ordinal);
-        Assert.Contains("FILTROS APLICADOS", pdfTexto, StringComparison.Ordinal);
-        Assert.Contains("Estado=APROBADA", pdfTexto, StringComparison.Ordinal);
-        Assert.Contains("Versión", pdfTexto, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Reportes_UsanLabelsCanonicosDesdeClavesYNumericos()
-    {
-        var fila = CrearFilas(1).Single();
-        fila.Vri = 3;
-        fila.NivelInherente = "MODERADO";
-        fila.Vrr = 1;
-        fila.NivelResidual = "BAJO";
-        fila.RespuestaRiesgo = "TRANSFERIR";
-
-        ArchivoReporteDto excel = _service.CrearExcelConsolidado([fila]);
-        ArchivoReporteDto pdf = _service.CrearPdfConsolidado([fila]);
-        using var stream = new MemoryStream(excel.Contenido);
-        using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
-        string sheet = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
+        XDocument sheet = XDocument.Load(zip.GetEntry("xl/worksheets/sheet1.xml")!.Open());
+        XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        XElement header = sheet.Descendants(ns + "row").Single(row => (string?)row.Attribute("r") == "4");
+        Assert.Equal(82, header.Elements(ns + "c").Count());
         string pdfText = Encoding.Latin1.GetString(pdf.Contenido);
-        Assert.Contains("Riesgo bajo", sheet, StringComparison.Ordinal);
-        Assert.Contains("Riesgo no significativo", sheet, StringComparison.Ordinal);
-        Assert.Contains("Transferir/Compartir", sheet, StringComparison.Ordinal);
-        Assert.DoesNotContain("MODERADO", sheet, StringComparison.Ordinal);
-        Assert.DoesNotContain("BAJO", sheet, StringComparison.Ordinal);
         Assert.StartsWith("%PDF-1.4", pdfText, StringComparison.Ordinal);
+        Assert.EndsWith("%%EOF", pdfText, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ArtefactosReales_FueraDelRepositorio_SeAbrenYConservanContratoInstitucional()
+    public void ExportacionesConsolidado_FallanCerradoSiFaltaProyeccionSeleccionada()
     {
-        string directory = Path.Combine(Path.GetTempPath(), "rl-fase52-reportes-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(directory);
-        try
-        {
-            var filas = CrearFilas(2);
-            ArchivoReporteDto pdf = _service.CrearPdfConsolidado(filas, "Estado=APROBADA");
-            ArchivoReporteDto excel = _service.CrearExcelConsolidado(filas, "Estado=APROBADA");
-            string pdfPath = Path.Combine(directory, "matriz-consolidada.pdf");
-            string excelPath = Path.Combine(directory, "matriz-consolidada.xlsx");
-            File.WriteAllBytes(pdfPath, pdf.Contenido);
-            File.WriteAllBytes(excelPath, excel.Contenido);
-
-            string pdfTexto = Encoding.Latin1.GetString(File.ReadAllBytes(pdfPath));
-            Assert.StartsWith("%PDF-1.4", pdfTexto, StringComparison.Ordinal);
-            Assert.Contains("/MediaBox [0 0 841.89 595.28]", pdfTexto, StringComparison.Ordinal);
-            Assert.Contains("FILTROS APLICADOS", pdfTexto, StringComparison.Ordinal);
-            Assert.Contains("R-001", pdfTexto, StringComparison.Ordinal);
-            Assert.Contains("R-002", pdfTexto, StringComparison.Ordinal);
-            Assert.EndsWith("%%EOF", pdfTexto, StringComparison.Ordinal);
-
-            using var zip = ZipFile.OpenRead(excelPath);
-            string sheet = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
-            _ = XDocument.Parse(sheet);
-            Assert.Contains("Matriz Consolidada de Riesgos", sheet, StringComparison.Ordinal);
-            Assert.Contains("Filtros aplicados: Estado=APROBADA", sheet, StringComparison.Ordinal);
-            Assert.Contains("<autoFilter ref=\"A4:M6\"/>", sheet, StringComparison.Ordinal);
-            Assert.Contains("state=\"frozen\"", sheet, StringComparison.Ordinal);
-            Assert.Contains("orientation=\"landscape\"", sheet, StringComparison.Ordinal);
-            Assert.Contains("fitToWidth=\"1\"", sheet, StringComparison.Ordinal);
-        }
-        finally
-        {
-            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
-        }
+        RiesgoReporteFilaDto row = CreateRows(1).Single();
+        Assert.Throws<InvalidOperationException>(() => _service.CrearExcelMatrizCompleta([row], new Dictionary<long, InstitutionalEvaluationProjectionDto>()));
+        Assert.Throws<InvalidOperationException>(() => _service.CrearPdfMatrizCompleta([row], new Dictionary<long, InstitutionalEvaluationProjectionDto>()));
     }
 
-    private static IReadOnlyList<RiesgoReporteFilaDto> CrearFilas(int cantidad) =>
-        Enumerable.Range(1, cantidad).Select(i => new RiesgoReporteFilaDto
+    private static IReadOnlyList<RiesgoReporteFilaDto> CreateRows(int count) => Enumerable.Range(1, count)
+        .Select(index => new RiesgoReporteFilaDto
         {
-            RiesgoId = i,
-            EvaluacionId = i + 100,
+            RiesgoId = index,
+            EvaluacionId = index + 100,
             VersionFormularioId = 1,
-            CodigoRiesgo = $"R-{i:D3}",
-            AreaPrincipal = "Cumplimiento",
-            DuenoRiesgo = "Responsable institucional",
-            Vri = 7,
-            NivelInherente = "ALTO",
-            Vrr = 4,
-            NivelResidual = "MODERADO",
-            RespuestaRiesgo = "MITIGAR",
-            EstadoEvaluacion = "APROBADA",
-            FechaEvaluacion = new DateTime(2026, 8, 7, 8, 0, 0, DateTimeKind.Utc)
+            CodigoRiesgo = $"R-{index:D3}",
+            EstadoEvaluacion = "APROBADA"
         }).ToArray();
 
-    private static string LeerEntrada(ZipArchive zip, string ruta)
+    private static Dictionary<long, InstitutionalEvaluationProjectionDto> CreateProjections(IEnumerable<RiesgoReporteFilaDto> rows)
     {
-        using Stream stream = zip.GetEntry(ruta)!.Open();
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return reader.ReadToEnd();
+        InstitutionalProjectionFieldDefinitionDto[] catalog = new InstitutionalProjectionMapper().GetFieldCatalog().ToArray();
+        return rows.ToDictionary(row => row.EvaluacionId, row => new InstitutionalEvaluationProjectionDto(
+            row.EvaluacionId,
+            row.CodigoRiesgo,
+            catalog.Select(field => new InstitutionalProjectionFieldDto(
+                field.FieldNumber,
+                field.FieldKey,
+                field.FieldLabel,
+                field.ValueType,
+                field.FieldNumber == 2 ? row.CodigoRiesgo : field.FieldNumber == 82 ? "valor-82" : $"valor-{field.FieldNumber:D2}",
+                "VALUE",
+                field.Source)).ToArray()) { RiskId = row.RiesgoId });
     }
+
+    private static string EscapePdfString(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace("(", "\\(", StringComparison.Ordinal).Replace(")", "\\)", StringComparison.Ordinal);
 }

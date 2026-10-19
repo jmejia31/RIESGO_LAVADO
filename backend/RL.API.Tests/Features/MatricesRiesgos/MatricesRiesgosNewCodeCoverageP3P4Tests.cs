@@ -374,7 +374,29 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
             }
         };
 
-        ArchivoReporteDto pdf = exportador.CrearPdfConsolidado(filas);
+        InstitutionalProjectionFieldDefinitionDto[] catalog = new InstitutionalProjectionMapper().GetFieldCatalog().ToArray();
+        string codigo = filas[0].CodigoRiesgo;
+        var projection = new InstitutionalEvaluationProjectionDto(
+            filas[0].EvaluacionId,
+            codigo,
+            catalog.Select(field => new InstitutionalProjectionFieldDto(
+                field.FieldNumber,
+                field.FieldKey,
+                field.FieldLabel,
+                field.ValueType,
+                field.FieldNumber switch
+                {
+                    2 => codigo,
+                    8 => filas[0].AreaPrincipal,
+                    9 => filas[0].DuenoRiesgo,
+                    _ => $"valor-{field.FieldNumber:D2}"
+                },
+                "VALUE",
+                field.Source)).ToArray()) { RiskId = filas[0].RiesgoId };
+
+        ArchivoReporteDto pdf = exportador.CrearPdfMatrizCompleta(
+            filas,
+            new Dictionary<long, InstitutionalEvaluationProjectionDto> { [filas[0].EvaluacionId] = projection });
 
         Assert.NotNull(pdf);
         Assert.Equal("application/pdf", pdf.ContentType);
@@ -386,13 +408,13 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         Assert.StartsWith("%PDF-1.4", header, StringComparison.Ordinal);
         Assert.Contains("INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL", texto, StringComparison.Ordinal);
         Assert.Contains("SGRLA-IHSS", texto, StringComparison.Ordinal);
-        Assert.Contains("/MediaBox [0 0 841.89 595.28]", texto, StringComparison.Ordinal);
+        Assert.Contains("/MediaBox [0 0 595.28 841.89]", texto, StringComparison.Ordinal);
         Assert.Contains("COD-MUY-LARGO", texto, StringComparison.Ordinal);
         Assert.Contains("XXXXXXXXXX", texto, StringComparison.Ordinal);
         Assert.Contains("María", texto, StringComparison.Ordinal);
         Assert.Contains("Peña", texto, StringComparison.Ordinal);
         Assert.DoesNotContain("...", texto, StringComparison.Ordinal);
-        Assert.Contains("Página 1 de 1", texto, StringComparison.Ordinal);
+        Assert.Contains("Página 1 de", texto, StringComparison.Ordinal);
     }
 
     #endregion

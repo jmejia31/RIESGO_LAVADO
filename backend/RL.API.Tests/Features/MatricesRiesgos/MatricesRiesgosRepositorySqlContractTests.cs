@@ -56,7 +56,7 @@ public sealed class MatricesRiesgosRepositorySqlContractTests
     }
 
     [Fact]
-    public void Consolidado_ListaTodasLasEvaluacionesActivasConProyeccionYFlujoOpcionales()
+    public void Consolidado_SeleccionaLaUltimaEvaluacionActivaAprobadaPorRiesgo()
     {
         string source = LeerRepositorioMatrices();
         int selectorStart = source.IndexOf("ConstruirFuenteConsolidado() =>", StringComparison.Ordinal);
@@ -66,17 +66,20 @@ public sealed class MatricesRiesgosRepositorySqlContractTests
         Assert.Contains("FROM RL_MR_EVALUACIONES_RIESGO e", selector, StringComparison.Ordinal);
         Assert.Contains("JOIN RL_MR_RIESGOS r", selector, StringComparison.Ordinal);
         Assert.Contains("LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p", selector, StringComparison.Ordinal);
-        Assert.Contains("LEFT JOIN (", selector, StringComparison.Ordinal);
+        Assert.Contains("JOIN (", selector, StringComparison.Ordinal);
         Assert.Contains("e.EVA_ID AS PROY_EVALUACION_ID", selector, StringComparison.Ordinal);
         Assert.Contains("NVL(p.PROY_CODIGO_RIESGO, r.RIE_CODIGO)", selector, StringComparison.Ordinal);
-        Assert.Contains("NVL(f.FLU_ESTADO, 'BORRADOR') AS PROY_ESTADO_EVALUACION", selector, StringComparison.Ordinal);
+        Assert.Contains("f.FLU_ESTADO AS PROY_ESTADO_EVALUACION", selector, StringComparison.Ordinal);
         Assert.Contains("PARTITION BY flujo.FLU_EVALUACION_ID", selector, StringComparison.Ordinal);
         Assert.Contains("ORDER BY flujo.FLU_FECHA DESC, flujo.FLU_ID DESC", selector, StringComparison.Ordinal);
         Assert.Contains("WHERE estado_actual.FLUJO_RN = 1", selector, StringComparison.Ordinal);
+        Assert.Contains("AND estado_actual.FLU_ESTADO = 'APROBADA'", selector, StringComparison.Ordinal);
         Assert.Contains("WHERE e.EVA_ACTIVO = 1", selector, StringComparison.Ordinal);
-        Assert.DoesNotContain("FLU_ESTADO = 'APROBADA'", selector, StringComparison.Ordinal);
-        Assert.DoesNotContain("PARTITION BY candidatas.EVA_RIESGO_ID", selector, StringComparison.Ordinal);
-        Assert.DoesNotContain("CONSOLIDADO_RIESGO_RN", selector, StringComparison.Ordinal);
+        Assert.Contains("PARTITION BY candidatas.EVA_RIESGO_ID", selector, StringComparison.Ordinal);
+        Assert.Contains("ORDER BY candidatas.FLU_FECHA DESC,", selector, StringComparison.Ordinal);
+        Assert.Contains("candidatas.FLU_ID DESC,", selector, StringComparison.Ordinal);
+        Assert.Contains("candidatas.PROY_EVALUACION_ID DESC", selector, StringComparison.Ordinal);
+        Assert.Contains("WHERE aprobadas.APROBADA_RN = 1", selector, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -87,14 +90,18 @@ public sealed class MatricesRiesgosRepositorySqlContractTests
     }
 
     [Fact]
-    public void ResumenOperativo_ReutilizaLaSeleccionOficialDelConsolidado()
+    public void ResumenOperativo_ConservaSuFuenteDeEvaluacionesActivasSeparadaDelConsolidadoBlock10()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "RIESGO_LAVADO.sln"))) directory = directory.Parent;
         Assert.NotNull(directory);
         string source = File.ReadAllText(Path.Combine(directory!.FullName, "backend", "RL.API", "Features", "MatricesRiesgos", "Persistence", "MatricesRiesgosMonitoreoRepository.cs"));
-        Assert.Contains("WITH CONSOLIDADO_OFICIAL AS {MatricesRiesgosRepository.ConstruirFuenteConsolidado()}", source, StringComparison.Ordinal);
+        Assert.Contains("WITH CONSOLIDADO_OFICIAL AS {MatricesRiesgosRepository.ConstruirFuenteMonitoreo()}", source, StringComparison.Ordinal);
         Assert.Contains("FROM CONSOLIDADO_OFICIAL WHERE UPPER(PROY_NIVEL_RESIDUAL)", source, StringComparison.Ordinal);
+
+        string repository = LeerRepositorioMatrices();
+        Assert.Contains("internal static string ConstruirFuenteMonitoreo()", repository, StringComparison.Ordinal);
+        Assert.DoesNotContain("AND estado_actual.FLU_ESTADO = 'APROBADA'", repository[repository.IndexOf("ConstruirFuenteMonitoreo()", StringComparison.Ordinal)..], StringComparison.Ordinal);
     }
 
     private static int Cuenta(string source, string value)

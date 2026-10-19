@@ -26,8 +26,47 @@ public sealed class InstitutionalProjectionMapperTests
         Assert.Equal("No hay", result.Fields[19].Value);
         Assert.Equal("ABSENT_CONTROL_PROJECTED", result.Fields[19].State);
         Assert.Equal("Inexistente", result.Fields[20].Value);
+        Assert.Equal("NOT_APPLICABLE", result.Fields[31].State);
+        Assert.Equal("Pendiente de monitoreo", result.Fields[70].Value);
+        Assert.Equal("OPERATIONAL_PENDING", result.Fields[70].State);
         Assert.Equal("LEGIT_FORMULA_BLANK", result.Fields[32].State);
         Assert.Equal(59, result.Fields[0].Value);
+    }
+
+    [Fact]
+    public void Map_ProjectsCatalogLabelsAndPreservesZeroAndFalseValues()
+    {
+        InstitutionalProjectionSource source = CreateSource();
+        JsonObject answers = JsonNode.Parse(source.Evaluation.EvaDataJson)!.AsObject();
+        answers["escala_preventivo"] = "ALTA_EFECTIVIDAD";
+        JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
+        calculations[FormulaKey(23)] = 0;
+        calculations[FormulaKey(33)] = 0;
+        calculations[FormulaKey(60)] = false;
+        source = source with
+        {
+            Evaluation = new EvaluacionRiesgoDto
+            {
+                EvaId = source.Evaluation.EvaId,
+                EvaRiesgoId = source.Evaluation.EvaRiesgoId,
+                EvaDataJson = answers.ToJsonString(),
+                EvaDataCalcJson = calculations.ToJsonString()
+            },
+            Controls = [new ControlRiesgoDto
+            {
+                ConId = 1,
+                ConEvaluacionId = source.Evaluation.EvaId,
+                ConTipo = "PREVENTIVO",
+                ConDescripcion = "Control preventivo",
+                ConAutomatizacion = "MANUAL"
+            }]
+        };
+
+        InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
+
+        Assert.Equal("Alta Efectividad", result.Fields[20].Value);
+        Assert.Equal(0L, result.Fields[22].Value);
+        Assert.Equal(false, result.Fields[59].Value);
     }
 
     [Fact]
@@ -178,7 +217,7 @@ public sealed class InstitutionalProjectionMapperTests
         Assert.Equal(expectedState, result.Fields[39].State);
     }
 
-    private static InstitutionalProjectionSource CreateSource()
+    internal static InstitutionalProjectionSource CreateSource()
     {
         string answers = """
             {"area_principal":"Sección de Cumplimiento","area_consolidada":"Sección de Cumplimiento","tipo_riesgo":"Operativo","procedimiento":"PROC-1","objetivos_estrategicos":["OBJ-1"],"frecuencia_inherente":1,"impacto_inherente":3,"dueno_riesgo":"Responsable","regimen_afectado":"Régimen","transversalidad":"No","respuesta_riesgo":"Aceptar"}

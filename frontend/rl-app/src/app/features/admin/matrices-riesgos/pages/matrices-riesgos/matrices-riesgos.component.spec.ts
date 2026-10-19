@@ -271,8 +271,8 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.evaluacionSeleccionada.set({ evaId: 20, evaRiesgoId: 5, evaVersionId: 10, evaEstado: 'CERRADA', evaDataJson: '{"controles_preventivo":90,"controles_detectivo":50,"controles_correctivo":0}', evaDataCalcJson: '{"etp":90}', evaFechaEval: '', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true });
     component.respuestas.set({ controles_preventivo: 90, controles_detectivo: 50, controles_correctivo: 0 });
 
-    expect(component.valorCampoControl(field(21))).toBe('No disponible en esta versión');
-    expect(component.valorCampoControl(field(22))).toBe('No disponible en esta versión');
+    expect(component.valorCampoControl(field(21))).toBe('Sin dato');
+    expect(component.valorCampoControl(field(22))).toBe('Sin dato');
     expect(component.valorCampoControl(field(23))).toBe('90%');
     expect(component.valorCampoControl(field(27))).toBe('50%');
     expect(component.valorCampoControl(field(31))).toBe('0%');
@@ -280,6 +280,24 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.formatearPorcentajeRuntime0A1(0.9)).toBe('90%');
     expect(component.formatearPorcentajeRuntime0A1(null)).toBe('—');
     expect(component.formatearPorcentajeRuntime0A1('')).toBe('—');
+  });
+
+  it('distingue valor real cero/falso, ausencia y no aplicabilidad desde la proyección canónica', () => {
+    component.proyeccionMatrizCompleta.set({
+      evaluationId: 20,
+      riskCode: 'R-005',
+      fields: [
+        { fieldNumber: 21, fieldKey: 'escala_preventivo', fieldLabel: 'Escala', valueType: 'number', value: 0, state: 'VALUE', source: 'fixture' },
+        { fieldNumber: 22, fieldKey: 'nivel_control_preventivo', fieldLabel: 'Nivel', valueType: 'boolean', value: false, state: 'VALUE', source: 'fixture' },
+        { fieldNumber: 25, fieldKey: 'escala_detectivo', fieldLabel: 'Escala', valueType: 'text', value: null, state: 'LEGIT_BLANK', source: 'fixture' },
+        { fieldNumber: 27, fieldKey: 'porcentaje_control_detectivo', fieldLabel: 'Porcentaje', valueType: 'number', value: null, state: 'NOT_APPLICABLE', source: 'fixture' }
+      ]
+    });
+
+    expect(component.valorCampoControl(MATRIX_BLOCK_2_FIELDS.find(field => field.ordinal === 21)!)).toBe('0');
+    expect(component.valorCampoControl(MATRIX_BLOCK_2_FIELDS.find(field => field.ordinal === 22)!)).toBe('false');
+    expect(component.valorCampoControl(MATRIX_BLOCK_2_FIELDS.find(field => field.ordinal === 25)!)).toBe('Sin dato');
+    expect(component.valorCampoControl(MATRIX_BLOCK_2_FIELDS.find(field => field.ordinal === 27)!)).toBe('No aplica');
   });
 
   it('normaliza mojibake del catálogo maestro de riesgos antes de renderizarlo', () => {

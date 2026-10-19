@@ -2073,9 +2073,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (!field.key) return '—';
     const value = this.respuestas()[field.key];
     if (value === null || value === undefined || value === '') {
-      return resumen.versionNumero === 1 && field.ordinal !== 3 && field.ordinal !== 10 && field.ordinal !== 11 && field.ordinal !== 14
-        ? 'No disponible en esta versión'
-        : '—';
+      return 'Sin dato';
     }
     return Array.isArray(value) ? value.join(', ') : String(value);
   }
@@ -2083,7 +2081,20 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private valorProyeccionMatrizCompleta(ordinal: number): string | null {
     const field = this.proyeccionMatrizCompleta()?.fields.find(item => item.fieldNumber === ordinal);
     if (!field) return null;
-    if (field.value === null || field.value === undefined || field.state === 'LEGIT_BLANK') return '—';
+    if (field.value === null || field.value === undefined) {
+      switch (field.state) {
+        case 'NOT_APPLICABLE':
+        case 'ABSENT_CONTROL_PROJECTED':
+          return 'No aplica';
+        case 'LEGIT_BLANK':
+        case 'LEGIT_FORMULA_BLANK':
+        case 'OPERATIONAL_PENDING':
+        case 'CALCULATION_PENDING':
+          return 'Sin dato';
+        default:
+          return 'Estado no reconocido';
+      }
+    }
     if (Array.isArray(field.value)) {
       return field.value.map((item, index) => {
         if (item === null || item === undefined || item === '') return `${index + 1}. [Sin dato]`;
@@ -2272,23 +2283,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   valorCampoControl(field: MatrixFieldContract): string {
     const canonical = this.valorProyeccionMatrizCompleta(field.ordinal);
-    if (canonical !== null && [22, 23, 26, 27, 30, 31, 33].includes(field.ordinal)) {
+    if (canonical !== null) {
+      if (![23, 27, 31, 33].includes(field.ordinal)) return canonical;
+      if (canonical === 'Sin dato' || canonical === 'No aplica' || canonical === 'Estado no reconocido') return canonical;
       const versionNumero = this.evaluacionResumenSeleccionada()?.versionNumero;
       const esV1 = versionNumero === 1;
-      if ([23, 27, 31].includes(field.ordinal)) {
-        return esV1 ? this.formatearPorcentajeHistorico0A100(canonical) : this.formatearPorcentajeRuntime0A1(canonical);
-      }
-      if (field.ordinal === 33) {
-        return esV1 ? this.formatearPorcentajeHistorico0A100(canonical) : this.formatearPorcentajeRuntime0A1(canonical);
-      }
-      return canonical;
+      return esV1 ? this.formatearPorcentajeHistorico0A100(canonical) : this.formatearPorcentajeRuntime0A1(canonical);
     }
     const key = field.key;
     if (!key) return '—';
     const versionNumero = this.evaluacionResumenSeleccionada()?.versionNumero;
     const esV1 = versionNumero === 1;
     if ([21, 22, 25, 26, 29, 30].includes(field.ordinal)
-      && (esV1 || !this.catalogoEscalaEfectividad())) return 'No disponible en esta versión';
+      && (esV1 || !this.catalogoEscalaEfectividad())) return 'Sin dato';
     if (field.ordinal === 23 || field.ordinal === 27 || field.ordinal === 31) {
       const source = esV1
         ? this.respuestas()[field.ordinal === 23 ? 'controles_preventivo' : field.ordinal === 27 ? 'controles_detectivo' : 'controles_correctivo']

@@ -355,7 +355,7 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
         string sql = $@"
-            WITH CONSOLIDADO_OFICIAL AS {MatricesRiesgosRepository.ConstruirFuenteConsolidado()}
+            WITH CONSOLIDADO_OFICIAL AS {MatricesRiesgosRepository.ConstruirFuenteMonitoreo()}
             SELECT
               (SELECT COUNT(*) FROM RL_MR_RIESGOS WHERE RIE_ACTIVO = 1) RIESGOS_ACTIVOS,
               (SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ACTIVO = 1) EVALUACIONES_ACTIVAS,

@@ -202,6 +202,23 @@ jobs:
           echo 'BLOCK8_ORACLE_TESTS_EXECUTED=1'
           echo 'BLOCK8_CONSOLIDATED_ORACLE_INTEGRATION=PASS'
 
+      - name: Run Block 10 latest approved consolidated selection against disposable Oracle XE
+        env:
+          RL_BLOCK10_ORACLE_INTEGRATION_REQUIRED: 'true'
+          BLOCK10_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~ConsolidatedApiAndReportSelectLatestApprovedPerRisk --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Passed: *1' <<<"$output"
+          echo 'BLOCK10_ORACLE_INTEGRATION_EXECUTED=YES'
+          echo 'BLOCK10_LATEST_APPROVED_TEST=PASS'
+          echo 'BLOCK10_BATCH_82_PROJECTION=PASS'
+          echo 'BLOCK10_EXPORT_SOURCE_PARITY=PASS'
+          echo 'BLOCK10_ORACLE_TEST_CLEANUP=PASS'
+          echo 'BLOCK10_ORACLE_TESTS_EXECUTED=1'
+          echo 'BLOCK10_LATEST_APPROVED_ORACLE_INTEGRATION=PASS'
+
       - name: Validate compose configuration without secrets in repository
         shell: bash
         env:

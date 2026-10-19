@@ -27,6 +27,11 @@ public sealed class InstitutionalProjectionMapper
     private static readonly ProjectionManifestField[] Fields = LoadManifest();
     private static readonly IReadOnlyDictionary<string, int> Ordinals = LoadOrdinals();
 
+    public IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> GetFieldCatalog() => Fields
+        .Select(field => new InstitutionalProjectionFieldDefinitionDto(
+            field.Number, field.CanonicalKey, field.Label, ValueTypeOf(field.DataType), field.Source))
+        .ToArray();
+
     public InstitutionalEvaluationProjectionDto Map(InstitutionalProjectionSource source)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -61,7 +66,10 @@ public sealed class InstitutionalProjectionMapper
         if (fields.Count != 82 || fields.Select(field => field.FieldNumber).Distinct().Count() != 82
             || fields.Where((field, index) => field.FieldNumber != index + 1).Any())
             throw new InstitutionalProjectionException("El manifest no produjo exactamente 82 posiciones únicas y ordenadas.");
-        return new(source.Evaluation.EvaId, source.Risk.RieCodigo, fields);
+        return new InstitutionalEvaluationProjectionDto(source.Evaluation.EvaId, source.Risk.RieCodigo, fields)
+        {
+            RiskId = source.Risk.RieId
+        };
     }
 
     private static (object? Value, string State) ResolveValue(
@@ -86,7 +94,18 @@ public sealed class InstitutionalProjectionMapper
             string key = field.Number switch { 21 => "escala_preventivo", 25 => "escala_detectivo", _ => "escala_correctivo" };
             string type = field.Number switch { 21 => "PREVENTIVO", 25 => "DETECTIVO", _ => "CORRECTIVO" };
             if (!OrderedControls(source, type).Any()) return ("Inexistente", "ABSENT_CONTROL_PROJECTED");
-            return FromJson(answers, key, optional: true);
+            (object? value, string state) = FromJson(answers, key, optional: true);
+            if (value is null) return (null, state);
+            try
+            {
+                return (MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta(
+                    "CONTROL_EFFECTIVENESS",
+                    Convert.ToString(value, CultureInfo.InvariantCulture)!), state);
+            }
+            catch (InvalidOperationException exception)
+            {
+                throw new InstitutionalProjectionException("La escala de efectividad no pertenece al catálogo institucional: " + exception.Message);
+            }
         }
         if (field.Number is 22 or 23 or 26 or 27 or 30 or 31)
         {
@@ -96,6 +115,7 @@ public sealed class InstitutionalProjectionMapper
         }
         if (field.Number == 32)
         {
+            if (OrderedControls(source).Count == 0) return (null, "NOT_APPLICABLE");
             string[] values = OrderedControls(source).Select(control => CanonicalAutomation(control.ConAutomatizacion)).ToArray();
             return values.Length == 0 ? (null, "LEGIT_BLANK") : (Enumerate(values), "VALUE");
         }
@@ -120,7 +140,9 @@ public sealed class InstitutionalProjectionMapper
             return alerts.Length == 0 ? (null, "LEGIT_BLANK") : (Enumerate(alerts), "VALUE");
         }
         if (field.Number == 71)
-            return Optional(source.Monitoring.EstadoRiesgo, "MONITORING");
+            return string.IsNullOrWhiteSpace(source.Monitoring.EstadoRiesgo)
+                ? ("Pendiente de monitoreo", "OPERATIONAL_PENDING")
+                : (Text(source.Monitoring.EstadoRiesgo), "VALUE");
         if (field.Number is 72 or 73 or 74 or 75 or 76 or 77 or 78 or 79 or 80)
             return ResolveMonitoredControl(field.Number, source);
         if (field.Number is 81 or 82)

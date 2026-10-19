@@ -344,7 +344,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     ]);
     expect(fields[0].getAttribute('data-matrix-field')).toBe('01');
     expect(fields[0].textContent).not.toContain('101');
-    expect(fields[3].textContent).toContain('No disponible en esta versión');
+    expect(fields[3].textContent).toContain('Sin dato');
     expect(fields[11].textContent).toContain('Calculado automáticamente');
     expect(fields[12].textContent).toContain('Calculado automáticamente');
     expect(fields[11].querySelector('[aria-readonly="true"]')).not.toBeNull();

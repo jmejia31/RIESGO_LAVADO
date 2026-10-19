@@ -9,6 +9,8 @@ namespace RL.API.Features.MatricesRiesgos.Application;
 public interface IInstitutionalProjectionService
 {
     Task<ServiceResult<InstitutionalEvaluationProjectionDto>> GetAsync(long evaluationId, long userId, CancellationToken cancellationToken);
+    Task<ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>> GetManyAsync(
+        IReadOnlyCollection<long> evaluationIds, long userId, CancellationToken cancellationToken);
 }
 
 /// <summary>Composes the canonical read model from a single Oracle read-only snapshot.</summary>
@@ -71,6 +73,59 @@ public sealed class InstitutionalProjectionService : IInstitutionalProjectionSer
             timer.Stop();
             _logger.LogError(exception, "Fallo de persistencia al leer proyección institucional. EvaluationId={EvaluationId}, DurationMs={DurationMs}", evaluationId, timer.ElapsedMilliseconds);
             return new(false, null, "No fue posible leer la proyección institucional en este momento.", 503);
+        }
+    }
+
+    public async Task<ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>> GetManyAsync(
+        IReadOnlyCollection<long> evaluationIds, long userId, CancellationToken cancellationToken)
+    {
+        if (evaluationIds is null || userId <= 0 || evaluationIds.Any(id => id <= 0))
+            return ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>.BadRequest("Las evaluaciones y el usuario deben ser válidos.");
+
+        Stopwatch timer = Stopwatch.StartNew();
+        try
+        {
+            IReadOnlyDictionary<long, InstitutionalProjectionSnapshot> snapshots =
+                await _repository.ReadManyAsync(evaluationIds, userId, cancellationToken);
+            long[] requestedIds = evaluationIds.Distinct().Order().ToArray();
+            if (snapshots.Count != requestedIds.Length || requestedIds.Any(id => !snapshots.ContainsKey(id)))
+                return ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>.NotFound("No se encontró una evaluación seleccionada o su riesgo maestro.");
+
+            var projections = new Dictionary<long, InstitutionalEvaluationProjectionDto>(requestedIds.Length);
+            foreach (long evaluationId in requestedIds)
+            {
+                InstitutionalProjectionSnapshot snapshot = snapshots[evaluationId];
+                projections.Add(evaluationId, _mapper.Map(new(
+                    snapshot.Evaluation, snapshot.Risk, snapshot.Controls, snapshot.Mitigation, snapshot.Monitoring, snapshot.AllRisks)));
+            }
+            timer.Stop();
+            _logger.LogInformation(
+                "Proyección institucional por lotes. EvaluationCount={EvaluationCount}, FieldCountPerEvaluation={FieldCount}, ReadQueryCountPerBatch={ReadQueryCount}, DurationMs={DurationMs}",
+                projections.Count, projections.Values.FirstOrDefault()?.Fields.Count ?? 0,
+                snapshots.Values.FirstOrDefault()?.QueryCount ?? 2, timer.ElapsedMilliseconds);
+            return ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>.Ok(projections);
+        }
+        catch (InstitutionalProjectionException exception)
+        {
+            timer.Stop();
+            _logger.LogWarning(exception, "Datos incompatibles para proyección institucional por lotes. EvaluationCount={EvaluationCount}, DurationMs={DurationMs}", evaluationIds.Count, timer.ElapsedMilliseconds);
+            return ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>.Conflict("Una evaluación contiene datos incompatibles con el contrato institucional.");
+        }
+        catch (System.Text.Json.JsonException exception)
+        {
+            timer.Stop();
+            _logger.LogWarning(exception, "JSON inválido para proyección institucional por lotes. EvaluationCount={EvaluationCount}, DurationMs={DurationMs}", evaluationIds.Count, timer.ElapsedMilliseconds);
+            return ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>.Conflict("Los datos JSON no son válidos para la proyección institucional.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Oracle.ManagedDataAccess.Client.OracleException exception)
+        {
+            timer.Stop();
+            _logger.LogError(exception, "Fallo de persistencia en proyección institucional por lotes. EvaluationCount={EvaluationCount}, DurationMs={DurationMs}", evaluationIds.Count, timer.ElapsedMilliseconds);
+            return new(false, null, "No fue posible leer las proyecciones institucionales en este momento.", 503);
         }
     }
 }

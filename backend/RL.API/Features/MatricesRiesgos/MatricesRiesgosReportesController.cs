@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Core.Security;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.MatricesRiesgos;
 
@@ -14,41 +16,59 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
 {
     private readonly IMatricesRiesgosAppService _matrices;
     private readonly IMatricesRiesgosReportExportService _exportador;
+    private readonly IInstitutionalProjectionService _proyecciones;
 
     public MatricesRiesgosReportesController(
         IMatricesRiesgosAppService matrices,
-        IMatricesRiesgosReportExportService exportador)
+        IMatricesRiesgosReportExportService exportador,
+        IInstitutionalProjectionService proyecciones)
     {
         _matrices = matrices;
         _exportador = exportador;
+        _proyecciones = proyecciones;
     }
 
     [HttpGet("consolidado.xlsx")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     [AuditRequired("Descarga de reporte consolidado Excel")]
-    public async Task<IActionResult> DescargarExcel([FromQuery] FiltroReporteMatricesDto? filtro = null)
+    public async Task<IActionResult> DescargarExcel([FromQuery] FiltroReporteMatricesDto? filtro = null, CancellationToken cancellationToken = default)
     {
         filtro ??= new FiltroReporteMatricesDto();
         var resultado = await _matrices.ObtenerConsolidadoParaExportacionAsync(filtro);
         if (!resultado.Success || resultado.Data is null)
             return StatusCode(resultado.StatusCode, new { success = false, mensaje = resultado.Message });
 
-        ArchivoReporteDto archivo = _exportador.CrearExcelConsolidado(resultado.Data, DescribirFiltros(filtro));
+        var proyecciones = await ObtenerProyeccionesAsync(resultado.Data, cancellationToken);
+        if (!proyecciones.Success || proyecciones.Data is null)
+            return StatusCode(proyecciones.StatusCode, new { success = false, mensaje = proyecciones.Message });
+
+        ArchivoReporteDto archivo = _exportador.CrearExcelMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
         return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
     }
 
     [HttpGet("consolidado.pdf")]
     [Produces("application/pdf")]
     [AuditRequired("Descarga de reporte consolidado PDF")]
-    public async Task<IActionResult> DescargarPdf([FromQuery] FiltroReporteMatricesDto? filtro = null)
+    public async Task<IActionResult> DescargarPdf([FromQuery] FiltroReporteMatricesDto? filtro = null, CancellationToken cancellationToken = default)
     {
         filtro ??= new FiltroReporteMatricesDto();
         var resultado = await _matrices.ObtenerConsolidadoParaExportacionAsync(filtro);
         if (!resultado.Success || resultado.Data is null)
             return StatusCode(resultado.StatusCode, new { success = false, mensaje = resultado.Message });
 
-        ArchivoReporteDto archivo = _exportador.CrearPdfConsolidado(resultado.Data, DescribirFiltros(filtro));
+        var proyecciones = await ObtenerProyeccionesAsync(resultado.Data, cancellationToken);
+        if (!proyecciones.Success || proyecciones.Data is null)
+            return StatusCode(proyecciones.StatusCode, new { success = false, mensaje = proyecciones.Message });
+
+        ArchivoReporteDto archivo = _exportador.CrearPdfMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
         return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
+    }
+
+    private Task<ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>> ObtenerProyeccionesAsync(
+        IReadOnlyList<RiesgoReporteFilaDto> filas, CancellationToken cancellationToken)
+    {
+        long userId = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out long parsed) ? parsed : 0;
+        return _proyecciones.GetManyAsync(filas.Select(row => row.EvaluacionId).ToArray(), userId, cancellationToken);
     }
 
     private static string DescribirFiltros(FiltroReporteMatricesDto filtro)

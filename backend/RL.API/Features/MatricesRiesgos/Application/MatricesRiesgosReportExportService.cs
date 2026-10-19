@@ -7,8 +7,14 @@ namespace RL.API.Features.MatricesRiesgos.Application;
 
 public interface IMatricesRiesgosReportExportService
 {
-    ArchivoReporteDto CrearExcelConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null);
-    ArchivoReporteDto CrearPdfConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null);
+    ArchivoReporteDto CrearExcelMatrizCompleta(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null);
+    ArchivoReporteDto CrearPdfMatrizCompleta(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null);
 }
 
 /// <summary>
@@ -17,91 +23,116 @@ public interface IMatricesRiesgosReportExportService
 /// </summary>
 public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportExportService
 {
-    private static readonly string[] Encabezados =
+    public ArchivoReporteDto CrearExcelMatrizCompleta(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null)
     {
-        "Riesgo ID", "Evaluación ID", "Versión", "Código", "Área principal", "Dueño del riesgo",
-        "VRI", "Nivel inherente", "VRR", "Nivel residual", "Respuesta", "Estado", "Fecha evaluación"
-    };
-
-    private static readonly decimal[] PesosColumnas =
-    {
-        0.8m, 0.9m, 0.8m, 1.0m, 1.5m, 1.7m, 0.6m, 1.1m, 0.6m, 1.1m, 1.0m, 1.0m, 1.2m
-    };
-
-    public ArchivoReporteDto CrearExcelConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null)
-    {
+        IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog = new InstitutionalProjectionMapper().GetFieldCatalog();
+        ValidarProyecciones(filas, proyecciones, catalog);
         var workbook = new InstitutionalXlsxWorkbook();
         workbook.AddSheet(
             "Matriz Consolidada",
-            "Matriz Consolidada de Riesgos",
-            Encabezados,
-            filas.Select(MapearExcel),
+            "Matriz Consolidada de Riesgos — Matriz completa 82 campos",
+            catalog.Select(field => field.FieldLabel).ToArray(),
+            filas.Select(row => MapearProyeccionExcel(proyecciones[row.EvaluacionId], catalog)),
             InstitutionalReportOrientation.Landscape,
             $"Filtros aplicados: {DescribirFiltros(filtros)}");
-
         return new ArchivoReporteDto(
             workbook.ToBytes(),
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            $"Matriz_Riesgos_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+            $"Matriz_Riesgos_Completa_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
     }
 
-    public ArchivoReporteDto CrearPdfConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null)
+    public ArchivoReporteDto CrearPdfMatrizCompleta(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null)
     {
-        InstitutionalReportStandard.ValidateMetadata(new InstitutionalReportMetadata(
-            "Matriz Consolidada de Riesgos",
-            "Matrices de Riesgos",
-            DateTime.Now));
-
+        IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog = new InstitutionalProjectionMapper().GetFieldCatalog();
+        ValidarProyecciones(filas, proyecciones, catalog);
         var document = new InstitutionalPdfDocument(
-            "Matriz Consolidada de Riesgos",
+            "Matriz Consolidada de Riesgos — Matriz completa 82 campos",
             "Matrices de Riesgos",
-            InstitutionalReportStandard.ResolveOrientation(Encabezados.Length),
+            InstitutionalReportOrientation.Portrait,
             DateTime.Now);
         document.AddSection("Filtros aplicados");
         document.AddParagraph(DescribirFiltros(filtros));
-        document.AddSection("Matriz consolidada");
-        document.AddTable(Encabezados, filas.Select(MapearPdf), PesosColumnas, 7m);
-
-        return new ArchivoReporteDto(
-            document.ToBytes(),
-            "application/pdf",
-            $"Matriz_Riesgos_{DateTime.UtcNow:yyyyMMdd_HHmmss}.pdf");
+        foreach (RiesgoReporteFilaDto fila in filas)
+        {
+            InstitutionalEvaluationProjectionDto projection = proyecciones[fila.EvaluacionId];
+            document.AddSection($"{projection.RiskCode} — Evaluación {projection.EvaluationId}");
+            document.AddKeyValueGrid(projection.Fields.Select(field =>
+                (field.FieldLabel, FormatearValorVisible(field.Value, field.State))), columns: 1, preserveLabelCase: true);
+        }
+        return new ArchivoReporteDto(document.ToBytes(), "application/pdf",
+            $"Matriz_Riesgos_Completa_{DateTime.UtcNow:yyyyMMdd_HHmmss}.pdf");
     }
+
+    private static void ValidarProyecciones(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog)
+    {
+        if (catalog.Count != 82 || catalog.Where((field, index) => field.FieldNumber != index + 1).Any())
+            throw new InvalidOperationException("El catálogo institucional no contiene exactamente 82 campos ordenados.");
+        if (filas.Select(row => row.RiesgoId).Distinct().Count() != filas.Count)
+            throw new InvalidOperationException("El consolidado contiene más de una fila para un riesgo.");
+        if (filas.Select(row => row.EvaluacionId).Distinct().Count() != filas.Count)
+            throw new InvalidOperationException("La exportación pretende reutilizar una evaluación en más de un riesgo.");
+        if (filas.Count != proyecciones.Count || filas.Any(row => !proyecciones.ContainsKey(row.EvaluacionId)))
+            throw new InvalidOperationException("El conjunto de proyecciones no coincide exactamente con las evaluaciones ya seleccionadas por el consolidado.");
+
+        foreach (RiesgoReporteFilaDto row in filas)
+        {
+            InstitutionalEvaluationProjectionDto projection = proyecciones[row.EvaluacionId];
+            if (projection.EvaluationId != row.EvaluacionId || projection.RiskId != row.RiesgoId
+                || !string.Equals(projection.RiskCode, row.CodigoRiesgo, StringComparison.Ordinal)
+                || projection.Fields.Count != catalog.Count)
+                throw new InvalidOperationException("La proyección 82 no coincide con el riesgo/evaluación o el conteo canónico.");
+            for (int index = 0; index < catalog.Count; index++)
+                if (projection.Fields[index].FieldNumber != catalog[index].FieldNumber
+                    || !string.Equals(projection.Fields[index].FieldLabel, catalog[index].FieldLabel, StringComparison.Ordinal))
+                    throw new InvalidOperationException($"La proyección del riesgo {row.RiesgoId} no respeta el catálogo 82 en la posición {index + 1}.");
+        }
+    }
+
+    private static IReadOnlyList<object?> MapearProyeccionExcel(
+        InstitutionalEvaluationProjectionDto projection,
+        IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog)
+    {
+        if (projection.Fields.Count != catalog.Count) throw new InvalidOperationException("La fila Excel no contiene 82 valores.");
+        return projection.Fields.Select(field => ValorExcel(field.Value, field.State)).ToArray();
+    }
+
+    private static object ValorExcel(object? value, string state)
+    {
+        if (value is null) return EstadoSinValor(state);
+        if (value is InstitutionalPlanProjectionValueDto[] plans)
+            return string.Join(Environment.NewLine, plans.Select(plan => $"{plan.PlanOrdinalIndex}. {FormatearValorVisible(plan.Value, plan.State)}"));
+        if (value is string[] strings) return string.Join(Environment.NewLine, strings);
+        if (value is System.Text.Json.JsonElement element) return element.ToString();
+        return value is string text ? TextoVisibleUtf8Normalizer.Normalizar(text) : value;
+    }
+
+    private static string FormatearValorVisible(object? value, string state)
+    {
+        if (value is null) return EstadoSinValor(state);
+        if (value is InstitutionalPlanProjectionValueDto[] plans)
+            return string.Join(Environment.NewLine, plans.Select(plan => $"{plan.PlanOrdinalIndex}. {FormatearValorVisible(plan.Value, plan.State)}"));
+        if (value is string[] strings) return string.Join(Environment.NewLine, strings);
+        if (value is System.Text.Json.JsonElement element) return element.ToString();
+        return TextoVisibleUtf8Normalizer.Normalizar(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
+    }
+
+    private static string EstadoSinValor(string state) => state switch
+    {
+        "NOT_APPLICABLE" or "ABSENT_CONTROL_PROJECTED" => "No aplica",
+        "LEGIT_BLANK" or "LEGIT_FORMULA_BLANK" or "OPERATIONAL_PENDING" or "CALCULATION_PENDING" => "Sin dato",
+        _ => throw new InvalidOperationException($"Estado semántico no reconocido para exportación: {state}.")
+    };
 
     private static string DescribirFiltros(string? filtros) =>
         string.IsNullOrWhiteSpace(filtros) ? "Sin filtros" : filtros.Trim();
 
-    private static IReadOnlyList<object?> MapearExcel(RiesgoReporteFilaDto fila) => new object?[]
-    {
-        fila.RiesgoId,
-        fila.EvaluacionId,
-        fila.VersionFormularioId,
-        fila.CodigoRiesgo,
-        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.AreaPrincipal),
-        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.DuenoRiesgo),
-        fila.Vri,
-        fila.Vri.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri.Value) : null,
-        fila.Vrr,
-        fila.Vrr.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr.Value) : null,
-        fila.RespuestaRiesgo is null ? null : MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
-        fila.FechaEvaluacion
-    };
-
-    private static IReadOnlyList<string> MapearPdf(RiesgoReporteFilaDto fila) => new[]
-    {
-        fila.RiesgoId.ToString(CultureInfo.InvariantCulture),
-        fila.EvaluacionId.ToString(CultureInfo.InvariantCulture),
-        fila.VersionFormularioId.ToString(CultureInfo.InvariantCulture),
-        fila.CodigoRiesgo,
-        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.AreaPrincipal) ?? string.Empty,
-        TextoVisibleUtf8Normalizer.NormalizarNullable(fila.DuenoRiesgo) ?? string.Empty,
-        fila.Vri?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
-        fila.Vri.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri.Value) : string.Empty,
-        fila.Vrr?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
-        fila.Vrr.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr.Value) : string.Empty,
-        fila.RespuestaRiesgo is null ? string.Empty : MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
-        fila.FechaEvaluacion?.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture) ?? string.Empty
-    };
 }

@@ -1,8 +1,8 @@
 import { expect, Page, test } from '@playwright/test';
 import { Buffer } from 'node:buffer';
 import * as ExcelJS from 'exceljs';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { createSystemTheme } from '../src/app/core/configuration/system-theme.util';
 
 function tokenAdministrador(): string {
@@ -77,13 +77,12 @@ async function preparar(page: Page): Promise<void> {
       return route.fulfill({ status: 200, contentType: 'application/pdf', body: Buffer.from(pdfFixture) });
     }
     if (path.endsWith('/reportes/consolidado.xlsx')) {
+      const canonicalFields = JSON.parse(await readFile(resolve(process.cwd(), '../../backend/RL.API/Features/MatricesRiesgos/Contracts/matriz_riesgos_82_campos_manifest.json'), 'utf8')) as Array<{ number: number; label: string }>;
       const reportWorkbook = new ExcelJS.Workbook();
-      const reportSheet = reportWorkbook.addWorksheet('Coincidencias');
-      reportSheet.addRows([
-        ['Código', 'Nombre', 'Estado'],
-        ['R-001', 'Riesgo UAT 1', 'ACTIVO'],
-        ['R-002', 'Riesgo UAT 2', 'ACTIVO']
-      ]);
+      const reportSheet = reportWorkbook.addWorksheet('Matriz Consolidada');
+      reportSheet.addRow(canonicalFields.map(field => field.label));
+      reportSheet.addRow(canonicalFields.map(field => field.number === 1 ? 1 : field.number === 2 ? 'R-001' : field.number === 8 ? 'Riesgo UAT 1' : `Valor ${field.number}`));
+      reportSheet.addRow(canonicalFields.map(field => field.number === 1 ? 2 : field.number === 2 ? 'R-002' : field.number === 8 ? 'Riesgo UAT 2' : `Valor ${field.number}`));
       const reportBuffer = await reportWorkbook.xlsx.writeBuffer();
       const reportBody = Buffer.isBuffer(reportBuffer) ? reportBuffer : Buffer.from(reportBuffer as ArrayBuffer);
       return route.fulfill({ status: 200, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: reportBody });
@@ -522,14 +521,14 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   await expect(fields.nth(16)).toContainText('Amenazas (Solo para riesgos de GTIC)');
   await expect(fields.nth(17)).toContainText('Vulnerabilidades (Solo para riesgos de GTIC)');
   await expect(fields.nth(18)).toContainText('Activos de Información (Solo para riesgos de GTIC)');
-  await expect(fields.nth(3)).toContainText('—');
-  await expect(fields.nth(20)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(3)).toContainText('Sin dato');
+  await expect(fields.nth(20)).not.toContainText('No disponible en esta versión');
   await expect(fields.nth(21)).toContainText('Razonable');
   await expect(fields.nth(22)).toContainText('90%');
-  await expect(fields.nth(24)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(24)).not.toContainText('No disponible en esta versión');
   await expect(fields.nth(25)).toContainText('Razonable');
   await expect(fields.nth(26)).toContainText('50%');
-  await expect(fields.nth(28)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(28)).not.toContainText('No disponible en esta versión');
   await expect(fields.nth(29)).toContainText('Razonable');
   await expect(fields.nth(30)).toContainText('30%');
 
@@ -1325,8 +1324,10 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     await expect(excelClose.locator('app-action-icon')).toHaveCount(1);
     await expect(excelDownload.locator('app-action-icon')).toHaveCount(1);
     await expect(preview.locator('[data-excel-preview-table]')).toBeVisible();
-    await expect(preview.getByText('Coincidencias', { exact: true })).toBeVisible();
-    await expect(preview.getByRole('columnheader', { name: 'Código' })).toBeVisible();
+    await expect(preview.getByText('Matriz Consolidada', { exact: true })).toBeVisible();
+    await expect(preview.locator('[data-excel-preview-table] thead th')).toHaveCount(82);
+    const canonicalFields = JSON.parse(await readFile(resolve(process.cwd(), '../../backend/RL.API/Features/MatricesRiesgos/Contracts/matriz_riesgos_82_campos_manifest.json'), 'utf8')) as Array<{ number: number; label: string }>;
+    await expect(preview.getByRole('columnheader', { name: canonicalFields[1].label })).toBeVisible();
     await expect(preview.getByText('R-001', { exact: true })).toBeVisible();
     await expect(preview.getByText('Riesgo UAT 1', { exact: true })).toBeVisible();
     const downloadPromise = page.waitForEvent('download');

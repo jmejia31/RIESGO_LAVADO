@@ -100,7 +100,7 @@ public sealed class InstitutionalPdfDocument
         _current.CursorY += totalHeight + 8m;
     }
 
-    public void AddKeyValueGrid(IEnumerable<(string Label, string Value)> items, int columns = 2)
+    public void AddKeyValueGrid(IEnumerable<(string Label, string Value)> items, int columns = 2, bool preserveLabelCase = false)
     {
         var data = items.ToList();
         if (data.Count == 0) return;
@@ -124,7 +124,7 @@ public sealed class InstitutionalPdfDocument
                     col % 2 == 0 ? "#FFFFFF" : InstitutionalReportStandard.Palette.AlternateRow,
                     InstitutionalReportStandard.Palette.Border);
                 if (col >= rowItems.Count) continue;
-                DrawText(Sanitizar(rowItems[col].Label).ToUpperInvariant(), x + 7m, _current.CursorY + 13m,
+                DrawText(preserveLabelCase ? Sanitizar(rowItems[col].Label) : Sanitizar(rowItems[col].Label).ToUpperInvariant(), x + 7m, _current.CursorY + 13m,
                     7m, true, InstitutionalReportStandard.Palette.Muted);
                 DrawLines(wrapped[col], x + 7m, _current.CursorY + 28m, 8.5m, 10m,
                     InstitutionalReportStandard.Palette.BodyText);

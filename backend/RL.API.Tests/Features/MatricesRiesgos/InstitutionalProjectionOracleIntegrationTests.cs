@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Data;
+using System.IO.Compression;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Xml.Linq;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -25,19 +27,29 @@ using RL.API.Features.Auditoria.Persistence;
 using RL.API.Shared.Results;
 using RL.API.Infrastructure.Database;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace RL.API.Tests.Features.MatricesRiesgos;
 
 /// <summary>Opt-in real Oracle integration test. CI runs it against a disposable Oracle XE service.</summary>
 public sealed class InstitutionalProjectionOracleIntegrationTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public InstitutionalProjectionOracleIntegrationTests(ITestOutputHelper output) => _output = output;
+
     [Fact]
-    [Trait("Category", "Block8OracleIntegration")]
-    public async Task ConsolidatedApiAndReportIncludeEveryActiveEvaluationAndFilterByLatestState()
+    [Trait("Category", "Block10OracleIntegration")]
+    public async Task ConsolidatedApiAndReportSelectLatestApprovedPerRisk()
     {
-        if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK8_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase)) return;
-        string connectionString = Environment.GetEnvironmentVariable("BLOCK8_ORACLE_CONNECTION_STRING")
-            ?? throw new InvalidOperationException("BLOCK8_ORACLE_CONNECTION_STRING is required when Block 8 Oracle integration is mandatory.");
+        if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK10_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            _output.WriteLine("BLOCK10_ORACLE_INTEGRATION_EXECUTED=NO (Oracle disposable not configured)");
+            return;
+        }
+        _output.WriteLine("BLOCK10_ORACLE_INTEGRATION_EXECUTED=YES");
+        string connectionString = Environment.GetEnvironmentVariable("BLOCK10_ORACLE_CONNECTION_STRING")
+            ?? throw new InvalidOperationException("BLOCK10_ORACLE_CONNECTION_STRING is required when Block 10 Oracle integration is mandatory.");
 
         OracleConnection.ClearAllPools();
         await using var seed = CreateConnection(connectionString);
@@ -54,41 +66,41 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         try
         {
             foreach ((long riskId, int index) in riskIds.Select((id, index) => (id, index)))
-                await ExecuteAsync(seed, "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,:name,'Fixture Block 8',1,:usr,SYSDATE)",
-                    ("id", riskId), ("code", $"B8-{stamp}-{index}"), ("name", $"Block 8 risk {index}"), ("usr", userId));
+                await ExecuteAsync(seed, "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,:name,'Fixture Block 10',1,:usr,SYSDATE)",
+                    ("id", riskId), ("code", $"B10-{stamp}-{index}"), ("name", $"Block 10 risk {index}"), ("usr", userId));
 
             // Risk 1: separate evaluations across approval, draft, review and rejection states.
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[0], flowIds[0], "APROBADA", t1, $"B8-{stamp}", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[1], flowIds[1], "APROBADA", t2, $"B8-{stamp}", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[2], flowIds[2], "BORRADOR", t3, $"B8-{stamp}", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[3], flowIds[3], "RECHAZADA", t3.AddDays(1), $"B8-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[0], flowIds[0], "APROBADA", t1, $"B10-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[1], flowIds[1], "APROBADA", t2, $"B10-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[2], flowIds[2], "BORRADOR", t3, $"B10-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[3], flowIds[3], "RECHAZADA", t3.AddDays(1), $"B10-{stamp}", userId);
             // Risk 2: same approval timestamp; larger flow ID is the deterministic winner.
-            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[4], flowIds[4], "APROBADA", tie, $"B8-{stamp}", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[5], flowIds[5], "APROBADA", tie, $"B8-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[4], flowIds[4], "APROBADA", tie, $"B10-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[5], flowIds[5], "APROBADA", tie, $"B10-{stamp}", userId);
             // The last workflow event is authoritative for this evaluation.
-            await InsertConsolidatedFixtureAsync(seed, riskIds[2], evaluationIds[6], flowIds[6], "APROBADA", t2, $"B8-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[2], evaluationIds[6], flowIds[6], "APROBADA", t2, $"B10-{stamp}", userId);
             await ExecuteAsync(seed, "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,'CERRADA','test',:usr,:eventDate)",
                 ("id", flowIds[7]), ("eva", evaluationIds[6]), ("usr", userId), ("eventDate", t3));
             await InsertDraftWithoutProjectionAsync(seed, riskIds[3], evaluationIds[7], t3.AddDays(2), userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[3], evaluationIds[8], flowIds[8], "EN_REVISION", t3.AddDays(3), $"B8-{stamp}", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[3], evaluationIds[8], flowIds[8], "EN_REVISION", t3.AddDays(3), $"B10-{stamp}", userId);
 
             await using var app = await CreateBlock7ApiAsync(connectionString);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
             using var http = new HttpClient { BaseAddress = new Uri(address) };
-            string fixtureSearch = Uri.EscapeDataString($"B8-{stamp}");
+            string fixtureSearch = Uri.EscapeDataString($"B10-{stamp}");
             using HttpResponseMessage response = await http.GetAsync($"/api/matrices-riesgos/consolidado/paginado?pagina=1&tamanoPagina=20&buscar={fixtureSearch}");
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             JsonElement rows = body.RootElement.GetProperty("datos").GetProperty("items");
             var allIds = rows.EnumerateArray().Select(item => item.GetProperty("evaluacionId").GetInt64()).ToArray();
-            Assert.Equal(evaluationIds.Order(), allIds.Order());
-            Assert.Equal(9, body.RootElement.GetProperty("datos").GetProperty("totalRegistros").GetInt32());
-            JsonElement noProjection = rows.EnumerateArray().Single(item => item.GetProperty("evaluacionId").GetInt64() == evaluationIds[7]);
-            Assert.Equal("BORRADOR", noProjection.GetProperty("estadoEvaluacion").GetString());
-            Assert.Equal($"B8-{stamp}-3", noProjection.GetProperty("codigoRiesgo").GetString());
-            Assert.Equal(JsonValueKind.Null, noProjection.GetProperty("vri").ValueKind);
-            Assert.Equal(JsonValueKind.Null, noProjection.GetProperty("vrr").ValueKind);
-            Assert.Equal(JsonValueKind.Null, noProjection.GetProperty("fechaEvaluacion").ValueKind);
+            Assert.Equal(new[] { evaluationIds[1], evaluationIds[5] }.Order(), allIds.Order());
+            _output.WriteLine("BLOCK10_LATEST_APPROVED_TEST=PASS");
+            Assert.Equal(2, body.RootElement.GetProperty("datos").GetProperty("totalRegistros").GetInt32());
+            Assert.All(rows.EnumerateArray(), item => Assert.Equal("APROBADA", item.GetProperty("estadoEvaluacion").GetString()));
+            Assert.Equal(1, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[0]));
+            Assert.Equal(1, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[1]));
+            Assert.DoesNotContain(rows.EnumerateArray(), item => item.GetProperty("riesgoId").GetInt64() == riskIds[2]);
+            Assert.DoesNotContain(rows.EnumerateArray(), item => item.GetProperty("riesgoId").GetInt64() == riskIds[3]);
 
             async Task<long[]> GetIdsByStateAsync(string state)
             {
@@ -99,18 +111,81 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                     .EnumerateArray().Select(item => item.GetProperty("evaluacionId").GetInt64()).ToArray();
             }
 
-            Assert.Equal(new[] { evaluationIds[0], evaluationIds[1], evaluationIds[4], evaluationIds[5] }.Order(), (await GetIdsByStateAsync("APROBADA")).Order());
-            Assert.Equal(new[] { evaluationIds[2], evaluationIds[7] }.Order(), (await GetIdsByStateAsync("BORRADOR")).Order());
-            Assert.Equal(new[] { evaluationIds[3] }, await GetIdsByStateAsync("RECHAZADA"));
-            Assert.Equal(new[] { evaluationIds[6] }, await GetIdsByStateAsync("CERRADA"));
-            Assert.Equal(new[] { evaluationIds[8] }, await GetIdsByStateAsync("EN_REVISION"));
-            Assert.Equal(4, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[0]));
+            Assert.Equal(new[] { evaluationIds[1], evaluationIds[5] }.Order(), (await GetIdsByStateAsync("APROBADA")).Order());
+            Assert.Empty(await GetIdsByStateAsync("BORRADOR"));
+            Assert.Empty(await GetIdsByStateAsync("RECHAZADA"));
+            Assert.Empty(await GetIdsByStateAsync("CERRADA"));
+            Assert.Empty(await GetIdsByStateAsync("EN_REVISION"));
 
             using var scope = app.Services.CreateScope();
             IMatricesRiesgosAppService service = scope.ServiceProvider.GetRequiredService<IMatricesRiesgosAppService>();
-            var export = await service.ObtenerConsolidadoParaExportacionAsync(new FiltroReporteMatricesDto { Buscar = $"B8-{stamp}" });
+            var export = await service.ObtenerConsolidadoParaExportacionAsync(new FiltroReporteMatricesDto { Buscar = $"B10-{stamp}" });
             Assert.True(export.Success);
             Assert.Equal(allIds.Order(), export.Data!.Select(row => row.EvaluacionId).Order());
+            IReadOnlyList<RiesgoReporteFilaDto> exportRows = export.Data!;
+
+            IInstitutionalProjectionReadRepository projectionRepository = scope.ServiceProvider.GetRequiredService<IInstitutionalProjectionReadRepository>();
+            IReadOnlyDictionary<long, InstitutionalProjectionSnapshot> batchSources =
+                await projectionRepository.ReadManyAsync(exportRows.Select(row => row.EvaluacionId).ToArray(), userId, CancellationToken.None);
+            Assert.Equal(exportRows.Count, batchSources.Count);
+            Assert.All(batchSources.Values, snapshot => Assert.Equal(9, snapshot.QueryCount));
+
+            IInstitutionalProjectionService projectionService = scope.ServiceProvider.GetRequiredService<IInstitutionalProjectionService>();
+            ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>> batch =
+                await projectionService.GetManyAsync(exportRows.Select(row => row.EvaluacionId).ToArray(), userId, CancellationToken.None);
+            Assert.True(batch.Success, batch.Message);
+            Assert.Equal(allIds.Order(), batch.Data!.Keys.Order());
+            foreach (RiesgoReporteFilaDto row in exportRows)
+            {
+                ServiceResult<InstitutionalEvaluationProjectionDto> single = await projectionService.GetAsync(row.EvaluacionId, userId, CancellationToken.None);
+                Assert.True(single.Success, single.Message);
+                InstitutionalEvaluationProjectionDto batched = batch.Data[row.EvaluacionId];
+                Assert.Equal(82, batched.Fields.Count);
+                Assert.Equal(single.Data!.Fields.Select(field => field.FieldLabel), batched.Fields.Select(field => field.FieldLabel));
+                Assert.Equal(single.Data.Fields.Select(field => field.Value), batched.Fields.Select(field => field.Value));
+                Assert.Equal(single.Data.Fields.Select(field => field.State), batched.Fields.Select(field => field.State));
+            }
+            _output.WriteLine("BLOCK10_BATCH_82_PROJECTION=PASS");
+
+            var exporter = new MatricesRiesgosReportExportService();
+            ArchivoReporteDto excelFile = exporter.CrearExcelMatrizCompleta(exportRows, batch.Data);
+            using (var zip = new ZipArchive(new MemoryStream(excelFile.Contenido), ZipArchiveMode.Read))
+            {
+                XDocument sheet = XDocument.Load(zip.GetEntry("xl/worksheets/sheet1.xml")!.Open());
+                XNamespace spreadsheet = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+                XElement headerRow = sheet.Descendants(spreadsheet + "row").Single(item => (string?)item.Attribute("r") == "4");
+                string[] expectedHeaders = new InstitutionalProjectionMapper().GetFieldCatalog().Select(field => field.FieldLabel).ToArray();
+                Assert.Equal(82, headerRow.Elements(spreadsheet + "c").Count());
+                Assert.Equal(expectedHeaders, headerRow.Elements(spreadsheet + "c")
+                    .Select(cell => (string?)cell.Element(spreadsheet + "is")?.Element(spreadsheet + "t") ?? string.Empty));
+                XElement[] dataRows = sheet.Descendants(spreadsheet + "row")
+                    .Where(item => int.TryParse((string?)item.Attribute("r"), out int rowNumber) && rowNumber >= 5).ToArray();
+                Assert.Equal(exportRows.Count, dataRows.Length);
+                for (int rowIndex = 0; rowIndex < exportRows.Count; rowIndex++)
+                {
+                    RiesgoReporteFilaDto selected = exportRows[rowIndex];
+                    InstitutionalEvaluationProjectionDto source = batch.Data[selected.EvaluacionId];
+                    XElement[] cells = dataRows[rowIndex].Elements(spreadsheet + "c").ToArray();
+                    Assert.Equal(82, cells.Length);
+                    Assert.Equal(selected.RiesgoId, source.RiskId);
+                    Assert.Equal(selected.EvaluacionId, source.EvaluationId);
+                    for (int fieldIndex = 0; fieldIndex < source.Fields.Count; fieldIndex++)
+                        Assert.Equal(ExpectedExcelValue(source.Fields[fieldIndex]), ReadExcelCell(cells[fieldIndex], spreadsheet));
+                }
+            }
+            ArchivoReporteDto pdfFile = exporter.CrearPdfMatrizCompleta(exportRows, batch.Data);
+            string pdfContent = System.Text.Encoding.Latin1.GetString(pdfFile.Contenido);
+            Assert.StartsWith("%PDF-1.4", pdfContent, StringComparison.Ordinal);
+            foreach (RiesgoReporteFilaDto row in exportRows)
+            {
+                InstitutionalEvaluationProjectionDto source = batch.Data[row.EvaluacionId];
+                Assert.Equal(row.RiesgoId, source.RiskId);
+                Assert.Equal(row.EvaluacionId, source.EvaluationId);
+                Assert.Contains(source.RiskCode, pdfContent, StringComparison.Ordinal);
+            }
+            Assert.Equal(82, new InstitutionalProjectionMapper().GetFieldCatalog().Count);
+            Assert.EndsWith("%%EOF", pdfContent, StringComparison.Ordinal);
+            _output.WriteLine("BLOCK10_EXPORT_SOURCE_PARITY=PASS");
         }
         finally
         {
@@ -122,7 +197,34 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             }
             foreach (long riskId in riskIds)
                 await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+            _output.WriteLine("BLOCK10_ORACLE_TEST_CLEANUP=PASS");
         }
+    }
+
+    private static object ExpectedExcelValue(InstitutionalProjectionFieldDto field)
+    {
+        if (field.Value is null)
+            return field.State is "NOT_APPLICABLE" or "ABSENT_CONTROL_PROJECTED" ? "No aplica" : "Sin dato";
+        if (field.Value is DateTime date) return date.ToOADate();
+        if (field.Value is bool boolean) return boolean;
+        if (field.Value is InstitutionalPlanProjectionValueDto[] plans)
+            return string.Join(Environment.NewLine, plans.Select(plan => plan.Value is null
+                ? $"{plan.PlanOrdinalIndex}. {(plan.State == "NOT_APPLICABLE" ? "No aplica" : "Sin dato")}" : $"{plan.PlanOrdinalIndex}. {plan.Value}"));
+        if (field.Value is string[] strings) return string.Join(Environment.NewLine, strings);
+        if (field.Value is System.Text.Json.JsonElement element) return element.ToString();
+        if (field.Value is IConvertible convertible && field.Value is not string)
+            return Convert.ToDouble(convertible, System.Globalization.CultureInfo.InvariantCulture);
+        return Convert.ToString(field.Value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+    }
+
+    private static object ReadExcelCell(XElement cell, XNamespace ns)
+    {
+        string? type = (string?)cell.Attribute("t");
+        if (type == "inlineStr") return (string?)cell.Element(ns + "is")?.Element(ns + "t") ?? string.Empty;
+        string value = (string?)cell.Element(ns + "v") ?? string.Empty;
+        if (type == "b") return value == "1";
+        return double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double number)
+            ? number : string.Empty;
     }
 
     private static Task InsertDraftWithoutProjectionAsync(OracleConnection connection, long riskId, long evaluationId, DateTime createdAt, long userId) =>
@@ -134,9 +236,10 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         OracleConnection connection, long riskId, long evaluationId, long flowId,
         string status, DateTime eventDate, string code, long userId)
     {
+        InstitutionalProjectionSource projectionFixture = InstitutionalProjectionMapperTests.CreateSource();
         await ExecuteAsync(connection,
-            "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,'{}','{}',:eventDate,:usr,1,1)",
-            ("id", evaluationId), ("risk", riskId), ("eventDate", eventDate), ("usr", userId));
+            "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,:answers,:calculations,:eventDate,:usr,1,1)",
+            ("id", evaluationId), ("risk", riskId), ("answers", projectionFixture.Evaluation.EvaDataJson), ("calculations", projectionFixture.Evaluation.EvaDataCalcJson), ("eventDate", eventDate), ("usr", userId));
         await ExecuteAsync(connection,
             "INSERT INTO RL_MR_PROYECCIONES_EVALUACION (PROY_ID,PROY_EVALUACION_ID,PROY_CODIGO_RIESGO,PROY_AREA_PRINCIPAL,PROY_VRI,PROY_VRR,PROY_NIVEL_INHERENTE,PROY_NIVEL_RESIDUAL,PROY_RESPUESTA_RIESGO,PROY_ESTADO_EVALUACION,PROY_DUENO_RIESGO,PROY_FECHA_EVAL) VALUES (:id,:eva,:code,'Block8',3,2,'BAJO','BAJO','Mitigar',:status,'Fixture',:eventDate)",
             ("id", evaluationId + 1000), ("eva", evaluationId), ("code", code), ("status", status), ("eventDate", eventDate));
