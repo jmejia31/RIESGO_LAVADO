@@ -147,7 +147,7 @@ app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
             }
             var calculations = calculatedValues.ToDictionary(pair => calculationKeys[pair.Key], pair => pair.Value, StringComparer.Ordinal);
             string calculationsJson = JsonSerializer.Serialize(calculations);
-            string evaluationDataJson = JsonSerializer.Serialize(new { area_principal = "Block12" });
+            string evaluationDataJson = BuildFullChainEvaluationDataJson();
             DateTime evaluatedAt = new DateTime(2026, 9, 1).AddMinutes(index);
             await ExecuteAsync(fullChainSeed,
                 "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,:data,:calculations,:eventDate,:usr,1,1)",
@@ -250,7 +250,32 @@ static IReadOnlyDictionary<int, string> ReadCalculationKeysByField()
             string mapping = field.GetProperty("dbOrEntityMapping").GetString()!;
             int separator = mapping.LastIndexOf("->", StringComparison.Ordinal);
             return separator >= 0 ? mapping[(separator + 2)..].Trim() : field.GetProperty("canonicalKey").GetString()!;
-        });
+    });
+}
+
+static string BuildFullChainEvaluationDataJson()
+{
+    DirectoryInfo? directory = new DirectoryInfo(Directory.GetCurrentDirectory());
+    while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "AGENTS.md"))) directory = directory.Parent;
+    string root = directory?.FullName ?? throw new DirectoryNotFoundException("Repository root was not found for the full-chain fixture.");
+    string manifestPath = Path.Combine(root, "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_82_campos_manifest.json");
+    using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+    var values = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+    foreach (JsonElement field in manifest.RootElement.EnumerateArray())
+    {
+        int number = field.GetProperty("number").GetInt32();
+        if (number is 1 or 2 or 8 or 9 or 12 or 13 or 20 or 22 or 23 or 24 or 26 or 27 or 28 or 30 or 31 or 33 or 34 or 35 or 36 or 37 or 38 or 40 or 41 or 42 or 43 or 44 or 45 or 46 or 47 or 48 or 49 or >= 50 and <= 82) continue;
+        string mapping = field.GetProperty("dbOrEntityMapping").GetString()!;
+        int separator = mapping.LastIndexOf("->", StringComparison.Ordinal);
+        string key = separator >= 0 ? mapping[(separator + 2)..].Trim() : field.GetProperty("canonicalKey").GetString()!;
+        values[key] = number switch { 5 => "GTIC", 21 or 25 or 29 => "Razonable", 39 => "Mitigar", _ => $"Fixture F{number:00}" };
+    }
+    values["tipo_riesgo"] = "GTIC";
+    values["respuesta_riesgo"] = "Mitigar";
+    values["amenazas_gtic"] = "Amenaza fixture";
+    values["vulnerabilidades_gtic"] = "Vulnerabilidad fixture";
+    values["activos_informacion_gtic"] = "Activo fixture";
+    return JsonSerializer.Serialize(values);
 }
 
 static object? NoControlExpected(WorkbookFormulaOracle oracle, int row, int field)
