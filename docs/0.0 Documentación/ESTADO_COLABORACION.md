@@ -1,3 +1,16 @@
+# Estado vigente - BLOQUE 11: clasificación de credencial sin evidencia concluyente (COD) - 2026-10-19 01:43 -06:00
+
+## Revisión de reclasificación solicitada por el propietario
+
+- Baseline `desarrollo`, `HEAD=origin/desarrollo=89ae5d2f2bc768050ac8146f0ca3b189ab7bda53`. Se preservaron las modificaciones tracked y archivos untracked ajenos presentes al inicio; no se alteraron ni stagearon.
+- La decisión del propietario elimina la atribución personal Antig como gate y solicita tratar la credencial observada como desarrollo/pruebas. Se inspeccionó localmente `backend/RL.API/appsettings.json` sin imprimir ni registrar valores: es ignorado por Git, carece de `Database:Profile`, contiene solo la clave legacy genérica `OracleDB`, y su destino se clasifica como remoto/no-XE. El identificador del servicio contiene un marcador nominal compatible con producción; no se guardó el identificador.
+- El resolver vigente falla cerrado si falta `Database:Profile` y solo acepta las claves nombradas de `PRODUCTION` o `LOCAL_XE`; por tanto la clave genérica no selecciona actualmente un destino en el runtime. Esto no demuestra que la credencial no pueda autenticarse contra producción ni identifica la cuenta o sus grants. No existe inventario productivo/QA accesible para comparar el destino. En consecuencia: `EXPOSED_CREDENTIAL_ENVIRONMENT=UNKNOWN`, `EXPOSED_CREDENTIAL_PRODUCTION_ACCESS=UNKNOWN`, `EXPOSED_CREDENTIAL_PRODUCTIVE_ACCOUNT=UNKNOWN`, `EXPOSED_CREDENTIAL_PRODUCTIVE_SECRET_STORE=UNKNOWN`.
+- No se realizó conexión Oracle, consulta de negocio, DML, DDL ni rotación. El archivo local ignorado se preserva sin modificación. La solicitud de reclasificar no supera la evidencia ambigua/indicador de producción; no se declara `PRODUCTION_SECRET_ROTATED=NOT_APPLICABLE`, `DEVELOPMENT_TEST_CREDENTIAL_ROTATION_REQUIRED=NO` ni `OWNER_ACCEPTED_DEVELOPMENT_TEST_CREDENTIAL_RISK=YES` hasta que el owner/DBA identifique el destino y confirme contra el inventario autorizado que no es productivo y la cuenta carece de acceso productivo.
+- Evidencia técnica vigente reutilizada: perfiles/no-fallback y guard certificados en código `4b34855d7211106993d941e785341de401e506a0`, CI `39204751409=success`; documentación/CI final previa `89ae5d2f2bc768050ac8146f0ca3b189ab7bda53`, run `39208819397=success`. El guard sigue certificado y la atribución histórica personal permanece `UNVERIFIED_NON_BLOCKING`.
+- **Bloqueo:** `BLOCK11_STATUS=BLOCKED`, `BLOCK11_CLOSED=NO`. Acción mínima: DBA/owner debe verificar en inventario seguro el service/destino y la identidad/grants de la cuenta referenciada; entregar solo confirmación no sensible `DEVELOPMENT_TEST_ONLY` y `PRODUCTION_ACCESS=NO` basada en ese inventario. Si la evidencia confirma producción, aplicar rotación por runbook autorizado; si confirma exclusivamente test, documentar riesgo aceptado y cerrar la rotación como `NOT_APPLICABLE`. No se publicó ningún secreto.
+
+---
+
 # Estado vigente - BLOQUE 11: certificación técnica del guard y bloqueo externo de rotación (COD) - 2026-10-19 00:12 -06:00
 
 ## Reanudación de cierre
