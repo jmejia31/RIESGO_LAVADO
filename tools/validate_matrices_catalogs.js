@@ -34,7 +34,9 @@ const expectedRisk = [
   'Riesgo no significativo', 'Riesgo no significativo', 'Riesgo bajo', 'Riesgo bajo',
   'Riesgo Medio', 'Riesgo Alto', 'Riesgo Alto', 'Riesgo Intolerable', 'Riesgo Intolerable'
 ];
-if (!risk || risk.items.length !== 9 || risk.items.some((i, n) => i.numericValue !== n + 1 || i.label !== expectedRisk[n])) fail('RISK_LEVEL must exactly match workbook values 1..9');
+const riskLevelValid = !!risk && risk.items.length === 9
+  && !risk.items.some((i, n) => i.numericValue !== n + 1 || i.label !== expectedRisk[n]);
+if (!riskLevelValid) fail('RISK_LEVEL must exactly match workbook values 1..9');
 
 const weights = get('CONTROL_WEIGHT');
 const weightSum = weights?.items.reduce((sum, item) => sum + item.weight, 0);
@@ -45,12 +47,14 @@ const expectedEffectiveness = [[0, 0], [1, 0], [2, .3], [3, .5], [4, .85], [5, .
 if (!effectiveness || effectiveness.items.length !== 6 || effectiveness.items.some((i, n) => i.level !== expectedEffectiveness[n][0] || i.percentage !== expectedEffectiveness[n][1])) fail('control effectiveness levels/percentages mismatch');
 
 const response = get('RISK_RESPONSE');
-if (!response || response.items.map(i => i.key).join(',') !== 'EVITAR,TRANSFERIR,ACEPTAR,MITIGAR') fail('risk response key contract mismatch');
-if (!response.items.find(i => i.key === 'MITIGAR')?.aliases.includes('Reducir')) fail('response alias Reducir is not registered');
-if (!response.items.find(i => i.key === 'TRANSFERIR')?.aliases.includes('Transferir')) fail('response alias Transferir is not registered');
+const responseValid = !!response && response.items.map(i => i.key).join(',') === 'EVITAR,TRANSFERIR,ACEPTAR,MITIGAR'
+  && response.items.find(i => i.key === 'MITIGAR')?.aliases.includes('Reducir')
+  && response.items.find(i => i.key === 'TRANSFERIR')?.aliases.includes('Transferir');
+if (!responseValid) fail('risk response key/alias contract mismatch');
 
 const automation = get('CONTROL_AUTOMATION');
-if (!automation?.items.find(i => i.label === 'Semiautomatizado')?.aliases.includes('Semi-Automatizado')) fail('automation alias is not registered');
+const automationValid = !!automation?.items.find(i => i.label === 'Semiautomatizado')?.aliases.includes('Semi-Automatizado');
+if (!automationValid) fail('automation alias is not registered');
 for (const id of ['MONITORING_RISK_STATUS', 'MONITORING_CONTROL_STATUS', 'MONITORING_EFFECTIVENESS']) if (!get(id)) fail(`missing ${id}`);
 
 const backendService = fs.readFileSync(path.join(__dirname, '..', 'backend', 'RL.API', 'Features', 'MatricesRiesgos', 'Application', 'MatricesRiesgosAppService.cs'), 'utf8');
@@ -93,13 +97,17 @@ const manifestData = Object.fromEntries(catalogs.map(c => [c.catalogId, c.items.
   return item;
 })]));
 if (JSON.stringify(generated) !== JSON.stringify(manifestData)) fail('generated frontend catalog data must exactly match the canonical manifest');
-const exportsCanonicalRiskValues = reportExport.includes('ObtenerEtiquetaNivelRiesgo(fila.Vri)')
-  && reportExport.includes('ObtenerEtiquetaNivelRiesgo(fila.Vrr)')
-  || reportExport.includes('fila.Vri.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri.Value)')
-  && reportExport.includes('fila.Vrr.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr.Value)');
-const exportsCanonicalRiskResponse = reportExport.includes('ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo)');
-if (!resolver.includes('matriz_riesgos_catalogos_manifest.json') || !exportsCanonicalRiskValues || !exportsCanonicalRiskResponse)
-  fail('backend Excel/PDF exports must resolve canonical risk/response labels through the manifest helper');
+// Block 10 exports the exact canonical 82-field projection already selected by
+// Consolidado. The old row-level VRI/VRR/response label checks predate that
+// contract and incorrectly require a second, legacy export mapping.
+const exportsCanonicalProjection = reportExport.includes('GetFieldCatalog()')
+  && reportExport.includes('catalog.Select(field => field.FieldLabel)')
+  && reportExport.includes('MapearProyeccionExcel(proyecciones[row.EvaluacionId], catalog)')
+  && reportExport.includes('projection.Fields.Select(field =>')
+  && reportExport.includes('proyecciones[row.EvaluacionId]')
+  && reportExport.includes('projection.Fields[index].FieldLabel');
+if (!resolver.includes('matriz_riesgos_catalogos_manifest.json') || !exportsCanonicalProjection)
+  fail('backend Excel/PDF exports must consume the selected canonical 82-field projection');
 if (!runtimeFactory.includes('CrearSnapshotNivelRiesgo') || !appService.includes('NormalizarRespuestaRiesgo(dto)')) fail('backend calculation/import alias consumers do not use canonical catalog rules');
 if (!frontendComponent.includes('canonicalRiskLevelLabel') || !frontendComponent.includes('canonicalRiskResponseLabel')
   || !frontendTemplate.includes('etiquetaNivelRiesgo(fila.vri)') || !frontendTemplate.includes('etiquetaRespuestaRiesgo(fila.respuestaRiesgo)'))
@@ -120,25 +128,31 @@ if (!monitoringUi.includes('estadosControl') || !monitoringUiTs.includes("canoni
 
 const frequency = get('FREQUENCY');
 const impact = get('IMPACT');
-if (JSON.stringify(frequency?.items.map(item => item.numericValue)) !== JSON.stringify([1, 2, 3, 4, 5])) fail('frequency numeric domain must be exactly 1..5');
-if (JSON.stringify(impact?.items.map(item => item.numericValue)) !== JSON.stringify([1, 2, 3, 4, 5])) fail('impact numeric domain must be exactly 1..5');
+const frequencyValid = JSON.stringify(frequency?.items.map(item => item.numericValue)) === JSON.stringify([1, 2, 3, 4, 5]);
+const impactValid = JSON.stringify(impact?.items.map(item => item.numericValue)) === JSON.stringify([1, 2, 3, 4, 5]);
+if (!frequencyValid) fail('frequency numeric domain must be exactly 1..5');
+if (!impactValid) fail('impact numeric domain must be exactly 1..5');
 const monitoringExpectations = {
   MONITORING_RISK_STATUS: ['Vigente', 'Mitigado', 'Nuevo'],
   MONITORING_CONTROL_STATUS: ['Se mantiene', 'No se mantiene', 'Requiere actualización'],
   MONITORING_EFFECTIVENESS: ['Inexistente', 'Inefectivo', 'Razonable', 'Parcialmente Efectivo', 'Moderado', 'Alta Efectividad']
 };
-for (const [id, expected] of Object.entries(monitoringExpectations)) if (JSON.stringify(get(id)?.items.map(item => item.label)) !== JSON.stringify(expected)) fail(`${id}: workbook labels/order differ from the canonical contract`);
+const monitoringValid = Object.entries(monitoringExpectations).every(([id, expected]) =>
+  JSON.stringify(get(id)?.items.map(item => item.label)) === JSON.stringify(expected));
+if (!monitoringValid) for (const [id, expected] of Object.entries(monitoringExpectations))
+  if (JSON.stringify(get(id)?.items.map(item => item.label)) !== JSON.stringify(expected))
+    fail(`${id}: workbook labels/order differ from the canonical contract`);
 
 console.log(`CATALOG_COUNT=${catalogs.length}`);
 console.log(`CATALOG_ITEMS_TOTAL=${catalogs.reduce((n, c) => n + c.items.length, 0)}`);
-console.log(`RISK_LEVEL_1_9=${process.exitCode ? 'FAIL' : 'PASS'}`);
+console.log(`RISK_LEVEL_1_9=${riskLevelValid ? 'PASS' : 'FAIL'}`);
 console.log(`CONTROL_WEIGHT_SUM=${Number.isFinite(weightSum) ? weightSum.toFixed(2) : 'INVALID'}`);
 console.log(`UNRESOLVED_SOURCES=${manifest.unresolvedSources?.length ?? 0}`);
 console.log(`CATALOG_COMPLETENESS=${manifest.unresolvedSources?.length ? 'PENDING' : 'PASS'}`);
-console.log(`RISK_LEVEL_CONSUMER_PARITY=${process.exitCode ? 'FAIL' : 'PASS'}`);
-console.log(`RESPONSE_CONSUMER_PARITY=${process.exitCode ? 'FAIL' : 'PASS'}`);
-console.log(`CONTROL_CONSUMER_PARITY=${process.exitCode ? 'FAIL' : 'PASS'}`);
-console.log(`AUTOMATION_CONSUMER_PARITY=${process.exitCode ? 'FAIL' : 'PASS'}`);
-console.log(`MONITORING_CONSUMER_PARITY=${process.exitCode ? 'FAIL' : 'PASS'}`);
-console.log(`EXPORT_CONSUMER_PARITY=${process.exitCode ? 'FAIL' : 'PASS'}`);
+console.log(`RISK_LEVEL_CONSUMER_PARITY=${riskLevelValid && runtimeFactory.includes('CrearSnapshotNivelRiesgo') ? 'PASS' : 'FAIL'}`);
+console.log(`RESPONSE_CONSUMER_PARITY=${responseValid && appService.includes('NormalizarRespuestaRiesgo(dto)') ? 'PASS' : 'FAIL'}`);
+console.log(`CONTROL_CONSUMER_PARITY=${weights && Math.abs(weightSum - 1) <= 1e-10 && effectiveness?.items.length === 6 ? 'PASS' : 'FAIL'}`);
+console.log(`AUTOMATION_CONSUMER_PARITY=${automationValid && mitigationService.includes('CONTROL_AUTOMATION') ? 'PASS' : 'FAIL'}`);
+console.log(`MONITORING_CONSUMER_PARITY=${monitoringValid && monitoringService.includes('MONITORING_CONTROL_STATUS') && monitoringUiTs.includes('canonicalMonitoringEffectivenessOptions()') ? 'PASS' : 'FAIL'}`);
+console.log(`EXPORT_CONSUMER_PARITY=${exportsCanonicalProjection ? 'PASS' : 'FAIL'}`);
 if (!process.exitCode) console.log('CATALOG_MANIFEST_STRUCTURE=PASS');
