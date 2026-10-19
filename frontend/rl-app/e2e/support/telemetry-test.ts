@@ -116,9 +116,11 @@ export const test = base.extend<{ browserTelemetry: void }>({
     const unobservedExpectedResponses = expectedResponses.filter(expected => expected.remaining > 0);
     const unexpectedBrowserResourceErrors = [...telemetry.browserResourceErrors];
     for (const expected of expectedResponses) {
-      if (expected.remaining === 0 && expected.status >= 400) {
-        const resourceIndex = unexpectedBrowserResourceErrors.indexOf(expected.status);
-        if (resourceIndex >= 0) unexpectedBrowserResourceErrors.splice(resourceIndex, 1);
+      if (expected.status >= 400) {
+        for (let matched = 0; matched < expected.observed; matched++) {
+          const resourceIndex = unexpectedBrowserResourceErrors.indexOf(expected.status);
+          if (resourceIndex >= 0) unexpectedBrowserResourceErrors.splice(resourceIndex, 1);
+        }
       }
     }
 

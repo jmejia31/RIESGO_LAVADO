@@ -375,6 +375,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const matrixFileChooserPromise = monitoringUiPage.waitForEvent('filechooser');
   await matrixUploader.click();
   const matrixFileChooser = await matrixFileChooserPromise;
+  const matrixLinkResponsePromise = monitoringUiPage.waitForResponse(response =>
+    response.request().method() === 'POST'
+    && new URL(response.url()).pathname.endsWith('/evidencias/vinculos'));
   const matrixUploadResponsePromise = monitoringUiPage.waitForResponse(response =>
     response.request().method() === 'POST'
     && new URL(response.url()).pathname.endsWith('/evidencias/cargar'));
@@ -385,6 +388,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   });
   const matrixUploadResponse = await matrixUploadResponsePromise;
   expect(matrixUploadResponse.status(), await matrixUploadResponse.text()).toBe(200);
+  const matrixLinkResponse = await matrixLinkResponsePromise;
+  expect(matrixLinkResponse.status(), await matrixLinkResponse.text()).toBe(200);
+  await expect(monitoringUiPage.getByText('Evidencia cargada y vinculada al control.')).toBeVisible();
   await expect(monitoringUiPage.getByText('block9-ui-control-evidence.pdf')).toBeVisible();
   const matrixUploadBody = await matrixUploadResponse.json() as { datos: { eviId: number } };
   const matrixUiEvidenceId = matrixUploadBody.datos.eviId;
