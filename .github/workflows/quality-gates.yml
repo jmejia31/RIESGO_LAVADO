@@ -257,6 +257,18 @@ jobs:
           echo 'BLOCK12_FORMULA_RESULTS=2006/2006'
           echo 'BLOCK12_ROP_CUMP_54=34/34'
 
+      - name: Certify all 2006 workbook calculations through Oracle XE persistence, API, and exports
+        env:
+          RL_BLOCK12_ORACLE_CERTIFICATION_REQUIRED: 'true'
+          BLOCK12_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          Database__Profile: LOCAL_XE
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~WorkbookCalculationResultsSurviveOracleApiProjectionAndBothExportsForAllRisks --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Passed: *1' <<<"$output"
+          echo 'BLOCK12_FORMULA_FULL_CHAIN_ORACLE_XE=PASS'
+
       - name: Validate compose configuration without secrets in repository
         shell: bash
         env:

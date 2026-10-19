@@ -41,7 +41,7 @@ async function installNonCriticalFixtures(
   page: Page,
   fixture: Fixture,
   evaluation: { id?: number; data?: Record<string, unknown>; state?: string },
-  options: { useRealRiskList?: boolean } = {},
+  options: { useRealRiskList?: boolean; useRealConsolidated?: boolean } = {},
 ) {
   const token = unsignedTestToken();
   await page.addInitScript(accessToken => {
@@ -62,6 +62,10 @@ async function installNonCriticalFixtures(
     const method = request.method();
     const key = `${method} ${path}`;
     if (options.useRealRiskList && method === 'GET' && path.endsWith('/riesgos/paginado')) {
+      await route.continue();
+      return;
+    }
+    if (options.useRealConsolidated && method === 'GET' && path.endsWith('/consolidado/paginado')) {
       await route.continue();
       return;
     }
@@ -772,4 +776,67 @@ test('Block 12 UI renders all 59 workbook risk identities from Oracle XE API', a
   }))].sort(byCode));
   console.log('BLOCK12_ORACLE_XE_API_RISK_IDENTITIES=59/59');
   console.log('BLOCK12_ORACLE_XE_UI_RISK_IDENTITIES=59/59');
+});
+
+test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results from Oracle XE', async ({ page, request }) => {
+  test.setTimeout(120_000);
+  const required = process.env['RL_BLOCK12_FULL_CHAIN_UI_REQUIRED'] === 'true';
+  test.skip(!required, 'The 2006-result full-matrix UI parity test requires disposable Oracle XE fixtures.');
+
+  const fullChainResponse = await request.post('http://127.0.0.1:5043/__e2e/seed-full-chain-calculations');
+  expect(fullChainResponse.ok(), await fullChainResponse.text()).toBeTruthy();
+  const fixtures = await fullChainResponse.json() as Array<{
+    ordinal: number;
+    riskId: number;
+    evaluationId: number;
+    riskCode: string;
+    expected: Record<string, number | string | null>;
+  }>;
+  expect(fixtures).toHaveLength(59);
+  expect(fixtures.map(item => item.ordinal)).toEqual(Array.from({ length: 59 }, (_, index) => index + 1));
+  expect(fixtures.reduce((count, item) => count + Object.keys(item.expected).length, 0)).toBe(2006);
+  expect(Object.keys(fixtures.find(item => item.riskCode === 'ROP-CUMP-54')?.expected ?? {})).toHaveLength(34);
+
+  const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/fixture');
+  expect(fixtureResponse.ok()).toBeTruthy();
+  const fixture = await fixtureResponse.json() as Fixture;
+  await installNonCriticalFixtures(page, fixture, {}, { useRealConsolidated: true });
+  await page.goto('/matrices-riesgos');
+  await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  const initialConsolidatedRequest = page.waitForResponse(response =>
+    response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await page.getByRole('tab', { name: 'Consolidado' }).click();
+  expect((await initialConsolidatedRequest).status()).toBe(200);
+
+  let uiCalculationValues = 0;
+  for (const item of fixtures) {
+    const listRequest = page.waitForResponse(response =>
+      response.request().method() === 'GET'
+      && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+    await page.locator('#consolidado-buscar').fill(item.riskCode);
+    const listResponse = await listRequest;
+    expect(listResponse.status(), `Consolidado request failed for ${item.riskCode}`).toBe(200);
+    const row = page.locator('#panel-consolidado tbody tr').filter({ hasText: item.riskCode });
+    await expect(row).toHaveCount(1);
+    const projectionRequest = page.waitForResponse(response =>
+      response.request().method() === 'GET'
+      && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${item.evaluationId}/proyeccion-institucional`);
+    await row.locator('[data-matrix-open="complete"]').click();
+    const projectionResponse = await projectionRequest;
+    expect(projectionResponse.status(), `Projection request failed for ${item.riskCode}`).toBe(200);
+    const matrixModal = page.locator('[data-matrix-modal="complete"]');
+    await expect(matrixModal).toBeVisible();
+    for (const [fieldNumber, expected] of Object.entries(item.expected)) {
+      const ordinal = fieldNumber.padStart(2, '0');
+      const displayed = (await matrixModal.locator(`[data-matrix-field="${ordinal}"] dd`).innerText()).trim();
+      expect(displayed, `${item.riskCode}/F${fieldNumber} differs in Full Matrix UI`).toBe(String(expected));
+      uiCalculationValues++;
+    }
+    await page.getByRole('button', { name: 'Cerrar Matriz completa' }).click();
+  }
+
+  expect(uiCalculationValues).toBe(2006);
+  console.log('BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006');
+  console.log('BLOCK12_ROP_CUMP_54_FULL_CHAIN_UI=34/34');
 });

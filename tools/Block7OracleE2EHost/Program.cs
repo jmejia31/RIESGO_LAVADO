@@ -59,6 +59,8 @@ for (int index = 0; index < canonicalRisks.Length; index++)
         ("id", canonicalRiskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
 }
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_E2E',1,:json,RPAD('B',64,'B'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
+var fullChainUiFixtures = new List<object>();
+bool fullChainSeeded = false;
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable browser rule','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
 foreach (long id in new[] { userId, areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId })
     await ExecuteAsync(oracle, "INSERT INTO RL_USUARIOS (USR_ID,USR_ACTIVO) VALUES (:id,1)", ("id", id));
@@ -120,6 +122,55 @@ app.MapGet("/__e2e/risk-identities", () => Results.Ok(canonicalRisks.Select((ris
     riskCode = risk.Code,
     riskName = risk.Name
 })));
+app.MapPost("/__e2e/seed-full-chain-calculations", async () =>
+{
+    if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK12_FULL_CHAIN_UI_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase))
+        return Results.NotFound();
+    if (!fullChainSeeded)
+    {
+        int[] projectedFields = [12, 13, 22, 23, 26, 27, 30, 31, 33, 34, 35, 36, 37, 38, .. Enumerable.Range(50, 20)];
+        IReadOnlyDictionary<int, string> calculationKeys = ReadCalculationKeysByField();
+        var formulaResults = workbook.EvaluateFormulaCells().ToDictionary(result => (result.RiskCode, result.FieldNumber));
+        if (formulaResults.Count != 2006) throw new InvalidOperationException("The independent workbook formula source must provide all 2006 expected values.");
+        await using var fullChainSeed = await OpenOracleWithRetryAsync(connectionString);
+        for (int index = 0; index < canonicalRisks.Length; index++)
+        {
+            var risk = canonicalRisks[index];
+            long evaluationId = riskId + 800_000_100 + index;
+            long flowId = riskId + 850_000_100 + index;
+            var calculatedValues = new Dictionary<int, object?>();
+            for (int formulaOrdinal = 1; formulaOrdinal <= projectedFields.Length; formulaOrdinal++)
+            {
+                int fieldNumber = projectedFields[formulaOrdinal - 1];
+                WorkbookFormulaResult formula = formulaResults[(risk.Code, formulaOrdinal)];
+                if (formula.IsError) throw new InvalidOperationException($"Independent workbook formula error at {risk.Code}/F{fieldNumber}.");
+                calculatedValues[fieldNumber] = NoControlExpected(workbook, risk.Ordinal + 1, fieldNumber) ?? formula.ExpectedValue;
+            }
+            var calculations = calculatedValues.ToDictionary(pair => calculationKeys[pair.Key], pair => pair.Value, StringComparer.Ordinal);
+            string calculationsJson = JsonSerializer.Serialize(calculations);
+            DateTime evaluatedAt = new DateTime(2026, 9, 1).AddMinutes(index);
+            await ExecuteAsync(fullChainSeed,
+                "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,'{}',:calculations,:eventDate,:usr,1,1)",
+                ("id", evaluationId), ("risk", canonicalRiskIds[index]), ("version", versionId), ("calculations", calculationsJson), ("eventDate", evaluatedAt), ("usr", userId));
+            await ExecuteAsync(fullChainSeed,
+                "INSERT INTO RL_MR_PROYECCIONES_EVALUACION (PROY_ID,PROY_EVALUACION_ID,PROY_CODIGO_RIESGO,PROY_AREA_PRINCIPAL,PROY_VRI,PROY_VRR,PROY_NIVEL_INHERENTE,PROY_NIVEL_RESIDUAL,PROY_RESPUESTA_RIESGO,PROY_ESTADO_EVALUACION,PROY_DUENO_RIESGO,PROY_FECHA_EVAL) VALUES (:id,:eva,:code,'Block12',3,1,'BAJO','NO SIGNIFICATIVO','Mitigar','APROBADA','Fixture',:eventDate)",
+                ("id", evaluationId + 100_000_000), ("eva", evaluationId), ("code", risk.Code), ("eventDate", evaluatedAt));
+            await ExecuteAsync(fullChainSeed,
+                "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,'APROBADA','Block 12 disposable full-chain fixture',:usr,:eventDate)",
+                ("id", flowId), ("eva", evaluationId), ("usr", userId), ("eventDate", evaluatedAt));
+            fullChainUiFixtures.Add(new
+            {
+                ordinal = risk.Ordinal,
+                riskId = canonicalRiskIds[index],
+                evaluationId,
+                riskCode = risk.Code,
+                expected = calculatedValues
+            });
+        }
+        fullChainSeeded = true;
+    }
+    return Results.Ok(fullChainUiFixtures);
+});
 app.MapGet("/__e2e/audit", async (OracleDbContext db, CancellationToken cancellationToken) =>
 {
     await using var connection = db.CreateConnection();
@@ -183,6 +234,35 @@ static string FindOfficialWorkbook()
     }
 
     throw new FileNotFoundException("The official risk workbook was not found from the repository working directory.");
+}
+
+static IReadOnlyDictionary<int, string> ReadCalculationKeysByField()
+{
+    DirectoryInfo? directory = new DirectoryInfo(Directory.GetCurrentDirectory());
+    while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "AGENTS.md"))) directory = directory.Parent;
+    string root = directory?.FullName ?? throw new DirectoryNotFoundException("Repository root was not found for the full-chain fixture.");
+    string manifestPath = Path.Combine(root, "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_82_campos_manifest.json");
+    using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+    return manifest.RootElement.EnumerateArray().ToDictionary(
+        field => field.GetProperty("number").GetInt32(),
+        field =>
+        {
+            string mapping = field.GetProperty("dbOrEntityMapping").GetString()!;
+            int separator = mapping.LastIndexOf("->", StringComparison.Ordinal);
+            return separator >= 0 ? mapping[(separator + 2)..].Trim() : field.GetProperty("canonicalKey").GetString()!;
+        });
+}
+
+static object? NoControlExpected(WorkbookFormulaOracle oracle, int row, int field)
+{
+    int descriptionColumn = field switch { 22 or 23 => 20, 26 or 27 => 24, 30 or 31 => 28, _ => 0 };
+    if (descriptionColumn == 0) return null;
+    string description = oracle.GetText(row, descriptionColumn).Trim();
+    int scaleColumn = field switch { 22 or 23 => 21, 26 or 27 => 25, 30 or 31 => 29, _ => 0 };
+    string scale = oracle.GetText(row, scaleColumn).Trim();
+    bool absent = description.Length == 0 || new[] { "NO HAY", "INEXISTENTE", "0", "0%" }.Contains(description, StringComparer.OrdinalIgnoreCase);
+    bool absentScale = scale.Length == 0 || scale.Equals("Inexistente", StringComparison.OrdinalIgnoreCase);
+    return absent && absentScale ? 0m : null;
 }
 
 static async Task<OracleConnection> OpenOracleWithRetryAsync(string connectionString)

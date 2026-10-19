@@ -155,6 +155,200 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     }
 
     [Fact]
+    [Trait("Category", "Block12OracleIntegration")]
+    public async Task WorkbookCalculationResultsSurviveOracleApiProjectionAndBothExportsForAllRisks()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK12_ORACLE_CERTIFICATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            _output.WriteLine("BLOCK12_FULL_CHAIN_2006_EXECUTED=NO (Oracle disposable not configured)");
+            return;
+        }
+
+        string connectionString = OracleTestDatabaseProfile.RequireLocalXeConnection(
+            Environment.GetEnvironmentVariable("BLOCK12_ORACLE_CONNECTION_STRING"));
+        OracleConnection.ClearAllPools();
+        await using var seed = CreateConnection(connectionString);
+        await OpenWithRetryAsync(seed);
+        await EnsureFixtureTablesAsync(seed);
+        await EnsureBlock7FixtureObjectsAsync(seed);
+
+        WorkbookFormulaOracle workbook = WorkbookFormulaOracle.Load(FindOfficialWorkbook());
+        IReadOnlyDictionary<(string RiskCode, int FieldNumber), object?> expected =
+            Block5WorkbookFormulaParityTests.BuildIndependentProjectionExpectations(workbook);
+        var canonical = Enumerable.Range(2, 59)
+            .Select(row => new
+            {
+                WorkbookRow = row,
+                RiskOrdinal = row - 1,
+                Code = workbook.GetText(row, 2),
+                Name = workbook.GetText(row, 3)
+            }).ToArray();
+        int[] formulaFields = expected.Keys.Select(key => key.FieldNumber).Distinct().Order().ToArray();
+        Assert.Equal(34, formulaFields.Length);
+        Assert.Equal(59 * 34, expected.Count);
+        Assert.Equal(34, expected.Keys.Count(key => key.RiskCode == "ROP-CUMP-54"));
+        IReadOnlyDictionary<int, string> calculationKeys = ReadCalculationKeysByField();
+
+        long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 700_000_000 + 200_000_000;
+        long[] riskIds = Enumerable.Range(1, 59).Select(offset => stamp + offset).ToArray();
+        long[] evaluationIds = Enumerable.Range(101, 59).Select(offset => stamp + offset).ToArray();
+        long[] flowIds = Enumerable.Range(201, 59).Select(offset => stamp + offset).ToArray();
+        const long userId = 987654;
+        DateTime approvedAt = new(2026, 9, 1);
+        try
+        {
+            for (int index = 0; index < canonical.Length; index++)
+            {
+                var risk = canonical[index];
+                string calculationsJson = BuildExpectedCalculationsJson(risk.Code, formulaFields, calculationKeys, expected);
+                InstitutionalProjectionSource projectionFixture = InstitutionalProjectionMapperTests.CreateSource();
+                await ExecuteAsync(seed,
+                    "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,:name,'Block 12 disposable calculation chain',1,:usr,SYSDATE)",
+                    ("id", riskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
+                await InsertConsolidatedFixtureAsync(seed, riskIds[index], evaluationIds[index], flowIds[index],
+                    "APROBADA", approvedAt.AddMinutes(index), risk.Code, userId,
+                    projectionFixture.Evaluation.EvaDataJson, calculationsJson);
+
+                string persisted = await ScalarTextAsync(seed,
+                    "SELECT EVA_CALCULOS_JSON FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationIds[index]));
+                using JsonDocument persistedJson = JsonDocument.Parse(persisted);
+                foreach (int fieldNumber in formulaFields)
+                {
+                    string key = calculationKeys[fieldNumber];
+                    object? actual = ReadJsonValue(persistedJson.RootElement.GetProperty(key));
+                    AssertEquivalent(expected[(risk.Code, fieldNumber)], actual,
+                        $"Persisted Oracle calculation mismatch for {risk.Code}/F{fieldNumber}.");
+                }
+            }
+
+            await using var app = await CreateBlock7ApiAsync(connectionString);
+            string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+            using var http = new HttpClient { BaseAddress = new Uri(address) };
+            var exportRows = new List<RiesgoReporteFilaDto>(59);
+            int apiCalculationValues = 0;
+            for (int index = 0; index < canonical.Length; index++)
+            {
+                var risk = canonical[index];
+                using HttpResponseMessage response = await http.GetAsync(
+                    $"/api/matrices-riesgos/evaluaciones/{evaluationIds[index]}/proyeccion-institucional");
+                Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+                using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                JsonElement projection = body.RootElement.GetProperty("datos");
+                Assert.Equal(evaluationIds[index], projection.GetProperty("evaluationId").GetInt64());
+                Assert.Equal(riskIds[index], projection.GetProperty("riskId").GetInt64());
+                JsonElement fields = projection.GetProperty("fields");
+                Assert.Equal(82, fields.GetArrayLength());
+                Assert.Equal(Enumerable.Range(1, 82), fields.EnumerateArray().Select(field => field.GetProperty("fieldNumber").GetInt32()));
+                foreach (int fieldNumber in formulaFields)
+                {
+                    JsonElement projectedField = fields.EnumerateArray().Single(field => field.GetProperty("fieldNumber").GetInt32() == fieldNumber);
+                    AssertEquivalent(expected[(risk.Code, fieldNumber)], ReadJsonValue(projectedField.GetProperty("value")),
+                        $"API projection mismatch for {risk.Code}/F{fieldNumber}.");
+                    apiCalculationValues++;
+                }
+
+                using var scope = app.Services.CreateScope();
+                IMatricesRiesgosAppService appService = scope.ServiceProvider.GetRequiredService<IMatricesRiesgosAppService>();
+                ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>> selected = await appService.ObtenerConsolidadoParaExportacionAsync(
+                    new FiltroReporteMatricesDto { Buscar = risk.Code, EstadoEvaluacion = "APROBADA" });
+                Assert.True(selected.Success, selected.Message);
+                RiesgoReporteFilaDto row = Assert.Single(selected.Data!);
+                Assert.Equal(riskIds[index], row.RiesgoId);
+                Assert.Equal(evaluationIds[index], row.EvaluacionId);
+                Assert.Equal("APROBADA", row.EstadoEvaluacion);
+                exportRows.Add(row);
+            }
+
+            Assert.Equal(59 * 34, apiCalculationValues);
+            using (var scope = app.Services.CreateScope())
+            {
+                IInstitutionalProjectionService projectionService = scope.ServiceProvider.GetRequiredService<IInstitutionalProjectionService>();
+                ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>> projections =
+                    await projectionService.GetManyAsync(evaluationIds, userId, CancellationToken.None);
+                Assert.True(projections.Success, projections.Message);
+                Assert.Equal(evaluationIds.Order(), projections.Data!.Keys.Order());
+                int projectionCalculationValues = 0;
+                foreach (var risk in canonical)
+                {
+                    int index = risk.RiskOrdinal - 1;
+                    InstitutionalEvaluationProjectionDto projection = projections.Data[evaluationIds[index]];
+                    Assert.Equal(riskIds[index], projection.RiskId);
+                    Assert.Equal(evaluationIds[index], projection.EvaluationId);
+                    foreach (int fieldNumber in formulaFields)
+                    {
+                        InstitutionalProjectionFieldDto field = projection.Fields.Single(item => item.FieldNumber == fieldNumber);
+                        AssertEquivalent(expected[(risk.Code, fieldNumber)], field.Value,
+                            $"Batch projection mismatch for {risk.Code}/F{fieldNumber}.");
+                        projectionCalculationValues++;
+                    }
+                }
+                Assert.Equal(2006, projectionCalculationValues);
+
+                var exporter = new MatricesRiesgosReportExportService();
+                ArchivoReporteDto excel = exporter.CrearExcelMatrizCompleta(exportRows, projections.Data);
+                using (var zip = new ZipArchive(new MemoryStream(excel.Contenido), ZipArchiveMode.Read))
+                {
+                    XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+                    XDocument sheet = XDocument.Load(zip.GetEntry("xl/worksheets/sheet1.xml")!.Open());
+                    XElement header = sheet.Descendants(ns + "row").Single(row => (string?)row.Attribute("r") == "4");
+                    Assert.Equal(82, header.Elements(ns + "c").Count());
+                    XElement[] dataRows = sheet.Descendants(ns + "row")
+                        .Where(row => int.TryParse((string?)row.Attribute("r"), out int number) && number >= 5).ToArray();
+                    Assert.Equal(59, dataRows.Length);
+                    for (int rowIndex = 0; rowIndex < exportRows.Count; rowIndex++)
+                    {
+                        InstitutionalEvaluationProjectionDto projection = projections.Data[exportRows[rowIndex].EvaluacionId];
+                        XElement[] cells = dataRows[rowIndex].Elements(ns + "c").ToArray();
+                        Assert.Equal(82, cells.Length);
+                        foreach (int fieldNumber in formulaFields)
+                        {
+                            InstitutionalProjectionFieldDto field = projection.Fields[fieldNumber - 1];
+                            Assert.Equal(ExpectedExcelValue(field), ReadExcelCell(cells[fieldNumber - 1], ns));
+                        }
+                    }
+                }
+
+                ArchivoReporteDto pdf = exporter.CrearPdfMatrizCompleta(exportRows, projections.Data);
+                string pdfContent = System.Text.Encoding.Latin1.GetString(pdf.Contenido);
+                Assert.StartsWith("%PDF-1.4", pdfContent, StringComparison.Ordinal);
+                Assert.EndsWith("%%EOF", pdfContent, StringComparison.Ordinal);
+                foreach (RiesgoReporteFilaDto row in exportRows)
+                {
+                    InstitutionalEvaluationProjectionDto projection = projections.Data[row.EvaluacionId];
+                    Assert.Contains(projection.RiskCode, pdfContent, StringComparison.Ordinal);
+                    foreach (int fieldNumber in formulaFields)
+                    {
+                        InstitutionalProjectionFieldDto field = projection.Fields[fieldNumber - 1];
+                        string value = field.Value is null ? (field.State is "NOT_APPLICABLE" or "ABSENT_CONTROL_PROJECTED" ? "No aplica" : "Sin dato")
+                            : Convert.ToString(field.Value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+                        Assert.Contains(EscapePdfString(value), pdfContent, StringComparison.Ordinal);
+                    }
+                }
+            }
+
+            Assert.Equal(59, exportRows.Count);
+            _output.WriteLine("BLOCK12_FORMULA_ORACLE_TO_ORACLE_PERSISTENCE=2006/2006");
+            _output.WriteLine("BLOCK12_FORMULA_ORACLE_TO_API_PROJECTION=2006/2006");
+            _output.WriteLine("BLOCK12_FORMULA_ORACLE_TO_XLSX=2006/2006");
+            _output.WriteLine("BLOCK12_FORMULA_ORACLE_TO_PDF=2006/2006");
+            _output.WriteLine("BLOCK12_CROSS_CHANNEL_EVALUATION_IDS=59/59");
+            _output.WriteLine("BLOCK12_ROP_CUMP_54_FULL_CHAIN=34/34");
+        }
+        finally
+        {
+            foreach (long evaluationId in evaluationIds)
+            {
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+            }
+            foreach (long riskId in riskIds)
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+            _output.WriteLine("BLOCK12_FULL_CHAIN_ORACLE_CLEANUP=PASS");
+        }
+    }
+
+    [Fact]
     [Trait("Category", "Block10OracleIntegration")]
     public async Task ConsolidatedApiAndReportSelectLatestApprovedPerRisk()
     {
@@ -333,6 +527,66 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         return Convert.ToString(field.Value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
     }
 
+    private static IReadOnlyDictionary<int, string> ReadCalculationKeysByField()
+    {
+        string manifestPath = Path.Combine(FindRepositoryRoot(), "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_82_campos_manifest.json");
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllText(manifestPath));
+        return manifest.RootElement.EnumerateArray().ToDictionary(
+            field => field.GetProperty("number").GetInt32(),
+            field =>
+            {
+                string mapping = field.GetProperty("dbOrEntityMapping").GetString()!;
+                int separator = mapping.LastIndexOf("->", StringComparison.Ordinal);
+                return separator >= 0 ? mapping[(separator + 2)..].Trim() : field.GetProperty("canonicalKey").GetString()!;
+            });
+    }
+
+    private static string BuildExpectedCalculationsJson(
+        string riskCode,
+        IReadOnlyCollection<int> fieldNumbers,
+        IReadOnlyDictionary<int, string> keys,
+        IReadOnlyDictionary<(string RiskCode, int FieldNumber), object?> expected)
+    {
+        var calculations = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (int fieldNumber in fieldNumbers)
+            calculations.Add(keys[fieldNumber], expected[(riskCode, fieldNumber)]);
+        return JsonSerializer.Serialize(calculations);
+    }
+
+    private static object? ReadJsonValue(JsonElement element) => element.ValueKind switch
+    {
+        JsonValueKind.Number => element.GetDouble(),
+        JsonValueKind.String => element.GetString(),
+        JsonValueKind.True => true,
+        JsonValueKind.False => false,
+        JsonValueKind.Null => null,
+        _ => element.Clone()
+    };
+
+    private static void AssertEquivalent(object? expected, object? actual, string message)
+    {
+        if (expected is JsonElement expectedElement) expected = ReadJsonValue(expectedElement);
+        if (actual is JsonElement actualElement) actual = ReadJsonValue(actualElement);
+        if (expected is null || actual is null)
+        {
+            Assert.True(expected is null && actual is null, message);
+            return;
+        }
+        bool expectedNumeric = expected is byte or short or int or long or float or double or decimal;
+        bool actualNumeric = actual is byte or short or int or long or float or double or decimal;
+        if (expectedNumeric && actualNumeric)
+        {
+            Assert.Equal(Convert.ToDouble(expected, System.Globalization.CultureInfo.InvariantCulture),
+                Convert.ToDouble(actual, System.Globalization.CultureInfo.InvariantCulture), 10);
+            return;
+        }
+        Assert.Equal(Convert.ToString(expected, System.Globalization.CultureInfo.InvariantCulture),
+            Convert.ToString(actual, System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    private static string EscapePdfString(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace("(", "\\(", StringComparison.Ordinal).Replace(")", "\\)", StringComparison.Ordinal);
+
     private static object ReadExcelCell(XElement cell, XNamespace ns)
     {
         string? type = (string?)cell.Attribute("t");
@@ -350,12 +604,13 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
     private static async Task InsertConsolidatedFixtureAsync(
         OracleConnection connection, long riskId, long evaluationId, long flowId,
-        string status, DateTime eventDate, string code, long userId)
+        string status, DateTime eventDate, string code, long userId,
+        string? answersJson = null, string? calculationsJson = null)
     {
         InstitutionalProjectionSource projectionFixture = InstitutionalProjectionMapperTests.CreateSource();
         await ExecuteAsync(connection,
             "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,:answers,:calculations,:eventDate,:usr,1,1)",
-            ("id", evaluationId), ("risk", riskId), ("answers", projectionFixture.Evaluation.EvaDataJson), ("calculations", projectionFixture.Evaluation.EvaDataCalcJson), ("eventDate", eventDate), ("usr", userId));
+            ("id", evaluationId), ("risk", riskId), ("answers", answersJson ?? projectionFixture.Evaluation.EvaDataJson), ("calculations", calculationsJson ?? projectionFixture.Evaluation.EvaDataCalcJson), ("eventDate", eventDate), ("usr", userId));
         await ExecuteAsync(connection,
             "INSERT INTO RL_MR_PROYECCIONES_EVALUACION (PROY_ID,PROY_EVALUACION_ID,PROY_CODIGO_RIESGO,PROY_AREA_PRINCIPAL,PROY_VRI,PROY_VRR,PROY_NIVEL_INHERENTE,PROY_NIVEL_RESIDUAL,PROY_RESPUESTA_RIESGO,PROY_ESTADO_EVALUACION,PROY_DUENO_RIESGO,PROY_FECHA_EVAL) VALUES (:id,:eva,:code,'Block8',3,2,'BAJO','BAJO','Mitigar',:status,'Fixture',:eventDate)",
             ("id", evaluationId + 1000), ("eva", evaluationId), ("code", code), ("status", status), ("eventDate", eventDate));

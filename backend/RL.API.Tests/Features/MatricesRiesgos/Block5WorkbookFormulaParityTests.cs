@@ -153,6 +153,29 @@ public sealed class Block5WorkbookFormulaParityTests
         Assert.True(differences.Count == 0, $"Calculation drift {differences.Count}/2006: {string.Join("; ", differences.Take(30))}");
     }
 
+    internal static IReadOnlyDictionary<(string RiskCode, int FieldNumber), object?> BuildIndependentProjectionExpectations(WorkbookFormulaOracle oracle)
+    {
+        WorkbookFormulaResult[] formulaResults = oracle.EvaluateFormulaCells().ToArray();
+        var byFormula = formulaResults.ToDictionary(result => (result.RiskCode, result.FieldNumber));
+        var expected = new Dictionary<(string RiskCode, int FieldNumber), object?>();
+        for (int row = 2; row <= 60; row++)
+        {
+            string riskCode = oracle.GetText(row, 2);
+            foreach (int fieldNumber in Fields)
+            {
+                int formulaNumber = SourceFieldToFormulaNumber[fieldNumber];
+                Assert.True(byFormula.TryGetValue((riskCode, formulaNumber), out WorkbookFormulaResult? result),
+                    $"The independent workbook source has no value for {riskCode}/F{fieldNumber}.");
+                Assert.False(result!.IsError, $"The independent workbook source has a formula error for {riskCode}/F{fieldNumber}.");
+                object? value = ExpectedInstitutionalNoControlValue(oracle, row, fieldNumber) ?? result.ExpectedValue;
+                expected.Add((riskCode, fieldNumber), value);
+            }
+        }
+
+        Assert.Equal(2006, expected.Count);
+        return expected;
+    }
+
     [Theory]
     [InlineData(1, "Riesgo no significativo")]
     [InlineData(2, "Riesgo no significativo")]
