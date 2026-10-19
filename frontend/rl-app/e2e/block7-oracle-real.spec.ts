@@ -752,8 +752,9 @@ test('Block 12 UI renders all 59 workbook risk identities from Oracle XE API', a
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
   const riskCombobox = page.getByRole('combobox', { name: 'Riesgo Institucional a Evaluar' });
   await riskCombobox.click();
-  const riskListbox = page.getByRole('listbox', { name: 'Riesgo Institucional a Evaluar' });
-  const rendered = await riskListbox.locator('[role="option"]').evaluateAll(options => options
+  const renderedOptions = page.locator('[data-ui-bounded-select-scroll] [role="option"]');
+  await expect(renderedOptions).toHaveCount(60);
+  const rendered = await renderedOptions.evaluateAll(options => options
     .filter(option => !option.id.endsWith('-option-placeholder'))
     .map(option => ({
       riskId: Number(option.id.match(/-option-(\d+)$/)?.[1]),
