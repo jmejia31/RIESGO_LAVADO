@@ -394,6 +394,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     expect(orphanDelete.status(), await orphanDelete.text()).toBe(200);
   }
 
+  await page.waitForLoadState('networkidle');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
   await page.getByTitle('Editar evaluación').click();
@@ -406,6 +407,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await page.getByRole('button', { name: 'Guardar borrador' }).click();
   expect((await updateResponsePromise).status()).toBe(200);
 
+  await page.waitForLoadState('networkidle');
   await page.reload();
   const pageA = await page.context().newPage();
   await installNonCriticalFixtures(pageA, fixture, evaluation);
