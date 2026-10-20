@@ -113,10 +113,9 @@ public sealed class InstitutionalProjectionMapper
             if (!OrderedControls(source, type).Any())
             {
                 string key = JsonKey(field);
-                bool hasFormulaValue = calculations.TryGetValue(key, out JsonElement formulaValue)
-                    && formulaValue.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined)
-                    && !(formulaValue.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(formulaValue.GetString()));
-                if (!hasFormulaValue) return (field.Number is 22 or 26 or 30 ? 0 : 0m, "ABSENT_CONTROL_PROJECTED");
+                bool hasFormulaResult = calculations.TryGetValue(key, out JsonElement formulaResult)
+                    && formulaResult.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined);
+                if (!hasFormulaResult) return (field.Number is 22 or 26 or 30 ? 0 : 0m, "ABSENT_CONTROL_PROJECTED");
             }
             return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
         }

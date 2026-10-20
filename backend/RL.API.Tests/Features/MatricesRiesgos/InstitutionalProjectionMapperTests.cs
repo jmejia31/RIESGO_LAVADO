@@ -136,11 +136,25 @@ public sealed class InstitutionalProjectionMapperTests
     }
 
     [Fact]
-    public void Map_ProjectsZeroForAbsentControlWhenItsFormulaResultIsBlank()
+    public void Map_PreservesLegitimateBlankFormulaResultWhenControlIsAbsent()
     {
         InstitutionalProjectionSource source = CreateSource();
         JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
         calculations[FormulaKey(30)] = string.Empty;
+        source = source with { Evaluation = WithCalculations(source.Evaluation, calculations) };
+
+        InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
+
+        Assert.Null(result.Fields[29].Value);
+        Assert.Equal("LEGIT_FORMULA_BLANK", result.Fields[29].State);
+    }
+
+    [Fact]
+    public void Map_ProjectsZeroForAbsentControlWhenItsFormulaResultIsMissing()
+    {
+        InstitutionalProjectionSource source = CreateSource();
+        JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
+        calculations.Remove(FormulaKey(30));
         source = source with { Evaluation = WithCalculations(source.Evaluation, calculations) };
 
         InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
