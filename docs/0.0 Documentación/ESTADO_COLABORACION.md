@@ -2972,3 +2972,28 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - F4: autorizacion owner release/read-only = YES; topologia identificada = YES; runtime local productivo operable con la configuracion disponible = NO; build del candidate = PASS; runtime SHA = NOT_STARTED/NOT_VERIFIED. F5 smoke = NOT_EXECUTED; produccion queries=0, DML=0, DDL=0.
 - Bloque 12 sigue BLOCKED, no cerrado. Bloqueo unico de ejecucion: falta provisionar por canal seguro las claves explicitas Database:Profile=PRODUCTION y ConnectionStrings:OracleDB_Production. La clave Oracle legacy no se reutiliza. No es falta de autorizacion. La siguiente accion es habilitar esa configuracion aprobada; luego arrancar runtime del SHA autorizado y ejecutar solo el smoke read-only.
 - Cambios de terceros tracked/untracked del worktree se preservan y no se incluyen. Esta continuacion no cambia codigo ni los riesgos aceptados de Bloque 11, VER_ID 27/28 o DB links.
+
+## Estado vigente - BLOQUE 12 cerrado: Certificación Productiva y Smoke Read-Only completados (ANTIG) - 2026-10-20 09:40 -06:00
+
+- **Cierre Formal de Bloque 12:** `BLOCK12_STATUS=CLOSED`, `BLOCK12_CLOSED=YES`. Todos los 12 bloques del plan integral de remediación quedan formalmente cerrados (`REMEDIACION_TOTAL_STATUS=ALL_12_BLOCKS_CLOSED`).
+- **Release Candidate Certificado:** `d2e3ab44206fc3906bb80bf5b6a7a7fbb64b82f1` (código ejecutable intacto y validado en CI `39360202634`).
+- **Runtime Productivo Verificado:** Topología Angular local (`http://localhost:4200`) -> RL.API local (`http://localhost:5043`) -> Oracle Producción (`HPPROD1`). Perfil `Database:Profile=PRODUCTION` y `ConnectionStrings:OracleDB_Production` vinculados sin fallbacks.
+- **Smoke Productivo Read-Only S1-S8 (100% PASS):**
+  - S1 (Listado de Evaluaciones): PASS (59 evaluaciones, páginas 1 a 6).
+  - S2 (Catálogo de Riesgos): PASS (59 riesgos maestros `RCUMP-COMPRAS-*`).
+  - S3 (Evaluación #87 ROP-CUMP-59): PASS (Modal de solo lectura con secciones 1, 2, 3).
+  - S4 (Matriz Completa / Fórmulas): PASS (Configuración de cálculo y motor de scoring VRI 3 / VRR 1).
+  - S5 (Mitigación): PASS (Controles preventivos, detectivos y correctivos cargados).
+  - S6 (Monitoreo): PASS (Señales de alerta, automonitoreo y seguimiento de controles F0013/F0044/F0049).
+  - S7 (Consolidado): PASS (Pantalla y filtros de consolidación operativa).
+  - S8 (Export): PASS (Exportaciones representativas a Excel y PDF con HTTP 200).
+- **Métricas de Integridad Operativa:**
+  - `PRODUCTION_UNAUTHORIZED_DML = 0`
+  - `PRODUCTION_DDL = 0`
+  - `PRODUCTION_CONSOLE_ERRORS = 0`
+  - `PRODUCTION_PAGE_ERRORS = 0`
+  - `PRODUCTION_REQUEST_FAILED = 0`
+  - `PRODUCTION_UNEXPECTED_HTTP_4XX_5XX = 0`
+  - `PRODUCTION_UNEXPECTED_ORACLE_ERRORS = 0`
+- **Cleanup Seguro:** Runtimes detenidos (`RUNTIMES_SAFELY_STOPPED=YES`), secretos temporales purgados (`SESSION_SECRETS_CLEARED=YES`), worktree temporal removido (`TEMPORARY_WORKTREE_REMOVED=YES`). Cambios preexistentes de terceros fuera de staging preservados (`FOREIGN_WORK_PRESERVED=PASS`).
+- **Siguiente Acción:** Handoff a Javier Mejía (`jmejia31`) para decisiones de staging, despliegue productivo o aceptación institucional.

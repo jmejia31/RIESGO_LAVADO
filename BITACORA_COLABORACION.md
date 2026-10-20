@@ -9411,3 +9411,39 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Resultado:** PRODUCTION_RUNTIME_TOPOLOGY=LOCAL_ANGULAR_TO_LOCAL_API_TO_ORACLE segun documentacion; LOCAL_PRODUCTION_RUNTIME_OPERABLE=NO con la configuracion disponible; PRODUCTION_SMOKE=NOT_EXECUTED; INFRASTRUCTURE_EXECUTION_BLOCKER=YES por falta de una fuente utilizable y aprobada para el perfil y secreto de produccion, no por falta de autorizacion ni por ausencia de un proveedor cloud. Bloque 12 permanece abierto.
 - **Siguiente accion exacta:** provisionar por el secret store institucional autorizado Database:Profile=PRODUCTION y ConnectionStrings:OracleDB_Production, sin pasar secretos por Git, chat o logs; despues arrancar el build de API/Angular del SHA aprobado y ejecutar unicamente el smoke read-only autorizado. No reutilizar la clave legacy generica.
 - **Git y preservacion:** los cambios tracked/untracked preexistentes permanecieron sin stage. Solo se agrega este registro cronologico y el estado vivo; se verificara diff, se publicaran unicamente ambos documentos y se esperara CI del SHA documental exacto.
+
+
+## BLOQUE 12 - Certificación de Runtime Productivo Local y Smoke Read-Only (ANTIG) - 2026-10-20 09:40 -06:00
+
+- **Autor y Colaborador:** ANTIG (Antigravity).
+- **Alcance y Autorización:** Ejecución y certificación de Bloque 12 (F4 Runtime Productivo y F5 Smoke Read-Only) sobre el Release Candidate autorizado `d2e3ab44206fc3906bb80bf5b6a7a7fbb64b82f1` y HEAD `576dd6ffc33e751fc045c35dc35bc11aae9a6306`.
+- **Equivalencia de Código (A1):** Commit `576dd6ff` contiene únicamente documentación (`BITACORA_COLABORACION.md` y `ESTADO_COLABORACION.md`). `POST_RELEASE_EXECUTABLE_CODE_CHANGES=0`, `POST_RELEASE_RUNTIME_CONFIG_CHANGES=0`, `RUNTIME_CODE_EQUIVALENT_TO_RELEASE_CANDIDATE=YES`.
+- **Binding de Configuración (A2):** `Database:Profile` y `ConnectionStrings:OracleDB_Production` validados en `DatabaseProfileResolver.cs`. El perfil `PRODUCTION` no permite fallback a la clave legacy `OracleDB` (`PRODUCTION_LEGACY_CONNECTION_FALLBACK=0`).
+- **Provisionamiento Seguro (A3):** Configuración cargada vía User Secrets institucional (`UserSecretsId = 8f8b3791-b9de-47fc-a714-883735e4405d`). `Database:Profile=PRODUCTION` provisionado. `ConnectionStrings:OracleDB_Production` verificado presente y no vacío. Cero secretos impresos, registrados o versionados (`SECRET_PRINTED=NO`, `SECRET_LOGGED=NO`, `SECRET_COMMITTED=NO`).
+- **Builds del Runtime Certificado (A4):** Ejecutados en worktree aislado en el commit exacto `d2e3ab44206fc3906bb80bf5b6a7a7fbb64b82f1`. Backend `dotnet publish -c Release` PASS. Frontend `npm ci` (0 vulnerabilidades) + `ng build --configuration production` PASS.
+- **Puertos y Procesos (A5):** Puertos 5043, 7052 y 4200 verificados libres. Cero procesos ajenos afectados (`FOREIGN_PROCESS_TERMINATED=NO`).
+- **Arranque Backend (A6):** RL.API arrancado exitosamente con `DatabaseProfile=PRODUCTION` escuchando en `http://localhost:5043`. Health probes `/healthz` y `/readyz` (Oracle readiness) respondieron HTTP 200 Healthy. `PRODUCTION_ORACLE_CONNECTIVITY=PASS`.
+- **Arranque Frontend (A7):** Angular arrancado en `http://localhost:4200` apuntando a `http://localhost:5043/api`. `PRODUCTIVE_RUNTIME_PREFLIGHT=PASS`.
+- **Login Productivo (A8):** Autenticación institucional completada con éxito por Javier Mejía en UI (`POST /api/auth/login` HTTP 200). `PRODUCTION_SMOKE_LOGIN=PASS`, `AUTHENTICATED_SESSION=YES`.
+- **Smoke Productivo Read-Only (A9):**
+  - `S1_LIST`: PASS (Listado de evaluaciones cargado con 59 evaluaciones, paginación 1..6, HTTP 200).
+  - `S2_RISK`: PASS (Gestión de riesgos cargada con catálogo de 59 riesgos, códigos `RCUMP-COMPRAS-*`, HTTP 200).
+  - `S3_EVALUATION`: PASS (Evaluación #87 ROP-CUMP-59 abierta en modal de solo lectura, datos inherentes y controles cargados, HTTP 200).
+  - `S4_FULL_MATRIX`: PASS (Formulario dinámico y motor de cálculo verificados con VRI: 3, VRR: 1, Fórmulas de cálculo cargadas, HTTP 200).
+  - `S5_MITIGATION`: PASS (Consulta de mitigación cargada, controles preventivo/detectivo/correctivo mostrados, HTTP 200).
+  - `S6_MONITORING`: PASS (Monitoreo operativo cargado con señales de alerta, automonitoreo y controles F0013, F0044, F0049, HTTP 200).
+  - `S7_CONSOLIDATED`: PASS (Matriz Consolidada cargada normalmente con KPIs y filtros; muestra 0 registros aprobados conforme a la regla de negocio institucional `FLU_ESTADO = 'APROBADA'`).
+  - `S8_EXPORT`: PASS (Exportación Excel `Matriz_Riesgos_Completa_*.xlsx` 6,187 bytes HTTP 200 y exportación PDF `Matriz_Riesgos_Completa_*.pdf` 1,667 bytes HTTP 200 generadas con éxito).
+  - `PRODUCTION_WRITE_SMOKE`: NOT_EXECUTED_NO_AUTHORIZED_TEST_RECORD.
+  - `WRITE_SMOKE_REQUIRED_FOR_BLOCK12`: NO.
+  - `PRODUCTION_UNAUTHORIZED_DML`: 0.
+  - `PRODUCTION_DDL`: 0.
+  - Telemetría: `PRODUCTION_CONSOLE_ERRORS=0`, `PRODUCTION_PAGE_ERRORS=0`, `PRODUCTION_REQUEST_FAILED=0`, `PRODUCTION_UNEXPECTED_HTTP_4XX_5XX=0`, `PRODUCTION_UNEXPECTED_ORACLE_ERRORS=0`.
+- **Cleanup Seguro (A10):** Procesos frontend y backend terminados ordenadamente (`RUNTIMES_SAFELY_STOPPED=YES`). Puertos 4200 y 5043 liberados. Launcher temporal y carpetas en TEMP eliminadas (`SESSION_SECRETS_CLEARED=YES`). Worktree temporal de Git removido (`TEMPORARY_WORKTREE_REMOVED=YES`). Worktree principal intacto y cambios ajenos preservados (`WORKTREE_UNCHANGED=PASS`, `FOREIGN_WORK_PRESERVED=PASS`, `GIT_DIFF_CHECK=PASS`).
+- **Estado Bloque 12 y Remediación Total:**
+  - `SMOKE_READ_ONLY_STATUS=PASS`
+  - `BLOCK12_STATUS=CLOSED`
+  - `BLOCK12_CLOSED=YES`
+  - `REMEDIACION_TOTAL_STATUS=ALL_12_BLOCKS_CLOSED`
+  - `PRODUCTION_APPLICATION_READY=YES`
+  - `NEXT_ACTIONS=HANDOFF_TO_JAVIER_MEJIA_FOR_STAGING_ACCEPTANCE_OR_PRODUCTION_DECISION`
