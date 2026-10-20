@@ -19,14 +19,14 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "22.2.0",
-    "@angular/common": "22.2.0",
-    "@angular/compiler": "22.2.0",
-    "@angular/core": "22.2.0",
-    "@angular/forms": "22.2.0",
-    "@angular/platform-browser": "22.2.0",
-    "@angular/platform-browser-dynamic": "22.2.0",
-    "@angular/router": "22.2.0",
+    "@angular/animations": "22.2.3",
+    "@angular/common": "22.2.3",
+    "@angular/compiler": "22.2.3",
+    "@angular/core": "22.2.3",
+    "@angular/forms": "22.2.3",
+    "@angular/platform-browser": "22.2.3",
+    "@angular/platform-browser-dynamic": "22.2.3",
+    "@angular/router": "22.2.3",
     "exceljs": "^4.4.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -52,12 +52,13 @@
     "qs": "6.16.0",
     "exceljs": {
       "uuid": "11.1.1"
-    }
+    },
+    "vite": "8.3.4"
   },
   "devDependencies": {
-    "@angular/build": "22.2.0",
-    "@angular/cli": "22.2.0",
-    "@angular/compiler-cli": "22.2.0",
+    "@angular/build": "22.2.3",
+    "@angular/cli": "22.2.3",
+    "@angular/compiler-cli": "22.2.3",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/forms": "^0.5.9",
     "@types/node": "26.2.0",
