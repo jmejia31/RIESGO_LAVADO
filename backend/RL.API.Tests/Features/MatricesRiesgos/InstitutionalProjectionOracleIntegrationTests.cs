@@ -48,6 +48,12 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     }
 
     [Fact]
+    public void SpreadsheetNumericRoundTrip_UsesCalculationPrecisionInsteadOfBinaryIdentity()
+    {
+        AssertEquivalent(1.1399999999999999d, 1.1400000000000001d, "XLSX decimal round-trip should retain calculation precision.");
+    }
+
+    [Fact]
     [Trait("Category", "Block12OracleIntegration")]
     public async Task Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection()
     {
@@ -310,7 +316,10 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                         foreach (int fieldNumber in formulaFields)
                         {
                             InstitutionalProjectionFieldDto field = projection.Fields[fieldNumber - 1];
-                            Assert.Equal(ExpectedExcelValue(field), ReadExcelCell(cells[fieldNumber - 1], ns));
+                            // XLSX stores numeric cells as decimal text and parsing them back can
+                            // change the final binary floating-point bit without changing the value.
+                            AssertEquivalent(ExpectedExcelValue(field), ReadExcelCell(cells[fieldNumber - 1], ns),
+                                $"XLSX projection mismatch for {projection.RiskCode}/F{fieldNumber}.");
                         }
                     }
                 }
