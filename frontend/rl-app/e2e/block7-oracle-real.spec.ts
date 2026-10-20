@@ -108,6 +108,9 @@ async function installNonCriticalFixtures(
 }
 
 test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidence against Oracle', async ({ page, request }, testInfo) => {
+  const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true'
+    && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
+  test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');
   expectHttpResponse({
     status: 400,
     method: 'POST',
@@ -122,9 +125,6 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     pathIncludes: '/borrador',
     reason: 'The stale concurrent browser editor is expected to be rejected.',
   });
-  const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true'
-    && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
-  test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');
   await page.setViewportSize({ width: 1280, height: 900 });
 
   const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/fixture');

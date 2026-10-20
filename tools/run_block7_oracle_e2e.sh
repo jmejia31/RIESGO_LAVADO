@@ -86,6 +86,14 @@ if ! grep -Eq '3 passed' <<<"$browser_output"; then
   exit 1
 fi
 grep -Fq 'BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006' <<<"$browser_output"
+# Inspect only the API host log and report counts, never exception text or connection data.
+oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_log" || true)"
+if [[ -n "$oracle_error_matches" ]]; then
+  oracle_error_count="$(printf '%s\n' "$oracle_error_matches" | wc -l | tr -d '[:space:]')"
+  echo "BLOCK7_UNEXPECTED_ORACLE_ERRORS=$oracle_error_count" >&2
+  exit 1
+fi
+echo 'BLOCK7_UNEXPECTED_ORACLE_ERRORS=0'
 echo 'BLOCK7_REAL_BROWSER_TESTS_EXECUTED=1'
 echo 'BLOCK7_CRITICAL_MATRIX_API_ROUTES_MOCKED=0'
 echo 'BLOCK7_BROWSER_API_ORACLE_E2E=PASS'
