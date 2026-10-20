@@ -634,8 +634,11 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(followUpModal).toBeVisible();
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
   const firstDestinations = followUpModal.locator('#seg-nuevo-estado option');
-  await expect(firstDestinations).toHaveCount(1);
-  await expect(followUpModal.locator('#seg-nuevo-estado')).toHaveValue('EN_REVISION');
+  await expect(firstDestinations).toHaveCount(6);
+  const firstDestinationValues = await firstDestinations.evaluateAll(options =>
+    options.map(option => (option as HTMLOptionElement).value).filter(Boolean));
+  expect(firstDestinationValues).toEqual(['APROBADA', 'CERRADA', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA']);
+  await expect(followUpModal.locator('#seg-nuevo-estado')).toHaveValue('');
   await page.locator('#seg-motivo').fill('Envío a revisión de prueba');
   await page.locator('#seg-nuevo-estado').selectOption('EN_REVISION');
   const draftToReview = page.waitForResponse(response => response.request().method() === 'POST'
@@ -648,11 +651,13 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await reviewState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('EN_REVISION');
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('En revisión');
   const reviewDestinations = followUpModal.locator('#seg-nuevo-estado option');
-  await expect(reviewDestinations).toHaveCount(3);
+  await expect(reviewDestinations).toHaveCount(6);
   const reviewDestinationValues = await reviewDestinations.evaluateAll(options =>
-    options.map(option => (option as HTMLOptionElement).value));
-  expect(reviewDestinationValues).toEqual(['APROBADA', 'OBSERVADA', 'RECHAZADA']);
-  await expect(reviewDestinations).toHaveText(['Aprobada', 'Observada', 'Rechazada']);
+    options.map(option => (option as HTMLOptionElement).value).filter(Boolean));
+  expect(reviewDestinationValues).toEqual(['APROBADA', 'BORRADOR', 'CERRADA', 'OBSERVADA', 'RECHAZADA']);
+  const reviewDestinationLabels = await reviewDestinations.evaluateAll(options =>
+    options.map(option => (option as HTMLOptionElement).textContent?.trim() ?? '').filter(text => text && !text.includes('Seleccione')));
+  expect(reviewDestinationLabels).toEqual(['Aprobada', 'Borrador', 'Cerrada', 'Observada', 'Rechazada']);
 
   await page.locator('#seg-motivo').fill('Observación de prueba');
   await page.locator('#seg-nuevo-estado').selectOption('OBSERVADA');
@@ -664,15 +669,18 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const observedState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
   expect((await observedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Observada');
-  await expect(followUpModal.locator('#seg-nuevo-estado option')).toHaveCount(1);
-  await expect(followUpModal.locator('#seg-nuevo-estado')).toHaveValue('BORRADOR');
+  const observedDestinations = followUpModal.locator('#seg-nuevo-estado option');
+  await expect(observedDestinations).toHaveCount(6);
+  const observedDestinationValues = await observedDestinations.evaluateAll(options =>
+    options.map(option => (option as HTMLOptionElement).value).filter(Boolean));
+  expect(observedDestinationValues).toEqual(['APROBADA', 'BORRADOR', 'CERRADA', 'EN_REVISION', 'RECHAZADA']);
 
   const historyResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/flujos`);
   expect(historyResponse.ok()).toBeTruthy();
   const flowStates = (await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado);
   expect(flowStates).toContain('EN_REVISION');
   expect(flowStates).toContain('OBSERVADA');
-  const invalidTransition = await request.post(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones?nuevoEstado=CERRADA`);
+  const invalidTransition = await request.post(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones?nuevoEstado=OBSERVADA`);
   expect(invalidTransition.status()).toBe(400);
   const unchangedState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
   expect((await unchangedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
