@@ -14,6 +14,14 @@
       <dl class="px-2 border-l border-gray-200"><dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Campos</dt><dd class="mt-1 font-bold text-ihss-700">{{ totalCampos() }}</dd></dl>
     </div>
   </header>
+  @if (errorCatalogoEstadosEvaluacion(); as errorCatalogo) {
+    <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+      <span class="flex-1">{{ errorCatalogo }}</span>
+      <button type="button" class="rounded-lg p-2 text-red-700 hover:bg-red-100" aria-label="Reintentar catálogo de estados" title="Reintentar catálogo de estados" (click)="cargarCatalogoEstadosEvaluacion()">
+        <app-action-icon action="retry"></app-action-icon>
+      </button>
+    </div>
+  }
   @if (configuracionFamiliaPredeterminadaPendiente()) {
     <section class="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sky-900 shadow-sm" role="status" aria-live="polite" data-ui-default-family-state>
       <svg class="mt-0.5 h-5 w-5 flex-shrink-0 text-sky-700" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg>
@@ -132,7 +140,7 @@
       </div>
       <div class="matrices-filter-surface flex flex-col sm:flex-row sm:items-end gap-3">
       <div class="flex-1 min-w-[200px]"><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por Código de Riesgo, Riesgo Inherente o Evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
-        <div class="w-full sm:w-48"><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
+        <div class="w-full sm:w-48"><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option>@for (estado of catalogoEstadosEvaluacion(); track estado.codigo) { <option [value]="estado.codigo">{{ estado.etiqueta }}</option> }</select></div>
         <div class="w-full sm:w-auto">
           <button type="button" title="Limpiar filtros de evaluaciones" aria-label="Limpiar filtros de evaluaciones" class="inline-flex h-10 w-10 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
             <app-action-icon action="clear-filters"></app-action-icon>
@@ -264,7 +272,7 @@
           <label for="consolidado-estado" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Estado</label>
           <select id="consolidado-estado" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoConsolidado()" (ngModelChange)="cambiarEstadoConsolidado($event)">
             <option value="TODOS">Todos los estados</option>
-            @for (estado of estadosConsolidado(); track estado) { <option [value]="estado">{{ etiquetaEstadoEvaluacion(estado) }}</option> }
+            @for (estado of catalogoEstadosEvaluacion(); track estado.codigo) { <option [value]="estado.codigo">{{ estado.etiqueta }}</option> }
           </select>
         </div>
         <app-page-size-selector [value]="registrosPorPaginaConsolidado()" [options]="opcionesRegistrosPorPagina" ariaLabel="Consolidado por página" (valueChange)="cambiarRegistrosPorPaginaConsolidado($event)" />
@@ -1167,7 +1175,7 @@
           @for (bloque of bloquesEvaluacion; track bloque) {
             <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700"
               [class.border-ihss-700]="bloqueEvaluacionActual() === bloque" [class.bg-ihss-50]="bloqueEvaluacionActual() === bloque"
-              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque" [disabled]="bloque > bloqueMasAltoAlcanzado() && !evaluacionSeleccionada()"
+              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque"
               [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
               {{ tituloBloqueEvaluacion(bloque) }}
             </button>
@@ -1224,9 +1232,13 @@
           }
           }
 
-          @if (bloqueEvaluacionActual() === 2 && evaluacionSeleccionada(); as evaluation) {
-            <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="controles" (persisted)="refrescarProyeccionEvaluacion()" />
-          }
+          <div [class.hidden]="bloqueEvaluacionActual() !== 2" [attr.aria-hidden]="bloqueEvaluacionActual() !== 2 ? 'true' : null">
+            @if (evaluacionSeleccionada(); as evaluation) {
+              <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="controles" (persisted)="refrescarProyeccionEvaluacion()" />
+            } @else {
+              <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Guarde el borrador explícitamente para administrar controles.</p>
+            }
+          </div>
 
           @if (bloqueEvaluacionActual() === 3) {
             <section class="space-y-4" aria-labelledby="titulo-bloque-residual">
@@ -1250,9 +1262,13 @@
             </section>
           }
 
-          @if (bloqueEvaluacionActual() === 4 && evaluacionSeleccionada(); as evaluation) {
-            <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="planes" (persisted)="refrescarProyeccionEvaluacion()" />
-          }
+          <div [class.hidden]="bloqueEvaluacionActual() !== 4" [attr.aria-hidden]="bloqueEvaluacionActual() !== 4 ? 'true' : null">
+            @if (evaluacionSeleccionada(); as evaluation) {
+              <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="planes" (persisted)="refrescarProyeccionEvaluacion()" />
+            } @else {
+              <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Guarde el borrador explícitamente para administrar planes y actividades.</p>
+            }
+          </div>
 
           @if (bloqueEvaluacionActual() === 5) {
             <section class="space-y-4" aria-labelledby="titulo-bloque-calculos">
@@ -1273,16 +1289,14 @@
             </section>
           }
 
-          @if (bloqueEvaluacionActual() === 6) {
-            <section aria-labelledby="titulo-bloque-seguimiento">
+          <section [class.hidden]="bloqueEvaluacionActual() !== 6" [attr.aria-hidden]="bloqueEvaluacionActual() !== 6 ? 'true' : null" aria-labelledby="titulo-bloque-seguimiento">
               <h4 id="titulo-bloque-seguimiento" class="mb-3 text-base font-bold text-slate-900">{{ tituloBloqueEvaluacion(6) }}</h4>
               @if (evaluacionSeleccionada(); as evaluation) {
                 <app-matrices-riesgos-monitoreo-operativo [evaluacionIdInicial]="evaluation.evaId" (persisted)="refrescarProyeccionEvaluacion()" />
               } @else {
                 <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">El seguimiento estará disponible después del primer guardado de la evaluación.</p>
               }
-            </section>
-          }
+          </section>
         </div>
 
         <div class="modal-footer-institutional flex-wrap">
@@ -1293,7 +1307,7 @@
           <button type="button" class="modal-action-icon modal-action-icon--secondary" title="Ir al bloque anterior" aria-label="Ir al bloque anterior" [disabled]="guardando() || bloqueEvaluacionActual() <= 1" (click)="volverBloqueEvaluacion()"><app-action-icon action="back"></app-action-icon></button>
           <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
                   class="modal-action-icon modal-action-icon--primary"
-                  [disabled]="guardando()"
+                  [disabled]="guardando() || bloqueEvaluacionActual() >= 6"
                   (click)="continuarBloqueEvaluacion()">
             <app-action-icon action="next"></app-action-icon>
           </button>
@@ -1338,6 +1352,7 @@
                   <select id="seg-nuevo-estado"
                           class="w-full border border-gray-200 rounded-xl px-3 py-2 bg-white font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600"
                           [(ngModel)]="nuevoEstado">
+                    <option value="">Seleccione estado de destino</option>
                     @for (estadoDest of obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || ''); track estadoDest) {
                       <option [value]="estadoDest">{{ etiquetaEstadoEvaluacion(estadoDest) }}</option>
                     }
@@ -1423,8 +1438,8 @@
           @for (bloque of bloquesEvaluacion; track bloque) {
             <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700"
               [class.border-ihss-700]="bloqueEvaluacionActual() === bloque" [class.bg-ihss-50]="bloqueEvaluacionActual() === bloque"
-              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque" [disabled]="bloque > 1"
-              [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null">
+              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque"
+              [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
               {{ tituloBloqueEvaluacion(bloque) }}
             </button>
           }
@@ -1536,6 +1551,12 @@
             </section>
           }
 
+          @if ([2, 4, 6].includes(bloqueEvaluacionActual())) {
+            <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Guarde el borrador explícitamente para habilitar la administración de controles, planes y seguimiento.</p>
+          } @else if (bloqueEvaluacionActual() === 5) {
+            <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Los cálculos se actualizan como vista previa mientras completa la evaluación. Navegar entre bloques no guarda los cambios.</p>
+          }
+
           @if (familiaNuevaSeleccionada() && versionVigente() && seccionesModal().length === 0) {
             <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800" role="status">
               La versión activa de la familia seleccionada no contiene secciones configuradas para esta evaluación.
@@ -1551,10 +1572,11 @@
           <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()">
             <app-action-icon action="cancel"></app-action-icon>
           </button>
+          <button type="button" class="modal-action-icon modal-action-icon--secondary" title="Ir al bloque anterior" aria-label="Ir al bloque anterior" [disabled]="guardando() || bloqueEvaluacionActual() <= 1" (click)="volverBloqueEvaluacion()"><app-action-icon action="back"></app-action-icon></button>
           <button type="button" class="modal-action-icon modal-action-icon--secondary" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
           <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
                   class="modal-action-icon modal-action-icon--primary"
-                  [disabled]="guardando()"
+                  [disabled]="guardando() || bloqueEvaluacionActual() >= 6"
                   (click)="continuarBloqueEvaluacion()">
                   <app-action-icon action="next"></app-action-icon>
           </button>

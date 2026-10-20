@@ -50,6 +50,11 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
 
   beforeEach(async () => {
     service = {
+      obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
+        { codigo: 'APROBADA', etiqueta: 'Aprobada' }, { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+        { codigo: 'CERRADA', etiqueta: 'Cerrada' }, { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+        { codigo: 'OBSERVADA', etiqueta: 'Observada' }, { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+      ])),
       obtenerResumenOperativo: vi.fn().mockReturnValue(of(resumen)),
       listarAlertas: vi.fn().mockReturnValue(of([alertaActiva, alertaInactiva])),
       listarAutomonitoreo: vi.fn().mockReturnValue(of([mon])),

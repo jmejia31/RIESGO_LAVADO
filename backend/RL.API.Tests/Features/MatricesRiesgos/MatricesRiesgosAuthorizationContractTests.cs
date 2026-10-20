@@ -97,6 +97,9 @@ public sealed class MatricesRiesgosAuthorizationContractTests
     {
         Assert.NotNull(typeof(MatricesRiesgosController).GetCustomAttribute<AuthorizeAttribute>());
         Assert.NotNull(typeof(MatricesRiesgosController).GetCustomAttribute<ModuloAuthorizeAttribute>());
+        MethodInfo catalogAction = typeof(MatricesRiesgosController).GetMethod(nameof(MatricesRiesgosController.ObtenerCatalogoEstadosEvaluacion))!;
+        Assert.Equal("evaluaciones/estados", catalogAction.GetCustomAttribute<HttpGetAttribute>()?.Template);
+        Assert.Null(catalogAction.GetCustomAttribute<AllowAnonymousAttribute>());
     }
 
     [Fact]

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
+import { EstadoEvaluacionCatalogoDto, EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
 import {
   AutomonitoreoDto,
   AutomonitoreoGuardarDto,
@@ -44,6 +44,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
+  readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>([]);
 
   evaluacionId = 0;
   readonly estadosRiesgo = canonicalCatalogSelectOptions('MONITORING_RISK_STATUS');
@@ -57,15 +58,8 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   }
 
   etiquetaEstadoEvaluacion(estado: string): string {
-    const etiquetas: Record<string, string> = {
-      BORRADOR: 'Borrador',
-      EN_REVISION: 'En revisión',
-      OBSERVADA: 'Observada',
-      APROBADA: 'Aprobada',
-      RECHAZADA: 'Rechazada',
-      CERRADA: 'Cerrada'
-    };
-    return etiquetas[estado.trim().toUpperCase()] ?? estado;
+    const codigo = estado.trim().toUpperCase();
+    return this.catalogoEstadosEvaluacion().find(item => item.codigo === codigo)?.etiqueta ?? estado;
   }
 
   get opcionesEvaluacion(): BoundedSelectOption[] {
@@ -96,6 +90,15 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   readonly archivosPendientesPorControl = signal<Record<number, File[]>>({});
 
   ngOnInit(): void {
+    const cargarCatalogo = this.service.obtenerCatalogoEstadosEvaluacion;
+    if (typeof cargarCatalogo === 'function') {
+      cargarCatalogo.call(this.service).subscribe({
+        next: estados => {
+          this.catalogoEstadosEvaluacion.set(estados);
+          this.cdr.markForCheck();
+        }
+      });
+    }
     if (this.evaluacionIdInicial && this.evaluacionIdInicial > 0) {
       this.seleccionarEvaluacion(this.evaluacionIdInicial);
     } else {

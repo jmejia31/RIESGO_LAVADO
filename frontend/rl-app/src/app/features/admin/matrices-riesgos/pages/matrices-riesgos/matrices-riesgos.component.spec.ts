@@ -19,6 +19,9 @@ describe('MatricesRiesgosComponent', () => {
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
     obtenerRiesgo: ReturnType<typeof vi.fn>;
     listarControles: ReturnType<typeof vi.fn>;
+    listarPlanes: ReturnType<typeof vi.fn>;
+    listarAlertas: ReturnType<typeof vi.fn>;
+    listarAutomonitoreo: ReturnType<typeof vi.fn>;
     obtenerMitigacionBloque4: ReturnType<typeof vi.fn>;
     obtenerBloque6: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
@@ -39,6 +42,7 @@ describe('MatricesRiesgosComponent', () => {
     actualizarEvaluacion: ReturnType<typeof vi.fn>;
     transicionarEvaluacion: ReturnType<typeof vi.fn>;
     obtenerTransicionesEvaluacion: ReturnType<typeof vi.fn>;
+    obtenerCatalogoEstadosEvaluacion: ReturnType<typeof vi.fn>;
     obtenerFlujos: ReturnType<typeof vi.fn>;
     crearBorradorFormulario: ReturnType<typeof vi.fn>;
     actualizarBorradorFormulario: ReturnType<typeof vi.fn>;
@@ -134,6 +138,9 @@ describe('MatricesRiesgosComponent', () => {
       })),
       obtenerRiesgo: vi.fn().mockReturnValue(of({ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo institucional', rieDescripcion: 'Evaluación', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T08:00:00' })),
       listarControles: vi.fn().mockReturnValue(of([])),
+      listarPlanes: vi.fn().mockReturnValue(of([])),
+      listarAlertas: vi.fn().mockReturnValue(of([])),
+      listarAutomonitoreo: vi.fn().mockReturnValue(of([])),
       obtenerMitigacionBloque4: vi.fn().mockReturnValue(of({ cantidadAcciones: 0, planes: [] })),
       obtenerBloque6: vi.fn().mockReturnValue(of({ senalesAlerta: [], estadoRiesgo: null, controles: [], observacionesArea: null, observacionesUgr: null, puedeEditarObservacionesArea: false, puedeEditarObservacionesUgr: false })),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({
@@ -183,7 +190,12 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       actualizarBorradorEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
       transicionarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
-      obtenerTransicionesEvaluacion: vi.fn().mockReturnValue(of({ estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] })),
+      obtenerTransicionesEvaluacion: vi.fn().mockReturnValue(of({ estadoActual: 'BORRADOR', destinosPermitidos: ['APROBADA', 'CERRADA', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA'] })),
+      obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
+        { codigo: 'APROBADA', etiqueta: 'Aprobada' }, { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+        { codigo: 'CERRADA', etiqueta: 'Cerrada' }, { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+        { codigo: 'OBSERVADA', etiqueta: 'Observada' }, { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+      ])),
       obtenerFlujos: vi.fn().mockReturnValue(of([])),
       crearBorradorFormulario: vi.fn().mockReturnValue(of(21)),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
@@ -845,5 +857,29 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       evaVersionId: 9,
       evaDataJson: JSON.stringify({ campo_historico: 'actualizado' })
     }));
+  });
+
+  it('navega por los seis bloques sin guardar, recargar ni perder respuestas locales', () => {
+    const localResponses = { area_principal: 'Área en memoria', dueno_riesgo: 'Dueño local' };
+    component.respuestas.set(localResponses);
+    component.bloqueEvaluacionActual.set(1);
+    component.cambiosSinGuardar.set(true);
+    service.guardarBorradorEvaluacion.mockClear();
+    service.actualizarBorradorEvaluacion.mockClear();
+    service.obtenerEvaluacion.mockClear();
+
+    component.continuarBloqueEvaluacion();
+    expect(component.bloqueEvaluacionActual()).toBe(2);
+    component.irABloqueEvaluacion(5);
+    expect(component.bloqueEvaluacionActual()).toBe(5);
+    component.volverBloqueEvaluacion();
+    expect(component.bloqueEvaluacionActual()).toBe(4);
+    component.irABloqueEvaluacion(1);
+    expect(component.bloqueEvaluacionActual()).toBe(1);
+    expect(component.respuestas()).toEqual(localResponses);
+    expect(component.cambiosSinGuardar()).toBe(true);
+    expect(service.guardarBorradorEvaluacion).not.toHaveBeenCalled();
+    expect(service.actualizarBorradorEvaluacion).not.toHaveBeenCalled();
+    expect(service.obtenerEvaluacion).not.toHaveBeenCalled();
   });
 });

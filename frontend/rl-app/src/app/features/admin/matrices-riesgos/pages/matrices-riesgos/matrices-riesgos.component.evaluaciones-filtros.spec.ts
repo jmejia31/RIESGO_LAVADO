@@ -42,6 +42,14 @@ describe('MatricesRiesgosComponent — evaluaciones: búsqueda y filtros', () =>
       listarRiesgos: vi.fn().mockReturnValue(of([])),
       listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of(paginadoMock)),
+      obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
+        { codigo: 'APROBADA', etiqueta: 'Aprobada' },
+        { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+        { codigo: 'CERRADA', etiqueta: 'Cerrada' },
+        { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+        { codigo: 'OBSERVADA', etiqueta: 'Observada' },
+        { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+      ])),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(version)),
       metodologiaVigente: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
@@ -231,6 +239,10 @@ describe('MatricesRiesgosComponent — evaluaciones: búsqueda y filtros', () =>
 
   it('CASO 8 — ESTADOS EXACTOS UI: soporta los 6 estados institucionales más la opción de Todos', () => {
     const estadosValidos = ['', 'BORRADOR', 'EN_REVISION', 'OBSERVADA', 'APROBADA', 'RECHAZADA', 'CERRADA'];
+
+    const opciones = Array.from(fixture.nativeElement.querySelectorAll('#filtro-estado option')) as HTMLOptionElement[];
+    expect(opciones.map(opcion => opcion.value)).toEqual(['', 'APROBADA', 'BORRADOR', 'CERRADA', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA']);
+    expect(opciones.map(opcion => opcion.textContent?.trim())).toEqual(['Todos los estados', 'Aprobada', 'Borrador', 'Cerrada', 'En revisión', 'Observada', 'Rechazada']);
 
     estadosValidos.forEach(est => {
       serviceMock.listarEvaluaciones.mockClear();

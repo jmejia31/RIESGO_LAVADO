@@ -247,6 +247,18 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
       datos = fixture.metodologia ?? metodologiaFormulario;
     } else if (path.endsWith('/formularios/historial')) {
       datos = [versionFormulario];
+    } else if (path.endsWith('/evaluaciones/estados') && method === 'GET') {
+      datos = [
+        { codigo: 'APROBADA', etiqueta: 'Aprobada' },
+        { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+        { codigo: 'CERRADA', etiqueta: 'Cerrada' },
+        { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+        { codigo: 'OBSERVADA', etiqueta: 'Observada' },
+        { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+      ];
+    } else if (/\/evaluaciones\/\d+\/transiciones-permitidas$/.test(path) && method === 'GET') {
+      const estados = ['APROBADA', 'BORRADOR', 'CERRADA', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA'];
+      datos = { estadoActual: 'BORRADOR', destinosPermitidos: estados.filter(estado => estado !== 'BORRADOR') };
     } else if (/\/formularios\/\d+$/.test(path) && method === 'GET') {
       datos = versionFormulario;
     } else if (path.endsWith('/consolidado/paginado')) {
@@ -334,6 +346,18 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
       datos = flujosEvaluacion;
     } else if (/\/evaluaciones\/\d+\/transiciones$/.test(path) && method === 'POST') {
       datos = null;
+    } else if (/\/mitigacion\/evaluaciones\/\d+\/controles$/.test(path) && method === 'GET') {
+      datos = [];
+    } else if (/\/mitigacion\/evaluaciones\/\d+\/planes$/.test(path) && method === 'GET') {
+      datos = [];
+    } else if (/\/mitigacion\/evaluaciones\/\d+\/bloque4$/.test(path) && method === 'GET') {
+      datos = { cantidadAcciones: 0, planes: [] };
+    } else if (/\/monitoreo\/evaluaciones\/\d+\/alertas$/.test(path) && method === 'GET') {
+      datos = [];
+    } else if (/\/monitoreo\/evaluaciones\/\d+\/automonitoreo$/.test(path) && method === 'GET') {
+      datos = [];
+    } else if (/\/monitoreo\/evaluaciones\/\d+\/bloque6$/.test(path) && method === 'GET') {
+      datos = { senalesAlerta: [], estadoRiesgo: null, controles: [], observacionesArea: null, observacionesUgr: null, puedeEditarObservacionesArea: false, puedeEditarObservacionesUgr: false };
     }
 
     return route.fulfill({
@@ -437,7 +461,7 @@ test('abre Matrices de Riesgos con una sesión autenticada y contratos dinámico
   await expect(page.getByRole('button', { name: 'Nueva evaluación' })).toBeVisible();
 });
 
-test('crea y recarga un borrador parcial antes de avanzar por bloques', async ({ page }) => {
+test('navega entre bloques sin guardar y solo persiste con Guardar borrador', async ({ page }) => {
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
@@ -455,11 +479,49 @@ test('crea y recarga un borrador parcial antes de avanzar por bloques', async ({
   await page.locator('#modal-selector-riesgo').selectOption({ label: 'R-502 — Riesgo tecnológico' });
   await page.getByLabel('Área principal').fill('Tecnología');
   await page.getByLabel('Dueño del riesgo').fill('Gerencia de Tecnología');
+  await page.waitForTimeout(500);
+  const navigationRequests: string[] = [];
+  page.on('request', request => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/api/')) navigationRequests.push(`${request.method()} ${path}`);
+  });
+  const nextTimes: number[] = [];
+  const previousTimes: number[] = [];
+  const navigateAndMeasure = async (button: import('@playwright/test').Locator, targetName: string, samples: number[]) => {
+    const started = performance.now();
+    await button.click();
+    await expect(page.getByRole('button', { name: targetName })).toHaveAttribute('aria-current', 'step');
+    samples.push(performance.now() - started);
+  };
+  await navigateAndMeasure(page.getByRole('button', { name: 'Continuar al siguiente bloque' }), '2. Controles', nextTimes);
+  await navigateAndMeasure(page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }), '3. Riesgo Residual y Respuesta', nextTimes);
+  await navigateAndMeasure(page.getByRole('button', { name: '4. Plan de Mitigación / Acciones Correctivas' }), '4. Plan de Mitigación / Acciones Correctivas', nextTimes);
+  await navigateAndMeasure(page.getByRole('button', { name: '5. Cálculos Auxiliares y Verificaciones' }), '5. Cálculos Auxiliares y Verificaciones', nextTimes);
+  await navigateAndMeasure(page.getByRole('button', { name: '6. Monitoreo, Efectividad y Observaciones' }), '6. Monitoreo, Efectividad y Observaciones', nextTimes);
+  for (const [target, name] of [
+    [5, '5. Cálculos Auxiliares y Verificaciones'],
+    [4, '4. Plan de Mitigación / Acciones Correctivas'],
+    [3, '3. Riesgo Residual y Respuesta'],
+    [2, '2. Controles'],
+    [1, '1. Identificación y Riesgo Inherente'],
+  ] as const) {
+    await navigateAndMeasure(page.getByRole('button', { name: 'Ir al bloque anterior' }), name, previousTimes);
+  }
+  await expect(page.getByLabel('Área principal')).toHaveValue('Tecnología');
+  expect(navigationRequests).toEqual([]);
+  await expect(page.locator('[data-uat="feedback-edicion-exito"]')).toHaveCount(0);
+  await expect(page.getByText('Actualizando cálculo institucional…', { exact: true })).toHaveCount(0);
+  const summarize = (samples: number[]) => {
+    const sorted = [...samples].sort((a, b) => a - b);
+    return { medianMs: sorted[Math.floor(sorted.length / 2)], p95Ms: sorted[Math.ceil(sorted.length * 0.95) - 1] };
+  };
+  console.log('EDITOR_NAVIGATION_TIMINGS', JSON.stringify({ next: summarize(nextTimes), previous: summarize(previousTimes) }));
+
   const saveRequest = page.waitForRequest(request =>
     request.method() === 'POST'
       && new URL(request.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador')
   );
-  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('button', { name: 'Guardar borrador' }).click();
   const request = await saveRequest;
   const payload = request.postDataJSON();
   expect(payload.evaRiesgoId).toBe(502);
@@ -471,6 +533,8 @@ test('crea y recarga un borrador parcial antes de avanzar por bloques', async ({
   expect(payload.evaDataCalcJson).toBe('{}');
 
   await expect(page.getByRole('heading', { name: 'Editar Evaluación #301' })).toBeVisible();
+  await expect(page.locator('[aria-label="Bloques funcionales de la evaluación"] [aria-current="step"]'))
+    .toHaveAccessibleName('1. Identificación y Riesgo Inherente');
   await expect(page.getByRole('button', { name: '2. Controles' })).toBeEnabled();
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
@@ -479,25 +543,25 @@ test('crea y recarga un borrador parcial antes de avanzar por bloques', async ({
   await expect(page.getByLabel('Área principal')).toHaveValue('Tecnología');
 });
 
-test('asocia el error requerido al control y enfoca el primer campo al continuar', async ({ page }) => {
+test('permite navegar sin completar campos y no guarda al continuar', async ({ page }) => {
   await stubAuthenticatedMatrices(page);
+  let draftWrites = 0;
+  page.on('request', request => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method())
+      && /\/api\/matrices-riesgos\/evaluaciones(?:\/borrador|\/\d+\/borrador)?$/.test(new URL(request.url()).pathname)) {
+      draftWrites++;
+    }
+  });
   await page.goto('/matrices-riesgos');
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
   await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
   await page.locator('#modal-selector-riesgo').selectOption({ label: 'R-502 — Riesgo tecnológico' });
 
-  const continueButton = page.getByRole('button', { name: /Continuar/ }).last();
-  await continueButton.click();
-
-  const area = page.getByLabel('Área principal');
-  await expect(area).toHaveAttribute('aria-invalid', 'true');
-  const describedBy = await area.getAttribute('aria-describedby');
-  expect(describedBy).toBeTruthy();
-  await expect(page.locator(`#${describedBy}`)).toContainText('Área principal es obligatorio.');
-  await expect(area).toBeFocused();
+  await page.getByRole('button', { name: 'Continuar al siguiente bloque' }).click();
+  await expect(page.getByRole('button', { name: '2. Controles' })).toHaveAttribute('aria-current', 'step');
+  expect(draftWrites).toBe(0);
   await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
-  const modalError = page.locator('[data-uat="feedback-nueva-error"]');
-  await expect(modalError).toContainText('campo(s) requerido(s)');
+  await expect(page.locator('[data-uat="feedback-nueva-error"]')).toHaveCount(0);
   await expect(page.locator('[data-uat="feedback-page-error"]')).toHaveCount(0);
 
   page.on('dialog', dialog => dialog.accept());

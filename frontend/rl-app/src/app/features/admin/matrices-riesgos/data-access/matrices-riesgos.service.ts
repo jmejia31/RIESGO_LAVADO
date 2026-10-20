@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
 import { createHttpErrorScopeContext, HttpErrorScope } from '../../../../core/http/http-error-scope';
@@ -21,6 +21,7 @@ import {
   FamiliaPredeterminadaDto,
   FiltroReporteMatrices,
   FlujoEvaluacionDto,
+  EstadoEvaluacionCatalogoDto,
   TransicionesEvaluacionDto,
   MetodologiaFormulario,
   ReporteMatricesPaginado,
@@ -66,6 +67,7 @@ export class MatricesRiesgosService {
       'Content-Type': 'application/json'
     })
   };
+  private catalogoEstadosEvaluacion$?: Observable<EstadoEvaluacionCatalogoDto[]>;
 
   metodologiaVigente(): Observable<MetodologiaFormulario> {
     return this.http
@@ -348,6 +350,13 @@ export class MatricesRiesgosService {
     return this.http
       .get<ApiResponse<TransicionesEvaluacionDto>>(`${this.apiUrl}/evaluaciones/${id}/transiciones-permitidas`, { context: createHttpErrorScopeContext('local') })
       .pipe(map(response => response.datos));
+  }
+
+  obtenerCatalogoEstadosEvaluacion(): Observable<EstadoEvaluacionCatalogoDto[]> {
+    this.catalogoEstadosEvaluacion$ ??= this.http
+      .get<ApiResponse<EstadoEvaluacionCatalogoDto[]>>(`${this.apiUrl}/evaluaciones/estados`, { context: createHttpErrorScopeContext('local') })
+      .pipe(map(response => response.datos), shareReplay({ bufferSize: 1, refCount: false }));
+    return this.catalogoEstadosEvaluacion$;
   }
 
   listarControles(evaluacionId: number): Observable<ControlRiesgoDto[]> {

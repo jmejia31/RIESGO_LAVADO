@@ -8,6 +8,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -25,6 +27,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
     private readonly IAuditoriaRepository _auditoriaRepo;
     private readonly VersionedCalculationRuntimeService _versionedRuntime;
     private readonly IMatricesRiesgosMitigacionRepository _controlsRepository;
+    private readonly ILogger<MatricesRiesgosAppService> _logger;
 
     public MatricesRiesgosAppService(
         IMatricesRiesgosRepository repo,
@@ -32,7 +35,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         IMatricesRiesgoService calculador,
         IAuditoriaRepository auditoriaRepo,
         VersionedCalculationRuntimeService versionedRuntime,
-        IMatricesRiesgosMitigacionRepository controlsRepository)
+        IMatricesRiesgosMitigacionRepository controlsRepository,
+        ILogger<MatricesRiesgosAppService>? logger = null)
     {
         _repo = repo ?? throw new ArgumentNullException(nameof(repo));
         _validador = validador ?? throw new ArgumentNullException(nameof(validador));
@@ -40,6 +44,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         _auditoriaRepo = auditoriaRepo ?? throw new ArgumentNullException(nameof(auditoriaRepo));
         _versionedRuntime = versionedRuntime ?? throw new ArgumentNullException(nameof(versionedRuntime));
         _controlsRepository = controlsRepository ?? throw new ArgumentNullException(nameof(controlsRepository));
+        _logger = logger ?? NullLogger<MatricesRiesgosAppService>.Instance;
     }
 
     public async Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string? familiaCodigo)
@@ -309,6 +314,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ServiceResult<long>.Ok(famId, "Familia de formulario creada exitosamente.");
     }
 
+    //Actualizar Familia de Formulario
     public async Task<ServiceResult> ActualizarFamiliaFormularioAsync(long famId, ActualizarFamiliaFormularioDto dto)
     {
         if (famId <= 0)
@@ -320,30 +326,31 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         {
             return ServiceResult.BadRequest("Los datos a actualizar son obligatorios.");
         }
-
+        //Verificar que la familia exista
         FamiliaFormularioDto? existente = await _repo.ObtenerFamiliaFormularioPorIdAsync(famId);
         if (existente is null)
         {
             return ServiceResult.NotFound($"No se encontró la familia de formulario con ID {famId}.");
         }
-
+//Validar que el nombre no sea nulo o vacio
         string nombreNormalizado = (dto.FamNombre ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(nombreNormalizado))
         {
             return ServiceResult.BadRequest("El nombre de la familia es obligatorio.");
         }
-
+        //Validar que si se esta desactivando la familia, no sea la predeterminada
         if (!dto.FamActivo && existente.FamPredeterminada)
         {
             return ServiceResult.BadRequest(
                 "Esta familia es actualmente la predeterminada. Establezca otra familia como predeterminada antes de desactivarla.");
         }
+        //Validar que si se esta desactivando la familia, no tenga una version publicada vigente
 
         if (!dto.FamActivo && existente.TieneVersionVigente)
         {
             return ServiceResult.BadRequest("No se puede desactivar la familia mientras posea una versión publicada vigente.");
         }
-
+        //Actualizar la familia
         bool actualizado = await _repo.ActualizarFamiliaFormularioAsync(
             famId,
             nombreNormalizado,
@@ -492,9 +499,9 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
                 ? ServiceResult.Ok("Evaluación actualizada y calculada exitosamente.")
                 : ServiceResult.NotFound($"No se encontró la evaluación con ID {dto.EvaId}.");
         }
-        catch (DBConcurrencyException ex)
+        catch (DBConcurrencyException)
         {
-            return new ServiceResult(false, ex.Message, 409);
+            return new ServiceResult(false, "La evaluación fue modificada por otra operación. Recargue e intente nuevamente.", 409);
         }
         catch (InvalidOperationException ex)
         {
@@ -631,9 +638,9 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             bool updated = await _repo.ActualizarEvaluacionAsync(dto, usuarioId, ip);
             return updated ? ServiceResult.Ok("Borrador actualizado.") : ServiceResult.NotFound($"No se encontró la evaluación con ID {dto.EvaId}.");
         }
-        catch (DBConcurrencyException ex)
+        catch (DBConcurrencyException)
         {
-            return new ServiceResult(false, ex.Message, 409);
+            return new ServiceResult(false, "La evaluación fue modificada por otra operación. Recargue e intente nuevamente.", 409);
         }
         catch (InvalidOperationException ex)
         {

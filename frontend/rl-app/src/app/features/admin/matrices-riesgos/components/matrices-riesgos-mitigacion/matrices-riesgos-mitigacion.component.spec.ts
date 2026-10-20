@@ -44,6 +44,11 @@ describe('MatricesRiesgosMitigacionComponent', () => {
 
   beforeEach(async () => {
     service = {
+      obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
+        { codigo: 'APROBADA', etiqueta: 'Aprobada' }, { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+        { codigo: 'CERRADA', etiqueta: 'Cerrada' }, { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+        { codigo: 'OBSERVADA', etiqueta: 'Observada' }, { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+      ])),
       listarControles: vi.fn().mockReturnValue(of([control])),
       listarPlanes: vi.fn().mockReturnValue(of([plan])),
       crearControl: vi.fn().mockReturnValue(of(3)),

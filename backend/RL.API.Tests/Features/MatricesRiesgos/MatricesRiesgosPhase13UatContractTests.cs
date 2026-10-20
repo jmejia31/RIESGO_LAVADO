@@ -70,6 +70,7 @@ public sealed class MatricesRiesgosPhase13UatContractTests
             nameof(MatricesRiesgosController.ObtenerEvaluacion),
             nameof(MatricesRiesgosController.CrearEvaluacion),
             nameof(MatricesRiesgosController.ActualizarEvaluacion),
+            nameof(MatricesRiesgosController.ObtenerCatalogoEstadosEvaluacion),
             nameof(MatricesRiesgosController.TransicionarEstadoEvaluacion),
             nameof(MatricesRiesgosController.ObtenerFlujosEvaluacion),
             nameof(MatricesRiesgosController.CargarEvidencia),

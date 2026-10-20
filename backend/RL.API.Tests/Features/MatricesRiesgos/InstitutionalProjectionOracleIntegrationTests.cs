@@ -187,6 +187,111 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         }
     }
 
+    [Block12OracleRequiredFact]
+    [Trait("Category", "Block12OracleIntegration")]
+    public async Task WorkflowAllowsAndAuditsAllThirtyDirectedStateChangesOnLocalXe()
+    {
+        string connectionString = OracleTestDatabaseProfile.RequireLocalXeConnection(
+            Environment.GetEnvironmentVariable("BLOCK12_ORACLE_CONNECTION_STRING"));
+        OracleConnection.ClearAllPools();
+        await using var seed = CreateConnection(connectionString);
+        await OpenWithRetryAsync(seed);
+        await EnsureFixtureTablesAsync(seed);
+        await EnsureBlock7FixtureObjectsAsync(seed);
+
+        string[] estados = EvaluacionWorkflow.ObtenerCatalogoEstados().Select(estado => estado.Codigo).ToArray();
+        long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 700_000_000 + 200_000_000;
+        long riskId = stamp + 1;
+        const long userId = 987654;
+        long[] evaluationIds = Enumerable.Range(0, 30).Select(index => stamp + 100 + index).ToArray();
+        DateTime createdAt = DateTime.UtcNow.AddMinutes(-5);
+        await ExecuteAsync(seed,
+            "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,'Block 12 workflow fixture','Disposable local XE workflow risk',1,:usr,SYSDATE)",
+            ("id", riskId), ("code", $"B12-WF-{stamp}"), ("usr", userId));
+
+        try
+        {
+            int fixtureIndex = 0;
+            foreach (string actual in estados)
+            foreach (string destino in estados.Where(estado => !estado.Equals(actual, StringComparison.OrdinalIgnoreCase)))
+            {
+                long evaluationId = evaluationIds[fixtureIndex];
+                await InsertConsolidatedFixtureAsync(seed, riskId, evaluationId, stamp + 200 + fixtureIndex,
+                    actual, createdAt.AddSeconds(fixtureIndex), $"B12-WF-{stamp}", userId);
+                fixtureIndex++;
+            }
+
+            await using var app = await CreateBlock7ApiAsync(connectionString);
+            string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+            using var http = new HttpClient { BaseAddress = new Uri(address) };
+            int validTransitions = 0;
+            int failedValidTransitions = 0;
+
+            fixtureIndex = 0;
+            foreach (string actual in estados)
+            foreach (string destino in estados.Where(estado => !estado.Equals(actual, StringComparison.OrdinalIgnoreCase)))
+            {
+                long evaluationId = evaluationIds[fixtureIndex++];
+                string query = $"nuevoEstado={Uri.EscapeDataString(destino)}&motivo={Uri.EscapeDataString($"Block 12 XE {actual} a {destino}")}";
+                using HttpResponseMessage transition = await http.PostAsync(
+                    $"/api/matrices-riesgos/evaluaciones/{evaluationId}/transiciones?{query}", content: null);
+                if (transition.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    failedValidTransitions++;
+                    Assert.Fail($"La transición válida {actual} → {destino} falló con HTTP {(int)transition.StatusCode}.");
+                }
+
+                Assert.Equal(destino, await ScalarTextAsync(seed,
+                    "SELECT PROY_ESTADO_EVALUACION FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id",
+                    ("id", evaluationId)));
+                Assert.Equal(2, await ScalarIntAsync(seed,
+                    "SELECT COUNT(*) FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id",
+                    ("id", evaluationId)));
+                Assert.Equal(1, await ScalarIntAsync(seed,
+                    "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID=:id AND AUD_TABLA='RL_MR_EVALUACIONES_RIESGO'",
+                    ("id", evaluationId.ToString())));
+
+                using HttpResponseMessage destinationsResponse = await http.GetAsync(
+                    $"/api/matrices-riesgos/evaluaciones/{evaluationId}/transiciones-permitidas");
+                Assert.Equal(System.Net.HttpStatusCode.OK, destinationsResponse.StatusCode);
+                using JsonDocument destinationsBody = JsonDocument.Parse(await destinationsResponse.Content.ReadAsStringAsync());
+                Assert.Equal(destino, destinationsBody.RootElement.GetProperty("datos").GetProperty("estadoActual").GetString());
+                Assert.Equal(5, destinationsBody.RootElement.GetProperty("datos").GetProperty("destinosPermitidos").GetArrayLength());
+
+                using HttpResponseMessage selfTransition = await http.PostAsync(
+                    $"/api/matrices-riesgos/evaluaciones/{evaluationId}/transiciones?nuevoEstado={Uri.EscapeDataString(destino)}&motivo=Self-transition+must+fail",
+                    content: null);
+                Assert.Equal(System.Net.HttpStatusCode.BadRequest, selfTransition.StatusCode);
+                Assert.Equal(2, await ScalarIntAsync(seed,
+                    "SELECT COUNT(*) FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id",
+                    ("id", evaluationId)));
+                Assert.Equal(1, await ScalarIntAsync(seed,
+                    "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID=:id AND AUD_TABLA='RL_MR_EVALUACIONES_RIESGO'",
+                    ("id", evaluationId.ToString())));
+                validTransitions++;
+            }
+
+            Assert.Equal(30, validTransitions);
+            Assert.Equal(0, failedValidTransitions);
+            _output.WriteLine("VALID_DIRECTED_STATE_CHANGES=30/30");
+            _output.WriteLine("FAILED_VALID_STATE_CHANGES=0");
+            _output.WriteLine("SELF_TRANSITION_BLOCKED=PASS");
+            _output.WriteLine("AUDIT_HISTORY_CREATED=PASS");
+        }
+        finally
+        {
+            foreach (long evaluationId in evaluationIds)
+            {
+                await ExecuteAsync(seed, "DELETE FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID=:id", ("id", evaluationId.ToString()));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+            }
+
+            await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+        }
+    }
+
     [Fact]
     [Trait("Category", "Block12OracleIntegration")]
     public async Task WorkbookCalculationResultsSurviveOracleApiProjectionAndBothExportsForAllRisks()
@@ -1381,5 +1486,22 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             ], Scheme.Name);
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name)));
         }
+    }
+}
+
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class Block12OracleRequiredFactAttribute : FactAttribute
+{
+    public Block12OracleRequiredFactAttribute()
+    {
+        bool optedIn = string.Equals(
+            Environment.GetEnvironmentVariable("RL_BLOCK12_ORACLE_CERTIFICATION_REQUIRED"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+        bool hasConnection = !string.IsNullOrWhiteSpace(
+            Environment.GetEnvironmentVariable("BLOCK12_ORACLE_CONNECTION_STRING"));
+
+        if (!optedIn || !hasConnection)
+            Skip = "Requires the disposable local Oracle XE Block 12 integration configuration.";
     }
 }

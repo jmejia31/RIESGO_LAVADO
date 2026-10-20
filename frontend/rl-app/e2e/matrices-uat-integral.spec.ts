@@ -79,7 +79,17 @@ async function preparar(page: Page): Promise<void> {
     const req = route.request();
     const path = new URL(req.url()).pathname;
     const method = req.method();
-    if (path.endsWith('/reportes/consolidado.pdf')) {
+    if (path.endsWith('/evaluaciones/estados')) {
+      datos = [
+        { codigo: 'APROBADA', etiqueta: 'Aprobada' },
+        { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+        { codigo: 'CERRADA', etiqueta: 'Cerrada' },
+        { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+        { codigo: 'OBSERVADA', etiqueta: 'Observada' },
+        { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+      ];
+    }
+    else if (path.endsWith('/reportes/consolidado.pdf')) {
       return route.fulfill({ status: 200, contentType: 'application/pdf', body: Buffer.from(pdfFixture) });
     }
     if (path.endsWith('/reportes/consolidado.xlsx')) {
@@ -1732,6 +1742,7 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
 
   // Stateful server representation
   let updatePayloadReceived: any = null;
+  let updateRequestCount = 0;
   let serverEvaVersionRow = 1;
   let serverEvaDataJson = JSON.stringify({
     area_principal: 'Área de Cumplimiento',
@@ -1824,6 +1835,7 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
     }
 
     if (path.endsWith('/evaluaciones/20/borrador') && method === 'PUT') {
+      updateRequestCount++;
       updatePayloadReceived = req.postDataJSON();
       serverEvaVersionRow++;
       serverEvaDataJson = updatePayloadReceived.evaDataJson;
@@ -1888,6 +1900,31 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   await expect(page.locator('#titulo-modal-editar')).toContainText('Editar Evaluación #20');
 
   // La edición permite abrir directamente el bloque guardado que se desea corregir.
+  await page.waitForTimeout(500);
+  const navigationRequests: string[] = [];
+  page.on('request', request => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/api/')) navigationRequests.push(`${request.method()} ${path}`);
+  });
+  await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
+  const respuestaLocal = page.locator('#campo-edit-respuesta_riesgo');
+  const previewBeforeNavigation = page.waitForResponse(response =>
+    new URL(response.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/calculo-preview')
+  );
+  await respuestaLocal.selectOption('MITIGAR');
+  await previewBeforeNavigation;
+  await page.waitForTimeout(450);
+  navigationRequests.length = 0;
+  await page.getByRole('button', { name: '2. Controles' }).click();
+  await page.getByRole('button', { name: '4. Plan de Mitigación / Acciones Correctivas' }).click();
+  await page.getByRole('button', { name: '5. Cálculos Auxiliares y Verificaciones' }).click();
+  await page.getByRole('button', { name: '6. Monitoreo, Efectividad y Observaciones' }).click();
+  await page.getByRole('button', { name: 'Ir al bloque anterior' }).click();
+  await expect(page.getByRole('button', { name: '5. Cálculos Auxiliares y Verificaciones' })).toHaveAttribute('aria-current', 'step');
+  await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
+  await expect(respuestaLocal).toHaveValue('MITIGAR');
+  expect(navigationRequests).toEqual([]);
+
   await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
 
   // C. Localizar el campo/selector “Respuesta al riesgo”
@@ -1917,7 +1954,9 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
 
   const feedbackExito = page.locator('[data-uat="feedback-edicion-exito"]');
   await expect(feedbackExito).toBeVisible();
-  await expect(feedbackExito).toContainText('guardado y recargado desde el servidor');
+  await expect(feedbackExito).toContainText('Borrador #20 guardado.');
+  await expect(page.locator('[aria-label="Bloques funcionales de la evaluación"] [aria-current="step"]'))
+    .toHaveAccessibleName('3. Riesgo Residual y Respuesta');
 
   // G. Capturar/verificar la petición de actualización real
   expect(updatePayloadReceived).not.toBeNull();
@@ -1938,9 +1977,25 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   await expect(selectorReabierto).toBeVisible();
   await expect(selectorReabierto).toHaveValue('MITIGAR');
 
-  // M. Cerrar el editor
+  const dirtyPreview = page.waitForResponse(response =>
+    new URL(response.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/calculo-preview')
+  );
+  await selectorReabierto.selectOption('EVITAR');
+  await dirtyPreview;
   await page.getByLabel('Cerrar edición').click();
+  const dirtyClose = page.locator('[role="dialog"], [role="alertdialog"]').last();
+  await expect(dirtyClose.getByRole('button', { name: 'Continuar editando' })).toBeVisible();
+  await expect(dirtyClose.getByRole('button', { name: 'Descartar cambios' })).toBeVisible();
+  await dirtyClose.getByRole('button', { name: 'Continuar editando' }).click();
+  await expect(selectorReabierto).toHaveValue('EVITAR');
+  expect(updateRequestCount).toBe(1);
+  await page.getByLabel('Cerrar edición').click();
+  const discardDirtyEdit = page.locator('[role="dialog"], [role="alertdialog"]').last();
+  await discardDirtyEdit.getByRole('button', { name: 'Descartar cambios' }).click();
   await expect(page.locator('#titulo-modal-editar')).toHaveCount(0);
+
+  // M. El cierre con cambios pendientes nunca persiste por sí solo.
+  expect(updateRequestCount).toBe(1);
 
   // Una evaluación en BORRADOR permanece en Evaluaciones; la Matriz completa es exclusiva del Consolidado oficial.
   await expect(page.locator('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveCount(0);

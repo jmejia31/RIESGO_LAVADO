@@ -16,6 +16,7 @@ import {
   FamiliaPredeterminadaDto,
   FiltroReporteMatrices,
   FlujoEvaluacionDto,
+  EstadoEvaluacionCatalogoDto,
   TransicionesEvaluacionDto,
   MetodologiaFormulario,
   RespuestasFormulario,
@@ -253,15 +254,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly ordenConsolidado = signal('fechaEvaluacion');
   readonly direccionConsolidado = signal<'asc' | 'desc'>('desc');
 
-  readonly estadosConsolidado = computed(() => Array.from(new Set([
-    'APROBADA',
-    'BORRADOR',
-    'CERRADA',
-    'EN_REVISION',
-    'OBSERVADA',
-    'RECHAZADA',
-    ...this.consolidado().map(fila => fila.estadoEvaluacion).filter(Boolean)
-  ])).sort());
+  readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>([]);
+  readonly errorCatalogoEstadosEvaluacion = signal<string | null>(null);
+  readonly estadosConsolidado = computed(() => this.catalogoEstadosEvaluacion().map(estado => estado.codigo));
 
   readonly totalPaginasConsolidado = computed(() => {
     return this.totalPaginasServidorConsolidado();
@@ -277,7 +272,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly modalNuevaEvaluacionAbierto = signal<boolean>(false);
   readonly bloqueEvaluacionActual = signal<BloqueEvaluacion>(1);
   readonly erroresValidacionBloque = signal<Record<string, string>>({});
-  readonly bloqueMasAltoAlcanzado = signal<BloqueEvaluacion>(1);
   readonly proyeccionEvaluacion = signal<InstitutionalEvaluationProjectionDto | null>(null);
   readonly cargandoProyeccionEvaluacion = signal(false);
   readonly detalleCalculosExpandido = signal(false);
@@ -307,7 +301,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   motivoTransicion = '';
-  nuevoEstado = 'EN_REVISION';
+  nuevoEstado = '';
   readonly errorSeguimiento = signal<string | null>(null);
   readonly transicionesPermitidas = signal<string[]>([]);
   readonly estadoTransiciones = signal<EstadoCargaWorkflow>('LOADING');
@@ -423,10 +417,35 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.cargarCatalogoEstadosEvaluacion();
     this.cargarFamilias();
     this.cargarRiesgos();
     this.cargarEvaluaciones();
     this.cargarFormularioVigente();
+  }
+
+  cargarCatalogoEstadosEvaluacion(): void {
+    this.errorCatalogoEstadosEvaluacion.set(null);
+    const cargarCatalogo = this.service.obtenerCatalogoEstadosEvaluacion;
+    if (typeof cargarCatalogo !== 'function') return;
+    cargarCatalogo.call(this.service).subscribe({
+      next: estados => {
+        const codigos = estados.map(estado => estado.codigo.trim().toUpperCase());
+        if (codigos.some(codigo => !codigo) || new Set(codigos).size !== codigos.length) {
+          this.catalogoEstadosEvaluacion.set([]);
+          this.errorCatalogoEstadosEvaluacion.set('El catálogo de estados de evaluación no es válido.');
+          return;
+        }
+        this.catalogoEstadosEvaluacion.set(estados.map(estado => ({
+          codigo: estado.codigo.trim().toUpperCase(),
+          etiqueta: estado.etiqueta.trim()
+        })));
+      },
+      error: () => {
+        this.catalogoEstadosEvaluacion.set([]);
+        this.errorCatalogoEstadosEvaluacion.set('No se pudo cargar el catálogo de estados de evaluación.');
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -1504,9 +1523,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   irABloqueEvaluacion(bloque: BloqueEvaluacion): void {
-    if (this.evaluacionSeleccionada() || bloque <= this.bloqueMasAltoAlcanzado()) {
-      this.bloqueEvaluacionActual.set(bloque);
-    }
+    if (!this.bloquesEvaluacion.includes(bloque)) return;
+    this.bloqueEvaluacionActual.set(bloque);
   }
 
   volverBloqueEvaluacion(): void {
@@ -1516,32 +1534,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   continuarBloqueEvaluacion(): void {
-    const bloque = this.bloqueEvaluacionActual();
-    const faltantes = this.camposDeBloqueActual().filter(field => field.obligatorio
-      && !this.esGTICCondicional(field.clave)
-      && !this.tieneValor(this.respuestas()[field.clave]));
-    if (faltantes.length > 0) {
-      const errors = Object.fromEntries(faltantes.map(field => [
-        this.normalizarClaveContrato(field.clave),
-        `${field.etiqueta} es obligatorio.`
-      ]));
-      this.erroresValidacionBloque.set(errors);
-      this.mostrarErrorEnEditor(`Revise ${faltantes.length} campo(s) requerido(s) de ${this.tituloBloqueEvaluacion(bloque)}.`);
-      const first = faltantes[0];
-      if (first) {
-        const prefix = this.modalNuevaEvaluacionAbierto() ? 'campo-new' : 'campo-edit';
-        const id = this.idCampoEditor(first.clave, prefix);
-        requestAnimationFrame(() => {
-          const control = document.getElementById(id)?.querySelector<HTMLElement>('input, select, textarea, button')
-            ?? document.getElementById(id);
-          control?.focus();
-        });
-      }
-      return;
-    }
-
-    this.erroresValidacionBloque.set({});
-    this.guardarBorradorEvaluacion(bloque < 6);
+    const bloqueActual = this.bloqueEvaluacionActual();
+    if (bloqueActual < 6) this.irABloqueEvaluacion((bloqueActual + 1) as BloqueEvaluacion);
   }
 
   errorCampoEditor(campo: CampoFormulario): string | null {
@@ -1558,7 +1552,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       .includes(this.normalizarClaveContrato(clave));
   }
 
-  guardarBorradorEvaluacion(continuar = false): void {
+  guardarBorradorEvaluacion(): void {
     const actual = this.evaluacionSeleccionada();
     const versionId = actual?.evaVersionId ?? this.versionVigente()?.verId ?? 0;
     if (this.riesgoId() <= 0 || versionId <= 0 || this.guardando()) {
@@ -1587,7 +1581,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       : this.service.guardarBorradorEvaluacion(dto);
 
     save.subscribe({
-      next: evaluationId => this.recargarBorradorGuardado(evaluationId, continuar),
+      next: evaluationId => this.recargarBorradorGuardado(evaluationId),
       error: error => {
         this.guardando.set(false);
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo guardar el borrador.'));
@@ -1595,7 +1589,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private recargarBorradorGuardado(evaluationId: number, continuar: boolean): void {
+  private recargarBorradorGuardado(evaluationId: number): void {
+    // Los endpoints de borrador solo devuelven el ID/mensaje; esta lectura explícita
+    // obtiene la versión canónica calculada después de Guardar.
     this.service.obtenerEvaluacion(evaluationId).subscribe({
       next: detalle => {
         this.evaluacionSeleccionada.set(detalle);
@@ -1621,11 +1617,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           this.versionHistorica.set(version ?? null);
           this.metodologiaHistorica.set(this.metodologia());
         }
-        if (continuar && this.bloqueEvaluacionActual() < 6) {
-          const nextBlock = (this.bloqueEvaluacionActual() + 1) as BloqueEvaluacion;
-          this.bloqueEvaluacionActual.set(nextBlock);
-          this.bloqueMasAltoAlcanzado.update(highest => Math.max(highest, nextBlock) as BloqueEvaluacion);
-        }
         this.modalNuevaEvaluacionAbierto.set(false);
         this.modalEditarAbierto.set(true);
         this.cargandoProyeccionEvaluacion.set(true);
@@ -1633,7 +1624,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         if (!projectionRequest) {
           this.cargandoProyeccionEvaluacion.set(false);
           this.guardando.set(false);
-          this.mostrarMensaje(`Borrador #${evaluationId} guardado y recargado desde el servidor.`);
+          this.mostrarMensaje(`Borrador #${evaluationId} guardado.`);
           this.cargarEvaluaciones();
           return;
         }
@@ -1650,7 +1641,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             });
             this.cargandoProyeccionEvaluacion.set(false);
             this.guardando.set(false);
-            this.mostrarMensaje(`Borrador #${evaluationId} guardado y recargado desde el servidor.`);
+            this.mostrarMensaje(`Borrador #${evaluationId} guardado.`);
             this.cargarEvaluaciones();
           },
           error: error => {
@@ -1773,7 +1764,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.metodologiaHistorica.set(null);
     this.respuestas.set({});
     this.bloqueEvaluacionActual.set(1);
-    this.bloqueMasAltoAlcanzado.set(1);
     this.proyeccionEvaluacion.set(null);
     this.modalNuevaEvaluacionAbierto.set(true);
 
@@ -2435,7 +2425,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
         this.cambiosSinGuardar.set(false);
         this.bloqueEvaluacionActual.set(1);
-        this.bloqueMasAltoAlcanzado.set(1);
         this.cargandoProyeccionEvaluacion.set(true);
         const projectionRequest = this.solicitarProyeccion(detalle.evaId);
         if (!projectionRequest) this.cargandoProyeccionEvaluacion.set(false);
@@ -2522,20 +2511,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   etiquetaEstadoEvaluacion(estado: string | null | undefined): string {
-    const etiquetas: Record<string, string> = {
-      BORRADOR: 'Borrador',
-      EN_REVISION: 'En revisión',
-      OBSERVADA: 'Observada',
-      APROBADA: 'Aprobada',
-      RECHAZADA: 'Rechazada',
-      CERRADA: 'Cerrada'
-    };
-    return etiquetas[(estado ?? '').trim().toUpperCase()] ?? 'Estado no reconocido';
-  }
-
-  obtenerTransicionPorDefecto(_estadoActual?: string): string {
-    const validas = this.transicionesPermitidas();
-    return validas.length > 0 ? validas[0] : '';
+    const codigo = (estado ?? '').trim().toUpperCase();
+    return this.catalogoEstadosEvaluacion().find(item => item.codigo === codigo)?.etiqueta ?? 'Estado no reconocido';
   }
 
   cargarTransiciones(evaluacionId: number): void {
@@ -2555,7 +2532,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         const destinos = [...transiciones.destinosPermitidos];
         this.transicionesPermitidas.set(destinos);
         this.estadoTransiciones.set(destinos.length > 0 ? 'SUCCESS_WITH_DATA' : 'SUCCESS_EMPTY');
-        this.nuevoEstado = this.obtenerTransicionPorDefecto();
+        this.nuevoEstado = '';
         const actual = this.evaluacionResumenSeleccionada();
         if (actual?.evaId === evaluacionId) {
           this.evaluacionResumenSeleccionada.set({ ...actual, estado: transiciones.estadoActual });
@@ -2655,13 +2632,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (!resumen) return;
 
     this.errorSeguimiento.set(null);
-    if (!this.nuevoEstado.trim()) {
+    const destino = this.nuevoEstado.trim().toUpperCase();
+    const destinoCatalogado = this.catalogoEstadosEvaluacion().some(estado => estado.codigo === destino);
+    if (!destino || !destinoCatalogado || !this.transicionesPermitidas().includes(destino)) {
       this.errorSeguimiento.set('Seleccione un estado de destino válido.');
       return;
     }
 
     this.guardando.set(true);
-    this.service.transicionarEvaluacion(resumen.evaId, this.nuevoEstado, this.motivoTransicion).subscribe({
+    this.service.transicionarEvaluacion(resumen.evaId, destino, this.motivoTransicion).subscribe({
       next: () => {
         this.guardando.set(false);
         this.globalState.limpiarError();

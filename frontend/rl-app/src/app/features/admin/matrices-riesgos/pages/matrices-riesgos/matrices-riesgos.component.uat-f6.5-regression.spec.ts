@@ -104,6 +104,12 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
       metodologiaVigente: vi.fn().mockReturnValue(of(metodologia)),
       obtenerEvaluacion: vi.fn().mockReturnValue(of(detalleOriginal)),
       metodologiaPorVersion: vi.fn().mockReturnValue(of(metodologia)),
+      listarControles: vi.fn().mockReturnValue(of([])),
+      listarPlanes: vi.fn().mockReturnValue(of([])),
+      obtenerMitigacionBloque4: vi.fn().mockReturnValue(of({ cantidadAcciones: 0, planes: [] })),
+      listarAlertas: vi.fn().mockReturnValue(of([])),
+      listarAutomonitoreo: vi.fn().mockReturnValue(of([])),
+      obtenerBloque6: vi.fn().mockReturnValue(of({ senalesAlerta: [], estadoRiesgo: null, controles: [], observacionesArea: null, observacionesUgr: null, puedeEditarObservacionesArea: false, puedeEditarObservacionesUgr: false })),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true }))
     };
 

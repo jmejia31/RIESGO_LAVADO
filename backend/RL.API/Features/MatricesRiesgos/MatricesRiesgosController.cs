@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Core.Security;
 using RL.API.Shared.Results;
 using RL.API.Infrastructure.Http;
@@ -311,6 +312,10 @@ public sealed class MatricesRiesgosController : ControllerBase
             return Error500(ex);
         }
     }
+
+    [HttpGet("evaluaciones/estados")]
+    public IActionResult ObtenerCatalogoEstadosEvaluacion() => Responder(
+        ServiceResult<IReadOnlyList<EstadoEvaluacionCatalogoDto>>.Ok(EvaluacionWorkflow.ObtenerCatalogoEstados()));
 
     [HttpPost("evaluaciones/{id:long}/transiciones")]
     [AuditRequired("Transición de estado de la máquina de estados")]

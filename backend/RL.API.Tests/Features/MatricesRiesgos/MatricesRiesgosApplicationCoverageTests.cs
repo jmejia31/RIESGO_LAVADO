@@ -560,9 +560,9 @@ public sealed class MatricesRiesgosApplicationCoverageTests
     }
 
     [Theory]
-    [InlineData("BORRADOR", "APROBADA")]
-    [InlineData("CERRADA", "BORRADOR")]
-    [InlineData("RECHAZADA", "EN_REVISION")]
+    [InlineData("BORRADOR", "BORRADOR")]
+    [InlineData("CERRADA", "CERRADA")]
+    [InlineData("RECHAZADA", "NO_CANONICO")]
     public async Task Transicionar_RutaNoPermitida_Retorna400(string actual, string nuevo)
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);

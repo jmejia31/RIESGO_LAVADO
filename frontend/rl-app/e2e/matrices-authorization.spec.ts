@@ -252,17 +252,17 @@ async function abrirSeguimiento(page: Page): Promise<Locator> {
   return dialog;
 }
 
-test('seguimiento de BORRADOR muestra EN_REVISION y trata historial 200 vacío como vacío legítimo', async ({ page }) => {
+test('seguimiento de BORRADOR ofrece todos los destinos y trata historial 200 vacío como vacío legítimo', async ({ page }) => {
   await prepararSeguimientoEvaluacion(
     page,
     'BORRADOR',
-    { status: 200, datos: { estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] } },
+    { status: 200, datos: { estadoActual: 'BORRADOR', destinosPermitidos: ['APROBADA', 'CERRADA', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA'] } },
     { status: 200, datos: [] }
   );
 
   const dialog = await abrirSeguimiento(page);
-  await expect(dialog.locator('#seg-nuevo-estado')).toHaveValue('EN_REVISION');
-  await expect(dialog.locator('#seg-nuevo-estado option')).toHaveCount(1);
+  await expect(dialog.locator('#seg-nuevo-estado')).toHaveValue('');
+  await expect(dialog.locator('#seg-nuevo-estado option')).toHaveCount(6);
   await expect(dialog.getByText('No hay transiciones pendientes para el estado actual.')).toHaveCount(0);
   await expect(dialog.getByText('Sin historial de flujo registrado.')).toBeVisible();
   await expect(dialog.getByRole('alert')).toHaveCount(0);
@@ -294,26 +294,28 @@ test('fallo al consultar historial muestra error y no afirma que está vacío', 
   await prepararSeguimientoEvaluacion(
     page,
     'BORRADOR',
-    { status: 200, datos: { estadoActual: 'BORRADOR', destinosPermitidos: ['EN_REVISION'] } },
+    { status: 200, datos: { estadoActual: 'BORRADOR', destinosPermitidos: ['APROBADA', 'CERRADA', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA'] } },
     { status: 503, mensaje: 'Servicio de historial no disponible.' }
   );
 
   const dialog = await abrirSeguimiento(page);
-  await expect(dialog.locator('#seg-nuevo-estado')).toHaveValue('EN_REVISION');
+  await expect(dialog.locator('#seg-nuevo-estado')).toHaveValue('');
   await expect(dialog.getByText('Servicio de historial no disponible.')).toBeVisible();
   await expect(dialog.getByText('Sin historial de flujo registrado.')).toHaveCount(0);
 });
 
-test('estado sin destinos devuelve éxito vacío y muestra el mensaje funcional', async ({ page }) => {
+test('estado actual queda excluido de los destinos permitidos', async ({ page }) => {
   await prepararSeguimientoEvaluacion(
     page,
     'CERRADA',
-    { status: 200, datos: { estadoActual: 'CERRADA', destinosPermitidos: [] } },
+    { status: 200, datos: { estadoActual: 'CERRADA', destinosPermitidos: ['APROBADA', 'BORRADOR', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA'] } },
     { status: 200, datos: [] }
   );
 
   const dialog = await abrirSeguimiento(page);
-  await expect(dialog.getByText('No hay transiciones pendientes para el estado actual.')).toBeVisible();
+  await expect(dialog.locator('#seg-nuevo-estado option')).toHaveCount(6);
+  await expect(dialog.locator('#seg-nuevo-estado option[value="CERRADA"]')).toHaveCount(0);
+  await expect(dialog.getByText('No hay transiciones pendientes para el estado actual.')).toHaveCount(0);
   await expect(dialog.getByText('Sin historial de flujo registrado.')).toBeVisible();
   await expect(dialog.getByRole('alert')).toHaveCount(0);
 });

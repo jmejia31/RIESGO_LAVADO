@@ -232,6 +232,15 @@ describe('MatricesRiesgosService', () => {
     expect(resultado).toHaveBeenCalledWith(22);
   });
 
+  it('lee del backend el catálogo canónico de estados de evaluación', () => {
+    const catalogo = vi.fn();
+    service.obtenerCatalogoEstadosEvaluacion().subscribe(catalogo);
+    const request = http.expectOne(`${apiUrl}/evaluaciones/estados`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: [{ codigo: 'BORRADOR', etiqueta: 'Borrador' }] });
+    expect(catalogo).toHaveBeenCalledWith([{ codigo: 'BORRADOR', etiqueta: 'Borrador' }]);
+  });
+
   it('crea control y plan mediante contratos reducidos de 17 tablas', () => {
     service.crearControl({
       conEvaluacionId: 15,

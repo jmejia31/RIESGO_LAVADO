@@ -1,25 +1,35 @@
 namespace RL.API.Features.MatricesRiesgos.Domain;
 
+using RL.API.Features.MatricesRiesgos.Contracts;
+
 /// <summary>Reglas de transición del flujo institucional; los guards permanecen en backend.</summary>
 public static class EvaluacionWorkflow
 {
-    private static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> Transiciones =
-        new Dictionary<string, IReadOnlySet<string>>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["BORRADOR"] = new HashSet<string>(new[] { "EN_REVISION" }, StringComparer.OrdinalIgnoreCase),
-            ["EN_REVISION"] = new HashSet<string>(new[] { "OBSERVADA", "APROBADA", "RECHAZADA" }, StringComparer.OrdinalIgnoreCase),
-            ["OBSERVADA"] = new HashSet<string>(new[] { "BORRADOR" }, StringComparer.OrdinalIgnoreCase),
-            ["APROBADA"] = new HashSet<string>(new[] { "CERRADA" }, StringComparer.OrdinalIgnoreCase)
-        };
+    private static readonly IReadOnlyList<EstadoEvaluacionCatalogoDto> Estados =
+    [
+        new("APROBADA", "Aprobada"),
+        new("BORRADOR", "Borrador"),
+        new("CERRADA", "Cerrada"),
+        new("EN_REVISION", "En revisión"),
+        new("OBSERVADA", "Observada"),
+        new("RECHAZADA", "Rechazada")
+    ];
+
+    public static IReadOnlyList<EstadoEvaluacionCatalogoDto> ObtenerCatalogoEstados() => Estados;
+
+    public static bool EsEstadoCanonico(string estado) =>
+        !string.IsNullOrWhiteSpace(estado) &&
+        Estados.Any(item => item.Codigo.Equals(estado.Trim(), StringComparison.OrdinalIgnoreCase));
 
     public static bool EsTransicionPermitida(string estadoActual, string estadoDestino) =>
         !string.IsNullOrWhiteSpace(estadoActual) &&
         !string.IsNullOrWhiteSpace(estadoDestino) &&
-        Transiciones.TryGetValue(estadoActual.Trim(), out var destinos) &&
-        destinos.Contains(estadoDestino.Trim());
+        !string.Equals(estadoActual.Trim(), estadoDestino.Trim(), StringComparison.OrdinalIgnoreCase) &&
+        EsEstadoCanonico(estadoActual) && EsEstadoCanonico(estadoDestino);
 
     public static IReadOnlyList<string> ObtenerDestinosPermitidos(string estadoActual) =>
-        !string.IsNullOrWhiteSpace(estadoActual) && Transiciones.TryGetValue(estadoActual.Trim(), out var destinos)
-            ? destinos.OrderBy(destino => destino, StringComparer.Ordinal).ToArray()
+        !string.IsNullOrWhiteSpace(estadoActual) && Estados.Any(estado => estado.Codigo.Equals(estadoActual.Trim(), StringComparison.OrdinalIgnoreCase))
+            ? Estados.Where(estado => !estado.Codigo.Equals(estadoActual.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Select(estado => estado.Codigo).ToArray()
             : Array.Empty<string>();
 }

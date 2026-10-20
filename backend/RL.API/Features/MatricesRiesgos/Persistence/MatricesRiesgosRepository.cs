@@ -17,16 +17,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 {
     private const string ModuloAuditoria = "MatricesRiesgos";
 
-    private static readonly HashSet<string> EstadosEvaluacionPermitidos = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "BORRADOR",
-        "EN_REVISION",
-        "OBSERVADA",
-        "APROBADA",
-        "RECHAZADA",
-        "CERRADA"
-    };
-
     private readonly OracleDbContext _db;
     private readonly IAuditoriaRepository _auditoriaRepository;
 
@@ -1292,7 +1282,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string? ip)
     {
         string estado = nuevoEstado.Trim().ToUpperInvariant();
-        if (!EstadosEvaluacionPermitidos.Contains(estado))
+        if (!EvaluacionWorkflow.EsEstadoCanonico(estado))
         {
             throw new ArgumentException($"Estado de evaluación no permitido: {nuevoEstado}.", nameof(nuevoEstado));
         }

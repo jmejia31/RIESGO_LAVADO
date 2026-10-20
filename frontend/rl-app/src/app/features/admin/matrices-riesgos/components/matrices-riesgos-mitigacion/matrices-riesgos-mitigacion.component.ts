@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
+import { EstadoEvaluacionCatalogoDto, EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
 import {
   ActividadPlanDto,
   ActividadPlanGuardarDto,
@@ -27,7 +27,7 @@ import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-cata
   templateUrl: './matrices-riesgos-mitigacion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MatricesRiesgosMitigacionComponent implements OnChanges {
+export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   private readonly service = inject(MatricesRiesgosService);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -44,10 +44,22 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
+  readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>([]);
 
   evaluacionId = 0;
   readonly tiposControlCatalogo = canonicalCatalogSelectOptions('CONTROL_TYPE');
   readonly automatizacionesCatalogo = canonicalCatalogSelectOptions('CONTROL_AUTOMATION');
+
+  ngOnInit(): void {
+    const cargarCatalogo = this.service.obtenerCatalogoEstadosEvaluacion;
+    if (typeof cargarCatalogo !== 'function') return;
+    cargarCatalogo.call(this.service).subscribe({
+      next: estados => {
+        this.catalogoEstadosEvaluacion.set(estados);
+        this.cdr.markForCheck();
+      }
+    });
+  }
 
   obtenerEstadoEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
     if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;
@@ -56,15 +68,8 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
   }
 
   etiquetaEstadoEvaluacion(estado: string): string {
-    const etiquetas: Record<string, string> = {
-      BORRADOR: 'Borrador',
-      EN_REVISION: 'En revisión',
-      OBSERVADA: 'Observada',
-      APROBADA: 'Aprobada',
-      RECHAZADA: 'Rechazada',
-      CERRADA: 'Cerrada'
-    };
-    return etiquetas[estado.trim().toUpperCase()] ?? estado;
+    const codigo = estado.trim().toUpperCase();
+    return this.catalogoEstadosEvaluacion().find(item => item.codigo === codigo)?.etiqueta ?? estado;
   }
 
   get opcionesEvaluacion(): BoundedSelectOption[] {

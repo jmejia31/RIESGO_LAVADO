@@ -251,6 +251,11 @@ export interface TransicionesEvaluacionDto {
   destinosPermitidos: string[];
 }
 
+export interface EstadoEvaluacionCatalogoDto {
+  codigo: string;
+  etiqueta: string;
+}
+
 export interface ReporteMatricesTotales {
   totalRiesgos: number;
   totalConEvaluacionOficial: number;

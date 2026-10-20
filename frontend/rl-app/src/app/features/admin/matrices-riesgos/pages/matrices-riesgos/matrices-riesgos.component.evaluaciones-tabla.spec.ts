@@ -93,6 +93,14 @@ describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
       listarRiesgos: vi.fn().mockReturnValue(of([])),
       listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of(paginado)),
+      obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
+        { codigo: 'APROBADA', etiqueta: 'Aprobada' },
+        { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+        { codigo: 'CERRADA', etiqueta: 'Cerrada' },
+        { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+        { codigo: 'OBSERVADA', etiqueta: 'Observada' },
+        { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+      ])),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(version)),
       metodologiaVigente: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
