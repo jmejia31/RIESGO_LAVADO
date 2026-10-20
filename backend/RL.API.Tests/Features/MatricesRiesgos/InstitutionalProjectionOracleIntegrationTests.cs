@@ -41,16 +41,35 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     public InstitutionalProjectionOracleIntegrationTests(ITestOutputHelper output) => _output = output;
 
     [Fact]
-    public void ProjectionExpectedText_UsesInstitutionalBoundaryWhitespaceContract()
+    public void ProjectionExpectedTextUsesInstitutionalBoundaryWhitespaceContract()
     {
         Assert.Equal("Incumplimiento a normativa de la CNBS por", NormalizeProjectionExpectedText("\nIncumplimiento a normativa de la CNBS por"));
         Assert.Equal(0m, NormalizeProjectionExpectedText(0m));
     }
 
     [Fact]
-    public void SpreadsheetNumericRoundTrip_UsesCalculationPrecisionInsteadOfBinaryIdentity()
+    public void SpreadsheetNumericRoundTripUsesCalculationPrecisionInsteadOfBinaryIdentity()
     {
         AssertEquivalent(1.1399999999999999d, 1.1400000000000001d, "XLSX decimal round-trip should retain calculation precision.");
+    }
+
+    [Fact]
+    public void PdfTextExtractionReassemblesWrappedValues()
+    {
+        const string expected = "Creación y activación de registros en el módulo de matrices de riesgos con validación institucional, trazabilidad completa y persistencia de resultados calculados a través de Oracle XE.";
+        var document = new RL.API.Infrastructure.Reporting.InstitutionalPdfDocument(
+            "Matriz de prueba", "Matrices de Riesgos", RL.API.Infrastructure.Reporting.InstitutionalReportOrientation.Portrait, new DateTime(2026, 1, 1));
+        document.AddSection("TEST-RISK — Evaluación 1");
+        document.AddKeyValueGrid([("Descripción", expected)], columns: 1, preserveLabelCase: true);
+
+        string[] items = ReadPdfTextItems(System.Text.Encoding.Latin1.GetString(document.ToBytes()));
+        int sectionIndex = FindPdfTextItemStartingWith(items, "TEST-RISK", 0);
+        Assert.True(sectionIndex >= 0, "PDF section was not emitted.");
+        int labelIndex = FindPdfTextItem(items, "Descripción", sectionIndex + 1);
+        Assert.True(labelIndex >= 0, "PDF description label was not emitted.");
+        string rendered = string.Concat(items.Skip(labelIndex + 1));
+
+        Assert.Contains(CompactPdfText(expected), CompactPdfText(rendered), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -328,16 +347,41 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 string pdfContent = System.Text.Encoding.Latin1.GetString(pdf.Contenido);
                 Assert.StartsWith("%PDF-1.4", pdfContent, StringComparison.Ordinal);
                 Assert.EndsWith("%%EOF", pdfContent, StringComparison.Ordinal);
+                string[] pdfTextItems = ReadPdfTextItems(pdfContent);
+                int pdfSearchStart = 0;
                 foreach (RiesgoReporteFilaDto row in exportRows)
                 {
                     InstitutionalEvaluationProjectionDto projection = projections.Data[row.EvaluacionId];
-                    Assert.Contains(projection.RiskCode, pdfContent, StringComparison.Ordinal);
+                    int sectionIndex = FindPdfTextItemStartingWith(pdfTextItems, projection.RiskCode, pdfSearchStart);
+                    Assert.True(sectionIndex >= 0, $"PDF section missing for {projection.RiskCode}/{projection.EvaluationId}.");
+                    pdfSearchStart = sectionIndex + 1;
+
+                    var labelIndexes = new int[projection.Fields.Count];
+                    int labelSearchStart = sectionIndex + 1;
+                    for (int fieldIndex = 0; fieldIndex < projection.Fields.Count; fieldIndex++)
+                    {
+                        InstitutionalProjectionFieldDto field = projection.Fields[fieldIndex];
+                        labelIndexes[fieldIndex] = FindPdfTextItem(pdfTextItems, field.FieldLabel, labelSearchStart);
+                        Assert.True(labelIndexes[fieldIndex] >= 0,
+                            $"PDF label missing or out of order for {projection.RiskCode}/F{field.FieldNumber}.");
+                        labelSearchStart = labelIndexes[fieldIndex] + 1;
+                    }
+                    pdfSearchStart = labelSearchStart;
+
                     foreach (int fieldNumber in formulaFields)
                     {
+                        int fieldIndex = fieldNumber - 1;
                         InstitutionalProjectionFieldDto field = projection.Fields[fieldNumber - 1];
                         string value = field.Value is null ? (field.State is "NOT_APPLICABLE" or "ABSENT_CONTROL_PROJECTED" ? "No aplica" : "Sin dato")
                             : Convert.ToString(field.Value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-                        Assert.Contains(EscapePdfString(value), pdfContent, StringComparison.Ordinal);
+                        int nextLabelIndex = fieldIndex + 1 < labelIndexes.Length
+                            ? labelIndexes[fieldIndex + 1]
+                            : pdfTextItems.Length;
+                        string renderedValue = string.Concat(pdfTextItems
+                            .Skip(labelIndexes[fieldIndex] + 1)
+                            .Take(nextLabelIndex - labelIndexes[fieldIndex] - 1));
+                        Assert.True(CompactPdfText(renderedValue).Contains(CompactPdfText(value), StringComparison.Ordinal),
+                            $"PDF formula value mismatch for {projection.RiskCode}/F{fieldNumber}.");
                     }
                 }
             }
@@ -653,8 +697,28 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         _ => false
     };
 
-    private static string EscapePdfString(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("(", "\\(", StringComparison.Ordinal).Replace(")", "\\)", StringComparison.Ordinal);
+    private static string[] ReadPdfTextItems(string pdfContent) =>
+        System.Text.RegularExpressions.Regex.Matches(pdfContent, @"\(((?:\\.|[^\\)])*)\)\s*Tj", System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(match => System.Text.RegularExpressions.Regex.Replace(match.Groups[1].Value, @"\\([\\()])", "$1"))
+            .ToArray();
+
+    private static int FindPdfTextItem(IReadOnlyList<string> items, string expected, int startIndex)
+    {
+        for (int index = Math.Max(0, startIndex); index < items.Count; index++)
+            if (string.Equals(items[index], expected, StringComparison.Ordinal)) return index;
+        return -1;
+    }
+
+    private static int FindPdfTextItemStartingWith(IReadOnlyList<string> items, string prefix, int startIndex)
+    {
+        for (int index = Math.Max(0, startIndex); index < items.Count; index++)
+            if (items[index].StartsWith(prefix, StringComparison.Ordinal)) return index;
+        return -1;
+    }
+
+    private static string CompactPdfText(string value) =>
+        System.Text.RegularExpressions.Regex.Replace(value, @"\s+", string.Empty);
 
     private static object ReadExcelCell(XElement cell, XNamespace ns)
     {
