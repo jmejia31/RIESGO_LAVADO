@@ -1,4 +1,4 @@
-import { expect, Page, test, expectHttpStatuses } from './support/telemetry-test';
+import { expect, Page, test, expectHttpStatuses, expectRequestFailure } from './support/telemetry-test';
 import { Buffer } from 'node:buffer';
 import * as ExcelJS from 'exceljs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -1304,6 +1304,24 @@ test('CRUD de Riesgos mantiene header, contenido y footer en los viewports insti
 });
 test('preview de exportaciones consolidado conserva el modal dentro del viewport', async ({ page }) => {
   test.setTimeout(120_000);
+  // Closing a PDF preview revokes its object URL; the browser may report the in-flight blob viewer as aborted.
+  expectRequestFailure({
+    method: 'GET',
+    protocol: 'blob:',
+    errorText: 'net::ERR_ABORTED',
+    minCount: 0,
+    maxCount: 8,
+    reason: 'The test closes up to eight PDF previews after checking their responsive layout.',
+  });
+  expectRequestFailure({
+    method: 'GET',
+    path: '/index.html',
+    protocol: 'chrome-extension:',
+    errorText: 'net::ERR_ABORTED',
+    minCount: 0,
+    maxCount: 8,
+    reason: 'Closing the embedded PDF viewer may cancel its internal document load.',
+  });
   const pageErrors: string[] = [];
   page.on('pageerror', error => pageErrors.push(error.stack || error.message));
   for (const viewport of [
@@ -1345,6 +1363,9 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
       expect(box.width).toBeGreaterThanOrEqual(Math.min(viewport.width * 0.9, 1510 * 0.9));
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect.poll(() => preview.locator('iframe[title="Documento PDF en vista previa"]')
+      .evaluate(element => (element as HTMLIFrameElement).contentDocument?.readyState ?? 'unavailable'))
+      .toBe('complete');
     await pdfClose.click();
     await expect(preview).toBeHidden();
 

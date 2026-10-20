@@ -4,7 +4,7 @@ type BrowserTelemetry = {
   consoleErrors: string[];
   browserResourceErrors: number[];
   pageErrors: string[];
-  requestFailures: string[];
+  requestFailures: Array<{ method: string; path: string; protocol: string; errorText: string }>;
   httpErrors: Array<{ status: number; method: string; url: string }>;
 };
 
@@ -19,6 +19,18 @@ type ExpectedHttpResponse = {
   reason?: string;
 };
 
+type ExpectedRequestFailure = {
+  method?: string;
+  path?: string;
+  pathIncludes?: string;
+  protocol?: string;
+  errorText?: string;
+  count?: number;
+  minCount?: number;
+  maxCount?: number;
+  reason: string;
+};
+
 export function expectHttpStatuses(...statuses: number[]): void {
   for (const status of statuses) {
     base.info().annotations.push({ type: 'expected-http-status', description: String(status) });
@@ -27,6 +39,10 @@ export function expectHttpStatuses(...statuses: number[]): void {
 
 export function expectHttpResponse(response: ExpectedHttpResponse): void {
   base.info().annotations.push({ type: 'expected-http-response', description: JSON.stringify(response) });
+}
+
+export function expectRequestFailure(failure: ExpectedRequestFailure): void {
+  base.info().annotations.push({ type: 'expected-request-failure', description: JSON.stringify(failure) });
 }
 
 function safePath(rawUrl: string): string {
@@ -68,7 +84,14 @@ export const test = base.extend<{ browserTelemetry: void }>({
       page.on('pageerror', error => telemetry.pageErrors.push(safeConsoleMessage(error.stack || error.message)));
     };
     const observeRequestFailure = (request: Request): void => {
-      telemetry.requestFailures.push(`${request.method()} ${safePath(request.url())} (${request.failure()?.errorText ?? 'unknown'})`);
+      let protocol = 'unknown:';
+      try { protocol = new URL(request.url()).protocol; } catch { /* Keep an explicit safe classification. */ }
+      telemetry.requestFailures.push({
+        method: request.method(),
+        path: safePath(request.url()),
+        protocol,
+        errorText: request.failure()?.errorText ?? 'unknown',
+      });
     };
     const observeResponse = (response: Response): void => {
       if (response.status() >= 400) {
@@ -115,6 +138,31 @@ export const test = base.extend<{ browserTelemetry: void }>({
       return false;
     });
     const unobservedExpectedResponses = expectedResponses.filter(expected => expected.remaining > 0);
+    const expectedFailures: Array<ExpectedRequestFailure & { remaining: number; observed: number; maximum: number }> = testInfo.annotations
+      .filter(annotation => annotation.type === 'expected-request-failure')
+      .map(annotation => {
+        const expected = JSON.parse(annotation.description!) as ExpectedRequestFailure;
+        return {
+          ...expected,
+          remaining: expected.minCount ?? expected.count ?? 0,
+          observed: 0,
+          maximum: expected.maxCount ?? expected.count ?? Number.MAX_SAFE_INTEGER,
+        };
+      });
+    const unexpectedRequestFailures = telemetry.requestFailures.filter(failure => {
+      const expectedIndex = expectedFailures.findIndex(expected => expected.observed < expected.maximum
+        && (!expected.method || expected.method === failure.method)
+        && (!expected.path || expected.path === failure.path)
+        && (!expected.pathIncludes || failure.path.includes(expected.pathIncludes))
+        && (!expected.protocol || expected.protocol === failure.protocol)
+        && (!expected.errorText || expected.errorText === failure.errorText));
+      if (expectedIndex < 0) return true;
+      const expected = expectedFailures[expectedIndex];
+      expected.observed++;
+      expected.remaining = Math.max(0, expected.remaining - 1);
+      return false;
+    });
+    const unobservedExpectedFailures = expectedFailures.filter(expected => expected.remaining > 0);
     const unexpectedBrowserResourceErrors = [...telemetry.browserResourceErrors];
     for (const expected of expectedResponses) {
       if (expected.status >= 400) {
@@ -126,7 +174,14 @@ export const test = base.extend<{ browserTelemetry: void }>({
     }
 
     await testInfo.attach('browser-telemetry', {
-      body: JSON.stringify({ ...telemetry, unexpectedHttpErrors }, null, 2),
+      body: JSON.stringify({
+        ...telemetry,
+        unexpectedHttpErrors,
+        expectedRequestFailures: expectedFailures.map(({ method, path, pathIncludes, protocol, errorText, observed, reason }) => ({
+          method, path, pathIncludes, protocol, errorText, observed, reason,
+        })),
+        unexpectedRequestFailures,
+      }, null, 2),
       contentType: 'application/json',
     });
 
@@ -135,7 +190,8 @@ export const test = base.extend<{ browserTelemetry: void }>({
     expect(unexpectedBrowserResourceErrors, 'Unmatched browser resource errors').toEqual([]);
     expect(telemetry.consoleErrors, 'Unexpected browser console.error entries').toEqual([]);
     expect(telemetry.pageErrors, 'Unexpected uncaught browser page errors').toEqual([]);
-    expect(telemetry.requestFailures, 'Unexpected browser request failures').toEqual([]);
+    expect(unobservedExpectedFailures, 'Expected browser request failures not observed').toEqual([]);
+    expect(unexpectedRequestFailures, 'Unexpected browser request failures').toEqual([]);
   }, { auto: true }],
 });
 

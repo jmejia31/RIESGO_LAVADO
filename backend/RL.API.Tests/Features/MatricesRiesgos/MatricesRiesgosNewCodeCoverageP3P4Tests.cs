@@ -33,6 +33,7 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 /// - Casos límite en validación de catálogos y campos sin id en FormularioValidador.
 /// - Casos límite en reportes PDF con truncamiento de texto largo (>110 caracteres) y caracteres no ASCII.
 /// </summary>
+[Collection("Shared evidence filesystem")]
 public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
 {
     private static void ConfigurarContextoHttp(

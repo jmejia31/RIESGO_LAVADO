@@ -18,6 +18,7 @@ using Xunit;
 
 namespace RL.API.Tests.Features.MatricesRiesgos;
 
+[Collection("Shared evidence filesystem")]
 public sealed class MatricesRiesgosApplicationCoverageTests
 {
     [Fact]
