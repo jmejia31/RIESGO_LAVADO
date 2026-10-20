@@ -2512,7 +2512,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   etiquetaEstadoEvaluacion(estado: string | null | undefined): string {
     const codigo = (estado ?? '').trim().toUpperCase();
-    return this.catalogoEstadosEvaluacion().find(item => item.codigo === codigo)?.etiqueta ?? 'Estado no reconocido';
+    const catalogado = this.catalogoEstadosEvaluacion().find(item => item.codigo === codigo)?.etiqueta;
+    if (catalogado) return catalogado;
+    const etiquetas: Record<string, string> = {
+      BORRADOR: 'Borrador',
+      EN_REVISION: 'En revisión',
+      OBSERVADA: 'Observada',
+      APROBADA: 'Aprobada',
+      RECHAZADA: 'Rechazada',
+      CERRADA: 'Cerrada'
+    };
+    return etiquetas[codigo] ?? 'Estado no reconocido';
   }
 
   cargarTransiciones(evaluacionId: number): void {
@@ -2633,7 +2643,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.errorSeguimiento.set(null);
     const destino = this.nuevoEstado.trim().toUpperCase();
-    const destinoCatalogado = this.catalogoEstadosEvaluacion().some(estado => estado.codigo === destino);
+    const destinoCatalogado = this.catalogoEstadosEvaluacion().some(estado => estado.codigo === destino)
+      || ['BORRADOR', 'EN_REVISION', 'OBSERVADA', 'APROBADA', 'RECHAZADA', 'CERRADA'].includes(destino);
     if (!destino || !destinoCatalogado || !this.transicionesPermitidas().includes(destino)) {
       this.errorSeguimiento.set('Seleccione un estado de destino válido.');
       return;
