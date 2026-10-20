@@ -739,7 +739,10 @@ test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios d
     expect(layout.footer).toBeTruthy();
     expect(layout.dialog!.height, JSON.stringify(layout)).toBeLessThanOrEqual(layout.viewportHeight);
     expect(layout.header!.top).toBeGreaterThanOrEqual(0);
-    expect(layout.footer!.bottom).toBeLessThanOrEqual(layout.viewportHeight);
+    await expect.poll(async () => {
+      const footerBottom = await modal.locator('.modal-footer-institutional').evaluate(element => element.getBoundingClientRect().bottom);
+      return footerBottom <= viewport.height;
+    }).toBe(true);
   }
 });
 
