@@ -41,6 +41,13 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     public InstitutionalProjectionOracleIntegrationTests(ITestOutputHelper output) => _output = output;
 
     [Fact]
+    public void ProjectionExpectedText_UsesInstitutionalBoundaryWhitespaceContract()
+    {
+        Assert.Equal("Incumplimiento a normativa de la CNBS por", NormalizeProjectionExpectedText("\nIncumplimiento a normativa de la CNBS por"));
+        Assert.Equal(0m, NormalizeProjectionExpectedText(0m));
+    }
+
+    [Fact]
     [Trait("Category", "Block12OracleIntegration")]
     public async Task Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection()
     {
@@ -595,6 +602,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
     private static void AssertApiProjectionEquivalent(object? expected, JsonElement projectedField, string message)
     {
+        expected = NormalizeProjectionExpectedText(expected);
         object? actual = ReadJsonValue(projectedField.GetProperty("value"));
         if (IsExpectedFormulaBlank(expected) && actual is null)
         {
@@ -607,6 +615,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
     private static void AssertProjectionEquivalent(object? expected, InstitutionalProjectionFieldDto actual, string message)
     {
+        expected = NormalizeProjectionExpectedText(expected);
         if (IsExpectedFormulaBlank(expected) && actual.Value is null)
         {
             Assert.Equal("LEGIT_FORMULA_BLANK", actual.State);
@@ -614,6 +623,18 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         }
 
         AssertEquivalent(expected, actual.Value, message);
+    }
+
+    private static object? NormalizeProjectionExpectedText(object? expected)
+    {
+        if (expected is JsonElement element) expected = ReadJsonValue(element);
+
+        // InstitutionalProjectionMapper applies Text() to projected formula strings:
+        // boundary whitespace is trimmed and the existing visible-UTF8 repairs are applied.
+        // Oracle persistence is compared to the workbook's raw value separately above.
+        return expected is string text
+            ? TextoVisibleUtf8Normalizer.Normalizar(text.Trim())
+            : expected;
     }
 
     private static bool IsExpectedFormulaBlank(object? expected) => expected switch
