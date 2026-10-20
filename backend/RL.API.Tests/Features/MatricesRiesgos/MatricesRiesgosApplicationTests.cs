@@ -257,7 +257,7 @@ public sealed class MatricesRiesgosApplicationTests
 
         Assert.True(result.Success);
         Assert.Equal("EN_REVISION", result.Data!.EstadoActual);
-        Assert.Equal(new[] { "APROBADA", "OBSERVADA", "RECHAZADA" }, result.Data.DestinosPermitidos);
+        Assert.Equal(new[] { "APROBADA", "BORRADOR", "CERRADA", "OBSERVADA", "RECHAZADA" }, result.Data.DestinosPermitidos);
     }
 
     [Fact]
