@@ -1232,13 +1232,9 @@
           }
           }
 
-          <div [class.hidden]="bloqueEvaluacionActual() !== 2" [attr.aria-hidden]="bloqueEvaluacionActual() !== 2 ? 'true' : null">
-            @if (evaluacionSeleccionada(); as evaluation) {
-              <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="controles" (persisted)="refrescarProyeccionEvaluacion()" />
-            } @else {
-              <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Guarde el borrador explícitamente para administrar controles.</p>
-            }
-          </div>
+          @if (bloqueEvaluacionActual() === 2 && evaluacionSeleccionada(); as evaluation) {
+            <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="controles" (persisted)="refrescarProyeccionEvaluacion()" />
+          }
 
           @if (bloqueEvaluacionActual() === 3) {
             <section class="space-y-4" aria-labelledby="titulo-bloque-residual">
@@ -1262,13 +1258,9 @@
             </section>
           }
 
-          <div [class.hidden]="bloqueEvaluacionActual() !== 4" [attr.aria-hidden]="bloqueEvaluacionActual() !== 4 ? 'true' : null">
-            @if (evaluacionSeleccionada(); as evaluation) {
-              <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="planes" (persisted)="refrescarProyeccionEvaluacion()" />
-            } @else {
-              <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Guarde el borrador explícitamente para administrar planes y actividades.</p>
-            }
-          </div>
+          @if (bloqueEvaluacionActual() === 4 && evaluacionSeleccionada(); as evaluation) {
+            <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="planes" (persisted)="refrescarProyeccionEvaluacion()" />
+          }
 
           @if (bloqueEvaluacionActual() === 5) {
             <section class="space-y-4" aria-labelledby="titulo-bloque-calculos">
@@ -1289,14 +1281,16 @@
             </section>
           }
 
-          <section [class.hidden]="bloqueEvaluacionActual() !== 6" [attr.aria-hidden]="bloqueEvaluacionActual() !== 6 ? 'true' : null" aria-labelledby="titulo-bloque-seguimiento">
+          @if (bloqueEvaluacionActual() === 6) {
+            <section aria-labelledby="titulo-bloque-seguimiento">
               <h4 id="titulo-bloque-seguimiento" class="mb-3 text-base font-bold text-slate-900">{{ tituloBloqueEvaluacion(6) }}</h4>
               @if (evaluacionSeleccionada(); as evaluation) {
                 <app-matrices-riesgos-monitoreo-operativo [evaluacionIdInicial]="evaluation.evaId" (persisted)="refrescarProyeccionEvaluacion()" />
               } @else {
                 <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">El seguimiento estará disponible después del primer guardado de la evaluación.</p>
               }
-          </section>
+            </section>
+          }
         </div>
 
         <div class="modal-footer-institutional flex-wrap">
