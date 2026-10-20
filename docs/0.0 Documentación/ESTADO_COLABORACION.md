@@ -2960,3 +2960,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El commit de esta actualización documental requiere y recibirá CI del HEAD exacto conforme al flujo obligatorio. No iniciar capacitación, correctivo físico Unicode preproducción, despliegue productivo ni aceptación institucional.
 - Preservar los cambios ajenos tracked/untracked que siguen en el worktree y fuera del stage/commit. Producción `PRODUCTION_QUERIED=NO`, `PRODUCTION_DML=0`, `PRODUCTION_DDL=0`.
 # Estado vigente - BLOQUE 11 cerrado por aceptación explícita de riesgo residual (COD) - 2026-10-19 08:08 -06:00
+
+
+## Estado vigente - BLOQUE 12 / F4 bloqueado por configuracion del runtime productivo (2026-10-20 08:16 -06:00)
+
+- Release candidate autorizado y certificado en CI: d2e3ab44206fc3906bb80bf5b6a7a7fbb64b82f1; CI tecnico 39360202634=success (evidencia heredada del checkpoint de entrada, no reejecutada en esta continuacion). No se reabrieron las certificaciones 59/59, 82/82, 34/34, 2006/2006 ni DB/filesystem.
+- Topologia vigente segun README/arquitectura: Angular local -> RL.API local -> Oracle productivo. El proyecto exige perfil explicito PRODUCTION y clave separada ConnectionStrings:OracleDB_Production; no hay fallback.
+- Verificacion de entorno en esta intervencion: appsettings local ignorado valido pero sin perfil/clave production (solo clave legacy generica, no usada); variables de entorno y launch profiles sin perfil/clave; archivo User Secrets existente no es JSON utilizable; no habia listeners en puertos 4200/5043/7052. No se inspeccionaron/imprimieron valores secretos ni se conecto a Oracle.
+- Artefactos operativos: el script de release crea/valida paquete local; el smoke script llama endpoints HTTP ya levantados. No proporcionan configuracion productiva ni un servicio local ejecutable por si mismos. No se busco ni supuso infraestructura cloud.
+- Builds exactos ejecutados en checkout temporal limpio del SHA autorizado: backend dotnet restore + dotnet publish -c Release PASS; frontend npm ci (0 vulnerabilidades reportadas) + build production PASS, con warnings existentes de presupuestos SCSS y CommonJS. Sin tests en este punto.
+- F4: autorizacion owner release/read-only = YES; topologia identificada = YES; runtime local productivo operable con la configuracion disponible = NO; build del candidate = PASS; runtime SHA = NOT_STARTED/NOT_VERIFIED. F5 smoke = NOT_EXECUTED; produccion queries=0, DML=0, DDL=0.
+- Bloque 12 sigue BLOCKED, no cerrado. Bloqueo unico de ejecucion: falta provisionar por canal seguro las claves explicitas Database:Profile=PRODUCTION y ConnectionStrings:OracleDB_Production. La clave Oracle legacy no se reutiliza. No es falta de autorizacion. La siguiente accion es habilitar esa configuracion aprobada; luego arrancar runtime del SHA autorizado y ejecutar solo el smoke read-only.
+- Cambios de terceros tracked/untracked del worktree se preservan y no se incluyen. Esta continuacion no cambia codigo ni los riesgos aceptados de Bloque 11, VER_ID 27/28 o DB links.
