@@ -36,6 +36,7 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 /// <summary>Opt-in real Oracle integration test. CI runs it against a disposable Oracle XE service.</summary>
 public sealed class InstitutionalProjectionOracleIntegrationTests
 {
+    private static readonly System.Text.Encoding WinAnsiEncoding = CreateWinAnsiEncoding();
     private readonly ITestOutputHelper _output;
 
     public InstitutionalProjectionOracleIntegrationTests(ITestOutputHelper output) => _output = output;
@@ -56,13 +57,13 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     [Fact]
     public void PdfTextExtractionReassemblesWrappedValues()
     {
-        const string expected = "Creación y activación de registros en el módulo de matrices de riesgos con validación institucional, trazabilidad completa y persistencia de resultados calculados a través de Oracle XE.";
+        const string expected = "Creación y activación de registros en el módulo de matrices de riesgos – con validación institucional, trazabilidad completa y persistencia de resultados calculados a través de Oracle XE.";
         var document = new RL.API.Infrastructure.Reporting.InstitutionalPdfDocument(
             "Matriz de prueba", "Matrices de Riesgos", RL.API.Infrastructure.Reporting.InstitutionalReportOrientation.Portrait, new DateTime(2026, 1, 1));
         document.AddSection("TEST-RISK — Evaluación 1");
         document.AddKeyValueGrid([("Descripción", expected)], columns: 1, preserveLabelCase: true);
 
-        string[] items = ReadPdfTextItems(System.Text.Encoding.Latin1.GetString(document.ToBytes()));
+        string[] items = ReadPdfTextItems(WinAnsiEncoding.GetString(document.ToBytes()));
         int sectionIndex = FindPdfTextItemStartingWith(items, "TEST-RISK", 0);
         Assert.True(sectionIndex >= 0, "PDF section was not emitted.");
         int labelIndex = FindPdfTextItem(items, "Descripción", sectionIndex + 1);
@@ -344,7 +345,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 }
 
                 ArchivoReporteDto pdf = exporter.CrearPdfMatrizCompleta(exportRows, projections.Data);
-                string pdfContent = System.Text.Encoding.Latin1.GetString(pdf.Contenido);
+                string pdfContent = WinAnsiEncoding.GetString(pdf.Contenido);
                 Assert.StartsWith("%PDF-1.4", pdfContent, StringComparison.Ordinal);
                 Assert.EndsWith("%%EOF", pdfContent, StringComparison.Ordinal);
                 string[] pdfTextItems = ReadPdfTextItems(pdfContent);
@@ -546,7 +547,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 }
             }
             ArchivoReporteDto pdfFile = exporter.CrearPdfMatrizCompleta(exportRows, batch.Data);
-            string pdfContent = System.Text.Encoding.Latin1.GetString(pdfFile.Contenido);
+            string pdfContent = WinAnsiEncoding.GetString(pdfFile.Contenido);
             Assert.StartsWith("%PDF-1.4", pdfContent, StringComparison.Ordinal);
             foreach (RiesgoReporteFilaDto row in exportRows)
             {
@@ -719,6 +720,12 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
     private static string CompactPdfText(string value) =>
         System.Text.RegularExpressions.Regex.Replace(value, @"\s+", string.Empty);
+
+    private static System.Text.Encoding CreateWinAnsiEncoding()
+    {
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        return System.Text.Encoding.GetEncoding(1252);
+    }
 
     private static object ReadExcelCell(XElement cell, XNamespace ns)
     {

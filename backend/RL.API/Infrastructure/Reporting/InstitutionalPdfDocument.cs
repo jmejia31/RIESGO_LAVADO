@@ -9,6 +9,8 @@ namespace RL.API.Infrastructure.Reporting;
 /// </summary>
 public sealed class InstitutionalPdfDocument
 {
+    private static readonly Encoding PdfTextEncoding = CreatePdfTextEncoding();
+
     private const decimal MarginLeft = 36m;
     private const decimal MarginRight = 36m;
     private const decimal HeaderHeight = 64m;
@@ -225,25 +227,25 @@ public sealed class InstitutionalPdfDocument
             objects.Add(FormattableString.Invariant(
                 $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {_pageWidth:0.##} {_pageHeight:0.##}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents {contentId} 0 R >>"));
             var content = page.Content.ToString();
-            objects.Add($"<< /Length {Encoding.Latin1.GetByteCount(content)} >>\nstream\n{content}\nendstream");
+            objects.Add($"<< /Length {PdfTextEncoding.GetByteCount(content)} >>\nstream\n{content}\nendstream");
         }
 
         objects[1] = $"<< /Type /Pages /Kids [{string.Join(" ", pageIds.Select(id => $"{id} 0 R"))}] /Count {pageIds.Count} >>";
 
         using var stream = new MemoryStream();
         var offsets = new List<long> { 0 };
-        WriteLatin1(stream, "%PDF-1.4\n");
+        WriteWinAnsi(stream, "%PDF-1.4\n");
         for (var index = 0; index < objects.Count; index++)
         {
             offsets.Add(stream.Position);
-            WriteLatin1(stream, $"{index + 1} 0 obj\n{objects[index]}\nendobj\n");
+            WriteWinAnsi(stream, $"{index + 1} 0 obj\n{objects[index]}\nendobj\n");
         }
 
         var xref = stream.Position;
-        WriteLatin1(stream, $"xref\n0 {objects.Count + 1}\n0000000000 65535 f \n");
+        WriteWinAnsi(stream, $"xref\n0 {objects.Count + 1}\n0000000000 65535 f \n");
         foreach (var offset in offsets.Skip(1))
-            WriteLatin1(stream, $"{offset:0000000000} 00000 n \n");
-        WriteLatin1(stream, $"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
+            WriteWinAnsi(stream, $"{offset:0000000000} 00000 n \n");
+        WriteWinAnsi(stream, $"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
         return stream.ToArray();
     }
 
@@ -423,9 +425,15 @@ public sealed class InstitutionalPdfDocument
     private static string EscapePdf(string value) =>
         value.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
 
-    private static void WriteLatin1(Stream stream, string value)
+    private static Encoding CreatePdfTextEncoding()
     {
-        var bytes = Encoding.Latin1.GetBytes(value);
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        return Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+    }
+
+    private static void WriteWinAnsi(Stream stream, string value)
+    {
+        var bytes = PdfTextEncoding.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
     }
 
