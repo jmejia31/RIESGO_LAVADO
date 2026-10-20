@@ -242,7 +242,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 foreach (int fieldNumber in formulaFields)
                 {
                     JsonElement projectedField = fields.EnumerateArray().Single(field => field.GetProperty("fieldNumber").GetInt32() == fieldNumber);
-                    AssertEquivalent(expected[(risk.Code, fieldNumber)], ReadJsonValue(projectedField.GetProperty("value")),
+                    AssertApiProjectionEquivalent(expected[(risk.Code, fieldNumber)], projectedField,
                         $"API projection mismatch for {risk.Code}/F{fieldNumber}.");
                     apiCalculationValues++;
                 }
@@ -277,7 +277,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                     foreach (int fieldNumber in formulaFields)
                     {
                         InstitutionalProjectionFieldDto field = projection.Fields.Single(item => item.FieldNumber == fieldNumber);
-                        AssertEquivalent(expected[(risk.Code, fieldNumber)], field.Value,
+                        AssertProjectionEquivalent(expected[(risk.Code, fieldNumber)], field,
                             $"Batch projection mismatch for {risk.Code}/F{fieldNumber}.");
                         projectionCalculationValues++;
                     }
@@ -590,6 +590,36 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             throw new Xunit.Sdk.XunitException($"{message} {exception.Message}");
         }
     }
+
+    private static void AssertApiProjectionEquivalent(object? expected, JsonElement projectedField, string message)
+    {
+        object? actual = ReadJsonValue(projectedField.GetProperty("value"));
+        if (IsExpectedFormulaBlank(expected) && actual is null)
+        {
+            Assert.Equal("LEGIT_FORMULA_BLANK", projectedField.GetProperty("state").GetString());
+            return;
+        }
+
+        AssertEquivalent(expected, actual, message);
+    }
+
+    private static void AssertProjectionEquivalent(object? expected, InstitutionalProjectionFieldDto actual, string message)
+    {
+        if (IsExpectedFormulaBlank(expected) && actual.Value is null)
+        {
+            Assert.Equal("LEGIT_FORMULA_BLANK", actual.State);
+            return;
+        }
+
+        AssertEquivalent(expected, actual.Value, message);
+    }
+
+    private static bool IsExpectedFormulaBlank(object? expected) => expected switch
+    {
+        JsonElement { ValueKind: JsonValueKind.String } element => element.GetString() == string.Empty,
+        string text => text.Length == 0,
+        _ => false
+    };
 
     private static string EscapePdfString(string value) => value.Replace("\\", "\\\\", StringComparison.Ordinal)
         .Replace("(", "\\(", StringComparison.Ordinal).Replace(")", "\\)", StringComparison.Ordinal);
