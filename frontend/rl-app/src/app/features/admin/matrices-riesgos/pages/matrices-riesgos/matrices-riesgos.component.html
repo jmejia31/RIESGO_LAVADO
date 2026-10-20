@@ -1307,7 +1307,7 @@
           <button type="button" class="modal-action-icon modal-action-icon--secondary" title="Ir al bloque anterior" aria-label="Ir al bloque anterior" [disabled]="guardando() || bloqueEvaluacionActual() <= 1" (click)="volverBloqueEvaluacion()"><app-action-icon action="back"></app-action-icon></button>
           <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
                   class="modal-action-icon modal-action-icon--primary"
-                  [disabled]="guardando() || bloqueEvaluacionActual() >= 6"
+                  [disabled]="guardando() || bloqueEvaluacionActual() === 6"
                   (click)="continuarBloqueEvaluacion()">
             <app-action-icon action="next"></app-action-icon>
           </button>
@@ -1576,7 +1576,7 @@
           <button type="button" class="modal-action-icon modal-action-icon--secondary" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
           <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
                   class="modal-action-icon modal-action-icon--primary"
-                  [disabled]="guardando() || bloqueEvaluacionActual() >= 6"
+                  [disabled]="guardando() || bloqueEvaluacionActual() === 6"
                   (click)="continuarBloqueEvaluacion()">
                   <app-action-icon action="next"></app-action-icon>
           </button>
