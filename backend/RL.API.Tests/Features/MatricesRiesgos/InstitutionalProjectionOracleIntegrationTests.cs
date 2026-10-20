@@ -221,7 +221,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 }
             }
 
-            await using var app = await CreateBlock7ApiAsync(connectionString);
+            await using var app = await CreateBlock7ApiAsync(connectionString, useBoundedConnectionPool: true);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
             using var http = new HttpClient { BaseAddress = new Uri(address) };
             var exportRows = new List<RiesgoReporteFilaDto>(59);
@@ -344,6 +344,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             }
             foreach (long riskId in riskIds)
                 await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+            using (var pooledConnection = new OracleConnection(BoundedPool(connectionString)))
+                OracleConnection.ClearPool(pooledConnection);
             _output.WriteLine("BLOCK12_FULL_CHAIN_ORACLE_CLEANUP=PASS");
         }
     }
@@ -881,7 +883,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         }
     }
 
-    private static async Task<WebApplication> CreateBlock7ApiAsync(string connectionString)
+    private static async Task<WebApplication> CreateBlock7ApiAsync(string connectionString, bool useBoundedConnectionPool = false)
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseKestrel().UseUrls("http://127.0.0.1:0");
@@ -890,7 +892,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         builder.Services.AddAuthorization();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
-        builder.Services.AddSingleton(new OracleDbContext(WithoutPooling(connectionString)));
+        builder.Services.AddSingleton(new OracleDbContext(
+            useBoundedConnectionPool ? BoundedPool(connectionString) : WithoutPooling(connectionString)));
         builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
         builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
         builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGestionRepository>();
@@ -1134,6 +1137,17 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         var builder = new OracleConnectionStringBuilder(connectionString)
         {
             Pooling = false
+        };
+        return builder.ConnectionString;
+    }
+
+    private static string BoundedPool(string connectionString)
+    {
+        var builder = new OracleConnectionStringBuilder(connectionString)
+        {
+            Pooling = true,
+            MinPoolSize = 0,
+            MaxPoolSize = 4
         };
         return builder.ConnectionString;
     }
