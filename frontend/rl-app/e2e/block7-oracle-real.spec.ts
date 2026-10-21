@@ -1059,11 +1059,29 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   ])).digest('hex');
 
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
-  await page.getByRole('button', { name: /Seguimiento de evaluaci.n/ }).click();
+  const evaluationsRow = page.locator(`#panel-evaluaciones tbody tr[data-evaluacion-id="${transitionFixture.evaluationId}"]`);
+  await expect(evaluationsRow).toBeVisible();
+  await evaluationsRow.getByRole('button', { name: /Seguimiento de evaluaci.n/ }).click();
   const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
   await expect(followUpModal).toBeVisible();
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
-  await page.locator('#seg-motivo').fill('Full chain workflow to approval');
+  await page.locator('#seg-motivo').fill('Full chain workflow to review');
+  await page.locator('#seg-nuevo-estado').selectOption('EN_REVISION');
+  const firstFollowUpResponsePromise = page.waitForResponse(response => response.request().method() === 'POST'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/transiciones`);
+  await followUpModal.getByRole('button', { name: /Aplicar transici.n de estado/ }).click();
+  const firstFollowUpResponse = await firstFollowUpResponsePromise;
+  workflowMatrixTrace.push({ method: 'POST', path: new URL(firstFollowUpResponse.url()).pathname, status: firstFollowUpResponse.status() });
+  expect(firstFollowUpResponse.status()).toBe(200);
+  uiEvaluation.state = 'EN_REVISION';
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('En revisión');
+  await followUpModal.getByRole('button', { name: 'Cerrar seguimiento' }).last().click();
+  await expect(followUpModal).toBeHidden();
+
+  await evaluationsRow.getByRole('button', { name: /Seguimiento de evaluaci.n/ }).click();
+  await expect(followUpModal).toBeVisible();
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('En revisión');
+  await page.locator('#seg-motivo').fill('Full chain workflow to approval after review');
   await page.locator('#seg-nuevo-estado').selectOption('APROBADA');
   const transitionResponsePromise = page.waitForResponse(response => response.request().method() === 'POST'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/transiciones`);
@@ -1107,7 +1125,8 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   const historyResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/flujos`);
   workflowMatrixTrace.push({ method: 'GET', path: new URL(historyResponse.url()).pathname, status: historyResponse.status() });
   expect(historyResponse.status()).toBe(200);
-  expect((await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado)).toContain('APROBADA');
+  expect((await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado))
+    .toEqual(expect.arrayContaining(['EN_REVISION', 'APROBADA']));
   page.on('response', traceMatrixRequests);
   const postTransitionProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/proyeccion-institucional`);
