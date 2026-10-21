@@ -802,6 +802,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/transiciones-permitidas'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('POST /api/matrices-riesgos/evaluaciones/{id}/transiciones'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/flujos'))).toBeTruthy();
+  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
   await expect(page.locator('#panel-evaluaciones')).toContainText('Aprobada');
   await page.screenshot({ path: testInfo.outputPath('evaluation-follow-up-workflow.png'), fullPage: true });
 
