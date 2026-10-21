@@ -76,10 +76,8 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
     {
         if (catalog.Count != 82 || catalog.Where((field, index) => field.FieldNumber != index + 1).Any())
             throw new InvalidOperationException("El catálogo institucional no contiene exactamente 82 campos ordenados.");
-        if (filas.Select(row => row.RiesgoId).Distinct().Count() != filas.Count)
-            throw new InvalidOperationException("El consolidado contiene más de una fila para un riesgo.");
         if (filas.Select(row => row.EvaluacionId).Distinct().Count() != filas.Count)
-            throw new InvalidOperationException("La exportación pretende reutilizar una evaluación en más de un riesgo.");
+            throw new InvalidOperationException("La exportación contiene evaluaciones duplicadas.");
         if (filas.Count != proyecciones.Count || filas.Any(row => !proyecciones.ContainsKey(row.EvaluacionId)))
             throw new InvalidOperationException("El conjunto de proyecciones no coincide exactamente con las evaluaciones ya seleccionadas por el consolidado.");
 
