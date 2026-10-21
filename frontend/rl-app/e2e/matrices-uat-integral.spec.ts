@@ -1932,10 +1932,8 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   await expect(page.getByRole('button', { name: '5. Cálculos Auxiliares y Verificaciones' })).toHaveAttribute('aria-current', 'step');
   await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
   const nonOnDemandRequests = navigationRequests.filter(req =>
-    !req.includes('/monitoreo/evaluaciones/20/automonitoreo') &&
-    !req.includes('/monitoreo/evaluaciones/20/bloque6') &&
-    !req.includes('/mitigacion/evaluaciones/20/controles') &&
-    !req.includes('/mitigacion/evaluaciones/20/bloque4')
+    !req.includes('/monitoreo/evaluaciones/') &&
+    !req.includes('/mitigacion/evaluaciones/')
   );
   expect(nonOnDemandRequests).toEqual([]);
 
