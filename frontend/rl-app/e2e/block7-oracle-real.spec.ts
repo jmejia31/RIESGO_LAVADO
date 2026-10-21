@@ -932,7 +932,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   expect(preTransitionRenderedNumbers).toHaveLength(82);
   await expect(preTransitionMatrix.locator('.modal-metadata-card dd').nth(1)).toHaveText('Borrador');
-  await preTransitionMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).click();
+  await preTransitionMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
 
   const transitionResponse = await request.post(`${transitionUrl}?nuevoEstado=APROBADA&motivo=${encodeURIComponent('Reproducción aislada de lectura posterior al workflow')}`);
   workflowMatrixTrace.push({ method: 'POST', path: new URL(transitionResponse.url()).pathname, status: transitionResponse.status() });
