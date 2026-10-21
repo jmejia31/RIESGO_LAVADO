@@ -254,7 +254,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly ordenConsolidado = signal('fechaEvaluacion');
   readonly direccionConsolidado = signal<'asc' | 'desc'>('desc');
 
-  readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>([]);
+  private static readonly ESTADOS_EVALUACION_CANONICOS: EstadoEvaluacionCatalogoDto[] = [
+    { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+    { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+    { codigo: 'OBSERVADA', etiqueta: 'Observada' },
+    { codigo: 'APROBADA', etiqueta: 'Aprobada' },
+    { codigo: 'RECHAZADA', etiqueta: 'Rechazada' },
+    { codigo: 'CERRADA', etiqueta: 'Cerrada' }
+  ];
+
+  readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>(MatricesRiesgosComponent.ESTADOS_EVALUACION_CANONICOS);
   readonly errorCatalogoEstadosEvaluacion = signal<string | null>(null);
   readonly estadosConsolidado = computed(() => this.catalogoEstadosEvaluacion().map(estado => estado.codigo));
 
@@ -442,7 +451,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         })));
       },
       error: () => {
-        this.catalogoEstadosEvaluacion.set([]);
+        this.catalogoEstadosEvaluacion.set(MatricesRiesgosComponent.ESTADOS_EVALUACION_CANONICOS);
         this.errorCatalogoEstadosEvaluacion.set('No se pudo cargar el catálogo de estados de evaluación.');
       }
     });
