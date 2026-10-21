@@ -3,6 +3,7 @@ import { expect, Page, test, expectHttpResponse } from './support/telemetry-test
 type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
 
 const critical = [
+  /^GET \/api\/matrices-riesgos\/evaluaciones\/estados$/,
   /^POST \/api\/matrices-riesgos\/evaluaciones\/borrador$/,
   /^PUT \/api\/matrices-riesgos\/evaluaciones\/\d+\/borrador$/,
   /^GET \/api\/matrices-riesgos\/evaluaciones\/\d+\/transiciones-permitidas$/,
@@ -88,7 +89,15 @@ async function installNonCriticalFixtures(
     const methodology = { versionFormularioId: fixture.versionId, codigo: fixture.versionCode, version: 1, secciones: fixture.definition.secciones, catalogos: [], reglas: [] };
     let datos: unknown = [];
 
-    if (path.endsWith('/formulario/version-vigente')) datos = version;
+    if (path.endsWith('/evaluaciones/estados')) datos = [
+      { codigo: 'APROBADA', etiqueta: 'Aprobada' },
+      { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+      { codigo: 'CERRADA', etiqueta: 'Cerrada' },
+      { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
+      { codigo: 'OBSERVADA', etiqueta: 'Observada' },
+      { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
+    ];
+    else if (path.endsWith('/formulario/version-vigente')) datos = version;
     else if (path.endsWith('/metodologia/vigente')) datos = methodology;
     else if (path.endsWith('/familias/predeterminada')) datos = { configurada: true, familiaId: 1, familiaCodigo: family.famCodigo, familiaNombre: family.famNombre };
     else if (path.endsWith('/familias/paginado')) datos = { items: [family], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } };

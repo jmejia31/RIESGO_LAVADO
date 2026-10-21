@@ -255,12 +255,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly direccionConsolidado = signal<'asc' | 'desc'>('desc');
 
   private static readonly ESTADOS_EVALUACION_CANONICOS: EstadoEvaluacionCatalogoDto[] = [
+    { codigo: 'APROBADA', etiqueta: 'Aprobada' },
     { codigo: 'BORRADOR', etiqueta: 'Borrador' },
+    { codigo: 'CERRADA', etiqueta: 'Cerrada' },
     { codigo: 'EN_REVISION', etiqueta: 'En revisión' },
     { codigo: 'OBSERVADA', etiqueta: 'Observada' },
-    { codigo: 'APROBADA', etiqueta: 'Aprobada' },
-    { codigo: 'RECHAZADA', etiqueta: 'Rechazada' },
-    { codigo: 'CERRADA', etiqueta: 'Cerrada' }
+    { codigo: 'RECHAZADA', etiqueta: 'Rechazada' }
   ];
 
   readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>(MatricesRiesgosComponent.ESTADOS_EVALUACION_CANONICOS);
@@ -439,9 +439,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (typeof cargarCatalogo !== 'function') return;
     cargarCatalogo.call(this.service).subscribe({
       next: estados => {
-        const codigos = estados.map(estado => estado.codigo.trim().toUpperCase());
+        if (!Array.isArray(estados) || estados.length === 0) {
+          this.catalogoEstadosEvaluacion.set(MatricesRiesgosComponent.ESTADOS_EVALUACION_CANONICOS);
+          return;
+        }
+        const codigos = estados.map(estado => estado.codigo?.trim().toUpperCase());
         if (codigos.some(codigo => !codigo) || new Set(codigos).size !== codigos.length) {
-          this.catalogoEstadosEvaluacion.set([]);
+          this.catalogoEstadosEvaluacion.set(MatricesRiesgosComponent.ESTADOS_EVALUACION_CANONICOS);
           this.errorCatalogoEstadosEvaluacion.set('El catálogo de estados de evaluación no es válido.');
           return;
         }
