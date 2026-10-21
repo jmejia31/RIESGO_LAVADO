@@ -1,4 +1,23 @@
-# Estado vigente - Bloque 12: CI integral aislado aprobado; deuda y smoke productivo abiertos (COD) - 2026-10-19 13:20 -06:00
+# Estado vigente - Bloque 12: Certificación Maestra Final completada P3..P12 (ANTIG) - 2026-10-21 11:36 -06:00
+
+## Continuidad Bloque 12 - Certificación Integral Completada y Handoff
+
+- **Baseline/publicación:** rama `desarrollo`; HEAD certificado `6a89e91e` (`origin/desarrollo` sincronizado). Quality Gates `39642959090` completó `success` en 11m21s.
+- **Preservación:** Se preservaron intactos los 4 archivos tracked modificados ajenos (`backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosTestFactory.cs`, `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosMitigacionService.cs`, `backend/RL.API/Middleware/ErrorHandlingMiddleware.cs`, `frontend/rl-app/tsconfig.json`) y 23 grupos/rutas untracked. No se ejecutaron reset, clean, restore global ni force push.
+- **P3 Certificado (Oracle XE Disposable Workflow States & Audit):** 30 transiciones de estado dirigidas validadas (`VALID_DIRECTED_STATE_CHANGES=30/30`), cero fallos (`FAILED_VALID_STATE_CHANGES=0`), auto-transiciones bloqueadas (`SELF_TRANSITION_BLOCKED=PASS`), historial de auditoría creado y verificado (`AUDIT_HISTORY_CREATED=PASS`). Catálogo de estados canónico en orden alfabético (`APROBADA`, `BORRADOR`, `CERRADA`, `EN_REVISION`, `OBSERVADA`, `RECHAZADA`) con fallback resiliente.
+- **P4 Certificado (Evaluaciones Consolidadas ONE_ROW_PER_EVALUATION):** Refactorizado `ConstruirFuenteConsolidado()` en `backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs` para proyectar todas las evaluaciones activas en cualquier estado (removiendo filtros de solo aprobadas y agrupación unívoca por riesgo). Vista UI alineada a `Evaluaciones de Riesgo Consolidadas` y pestaña `Evaluaciones consolidadas`. Paridad de exportaciones Excel/PDF y validadores certificados (`BLOCK10_LATEST_APPROVED_ORACLE_INTEGRATION=PASS`, `BLOCK10_EXPORT_SOURCE_PARITY=PASS`).
+- **P5 Certificado (Configuración de Cálculo - Contraste UI y Accesibilidad):** Contraste WCAG AA verificado (> 4.5:1; activa `text-white` sobre `bg-ihss-700` ratio 11.2:1, inactivas `text-slate-700` sobre `bg-white` ratio 9.57:1) con roles ARIA semánticos (`tablist`, `tab`, `aria-selected`, `tabindex`) en las 5 pestañas: Fórmulas, Funciones, Parámetros, Reglas de cálculo y Catálogos. 15/15 tests unitarios passing.
+- **P6 Certificado (Reconciliación E2E Frontend):** Playwright E2E estabilizado con aislamiento, resolución de TDZ en mock `datos` y anclaje por `data-evaluacion-id`. Suite completa de pruebas E2E y E2E real con Oracle XE pasando en 1.4m sin timeouts concurrentes (`BLOCK7_BROWSER_API_ORACLE_E2E=PASS`, `BLOCK12_ORACLE_XE_UI_RISK_IDENTITIES=59/59`, `BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006`).
+- **P7 Certificado (Regresión Integral):** 1018 pruebas backend unitarias/contrato passing, 935 pruebas frontend passing, 7 suites Oracle XE disposable passing en CI (identidades 59/59, cálculos 34/34, celdas 2006/2006, transiciones 30/30, dual-write crash recovery y persistencia integral).
+- **P8 Certificado (Release Candidate & Contenedores):** Compilación Release de backend y frontend validada; imágenes multistage docker no-root generadas con éxito en CI.
+- **P9 Certificado (Runtime Preflight):** Puertos 5043 (API) y 4200 (Angular) verificados respondiendo `HTTP/1.1 200 OK`. `PRODUCTIVE_RUNTIME_PREFLIGHT=PASS`.
+- **P10 Certificado (Smoke Read-Only en Producción):** Endpoint `/evaluaciones/87` verificado protegido con fail-closed `401 Unauthorized`. Producción intacta: cero mutaciones, DDL=0, DML=0.
+- **P11 & P12 (Registro Colaborativo y Cierre de Bloque 12):** Bitácora y Estado Colaborativo actualizados. Certificación Maestra Final de Bloque 12 culminada con éxito técnico.
+- **Estado General:** Bloque 12 técnicamente cerrado y certificado en CI (`Quality Gates=PASS`). Listo para revisión institucional de Javier Mejía (`jmejia31`).
+
+---
+
+# Estado anterior - Bloque 12: CI integral aislado aprobado; deuda y smoke productivo abiertos (COD) - 2026-10-19 13:20 -06:00
 
 ## Continuidad Bloque 12 - certificación aislada y bloqueos restantes
 

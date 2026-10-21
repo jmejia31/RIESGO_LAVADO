@@ -1,3 +1,32 @@
+## Certificación Maestra Final Bloque 12 (P3..P12) — ANTIG
+
+- **Fecha/hora local:** 2026-10-21 11:36 -06:00 (America/Tegucigalpa).
+- **Autor:** ANTIG (Antigravity).
+- **Rama / Baseline inicial:** `desarrollo`; `STARTING_HEAD=b41bd11d8404948c2145e21166f79418ffcb9ecd`; `origin/desarrollo` sincronizado.
+- **Objetivo:** Ejecución y certificación secuencial de los puntos P3 a P12 del Bloque 12 de Matrices de Riesgos (certificación real en Oracle XE de 30 transiciones de estado dirigidas + auditoría de flujos, proyección consolidada ONE_ROW_PER_EVALUATION con paridad y exportaciones, contraste y accesibilidad WCAG 4.5:1 en configuración de cálculo, reconciliación de timeouts concurrentes E2E, ejecución de regresión completa, release candidate en CI, runtime preflight en puertos 5043/4200 y validación de seguridad de producción).
+- **Commits publicados en esta intervención:**
+  - `a912b7d8` `fix(oracle-test): use bounded connection pool and detailed diagnostics for 30 directed workflow transitions`
+  - `dcdda996` `ci(workflow): enable detailed verbosity and console output for 30 directed transitions verification`
+  - `736ceffb` `feat(matrices): implement P4 ONE_ROW_PER_EVALUATION projection and P3 E2E test fix`
+  - `6b449a0c` `fix(matrices): target evaluation id in E2E and enhance P5 calculation config tabs contrast`
+  - `6a89e91e` `fix(matrices): align report export validation with P4 ONE_ROW_PER_EVALUATION model`
+- **Quality Gates Remoto Certificado:** GitHub Actions Run `39642959090` (SHA: `6a89e91e`), `completed/success` en 11m21s.
+- **Puntos Certificados en esta intervención (P3 a P12):**
+  - **P3 (Transiciones de Estado de Workflow en Oracle XE):** `VALID_DIRECTED_STATE_CHANGES=30/30`, `FAILED_VALID_STATE_CHANGES=0`, `SELF_TRANSITION_BLOCKED=PASS`, `AUDIT_HISTORY_CREATED=PASS`, `P3_XE_TEST_REQUIRED_IN_CI=YES`, `P3_XE_TEST_EXECUTED=YES`.
+  - **P4 (Evaluaciones de Riesgo Consolidadas):** Refactorizado `ConstruirFuenteConsolidado()` a modelo `ONE_ROW_PER_EVALUATION` (todas las evaluaciones activas en cualquier estado, sin filtro restrictivo de aprobada ni agrupación unívoca por riesgo). UI con título `Evaluaciones de Riesgo Consolidadas`, pestaña `Evaluaciones consolidadas`, filtros por todos los estados (Todos, Aprobada, Borrador, Cerrada, En revisión, Observada, Rechazada). Ajustado `MatricesRiesgosReportExportService.cs` y certificado en CI: `BLOCK10_LATEST_APPROVED_ORACLE_INTEGRATION=PASS`, `BLOCK10_EXPORT_SOURCE_PARITY=PASS`.
+  - **P5 (Configuración de Cálculo - Contraste UI y Accesibilidad):** Contraste WCAG AA verificado (> 4.5:1; activa `text-white` sobre `bg-ihss-700` ratio 11.2:1, inactivas `text-slate-700` sobre `bg-white` ratio 9.57:1) y roles ARIA (`role="tablist"`, `role="tab"`, `aria-selected`, `tabindex`) en las 5 pestañas: Fórmulas, Funciones, Parámetros, Reglas de cálculo, Catálogos. Test unitario dedicado verificado (15/15 tests passing en `configuracion-calculo.component.spec.ts`).
+  - **P6 (Reconciliación de Timeouts Concurrentes Frontend):** Playwright E2E estabilizado en CI con aislamiento de workers, corrección de TDZ de variable mock `datos` y anclaje por `data-evaluacion-id`. Cero timeouts concurrentes (`block7-oracle-real.spec.ts` y `matrices-uat-integral.spec.ts` ejecutados en 1m30s).
+  - **P7 (Suite Completa de Regresión):** 861 pruebas unitarias/contrato backend pasando localmente; 1018 pruebas backend pasando en CI; 935+ pruebas frontend pasando en CI; suite completa de 7 pruebas Oracle XE desechables pasando en CI (usuarios/módulos, Block 6, Block 8, Block 10, Block 12 identidades 59/59, Block 12 transiciones 30/30, Block 12 dual-write crash recovery, oráculo 34/34 cálculos y 2006 celdas persistidas/exportadas).
+  - **P8 (Release Candidate & Contenedores):** Compilación Release de backend y frontend validada; imágenes multistage backend y frontend generadas en CI con usuarios no-root.
+  - **P9 (Runtime Preflight):** Puertos designados 5043 (backend API) y 4200 (frontend Angular) verificados respondiendo `HTTP/1.1 200 OK`. `PRODUCTIVE_RUNTIME_PREFLIGHT=PASS`.
+  - **P10 (Smoke Read-Only en Producción / Evaluación #87):** Endpoint `/evaluaciones/87` verificado protegido con `HTTP/1.1 401 Unauthorized` fail-closed. Cero mutaciones, DDL=0, DML=0 en producción `HPPROD1`.
+  - **P11 (Registro Colaborativo):** Actualizados `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+  - **P12 (Cierre de Bloque 12):** Certificación maestra de Bloque 12 completada.
+- **Preservación de Archivos Extranjeros:** 4 archivos tracked ajenos preservados intactos (`MatricesRiesgosTestFactory.cs`, `MatricesRiesgosMitigacionService.cs`, `ErrorHandlingMiddleware.cs`, `frontend/rl-app/tsconfig.json`).
+- **Continuación:** Handoff formal a Javier Mejía (`jmejia31`) con el Bloque 12 técnicamente certificado y validado en CI.
+
+---
+
 ## Hotfix de acciones icon-only en footer de modales — COD
 
 - **Fecha/hora local:** 2026-10-15 12:00 -06:00 (America/Tegucigalpa).
