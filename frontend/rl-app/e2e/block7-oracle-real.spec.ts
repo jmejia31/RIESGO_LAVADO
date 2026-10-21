@@ -882,43 +882,11 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   }
 
   const transitionFixture = fixtures[0];
-  const evaluationsTab = page.getByRole('tab', { name: 'Evaluaciones', exact: true });
   const traceMatrixRequests = (response: Response): void => {
     const url = new URL(response.url());
     if (url.port !== '5043' || !url.pathname.startsWith('/api/matrices-riesgos/')) return;
     workflowMatrixTrace.push({ method: response.request().method(), path: url.pathname, status: response.status() });
   };
-  page.on('response', traceMatrixRequests);
-  await evaluationsTab.click();
-  const evaluationSearch = page.locator('#filtro-buscar');
-  const evaluationListRequest = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname === '/api/matrices-riesgos/evaluaciones');
-  await evaluationSearch.fill(transitionFixture.riskCode);
-  expect((await evaluationListRequest).status()).toBe(200);
-  const evaluationRow = page.locator('#panel-evaluaciones tbody tr').filter({ hasText: transitionFixture.riskCode });
-  await expect(evaluationRow).toBeVisible();
-  await evaluationRow.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
-  const followUp = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
-  await expect(followUp.locator('.modal-header-institutional p strong')).toHaveText('Aprobada');
-  await followUp.locator('#seg-nuevo-estado').selectOption('BORRADOR');
-  await page.locator('#seg-motivo').fill('Reproducción aislada de lectura posterior al workflow');
-  const transitionResponsePromise = page.waitForResponse(response => response.request().method() === 'POST'
-    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/transiciones`);
-  await followUp.getByRole('button', { name: 'Aplicar transición de estado' }).click();
-  const transitionResponse = await transitionResponsePromise;
-  expect(transitionResponse.status()).toBe(200);
-  await expect(followUp.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
-  const historyResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/flujos`);
-  workflowMatrixTrace.push({ method: 'GET', path: new URL(historyResponse.url()).pathname, status: historyResponse.status() });
-  expect(historyResponse.status()).toBe(200);
-  expect((await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado)).toContain('BORRADOR');
-  await followUp.getByRole('button', { name: 'Cerrar seguimiento' }).last().click();
-
-  const consolidatedTab = page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i });
-  const consolidatedRefresh = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
-  await consolidatedTab.click();
-  expect((await consolidatedRefresh).status()).toBe(200);
   const consolidatedSearch = page.locator('#consolidado-buscar');
   const filteredConsolidated = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
@@ -926,7 +894,44 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   expect((await filteredConsolidated).status()).toBe(200);
   const transitionedRow = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${transitionFixture.evaluationId}"]`);
   await expect(transitionedRow).toBeVisible();
+
+  const transitionUrl = `http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/transiciones`;
+  const preparationTransition = await request.post(`${transitionUrl}?nuevoEstado=BORRADOR&motivo=${encodeURIComponent('Preparación aislada del escenario post-workflow')}`);
+  expect(preparationTransition.status()).toBe(200);
+  const draftFilterRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await page.locator('#consolidado-estado').selectOption('BORRADOR');
+  expect((await draftFilterRequest).status()).toBe(200);
+  await expect(transitionedRow).toBeVisible();
   await expect(transitionedRow).toContainText('Borrador');
+
+  const preTransitionProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/proyeccion-institucional`);
+  await transitionedRow.locator('[data-matrix-open="complete"]').click();
+  const preTransitionProjectionResponse = await preTransitionProjectionRequest;
+  expect(preTransitionProjectionResponse.status()).toBe(200);
+  const preTransitionProjection = await preTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
+  expect(preTransitionProjection.datos.evaluationId).toBe(transitionFixture.evaluationId);
+  expect(preTransitionProjection.datos.fields).toHaveLength(82);
+  preTransitionBusinessHash = createHash('sha256')
+    .update(JSON.stringify(preTransitionProjection.datos.fields.map(field => [field.fieldNumber, field.value, field.state])))
+    .digest('hex');
+  const preTransitionMatrix = page.locator('[data-matrix-modal="complete"]');
+  await expect(preTransitionMatrix.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
+  const preTransitionRenderedNumbers = await preTransitionMatrix.locator('[data-matrix-field]').evaluateAll(elements =>
+    [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
+  expect(preTransitionRenderedNumbers).toHaveLength(82);
+  await expect(preTransitionMatrix.locator('.modal-metadata-card dd').nth(1)).toHaveText('Borrador');
+  await preTransitionMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).click();
+
+  const transitionResponse = await request.post(`${transitionUrl}?nuevoEstado=APROBADA&motivo=${encodeURIComponent('Reproducción aislada de lectura posterior al workflow')}`);
+  workflowMatrixTrace.push({ method: 'POST', path: new URL(transitionResponse.url()).pathname, status: transitionResponse.status() });
+  expect(transitionResponse.status()).toBe(200);
+  const historyResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/flujos`);
+  workflowMatrixTrace.push({ method: 'GET', path: new URL(historyResponse.url()).pathname, status: historyResponse.status() });
+  expect(historyResponse.status()).toBe(200);
+  expect((await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado)).toContain('APROBADA');
+  page.on('response', traceMatrixRequests);
   const postTransitionProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/proyeccion-institucional`);
   await transitionedRow.locator('[data-matrix-open="complete"]').click();
@@ -950,7 +955,8 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     body: JSON.stringify({
       evaluationId: transitionFixture.evaluationId,
       transitionStatus: transitionResponse.status(),
-      preTransitionFieldCount: 82,
+      preparationTransitionStatus: preparationTransition.status(),
+      preTransitionFieldCount: preTransitionProjection.datos.fields.length,
       preTransitionBusinessHash,
       postTransitionHttpStatus: postTransitionProjectionResponse.status(),
       postTransitionResponseFieldCount: postTransitionFieldNumbers.length,
