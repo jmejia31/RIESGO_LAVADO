@@ -1059,7 +1059,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   ])).digest('hex');
 
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
-  const evaluationsRow = page.locator(`#panel-evaluaciones tbody tr[data-evaluacion-id="${transitionFixture.evaluationId}"]`);
+  const evaluationsRow = page.locator('#panel-evaluaciones tbody tr').filter({ hasText: `#${transitionFixture.evaluationId}` });
   await expect(evaluationsRow).toBeVisible();
   await evaluationsRow.getByRole('button', { name: /Seguimiento de evaluaci.n/ }).click();
   const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
