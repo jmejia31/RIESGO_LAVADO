@@ -150,7 +150,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     if (critical.some(pattern => pattern.test(key)) && response.status() < 500) criticalResponses.add(key.replace(/\/\d+(?=\/|$)/g, '/{id}'));
   });
 
-  await installNonCriticalFixtures(page, fixture, evaluation);
+  await installNonCriticalFixtures(page, fixture, evaluation, { useRealConsolidated: true });
   await page.goto('/matrices-riesgos');
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
@@ -640,7 +640,41 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const mobileOverflow = await pageA.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(mobileOverflow).toBeLessThanOrEqual(0);
 
-  await page.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
+  const consolidatedTab = page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i });
+  const baselineConsolidatedRead = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await consolidatedTab.click();
+  expect((await baselineConsolidatedRead).status()).toBe(200);
+  const consolidatedSearch = page.locator('#consolidado-buscar');
+  const baselineSearchRead = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await consolidatedSearch.fill(fixture.riskCode);
+  expect((await baselineSearchRead).status()).toBe(200);
+  const evaluationRow = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${evaluation.id}"]`);
+  await expect(evaluationRow).toBeVisible();
+  const preWorkflowProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
+  const preWorkflowBlock6Request = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${evaluation.id}/bloque6`);
+  await evaluationRow.locator('[data-matrix-open="complete"]').click();
+  const preWorkflowProjectionResponse = await preWorkflowProjectionRequest;
+  expect(preWorkflowProjectionResponse.status()).toBe(200);
+  expect((await preWorkflowBlock6Request).status()).toBe(200);
+  const preWorkflowProjection = await preWorkflowProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
+  expect(preWorkflowProjection.datos.evaluationId).toBe(evaluation.id);
+  expect(preWorkflowProjection.datos.fields).toHaveLength(82);
+  const preWorkflowHash = createHash('sha256')
+    .update(JSON.stringify(preWorkflowProjection.datos.fields.map(field => [field.fieldNumber, field.value, field.state])))
+    .digest('hex');
+  const preWorkflowModal = page.locator('[data-matrix-modal="complete"]');
+  await expect(preWorkflowModal).toBeVisible();
+  const preWorkflowRenderedFields = await preWorkflowModal.locator('[data-matrix-field]').evaluateAll(elements =>
+    [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
+  expect(preWorkflowRenderedFields).toHaveLength(82);
+  await expect(preWorkflowModal.getByText(/La evaluaci/)).toHaveCount(0);
+  await preWorkflowModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
+  await page.getByRole('button', { name: /Seguimiento de evaluaci/ }).click();
   const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
   await expect(followUpModal).toBeVisible();
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
@@ -691,14 +725,82 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const flowStates = (await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado);
   expect(flowStates).toContain('EN_REVISION');
   expect(flowStates).toContain('OBSERVADA');
-  const invalidTransition = await request.post(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones?nuevoEstado=OBSERVADA`);
+  await page.locator('#seg-motivo').fill('AprobaciÃ³n de prueba post-observaciÃ³n');
+  await page.locator('#seg-nuevo-estado').selectOption('APROBADA');
+  const observedToApproved = page.waitForResponse(response => response.request().method() === 'POST'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones`);
+  await followUpModal.getByRole('button', { name: 'Aplicar transiciÃ³n de estado' }).click();
+  expect((await observedToApproved).status()).toBe(200);
+  evaluation.state = 'APROBADA';
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Aprobada');
+  const approvedDetail = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect((await approvedDetail.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('APROBADA');
+  await expect(page.locator('#panel-evaluaciones')).toContainText('Aprobada');
+  const approvedConsolidatedRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
+  expect((await approvedConsolidatedRequest).status()).toBe(200);
+  const postWorkflowSearchRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await page.locator('#consolidado-buscar').fill(fixture.riskCode);
+  expect((await postWorkflowSearchRequest).status()).toBe(200);
+  const approvedRow = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${evaluation.id}"]`);
+  await expect(approvedRow).toBeVisible();
+  await expect(approvedRow).toContainText('Aprobada');
+  const postWorkflowProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
+  const postWorkflowBlock6Request = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${evaluation.id}/bloque6`);
+  const fullMatrixResponses: Array<{ method: string; path: string; status: number }> = [];
+  const captureFullMatrixResponse = (response: Response): void => {
+    const url = new URL(response.url());
+    if (url.port === '5043' && url.pathname.startsWith('/api/matrices-riesgos/')) {
+      fullMatrixResponses.push({ method: response.request().method(), path: url.pathname, status: response.status() });
+    }
+  };
+  page.on('response', captureFullMatrixResponse);
+  await approvedRow.locator('[data-matrix-open="complete"]').click();
+  const postWorkflowProjectionResponse = await postWorkflowProjectionRequest;
+  const postWorkflowBlock6Response = await postWorkflowBlock6Request;
+  page.off('response', captureFullMatrixResponse);
+  const postWorkflowProjection = await postWorkflowProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
+  expect(postWorkflowProjectionResponse.status()).toBe(200);
+  expect(postWorkflowBlock6Response.status()).toBe(200);
+  expect(postWorkflowProjection.datos.evaluationId).toBe(evaluation.id);
+  expect(postWorkflowProjection.datos.fields).toHaveLength(82);
+  expect(createHash('sha256').update(JSON.stringify(postWorkflowProjection.datos.fields.map(field => [field.fieldNumber, field.value, field.state]))).digest('hex')).toBe(preWorkflowHash);
+  const postWorkflowMatrix = page.locator('[data-matrix-modal="complete"]');
+  await expect(postWorkflowMatrix).toBeVisible();
+  const postWorkflowFieldNumbers = await postWorkflowMatrix.locator('[data-matrix-field]').evaluateAll(elements =>
+    [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
+  const postWorkflowWarning = await postWorkflowMatrix.getByText(/La evaluaciÃ³n fue modificada por otra sesiÃ³n o usuario/).count()
+    + await page.getByText(/La evaluaciÃ³n fue modificada por otra sesiÃ³n o usuario/).count();
+  const postWorkflowDiagnostic = {
+    evaluationId: evaluation.id,
+    transition: 'OBSERVADA->APROBADA',
+    requests: fullMatrixResponses,
+    projectionStatus: postWorkflowProjectionResponse.status(),
+    block6Status: postWorkflowBlock6Response.status(),
+    responseFieldCount: postWorkflowProjection.datos.fields.length,
+    renderedFieldCount: postWorkflowFieldNumbers.length,
+    headerState: await postWorkflowMatrix.locator('.modal-metadata-card dd').nth(1).innerText(),
+    warningCount: postWorkflowWarning,
+    businessHashBefore: preWorkflowHash,
+    businessHashAfter: createHash('sha256').update(JSON.stringify(postWorkflowProjection.datos.fields.map(field => [field.fieldNumber, field.value, field.state]))).digest('hex'),
+  };
+  await testInfo.attach('post-workflow-ui-full-matrix-diagnostic', { body: Buffer.from(JSON.stringify(postWorkflowDiagnostic, null, 2)), contentType: 'application/json' });
+  expect(postWorkflowFieldNumbers).toHaveLength(82);
+  expect(postWorkflowWarning).toBe(0);
+  expect(postWorkflowDiagnostic.headerState).toBe('Aprobada');
+  await postWorkflowMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  const invalidTransition = await request.post(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones?nuevoEstado=APROBADA`);
   expect(invalidTransition.status()).toBe(400);
   const unchangedState = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
-  expect((await unchangedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
+  expect((await unchangedState.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('APROBADA');
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/transiciones-permitidas'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('POST /api/matrices-riesgos/evaluaciones/{id}/transiciones'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/flujos'))).toBeTruthy();
-  await expect(page.locator('#panel-evaluaciones')).toContainText('Observada');
+  await expect(page.locator('#panel-evaluaciones')).toContainText('Aprobada');
   await page.screenshot({ path: testInfo.outputPath('evaluation-follow-up-workflow.png'), fullPage: true });
 
   const filterRequest = page.waitForResponse(response => response.request().method() === 'GET'
@@ -706,7 +808,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await page.locator('#filtro-estado').selectOption('BORRADOR');
   await filterRequest;
   const afterFilter = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
-  expect((await afterFilter.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('OBSERVADA');
+  expect((await afterFilter.json() as { datos: { evaEstado: string } }).datos.evaEstado).toBe('APROBADA');
   await concurrencyA.close();
   await pageB.close();
   console.log('BLOCK7_MATRIX_API_ROUTES_MOCKED=0');
