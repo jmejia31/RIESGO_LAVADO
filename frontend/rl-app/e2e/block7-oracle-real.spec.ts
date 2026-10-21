@@ -725,11 +725,11 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const flowStates = (await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado);
   expect(flowStates).toContain('EN_REVISION');
   expect(flowStates).toContain('OBSERVADA');
-  await page.locator('#seg-motivo').fill('AprobaciÃ³n de prueba post-observaciÃ³n');
+  await page.locator('#seg-motivo').fill('E2E approval after observation');
   await page.locator('#seg-nuevo-estado').selectOption('APROBADA');
   const observedToApproved = page.waitForResponse(response => response.request().method() === 'POST'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones`);
-  await followUpModal.getByRole('button', { name: 'Aplicar transiciÃ³n de estado' }).click();
+  await followUpModal.getByRole('button', { name: /Aplicar transici.n de estado/ }).click();
   expect((await observedToApproved).status()).toBe(200);
   evaluation.state = 'APROBADA';
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Aprobada');
@@ -773,8 +773,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(postWorkflowMatrix).toBeVisible();
   const postWorkflowFieldNumbers = await postWorkflowMatrix.locator('[data-matrix-field]').evaluateAll(elements =>
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
-  const postWorkflowWarning = await postWorkflowMatrix.getByText(/La evaluaciÃ³n fue modificada por otra sesiÃ³n o usuario/).count()
-    + await page.getByText(/La evaluaciÃ³n fue modificada por otra sesiÃ³n o usuario/).count();
+  const postWorkflowWarning = await postWorkflowMatrix.getByText(/La evaluaci.n fue modificada por otra sesi.n o usuario/).count()
+    + await page.getByText(/La evaluaci.n fue modificada por otra sesi.n o usuario/).count();
   const postWorkflowDiagnostic = {
     evaluationId: evaluation.id,
     transition: 'OBSERVADA->APROBADA',
