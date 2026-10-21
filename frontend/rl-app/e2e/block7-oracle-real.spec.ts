@@ -787,11 +787,20 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     }
   };
   page.on('response', captureFullMatrixResponse);
+  if (process.env.BLOCK12_EXPECT_PREFX_REPRODUCTION === 'true') {
+    expectHttpResponse({
+      status: 409,
+      method: 'GET',
+      path: `/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`,
+      reason: 'Expected pre-fix consolidated evaluation read failure after workflow follow-ups',
+    });
+  }
   await approvedRow.locator('[data-matrix-open="complete"]').click();
   const postWorkflowProjectionResponse = await postWorkflowProjectionRequest;
   const postWorkflowBlock6Response = await postWorkflowBlock6Request;
   page.off('response', captureFullMatrixResponse);
   if (process.env.BLOCK12_EXPECT_PREFX_REPRODUCTION === 'true') {
+    const projectionErrorBody = await postWorkflowProjectionResponse.json() as { mensaje?: string; detail?: string };
     const postWorkflowMatrix = page.locator('[data-matrix-modal="complete"]');
     await expect(postWorkflowMatrix).toBeVisible();
     await expect(page.getByText(/La evaluaci.n fue modificada por otra sesi.n o usuario/)).toBeVisible();
@@ -802,6 +811,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
       evaluationId: evaluation.id,
       workflowFollowUps: 3,
       projectionHttpStatus: postWorkflowProjectionResponse.status(),
+      projectionErrorMessage: projectionErrorBody.mensaje ?? projectionErrorBody.detail ?? 'NO_ERROR_MESSAGE',
       monitoringHttpStatus: postWorkflowBlock6Response.status(),
       detailState: postWorkflowDetail.evaEstado,
       evaluationIdPreserved: postWorkflowDetail.evaId === evaluation.id,

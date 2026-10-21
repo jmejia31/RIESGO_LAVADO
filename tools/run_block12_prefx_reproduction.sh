@@ -79,6 +79,14 @@ export CI=true
 browser_output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts --grep 'Block 7/9 real browser certifies draft' 2>&1 | tee /dev/stderr)"
 popd >/dev/null
 
+if grep -Fq 'Datos incompatibles para proyección institucional' "$api_log"; then
+  echo 'BLOCK12_PREFX_API_PROJECTION_EXCEPTION_BEGIN'
+  grep -F 'Datos incompatibles para proyección institucional' "$api_log" \
+    | sed -E 's/EvaluationId=[0-9]+/EvaluationId=[fixture]/g' \
+    | tail -n 2
+  echo 'BLOCK12_PREFX_API_PROJECTION_EXCEPTION_END'
+fi
+
 grep -Fq '1 passed' <<<"$browser_output"
 grep -Fq 'BLOCK12_PRE_FIX_CONSOLIDATED_MATRIX_DEFECT_REPRODUCED=YES' <<<"$browser_output"
 echo 'BLOCK12_PREFX_DISPOSABLE_XE_BROWSER_API_REPRODUCTION=PASS'
