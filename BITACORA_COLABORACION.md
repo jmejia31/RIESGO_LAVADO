@@ -9536,3 +9536,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado de evidencia:** R1_BEFORE_FIX_REPRODUCTION=PENDING hasta obtener el CI nuevo exacto. El gate se considera pass únicamente si el antiguo source presenta conjuntamente status/warning/cuerpo vacíos y los valores de negocio permanecen iguales. La cobertura post-fix de tres seguimientos ya tiene CI success heredado del SHA 3320ca00fe5b8dcfbb66642021aa5e5e39714d65 (run 39676049332); R11 global continúa parcial, aunque ROP-CUMP-59 y ROP-CUMP-58 se vieron con 82 campos en el smoke solo lectura.
 - **Archivos propios:** .github/workflows/quality-gates.yml, 	ools/run_block12_prefx_reproduction.sh, rontend/rl-app/e2e/block7-oracle-real.spec.ts, bitácora y estado vivo. Los cuatro tracked ajenos y los grupos untracked ajenos siguen fuera del stage.
 - **Continuación:** publicar estos cambios y esperar Quality Gates del SHA exacto. Si el pre-fix arnés falla por error propio, repararlo sin dejar desarrollo rojo; no cerrar Block12 hasta completar R1/R11 y los demás gates pendientes. git diff --check PASS.
+
+
+## 2026-10-21 16:25 -06:00 - Corrección del arranque del gate pre-fix (COD)
+
+- Quality Gates 39685201111, SHA 8a33d9ee7a9dc641671970e1f6cb37292db6b5bc, ejecutó las suites base y la regresión browser post-fix, pero falló al iniciar el nuevo paso: Permission denied al invocar el script porque su modo ejecutable no estaba marcado en Git. La reproducción pre-fix no se ejecutó; no se atribuye a fallo funcional.
+- Se cambió el paso para lanzar explícitamente ash ./tools/run_block12_prefx_reproduction.sh. El diagnóstico conserva el mismo script/host/XE. R1_BEFORE_FIX_REPRODUCTION=PENDING hasta la siguiente ejecución exacta.
+- Solo se actualizan el workflow y estos dos documentos; ningún cambio ajeno se incluye. git diff --check y validación documental se repetirán antes de commit.

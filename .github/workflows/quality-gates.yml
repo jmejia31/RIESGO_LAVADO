@@ -185,7 +185,7 @@ jobs:
         shell: bash
         env:
           BLOCK12_PREFX_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
-        run: ./tools/run_block12_prefx_reproduction.sh
+        run: bash ./tools/run_block12_prefx_reproduction.sh
 
       - name: Run Block 6 canonical projection against disposable Oracle XE
         env:
