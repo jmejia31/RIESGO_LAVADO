@@ -1353,8 +1353,9 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 using HttpResponseMessage stateResponse = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/proyeccion-institucional");
                 Assert.Equal(System.Net.HttpStatusCode.OK, stateResponse.StatusCode);
                 using JsonDocument stateBody = JsonDocument.Parse(await stateResponse.Content.ReadAsStringAsync());
-                Assert.Equal(evaluationId, stateBody.RootElement.GetProperty("evaluationId").GetInt64());
-                Assert.Equal(82, stateBody.RootElement.GetProperty("fields").GetArrayLength());
+                JsonElement stateProjection = stateBody.RootElement.GetProperty("datos");
+                Assert.Equal(evaluationId, stateProjection.GetProperty("evaluationId").GetInt64());
+                Assert.Equal(82, stateProjection.GetProperty("fields").GetArrayLength());
                 availableStates++;
             }
             Assert.Equal(6, availableStates);
