@@ -823,7 +823,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   const initialConsolidatedRequest = page.waitForResponse(response =>
     response.request().method() === 'GET'
     && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
-  await page.getByRole('tab', { name: 'Consolidado' }).click();
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   expect((await initialConsolidatedRequest).status()).toBe(200);
 
   let uiCalculationValues = 0;

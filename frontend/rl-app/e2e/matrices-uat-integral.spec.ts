@@ -408,18 +408,18 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   page.on('response', response => { if (response.status() >= 400) unexpectedHttpErrors.push(`${response.status()} ${response.url()}`); });
   await page.goto('/matrices-riesgos');
   await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible({ timeout: 15000 });
-  await expect(page.getByRole('tab', { name: 'Consolidado', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Matriz completa', exact: true })).toHaveCount(0);
   await expect(page.getByRole('tab', { name: 'Plantillas', exact: true })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();
   await expect(page.locator('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveCount(0);
 
-  const consolidadoTab = page.getByRole('tab', { name: 'Consolidado', exact: true });
+  const consolidadoTab = page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i });
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(consolidadoTab).toHaveAttribute('aria-selected', 'true');
   await expect(consolidadoTab).toBeFocused();
-  await expect(page.getByRole('heading', { name: 'Matriz Consolidada' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Evaluaciones de Riesgo Consolidadas|Matriz Consolidada/i })).toBeVisible();
   const openMatrixButton = page.getByRole('button', { name: 'Ver Matriz completa' }).first();
   await openMatrixButton.focus();
   await page.keyboard.press('Enter');
@@ -583,14 +583,14 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   expect(requestFailures).toHaveLength(0);
   expect(unexpectedHttpErrors).toHaveLength(0);
   expect(familiaUnoRequests).toHaveLength(0);
-  await expect(page.getByRole('tab', { name: 'Consolidado', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i })).toHaveAttribute('aria-selected', 'true');
 
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
   await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();
   await expect(page.locator('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveCount(0);
-  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   await expect(page.getByRole('button', { name: 'Ver Matriz completa' })).toHaveCount(1);
-  await expect(page.getByRole('heading', { name: 'Matriz Consolidada' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Evaluaciones de Riesgo Consolidadas|Matriz Consolidada/i })).toBeVisible();
 });
 
 test('Configuración de cálculo muestra referencias institucionales F01, F15 y F34 desde el API en modo lectura', async ({ page }) => {
@@ -680,7 +680,7 @@ test('Configuracion de calculo conserva un 422 en el feedback local sin contamin
 test('Matriz completa adopta el tema azul y rojo en el mismo modal sin cambios de template', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/matrices-riesgos');
-  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
   const modal = page.locator('[data-matrix-modal="complete"]');
   const header = modal.locator('.modal-header-institutional');
@@ -775,7 +775,7 @@ test('Consolidado muestra todos los estados y abre una matriz BORRADOR por su ev
   });
 
   await page.goto('/matrices-riesgos');
-  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   const tableRows = page.locator('#panel-consolidado tbody tr');
   await expect(tableRows).toHaveCount(5);
   for (const status of ['Borrador', 'En revisión', 'Aprobada', 'Rechazada', 'Cerrada']) await expect(page.locator('#panel-consolidado tbody')).toContainText(status);
@@ -1355,7 +1355,7 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
   ]) {
     await page.setViewportSize(viewport);
     await page.goto('/matrices-riesgos');
-    await page.getByRole('tab', { name: 'Consolidado' }).click();
+    await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
     await page.getByRole('button', { name: 'Generar reporte PDF de la matriz consolidada' }).click();
     const preview = page.locator('[data-report-preview]');
     await expect(preview).toBeVisible();
@@ -1678,7 +1678,7 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await expect.poll(() => serverPlans[0]['plaRecursos']).toBe('Personal especializado, monitoreo y análisis');
 
   await page.getByRole('button', { name: 'Matriz y evaluaciones', exact: true }).click();
-  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
   const matrix = page.locator('[data-matrix-view="complete"]');
   const fields = matrix.locator('[data-matrix-field]');

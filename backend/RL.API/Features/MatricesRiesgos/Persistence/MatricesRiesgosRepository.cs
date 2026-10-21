@@ -1896,72 +1896,45 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     }
 
     internal static string ConstruirFuenteConsolidado() => @"(
-        SELECT aprobadas.EVA_RIESGO_ID,
-               aprobadas.EVA_VERSION_ID,
-               aprobadas.PROY_EVALUACION_ID,
-               aprobadas.PROY_CODIGO_RIESGO,
-               aprobadas.PROY_AREA_PRINCIPAL,
-               aprobadas.PROY_DUENO_RIESGO,
-               aprobadas.PROY_VRI,
-               aprobadas.PROY_NIVEL_INHERENTE,
-               aprobadas.PROY_VRR,
-               aprobadas.PROY_NIVEL_RESIDUAL,
-               aprobadas.PROY_RESPUESTA_RIESGO,
-               aprobadas.PROY_ESTADO_EVALUACION,
-               aprobadas.PROY_FECHA_EVAL,
-               aprobadas.FLU_ID,
-               aprobadas.FLU_FECHA
-          FROM (
-                SELECT candidatas.*,
-                       ROW_NUMBER() OVER (
-                           PARTITION BY candidatas.EVA_RIESGO_ID
-                           ORDER BY candidatas.FLU_FECHA DESC,
-                                    candidatas.FLU_ID DESC,
-                                    candidatas.PROY_EVALUACION_ID DESC) AS APROBADA_RN
+        SELECT e.EVA_RIESGO_ID,
+               e.EVA_VERSION_ID,
+               e.EVA_ID AS PROY_EVALUACION_ID,
+               NVL(p.PROY_CODIGO_RIESGO, r.RIE_CODIGO) AS PROY_CODIGO_RIESGO,
+               p.PROY_AREA_PRINCIPAL,
+               p.PROY_DUENO_RIESGO,
+               p.PROY_VRI,
+               p.PROY_NIVEL_INHERENTE,
+               p.PROY_VRR,
+               p.PROY_NIVEL_RESIDUAL,
+               p.PROY_RESPUESTA_RIESGO,
+               NVL(f.FLU_ESTADO, 'BORRADOR') AS PROY_ESTADO_EVALUACION,
+               p.PROY_FECHA_EVAL,
+               f.FLU_ID,
+               f.FLU_FECHA
+          FROM RL_MR_EVALUACIONES_RIESGO e
+          JOIN RL_MR_RIESGOS r
+            ON r.RIE_ID = e.EVA_RIESGO_ID
+          LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p
+            ON p.PROY_EVALUACION_ID = e.EVA_ID
+          LEFT JOIN (
+                SELECT estado_actual.FLU_EVALUACION_ID,
+                       estado_actual.FLU_ID,
+                       estado_actual.FLU_ESTADO,
+                       estado_actual.FLU_FECHA
                   FROM (
-                        SELECT e.EVA_RIESGO_ID,
-                               e.EVA_VERSION_ID,
-                               e.EVA_ID AS PROY_EVALUACION_ID,
-                               NVL(p.PROY_CODIGO_RIESGO, r.RIE_CODIGO) AS PROY_CODIGO_RIESGO,
-                               p.PROY_AREA_PRINCIPAL,
-                               p.PROY_DUENO_RIESGO,
-                               p.PROY_VRI,
-                               p.PROY_NIVEL_INHERENTE,
-                               p.PROY_VRR,
-                               p.PROY_NIVEL_RESIDUAL,
-                               p.PROY_RESPUESTA_RIESGO,
-                               f.FLU_ESTADO AS PROY_ESTADO_EVALUACION,
-                               p.PROY_FECHA_EVAL,
-                               f.FLU_ID,
-                               f.FLU_FECHA
-                          FROM RL_MR_EVALUACIONES_RIESGO e
-                          JOIN RL_MR_RIESGOS r
-                            ON r.RIE_ID = e.EVA_RIESGO_ID
-                          LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p
-                            ON p.PROY_EVALUACION_ID = e.EVA_ID
-                          JOIN (
-                                SELECT estado_actual.FLU_EVALUACION_ID,
-                                       estado_actual.FLU_ID,
-                                       estado_actual.FLU_ESTADO,
-                                       estado_actual.FLU_FECHA
-                                  FROM (
-                                        SELECT flujo.FLU_EVALUACION_ID,
-                                               flujo.FLU_ID,
-                                               flujo.FLU_ESTADO,
-                                               flujo.FLU_FECHA,
-                                               ROW_NUMBER() OVER (
-                                                   PARTITION BY flujo.FLU_EVALUACION_ID
-                                                   ORDER BY flujo.FLU_FECHA DESC, flujo.FLU_ID DESC) AS FLUJO_RN
-                                          FROM RL_MR_FLUJOS_EVALUACION flujo
-                                       ) estado_actual
-                                 WHERE estado_actual.FLUJO_RN = 1
-                                   AND estado_actual.FLU_ESTADO = 'APROBADA'
-                               ) f
-                            ON f.FLU_EVALUACION_ID = e.EVA_ID
-                         WHERE e.EVA_ACTIVO = 1
-                       ) candidatas
-               ) aprobadas
-         WHERE aprobadas.APROBADA_RN = 1
+                        SELECT flujo.FLU_EVALUACION_ID,
+                               flujo.FLU_ID,
+                               flujo.FLU_ESTADO,
+                               flujo.FLU_FECHA,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY flujo.FLU_EVALUACION_ID
+                                   ORDER BY flujo.FLU_FECHA DESC, flujo.FLU_ID DESC) AS FLUJO_RN
+                          FROM RL_MR_FLUJOS_EVALUACION flujo
+                       ) estado_actual
+                 WHERE estado_actual.FLUJO_RN = 1
+               ) f
+            ON f.FLU_EVALUACION_ID = e.EVA_ID
+         WHERE e.EVA_ACTIVO = 1
     )";
 
     // Monitoreo conserva su fuente vigente; Bloque 10 aplica la selección de última aprobada

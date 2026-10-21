@@ -295,7 +295,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
     const tabs = Array.from(root.querySelectorAll('[role="tab"]')).map(tab => tab.textContent?.trim());
-    expect(tabs).toEqual(['Evaluaciones', 'Consolidado', 'Plantillas']);
+    expect(tabs).toEqual(['Evaluaciones', 'Evaluaciones consolidadas', 'Plantillas']);
     expect(root.querySelector('#tab-matriz-completa')).toBeNull();
     expect(root.querySelector('#panel-matriz-completa')).toBeNull();
     expect(root.querySelector('[data-matrix-modal="complete"]')).toBeNull();

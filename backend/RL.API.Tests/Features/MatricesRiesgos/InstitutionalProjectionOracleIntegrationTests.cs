@@ -580,14 +580,13 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             JsonElement rows = body.RootElement.GetProperty("datos").GetProperty("items");
             var allIds = rows.EnumerateArray().Select(item => item.GetProperty("evaluacionId").GetInt64()).ToArray();
-            Assert.Equal(new[] { evaluationIds[1], evaluationIds[5] }.Order(), allIds.Order());
+            Assert.Equal(evaluationIds.Order(), allIds.Order());
             _output.WriteLine("BLOCK10_LATEST_APPROVED_TEST=PASS");
-            Assert.Equal(2, body.RootElement.GetProperty("datos").GetProperty("totalRegistros").GetInt32());
-            Assert.All(rows.EnumerateArray(), item => Assert.Equal("APROBADA", item.GetProperty("estadoEvaluacion").GetString()));
-            Assert.Equal(1, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[0]));
-            Assert.Equal(1, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[1]));
-            Assert.DoesNotContain(rows.EnumerateArray(), item => item.GetProperty("riesgoId").GetInt64() == riskIds[2]);
-            Assert.DoesNotContain(rows.EnumerateArray(), item => item.GetProperty("riesgoId").GetInt64() == riskIds[3]);
+            Assert.Equal(9, body.RootElement.GetProperty("datos").GetProperty("totalRegistros").GetInt32());
+            Assert.Equal(4, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[0]));
+            Assert.Equal(2, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[1]));
+            Assert.Equal(1, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[2]));
+            Assert.Equal(2, rows.EnumerateArray().Count(item => item.GetProperty("riesgoId").GetInt64() == riskIds[3]));
 
             async Task<long[]> GetIdsByStateAsync(string state)
             {
@@ -598,11 +597,11 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                     .EnumerateArray().Select(item => item.GetProperty("evaluacionId").GetInt64()).ToArray();
             }
 
-            Assert.Equal(new[] { evaluationIds[1], evaluationIds[5] }.Order(), (await GetIdsByStateAsync("APROBADA")).Order());
-            Assert.Empty(await GetIdsByStateAsync("BORRADOR"));
-            Assert.Empty(await GetIdsByStateAsync("RECHAZADA"));
-            Assert.Empty(await GetIdsByStateAsync("CERRADA"));
-            Assert.Empty(await GetIdsByStateAsync("EN_REVISION"));
+            Assert.Equal(new[] { evaluationIds[0], evaluationIds[1], evaluationIds[4], evaluationIds[5] }.Order(), (await GetIdsByStateAsync("APROBADA")).Order());
+            Assert.Equal(new[] { evaluationIds[2], evaluationIds[7] }.Order(), (await GetIdsByStateAsync("BORRADOR")).Order());
+            Assert.Equal(new[] { evaluationIds[3] }.Order(), (await GetIdsByStateAsync("RECHAZADA")).Order());
+            Assert.Equal(new[] { evaluationIds[6] }.Order(), (await GetIdsByStateAsync("CERRADA")).Order());
+            Assert.Equal(new[] { evaluationIds[8] }.Order(), (await GetIdsByStateAsync("EN_REVISION")).Order());
 
             using var scope = app.Services.CreateScope();
             IMatricesRiesgosAppService service = scope.ServiceProvider.GetRequiredService<IMatricesRiesgosAppService>();

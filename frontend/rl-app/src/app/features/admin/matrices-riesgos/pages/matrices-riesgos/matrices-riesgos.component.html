@@ -90,7 +90,7 @@
     <nav class="flex w-full sm:w-auto items-center gap-1 sm:gap-1.5" aria-label="Secciones de Matrices de Riesgos" role="tablist">
       @for (opcion of [
         { id: 'evaluaciones', texto: 'Evaluaciones' },
-        { id: 'consolidado', texto: 'Consolidado' },
+        { id: 'consolidado', texto: 'Evaluaciones consolidadas' },
         { id: 'plantillas', texto: 'Plantillas' }
       ]; track opcion.id) {
             <button type="button" data-ui-control="navigation"
@@ -250,7 +250,7 @@
         </div>
       }
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div><h2 class="text-lg font-bold text-gray-900">Matriz Consolidada</h2><p class="text-xs text-gray-500">Proyección relacional tipada y exportable institucionalmente.</p></div>
+        <div><h2 class="text-lg font-bold text-gray-900">Evaluaciones de Riesgo Consolidadas</h2><p class="text-xs text-gray-500">Proyección relacional tipada y exportable institucionalmente.</p></div>
         <div class="flex flex-wrap gap-2">
           <button type="button" title="Actualizar matriz consolidada" aria-label="Actualizar matriz consolidada" class="inline-flex h-10 w-10 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-sm" (click)="cargarConsolidado()">
             <app-action-icon action="refresh"></app-action-icon>
