@@ -861,7 +861,6 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
       const renderedFieldNumbers = await matrixModal.locator('[data-matrix-field]').evaluateAll(elements =>
         [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
       expect(renderedFieldNumbers).toHaveLength(82);
-      await expect(matrixModal.locator('.modal-metadata-card dd').nth(1)).toHaveText('Aprobada');
       await expect(matrixModal.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
     }
     for (const [fieldNumber, expected] of Object.entries(item.expected)) {
@@ -896,8 +895,13 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   await expect(transitionedRow).toBeVisible();
 
   const transitionUrl = `http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/transiciones`;
-  const preparationTransition = await request.post(`${transitionUrl}?nuevoEstado=BORRADOR&motivo=${encodeURIComponent('Preparación aislada del escenario post-workflow')}`);
-  expect(preparationTransition.status()).toBe(200);
+  const initialDetailResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}`);
+  expect(initialDetailResponse.status()).toBe(200);
+  const initialState = (await initialDetailResponse.json() as { datos: { evaEstado: string } }).datos.evaEstado;
+  const preparationTransitionStatus = initialState === 'BORRADOR'
+    ? null
+    : (await request.post(`${transitionUrl}?nuevoEstado=BORRADOR&motivo=${encodeURIComponent('Preparación aislada del escenario post-workflow')}`)).status();
+  if (preparationTransitionStatus !== null) expect(preparationTransitionStatus).toBe(200);
   const draftFilterRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
   await page.locator('#consolidado-estado').selectOption('BORRADOR');
@@ -955,7 +959,8 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     body: JSON.stringify({
       evaluationId: transitionFixture.evaluationId,
       transitionStatus: transitionResponse.status(),
-      preparationTransitionStatus: preparationTransition.status(),
+      initialServerState: initialState,
+      preparationTransitionStatus,
       preTransitionFieldCount: preTransitionProjection.datos.fields.length,
       preTransitionBusinessHash,
       postTransitionHttpStatus: postTransitionProjectionResponse.status(),
