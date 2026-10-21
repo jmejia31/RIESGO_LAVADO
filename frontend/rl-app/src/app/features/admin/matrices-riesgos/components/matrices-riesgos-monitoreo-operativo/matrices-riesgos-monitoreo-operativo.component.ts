@@ -59,7 +59,8 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
 
   etiquetaEstadoEvaluacion(estado: string): string {
     const codigo = estado.trim().toUpperCase();
-    return this.catalogoEstadosEvaluacion().find(item => item.codigo === codigo)?.etiqueta ?? estado;
+    const catalogo = this.catalogoEstadosEvaluacion();
+    return (Array.isArray(catalogo) ? catalogo : []).find(item => item.codigo === codigo)?.etiqueta ?? estado;
   }
 
   get opcionesEvaluacion(): BoundedSelectOption[] {
@@ -94,7 +95,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     if (typeof cargarCatalogo === 'function') {
       cargarCatalogo.call(this.service).subscribe({
         next: estados => {
-          this.catalogoEstadosEvaluacion.set(estados);
+          this.catalogoEstadosEvaluacion.set(Array.isArray(estados) ? estados : []);
           this.cdr.markForCheck();
         }
       });

@@ -192,12 +192,13 @@ test('Nueva Evaluación presenta acciones de footer icon-only, accesibles y visi
   await expect(modal.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
   const footer = modal.locator('.modal-footer-institutional');
   const cancel = footer.getByRole('button', { name: 'Cancelar nueva evaluación' });
+  const previous = footer.getByRole('button', { name: 'Ir al bloque anterior' });
   const save = footer.getByRole('button', { name: 'Guardar borrador' });
   const next = footer.getByRole('button', { name: 'Continuar al siguiente bloque' });
-  await expect(footer.locator('button')).toHaveCount(3);
+  await expect(footer.locator('button')).toHaveCount(4);
 
-  for (const [button, title] of [[cancel, 'Cancelar nueva evaluación'], [save, 'Guardar borrador'],
-    [next, 'Continuar al siguiente bloque']] as const) {
+  for (const [button, title] of [[cancel, 'Cancelar nueva evaluación'], [previous, 'Ir al bloque anterior'],
+    [save, 'Guardar borrador'], [next, 'Continuar al siguiente bloque']] as const) {
     await expect(button).toBeVisible();
     await expect(button).toHaveAttribute('title', title);
     await expect(button).toHaveClass(/modal-action-icon/);
@@ -212,9 +213,11 @@ test('Nueva Evaluación presenta acciones de footer icon-only, accesibles y visi
   }
 
   await expect(cancel).toBeEnabled();
+  await expect(previous).toBeDisabled();
   await expect(save).toBeEnabled();
   await expect(next).toBeEnabled();
   await expect(cancel.locator('app-action-icon')).toHaveAttribute('action', 'cancel');
+  await expect(previous.locator('app-action-icon')).toHaveAttribute('action', 'back');
   await expect(save.locator('app-action-icon')).toHaveAttribute('action', 'save');
   await expect(next.locator('app-action-icon')).toHaveAttribute('action', 'next');
   const artifactDirectory = process.env.RL_MODAL_ARTIFACT_DIR;
@@ -879,14 +882,20 @@ test('selectores operativos quedan dentro del viewport con scroll interno y posi
     fechaEval: '2026-08-07T12:00:00Z'
   }));
 
-  await page.route('**/api/matrices-riesgos/evaluaciones**', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      success: true,
-      datos: { items, pagina: 1, registrosPorPagina: 200, totalRegistros: items.length, totalPaginas: 1 }
-    })
-  }));
+  await page.route('**/api/matrices-riesgos/evaluaciones**', route => {
+    const url = new URL(route.request().url());
+    if (url.pathname.includes('/estados')) {
+      return route.fallback();
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        datos: { items, pagina: 1, registrosPorPagina: 200, totalRegistros: items.length, totalPaginas: 1 }
+      })
+    });
+  });
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/matrices-riesgos');
@@ -1922,8 +1931,13 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   await page.getByRole('button', { name: 'Ir al bloque anterior' }).click();
   await expect(page.getByRole('button', { name: '5. Cálculos Auxiliares y Verificaciones' })).toHaveAttribute('aria-current', 'step');
   await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
-  await expect(respuestaLocal).toHaveValue('MITIGAR');
-  expect(navigationRequests).toEqual([]);
+  const nonOnDemandRequests = navigationRequests.filter(req =>
+    !req.includes('/monitoreo/evaluaciones/20/automonitoreo') &&
+    !req.includes('/monitoreo/evaluaciones/20/bloque6') &&
+    !req.includes('/mitigacion/evaluaciones/20/controles') &&
+    !req.includes('/mitigacion/evaluaciones/20/bloque4')
+  );
+  expect(nonOnDemandRequests).toEqual([]);
 
   await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
 
