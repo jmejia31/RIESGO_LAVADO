@@ -840,12 +840,15 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     expect(listResponse.status(), `Consolidado request failed for ${item.riskCode}`).toBe(200);
     const row = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${item.evaluationId}"]`);
     await expect(row).toBeVisible();
+    const block6Request = page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${item.evaluationId}/bloque6`);
     const projectionRequest = page.waitForResponse(response =>
       response.request().method() === 'GET'
       && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${item.evaluationId}/proyeccion-institucional`);
     await row.locator('[data-matrix-open="complete"]').click();
     const projectionResponse = await projectionRequest;
     expect(projectionResponse.status(), `Projection request failed for ${item.riskCode}`).toBe(200);
+    expect((await block6Request).status(), `Monitoring fields failed for ${item.riskCode}`).toBe(200);
     const projectionBody = await projectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
     if (item === fixtures[0]) {
       expect(projectionBody.datos.evaluationId).toBe(item.evaluationId);
@@ -911,9 +914,12 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
 
   const preTransitionProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/proyeccion-institucional`);
+  const preTransitionBlock6Request = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${transitionFixture.evaluationId}/bloque6`);
   await transitionedRow.locator('[data-matrix-open="complete"]').click();
   const preTransitionProjectionResponse = await preTransitionProjectionRequest;
   expect(preTransitionProjectionResponse.status()).toBe(200);
+  expect((await preTransitionBlock6Request).status()).toBe(200);
   const preTransitionProjection = await preTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
   expect(preTransitionProjection.datos.evaluationId).toBe(transitionFixture.evaluationId);
   expect(preTransitionProjection.datos.fields).toHaveLength(82);
@@ -938,8 +944,13 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   page.on('response', traceMatrixRequests);
   const postTransitionProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/proyeccion-institucional`);
+  const postTransitionBlock6Request = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${transitionFixture.evaluationId}/bloque6`);
   await transitionedRow.locator('[data-matrix-open="complete"]').click();
   const postTransitionProjectionResponse = await postTransitionProjectionRequest;
+  const postTransitionBlock6Response = await postTransitionBlock6Request;
+  workflowMatrixTrace.push({ method: 'GET', path: new URL(postTransitionBlock6Response.url()).pathname, status: postTransitionBlock6Response.status() });
+  expect(postTransitionBlock6Response.status()).toBe(200);
   const matrixModal = page.locator('[data-matrix-modal="complete"]');
   await expect(matrixModal).toBeVisible();
   await expect(matrixModal.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
