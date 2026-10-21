@@ -1,4 +1,6 @@
-import { expect, Page, test, expectHttpResponse } from './support/telemetry-test';
+import { expect, test, expectHttpResponse } from './support/telemetry-test';
+import type { Page, Response } from '@playwright/test';
+import { createHash } from 'node:crypto';
 
 type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
 
@@ -827,6 +829,8 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   expect((await initialConsolidatedRequest).status()).toBe(200);
 
   let uiCalculationValues = 0;
+  let preTransitionBusinessHash = '';
+  const workflowMatrixTrace: Array<{ method: string; path: string; status: number }> = [];
   for (const item of fixtures) {
     const listRequest = page.waitForResponse(response =>
       response.request().method() === 'GET'
@@ -842,8 +846,24 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     await row.locator('[data-matrix-open="complete"]').click();
     const projectionResponse = await projectionRequest;
     expect(projectionResponse.status(), `Projection request failed for ${item.riskCode}`).toBe(200);
+    const projectionBody = await projectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
+    if (item === fixtures[0]) {
+      expect(projectionBody.datos.evaluationId).toBe(item.evaluationId);
+      expect(projectionBody.datos.fields).toHaveLength(82);
+      preTransitionBusinessHash = createHash('sha256')
+        .update(JSON.stringify(projectionBody.datos.fields.map(field => [field.fieldNumber, field.value, field.state])))
+        .digest('hex');
+    }
     const matrixModal = page.locator('[data-matrix-modal="complete"]');
     await expect(matrixModal).toBeVisible();
+    await expect(matrixModal.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
+    if (item === fixtures[0]) {
+      const renderedFieldNumbers = await matrixModal.locator('[data-matrix-field]').evaluateAll(elements =>
+        [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
+      expect(renderedFieldNumbers).toHaveLength(82);
+      await expect(matrixModal.locator('.modal-metadata-card dd').nth(1)).toHaveText('Aprobada');
+      await expect(matrixModal.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
+    }
     for (const [fieldNumber, expected] of Object.entries(item.expected)) {
       const ordinal = fieldNumber.padStart(2, '0');
       const displayed = (await matrixModal.locator(`[data-matrix-field="${ordinal}"] dd`).innerText()).trim();
@@ -860,6 +880,96 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     await matrixModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
     await expect(matrixModal).toBeHidden();
   }
+
+  const transitionFixture = fixtures[0];
+  const evaluationsTab = page.getByRole('tab', { name: 'Evaluaciones', exact: true });
+  const traceMatrixRequests = (response: Response): void => {
+    const url = new URL(response.url());
+    if (url.port !== '5043' || !url.pathname.startsWith('/api/matrices-riesgos/')) return;
+    workflowMatrixTrace.push({ method: response.request().method(), path: url.pathname, status: response.status() });
+  };
+  page.on('response', traceMatrixRequests);
+  await evaluationsTab.click();
+  const evaluationSearch = page.locator('#filtro-buscar');
+  const evaluationListRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === '/api/matrices-riesgos/evaluaciones');
+  await evaluationSearch.fill(transitionFixture.riskCode);
+  expect((await evaluationListRequest).status()).toBe(200);
+  const evaluationRow = page.locator('#panel-evaluaciones tbody tr').filter({ hasText: transitionFixture.riskCode });
+  await expect(evaluationRow).toBeVisible();
+  await evaluationRow.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
+  const followUp = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
+  await expect(followUp.locator('.modal-header-institutional p strong')).toHaveText('Aprobada');
+  await followUp.locator('#seg-nuevo-estado').selectOption('BORRADOR');
+  await page.locator('#seg-motivo').fill('Reproducción aislada de lectura posterior al workflow');
+  const transitionResponsePromise = page.waitForResponse(response => response.request().method() === 'POST'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/transiciones`);
+  await followUp.getByRole('button', { name: 'Aplicar transición de estado' }).click();
+  const transitionResponse = await transitionResponsePromise;
+  expect(transitionResponse.status()).toBe(200);
+  await expect(followUp.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
+  const historyResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/flujos`);
+  workflowMatrixTrace.push({ method: 'GET', path: new URL(historyResponse.url()).pathname, status: historyResponse.status() });
+  expect(historyResponse.status()).toBe(200);
+  expect((await historyResponse.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado)).toContain('BORRADOR');
+  await followUp.getByRole('button', { name: 'Cerrar seguimiento' }).last().click();
+
+  const consolidatedTab = page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i });
+  const consolidatedRefresh = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await consolidatedTab.click();
+  expect((await consolidatedRefresh).status()).toBe(200);
+  const consolidatedSearch = page.locator('#consolidado-buscar');
+  const filteredConsolidated = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await consolidatedSearch.fill(transitionFixture.riskCode);
+  expect((await filteredConsolidated).status()).toBe(200);
+  const transitionedRow = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${transitionFixture.evaluationId}"]`);
+  await expect(transitionedRow).toBeVisible();
+  await expect(transitionedRow).toContainText('Borrador');
+  const postTransitionProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/proyeccion-institucional`);
+  await transitionedRow.locator('[data-matrix-open="complete"]').click();
+  const postTransitionProjectionResponse = await postTransitionProjectionRequest;
+  const matrixModal = page.locator('[data-matrix-modal="complete"]');
+  await expect(matrixModal).toBeVisible();
+  await expect(matrixModal.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
+  const postTransitionBody = postTransitionProjectionResponse.status() === 200
+    ? await postTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } }
+    : null;
+  const postTransitionFieldNumbers = postTransitionBody?.datos.fields.map(field => field.fieldNumber) ?? [];
+  const renderedPostTransitionNumbers = await matrixModal.locator('[data-matrix-field]').evaluateAll(elements =>
+    [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
+  const warningVisible = await matrixModal.getByText(/La evaluación fue modificada por otra sesión o usuario/).count() > 0
+    || await page.getByText(/La evaluación fue modificada por otra sesión o usuario/).count() > 0;
+  page.off('response', traceMatrixRequests);
+  const postTransitionBusinessHash = postTransitionBody
+    ? createHash('sha256').update(JSON.stringify(postTransitionBody.datos.fields.map(field => [field.fieldNumber, field.value, field.state]))).digest('hex')
+    : null;
+  await test.info().attach('post-workflow-full-matrix-diagnostic', {
+    body: JSON.stringify({
+      evaluationId: transitionFixture.evaluationId,
+      transitionStatus: transitionResponse.status(),
+      preTransitionFieldCount: 82,
+      preTransitionBusinessHash,
+      postTransitionHttpStatus: postTransitionProjectionResponse.status(),
+      postTransitionResponseFieldCount: postTransitionFieldNumbers.length,
+      postTransitionRenderedFieldCount: renderedPostTransitionNumbers.length,
+      postTransitionState: (await matrixModal.locator('.modal-metadata-card dd').nth(1).textContent())?.trim() ?? null,
+      warningVisible,
+      blankBody: renderedPostTransitionNumbers.length === 0,
+      businessHashUnchanged: preTransitionBusinessHash === postTransitionBusinessHash,
+      requests: workflowMatrixTrace,
+    }, null, 2),
+    contentType: 'application/json',
+  });
+  expect(postTransitionProjectionResponse.status()).toBe(200);
+  expect(postTransitionBody?.datos.evaluationId).toBe(transitionFixture.evaluationId);
+  expect(postTransitionFieldNumbers).toHaveLength(82);
+  expect(renderedPostTransitionNumbers).toHaveLength(82);
+  await expect(matrixModal.locator('.modal-metadata-card dd').nth(1)).toHaveText('Borrador');
+  expect(warningVisible).toBe(false);
+  expect(postTransitionBusinessHash).toBe(preTransitionBusinessHash);
 
   expect(uiCalculationValues).toBe(2006);
   console.log('BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006');
