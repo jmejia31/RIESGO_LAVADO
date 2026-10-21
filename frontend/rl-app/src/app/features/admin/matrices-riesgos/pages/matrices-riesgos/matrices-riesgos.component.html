@@ -287,7 +287,7 @@
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
             @for (fila of consolidadoPaginado(); track fila.evaluacionId) {
-              <tr class="hover:bg-gray-50/50 transition-colors">
+              <tr class="hover:bg-gray-50/50 transition-colors" [attr.data-evaluacion-id]="fila.evaluacionId">
                 <td class="px-6 py-4 font-bold text-gray-900">{{ fila.codigoRiesgo }}</td>
                 <td class="px-6 py-4">{{ fila.areaPrincipal }}</td>
                 <td class="px-6 py-4">{{ fila.duenoRiesgo }}</td>

@@ -834,8 +834,8 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     await page.locator('#consolidado-buscar').fill(item.riskCode);
     const listResponse = await listRequest;
     expect(listResponse.status(), `Consolidado request failed for ${item.riskCode}`).toBe(200);
-    const row = page.locator('#panel-consolidado tbody tr').filter({ hasText: item.riskCode });
-    await expect(row).toHaveCount(1);
+    const row = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${item.evaluationId}"]`);
+    await expect(row).toBeVisible();
     const projectionRequest = page.waitForResponse(response =>
       response.request().method() === 'GET'
       && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${item.evaluationId}/proyeccion-institucional`);

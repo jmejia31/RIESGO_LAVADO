@@ -7,9 +7,24 @@
         <p class="mt-1 max-w-3xl text-sm text-slate-600">Administre fórmulas, funciones y parámetros versionados. Reglas y catálogos continúan utilizando sus fuentes institucionales existentes.</p>
       </div>
     </div>
-    <nav class="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4" aria-label="Dominios de configuración de cálculo">
+    <nav class="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4" aria-label="Dominios de configuración de cálculo" role="tablist">
       @for (item of [{id:'formulas', label:'Fórmulas'}, {id:'funciones', label:'Funciones'}, {id:'parametros', label:'Parámetros'}, {id:'reglas', label:'Reglas de cálculo'}, {id:'catalogos', label:'Catálogos'}]; track item.id) {
-        <button type="button" class="rounded-xl border px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-500/30" [class.border-ihss-600]="tab() === item.id" [class.bg-ihss-600]="tab() === item.id" [class.text-white]="tab() === item.id" [class.border-slate-200]="tab() !== item.id" [class.text-slate-700]="tab() !== item.id" (click)="seleccionarTab($any(item.id))">{{ item.label }}</button>
+        <button type="button"
+          role="tab"
+          [attr.id]="'tab-' + item.id"
+          [attr.aria-selected]="tab() === item.id"
+          [attr.tabindex]="tab() === item.id ? 0 : -1"
+          class="rounded-xl border px-4 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ihss-600/30"
+          [class.border-ihss-700]="tab() === item.id"
+          [class.bg-ihss-700]="tab() === item.id"
+          [class.text-white]="tab() === item.id"
+          [class.shadow-sm]="tab() === item.id"
+          [class.border-slate-300]="tab() !== item.id"
+          [class.bg-white]="tab() !== item.id"
+          [class.text-slate-700]="tab() !== item.id"
+          [class.hover:bg-slate-50]="tab() !== item.id"
+          [class.hover:text-slate-900]="tab() !== item.id"
+          (click)="seleccionarTab($any(item.id))">{{ item.label }}</button>
       }
     </nav>
   </header>

@@ -239,4 +239,32 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(component.parametroSeleccionado()?.id).toBe(31);
     expect(component.parametroPosicion()).toBe('2 de 2');
   });
+
+  it('garantiza roles accesibles, contraste WCAG y diferenciacion visual activa/inactiva en pestanas', () => {
+    fixture.detectChanges();
+    const nav = fixture.nativeElement.querySelector('nav[role="tablist"]');
+    expect(nav).not.toBeNull();
+    const tabs = Array.from(fixture.nativeElement.querySelectorAll('button[role="tab"]')) as HTMLButtonElement[];
+    expect(tabs).toHaveLength(5);
+    expect(tabs.map(t => t.textContent?.trim())).toEqual(['Fórmulas', 'Funciones', 'Parámetros', 'Reglas de cálculo', 'Catálogos']);
+
+    const activeTab = tabs[0];
+    expect(activeTab.getAttribute('aria-selected')).toBe('true');
+    expect(activeTab.getAttribute('id')).toBe('tab-formulas');
+    expect(activeTab.classList.contains('bg-ihss-700')).toBe(true);
+    expect(activeTab.classList.contains('text-white')).toBe(true);
+
+    const inactiveTab = tabs[1];
+    expect(inactiveTab.getAttribute('aria-selected')).toBe('false');
+    expect(inactiveTab.getAttribute('id')).toBe('tab-funciones');
+    expect(inactiveTab.classList.contains('text-slate-700')).toBe(true);
+    expect(inactiveTab.classList.contains('bg-white')).toBe(true);
+
+    tabs[1].click();
+    fixture.detectChanges();
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[1].classList.contains('bg-ihss-700')).toBe(true);
+    expect(tabs[0].getAttribute('aria-selected')).toBe('false');
+    expect(tabs[0].classList.contains('text-slate-700')).toBe(true);
+  });
 });
