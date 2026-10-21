@@ -9532,14 +9532,22 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 - **Inicio:** se continuó desde desarrollo, HEAD=origin/desarrollo=8a1fde8f5860c7a46b12c22726215d0fa0af88af. Sin cambios en producción ni lectura de navegador.
 - **Implementación de diagnóstico:** se añadió un modo explícito a la prueba browser que, solo con BLOCK12_EXPECT_PREFX_REPRODUCTION=true, verifica el escenario tras tres seguimientos y exige HTTP 409 en lectura, HTTP 200 en monitoreo, encabezado Aprobada, cero campos visibles, warning de falsa concurrencia y hash estable de ID, metodología, respuestas, cálculos y resultados VRI/VRR. Se agregó un script CI que obtiene el commit pre-fix 3325778c81dee92853044036945ae16ba0942311 en worktree temporal, usa el mismo servicio Oracle XE ya definido, el host/API real y el navegador Playwright existente; no crea infraestructura Oracle adicional.
-- **Validación local de arnés:** ash -n tools/run_block12_prefx_reproduction.sh PASS; git diff --check PASS; Playwright --list en copia temporal limpia enumeró 3 tests incluyendo el escenario afectado. Ejecución local browser/API/XE no realizada por falta de XE local; se reserva a CI disposable.
+- **Validación local de arnés:** bash -n tools/run_block12_prefx_reproduction.sh PASS; git diff --check PASS; Playwright --list en copia temporal limpia enumeró 3 tests incluyendo el escenario afectado. Ejecución local browser/API/XE no realizada por falta de XE local; se reserva a CI disposable.
 - **Estado de evidencia:** R1_BEFORE_FIX_REPRODUCTION=PENDING hasta obtener el CI nuevo exacto. El gate se considera pass únicamente si el antiguo source presenta conjuntamente status/warning/cuerpo vacíos y los valores de negocio permanecen iguales. La cobertura post-fix de tres seguimientos ya tiene CI success heredado del SHA 3320ca00fe5b8dcfbb66642021aa5e5e39714d65 (run 39676049332); R11 global continúa parcial, aunque ROP-CUMP-59 y ROP-CUMP-58 se vieron con 82 campos en el smoke solo lectura.
-- **Archivos propios:** .github/workflows/quality-gates.yml, 	ools/run_block12_prefx_reproduction.sh, rontend/rl-app/e2e/block7-oracle-real.spec.ts, bitácora y estado vivo. Los cuatro tracked ajenos y los grupos untracked ajenos siguen fuera del stage.
+- **Archivos propios:** .github/workflows/quality-gates.yml, tools/run_block12_prefx_reproduction.sh, frontend/rl-app/e2e/block7-oracle-real.spec.ts, bitácora y estado vivo. Los cuatro tracked ajenos y los grupos untracked ajenos siguen fuera del stage.
 - **Continuación:** publicar estos cambios y esperar Quality Gates del SHA exacto. Si el pre-fix arnés falla por error propio, repararlo sin dejar desarrollo rojo; no cerrar Block12 hasta completar R1/R11 y los demás gates pendientes. git diff --check PASS.
 
 
 ## 2026-10-21 16:25 -06:00 - Corrección del arranque del gate pre-fix (COD)
 
 - Quality Gates 39685201111, SHA 8a33d9ee7a9dc641671970e1f6cb37292db6b5bc, ejecutó las suites base y la regresión browser post-fix, pero falló al iniciar el nuevo paso: Permission denied al invocar el script porque su modo ejecutable no estaba marcado en Git. La reproducción pre-fix no se ejecutó; no se atribuye a fallo funcional.
-- Se cambió el paso para lanzar explícitamente ash ./tools/run_block12_prefx_reproduction.sh. El diagnóstico conserva el mismo script/host/XE. R1_BEFORE_FIX_REPRODUCTION=PENDING hasta la siguiente ejecución exacta.
+- Se cambió el paso para lanzar explícitamente bash ./tools/run_block12_prefx_reproduction.sh. El diagnóstico conserva el mismo script/host/XE. R1_BEFORE_FIX_REPRODUCTION=PENDING hasta la siguiente ejecución exacta.
 - Solo se actualizan el workflow y estos dos documentos; ningún cambio ajeno se incluye. git diff --check y validación documental se repetirán antes de commit.
+
+
+## 2026-10-21 16:36 -06:00 - Aislamiento del usuario de fixture en el gate pre-fix (COD)
+
+- Quality Gates 39686384005, SHA 09ad2cacfc5f1f116fa462c1a00b1d6365edf9bc, completó la suite normal y arrancó el host pre-fix desde el worktree temporal, pero la siembra terminó en ORA-00001 por la colisión del usuario fijo 987654 que el E2E normal dejó en el mismo XE. No hubo request de Matriz completa ni reproducción; R1 sigue pendiente.
+- Se confirmó que el host E2E deja ese ID fijo en el XE disposable. El script sustituye 987654 solo en el Program.cs temporal y el token del navegador temporal por un ID alto derivado de GITHUB_RUN_ID, para aislar ambas ejecuciones sin limpiar tablas compartidas.
+- El CI 39685201111 anterior no llegó a ejecutar el script por su modo de invocación; ese problema se corrigió ejecutándolo mediante bash. Próximo paso: publicar el ajuste y repetir Quality Gates, comprobando el marcador diagnóstico.
+- Producción sigue sin mutaciones; ningún dato productivo participa en la prueba.

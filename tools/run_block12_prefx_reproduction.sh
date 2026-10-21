@@ -6,6 +6,7 @@ prefx_sha="3325778c81dee92853044036945ae16ba0942311"
 temp_root="${RUNNER_TEMP:-/tmp}"
 prefx_root="$temp_root/block12-prefx-$GITHUB_RUN_ID"
 api_log="$temp_root/block12-prefx-api-$GITHUB_RUN_ID.log"
+prefx_user_id=$((9900000000 + GITHUB_RUN_ID % 99999998))
 
 if [[ -z "${BLOCK12_PREFX_ORACLE_CONNECTION_STRING:-}" ]]; then
   echo 'BLOCK12_PREFX_ORACLE_CONNECTION_STRING is required.' >&2
@@ -30,6 +31,11 @@ git -C "$repo_root" worktree add --detach "$prefx_root" FETCH_HEAD
 
 # Run the current diagnostic E2E against the historical defective app source.
 cp "$repo_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts" \
+  "$prefx_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts"
+# The normal E2E host uses a fixed user id and leaves that row in the shared XE schema.
+# Give this isolated historical run a run-scoped user id in both its host and browser token.
+sed -i "s/987654/$prefx_user_id/g" \
+  "$prefx_root/tools/Block7OracleE2EHost/Program.cs" \
   "$prefx_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts"
 ln -s "$repo_root/frontend/rl-app/node_modules" "$prefx_root/frontend/rl-app/node_modules"
 
