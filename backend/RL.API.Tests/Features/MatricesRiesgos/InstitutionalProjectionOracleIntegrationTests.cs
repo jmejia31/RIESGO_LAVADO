@@ -221,7 +221,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 fixtureIndex++;
             }
 
-            await using var app = await CreateBlock7ApiAsync(connectionString);
+            await using var app = await CreateBlock7ApiAsync(connectionString, useBoundedConnectionPool: true);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
             using var http = new HttpClient { BaseAddress = new Uri(address) };
             int validTransitions = 0;
@@ -238,7 +238,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 if (transition.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     failedValidTransitions++;
-                    Assert.Fail($"La transición válida {actual} → {destino} falló con HTTP {(int)transition.StatusCode}.");
+                    string errorDetail = await transition.Content.ReadAsStringAsync();
+                    Assert.Fail($"La transición válida {actual} → {destino} falló con HTTP {(int)transition.StatusCode}: {errorDetail}");
                 }
 
                 Assert.Equal(destino, await ScalarTextAsync(seed,
@@ -261,7 +262,11 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 using HttpResponseMessage selfTransition = await http.PostAsync(
                     $"/api/matrices-riesgos/evaluaciones/{evaluationId}/transiciones?nuevoEstado={Uri.EscapeDataString(destino)}&motivo=Self-transition+must+fail",
                     content: null);
-                Assert.Equal(System.Net.HttpStatusCode.BadRequest, selfTransition.StatusCode);
+                if (selfTransition.StatusCode != System.Net.HttpStatusCode.BadRequest)
+                {
+                    string selfDetail = await selfTransition.Content.ReadAsStringAsync();
+                    Assert.Fail($"La auto-transición {destino} → {destino} no fue rechazada con BadRequest: HTTP {(int)selfTransition.StatusCode}: {selfDetail}");
+                }
                 Assert.Equal(2, await ScalarIntAsync(seed,
                     "SELECT COUNT(*) FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id",
                     ("id", evaluationId)));
