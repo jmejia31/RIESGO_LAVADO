@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Data;
 using System.IO.Compression;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -226,12 +227,21 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             using var http = new HttpClient { BaseAddress = new Uri(address) };
             int validTransitions = 0;
             int failedValidTransitions = 0;
+            int postTransitionProjectionCount = 0;
+            int postTransitionBusinessParityCount = 0;
 
             fixtureIndex = 0;
             foreach (string actual in estados)
             foreach (string destino in estados.Where(estado => !estado.Equals(actual, StringComparison.OrdinalIgnoreCase)))
             {
                 long evaluationId = evaluationIds[fixtureIndex++];
+                using HttpResponseMessage beforeProjectionResponse = await http.GetAsync(
+                    $"/api/matrices-riesgos/evaluaciones/{evaluationId}/proyeccion-institucional");
+                Assert.Equal(System.Net.HttpStatusCode.OK, beforeProjectionResponse.StatusCode);
+                using JsonDocument beforeProjection = JsonDocument.Parse(await beforeProjectionResponse.Content.ReadAsStringAsync());
+                JsonElement beforeFields = beforeProjection.RootElement.GetProperty("datos").GetProperty("fields");
+                Assert.Equal(82, beforeFields.GetArrayLength());
+                string beforeBusinessHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(beforeFields.GetRawText())));
                 string query = $"nuevoEstado={Uri.EscapeDataString(destino)}&motivo={Uri.EscapeDataString($"Block 12 XE {actual} a {destino}")}";
                 using HttpResponseMessage transition = await http.PostAsync(
                     $"/api/matrices-riesgos/evaluaciones/{evaluationId}/transiciones?{query}", content: null);
@@ -251,6 +261,19 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 Assert.Equal(1, await ScalarIntAsync(seed,
                     "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID=:id AND AUD_TABLA='RL_MR_EVALUACIONES_RIESGO'",
                     ("id", evaluationId.ToString())));
+
+                using HttpResponseMessage afterProjectionResponse = await http.GetAsync(
+                    $"/api/matrices-riesgos/evaluaciones/{evaluationId}/proyeccion-institucional");
+                Assert.Equal(System.Net.HttpStatusCode.OK, afterProjectionResponse.StatusCode);
+                using JsonDocument afterProjection = JsonDocument.Parse(await afterProjectionResponse.Content.ReadAsStringAsync());
+                JsonElement afterProjectionData = afterProjection.RootElement.GetProperty("datos");
+                Assert.Equal(evaluationId, afterProjectionData.GetProperty("evaluationId").GetInt64());
+                JsonElement afterFields = afterProjectionData.GetProperty("fields");
+                Assert.Equal(82, afterFields.GetArrayLength());
+                string afterBusinessHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(afterFields.GetRawText())));
+                Assert.Equal(beforeBusinessHash, afterBusinessHash);
+                postTransitionProjectionCount++;
+                postTransitionBusinessParityCount++;
 
                 using HttpResponseMessage destinationsResponse = await http.GetAsync(
                     $"/api/matrices-riesgos/evaluaciones/{evaluationId}/transiciones-permitidas");
@@ -278,11 +301,19 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
             Assert.Equal(30, validTransitions);
             Assert.Equal(0, failedValidTransitions);
+            Assert.Equal(30, postTransitionProjectionCount);
+            Assert.Equal(30, postTransitionBusinessParityCount);
             Console.WriteLine("VALID_DIRECTED_STATE_CHANGES=30/30");
+            Console.WriteLine("POST_TRANSITION_FULL_MATRIX_AVAILABLE=30/30");
+            Console.WriteLine("POST_TRANSITION_FULL_MATRIX_FIELDS=2460/2460");
+            Console.WriteLine("POST_TRANSITION_BUSINESS_DATA_PARITY=30/30");
             Console.WriteLine("FAILED_VALID_STATE_CHANGES=0");
             Console.WriteLine("SELF_TRANSITION_BLOCKED=PASS");
             Console.WriteLine("AUDIT_HISTORY_CREATED=PASS");
             _output.WriteLine("VALID_DIRECTED_STATE_CHANGES=30/30");
+            _output.WriteLine("POST_TRANSITION_FULL_MATRIX_AVAILABLE=30/30");
+            _output.WriteLine("POST_TRANSITION_FULL_MATRIX_FIELDS=2460/2460");
+            _output.WriteLine("POST_TRANSITION_BUSINESS_DATA_PARITY=30/30");
             _output.WriteLine("FAILED_VALID_STATE_CHANGES=0");
             _output.WriteLine("SELF_TRANSITION_BLOCKED=PASS");
             _output.WriteLine("AUDIT_HISTORY_CREATED=PASS");
@@ -1308,6 +1339,26 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             JsonElement monitoredEvidence = fields[73].GetProperty("value");
             Assert.Contains("1. early-id-later",monitoredEvidence.GetString());
             Assert.True(serialized.Contains("early-id-later",StringComparison.Ordinal));
+
+            // The read contract must remain available regardless of the workflow state.
+            // Each state is supplied through the same canonical workflow history table
+            // used by the production projection query; no evaluation business data changes.
+            string[] workflowStates = ["APROBADA", "BORRADOR", "CERRADA", "EN_REVISION", "OBSERVADA", "RECHAZADA"];
+            int availableStates = 0;
+            foreach (string state in workflowStates)
+            {
+                await ExecuteAsync(connection,
+                    "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,:state,'projection read state coverage',:usr,:eventDate)",
+                    ("id", stamp + 700 + availableStates), ("eva", evaluationId), ("state", state), ("usr", userId), ("eventDate", baseDate.AddDays(availableStates + 1)));
+                using HttpResponseMessage stateResponse = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/proyeccion-institucional");
+                Assert.Equal(System.Net.HttpStatusCode.OK, stateResponse.StatusCode);
+                using JsonDocument stateBody = JsonDocument.Parse(await stateResponse.Content.ReadAsStringAsync());
+                Assert.Equal(evaluationId, stateBody.RootElement.GetProperty("evaluationId").GetInt64());
+                Assert.Equal(82, stateBody.RootElement.GetProperty("fields").GetArrayLength());
+                availableStates++;
+            }
+            Assert.Equal(6, availableStates);
+            _output.WriteLine("FULL_MATRIX_ORACLE_ALL_WORKFLOW_STATES=6/6");
             await app.StopAsync();
         }
         finally

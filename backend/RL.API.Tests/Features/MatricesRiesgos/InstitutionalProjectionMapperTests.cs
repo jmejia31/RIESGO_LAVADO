@@ -96,7 +96,7 @@ public sealed class InstitutionalProjectionMapperTests
     }
 
     [Fact]
-    public void Map_FailsClosedWhenRequiredFormulaKeyIsMissingForExistingControl()
+    public void Map_ProjectsMissingCalculationAsPendingWhenControlExists()
     {
         InstitutionalProjectionSource source = CreateSource();
         JsonObject calculations = JsonNode.Parse(source.Evaluation.EvaDataCalcJson)!.AsObject();
@@ -115,10 +115,10 @@ public sealed class InstitutionalProjectionMapperTests
             }]
         };
 
-        InstitutionalProjectionException exception = Assert.Throws<InstitutionalProjectionException>(
-            () => new InstitutionalProjectionMapper().Map(source));
+        InstitutionalEvaluationProjectionDto projection = new InstitutionalProjectionMapper().Map(source);
 
-        Assert.Contains(FormulaKey(22), exception.Message);
+        Assert.Null(projection.Fields[21].Value);
+        Assert.Equal("CALCULATION_PENDING", projection.Fields[21].State);
     }
 
     [Fact]
@@ -260,8 +260,14 @@ public sealed class InstitutionalProjectionMapperTests
         Assert.Contains("está vacío", exception.Message);
     }
 
-    [Fact]
-    public void Map_ProjectsIncompleteDraftWithExplicitPendingStatesAcrossAll82Fields()
+    [Theory]
+    [InlineData("APROBADA")]
+    [InlineData("BORRADOR")]
+    [InlineData("CERRADA")]
+    [InlineData("EN_REVISION")]
+    [InlineData("OBSERVADA")]
+    [InlineData("RECHAZADA")]
+    public void Map_ProjectsIncompleteEvaluationWithExplicitPendingStatesAcrossAll82Fields(string workflowState)
     {
         InstitutionalProjectionSource source = CreateSource() with
         {
@@ -269,7 +275,7 @@ public sealed class InstitutionalProjectionMapperTests
             {
                 EvaId = 123,
                 EvaRiesgoId = 456,
-                EvaEstado = "BORRADOR",
+                EvaEstado = workflowState,
                 EvaDataJson = "{}",
                 EvaDataCalcJson = "{}"
             }

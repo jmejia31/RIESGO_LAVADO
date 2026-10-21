@@ -117,7 +117,7 @@ public sealed class InstitutionalProjectionMapper
                     && formulaResult.ValueKind is not (JsonValueKind.Null or JsonValueKind.Undefined);
                 if (!hasFormulaResult) return (field.Number is 22 or 26 or 30 ? 0 : 0m, "ABSENT_CONTROL_PROJECTED");
             }
-            return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
+            return FromFormulaJson(calculations, JsonKey(field), MissingReadState(CalculationPendingState));
         }
         if (field.Number == 32)
         {
@@ -128,11 +128,11 @@ public sealed class InstitutionalProjectionMapper
         if (field.Number == 33)
         {
             if (OrderedControls(source).Count == 0 && !calculations.ContainsKey(JsonKey(field))) return (null, "LEGIT_FORMULA_BLANK");
-            return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
+            return FromFormulaJson(calculations, JsonKey(field), MissingReadState(CalculationPendingState));
         }
         if (field.Number == 39)
         {
-            (object? value, string state) = FromJson(answers, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, DraftInputPendingState));
+            (object? value, string state) = FromJson(answers, JsonKey(field), optional: false, missingDraftState: MissingReadState(DraftInputPendingState));
             if (value is null) return (null, state);
             try { return (MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", Convert.ToString(value, CultureInfo.InvariantCulture)!), state); }
             catch (InvalidOperationException exception) { throw new InstitutionalProjectionException("La respuesta de riesgo no pertenece al catálogo institucional: " + exception.Message); }
@@ -154,13 +154,13 @@ public sealed class InstitutionalProjectionMapper
         if (field.Number is 81 or 82)
             return Optional(field.Number == 81 ? source.Monitoring.ObservacionesArea : source.Monitoring.ObservacionesUgr, "MONITORING");
         if (field.Source.Equals("EXCEL_FORMULA", StringComparison.Ordinal))
-            return FromFormulaJson(calculations, JsonKey(field), MissingDraftState(source, CalculationPendingState));
+            return FromFormulaJson(calculations, JsonKey(field), MissingReadState(CalculationPendingState));
         if (field.Number is 17 or 18 or 19)
             return IsGtic(source, answers)
-                ? FromJson(answers, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, DraftInputPendingState))
+                ? FromJson(answers, JsonKey(field), optional: false, missingDraftState: MissingReadState(DraftInputPendingState))
                 : (null, "NOT_APPLICABLE");
         return FromJson(answers, JsonKey(field), optional: field.Requiredness == "OPTIONAL",
-            field.Requiredness == "REQUIRED" ? MissingDraftState(source, DraftInputPendingState) : null);
+            field.Requiredness == "REQUIRED" ? MissingReadState(DraftInputPendingState) : null);
     }
 
     private static (object? Value, string State) ResolveMitigation(
@@ -171,10 +171,9 @@ public sealed class InstitutionalProjectionMapper
         PlanMitigacionDto[] plans = source.Mitigation.Planes.OrderBy(plan => plan.PlaId).ToArray();
         ActividadPlanDto[] activities = plans.SelectMany(plan => plan.Actividades.OrderBy(activity => activity.ActId)).ToArray();
         bool mitigationApplies = MitigationApplies(source);
-        bool responsePending = string.Equals(source.Evaluation.EvaEstado, "BORRADOR", StringComparison.OrdinalIgnoreCase)
-            && (!answers.TryGetValue("respuesta_riesgo", out JsonElement response)
-                || response.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
-                || response.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(response.GetString()));
+        bool responsePending = !answers.TryGetValue("respuesta_riesgo", out JsonElement response)
+            || response.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+            || response.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(response.GetString());
         if (number == 41) return plans.Length == 0 && !mitigationApplies
             ? (null, responsePending ? "OPERATIONAL_PENDING" : "NOT_APPLICABLE") : (plans.Length, "VALUE");
         if (number == 43) return plans.Length == 0 && !mitigationApplies
@@ -273,8 +272,7 @@ public sealed class InstitutionalProjectionMapper
         return values.TryGetValue(key, out JsonElement value) && value.TryGetInt32(out int parsed) ? parsed : null;
     }
 
-    private static string? MissingDraftState(InstitutionalProjectionSource source, string pendingState) =>
-        string.Equals(source.Evaluation.EvaEstado, "BORRADOR", StringComparison.OrdinalIgnoreCase) ? pendingState : null;
+    private static string MissingReadState(string pendingState) => pendingState;
 
     private static (object? Value, string State) FromFormulaJson(
         IReadOnlyDictionary<string, JsonElement> source,
@@ -294,7 +292,7 @@ public sealed class InstitutionalProjectionMapper
         if (!source.TryGetValue(key, out JsonElement element) || element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
             return missingDraftState is not null ? (null, missingDraftState) : optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"Falta el valor requerido '{key}' para la proyección.");
         if (element.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(element.GetString()))
-            return missingDraftState is not null ? (null, missingDraftState) : optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"El valor requerido '{key}' está vacío.");
+            return optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"El valor requerido '{key}' está vacío.");
         object? value = element.ValueKind switch
         {
             JsonValueKind.String => Text(element.GetString()),

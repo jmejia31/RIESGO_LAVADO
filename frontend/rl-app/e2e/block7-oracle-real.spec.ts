@@ -919,11 +919,16 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   expect(fixtures.map(item => item.ordinal)).toEqual(Array.from({ length: 59 }, (_, index) => index + 1));
   expect(fixtures.reduce((count, item) => count + Object.keys(item.expected).length, 0)).toBe(2006);
   expect(Object.keys(fixtures.find(item => item.riskCode === 'ROP-CUMP-54')?.expected ?? {})).toHaveLength(34);
+  const transitionFixture = fixtures[0];
+  const uiEvaluation: { id?: number; data?: Record<string, unknown>; state?: string } = {
+    id: transitionFixture.evaluationId,
+    state: 'BORRADOR',
+  };
 
   const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/fixture');
   expect(fixtureResponse.ok()).toBeTruthy();
   const fixture = await fixtureResponse.json() as Fixture;
-  await installNonCriticalFixtures(page, fixture, {}, { useRealConsolidated: true });
+  await installNonCriticalFixtures(page, fixture, uiEvaluation, { useRealConsolidated: true });
   await page.goto('/matrices-riesgos');
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
   const initialConsolidatedRequest = page.waitForResponse(response =>
@@ -987,7 +992,6 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     await expect(matrixModal).toBeHidden();
   }
 
-  const transitionFixture = fixtures[0];
   const traceMatrixRequests = (response: Response): void => {
     const url = new URL(response.url());
     if (url.port !== '5043' || !url.pathname.startsWith('/api/matrices-riesgos/')) return;
@@ -1011,6 +1015,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   if (preparationTransitionStatus !== null) expect(preparationTransitionStatus).toBe(200);
   const draftFilterRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  uiEvaluation.state = 'BORRADOR';
   await page.locator('#consolidado-estado').selectOption('BORRADOR');
   expect((await draftFilterRequest).status()).toBe(200);
   await expect(transitionedRow).toBeVisible();
@@ -1037,10 +1042,67 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   expect(preTransitionRenderedNumbers).toHaveLength(82);
   await expect(preTransitionMatrix.locator('.modal-metadata-card dd').nth(1)).toHaveText('Borrador');
   await preTransitionMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  const preTransitionDetailResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}`);
+  expect(preTransitionDetailResponse.status()).toBe(200);
+  const preTransitionDetail = (await preTransitionDetailResponse.json() as { datos: {
+    evaId: number; evaRiesgoId: number; evaVersionId: number; evaDataJson: string; evaDataCalcJson: string; evaVri: number | null; evaVrr: number | null;
+  } }).datos;
+  const preTransitionCanonicalBusinessHash = createHash('sha256').update(JSON.stringify([
+    preTransitionDetail.evaId,
+    preTransitionDetail.evaRiesgoId,
+    preTransitionDetail.evaVersionId,
+    preTransitionDetail.evaDataJson,
+    preTransitionDetail.evaDataCalcJson,
+    preTransitionDetail.evaVri,
+    preTransitionDetail.evaVrr,
+  ])).digest('hex');
 
-  const transitionResponse = await request.post(`${transitionUrl}?nuevoEstado=APROBADA&motivo=${encodeURIComponent('Reproducción aislada de lectura posterior al workflow')}`);
+  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
+  await page.getByRole('button', { name: /Seguimiento de evaluaci.n/ }).click();
+  const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
+  await expect(followUpModal).toBeVisible();
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
+  await page.locator('#seg-motivo').fill('Full chain workflow to approval');
+  await page.locator('#seg-nuevo-estado').selectOption('APROBADA');
+  const transitionResponsePromise = page.waitForResponse(response => response.request().method() === 'POST'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/transiciones`);
+  await followUpModal.getByRole('button', { name: /Aplicar transici.n de estado/ }).click();
+  const transitionResponse = await transitionResponsePromise;
   workflowMatrixTrace.push({ method: 'POST', path: new URL(transitionResponse.url()).pathname, status: transitionResponse.status() });
   expect(transitionResponse.status()).toBe(200);
+  uiEvaluation.state = 'APROBADA';
+  await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Aprobada');
+  const postTransitionDetailResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}`);
+  expect(postTransitionDetailResponse.status()).toBe(200);
+  const postTransitionDetail = (await postTransitionDetailResponse.json() as { datos: {
+    evaId: number; evaRiesgoId: number; evaVersionId: number; evaDataJson: string; evaDataCalcJson: string; evaVri: number | null; evaVrr: number | null; evaEstado: string;
+  } }).datos;
+  expect(postTransitionDetail.evaId).toBe(transitionFixture.evaluationId);
+  expect(postTransitionDetail.evaEstado).toBe('APROBADA');
+  expect(createHash('sha256').update(JSON.stringify([
+    postTransitionDetail.evaId,
+    postTransitionDetail.evaRiesgoId,
+    postTransitionDetail.evaVersionId,
+    postTransitionDetail.evaDataJson,
+    postTransitionDetail.evaDataCalcJson,
+    postTransitionDetail.evaVri,
+    postTransitionDetail.evaVrr,
+  ])).digest('hex')).toBe(preTransitionCanonicalBusinessHash);
+  await followUpModal.getByRole('button', { name: 'Cerrar seguimiento' }).last().click();
+  await expect(followUpModal).toBeHidden();
+  const approvedListRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
+  expect((await approvedListRequest).status()).toBe(200);
+  const approvedFilterRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await page.locator('#consolidado-estado').selectOption('APROBADA');
+  expect((await approvedFilterRequest).status()).toBe(200);
+  const approvedSearchRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await consolidatedSearch.fill(transitionFixture.riskCode);
+  expect((await approvedSearchRequest).status()).toBe(200);
+  await expect(transitionedRow).toContainText('Aprobada');
   const historyResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}/flujos`);
   workflowMatrixTrace.push({ method: 'GET', path: new URL(historyResponse.url()).pathname, status: historyResponse.status() });
   expect(historyResponse.status()).toBe(200);
@@ -1093,7 +1155,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   expect(postTransitionBody?.datos.evaluationId).toBe(transitionFixture.evaluationId);
   expect(postTransitionFieldNumbers).toHaveLength(82);
   expect(renderedPostTransitionNumbers).toHaveLength(82);
-  await expect(matrixModal.locator('.modal-metadata-card dd').nth(1)).toHaveText('Borrador');
+  await expect(matrixModal.locator('.modal-metadata-card dd').nth(1)).toHaveText('Aprobada');
   expect(warningVisible).toBe(false);
   expect(postTransitionBusinessHash).toBe(preTransitionBusinessHash);
 

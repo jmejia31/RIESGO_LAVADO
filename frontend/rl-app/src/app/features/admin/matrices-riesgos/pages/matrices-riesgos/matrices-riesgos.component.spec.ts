@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Subject, of } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
@@ -17,6 +17,7 @@ describe('MatricesRiesgosComponent', () => {
     metodologiaVigente: ReturnType<typeof vi.fn>;
     metodologiaPorVersion: ReturnType<typeof vi.fn>;
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
+    obtenerProyeccionInstitucional: ReturnType<typeof vi.fn>;
     obtenerRiesgo: ReturnType<typeof vi.fn>;
     listarControles: ReturnType<typeof vi.fn>;
     listarPlanes: ReturnType<typeof vi.fn>;
@@ -135,6 +136,19 @@ describe('MatricesRiesgosComponent', () => {
         evaUsrEval: 1,
         evaVersionRow: 1,
         evaActivo: true
+      })),
+      obtenerProyeccionInstitucional: vi.fn().mockReturnValue(of({
+        evaluationId: 20,
+        riskCode: 'R-005',
+        fields: Array.from({ length: 82 }, (_, index) => ({
+          fieldNumber: index + 1,
+          fieldKey: `field_${index + 1}`,
+          fieldLabel: `Field ${index + 1}`,
+          valueType: 'text',
+          value: null,
+          state: 'OPERATIONAL_PENDING',
+          source: 'fixture',
+        })),
       })),
       obtenerRiesgo: vi.fn().mockReturnValue(of({ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo institucional', rieDescripcion: 'Evaluación', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T08:00:00' })),
       listarControles: vi.fn().mockReturnValue(of([])),
@@ -312,6 +326,65 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.valorCampoControl(MATRIX_BLOCK_2_FIELDS.find(field => field.ordinal === 27)!)).toBe('No aplica');
   });
 
+  it('refreshes workflow state from canonical detail and renders the 82-field projection', () => {
+    service.obtenerEvaluacion.mockReturnValue(of({
+      evaId: 20,
+      evaRiesgoId: 5,
+      evaVersionId: 10,
+      evaEstado: 'APROBADA',
+      evaDataJson: '{}',
+      evaDataCalcJson: '{}',
+      evaFechaEval: '2026-10-20T10:47:00',
+      evaUsrEval: 1,
+      evaVersionRow: 2,
+      evaActivo: true,
+    }));
+    component.abrirMatrizCompleta({
+      evaId: 20,
+      evaRiesgoId: 5,
+      riesgoCodigo: 'R-005',
+      riesgoNombre: 'Institutional risk',
+      evaVersionId: 10,
+      versionCodigo: 'FORM_A',
+      versionNumero: 2,
+      estado: 'BORRADOR',
+      evaEstado: 'BORRADOR',
+      fechaEval: '2026-08-14T00:00:00',
+    });
+    fixture.detectChanges();
+
+    expect(component.evaluacionResumenSeleccionada()?.estado).toBe('APROBADA');
+    expect(component.proyeccionMatrizCompleta()?.fields).toHaveLength(82);
+    const renderedFields = [...fixture.nativeElement.querySelectorAll('[data-matrix-field]')]
+      .map((element: Element) => Number(element.getAttribute('data-matrix-field')));
+    expect(new Set(renderedFields).size).toBe(82);
+    expect(component.matrizCompletaError()).toBeNull();
+  });
+
+  it('shows the actual read error for HTTP 409 without reporting an edit conflict', () => {
+    service.obtenerProyeccionInstitucional.mockReturnValue(throwError(() => ({
+      status: 409,
+      error: { success: false, mensaje: 'Read projection data is incompatible with its contract.' },
+    })));
+    component.abrirMatrizCompleta({
+      evaId: 20,
+      evaRiesgoId: 5,
+      riesgoCodigo: 'R-005',
+      riesgoNombre: 'Institutional risk',
+      evaVersionId: 10,
+      versionCodigo: 'FORM_A',
+      versionNumero: 2,
+      estado: 'APROBADA',
+      evaEstado: 'APROBADA',
+      fechaEval: '2026-10-20T10:47:00',
+    });
+    fixture.detectChanges();
+
+    expect(component.matrizCompletaError()).toBe('Read projection data is incompatible with its contract.');
+    expect(fixture.nativeElement.querySelector('[data-matrix-view="complete"] [role="alert"]')?.textContent)
+      .toContain('incompatible');
+    expect(component.matrizCompletaError()).not.toContain('modified by another session');
+  });
   it('normaliza mojibake del catálogo maestro de riesgos antes de renderizarlo', () => {
     const bad = '\u00EF\u00BF\u00BD';
     service.listarRiesgosPaginados.mockReturnValue(of({

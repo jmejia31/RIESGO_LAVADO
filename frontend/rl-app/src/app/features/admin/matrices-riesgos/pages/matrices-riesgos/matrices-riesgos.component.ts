@@ -1975,7 +1975,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         },
         error: error => {
           if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
-          this.matrizCompletaError.set(this.obtenerMensajeError(error, 'No se pudo cargar la proyección institucional canónica.'));
+          this.matrizCompletaError.set(this.obtenerMensajeErrorLectura(error, 'No se pudo cargar la proyección institucional canónica.'));
           this.proyeccionMatrizCompletaEnCarga.set(false);
         }
       });
@@ -1985,6 +1985,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: detalle => {
         if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
         this.evaluacionSeleccionada.set(detalle);
+        this.evaluacionResumenSeleccionada.update(actual => actual
+          ? {
+            ...actual,
+            estado: detalle.evaEstado,
+            evaEstado: detalle.evaEstado,
+            evaVersionId: detalle.evaVersionId,
+            fechaEval: detalle.evaFechaEval,
+            evaFechaEval: detalle.evaFechaEval,
+          }
+          : actual);
         this.riesgoId.set(detalle.evaRiesgoId);
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
         this.cargarControlesMatrizCompleta(detalle.evaId, solicitudId);
@@ -2007,7 +2017,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           },
           error: error => {
             if (solicitudId === this.secuenciaCargaMatrizCompleta)
-              this.bloque6MatrizError.set(this.obtenerMensajeError(error, 'No se pudo cargar el monitoreo y las observaciones.'));
+              this.bloque6MatrizError.set(this.obtenerMensajeErrorLectura(error, 'No se pudo cargar el monitoreo y las observaciones.'));
           }
         });
         this.cargarMetodologiaMatrizCompleta(detalle.evaVersionId, solicitudId);
@@ -2025,14 +2035,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           },
           error: error => {
             if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
-            this.matrizCompletaError.set(this.obtenerMensajeError(error, 'No se pudo recuperar el riesgo maestro vinculado a la evaluación.'));
+            this.matrizCompletaError.set(this.obtenerMensajeErrorLectura(error, 'No se pudo recuperar el riesgo maestro vinculado a la evaluación.'));
             this.matrizCompletaEnCarga.set(false);
           }
         });
       },
       error: error => {
         if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
-        this.matrizCompletaError.set(this.obtenerMensajeError(error, 'No se pudo obtener la evaluación seleccionada.'));
+        this.matrizCompletaError.set(this.obtenerMensajeErrorLectura(error, 'No se pudo obtener la evaluación seleccionada.'));
         this.matrizCompletaEnCarga.set(false);
       }
     });
@@ -2279,7 +2289,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       error: error => {
         if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
         this.bloque4Matriz.set(null);
-        this.bloque4MatrizError.set(this.obtenerMensajeError(error, 'No se pudo cargar el plan de mitigación de la evaluación.'));
+        this.bloque4MatrizError.set(this.obtenerMensajeErrorLectura(error, 'No se pudo cargar el plan de mitigación de la evaluación.'));
         this.bloque4MatrizEnCarga.set(false);
       }
     });
@@ -2356,7 +2366,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       error: error => {
         if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
         this.metodologiaMatrizCompleta.set(null);
-        this.metodologiaMatrizCompletaError.set(this.obtenerMensajeError(error, `No se pudo cargar la metodología de la versión ${versionId}.`));
+        this.metodologiaMatrizCompletaError.set(this.obtenerMensajeErrorLectura(error, `No se pudo cargar la metodología de la versión ${versionId}.`));
         this.metodologiaMatrizCompletaEnCarga.set(false);
       }
     });
@@ -2379,7 +2389,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       error: error => {
         if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
         this.controlesMatrizCompleta.set([]);
-        this.controlesMatrizError.set(this.obtenerMensajeError(error, 'No se pudieron cargar los controles asociados.'));
+        this.controlesMatrizError.set(this.obtenerMensajeErrorLectura(error, 'No se pudieron cargar los controles asociados.'));
         this.controlesMatrizEnCarga.set(false);
       }
     });
@@ -3240,6 +3250,22 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
   }
 
+  private obtenerMensajeErrorLectura(error: unknown, mensaje: string): string {
+    const respuesta = error as {
+      error?: {
+        detail?: string;
+        mensaje?: string;
+        title?: string;
+        errors?: Record<string, string[]>;
+      };
+    };
+    const errorValidacion = Object.values(respuesta?.error?.errors ?? {}).flat().find(Boolean);
+    return respuesta?.error?.detail
+      || respuesta?.error?.mensaje
+      || errorValidacion
+      || respuesta?.error?.title
+      || mensaje;
+  }
   private obtenerMensajeError(error: unknown, mensaje: string): string {
     const respuesta = error as {
       status?: number;
