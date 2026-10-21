@@ -1,3 +1,15 @@
+## Continuación hotfix: dos seguimientos sobre la misma evaluación antes de abrir Consolidado (COD)
+
+- **Fecha/hora local:** 2026-10-21 15:15 -06:00 (America/Tegucigalpa).
+- **Autor:** COD.
+- **Rama y baseline:** `desarrollo`; inicio `1a1007f531edb0d7f0e5e181ed146926800318d3`; HEAD final de código/pruebas `3320ca00fe5b8dcfbb66642021aa5e5e39714d65`.
+- **Aclaración del propietario:** el defecto funcional se expresa en el flujo de la opción única **Evaluaciones** desde las acciones de **Dar seguimiento**. Tras uno o más seguimientos de una misma evaluación, la vista **Evaluaciones consolidadas** debe conservar la evaluación y mostrar la matriz completa. Se ajustó el E2E para ejecutar dos seguimientos sucesivos a la misma evaluación (BORRADOR→EN_REVISION→APROBADA) y abrir después la vista consolidada en el mismo contexto, sin `page.reload()`.
+- **Corrección del test:** la primera ejecución extendida (`39675020114`) encontró que la tabla de Evaluaciones no contiene el atributo `data-evaluacion-id`; se sustituyó por una búsqueda de la fila visible anclada al ID mostrado. No se modificó código funcional de aplicación en esta continuación.
+- **Verificación:** Quality Gates `39676049332`, URL https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/39676049332, terminó `completed/success` para SHA exacto `3320ca00fe5b8dcfbb66642021aa5e5e39714d65`. El E2E valida baseline 82 campos, dos transiciones reales en la misma evaluación, consulta de la evaluación consolidada posterior con estado actual y 82 campos, sin warning falso, blank body ni recarga. El run mantiene las pruebas Oracle XE de 6/6 estados, 30/30 transiciones post-matrix y 2460/2460 campos certificadas anteriormente.
+- **Smoke productivo:** el navegador fue cerrado por el propietario tras el smoke read-only parcial ya registrado. No se reabrió ni se hicieron nuevas operaciones productivas. La limitación de telemetría y el resultado global `R11=NOT_PASS` permanecen sin cambios.
+- **Archivos cambiados en esta continuación:** `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`; sólo documentación. Se preserva el trabajo ajeno sin staging. Pendiente publicar esta actualización documental y obtener CI del SHA documental exacto.
+- **Estado y continuidad:** `FULL_MATRIX_POST_WORKFLOW_STATUS=REOPENED`; `WORKFLOW_MATRIX_HANDOFF_STATUS=REOPENED`; `BLOCK12_STATUS=REOPENED`; `BLOCK12_CLOSED=NO`. La prueba sobre seguimientos repetidos ya está en verde; la certificación global sigue abierta por los pendientes documentados de R11/telemetría productiva.
+
 ## Hotfix maestro: lectura de Matriz completa después de workflow (COD)
 
 - **Fecha/hora local:** 2026-10-21 14:35 -06:00 (America/Tegucigalpa).
