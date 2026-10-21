@@ -672,6 +672,19 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   expect(preWorkflowRenderedFields).toHaveLength(82);
   await expect(preWorkflowModal.getByText(/La evaluaci/)).toHaveCount(0);
+  const preWorkflowDetailResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect(preWorkflowDetailResponse.status()).toBe(200);
+  const preWorkflowDetail = (await preWorkflowDetailResponse.json() as { datos: {
+    evaId: number; evaVersionId: number; evaDataJson: string; evaDataCalcJson: string; evaVri: number | null; evaVrr: number | null;
+  } }).datos;
+  const preWorkflowBusinessHash = createHash('sha256').update(JSON.stringify([
+    preWorkflowDetail.evaId,
+    preWorkflowDetail.evaVersionId,
+    preWorkflowDetail.evaDataJson,
+    preWorkflowDetail.evaDataCalcJson,
+    preWorkflowDetail.evaVri,
+    preWorkflowDetail.evaVrr,
+  ])).digest('hex');
   await preWorkflowModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
   await page.getByRole('button', { name: /Seguimiento de evaluaci/ }).click();
@@ -749,6 +762,19 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const approvedRow = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${evaluation.id}"]`);
   await expect(approvedRow).toBeVisible();
   await expect(approvedRow).toContainText('Aprobada');
+  const postWorkflowDetailResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect(postWorkflowDetailResponse.status()).toBe(200);
+  const postWorkflowDetail = (await postWorkflowDetailResponse.json() as { datos: {
+    evaId: number; evaEstado: string; evaVersionId: number; evaDataJson: string; evaDataCalcJson: string; evaVri: number | null; evaVrr: number | null;
+  } }).datos;
+  const postWorkflowBusinessHash = createHash('sha256').update(JSON.stringify([
+    postWorkflowDetail.evaId,
+    postWorkflowDetail.evaVersionId,
+    postWorkflowDetail.evaDataJson,
+    postWorkflowDetail.evaDataCalcJson,
+    postWorkflowDetail.evaVri,
+    postWorkflowDetail.evaVrr,
+  ])).digest('hex');
   const postWorkflowProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   const postWorkflowBlock6Request = page.waitForResponse(response => response.request().method() === 'GET'
@@ -765,6 +791,45 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const postWorkflowProjectionResponse = await postWorkflowProjectionRequest;
   const postWorkflowBlock6Response = await postWorkflowBlock6Request;
   page.off('response', captureFullMatrixResponse);
+  if (process.env.BLOCK12_EXPECT_PREFX_REPRODUCTION === 'true') {
+    const postWorkflowMatrix = page.locator('[data-matrix-modal="complete"]');
+    await expect(postWorkflowMatrix).toBeVisible();
+    await expect(page.getByText(/La evaluaci.n fue modificada por otra sesi.n o usuario/)).toBeVisible();
+    const warningCount = await page.getByText(/La evaluaci.n fue modificada por otra sesi.n o usuario/).count();
+    const renderedFieldCount = await postWorkflowMatrix.locator('[data-matrix-field]').count();
+    const headerState = await postWorkflowMatrix.locator('.modal-metadata-card dd').nth(1).innerText();
+    const diagnostic = {
+      evaluationId: evaluation.id,
+      workflowFollowUps: 3,
+      projectionHttpStatus: postWorkflowProjectionResponse.status(),
+      monitoringHttpStatus: postWorkflowBlock6Response.status(),
+      detailState: postWorkflowDetail.evaEstado,
+      evaluationIdPreserved: postWorkflowDetail.evaId === evaluation.id,
+      methodologyVersionPreserved: postWorkflowDetail.evaVersionId === preWorkflowDetail.evaVersionId,
+      businessHashBefore: preWorkflowBusinessHash,
+      businessHashAfter: postWorkflowBusinessHash,
+      businessDataPreserved: postWorkflowBusinessHash === preWorkflowBusinessHash,
+      headerState,
+      renderedFieldCount,
+      falseConcurrencyWarningVisible: warningCount > 0,
+    };
+    await testInfo.attach('pre-fix-consolidated-matrix-reproduction', {
+      body: Buffer.from(JSON.stringify(diagnostic, null, 2)),
+      contentType: 'application/json',
+    });
+    expect(diagnostic.projectionHttpStatus).toBe(409);
+    expect(diagnostic.monitoringHttpStatus).toBe(200);
+    expect(diagnostic.detailState).toBe('APROBADA');
+    expect(diagnostic.evaluationIdPreserved).toBe(true);
+    expect(diagnostic.methodologyVersionPreserved).toBe(true);
+    expect(diagnostic.businessDataPreserved).toBe(true);
+    expect(diagnostic.headerState).toBe('Aprobada');
+    expect(diagnostic.renderedFieldCount).toBe(0);
+    expect(diagnostic.falseConcurrencyWarningVisible).toBe(true);
+    console.log('BLOCK12_PRE_FIX_CONSOLIDATED_MATRIX_DEFECT_REPRODUCED=YES');
+    console.log(`BLOCK12_PRE_FIX_DIAGNOSTIC=${JSON.stringify(diagnostic)}`);
+    return;
+  }
   const postWorkflowProjection = await postWorkflowProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
   expect(postWorkflowProjectionResponse.status()).toBe(200);
   expect(postWorkflowBlock6Response.status()).toBe(200);
