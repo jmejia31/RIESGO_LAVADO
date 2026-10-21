@@ -79,6 +79,7 @@ async function preparar(page: Page): Promise<void> {
     const req = route.request();
     const path = new URL(req.url()).pathname;
     const method = req.method();
+    let datos: unknown = [];
     if (path.endsWith('/evaluaciones/estados')) {
       datos = [
         { codigo: 'APROBADA', etiqueta: 'Aprobada' },
@@ -103,7 +104,6 @@ async function preparar(page: Page): Promise<void> {
       const reportBody = Buffer.isBuffer(reportBuffer) ? reportBuffer : Buffer.from(reportBuffer as ArrayBuffer);
       return route.fulfill({ status: 200, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: reportBody });
     }
-    let datos: unknown = [];
 
     if (path.endsWith('/formulario/version-vigente')) datos = version;
     else if (path.endsWith('/formularios/10')) datos = version;
