@@ -240,7 +240,7 @@ jobs:
           TZ: UTC
         shell: bash
         run: |
-          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~WorkflowAllowsAndAuditsAllThirtyDirectedStateChangesOnLocalXe --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~WorkflowAllowsAndAuditsAllThirtyDirectedStateChangesOnLocalXe --logger 'console;verbosity=detailed' 2>&1 | tee /dev/stderr)"
           grep -Eq 'Total tests: *1' <<<"$output"
           grep -Eq 'Passed: *1' <<<"$output"
           ! grep -Eq 'Skipped: *[1-9]' <<<"$output"

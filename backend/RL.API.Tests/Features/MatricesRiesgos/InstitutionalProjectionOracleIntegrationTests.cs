@@ -278,6 +278,10 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
             Assert.Equal(30, validTransitions);
             Assert.Equal(0, failedValidTransitions);
+            Console.WriteLine("VALID_DIRECTED_STATE_CHANGES=30/30");
+            Console.WriteLine("FAILED_VALID_STATE_CHANGES=0");
+            Console.WriteLine("SELF_TRANSITION_BLOCKED=PASS");
+            Console.WriteLine("AUDIT_HISTORY_CREATED=PASS");
             _output.WriteLine("VALID_DIRECTED_STATE_CHANGES=30/30");
             _output.WriteLine("FAILED_VALID_STATE_CHANGES=0");
             _output.WriteLine("SELF_TRANSITION_BLOCKED=PASS");
