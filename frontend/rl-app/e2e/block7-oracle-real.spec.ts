@@ -738,6 +738,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(page.locator('#panel-evaluaciones')).toContainText('Aprobada');
   const approvedConsolidatedRequest = page.waitForResponse(response => response.request().method() === 'GET'
     && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await followUpModal.getByRole('button', { name: 'Cerrar seguimiento' }).last().click();
+  await expect(followUpModal).toBeHidden();
   await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   expect((await approvedConsolidatedRequest).status()).toBe(200);
   const postWorkflowSearchRequest = page.waitForResponse(response => response.request().method() === 'GET'
