@@ -67,10 +67,14 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
   expect(rendered.map(field => field.label)).toEqual(orderedFields.map(field => field.fieldLabel));
 
   const renderedByNumber = new Map(rendered.map(field => [field.fieldNumber, field]));
+  const renderedActivityCount = await matrix.locator('[data-matrix-activity]').count();
+  const renderedActivityField = renderedByNumber.get(43);
+  if (renderedActivityField) renderedByNumber.set(43, { ...renderedActivityField, value: String(renderedActivityCount) });
   // F40 is a repeater section heading; its descendants contain the actual
   // values. F42 is compared against the visible activity descriptions below.
   const comparableValues = orderedFields.filter(field => field.fieldNumber !== 40
-    && field.fieldNumber !== 42 && (field.value === null || typeof field.value !== 'object'));
+    && field.fieldNumber !== 42 && field.fieldNumber !== 43
+    && (field.value === null || typeof field.value !== 'object'));
   expect(comparableValues.length).toBeGreaterThanOrEqual(40);
   for (const field of comparableValues) {
     const renderedValue = renderedByNumber.get(field.fieldNumber)?.value ?? '';
@@ -99,6 +103,10 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
     .trim());
   expect(normalizeActivities(renderedByNumber.get(42)?.value ?? ''), 'F42 activities differ from the Oracle projection')
     .toEqual(normalizeActivities(String(activityProjection?.value ?? '')));
+  const activityCountProjection = orderedFields.find(field => field.fieldNumber === 43);
+  expect(activityCountProjection, 'F43 activity count projection is missing').toBeDefined();
+  expect(renderedByNumber.get(43)?.value ?? '0', 'F43 total activity count differs from the Oracle projection')
+    .toBe(String(activityCountProjection?.value ?? 0));
   console.log(`FULL_MATRIX_VALUE_PARITY=PASS;compared=${comparableValues.length};placeholderFakeRender=NO`);
   return comparableValues.length;
 }
