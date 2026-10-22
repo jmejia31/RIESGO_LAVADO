@@ -9,6 +9,19 @@ function expectedProjectionDisplay(field: MatrixProjectionField): string {
   if (field.value === null || field.value === undefined) {
     return ['NOT_APPLICABLE', 'ABSENT_CONTROL_PROJECTED'].includes(field.state) ? 'No aplica' : 'Sin dato';
   }
+  const controlType = field.fieldNumber === 20 ? 'preventivo'
+    : field.fieldNumber === 24 ? 'detectivo'
+      : field.fieldNumber === 28 ? 'correctivo' : null;
+  if (controlType) {
+    const descriptions = (Array.isArray(field.value) ? field.value : String(field.value).split(/\r?\n/))
+      .map((item, index) => {
+        const rawValue = typeof item === 'object' && item !== null
+          ? (item as Record<string, unknown>)['value'] ?? (item as Record<string, unknown>)['description'] ?? item
+          : item;
+        return `Control ${controlType} ${index + 1}\n${String(rawValue).replace(/^\d+\.\s*/, '')}`;
+      });
+    return descriptions.join('\n');
+  }
   if (Array.isArray(field.value)) {
     return field.value.map((item, index) => {
       if (item === null || item === undefined || item === '') return `${index + 1}. [Sin dato]`;
