@@ -1,8 +1,79 @@
 import { expect, test, expectHttpResponse } from './support/telemetry-test';
-import type { Page, Response } from '@playwright/test';
+import type { Locator, Page, Response } from '@playwright/test';
 import { createHash } from 'node:crypto';
 
 type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
+type MatrixProjectionField = { fieldNumber: number; fieldLabel: string; value: unknown; state: string };
+
+function expectedProjectionDisplay(field: MatrixProjectionField): string {
+  if (field.value === null || field.value === undefined) {
+    return ['NOT_APPLICABLE', 'ABSENT_CONTROL_PROJECTED'].includes(field.state) ? 'No aplica' : 'Sin dato';
+  }
+  if (Array.isArray(field.value)) {
+    return field.value.map((item, index) => {
+      if (item === null || item === undefined || item === '') return `${index + 1}. [Sin dato]`;
+      if (typeof item !== 'object') return `${index + 1}. ${String(item)}`;
+      const record = item as Record<string, unknown>;
+      const ordinalIndex = record['planOrdinalIndex'] ?? record['ordinalIndex'] ?? record['activityOrdinalIndex'];
+      const value = record['value'] ?? record['displayValue'] ?? record['description'] ?? record['text'];
+      return `${ordinalIndex ?? index + 1}. ${value === null || value === undefined || value === '' ? '[Sin dato]' : String(value)}`;
+    }).join('\n');
+  }
+  if (typeof field.value === 'object') {
+    const record = field.value as Record<string, unknown>;
+    const value = record['value'] ?? record['displayValue'] ?? record['text'];
+    return value === null || value === undefined ? JSON.stringify(field.value) ?? '—' : String(value);
+  }
+  return String(field.value);
+}
+
+async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: MatrixProjectionField[]): Promise<number> {
+  const rendered = await matrix.locator('[data-matrix-field]').evaluateAll(elements => {
+    const seen = new Set<number>();
+    return elements.flatMap(element => {
+      const fieldNumber = Number(element.getAttribute('data-matrix-field'));
+      if (!Number.isFinite(fieldNumber) || seen.has(fieldNumber)) return [];
+      seen.add(fieldNumber);
+      const label = element.querySelector('dt')?.textContent?.trim().replace(/^\d{1,2}\s*[·.]\s*/, '') ?? '';
+      const value = (element.querySelector('dd') as HTMLElement | null)?.innerText.trim() ?? '';
+      return [{ fieldNumber, label, value }];
+    });
+  });
+  const orderedFields = [...fields].sort((left, right) => left.fieldNumber - right.fieldNumber);
+  expect(rendered.map(field => field.fieldNumber)).toEqual(Array.from({ length: 82 }, (_, index) => index + 1));
+  expect(orderedFields.map(field => field.fieldNumber)).toEqual(Array.from({ length: 82 }, (_, index) => index + 1));
+  expect(rendered.map(field => field.label)).toEqual(orderedFields.map(field => field.fieldLabel));
+
+  const renderedByNumber = new Map(rendered.map(field => [field.fieldNumber, field]));
+  const comparableValues = orderedFields.filter(field => field.value === null || typeof field.value !== 'object');
+  expect(comparableValues.length).toBeGreaterThanOrEqual(40);
+  for (const field of comparableValues) {
+    expect(renderedByNumber.get(field.fieldNumber)?.value, `F${field.fieldNumber} value differs from the Oracle projection`)
+      .toBe(expectedProjectionDisplay(field));
+  }
+  return comparableValues.length;
+}
+
+async function refreshConsolidatedFor(page: Page, state: string, riskCode: string): Promise<void> {
+  const stateFilter = page.locator('#consolidado-estado');
+  if (await stateFilter.inputValue() !== state) {
+    const stateRequest = page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+    await stateFilter.selectOption(state);
+    expect((await stateRequest).status()).toBe(200);
+  }
+  const search = page.locator('#consolidado-buscar');
+  if (await search.inputValue() !== riskCode) {
+    const searchRequest = page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+    await search.fill(riskCode);
+    expect((await searchRequest).status()).toBe(200);
+  }
+  const refreshRequest = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await page.getByRole('button', { name: 'Actualizar matriz consolidada' }).click();
+  expect((await refreshRequest).status()).toBe(200);
+}
 
 const critical = [
   /^GET \/api\/matrices-riesgos\/evaluaciones\/estados$/,
@@ -660,7 +731,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const preWorkflowProjectionResponse = await preWorkflowProjectionRequest;
   expect(preWorkflowProjectionResponse.status()).toBe(200);
   expect((await preWorkflowBlock6Request).status()).toBe(200);
-  const preWorkflowProjection = await preWorkflowProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
+  const preWorkflowProjection = await preWorkflowProjectionResponse.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } };
   expect(preWorkflowProjection.datos.evaluationId).toBe(evaluation.id);
   expect(preWorkflowProjection.datos.fields).toHaveLength(82);
   const preWorkflowHash = createHash('sha256')
@@ -672,6 +743,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   expect(preWorkflowRenderedFields).toHaveLength(82);
   await expect(preWorkflowModal.getByText(/La evaluaci/)).toHaveCount(0);
+  const preWorkflowValueParitySamples = await assertRenderedMatrixMatchesProjection(preWorkflowModal, preWorkflowProjection.datos.fields);
+  console.log(`BEFORE_TRANSITION_MATRIX_RENDERED=YES;fields=82;labels=82;order=PASS;valueSamples=${preWorkflowValueParitySamples};warning=NO`);
   const preWorkflowDetailResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
   expect(preWorkflowDetailResponse.status()).toBe(200);
   const preWorkflowDetail = (await preWorkflowDetailResponse.json() as { datos: {
@@ -783,19 +856,19 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     }
   };
   page.on('response', captureFullMatrixResponse);
-  if (process.env.BLOCK12_EXPECT_PREFX_REPRODUCTION === 'true') {
+  if (process.env['BLOCK12_EXPECT_PREFX_REPRODUCTION'] === 'true') {
     expectHttpResponse({
       status: 409,
       method: 'GET',
       path: `/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`,
-      reason: 'Expected pre-fix consolidated evaluation read failure after workflow follow-ups',
+    reason: 'Expected pre-fix full matrix projection read failure after workflow follow-ups',
     });
   }
   await approvedRow.locator('[data-matrix-open="complete"]').click();
   const postWorkflowProjectionResponse = await postWorkflowProjectionRequest;
   const postWorkflowBlock6Response = await postWorkflowBlock6Request;
   page.off('response', captureFullMatrixResponse);
-  if (process.env.BLOCK12_EXPECT_PREFX_REPRODUCTION === 'true') {
+  if (process.env['BLOCK12_EXPECT_PREFX_REPRODUCTION'] === 'true') {
     const projectionErrorBody = await postWorkflowProjectionResponse.json() as { mensaje?: string; detail?: string };
     const postWorkflowMatrix = page.locator('[data-matrix-modal="complete"]');
     await expect(postWorkflowMatrix).toBeVisible();
@@ -819,7 +892,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
       renderedFieldCount,
       falseConcurrencyWarningVisible: warningCount > 0,
     };
-    await testInfo.attach('pre-fix-consolidated-matrix-reproduction', {
+    await testInfo.attach('pre-fix-full-matrix-workflow-reproduction', {
       body: Buffer.from(JSON.stringify(diagnostic, null, 2)),
       contentType: 'application/json',
     });
@@ -832,11 +905,11 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     expect(diagnostic.headerState).toBe('Aprobada');
     expect(diagnostic.renderedFieldCount).toBe(0);
     expect(diagnostic.falseConcurrencyWarningVisible).toBe(true);
-    console.log('BLOCK12_PRE_FIX_CONSOLIDATED_MATRIX_DEFECT_REPRODUCED=YES');
+    console.log('BLOCK12_PRE_FIX_FULL_MATRIX_DEFECT_REPRODUCED=YES');
     console.log(`BLOCK12_PRE_FIX_DIAGNOSTIC=${JSON.stringify(diagnostic)}`);
     return;
   }
-  const postWorkflowProjection = await postWorkflowProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
+  const postWorkflowProjection = await postWorkflowProjectionResponse.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } };
   expect(postWorkflowProjectionResponse.status()).toBe(200);
   expect(postWorkflowBlock6Response.status()).toBe(200);
   expect(postWorkflowProjection.datos.evaluationId).toBe(evaluation.id);
@@ -865,6 +938,14 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(postWorkflowFieldNumbers).toHaveLength(82);
   expect(postWorkflowWarning).toBe(0);
   expect(postWorkflowDiagnostic.headerState).toBe('Aprobada');
+  const postWorkflowValueParitySamples = await assertRenderedMatrixMatchesProjection(postWorkflowMatrix, postWorkflowProjection.datos.fields);
+  console.log(`AFTER_TRANSITION_MATRIX_RENDERED=YES;fields=82;labels=82;order=PASS;valueSamples=${postWorkflowValueParitySamples};state=${postWorkflowDiagnostic.headerState};warning=NO;blank=NO`);
+  console.log('FULL_MATRIX_POST_TRANSITION_RENDER=PASS');
+  console.log('FULL_MATRIX_FIELDS=82/82');
+  console.log('FULL_MATRIX_LABELS=82/82');
+  console.log('FULL_MATRIX_ORDER=PASS');
+  console.log('FULL_MATRIX_VALUE_PARITY=PASS');
+  console.log('FULL_MATRIX_READ_FALSE_CONCURRENCY=0');
   await postWorkflowMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
   const invalidTransition = await request.post(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones?nuevoEstado=APROBADA`);
   expect(invalidTransition.status()).toBe(400);
@@ -974,7 +1055,7 @@ test('Block 12 UI renders all 59 workbook risk identities from Oracle XE API', a
 });
 
 test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results from Oracle XE', async ({ page, request }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(240_000);
   const required = process.env['RL_BLOCK12_FULL_CHAIN_UI_REQUIRED'] === 'true';
   test.skip(!required, 'The 2006-result full-matrix UI parity test requires disposable Oracle XE fixtures.');
 
@@ -1101,7 +1182,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   const preTransitionProjectionResponse = await preTransitionProjectionRequest;
   expect(preTransitionProjectionResponse.status()).toBe(200);
   expect((await preTransitionBlock6Request).status()).toBe(200);
-  const preTransitionProjection = await preTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } };
+  const preTransitionProjection = await preTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } };
   expect(preTransitionProjection.datos.evaluationId).toBe(transitionFixture.evaluationId);
   expect(preTransitionProjection.datos.fields).toHaveLength(82);
   preTransitionBusinessHash = createHash('sha256')
@@ -1113,6 +1194,9 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   expect(preTransitionRenderedNumbers).toHaveLength(82);
   await expect(preTransitionMatrix.locator('.modal-metadata-card dd').nth(1)).toHaveText('Borrador');
+  await expect(preTransitionMatrix.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
+  await expect(page.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
+  await assertRenderedMatrixMatchesProjection(preTransitionMatrix, preTransitionProjection.datos.fields);
   await preTransitionMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
   const preTransitionDetailResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${transitionFixture.evaluationId}`);
   expect(preTransitionDetailResponse.status()).toBe(200);
@@ -1212,7 +1296,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   await expect(matrixModal).toBeVisible();
   await expect(matrixModal.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
   const postTransitionBody = postTransitionProjectionResponse.status() === 200
-    ? await postTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: Array<{ fieldNumber: number; value: unknown; state: string }> } }
+    ? await postTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } }
     : null;
   const postTransitionFieldNumbers = postTransitionBody?.datos.fields.map(field => field.fieldNumber) ?? [];
   const renderedPostTransitionNumbers = await matrixModal.locator('[data-matrix-field]').evaluateAll(elements =>
@@ -1249,6 +1333,118 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   await expect(matrixModal.locator('.modal-metadata-card dd').nth(1)).toHaveText('Aprobada');
   expect(warningVisible).toBe(false);
   expect(postTransitionBusinessHash).toBe(preTransitionBusinessHash);
+  await assertRenderedMatrixMatchesProjection(matrixModal, postTransitionBody!.datos.fields);
+
+  const destinationLabels: Record<string, string> = {
+    APROBADA: 'Aprobada',
+    BORRADOR: 'Borrador',
+    CERRADA: 'Cerrada',
+    EN_REVISION: 'En revisión',
+    OBSERVADA: 'Observada',
+    RECHAZADA: 'Rechazada',
+  };
+  const destinationResults = ['APROBADA'];
+  await matrixModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+
+  const destinationFixtures = [
+    { item: fixtures[1], destination: 'BORRADOR' },
+    { item: fixtures[2], destination: 'CERRADA' },
+    { item: fixtures[3], destination: 'EN_REVISION' },
+    { item: fixtures[4], destination: 'OBSERVADA' },
+    { item: fixtures[5], destination: 'RECHAZADA' },
+  ];
+  for (const { item, destination } of destinationFixtures) {
+    const detailBeforePreparation = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${item.evaluationId}`);
+    expect(detailBeforePreparation.status()).toBe(200);
+    const stateBeforePreparation = (await detailBeforePreparation.json() as { datos: { evaEstado: string } }).datos.evaEstado;
+    if (stateBeforePreparation !== 'BORRADOR') {
+      const prepareDraftUrl = `http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${item.evaluationId}/transiciones?nuevoEstado=BORRADOR&motivo=${encodeURIComponent('Prepare independent Full Matrix destination fixture')}`;
+      expect((await request.post(prepareDraftUrl)).status()).toBe(200);
+    }
+
+    await refreshConsolidatedFor(page, 'BORRADOR', item.riskCode);
+    const draftRow = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${item.evaluationId}"]`);
+    await expect(draftRow).toBeVisible();
+    await expect(draftRow).toContainText('Borrador');
+    const beforeProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${item.evaluationId}/proyeccion-institucional`);
+    const beforeBlock6Request = page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${item.evaluationId}/bloque6`);
+    await draftRow.locator('[data-matrix-open="complete"]').click();
+    const beforeProjectionResponse = await beforeProjectionRequest;
+    expect(beforeProjectionResponse.status(), `${item.riskCode} pre-transition matrix HTTP`).toBe(200);
+    expect((await beforeBlock6Request).status()).toBe(200);
+    const beforeProjection = (await beforeProjectionResponse.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } }).datos;
+    expect(beforeProjection.evaluationId).toBe(item.evaluationId);
+    expect(beforeProjection.fields).toHaveLength(82);
+    const beforeHash = createHash('sha256')
+      .update(JSON.stringify(beforeProjection.fields.map(field => [field.fieldNumber, field.value, field.state])))
+      .digest('hex');
+    const beforeMatrix = page.locator('[data-matrix-modal="complete"]');
+    await expect(beforeMatrix).toBeVisible();
+    await expect(beforeMatrix.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
+    await expect(beforeMatrix.locator('.modal-metadata-card dd').nth(1)).toHaveText('Borrador');
+    await expect(beforeMatrix.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
+    await expect(page.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
+    const preTransitionValueParitySamples = await assertRenderedMatrixMatchesProjection(beforeMatrix, beforeProjection.fields);
+    await beforeMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+
+    const transitionTargets = destination === 'BORRADOR' ? ['EN_REVISION', 'BORRADOR'] : [destination];
+    for (const target of transitionTargets) {
+      const transitionUrl = `http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${item.evaluationId}/transiciones?nuevoEstado=${target}&motivo=${encodeURIComponent(`Full Matrix destination coverage ${target}`)}`;
+      const transitionResponseForFixture = await request.post(transitionUrl);
+      expect(transitionResponseForFixture.status(), `${item.riskCode} transition to ${target}`).toBe(200);
+    }
+
+    const detailResponse = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${item.evaluationId}`);
+    expect(detailResponse.status()).toBe(200);
+    expect((await detailResponse.json() as { datos: { evaId: number; evaEstado: string } }).datos)
+      .toMatchObject({ evaId: item.evaluationId, evaEstado: destination });
+    const historyResponseForFixture = await request.get(`http://127.0.0.1:5043/api/matrices-riesgos/evaluaciones/${item.evaluationId}/flujos`);
+    expect(historyResponseForFixture.status()).toBe(200);
+    const historyStates = (await historyResponseForFixture.json() as { datos: Array<{ fluEstado: string }> }).datos.map(flow => flow.fluEstado);
+    expect(historyStates).toEqual(expect.arrayContaining(transitionTargets));
+
+    // Keep the already-rendered BORRADOR row stale on purpose. The read must
+    // refresh canonical detail/state when Matriz completa opens, without F5.
+    await expect(draftRow).toBeVisible();
+    await expect(draftRow).toContainText('Borrador');
+
+    const destinationProjectionRequest = page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${item.evaluationId}/proyeccion-institucional`);
+    const destinationBlock6Request = page.waitForResponse(response => response.request().method() === 'GET'
+      && new URL(response.url()).pathname === `/api/matrices-riesgos/monitoreo/evaluaciones/${item.evaluationId}/bloque6`);
+    await draftRow.locator('[data-matrix-open="complete"]').click();
+    const destinationProjectionResponse = await destinationProjectionRequest;
+    expect(destinationProjectionResponse.status(), `${destination} Matriz completa HTTP`).toBe(200);
+    expect((await destinationBlock6Request).status(), `${destination} Matriz completa monitoring`).toBe(200);
+    const destinationProjection = (await destinationProjectionResponse.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } }).datos;
+    expect(destinationProjection.evaluationId).toBe(item.evaluationId);
+    expect(destinationProjection.fields).toHaveLength(82);
+    const afterHash = createHash('sha256')
+      .update(JSON.stringify(destinationProjection.fields.map(field => [field.fieldNumber, field.value, field.state])))
+      .digest('hex');
+    expect(afterHash, `${destination} business projection parity`).toBe(beforeHash);
+
+    const destinationMatrix = page.locator('[data-matrix-modal="complete"]');
+    await expect(destinationMatrix).toBeVisible();
+    await expect(destinationMatrix.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
+    await expect(destinationMatrix.locator('[role="alert"]')).toHaveCount(0);
+    await expect(destinationMatrix.locator('.modal-metadata-card dd').nth(1)).toHaveText(destinationLabels[destination]);
+    await expect(destinationMatrix.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
+    await expect(page.getByText(/La evaluación fue modificada por otra sesión o usuario/)).toHaveCount(0);
+    const postTransitionValueParitySamples = await assertRenderedMatrixMatchesProjection(destinationMatrix, destinationProjection.fields);
+    const renderedDestinationCount = await destinationMatrix.locator('[data-matrix-field]')
+      .evaluateAll(elements => new Set(elements.map(element => Number(element.getAttribute('data-matrix-field')))).size);
+    expect(renderedDestinationCount).toBe(82);
+    destinationResults.push(destination);
+    console.log(`POST_TRANSITION_DESTINATION_FULL_MATRIX=${destination}:HTTP=${destinationProjectionResponse.status()};rendered=82/82;labels=82/82;order=PASS;valueSamples=${postTransitionValueParitySamples};preTransitionValueSamples=${preTransitionValueParitySamples};header=${destinationLabels[destination]};warning=NO;blank=NO`);
+    console.log(`STALE_CLIENT_READ_FULL_MATRIX=${destination}:PASS`);
+    await destinationMatrix.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  }
+  expect(destinationResults.sort()).toEqual(['APROBADA', 'BORRADOR', 'CERRADA', 'EN_REVISION', 'OBSERVADA', 'RECHAZADA'].sort());
+  console.log('POST_TRANSITION_DESTINATION_FULL_MATRIX=6/6');
+  console.log('BROWSER_POST_TRANSITION_DESTINATION_MATRIX=6/6');
 
   expect(uiCalculationValues).toBe(2006);
   console.log('BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006');

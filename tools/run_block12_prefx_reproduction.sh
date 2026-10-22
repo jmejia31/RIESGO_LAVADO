@@ -88,5 +88,5 @@ if grep -Fq 'Datos incompatibles para proyección institucional' "$api_log"; the
 fi
 
 grep -Fq '1 passed' <<<"$browser_output"
-grep -Fq 'BLOCK12_PRE_FIX_CONSOLIDATED_MATRIX_DEFECT_REPRODUCED=YES' <<<"$browser_output"
+grep -Fq 'BLOCK12_PRE_FIX_FULL_MATRIX_DEFECT_REPRODUCED=YES' <<<"$browser_output"
 echo 'BLOCK12_PREFX_DISPOSABLE_XE_BROWSER_API_REPRODUCTION=PASS'

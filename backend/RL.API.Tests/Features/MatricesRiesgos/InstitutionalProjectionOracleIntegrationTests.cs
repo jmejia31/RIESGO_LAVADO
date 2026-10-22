@@ -306,6 +306,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Console.WriteLine("VALID_DIRECTED_STATE_CHANGES=30/30");
             Console.WriteLine("POST_TRANSITION_FULL_MATRIX_AVAILABLE=30/30");
             Console.WriteLine("POST_TRANSITION_FULL_MATRIX_FIELDS=2460/2460");
+            Console.WriteLine("ORACLE_POST_TRANSITION_FULL_MATRIX=30/30");
+            Console.WriteLine("POST_TRANSITION_FIELD_COUNT_PARITY=30/30");
             Console.WriteLine("POST_TRANSITION_BUSINESS_DATA_PARITY=30/30");
             Console.WriteLine("FAILED_VALID_STATE_CHANGES=0");
             Console.WriteLine("SELF_TRANSITION_BLOCKED=PASS");
@@ -313,6 +315,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             _output.WriteLine("VALID_DIRECTED_STATE_CHANGES=30/30");
             _output.WriteLine("POST_TRANSITION_FULL_MATRIX_AVAILABLE=30/30");
             _output.WriteLine("POST_TRANSITION_FULL_MATRIX_FIELDS=2460/2460");
+            _output.WriteLine("ORACLE_POST_TRANSITION_FULL_MATRIX=30/30");
+            _output.WriteLine("POST_TRANSITION_FIELD_COUNT_PARITY=30/30");
             _output.WriteLine("POST_TRANSITION_BUSINESS_DATA_PARITY=30/30");
             _output.WriteLine("FAILED_VALID_STATE_CHANGES=0");
             _output.WriteLine("SELF_TRANSITION_BLOCKED=PASS");
@@ -1068,6 +1072,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.Contains("Cliente A", afterConflict.EvaDataJson, StringComparison.Ordinal);
             AssertLegacyPreimagePreserved(afterConflict.EvaDataJson);
             Assert.DoesNotContain("Cliente B", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Console.WriteLine("WRITE_STALE_TOKEN_REJECTED=PASS");
+            _output.WriteLine("WRITE_STALE_TOKEN_REJECTED=PASS");
 
             afterConflict.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B recargado" });
             using HttpResponseMessage updateB = await http.PutAsJsonAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/borrador", afterConflict);
