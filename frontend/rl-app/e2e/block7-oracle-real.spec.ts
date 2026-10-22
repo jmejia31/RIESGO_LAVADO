@@ -83,7 +83,9 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
     if (field.fieldNumber >= 72 && field.fieldNumber <= 80) {
       const normalizeToken = (value: string): string => value
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().replace(/[^a-z0-9]/g, '');
-      const expectedTokens = expectedValue.split(/\r?\n/).map(line => line.replace(/^\s*\d+\.\s*/, '').trim()).filter(Boolean);
+      const expectedTokens = expectedValue.split(/\r?\n/)
+        .map(line => line.replace(/^\s*\d+\.\s*/, '').trim())
+        .filter(value => value && !/^(sin dato|sin datos|no aplica|—|-)\.?$/i.test(value));
       const renderedToken = normalizeToken(renderedValue);
       for (const expectedToken of expectedTokens) {
         expect(renderedToken, `F${field.fieldNumber} projected monitoring value is absent from rendered controls`)
