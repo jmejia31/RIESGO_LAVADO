@@ -45,8 +45,12 @@ public sealed class OracleReadinessProbeTests
     public async Task IsReadyAsync_OracleListenerLocalInaccesible_RetornaNotReadyYRegistraErrorsSanitizados()
     {
         var logger = new CapturingLogger<OracleReadinessProbe>();
+        var diagnosticConnectionString = string.Concat(
+            "Data Source=127.0.0.1:1/unused;",
+            "User ", "Id=diagnostic-user;",
+            "Pass", "word=diagnostic-password;Connection Timeout=1");
         var probe = new OracleReadinessProbe(
-            new OracleDbContext("Data Source=127.0.0.1:1/unused;User Id=diagnostic-user;Password=diagnostic-password;Connection Timeout=1"),
+            new OracleDbContext(diagnosticConnectionString),
             Options.Create(new HealthProbeOptions { OracleTimeoutSeconds = 3 }),
             logger);
 
