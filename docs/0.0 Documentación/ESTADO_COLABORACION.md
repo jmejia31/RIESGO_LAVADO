@@ -1,4 +1,4 @@
-# Estado vigente - Readiness productivo certificado; CI documental final pendiente (COD) - 2026-10-22 15:03 -06:00
+# Estado vigente - Readiness productivo y Bloque 12 cerrados (COD) - 2026-10-22 15:21 -06:00
 
 ## Certificación final de OracleReadinessProbe /readyz
 
@@ -8,7 +8,7 @@
 - **Health/readiness (GET única por ruta):** `GET /healthz` HTTP 200, 25 ms; después `GET /readyz` HTTP 200, 6 ms. En el tramo de estas llamadas no apareció un evento `Oracle readiness failed/cancelled`. `PRODUCTION_HEALTHZ=PASS`, `PRODUCTION_READYZ=PASS`, `PRODUCTION_ORACLE_CONNECTIVITY=PASS`, `CURRENT_READINESS_UNEXPECTED_ERRORS=0`.
 - **Conclusión:** el 503 histórico no se reprodujo en el runtime certificado. No se identifica causa del 503 histórico con la evidencia actual: `HISTORICAL_READYZ_503_CLASSIFICATION=TRANSIENT_OR_NON_REPRODUCED_HISTORICAL_FAILURE`, `ROOT_CAUSE_OF_HISTORICAL_503=NOT_DETERMINABLE_WITH_CURRENT_EVIDENCE`. No se cambió código, configuración, SQL, timeout ni pooling; no se repitió el smoke funcional ya certificado (`SAME_EXECUTABLE_SHA_AND_NO_EXECUTABLE_CHANGE`).
 - **Seguridad:** únicamente se llamaron `/healthz` y `/readyz`, siendo readiness `SELECT 1 FROM DUAL`; no se ejecutaron transiciones, guardados, DML ni DDL. No se imprimieron ni persistieron secretos nuevos.
-- **Estado:** `READYZ_PROBLEM_STATUS=CLOSED`, `ORACLE_READINESS_PROBE_STATUS=CLOSED`, `PRODUCTION_READINESS_STATUS=PASS`. El cierre consolidado de Bloque 12 queda condicionado al CI del nuevo HEAD documental, que debe pasar todos los jobs del workflow.
+- **Estado:** `READYZ_PROBLEM_STATUS=CLOSED`, `ORACLE_READINESS_PROBE_STATUS=CLOSED`, `PRODUCTION_READINESS_STATUS=PASS`. Quality Gates run `39854236469` (reintento del job fallido), SHA exacto `6df569f93974070d9ecb51ff552ea2ece13f832b`, terminó `completed/success`; todos los pasos, incluidos Oracle XE, browser/E2E y contenedores, pasaron. Con el CI exacto verde y sin otros gates técnicos abiertos identificados, `BLOCK12_STATUS=PASS`, `BLOCK12_CLOSED=YES`, `MASTER_EXECUTION_STATUS=PASS`. El proyecto institucional permanece `NOT_CLOSED`; las fases externas requieren reconciliación institucional independiente.
 - **Archivos de esta intervención:** este estado vivo y `BITACORA_COLABORACION.md`, documentación solamente. Cambios ajenos tracked/untracked preservados y fuera del stage.
 
 # Estado histórico - Hotfix Matriz completa post-workflow; R11 verificado, R12 en publicación (COD) - 2026-10-22 14:14 -06:00
