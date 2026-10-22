@@ -34,8 +34,8 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
       const fieldNumber = Number(element.getAttribute('data-matrix-field'));
       if (!Number.isFinite(fieldNumber) || seen.has(fieldNumber)) return [];
       seen.add(fieldNumber);
-      const label = element.querySelector('dt')?.textContent?.trim().replace(/^\d{1,2}\s*[·.]\s*/, '') ?? '';
-      const value = (element.querySelector('dd') as HTMLElement | null)?.innerText.trim() ?? '';
+      const label = element.querySelector('dt, h4, h6')?.textContent?.trim().replace(/^\d{1,2}\s*[·.]\s*/, '').trim() ?? '';
+      const value = (element.querySelector('dd, p[aria-readonly="true"]') as HTMLElement | null)?.innerText.trim() ?? '';
       return [{ fieldNumber, label, value }];
     });
   });
@@ -51,6 +51,7 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
     expect(renderedByNumber.get(field.fieldNumber)?.value, `F${field.fieldNumber} value differs from the Oracle projection`)
       .toBe(expectedProjectionDisplay(field));
   }
+  console.log(`FULL_MATRIX_VALUE_PARITY=PASS;compared=${comparableValues.length};placeholderFakeRender=NO`);
   return comparableValues.length;
 }
 
