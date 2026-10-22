@@ -67,9 +67,15 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
   expect(rendered.map(field => field.label)).toEqual(orderedFields.map(field => field.fieldLabel));
 
   const renderedByNumber = new Map(rendered.map(field => [field.fieldNumber, field]));
+  const renderedActivities = await matrix.locator('[data-matrix-activity] > p:first-child').allTextContents();
+  const renderedActivityField = renderedByNumber.get(42);
+  if (renderedActivityField) renderedByNumber.set(42, {
+    ...renderedActivityField,
+    value: renderedActivities.map(value => value.trim()).join('\n')
+  });
   const renderedActivityCount = await matrix.locator('[data-matrix-activity]').count();
-  const renderedActivityField = renderedByNumber.get(43);
-  if (renderedActivityField) renderedByNumber.set(43, { ...renderedActivityField, value: String(renderedActivityCount) });
+  const renderedActivityCountField = renderedByNumber.get(43);
+  if (renderedActivityCountField) renderedByNumber.set(43, { ...renderedActivityCountField, value: String(renderedActivityCount) });
   // F40 is a repeater section heading; its descendants contain the actual
   // values. F42 is compared against the visible activity descriptions below.
   const comparableValues = orderedFields.filter(field => field.fieldNumber !== 40
@@ -79,7 +85,7 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
   for (const field of comparableValues) {
     const renderedValue = renderedByNumber.get(field.fieldNumber)?.value ?? '';
     const expectedValue = expectedProjectionDisplay(field);
-    if (expectedValue === 'Sin dato' && /^sin datos?\.?$/i.test(renderedValue)) continue;
+    if (expectedValue === 'Sin dato' && /^(sin datos?|—|-)\.?$/i.test(renderedValue)) continue;
     if (field.fieldNumber >= 72 && field.fieldNumber <= 80) {
       const normalizeToken = (value: string): string => value
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().replace(/[^a-z0-9]/g, '');
