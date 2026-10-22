@@ -3091,3 +3091,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - La prueba focalizada ahora también ejercita una OracleException real contra loopback local `127.0.0.1:1`; valida `Number`, `Errors.Count`, códigos/elementos, etapa, retorno not-ready y redacción de usuario, password, descriptor e IP. Se añadieron source-contract assertions para SQL, timeout, cancelación, factory y resultado.
 - Resultado local: OracleReadinessProbeTests 8/8 PASS. Esta ampliación solo toca tests/documentación; el runtime ejecutable sigue siendo `16acd5a39acfa9b93b5caa2c8ff81494329e53bf`. El nuevo commit de tests/docs debe obtener CI exacto.
 - R11 no avanzó: la política de ejecución había rechazado el lanzamiento del runtime antes de crear el proceso; no se hicieron llamadas HTTP ni conexiones productivas. La causa de READY 503 sigue sin clasificar.
+
+### CI más reciente y bloqueo de R11 — 2026-10-22
+
+- Quality Gates `39832207022` para `3d98a4de2537fe429b4f2ae823558f436d36c6c1` falló en el gate inicial de `npm audit`, antes de analyzers/build/tests. El reporte actual marca crítico `dompurify <=3.4.16`; la aplicación fija `3.4.16` en `frontend/rl-app/package.json`, archivo fuera del alcance autorizado y no modificado. Runs inmediatamente anteriores (`39828221310` runtime y `39830555033` documentación) pasaron al encontrar cero advisories. No se declara CI verde para `3d98a4de`.
+- El código de readiness sigue siendo el del runtime `16acd5a39acfa9b93b5caa2c8ff81494329e53bf`, CI exacto `39828221310=success`; tests focalizados locales actualizados 8/8 PASS. El run fallido no alcanzó las pruebas.
+- R11 productivo no se inició: la política rechazó el comando de proceso exacto antes de iniciar API, sin llamadas HTTP ni Oracle. `R11_STATUS=BLOCKED`; root cause permanece pendiente. No cerrar Bloque 12.
