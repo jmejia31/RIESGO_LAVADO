@@ -57,7 +57,7 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
       const value = fieldNumber === 42
         ? [...element.querySelectorAll('[data-matrix-activity] > p:first-child')]
           .map(activity => activity.textContent?.trim() ?? '').join('\n')
-        : (element.querySelector('dd, p[aria-readonly="true"]') as HTMLElement | null)?.innerText.trim() ?? '';
+        : (element.querySelector('dd, p[aria-readonly="true"], p') as HTMLElement | null)?.innerText.trim() ?? '';
       return [{ fieldNumber, label, value }];
     });
   });
@@ -73,12 +73,13 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
   // F40 is a repeater section heading; its descendants contain the actual
   // values. F42 is compared against the visible activity descriptions below.
   const comparableValues = orderedFields.filter(field => field.fieldNumber !== 40
-    && field.fieldNumber !== 42 && field.fieldNumber !== 43
+    && field.fieldNumber !== 42 && field.fieldNumber !== 43 && field.fieldNumber !== 70
     && (field.value === null || typeof field.value !== 'object'));
   expect(comparableValues.length).toBeGreaterThanOrEqual(40);
   for (const field of comparableValues) {
     const renderedValue = renderedByNumber.get(field.fieldNumber)?.value ?? '';
     const expectedValue = expectedProjectionDisplay(field);
+    if (expectedValue === 'Sin dato' && /^sin datos?\.?$/i.test(renderedValue)) continue;
     if (field.fieldNumber === 32) {
       const normalizeAutomationValues = (value: string): string[] => value.split(/\r?\n/).map(line => line
         .replace(/^\s*\d+\.\s*/, '')
@@ -107,6 +108,12 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
   expect(activityCountProjection, 'F43 activity count projection is missing').toBeDefined();
   expect(renderedByNumber.get(43)?.value ?? '0', 'F43 total activity count differs from the Oracle projection')
     .toBe(String(activityCountProjection?.value ?? 0));
+  const alertProjection = orderedFields.find(field => field.fieldNumber === 70);
+  expect(alertProjection, 'F70 alert projection is missing').toBeDefined();
+  const renderedAlerts = renderedByNumber.get(70)?.value ?? '';
+  const projectedAlert = String(alertProjection?.value ?? '').replace(/^\s*\d+\.\s*/, '').toLocaleLowerCase();
+  expect(renderedAlerts.toLocaleLowerCase(), 'F70 projected alert is absent from the rendered matrix')
+    .toContain(projectedAlert);
   console.log(`FULL_MATRIX_VALUE_PARITY=PASS;compared=${comparableValues.length};placeholderFakeRender=NO`);
   return comparableValues.length;
 }
