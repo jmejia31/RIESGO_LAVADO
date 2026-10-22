@@ -54,7 +54,10 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
       if (!Number.isFinite(fieldNumber) || seen.has(fieldNumber)) return [];
       seen.add(fieldNumber);
       const label = element.querySelector('dt, h4, h6')?.textContent?.trim().replace(/^\d{1,2}\s*[·.]\s*/, '').trim() ?? '';
-      const value = (element.querySelector('dd, p[aria-readonly="true"]') as HTMLElement | null)?.innerText.trim() ?? '';
+      const value = fieldNumber === 42
+        ? [...element.querySelectorAll('[data-matrix-activity] > p:first-child')]
+          .map(activity => activity.textContent?.trim() ?? '').join('\n')
+        : (element.querySelector('dd, p[aria-readonly="true"]') as HTMLElement | null)?.innerText.trim() ?? '';
       return [{ fieldNumber, label, value }];
     });
   });
@@ -64,7 +67,10 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
   expect(rendered.map(field => field.label)).toEqual(orderedFields.map(field => field.fieldLabel));
 
   const renderedByNumber = new Map(rendered.map(field => [field.fieldNumber, field]));
-  const comparableValues = orderedFields.filter(field => field.value === null || typeof field.value !== 'object');
+  // F40 is a repeater section heading; its descendants contain the actual
+  // values. F42 is compared against the visible activity descriptions below.
+  const comparableValues = orderedFields.filter(field => field.fieldNumber !== 40
+    && field.fieldNumber !== 42 && (field.value === null || typeof field.value !== 'object'));
   expect(comparableValues.length).toBeGreaterThanOrEqual(40);
   for (const field of comparableValues) {
     const renderedValue = renderedByNumber.get(field.fieldNumber)?.value ?? '';
@@ -83,6 +89,16 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
       expect(renderedValue, `F${field.fieldNumber} value differs from the Oracle projection`).toBe(expectedValue);
     }
   }
+  const activityProjection = orderedFields.find(field => field.fieldNumber === 42);
+  expect(activityProjection, 'F42 activity projection is missing').toBeDefined();
+  const normalizeActivities = (value: string): string[] => value.split(/\r?\n/).map(line => line
+    .replace(/^\s*\d+(?:\.\d+)*\s*/, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase()
+    .trim());
+  expect(normalizeActivities(renderedByNumber.get(42)?.value ?? ''), 'F42 activities differ from the Oracle projection')
+    .toEqual(normalizeActivities(String(activityProjection?.value ?? '')));
   console.log(`FULL_MATRIX_VALUE_PARITY=PASS;compared=${comparableValues.length};placeholderFakeRender=NO`);
   return comparableValues.length;
 }
