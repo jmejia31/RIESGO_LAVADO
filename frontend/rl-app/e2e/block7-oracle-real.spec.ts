@@ -22,6 +22,12 @@ function expectedProjectionDisplay(field: MatrixProjectionField): string {
       });
     return descriptions.join('\n');
   }
+  if ([23, 27, 31, 33].includes(field.fieldNumber)) {
+    const percentagePoints = typeof field.value === 'number' ? field.value : Number(field.value);
+    if (Number.isFinite(percentagePoints) && percentagePoints >= 0 && percentagePoints <= 100) {
+      return `${new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(percentagePoints)}%`;
+    }
+  }
   if (Array.isArray(field.value)) {
     return field.value.map((item, index) => {
       if (item === null || item === undefined || item === '') return `${index + 1}. [Sin dato]`;
