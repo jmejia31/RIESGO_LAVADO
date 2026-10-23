@@ -1,3 +1,41 @@
+## 2026-10-23 13:45 -06:00 - Cierre y Reconciliación Documental Final: Reparación Física Unicode Oracle (ANTIG)
+
+- **Baseline:** rama `desarrollo`; `PRE_UNICODE_DOC_HEAD=f49da4483bcf2c82215bf94ba0edbdb8fc2adf6d`, igual a `origin/desarrollo`. Runtime ejecutable certificado preservado: `CERTIFIED_RUNTIME_SHA=292af44c6399eb22931382a76677c926d469af51`.
+- **Antecedente y desfase documental:** La reparación física Unicode en la base Oracle productiva fue ejecutada el 2026-09-25 (respaldo `RL_MR_UNI_BKP_20260924` con 169 celdas, 275 reemplazos y 0 residuos post-reparación sobre 88 columnas de texto en 25 tablas). Registros posteriores en la bitácora y estado de colaboración mantuvieron menciones cautelares a «reparación física Unicode Oracle» como pendiente externo no cerrado por falta de acceso o ejecución de sonda en sesiones recientes, originando `DOCUMENTATION_STATE_DRIFT=YES`.
+- **Certificación read-only en Oracle Producción:** Se ejecutó una auditoría técnica en modo estrictamente de solo lectura directamente contra la instancia real de Oracle Producción:
+  - `TARGET_DATABASE_PROFILE=PRODUCTION`
+  - `PRODUCTION_PROFILE_RESOLVED=YES`
+  - `EXPECTED_CONNECTION_NAME=OracleDB_Production`
+  - `PRODUCTION_CONNECTION_RESOLVED=YES`
+  - `PRODUCTION_CONNECTION_SOURCE_CLASS=USER_SECRETS` (resuelto de forma segura y autorizada desde User Secrets locales sin exponer secretos)
+  - `ORACLE_CONNECTION_ATTEMPTED=YES`
+  - `ORACLE_CONNECTION_OPEN=PASS`
+  - `ORACLE_READ_ONLY_TRANSACTION_ENFORCED=YES` (`SET TRANSACTION READ ONLY`)
+- **Contexto y metadatos Oracle observados:** `DB_NLS_CHARACTERSET=WE8MSWIN1252`, `DB_NLS_NCHAR_CHARACTERSET=AL16UTF16`, `SESSION_NLS_LENGTH_SEMANTICS=BYTE`. Alcance actual: 25 tablas (`CURRENT_TABLES_IN_SCOPE=25`) y 94 columnas de texto (`CURRENT_TEXT_COLUMNS_IN_SCOPE=94`), frente a las 88 columnas del escaneo histórico original de septiembre de 2026. Todas las 94 columnas fueron completamente auditadas sin encontrar residuos.
+- **Resultados de scripts certificados en producción:**
+  - **Script 41 (`41_precheck_unicode_modulo_matrices_completo.sql`):** `UNICODE_PRECHECK_EXECUTED=YES`, `UNICODE_PRECHECK_ROWS_SCANNED=528`, `UNICODE_PRECHECK_COLUMNS_SCANNED=94`, `UNICODE_PRECHECK_SUSPECT_CELLS=0`, `UNICODE_PRECHECK_RESIDUAL_PATTERNS=0`, `UNICODE_PRECHECK_UNEXPECTED_ERRORS=0`. Conteos de inventario: `TOTAL_TOKEN_OCCURRENCES=0`, `UNIQUE_BAD_TOKENS=0`, `DETERMINISTIC_MAPPINGS=281`.
+  - **Script 44 (`44_postcheck_unicode_modulo_matrices_completo.sql`):** `UNICODE_POSTCHECK_EXECUTED=YES`, `UNICODE_POSTCHECK_ROWS_SCANNED=528`, `UNICODE_POSTCHECK_COLUMNS_SCANNED=94`, `UNICODE_POSTCHECK_RESIDUAL_CELLS=0`, `UNICODE_POSTCHECK_INVALID_PATTERNS=0`, `UNICODE_POSTCHECK_PROJECTION_PARITY=PASS`, `UNICODE_POSTCHECK_INTEGRITY=PASS`, `UNICODE_POSTCHECK_UNEXPECTED_ERRORS=0`. Integridad observada: `RISK_ROWS=59`, `EVALUATION_ROWS=59`, `PROJECTION_ROWS=59`, `ORPHAN_EVALUATIONS=0`, `INVALID_OBJECTS=0`, `DISABLED_CONSTRAINTS=0`, `PARITY_BAD_ROWS=0`, `PROJECTION_JSON_PARITY=PASS`.
+  - **Tabla de Respaldo Histórica:** `HISTORICAL_UNICODE_BACKUP_OBJECT=RL_MR_UNI_BKP_20260924`, `HISTORICAL_UNICODE_BACKUP_OBJECT_EXISTS=YES`, `HISTORICAL_UNICODE_BACKUP_ROW_COUNT=169`. Preservada intacta en la base de datos productiva.
+- **Cierre y certificación Unicode:**
+  - `UNICODE_CURRENT_STATE_VERIFIED=YES`
+  - `UNICODE_CURRENT_RESIDUES=0`
+  - `HISTORICAL_UNICODE_REPAIR_CONFIRMED_EFFECTIVE=YES`
+  - `UNICODE_PHYSICAL_REPAIR_REQUIRED_NOW=NO`
+  - `NEW_UNICODE_REPAIR_REQUIRED=NO`
+  - `ORACLE_UNICODE_PHYSICAL_REPAIR=PASS`
+  - `ORACLE_UNICODE_PHYSICAL_REPAIR_CLOSED=YES`
+  - `UNICODE_REPAIR_CERTIFIED=YES`
+  - `UNICODE_REPAIR_EXECUTED_THIS_INTERVENTION=NO`
+  - `UNICODE_DOCUMENTATION_RECONCILIATION=PASS`
+  - `UNICODE_DOCUMENTATION_RECONCILIATION_CLOSED=YES`
+- **Operaciones y seguridad en base de datos:** `PRODUCTION_DML=0`, `PRODUCTION_DDL=0`, `DATABASE_DATA_CHANGED=NO`, `DATABASE_SCHEMA_CHANGED=NO`. Cero escrituras o mutaciones realizadas en base de datos.
+- **Root Cause Histórico:** `UNICODE_HISTORICAL_ROOT_CAUSE=NOT_DETERMINED`. No se atribuye la causa raíz histórica de la corrupción a un componente específico en ausencia de evidencia demostrada; se acredita el estado físico limpio y actual.
+- **Preservación técnica e institucional:**
+  - Se mantienen plenamente vigentes y cerrados los gates técnicos: `BLOCK12_STATUS=PASS`, `BLOCK12_CLOSED=YES`, `MASTER_EXECUTION_STATUS=PASS`, `TECHNICAL_MODULE_STATUS=CLOSED`, `R11_STATUS=PASS`, `R11_CLOSED=YES`, `R12_STATUS=PASS`, `R12_CLOSED=YES`, `POINT9_STATUS=CLOSED`.
+  - Límite institucional: `FINAL_PROJECT_STATUS=NOT_CLOSED`. Los pendientes institucionales externos (capacitación institucional, autorización de release, despliegue productivo y aceptación final) conservan sus estados vigentes; la reparación física Unicode queda definitivamente cerrada y eliminada de la lista de pendientes.
+- **Cambios en esta intervención:** Modificación exclusivamente documental de `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`. Sin cambios de código de aplicación (`APPLICATION_CODE_CHANGED=NO`), configuración ni dependencias. Los cambios preexistentes ajenos continúan preservados intactos y fuera del stage.
+
+---
 ## 2026-10-23 11:44 -06:00 - Cierre documental Point 9 / Block 12 (COD)
 
 - **Baseline:** rama `desarrollo`; `PRE_POINT9_HEAD=c223ebd801d0e8c5506dd7cbcafb17671c932974; R12_DOCUMENTATION_HEAD=c223ebd801d0e8c5506dd7cbcafb17671c932974`, igual a `origin/desarrollo`. El runtime funcional continúa siendo `292af44c6399eb22931382a76677c926d469af51`.

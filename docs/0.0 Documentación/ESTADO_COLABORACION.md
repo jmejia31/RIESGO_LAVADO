@@ -1,3 +1,35 @@
+# Estado vigente — Reparación física Unicode Oracle certificada y cerrada (ANTIG) — 2026-10-23 13:45 -06:00
+
+## Certificación y cierre definitivo de Reparación Física Unicode Oracle
+
+- `ORACLE_UNICODE_PHYSICAL_REPAIR=PASS`
+- `ORACLE_UNICODE_PHYSICAL_REPAIR_CLOSED=YES`
+- `UNICODE_REPAIR_CERTIFIED=YES`
+- `UNICODE_CURRENT_STATE_VERIFIED=YES`
+- `UNICODE_CURRENT_RESIDUES=0`
+- `HISTORICAL_UNICODE_REPAIR_CONFIRMED_EFFECTIVE=YES`
+- `UNICODE_PHYSICAL_REPAIR_REQUIRED_NOW=NO`
+- `NEW_UNICODE_REPAIR_REQUIRED=NO`
+- `UNICODE_DOCUMENTATION_RECONCILIATION=PASS`
+- `UNICODE_DOCUMENTATION_RECONCILIATION_CLOSED=YES`
+- `HISTORICAL_UNICODE_BACKUP_OBJECT=RL_MR_UNI_BKP_20260924`
+- `HISTORICAL_UNICODE_BACKUP_OBJECT_EXISTS=YES`
+- `HISTORICAL_UNICODE_BACKUP_ROW_COUNT=169`
+- `PRODUCTION_DML=0`; `PRODUCTION_DDL=0`; `DATABASE_DATA_CHANGED=NO`; `DATABASE_SCHEMA_CHANGED=NO`.
+- `UNICODE_REPAIR_EXECUTED_THIS_INTERVENTION=NO`
+- `UNICODE_HISTORICAL_ROOT_CAUSE=NOT_DETERMINED`
+- **Evidencia certificada en Oracle Producción (read-only):** Sonda de certificación ejecutada con credenciales autorizadas de User Secrets (`PRODUCTION_PROFILE_RESOLVED=YES`, `PRODUCTION_CONNECTION_RESOLVED=YES`, `PRODUCTION_CONNECTION_SOURCE_CLASS=USER_SECRETS`, `ORACLE_CONNECTION_OPEN=PASS`, `ORACLE_READ_ONLY_TRANSACTION_ENFORCED=YES`).
+- **Contexto NLS auditado:** `DB_NLS_CHARACTERSET=WE8MSWIN1252`, `DB_NLS_NCHAR_CHARACTERSET=AL16UTF16`, `SESSION_NLS_LENGTH_SEMANTICS=BYTE`.
+- **Alcance auditado:** 25 tablas (`CURRENT_TABLES_IN_SCOPE=25`), 94 columnas de texto (`CURRENT_TEXT_COLUMNS_IN_SCOPE=94`, comparado con las 88 columnas del escaneo histórico de septiembre de 2026; todas las 94 columnas fueron auditadas sin residuos).
+- **Ejecución de Scripts 41 y 44 en producción:**
+  - **Script 41 Precheck:** 528 filas escaneadas en 25 tablas y 94 columnas de texto, `UNICODE_PRECHECK_SUSPECT_CELLS=0`, `UNICODE_PRECHECK_RESIDUAL_PATTERNS=0`, `UNICODE_PRECHECK_UNEXPECTED_ERRORS=0`, `TOTAL_TOKEN_OCCURRENCES=0`, `UNIQUE_BAD_TOKENS=0`, `DETERMINISTIC_MAPPINGS=281`.
+  - **Script 44 Postcheck:** 528 filas escaneadas en 25 tablas y 94 columnas de texto, `UNICODE_POSTCHECK_RESIDUAL_CELLS=0`, `UNICODE_POSTCHECK_INVALID_PATTERNS=0`, `UNICODE_POSTCHECK_PROJECTION_PARITY=PASS`, `UNICODE_POSTCHECK_INTEGRITY=PASS`, `UNICODE_POSTCHECK_UNEXPECTED_ERRORS=0`.
+  - **Integridad referencial y proyecciones:** 59 riesgos (`RISK_ROWS=59`), 59 evaluaciones (`EVALUATION_ROWS=59`), 59 proyecciones (`PROJECTION_ROWS=59`), 0 huérfanos (`ORPHAN_EVALUATIONS=0`, `ORPHAN_PROJECTIONS=0`), 0 objetos inválidos (`INVALID_OBJECTS=0`), 0 constraints deshabilitados (`DISABLED_CONSTRAINTS=0`), 0 disparidades en proyección (`PARITY_BAD_ROWS=0`, `PROJECTION_JSON_PARITY=PASS`).
+- **Desfase documental superado:** La reparación física ejecutada el 2026-09-25 se mantiene plenamente efectiva y validada. No existen residuos de corrupción Unicode en producción. La reparación física Unicode Oracle queda formalmente CERRADA y removida de los pendientes del proyecto.
+- **Gates y baseline técnico preservados:** `BLOCK12_STATUS=PASS`, `BLOCK12_CLOSED=YES`, `MASTER_EXECUTION_STATUS=PASS`, `TECHNICAL_MODULE_STATUS=CLOSED`, `R11_STATUS=PASS`, `R11_CLOSED=YES`, `R12_STATUS=PASS`, `R12_CLOSED=YES`, `POINT9_STATUS=CLOSED`.
+- **Límite institucional:** `FINAL_PROJECT_STATUS=NOT_CLOSED`. Capacitación institucional, autorización final de release, despliegue productivo y aceptación final permanecen sujetos a sus aprobaciones externas; el cierre técnico y el cierre Unicode no los conceden automáticamente.
+
+---
 # Estado vigente — R11, R12 y Block 12 técnico cerrados (COD) — 2026-10-23 11:44 -06:00
 
 ## R11 / R12 y runtime certificado
@@ -38,7 +70,7 @@ Los once gates abajo quedan `CLOSED` por reconciliación de evidencia certificad
 | `PRODUCTION_FUNCTIONAL_STATUS` | Readiness 200/200; #85 GET 200; telemetría y mutaciones en cero dentro del alcance certificado. | `CLOSED` |
 
 - `BLOCK12_TECHNICAL_RECONCILIATION=PASS`; `BLOCK12_FINAL_GATE_COUNT=11`; `BLOCK12_FINAL_GATES_CLOSED=11`; `BLOCK12_FINAL_GATES_BLOCKED=0`; `BLOCK12_FINAL_GATES_FAILED=0`; `BLOCK12_STATUS=PASS`; `BLOCK12_CLOSED=YES`; `MASTER_EXECUTION_STATUS=PASS`.
-- `FINAL_PROJECT_STATUS=NOT_CLOSED`. Capacitación institucional, reparación física Unicode Oracle, autorización de release, despliegue productivo y aceptación final permanecen sujetos a sus estados/aprobaciones externas; el cierre técnico no los concede.
+- `FINAL_PROJECT_STATUS=NOT_CLOSED`. Capacitación institucional, autorización final de release, despliegue productivo y aceptación final permanecen sujetos a sus estados/aprobaciones externas; el cierre técnico y el cierre Unicode no los conceden automáticamente.
 - El registro temporal `R12_STATUS=PENDING_FINAL_CI` del 2026-10-23 11:13 -06:00 queda supersedido por R12=PASS/CLOSED y el run exacto `39993605519` sobre `c223ebd801d0e8c5506dd7cbcafb17671c932974`.
 
 ---
