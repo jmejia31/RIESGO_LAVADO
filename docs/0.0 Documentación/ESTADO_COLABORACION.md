@@ -1,3 +1,30 @@
+# Estado vigente — R11 certificado; R12 pendiente de CI final (COD) — 2026-10-23 11:13 -06:00
+
+## Reconciliación y cierre técnico R11
+
+- `R11_STATUS=PASS`; `R11_CLOSED=YES`; requisitos A1–A10: 10/10 PASS, 0 FAIL, 0 BLOCKED. Los estados históricos `BLOCKED`/`NOT_PASS` permanecen como historia y están supersedidos por la certificación posterior del 2026-10-22 y las evidencias posteriores de Points 5–7. `R12_PRECONDITION_R11=PASS`.
+- Runtime funcional certificado: `292af44c6399eb22931382a76677c926d469af51`. Readiness productivo: `/healthz=200`, `/readyz=200`, perfil `PRODUCTION`, `OracleDB_Production` seleccionado, sin fallback legacy. El 503 histórico no se reprodujo; `HISTORICAL_READYZ_FAILURE_CLASSIFICATION=TRANSIENT_OR_NON_REPRODUCED_HISTORICAL_FAILURE`; `ROOT_CAUSE=NOT_DETERMINABLE_WITH_CURRENT_EVIDENCE`. No existe evidencia concluyente para atribuir causa técnica específica.
+
+## Evidencia final de los puntos
+
+- `POINT_4_STATUS=CLOSED`: ROP-CUMP-59 (#87) y ROP-CUMP-58 (#86), Matriz completa 82/82, HTTP 200, sin cuerpo vacío, falso conflicto ni reload manual.
+- `POINT_5_STATUS=CLOSED`; `POINT_5_REQUIREMENT_SATISFIED=YES`. Inventario vigente: APROBADA=2, BORRADOR=57, CERRADA=0, EN_REVISION=0, OBSERVADA=0, RECHAZADA=0; total=59 y conteos coinciden con la fuente. Estados sin registros quedan `NO_RECORD_AVAILABLE`. BORRADOR #85 / ROP-CUMP-57: GET `/api/matrices-riesgos/evaluaciones/85/proyeccion-institucional`, HTTP 200, `requestfailed=NO`; fuente `EXISTING_BACKEND_REQUEST_LOG`, no DevTools.
+- `POINT_6_STATUS=CLOSED`; `POINT_6_TELEMETRY_INSTRUMENTED=YES`; una ejecución válida. Ventana UTC `2026-10-23T15:56:00.778Z`–`2026-10-23T15:58:34.306Z`, con login excluido. Durante el smoke estuvieron instrumentados los eventos `console`, `pageerror`, `requestfailed`, respuestas HTTP y errores Oracle vía RL.API/Serilog. Resultados medidos: `PRODUCTION_CONSOLE_ERRORS=0`, `PRODUCTION_PAGE_ERRORS=0`, `PRODUCTION_REQUEST_FAILED=0`, `PRODUCTION_HTTP_4XX_5XX_TOTAL=0`, `PRODUCTION_UNEXPECTED_HTTP_4XX_5XX=0`, `PRODUCTION_ORACLE_ERROR_EVENTS_TOTAL=0`, `PRODUCTION_UNEXPECTED_ORACLE_ERRORS=0`. GET de #85: visto, método GET, HTTP 200.
+- `POINT_7_STATUS=CLOSED`; `POINT_7_ZERO_PRODUCTION_MUTATIONS_CERTIFIED=YES`. En la ventana: 22 request starts/ends, 11 GET, 11 OPTIONS, cero POST/PUT/PATCH/DELETE y todos HTTP <400; cero filas relevantes en `RL_MR_FLUJOS_EVALUACION` y `RL_AUDITORIA`. Evidencia de código/runtime: `InstitutionalProjectionReadRepository` read-only, cero llamadas de escritura y funciones SQL mutantes en el flujo; sin servicio Oracle mutante en segundo plano, migraciones ni DDL runtime. Cero DML/DDL manual. Gates: `PRODUCTION_STATE_TRANSITIONS=0`, `PRODUCTION_APPLICATION_DML=0`, `PRODUCTION_MANUAL_SQL_DML=0`, `PRODUCTION_DDL=0`; evidencia suficiente para el alcance atribuible al smoke/harness/contexto y ventana.
+- **Límite de auditoría:** la cuenta no permitió demostrar cobertura global completa de auditoría Oracle mediante vistas DBA/ALL. No se usa `USER_AUDIT_TRAIL=0` como prueba global. Point 7 cierra con evidencia compuesta para el smoke/harness; no afirma ausencia universal de actividad independiente en la base.
+
+## Root cause y bloqueos históricos
+
+- Los bloqueos temporales de Point 5 (captura HTTP), Point 6 (observabilidad del CUA) y Point 7 (suficiencia de evidencia de mutaciones) se resolvieron con el log backend existente, Chromium Playwright instrumentado y evidencia compuesta read-only, respectivamente. No fueron defectos funcionales demostrados.
+- El 503 histórico de `/readyz` no se reprodujo posteriormente. Su clasificación permanece `TRANSIENT_OR_NON_REPRODUCED_HISTORICAL_FAILURE`; la causa técnica es `NOT_DETERMINABLE_WITH_CURRENT_EVIDENCE`.
+- Los registros históricos de bloqueos se conservan íntegros; esta entrada posterior establece el estado vigente supersedente.
+
+## R12 — documentación publicada, CI pendiente
+
+- `R12_STATUS=PENDING_FINAL_CI`; `R12_CLOSED=NO`. En esta intervención se actualizaron solo la bitácora y este estado. No hubo cambios de código, configuración o base de datos; las pruebas de código no se repitieron por ser un cambio documental.
+- Pendiente: validar/confirmar el commit documental de dos archivos, publicarlo en `origin/desarrollo` y esperar Quality Gates `completed/success` cuyo SHA coincida exactamente con el `FINAL_HEAD` publicado. El runtime certificado sigue siendo `292af44c6399eb22931382a76677c926d469af51`; no confundirlo con el futuro SHA documental.
+- `FINAL_PROJECT_STATUS=NOT_CLOSED` mientras sigan pendientes las fases externas de capacitación institucional, reparación física Unicode Oracle, autorización de release, despliegue productivo y aceptación final.
+
 # Estado vigente - Readiness productivo y Bloque 12 cerrados (COD) - 2026-10-22 15:21 -06:00
 
 ## Certificación final de OracleReadinessProbe /readyz
