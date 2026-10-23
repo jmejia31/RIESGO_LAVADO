@@ -1,3 +1,18 @@
+# Estado vigente — Paquete de capacitación institucional preparado (COD) — 2026-10-23 14:36 -06:00
+
+## Fase A — materiales preparados; sesión institucional pendiente
+
+- `TRAINING_MATERIAL=PASS`; `INSTITUTIONAL_TRAINING_PACKAGE_READY=YES`; `TRAINING_DOCX_VISUAL_QA=PASS`; `TRAINING_CONTENT_RECONCILIATION=PASS`; `TRAINING_SCREENSHOTS_SANITIZED=NOT_USED`; `TRAINING_PII_EXPOSED=NO`; `TRAINING_SECRETS_EXPOSED=NO`.
+- Paquete Word editable ubicado en `docs/3. Módulo Matrices de Riesgos/Capacitación Institucional/`: manual de usuario, guía rápida, guía del instructor, plan/agenda, lista de asistencia, evaluación, acta de ejecución/aceptación, índice de evidencias y README índice.
+- Los ocho DOCX se abrieron y renderizaron con Microsoft Word; se inspeccionaron visualmente todas sus 30 páginas renderizadas. Se verificaron portada y control documental, estilos Word, tablas, TOC automáticas donde corresponden, campos en blanco de plantillas, pies/paginación, legibilidad, ausencia de texto cortado y consistencia del contenido. No se usaron capturas.
+- El contenido sigue los contratos vigentes: seis bloques del editor; estados `APROBADA`, `BORRADOR`, `CERRADA`, `EN_REVISION`, `OBSERVADA`, `RECHAZADA`; cambios de estado mediante Seguimiento; guardado explícito; consolidado de una fila por evaluación y exportación correspondiente al conjunto filtrado. Los permisos se describen según la asignación institucional; no se afirma un mapa de roles no demostrado. Los ejercicios usan datos sintéticos.
+- `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`; `TRAINING_READY_FOR_REAL_SESSION=YES`; `FINAL_PROJECT_STATUS=NOT_CLOSED`. Preparar el paquete no constituye una sesión ejecutada. Fase B requiere evidencia real de fecha/horario, responsable, participantes, asistencia y sesión impartida, además de evaluación o aceptación según el requerimiento aplicable.
+- Los originales de asistencia, evaluaciones y actas completadas pueden incluir datos personales o firmas: deben conservarse en repositorio institucional autorizado y restringido, no en Git sin autorización expresa.
+- Baseline de la intervención: rama `desarrollo`, `HEAD=83d1fdbd60b4ed72bfb424d48103ecce68818a27`, igual a `origin/desarrollo`. Los cambios ajenos de código y artefactos del worktree fueron preservados y excluidos del stage.
+- Archivos propios: los ocho DOCX, el README del paquete y los documentos colaborativos. No se cambiaron código, configuración, base de datos ni producción; no se repitieron certificaciones técnicas ni pruebas funcionales. Quality Gates CI del commit documental exacto queda pendiente.
+
+---
+
 # Estado vigente — Reparación física Unicode Oracle certificada y cerrada (ANTIG) — 2026-10-23 13:45 -06:00
 
 ## Certificación y cierre definitivo de Reparación Física Unicode Oracle
