@@ -1620,6 +1620,27 @@
       </div>
     </dialog>
   }
+  @if (familiaRestauracionPendiente(); as familiaRestauracion) {
+    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-justificacion-restauracion">
+      <div class="modal-container-card modal-size-sm max-w-lg">
+        <div class="modal-header-institutional">
+          <div>
+            <h2 id="titulo-justificacion-restauracion" class="text-base sm:text-lg font-bold text-gray-900">Justificación de la restauración</h2>
+            <p class="mt-1 text-xs text-gray-500">Familia {{ familiaRestauracion.famCodigo }}</p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100" title="Cancelar restauración" aria-label="Cancelar restauración" (click)="cancelarRestauracion()"><app-action-icon action="close"></app-action-icon></button>
+        </div>
+        <div class="modal-body-scrollable space-y-4">
+          <label for="motivo-restauracion" class="block text-sm font-semibold text-gray-700">Motivo <span class="text-red-600">*</span></label>
+          <textarea id="motivo-restauracion" rows="4" maxlength="500" class="w-full rounded-xl border border-gray-300 p-3 text-sm focus:border-ihss-600 focus:ring-2 focus:ring-ihss-600/20" [ngModel]="motivoRestauracion()" (ngModelChange)="motivoRestauracion.set($event)" placeholder="Escriba la justificación administrativa..."></textarea>
+        </div>
+        <div class="modal-footer-institutional">
+          <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar restauración" aria-label="Cancelar restauración" (click)="cancelarRestauracion()"><app-action-icon action="cancel"></app-action-icon></button>
+          <button type="button" class="modal-action-icon modal-action-icon--primary" title="Confirmar restauración" aria-label="Confirmar restauración" [disabled]="!motivoRestauracion().trim() || guardando()" (click)="confirmarRestauracion()"><app-action-icon action="activate"></app-action-icon></button>
+        </div>
+      </div>
+    </dialog>
+  }
   @if (modalConfirmarPredeterminadaAbierto() && familiaObjetivoPredeterminada(); as familiaObjetivo) {
     <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmar-familia-predeterminada" data-ui-default-confirmation>
       <div class="modal-container-card modal-size-sm max-w-lg">

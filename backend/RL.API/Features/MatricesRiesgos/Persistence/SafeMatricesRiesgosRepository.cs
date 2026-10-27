@@ -177,7 +177,8 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
                 SELECT FAM_CODIGO,
                        FAM_NOMBRE,
                        FAM_DESCRIPCION,
-                       FAM_ACTIVO
+                       FAM_ACTIVO,
+                       FAM_ARCHIVADA
                   FROM RL_MR_FAMILIAS_FORMULARIO
                  WHERE FAM_ID = :famId
                  FOR UPDATE";
@@ -186,6 +187,7 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
             string nombreAnterior;
             string? descripcionAnterior;
             bool activoActual;
+            bool archivadaActual;
             await using (var cmdLock = CrearComando(sqlLock, conn, transaction))
             {
                 cmdLock.Parameters.Add(new OracleParameter("famId", famId));
@@ -200,6 +202,13 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
                 nombreAnterior = reader.GetString(1);
                 descripcionAnterior = reader.IsDBNull(2) ? null : reader.GetString(2);
                 activoActual = reader.GetInt32(3) == 1;
+                archivadaActual = reader.GetInt32(4) == 1;
+            }
+
+            if (archivadaActual)
+            {
+                await transaction.RollbackAsync();
+                return false;
             }
 
             string nombre = (famNombre ?? string.Empty).Trim();
@@ -209,7 +218,8 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
                 UPDATE RL_MR_FAMILIAS_FORMULARIO
                    SET FAM_NOMBRE = :famNombre,
                        FAM_DESCRIPCION = :famDescripcion
-                 WHERE FAM_ID = :famId";
+                 WHERE FAM_ID = :famId
+                   AND FAM_ARCHIVADA = 0";
 
             await using var cmdUpdate = CrearComando(sqlUpdate, conn, transaction);
             cmdUpdate.Parameters.Add(new OracleParameter("famNombre", nombre));

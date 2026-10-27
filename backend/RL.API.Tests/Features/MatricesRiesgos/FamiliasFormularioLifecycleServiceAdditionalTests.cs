@@ -41,10 +41,35 @@ public sealed class FamiliasFormularioLifecycleServiceAdditionalTests
         repo.On(nameof(IFamiliasFormularioLifecycleRepository.RestaurarFamiliaFormularioAtomicoAsync), _ =>
             Task.FromResult(ResultadoRestauracionFamiliaFormulario.Exito));
 
-        ServiceResult result = await service.RestaurarFamiliaFormularioAsync(9);
+        ServiceResult result = await service.RestaurarFamiliaFormularioAsync(9, "ReutilizaciÃ³n administrativa");
 
         Assert.True(result.Success);
         Assert.Contains("inactiva", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Restaurar_SinJustificacion_FallaAntesDePersistir()
+    {
+        FamiliasFormularioLifecycleService service = Crear(out InterfaceStub repo);
+
+        ServiceResult result = await service.RestaurarFamiliaFormularioAsync(9, " ");
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.DoesNotContain(repo.Invocations, invocation => invocation.MethodName == nameof(IFamiliasFormularioLifecycleRepository.RestaurarFamiliaFormularioAtomicoAsync));
+    }
+
+    [Fact]
+    public async Task Activar_FamiliaArchivada_FallaConConflicto()
+    {
+        FamiliasFormularioLifecycleService service = Crear(out InterfaceStub repo);
+        repo.On(nameof(IFamiliasFormularioLifecycleRepository.ActivarFamiliaFormularioAtomicoAsync), _ =>
+            Task.FromResult(ResultadoCambioEstadoFamiliaFormulario.EstaArchivada));
+
+        ServiceResult result = await service.ActivarFamiliaFormularioAsync(9);
+
+        Assert.False(result.Success);
+        Assert.Equal(409, result.StatusCode);
     }
 
     [Theory]

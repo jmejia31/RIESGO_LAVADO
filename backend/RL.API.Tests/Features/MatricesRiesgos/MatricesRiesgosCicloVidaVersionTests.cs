@@ -114,6 +114,35 @@ public class MatricesRiesgosCicloVidaVersionTests
     }
 
     [Fact]
+    public async Task Publicar_FamiliaArchivada_Retorna409YNoInvocaRepositorio()
+    {
+        var version = new VersionFormularioDto
+        {
+            VerId = 10,
+            VerFamiliaId = 1,
+            VerCodigo = "FORM_A",
+            VerEstado = "DRAFT"
+        };
+        var familiaArchivada = new FamiliaFormularioDto
+        {
+            FamId = 1,
+            FamCodigo = "FAM_A",
+            FamActivo = false,
+            FamArchivada = true
+        };
+
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repoStub);
+        repoStub.On("ObtenerVersionFormularioAsync", _ => Task.FromResult<VersionFormularioDto?>(version));
+        repoStub.On("ObtenerFamiliaFormularioPorIdAsync", _ => Task.FromResult<FamiliaFormularioDto?>(familiaArchivada));
+
+        ServiceResult res = await service.PublicarVersionFormularioAsync(10, 99);
+
+        Assert.False(res.Success);
+        Assert.Equal(409, res.StatusCode);
+        Assert.Empty(repoStub.CallsTo("PublicarVersionFormularioAsync"));
+    }
+
+    [Fact]
     public async Task CambiarVigencia_VersionInexistente_Retorna404()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repoStub);

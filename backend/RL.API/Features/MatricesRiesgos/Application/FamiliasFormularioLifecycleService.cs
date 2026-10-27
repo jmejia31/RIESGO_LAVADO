@@ -84,10 +84,12 @@ public sealed class FamiliasFormularioLifecycleService
         };
     }
 
-    public async Task<ServiceResult> RestaurarFamiliaFormularioAsync(long famId)
+    public async Task<ServiceResult> RestaurarFamiliaFormularioAsync(long famId, string? motivo)
     {
         if (famId <= 0) return ServiceResult.BadRequest("El ID de familia especificado es inválido.");
-        ResultadoRestauracionFamiliaFormulario resultado = await _repository.RestaurarFamiliaFormularioAtomicoAsync(famId);
+        if (string.IsNullOrWhiteSpace(motivo)) return ServiceResult.BadRequest("La justificaciÃ³n de la restauraciÃ³n es obligatoria.");
+        if (motivo.Trim().Length > 500) return ServiceResult.BadRequest("La justificaciÃ³n no puede exceder 500 caracteres.");
+        ResultadoRestauracionFamiliaFormulario resultado = await _repository.RestaurarFamiliaFormularioAtomicoAsync(famId, motivo.Trim());
         return resultado switch
         {
             ResultadoRestauracionFamiliaFormulario.Exito => InvalidarYRetornar("Familia restaurada como inactiva. No se publicaron ni activaron versiones."),

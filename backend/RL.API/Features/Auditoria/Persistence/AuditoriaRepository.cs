@@ -226,4 +226,65 @@ public class AuditoriaRepository : IAuditoriaRepository
 
         return (list, total);
     }
+
+    public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorEntidadPaginadaAsync(
+        string tabla, string registroId, string? registroAlternativo, int pagina, int limite)
+    {
+        pagina = Math.Max(1, pagina);
+        limite = Math.Clamp(limite, 1, 100);
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        string identidad = string.IsNullOrWhiteSpace(registroAlternativo)
+            ? "AUD_REGISTRO_ID = :registroId"
+            : "(AUD_REGISTRO_ID = :registroId OR AUD_REGISTRO_ID = :registroAlternativo)";
+        string where = $"AUD_TABLA = :tabla AND {identidad}";
+        int total;
+        await using (var count = conn.CreateCommand())
+        {
+            count.BindByName = true;
+            count.CommandText = $"SELECT COUNT(*) FROM RL_AUDITORIA WHERE {where}";
+            count.Parameters.Add(new OracleParameter("tabla", tabla));
+            count.Parameters.Add(new OracleParameter("registroId", registroId));
+            if (!string.IsNullOrWhiteSpace(registroAlternativo)) count.Parameters.Add(new OracleParameter("registroAlternativo", registroAlternativo));
+            total = Convert.ToInt32(await count.ExecuteScalarAsync());
+        }
+
+        var datos = new List<AuditoriaDto>();
+        await using var query = conn.CreateCommand();
+        query.BindByName = true;
+        query.CommandText = $@"
+            SELECT * FROM (
+                SELECT a.*, ROWNUM rnum FROM (
+                    SELECT AUD_ID, AUD_TABLA, AUD_REGISTRO_ID, AUD_ACCION,
+                           AUD_DATOS_ANT, AUD_DATOS_NVO, AUD_USR_ID,
+                           NVL((SELECT USR_NOMBRE || ' ' || USR_APELLIDO FROM RL_USUARIOS WHERE USR_ID = AUD_USR_ID), AUD_USR_EMAIL) AS AUD_USR_EMAIL,
+                           AUD_IP, AUD_FECHA, AUD_MODULO
+                      FROM RL_AUDITORIA
+                     WHERE {where}
+                     ORDER BY AUD_FECHA DESC, AUD_ID DESC
+                ) a WHERE ROWNUM <= :maxRow
+            ) WHERE rnum > :minRow";
+        query.Parameters.Add(new OracleParameter("tabla", tabla));
+        query.Parameters.Add(new OracleParameter("registroId", registroId));
+        if (!string.IsNullOrWhiteSpace(registroAlternativo)) query.Parameters.Add(new OracleParameter("registroAlternativo", registroAlternativo));
+        query.Parameters.Add(new OracleParameter("maxRow", pagina * limite));
+        query.Parameters.Add(new OracleParameter("minRow", (pagina - 1) * limite));
+        await using var reader = await query.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            datos.Add(new AuditoriaDto
+            {
+                AudId = Convert.ToInt64(reader["AUD_ID"]), Tabla = reader["AUD_TABLA"]?.ToString() ?? string.Empty,
+                RegistroId = reader["AUD_REGISTRO_ID"]?.ToString() ?? string.Empty, Accion = reader["AUD_ACCION"]?.ToString() ?? string.Empty,
+                DatosAnt = reader["AUD_DATOS_ANT"] == DBNull.Value ? null : reader["AUD_DATOS_ANT"]?.ToString(),
+                DatosNvo = reader["AUD_DATOS_NVO"] == DBNull.Value ? null : reader["AUD_DATOS_NVO"]?.ToString(),
+                UsrId = reader["AUD_USR_ID"] == DBNull.Value ? null : Convert.ToInt64(reader["AUD_USR_ID"]),
+                UsrEmail = reader["AUD_USR_EMAIL"] == DBNull.Value ? null : reader["AUD_USR_EMAIL"]?.ToString(),
+                Ip = reader["AUD_IP"] == DBNull.Value ? null : reader["AUD_IP"]?.ToString(), Fecha = Convert.ToDateTime(reader["AUD_FECHA"]),
+                Modulo = reader["AUD_MODULO"] == DBNull.Value ? null : reader["AUD_MODULO"]?.ToString()
+            });
+        }
+        return (datos, total);
+    }
 }

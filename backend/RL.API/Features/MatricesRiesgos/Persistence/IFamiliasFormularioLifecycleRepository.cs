@@ -42,6 +42,6 @@ public interface IFamiliasFormularioLifecycleRepository
     Task<ResultadoCambioEstadoFamiliaFormulario> DesactivarFamiliaFormularioAtomicoAsync(long famId);
     Task<ResultadoEliminacionFamiliaFormulario> EliminarFamiliaFormularioSeguraAsync(long famId);
     Task<ResultadoArchivadoFamiliaFormulario> ArchivarFamiliaFormularioAtomicoAsync(long famId, string motivo);
-    Task<ResultadoRestauracionFamiliaFormulario> RestaurarFamiliaFormularioAtomicoAsync(long famId);
+    Task<ResultadoRestauracionFamiliaFormulario> RestaurarFamiliaFormularioAtomicoAsync(long famId, string motivo);
     Task<FamiliaFormularioPurgaPrecheckDto?> ObtenerPurgaPrecheckAsync(long famId);
 }

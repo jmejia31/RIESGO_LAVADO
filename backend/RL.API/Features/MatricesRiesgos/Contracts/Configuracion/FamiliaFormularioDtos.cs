@@ -94,6 +94,7 @@ public sealed class FamiliaFormularioPurgaPrecheckDto
     public int VersionesPublicadas { get; init; }
     public int VersionesPublicadasVigentes { get; init; }
     public int TotalEvaluaciones { get; init; }
+    public int TotalEvidenciasVinculadas { get; init; }
     public int TotalUsosFormula { get; init; }
     public int TotalReferenciasAuditoria { get; init; }
     public bool DependenciasCompletamenteAuditadas { get; init; }

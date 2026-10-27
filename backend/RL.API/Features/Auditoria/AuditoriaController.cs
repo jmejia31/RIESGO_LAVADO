@@ -55,6 +55,30 @@ namespace RL.API.Features.Auditoria
                 });
             }
         }
+        [HttpGet("entidad")]
+        [ModuloAuthorize(5)]
+        public async Task<IActionResult> ObtenerHistorialEntidad(
+            [FromQuery] string tabla,
+            [FromQuery] string registroId,
+            [FromQuery] string? registroAlternativo = null,
+            [FromQuery] int pagina = 1,
+            [FromQuery] int limite = 25)
+        {
+            if (string.IsNullOrWhiteSpace(tabla) || string.IsNullOrWhiteSpace(registroId))
+                return BadRequest(new { success = false, mensaje = "La tabla y el identificador de entidad son obligatorios." });
+
+            try
+            {
+                var (datos, total) = await _service.ObtenerPorEntidadPaginadaAsync(tabla.Trim(), registroId.Trim(), registroAlternativo?.Trim(), pagina, limite);
+                return Ok(new AuditoriaPaginadoDto { Datos = datos, TotalRegistros = total });
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Error al obtener el historial de auditorÃ­a de {Tabla}/{RegistroId}", tabla, registroId);
+                return StatusCode(500, new { success = false, mensaje = "OcurriÃ³ un error interno al consultar el historial.", traceId = HttpContext.TraceIdentifier });
+            }
+        }
+
         [HttpPost("exportacion")]
         [ModuloAuthorize(4, 5, 7, 8, 9)]
         [AuditRequired("Exportación Excel/PDF o generación de reporte")]

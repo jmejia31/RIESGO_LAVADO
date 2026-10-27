@@ -167,6 +167,11 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest($"La familia de formulario asociada ID {version.VerFamiliaId} no existe.");
         }
 
+        if (familia.FamArchivada)
+        {
+            return ServiceResult.Conflict($"No se puede publicar una version en la familia '{familia.FamCodigo}' porque se encuentra archivada.");
+        }
+
         if (!familia.FamActivo)
         {
             return ServiceResult.BadRequest($"No se puede publicar una versión en la familia '{familia.FamCodigo}' porque se encuentra inactiva.");

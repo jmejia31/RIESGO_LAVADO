@@ -51,6 +51,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
               JOIN RL_MR_FAMILIAS_FORMULARIO f
                 ON f.FAM_ID = v.VER_FAMILIA_ID
              WHERE f.FAM_CODIGO = :familiaCodigo
+               AND f.FAM_ACTIVO = 1
+               AND f.FAM_ARCHIVADA = 0
                AND v.VER_ESTADO = 'PUBLISHED'
                AND v.VER_VIGENTE = 1";
 
@@ -210,7 +212,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    VER_HASH = :hash
              WHERE VER_ID = :versionId
                AND VER_VIGENTE = 0
-               AND VER_ESTADO = 'DRAFT'";
+               AND VER_ESTADO = 'DRAFT'
+               AND EXISTS (
+                   SELECT 1 FROM RL_MR_FAMILIAS_FORMULARIO f
+                    WHERE f.FAM_ID = RL_MR_VERSIONES_FORMULARIO.VER_FAMILIA_ID
+                      AND f.FAM_ARCHIVADA = 0)";
 
         await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("jsonConfig", OracleDbType.Clob) { Value = jsonConfig });
@@ -246,7 +252,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             long familiaId = Convert.ToInt64(familiaIdObj);
 
             const string sqlLockFam = @"
-                SELECT FAM_ID
+                SELECT FAM_ACTIVO, FAM_ARCHIVADA
                   FROM RL_MR_FAMILIAS_FORMULARIO
                  WHERE FAM_ID = :familiaId
                  FOR UPDATE";
@@ -254,7 +260,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
             {
                 cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
-                await cmdLockFam.ExecuteScalarAsync();
+                await using var readerFam = await cmdLockFam.ExecuteReaderAsync();
+                if (!await readerFam.ReadAsync() || readerFam.GetInt32(0) != 1 || readerFam.GetInt32(1) == 1)
+                {
+                    await trans.RollbackAsync();
+                    return false;
+                }
             }
 
             const string sqlApagar = @"
@@ -326,7 +337,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 long familiaId = Convert.ToInt64(famIdObj);
 
                 const string sqlLockFam = @"
-                    SELECT FAM_ID
+                    SELECT FAM_ACTIVO, FAM_ARCHIVADA
                       FROM RL_MR_FAMILIAS_FORMULARIO
                      WHERE FAM_ID = :familiaId
                      FOR UPDATE";
@@ -334,7 +345,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
                 {
                     cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
-                    await cmdLockFam.ExecuteScalarAsync();
+                    await using var readerFam = await cmdLockFam.ExecuteReaderAsync();
+                    if (!await readerFam.ReadAsync() || readerFam.GetInt32(0) != 1 || readerFam.GetInt32(1) == 1)
+                    {
+                        await trans.RollbackAsync();
+                        return false;
+                    }
                 }
 
                 const string sqlApagar = @"
@@ -417,9 +433,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await conn.OpenAsync();
 
         const string sqlCheck = @"
-            SELECT VER_VIGENTE, VER_ESTADO
-              FROM RL_MR_VERSIONES_FORMULARIO
-             WHERE VER_ID = :versionId";
+            SELECT v.VER_VIGENTE, v.VER_ESTADO, f.FAM_ARCHIVADA
+              FROM RL_MR_VERSIONES_FORMULARIO v
+              JOIN RL_MR_FAMILIAS_FORMULARIO f ON f.FAM_ID = v.VER_FAMILIA_ID
+             WHERE v.VER_ID = :versionId";
 
         await using var cmdCheck = CrearComando(sqlCheck, conn);
         cmdCheck.Parameters.Add(new OracleParameter("versionId", versionId));
@@ -431,6 +448,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         int vigente = reader.GetInt32(0);
         string estado = reader.GetString(1);
+        int archivada = reader.GetInt32(2);
+        if (archivada == 1) return false;
         if (vigente == 1 || !estado.Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
         {
             return false;
@@ -602,7 +621,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                        AND v.VER_ESTADO = 'PUBLISHED'
                        AND v.VER_VIGENTE = 1) AS VERSION_NUMERO
               FROM RL_MR_FAMILIAS_FORMULARIO f
-             WHERE f.FAM_PREDETERMINADA = 1";
+             WHERE f.FAM_PREDETERMINADA = 1
+               AND f.FAM_ACTIVO = 1
+               AND f.FAM_ARCHIVADA = 0";
 
         await using var cmd = CrearComando(sql, conn);
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -637,7 +658,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         try
         {
             const string sqlFamilia = @"
-                SELECT FAM_CODIGO, FAM_NOMBRE, FAM_ACTIVO, FAM_PREDETERMINADA
+                SELECT FAM_CODIGO, FAM_NOMBRE, FAM_ACTIVO, FAM_PREDETERMINADA, FAM_ARCHIVADA
                   FROM RL_MR_FAMILIAS_FORMULARIO
                  WHERE FAM_ID = :famId
                  FOR UPDATE";
@@ -645,6 +666,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             string codigo;
             string nombre;
             bool activa;
+            bool archivada;
             await using (var cmdFamilia = CrearComando(sqlFamilia, conn, transaction))
             {
                 cmdFamilia.Parameters.Add(new OracleParameter("famId", famId));
@@ -658,9 +680,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 codigo = reader.GetString(0);
                 nombre = reader.GetString(1);
                 activa = reader.GetInt32(2) == 1;
+                archivada = reader.GetInt32(4) == 1;
             }
 
-            if (!activa)
+            if (!activa || archivada)
             {
                 await transaction.RollbackAsync();
                 return ResultadoFamiliaPredeterminada.Inactiva;
@@ -712,7 +735,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 UPDATE RL_MR_FAMILIAS_FORMULARIO
                    SET FAM_PREDETERMINADA = 1
                  WHERE FAM_ID = :famId
-                   AND FAM_ACTIVO = 1";
+                   AND FAM_ACTIVO = 1
+                   AND FAM_ARCHIVADA = 0";
             await using (var cmdEstablecer = CrearComando(sqlEstablecer, conn, transaction))
             {
                 cmdEstablecer.Parameters.Add(new OracleParameter("famId", famId));
@@ -2043,6 +2067,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
               JOIN RL_MR_FAMILIAS_FORMULARIO f
                 ON f.FAM_ID = v.VER_FAMILIA_ID
              WHERE f.FAM_PREDETERMINADA = 1
+               AND f.FAM_ACTIVO = 1
+               AND f.FAM_ARCHIVADA = 0
                AND v.VER_ESTADO = 'PUBLISHED'
                AND v.VER_VIGENTE = 1
                AND (SELECT COUNT(*)
@@ -2669,11 +2695,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         bool exigirVigente)
     {
         string sqlVersion = @"
-            SELECT VER_JSON
-              FROM RL_MR_VERSIONES_FORMULARIO
-             WHERE VER_ID = :versionId
-               AND VER_ESTADO = 'PUBLISHED'";
-        if (exigirVigente) sqlVersion += " AND VER_VIGENTE = 1";
+            SELECT v.VER_JSON
+              FROM RL_MR_VERSIONES_FORMULARIO v
+              JOIN RL_MR_FAMILIAS_FORMULARIO f ON f.FAM_ID = v.VER_FAMILIA_ID
+             WHERE v.VER_ID = :versionId
+               AND v.VER_ESTADO = 'PUBLISHED'";
+        if (exigirVigente) sqlVersion += " AND v.VER_VIGENTE = 1 AND f.FAM_ACTIVO = 1 AND f.FAM_ARCHIVADA = 0";
 
         await using var cmdVersion = CrearComando(sqlVersion, conn, transaction);
         cmdVersion.Parameters.Add(new OracleParameter("versionId", versionFormularioId));

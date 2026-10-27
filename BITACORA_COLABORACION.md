@@ -1,5 +1,15 @@
 ## 2026-10-27 09:10 -06:00 - Ciclo de vida seguro de familias de formularios (COD)
 
+## 2026-10-27 09:58 -06:00 - Correccion quirurgica del ciclo de vida de familias (COD)
+
+- **Baseline:** rama `desarrollo`, SHA inicial `c7663b248df7520648839a2f698538a717073db3`, igual a `origin/desarrollo`. Se preservaron cambios tracked/untracked ajenos y no se incluyeron en el stage.
+- **Alcance ejecutado:** identidad canonica de auditoria por `FAM_ID` con codigo alternativo, historial paginado por entidad, auditoria explicita de archivar/restaurar/activar/desactivar, justificacion obligatoria de restauracion, guardas de familia activa/no archivada para publicar, vigencia, borrador, evaluacion y predeterminada, y prechequeo de purga con evidencias vinculadas.
+- **Frontend:** acciones de archivar/restaurar con confirmacion institucional y motivo obligatorio, mensajes de estado, filtros/indicadores de archivado, historial reciente y carga progresiva de actividad. Se actualizo el override de `fast-uri` de `3.1.8` a `3.1.9` en `package.json` y lock para cerrar el advisory de CI sin upgrade mayor de Angular.
+- **Pruebas verificadas:** build/backend focalizado y regresion del alcance `85/85 PASS`; validadores de estructura, base de datos y enlaces documentales PASS; `npm audit` PASS con `0 vulnerabilities`; caracterizacion previa de UI del modal `23/23 PASS`.
+- **Limitaciones:** la suite backend completa obtuvo `1085 PASS`, `2 SKIP` y `5 FAIL` unicamente porque las pruebas Oracle requieren `Database:Profile=LOCAL_XE`, no disponible en este entorno. `npm ci`/build/test frontend de esta ejecucion quedaron pendientes por bloqueo Windows `EBUSY` en `node_modules/sass-embedded-win32-x64`; no se modificaron procesos existentes. No se ejecuto Oracle ni se modifico produccion; E2E queda pendiente de CI.
+- **CI investigado:** run `40528313606` fallo exclusivamente en `npm audit` por `fast-uri` vulnerable `<3.1.9`; el cambio correctivo queda listo para el nuevo CI despues del commit/push.
+- **Continuacion:** revisar diff final, ejecutar quality gates disponibles, confirmar unicamente archivos propios, commit/push normal a `origin/desarrollo`, y esperar el CI del SHA exacto.
+
 - **Baseline:** rama `desarrollo`; `BASELINE_HEAD=8482be1c`; igual a `origin/desarrollo` al inicio. Se preservaron y excluyeron del stage cambios y artefactos preexistentes ajenos.
 - **Objetivo:** archivado reversible, restauración como inactiva, filtros/listado, bloqueo de operaciones sobre archivadas, precheck de purga solo lectura y trazabilidad administrativa.
 - **Cambios:** persistencia idempotente para `FAM_ARCHIVADA`, fecha, usuario y motivo; endpoints admin de archivar/restaurar; auditoría, bloqueo de fila y transacciones; UI con filtros, estado ARCHIVADA, modal de justificación y restauración.

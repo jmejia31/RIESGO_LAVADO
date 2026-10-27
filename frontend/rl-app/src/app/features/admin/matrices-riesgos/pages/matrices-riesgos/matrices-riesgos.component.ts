@@ -132,6 +132,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly modalConfirmarPredeterminadaAbierto = signal(false);
   readonly familiaArchivadoPendiente = signal<FamiliaFormularioDto | null>(null);
   readonly motivoArchivado = signal('');
+  readonly familiaRestauracionPendiente = signal<FamiliaFormularioDto | null>(null);
+  readonly motivoRestauracion = signal('');
 
   readonly cargandoConsolidado = signal(false);
   readonly errorConsolidado = signal<string | null>(null);
@@ -1088,12 +1090,29 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       title: `¿Restaurar la familia ${fam.famNombre}?`,
       message: 'La familia se restaurará como INACTIVA. No se publicarán ni activarán versiones automáticamente.',
       icon: 'question', confirmLabel: 'Restaurar', cancelLabel: 'Cancelar', confirmIcon: 'activate', confirmVariant: 'success'
-    }).then(confirmed => { if (confirmed) this.restaurarFamilia(fam); });
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.familiaRestauracionPendiente.set(fam);
+      this.motivoRestauracion.set('');
+    });
   }
 
-  restaurarFamilia(fam: FamiliaFormularioDto): void {
+  cancelarRestauracion(): void {
+    this.familiaRestauracionPendiente.set(null);
+    this.motivoRestauracion.set('');
+  }
+
+  confirmarRestauracion(): void {
+    const familia = this.familiaRestauracionPendiente();
+    const motivo = this.motivoRestauracion().trim();
+    if (!familia || !motivo) return;
+    this.cancelarRestauracion();
+    this.restaurarFamilia(familia, motivo);
+  }
+
+  restaurarFamilia(fam: FamiliaFormularioDto, motivo: string): void {
     this.guardando.set(true);
-    this.service.restaurarFamiliaFormulario(fam.famId).subscribe({
+    this.service.restaurarFamiliaFormulario(fam.famId, motivo).subscribe({
       next: () => { this.guardando.set(false); this.mostrarMensaje('Familia restaurada como inactiva.'); this.cargarFamilias(); },
       error: error => { this.guardando.set(false); this.mostrarError(this.obtenerMensajeError(error, 'No se pudo restaurar la familia.')); this.cargarFamilias(); }
     });
