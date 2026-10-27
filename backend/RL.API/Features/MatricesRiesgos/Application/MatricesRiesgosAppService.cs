@@ -233,23 +233,23 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         {
             FamiliaFormularioDto? familia = await _repo.ObtenerFamiliaFormularioPorIdAsync(version.VerFamiliaId);
             if (familia is null)
-                return ServiceResult.BadRequest("No se puede reactivar la versiÃ³n porque su familia ya no existe.");
+                return ServiceResult.BadRequest("No se puede reactivar la version porque su familia ya no existe.");
             if (familia.FamArchivada || !familia.FamActivo)
-                return ServiceResult.Conflict("No se puede reactivar una versiÃ³n histÃ³rica mientras su familia estÃ© archivada o inactiva.");
+                return ServiceResult.Conflict("No se puede reactivar una version historica mientras su familia este archivada o inactiva.");
 
             if (!string.IsNullOrWhiteSpace(version.VerHash)
                 && !CalcularHashSha256(version.VerJson).Equals(version.VerHash, StringComparison.OrdinalIgnoreCase))
-                return ServiceResult.Conflict("La versiÃ³n histÃ³rica no puede reactivarse porque su hash no coincide con la definiciÃ³n persistida.");
+                return ServiceResult.Conflict("La version historica no puede reactivarse porque su hash no coincide con la definicion persistida.");
 
             FormularioDefinitionValidationResult definicion =
                 await _validador.ValidarDefinicionPublicableAsync(version.VerJson);
             if (!definicion.Valido)
-                return ServiceResult.BadRequest("La versiÃ³n histÃ³rica no cumple actualmente el contrato del formulario y permanece bloqueada.");
+                return ServiceResult.BadRequest("La version historica no cumple actualmente el contrato del formulario y permanece bloqueada.");
 
             IReadOnlyList<FormulaDiagnostic> runtimeErrors =
                 await _versionedRuntime.ValidateForPublicationAsync(versionId, version.VerJson);
             if (runtimeErrors.Count > 0)
-                return ServiceResult.BadRequest("La versiÃ³n histÃ³rica no puede reactivarse porque sus dependencias de runtime ya no son vÃ¡lidas.");
+                return ServiceResult.BadRequest("La version historica no puede reactivarse porque sus dependencias de runtime ya no son validas.");
         }
 
         bool actualizado = await _repo.CambiarEstadoVigenciaFormularioAsync(versionId, vigente, usuarioId);
