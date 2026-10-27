@@ -152,7 +152,7 @@
               <div class="flex items-center justify-between gap-3">
                 <h4 id="titulo-actividad-familia" class="text-base font-bold text-gray-950">Actividad reciente</h4>
                 @if (totalActividad() > 4 && !mostrandoHistorialCompleto()) {
-                  <button type="button" class="text-xs font-bold text-ihss-700 hover:text-ihss-900" title="Ver historial completo de la familia" aria-label="Ver historial completo de la familia" (click)="mostrarHistorialCompleto()">Ver historial completo</button>
+                  <button type="button" class="inline-flex items-center gap-1 text-xs font-bold text-ihss-700 hover:text-ihss-900" title="Ver historial completo de la familia" aria-label="Ver historial completo de la familia" (click)="mostrarHistorialCompleto()"><app-action-icon action="view"></app-action-icon><span>Ver historial completo</span></button>
                 }
               </div>
               @if (cargandoActividad()) {
@@ -190,7 +190,7 @@
           </button>
               }
               @if (mostrandoHistorialCompleto() && auditoria().length < totalActividad() && !cargandoActividad()) {
-                <button type="button" class="mt-4 w-full rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50" title="Cargar más actividad" aria-label="Cargar más actividad" (click)="cargarMasActividad()">Cargar más actividad</button>
+                <button type="button" class="mt-4 inline-flex w-full items-center justify-center gap-1 rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50" title="Cargar más actividad" aria-label="Cargar más actividad" (click)="cargarMasActividad()"><app-action-icon action="upload"></app-action-icon><span>Cargar más actividad</span></button>
               }
             </div>
 
