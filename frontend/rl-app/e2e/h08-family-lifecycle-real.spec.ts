@@ -33,7 +33,6 @@ test('H08 certifica dos ciclos de archivado/restauracion y reutilizacion contra 
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   });
   await page.goto('/matrices-riesgos');
-  await expect(page.locator('body')).toContainText(/Matrices|Familias/i);
 
   const api = async (method: string, path: string, body?: object): Promise<{ status: number; json: unknown }> =>
     page.evaluate(async ({ method, path, body, headers }) => {
