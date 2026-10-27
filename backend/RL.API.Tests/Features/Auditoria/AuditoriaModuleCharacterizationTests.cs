@@ -21,11 +21,13 @@ public sealed class AuditoriaModuleCharacterizationTests
         var controllerType = typeof(AuditoriaController);
         var route = Assert.Single(controllerType.GetCustomAttributes(typeof(RouteAttribute), inherit: true).Cast<RouteAttribute>());
         var obtener = controllerType.GetMethod(nameof(AuditoriaController.ObtenerBitacora))!;
+        var historialFamilia = controllerType.GetMethod(nameof(AuditoriaController.ObtenerHistorialFamilia))!;
         var exportar = controllerType.GetMethod(nameof(AuditoriaController.RegistrarExportacion))!;
 
         Assert.Equal("api/[controller]", route.Template);
         Assert.NotNull(controllerType.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).SingleOrDefault());
         Assert.Equal(new[] { 5 }, ObtenerModulos(Assert.Single(obtener.GetCustomAttributes(typeof(ModuloAuthorizeAttribute), inherit: true).Cast<ModuloAuthorizeAttribute>())));
+        Assert.Equal(new[] { 10 }, ObtenerModulos(Assert.Single(historialFamilia.GetCustomAttributes(typeof(ModuloAuthorizeAttribute), inherit: true).Cast<ModuloAuthorizeAttribute>())));
         Assert.Equal(new[] { 4, 5, 7, 8, 9 }, ObtenerModulos(Assert.Single(exportar.GetCustomAttributes(typeof(ModuloAuthorizeAttribute), inherit: true).Cast<ModuloAuthorizeAttribute>())));
     }
 
@@ -60,6 +62,18 @@ public sealed class AuditoriaModuleCharacterizationTests
 
         Assert.Single(response.Datos);
         Assert.Equal(("RL_MR_FAMILIAS_FORMULARIO", "7", "FAMILIA_A", 2, 25), repository.UltimaEntidad);
+    }
+
+    [Fact]
+    public async Task ObtenerHistorialFamilia_UsaEndpointDeMatricesConIdCanonico()
+    {
+        var repository = new AuditoriaRepositoryFake { Datos = new List<AuditoriaDto> { new() { AudId = 8, RegistroId = "7" } }, Total = 1 };
+        var controller = CrearController(repository);
+
+        var result = Assert.IsType<OkObjectResult>(await controller.ObtenerHistorialFamilia(7, 2, 25));
+
+        Assert.Single(Assert.IsType<AuditoriaPaginadoDto>(result.Value).Datos);
+        Assert.Equal((7L, 2, 25), repository.UltimaFamilia);
     }
 
     [Fact]
@@ -164,6 +178,7 @@ public sealed class AuditoriaModuleCharacterizationTests
         public bool LanzarEnConsulta { get; init; }
         public (int Pagina, int Limite, string? Buscar, string? Accion, string? Modulo, string? Tabla, DateTime? Inicio, DateTime? Fin)? UltimaConsulta { get; private set; }
         public (string Tabla, string RegistroId, string? Alternativo, int Pagina, int Limite)? UltimaEntidad { get; private set; }
+        public (long FamiliaId, int Pagina, int Limite)? UltimaFamilia { get; private set; }
         public List<AuditoriaRegistro> Registros { get; } = new();
 
         public Task RegistrarAsync(string tabla, string registroId, string accion, string? datosAnt, string? datosNvo, long? usrId, string? email, string? ip, string? modulo)
@@ -184,6 +199,12 @@ public sealed class AuditoriaModuleCharacterizationTests
         public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorEntidadPaginadaAsync(string tabla, string registroId, string? registroAlternativo, int pagina, int limite)
         {
             UltimaEntidad = (tabla, registroId, registroAlternativo, pagina, limite);
+            return Task.FromResult((Datos, Total));
+        }
+
+        public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorFamiliaPaginadaAsync(long familiaId, int pagina, int limite)
+        {
+            UltimaFamilia = (familiaId, pagina, limite);
             return Task.FromResult((Datos, Total));
         }
     }

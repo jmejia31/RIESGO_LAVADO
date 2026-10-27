@@ -4,6 +4,14 @@
 
 El módulo usa Angular (`frontend/rl-app`), ASP.NET Core (`backend/RL.API`) y Oracle (`RIESGO_LAVADO`). La API calcula y valida en servidor; Angular no es autoridad de scoring, permisos ni estados. El renderer consume el JSON versionado y `ReportPreview` es compartido por reportes y Excel.
 
+## Gobierno del ciclo de vida H01-H14
+
+La transición de familias y formularios se gobierna en servidor y Oracle. H01 protege la vigencia histórica y bloquea familias archivadas; H05 registra cada transición de versión en la transacción de negocio; H06/H07 serializan el bloqueo y la relectura de familia para evitar que una carrera de archivado elimine o actualice un borrador. H02/H09 exponen el historial de una familia mediante una consulta específica autorizada para módulo 10, con resolución canónica por ID y paginación aislada.
+
+El frontend centraliza `familiaArchivada`/`puedeGestionarFamilia` en los modales de detalle y edición. Una familia archivada es visible como `ARCHIVADA`, permanece consultable y no ofrece mutaciones administrativas. La eliminación ordinaria usa iconografía `delete`, no `versions`, y el backend rechaza familias archivadas dentro de su transacción (H10/H11). Los KPI de familias provienen del consolidado servidor y los filtros archivado/estado no se mezclan con el total institucional (H12).
+
+Antes de devolver vigencia a una versión histórica se validan familia, hash de definición, contrato JSON y runtime versionado; una discrepancia bloquea la operación sin modificar el JSON histórico (H13). La migración de ciclo de vida se mantiene preparada para Oracle XE descartable y no se ha ejecutado contra Oracle productivo (H14).
+
 ## Oracle
 
 El modelo operativo tiene 17 tablas: familias, versiones, catálogos, elementos, reglas, riesgos, evaluaciones, proyecciones, flujos, controles, evaluaciones de controles, planes, actividades, evidencias, vínculos de evidencias, señales y automonitoreo. El motor añade ocho tablas de fórmulas/versiones/funciones/parámetros. Las secuencias y restricciones están versionadas en `database/19_matrices_riesgos`.
