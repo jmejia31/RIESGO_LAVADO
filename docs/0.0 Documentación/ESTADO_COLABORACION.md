@@ -3251,9 +3251,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - R11 productivo no se inició: la política rechazó el comando de proceso exacto antes de iniciar API, sin llamadas HTTP ni Oracle. `R11_STATUS=BLOCKED`; root cause permanece pendiente. No cerrar Bloque 12.
 # Estado vigente - Intervencion quirurgica integral H01-H14 (COD) - 2026-10-27 14:30 -06:00
 
-- `CURRENT_BRANCH=desarrollo`; `BASELINE_HEAD=f9434f1dc68f1944d8caf65d4911a82cf769440e`; `CURRENT_HEAD=881c02b8f3bb6a41ec5e9b4182d8e60d36547e24`; `REMOTE=origin/desarrollo`.
+- `CURRENT_BRANCH=desarrollo`; `BASELINE_HEAD=f9434f1dc68f1944d8caf65d4911a82cf769440e`; `CURRENT_HEAD=ae7775fe2cbf75d5da96e940690d8a806ae1aabf`; `REMOTE=origin/desarrollo`.
 - `H01=PASS`; `H05=PASS`; `H06=PASS`; `H07=PASS`; `H02=PASS`; `H03=PASS`; `H04=PASS`; `H09=PASS`; `H10=PASS`; `H11=PASS`; `H12=PASS_BY_SERVER_TOTALS_AND_FILTERS`; `H13=PASS`; `H14=READY_FOR_AUTHORIZATION_NOT_PRODUCTION_EXECUTED`.
-- Evidencia CI: `40550147162`, `40552319243`, `40555729812`, `40558149309` y `40562316800` success sobre sus SHA exactos; el ultimo corresponde a `881c02b8` y fue rerun por una falla E2E flaky.
+- Evidencia CI: `40550147162`, `40552319243`, `40555729812`, `40558149309` y `40562316800` success funcional; `40566357987` success sobre el HEAD documental `ae7775fe`. El funcional fue rerun por una falla E2E flaky.
 - Evidencia local: build Release backend PASS; auditoria `10/10`; ciclo de vida `34/34`; revalidacion historica `13/13`; Angular local bloqueado por ausencia de `@angular/build:unit-test`; Oracle local bloqueado por ausencia de `Database:Profile=LOCAL_XE`.
 - No se ejecuto Oracle productivo, no hubo DDL/DML productivo, no se elimino `PRUEBA_FORMULARIO`, no se modifico `main`. Cambios ajenos permanecen preservados fuera del stage.
 - Punto de cierre: H08 cuenta con E2E Oracle XE y regresion integral del repositorio; no se afirma una prueba separada de dos ciclos completos de archivado/restauracion. H14 queda listo para autorizacion, con migracion productiva no ejecutada.
