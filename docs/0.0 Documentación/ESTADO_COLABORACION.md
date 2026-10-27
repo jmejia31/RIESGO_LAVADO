@@ -3257,3 +3257,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia local: build Release backend PASS; auditoria `10/10`; ciclo de vida `34/34`; revalidacion historica `13/13`; Angular local bloqueado por ausencia de `@angular/build:unit-test`; Oracle local bloqueado por ausencia de `Database:Profile=LOCAL_XE`.
 - No se ejecuto Oracle productivo, no hubo DDL/DML productivo, no se elimino `PRUEBA_FORMULARIO`, no se modifico `main`. Cambios ajenos permanecen preservados fuera del stage.
 - Punto de cierre: H08 cuenta con E2E Oracle XE y regresion integral del repositorio; no se afirma una prueba separada de dos ciclos completos de archivado/restauracion. H14 queda listo para autorizacion, con migracion productiva no ejecutada.
+
+## Estado vigente - H02 y H08 certificados quirurgicamente (COD) - 2026-10-27 15:46 -06:00
+
+- `CURRENT_BRANCH=desarrollo`; codigo funcional final `6ada2eb1c99e689837193946784c64dcc17847bf` antes de este handoff documental. `main` no fue modificado.
+- `H02_STATUS=PASS`: historial de familia resuelto por ID y codigo canonico, aislamiento confirmado, paginacion Oracle XE `25/25/10`, deduplicacion frontend y proteccion contra respuestas fuera de orden. CI exacto `40578732525=completed/success` sobre `ba431754`.
+- `H08_STATUS=PASS`: host Oracle XE dedicado e idempotente, Angular navegable, endpoints reales de ciclo de vida, dos ciclos archive/restore/reactivate, rechazos de estado invalido, version/evaluacion/evidencia/vinculo preservados y auditoria monotona con minimo historico. CI exacto `40587631488=completed/success` sobre `6ada2eb1`; marcadores H08 completos y `audit=6` observado.
+- Commits propios de la intervencion: `8424af14`, `61b6457d`, `af6383cc`, `773824a2`, `ba431754`, `2b585836`, `840e1bcf`, `09e0146a`, `2a4cb8bf`, `cfcabf48`, `6ada2eb1`. Todos publicados en `origin/desarrollo`.
+- Pruebas: build host Release PASS (0 errores); CI backend `1097 passed, 1 skipped`; H02 Oracle PASS; H08 dedicado `1 passed`; Quality Gates completo PASS. Frontend unitario local queda `PENDIENTE_LOCAL` por dependencia `@angular/build:unit-test` ausente; CI lo ejecuto correctamente.
+- Restricciones: Python 3 no disponible localmente, por lo que la validacion local de Agent Skills quedo delegada a CI. No se uso Oracle productivo, no hubo DDL/DML productivo, no se altero `PRUEBA_FORMULARIO`, no se ejecuto migracion 54 y no se toco `main`.
+- Estado de Git: los cambios ajenos tracked/untracked identificados al inicio permanecen preservados y fuera del stage; los archivos propios de esta intervencion se publican con el commit documental siguiente. Punto de continuacion: cualquier cierre institucional o publicacion en `main` requiere aprobacion expresa de Javier Mejia.
