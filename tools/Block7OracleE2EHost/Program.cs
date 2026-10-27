@@ -428,6 +428,14 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
     ];
     foreach (string sql in ddl)
         try { await ExecuteAsync(connection, sql); } catch (OracleException exception) when (exception.Number == 955) { }
+    foreach (string sql in new[]
+    {
+        "ALTER TABLE RL_MR_FAMILIAS_FORMULARIO ADD (FAM_PREDETERMINADA NUMBER(1))",
+        "ALTER TABLE RL_MR_FAMILIAS_FORMULARIO ADD (FAM_FECHA_ARCHIVADO DATE)",
+        "ALTER TABLE RL_MR_FAMILIAS_FORMULARIO ADD (FAM_USR_ARCHIVADO NUMBER(10))",
+        "ALTER TABLE RL_MR_FAMILIAS_FORMULARIO ADD (FAM_MOTIVO_ARCHIVADO VARCHAR2(500))"
+    })
+        try { await ExecuteAsync(connection, sql); } catch (OracleException exception) when (exception.Number == 1430) { }
     foreach (string sequence in new[]
     {
         "SEQ_RL_MR_EVALUACIONES", "SEQ_RL_MR_PROYECCIONES", "SEQ_RL_MR_FLUJOS", "SEQ_RL_AUDITORIA",
