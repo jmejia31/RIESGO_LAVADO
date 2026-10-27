@@ -130,6 +130,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly operacionPredeterminadaEnCurso = signal(false);
   readonly familiaObjetivoPredeterminada = signal<FamiliaFormularioDto | null>(null);
   readonly modalConfirmarPredeterminadaAbierto = signal(false);
+  readonly familiaArchivadoPendiente = signal<FamiliaFormularioDto | null>(null);
+  readonly motivoArchivado = signal('');
 
   readonly cargandoConsolidado = signal(false);
   readonly errorConsolidado = signal<string | null>(null);
@@ -143,6 +145,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly detalleFamiliaDinamicoAbierto = signal(false);
   readonly filtroBuscarFamilia = signal('');
   readonly filtroEstadoFamilia = signal('TODAS');
+  readonly filtroArchivadoFamilia = signal<'NO_ARCHIVADAS' | 'ARCHIVADAS' | 'TODAS'>('NO_ARCHIVADAS');
   readonly filtroVigenciaFamilia = signal('TODAS');
   readonly filtroBuscarConsolidado = signal('');
   readonly filtroEstadoConsolidado = signal('TODOS');
@@ -152,7 +155,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly registrosPorPaginaFamilias = signal(10);
   readonly totalRegistrosFamilias = signal(0);
   readonly totalPaginasFamiliasServidor = signal(0);
-  readonly totalesFamiliasServidor = signal({ totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 });
+  readonly totalesFamiliasServidor = signal({ totalFamilias: 0, activas: 0, inactivas: 0, archivadas: 0, totalVersiones: 0 });
   readonly familiaNuevaSeleccionada = computed(() =>
     this.familias().find(familia => familia.famCodigo === this.familiaSeleccionada())
       ?? (() => {
@@ -534,6 +537,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       tamanoPagina: this.registrosPorPaginaFamilias(),
       buscar: this.filtroBuscarFamilia(),
       estado: this.filtroEstadoFamilia() as 'TODAS' | 'ACTIVAS' | 'INACTIVAS',
+      archivado: this.filtroArchivadoFamilia(),
       vigencia: this.filtroVigenciaFamilia() as 'TODAS' | 'VIGENTES' | 'SIN_VIGENTE'
     }).subscribe({
       next: resultado => {
@@ -547,11 +551,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.paginaFamilias.set(resultado?.pagina ?? 1);
         this.totalRegistrosFamilias.set(resultado?.totalRegistros ?? 0);
         this.totalPaginasFamiliasServidor.set(resultado?.totalPaginas ?? 0);
-        this.totalesFamiliasServidor.set(resultado?.totales ?? {
-          totalFamilias: 0,
-          activas: 0,
-          inactivas: 0,
-          totalVersiones: 0
+        this.totalesFamiliasServidor.set({
+          totalFamilias: resultado?.totales?.totalFamilias ?? 0,
+          activas: resultado?.totales?.activas ?? 0,
+          inactivas: resultado?.totales?.inactivas ?? 0,
+          archivadas: resultado?.totales?.archivadas ?? 0,
+          totalVersiones: resultado?.totales?.totalVersiones ?? 0
         });
         if (this.familiaSeleccionada() && !items.some(f => f.famCodigo === this.familiaSeleccionada())) {
           this.familiaSeleccionada.set('');
@@ -652,6 +657,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   limpiarFiltrosFamilias(): void {
     this.filtroBuscarFamilia.set('');
     this.filtroEstadoFamilia.set('TODAS');
+    this.filtroArchivadoFamilia.set('NO_ARCHIVADAS');
     this.filtroVigenciaFamilia.set('TODAS');
     this.paginaFamilias.set(1);
     this.cargarFamilias();
@@ -665,6 +671,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   cambiarEstadoFamilia(valor: string): void {
     this.filtroEstadoFamilia.set(valor);
+    this.paginaFamilias.set(1);
+    this.cargarFamilias();
+  }
+
+  cambiarArchivadoFamilia(valor: string): void {
+    if (valor !== 'NO_ARCHIVADAS' && valor !== 'ARCHIVADAS' && valor !== 'TODAS') return;
+    this.filtroArchivadoFamilia.set(valor);
     this.paginaFamilias.set(1);
     this.cargarFamilias();
   }
@@ -1032,6 +1045,57 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo activar la familia.'));
         this.cargarFamilias();
       }
+    });
+  }
+
+  confirmarArchivarFamilia(fam: FamiliaFormularioDto): void {
+    if (fam.famActivo || fam.famArchivada || fam.famPredeterminada) return;
+    void this.confirmation.confirm({
+      title: `¿Archivar la familia ${fam.famNombre}?`,
+      message: 'Se retirará de los listados operativos y se conservarán versiones, evaluaciones y auditoría. La restauración devolverá la familia a estado inactivo.',
+      icon: 'warning', confirmLabel: 'Archivar', cancelLabel: 'Cancelar', confirmIcon: 'deactivate', confirmVariant: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.familiaArchivadoPendiente.set(fam);
+      this.motivoArchivado.set('');
+    });
+  }
+
+  cancelarArchivado(): void {
+    this.familiaArchivadoPendiente.set(null);
+    this.motivoArchivado.set('');
+  }
+
+  confirmarArchivado(): void {
+    const familia = this.familiaArchivadoPendiente();
+    const motivo = this.motivoArchivado().trim();
+    if (!familia || !motivo) return;
+    this.cancelarArchivado();
+    this.archivarFamilia(familia, motivo);
+  }
+
+  archivarFamilia(fam: FamiliaFormularioDto, motivo: string): void {
+    this.guardando.set(true);
+    this.service.archivarFamiliaFormulario(fam.famId, motivo).subscribe({
+      next: () => { this.guardando.set(false); this.mostrarMensaje('Familia archivada correctamente. El historial se conserva.'); this.cargarFamilias(); },
+      error: error => { this.guardando.set(false); this.mostrarError(this.obtenerMensajeError(error, 'No se pudo archivar la familia.')); this.cargarFamilias(); }
+    });
+  }
+
+  confirmarRestaurarFamilia(fam: FamiliaFormularioDto): void {
+    if (!fam.famArchivada) return;
+    void this.confirmation.confirm({
+      title: `¿Restaurar la familia ${fam.famNombre}?`,
+      message: 'La familia se restaurará como INACTIVA. No se publicarán ni activarán versiones automáticamente.',
+      icon: 'question', confirmLabel: 'Restaurar', cancelLabel: 'Cancelar', confirmIcon: 'activate', confirmVariant: 'success'
+    }).then(confirmed => { if (confirmed) this.restaurarFamilia(fam); });
+  }
+
+  restaurarFamilia(fam: FamiliaFormularioDto): void {
+    this.guardando.set(true);
+    this.service.restaurarFamiliaFormulario(fam.famId).subscribe({
+      next: () => { this.guardando.set(false); this.mostrarMensaje('Familia restaurada como inactiva.'); this.cargarFamilias(); },
+      error: error => { this.guardando.set(false); this.mostrarError(this.obtenerMensajeError(error, 'No se pudo restaurar la familia.')); this.cargarFamilias(); }
     });
   }
 

@@ -219,7 +219,7 @@ public sealed class MatricesRiesgosFamiliasF65Fam1Tests
         string source = ObtenerMetodoFuente(
             LeerLifecycleRepository(),
             "EliminarFamiliaFormularioSeguraAsync",
-            "ObtenerFamiliaBloqueadaAsync");
+            "ArchivarFamiliaFormularioAtomicoAsync");
 
         Assert.Contains("FROM RL_MR_VERSIONES_FORMULARIO", source, StringComparison.Ordinal);
         Assert.DoesNotContain("VER_ESTADO", source, StringComparison.Ordinal);
@@ -232,7 +232,7 @@ public sealed class MatricesRiesgosFamiliasF65Fam1Tests
         string source = ObtenerMetodoFuente(
             LeerLifecycleRepository(),
             "EliminarFamiliaFormularioSeguraAsync",
-            "ObtenerFamiliaBloqueadaAsync");
+            "ArchivarFamiliaFormularioAtomicoAsync");
 
         Assert.Contains("DELETE FROM RL_MR_FAMILIAS_FORMULARIO", source, StringComparison.Ordinal);
         Assert.Contains("NOT EXISTS", source, StringComparison.Ordinal);
@@ -244,7 +244,7 @@ public sealed class MatricesRiesgosFamiliasF65Fam1Tests
         string source = ObtenerMetodoFuente(
             LeerLifecycleRepository(),
             "EliminarFamiliaFormularioSeguraAsync",
-            "ObtenerFamiliaBloqueadaAsync");
+            "ArchivarFamiliaFormularioAtomicoAsync");
 
         Assert.DoesNotContain("CASCADE", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("DELETE FROM RL_MR_VERSIONES_FORMULARIO", source, StringComparison.OrdinalIgnoreCase);
@@ -256,7 +256,7 @@ public sealed class MatricesRiesgosFamiliasF65Fam1Tests
         string source = ObtenerMetodoFuente(
             LeerLifecycleRepository(),
             "EliminarFamiliaFormularioSeguraAsync",
-            "ObtenerFamiliaBloqueadaAsync");
+            "ArchivarFamiliaFormularioAtomicoAsync");
 
         Assert.Contains("ex.Number == 2292", source, StringComparison.Ordinal);
         Assert.Contains("TieneVersiones", source, StringComparison.Ordinal);

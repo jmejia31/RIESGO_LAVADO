@@ -896,7 +896,15 @@
                   <option value="INACTIVAS">Inactivas</option>
                 </select>
               </div>
-              @if (filtroBuscarFamilia().trim() || filtroEstadoFamilia() !== 'TODAS') {
+              <div class="flex items-center gap-2">
+                <label for="filtro-archivado-fam" class="text-xs font-bold text-gray-700">Archivo:</label>
+                <select id="filtro-archivado-fam" class="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [ngModel]="filtroArchivadoFamilia()" (ngModelChange)="cambiarArchivadoFamilia($event)">
+                  <option value="NO_ARCHIVADAS">No archivadas</option>
+                  <option value="ARCHIVADAS">Archivadas</option>
+                  <option value="TODAS">Todas</option>
+                </select>
+              </div>
+              @if (filtroBuscarFamilia().trim() || filtroEstadoFamilia() !== 'TODAS' || filtroArchivadoFamilia() !== 'NO_ARCHIVADAS') {
                 <button type="button" class="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:text-ihss-900 bg-gray-200/70 hover:bg-gray-200 rounded-xl transition-colors" title="Limpiar filtros de familias" aria-label="Limpiar filtros de familias" (click)="limpiarFiltrosFamilias()">
             <app-action-icon action="clear-filters"></app-action-icon>
           </button>
@@ -929,9 +937,11 @@
                             [class.text-emerald-700]="fam.famActivo"
                             [class.ring-1]="fam.famActivo"
                             [class.ring-emerald-600\/20]="fam.famActivo"
-                            [class.bg-gray-100]="!fam.famActivo"
-                            [class.text-gray-600]="!fam.famActivo">
-                        {{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}
+                            [class.bg-gray-100]="!fam.famActivo && !fam.famArchivada"
+                            [class.text-gray-600]="!fam.famActivo && !fam.famArchivada"
+                            [class.bg-slate-200]="fam.famArchivada"
+                            [class.text-slate-700]="fam.famArchivada">
+                        {{ fam.famArchivada ? 'ARCHIVADA' : (fam.famActivo ? 'ACTIVA' : 'INACTIVA') }}
                       </span>
                     </td>
                     <td class="px-4 py-3 text-center font-bold text-gray-800 whitespace-nowrap">{{ fam.totalVersiones }}</td>
@@ -958,7 +968,11 @@
                                   (click)="abrirModalEditarFamilia(fam)">
             <app-action-icon action="edit"></app-action-icon>
           </button>
-                          @if (fam.famActivo) {
+                          @if (fam.famArchivada) {
+                            <button type="button" class="p-1.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 bg-emerald-50 shadow-2xs" aria-label="Restaurar" title="Restaurar" (click)="confirmarRestaurarFamilia(fam)">
+                              <app-action-icon action="activate"></app-action-icon>
+                            </button>
+                          } @else if (fam.famActivo) {
                             <button type="button"
                                     class="p-1.5 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 bg-amber-50 shadow-2xs"
                                     aria-label="Desactivar"
@@ -974,6 +988,11 @@
                                     (click)="confirmarActivarFamilia(fam)">
             <app-action-icon action="activate"></app-action-icon>
           </button>
+                          }
+                          @if (!fam.famActivo && !fam.famArchivada && !fam.famPredeterminada) {
+                            <button type="button" class="p-1.5 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors border border-slate-300 bg-slate-50 shadow-2xs" aria-label="Archivar" title="Archivar" (click)="confirmarArchivarFamilia(fam)">
+                              <app-action-icon action="deactivate"></app-action-icon>
+                            </button>
                           }
                           @if (fam.totalVersiones === 0) {
                             <button type="button"
@@ -1574,6 +1593,29 @@
                   (click)="continuarBloqueEvaluacion()">
                   <app-action-icon action="next"></app-action-icon>
           </button>
+        </div>
+      </div>
+    </dialog>
+  }
+  @if (familiaArchivadoPendiente(); as familiaArchivado) {
+    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-justificacion-archivado">
+      <div class="modal-container-card modal-size-sm max-w-lg">
+        <div class="modal-header-institutional">
+          <div>
+            <h2 id="titulo-justificacion-archivado" class="text-base sm:text-lg font-bold text-gray-900">Justificación del archivado</h2>
+            <p class="mt-1 text-xs text-gray-500">Familia {{ familiaArchivado.famCodigo }}</p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100" title="Cancelar archivado" aria-label="Cancelar archivado" (click)="cancelarArchivado()">
+            <app-action-icon action="close"></app-action-icon>
+          </button>
+        </div>
+        <div class="modal-body-scrollable space-y-4">
+          <label for="motivo-archivado" class="block text-sm font-semibold text-gray-700">Motivo <span class="text-red-600">*</span></label>
+          <textarea id="motivo-archivado" rows="4" maxlength="500" class="w-full rounded-xl border border-gray-300 p-3 text-sm focus:border-ihss-600 focus:ring-2 focus:ring-ihss-600/20" [ngModel]="motivoArchivado()" (ngModelChange)="motivoArchivado.set($event)" placeholder="Escriba la justificación administrativa..."></textarea>
+        </div>
+        <div class="modal-footer-institutional">
+          <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar archivado" aria-label="Cancelar archivado" (click)="cancelarArchivado()"><app-action-icon action="cancel"></app-action-icon></button>
+          <button type="button" class="modal-action-icon modal-action-icon--primary" title="Confirmar archivado" aria-label="Confirmar archivado" [disabled]="!motivoArchivado().trim() || guardando()" (click)="confirmarArchivado()"><app-action-icon action="deactivate"></app-action-icon></button>
         </div>
       </div>
     </dialog>

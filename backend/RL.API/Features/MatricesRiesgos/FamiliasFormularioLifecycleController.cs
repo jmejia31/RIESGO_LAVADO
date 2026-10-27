@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Core.Security;
 using RL.API.Features.MatricesRiesgos.Application;
+using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Shared.Results;
 
 namespace RL.API.Features.MatricesRiesgos;
@@ -56,6 +57,36 @@ public sealed class FamiliasFormularioLifecycleController : ControllerBase
         }
     }
 
+    [HttpPut("{id:long}/archivar")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Archivado administrativo de familia de formulario")]
+    public async Task<IActionResult> ArchivarFamiliaFormulario(long id, [FromBody] JustificacionFamiliaDto dto)
+    {
+        try { return Responder(await _service.ArchivarFamiliaFormularioAsync(id, dto?.Motivo)); }
+        catch (Exception ex) { _logger.LogError(ex, "Error al archivar la familia de formulario ID {Id}", id); return Error500(); }
+    }
+
+    [HttpPut("{id:long}/restaurar")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Restauración administrativa de familia de formulario")]
+    public async Task<IActionResult> RestaurarFamiliaFormulario(long id)
+    {
+        try { return Responder(await _service.RestaurarFamiliaFormularioAsync(id)); }
+        catch (Exception ex) { _logger.LogError(ex, "Error al restaurar la familia de formulario ID {Id}", id); return Error500(); }
+    }
+
+    [HttpGet("{id:long}/purga-precheck")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    public async Task<IActionResult> ObtenerPurgaPrecheck(long id)
+    {
+        try
+        {
+            ServiceResult<FamiliaFormularioPurgaPrecheckDto> result = await _service.ObtenerPurgaPrecheckAsync(id);
+            return result.Success ? Ok(new { success = true, datos = result.Data }) : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Error al evaluar la purga de la familia de formulario ID {Id}", id); return Error500(); }
+    }
+
     private IActionResult Responder(ServiceResult result)
     {
         return result.Success
@@ -72,4 +103,9 @@ public sealed class FamiliasFormularioLifecycleController : ControllerBase
             traceId = HttpContext.TraceIdentifier
         });
     }
+}
+
+public sealed class JustificacionFamiliaDto
+{
+    public string? Motivo { get; set; }
 }

@@ -1,3 +1,23 @@
+# Estado vigente — Ciclo de vida seguro de familias de formularios (COD) — 2026-10-27 09:10 -06:00
+
+## Archivado reversible y purga fail-closed
+
+- `FAMILY_ARCHIVE_LIFECYCLE=IMPLEMENTED`; `FAMILY_ARCHIVE_RESTORE=IMPLEMENTED`; restaurar deja la familia `INACTIVA` y no publica versiones automáticamente.
+- `FAMILY_ARCHIVE_HISTORY_PRESERVED=YES`; no se elimina `PRUEBA_FORMULARIO`; la eliminación ordinaria continúa bloqueada si existen versiones.
+- `FAMILY_ARCHIVE_ADMIN_ONLY=YES`; `FAMILY_ARCHIVE_AUDIT=YES`; `FAMILY_ARCHIVE_ATOMIC=YES`; `FAMILY_ARCHIVE_CONCURRENCY_LOCK=YES`; `FAMILY_ARCHIVE_CACHE_INVALIDATION=YES`.
+- `FAMILY_PURGE_PRECHECK=READ_ONLY`; `FAMILY_PURGE_FAIL_CLOSED=YES`; no existe endpoint destructivo por política.
+- `FAMILY_ARCHIVE_MIGRATION_PREPARED=YES`; `FAMILY_ARCHIVE_MIGRATION_EXECUTED=NO`; `PRODUCTION_DML=0`; `PRODUCTION_DDL=0`; Oracle productivo no fue accedido.
+
+## Evidencia de esta intervención
+
+- Baseline `HEAD=8482be1c`, rama `desarrollo`; cambios ajenos del worktree preservados y excluidos.
+- Backend: build Release PASS; pruebas focalizadas `62/62` PASS.
+- Frontend: build PASS; pruebas focalizadas `29/29` PASS. Warnings SCSS/CommonJS existentes.
+- Validadores de estructura, base de datos y enlaces PASS. No se ejecutaron E2E ni Oracle productivo.
+- Continuación: revisar commit publicado y ejecutar CI/quality gates; aplicar migración únicamente con autorización institucional.
+
+---
+
 # Estado vigente — Paquete de capacitación institucional preparado (COD) — 2026-10-23 14:36 -06:00
 
 ## Fase A — materiales preparados; sesión institucional pendiente

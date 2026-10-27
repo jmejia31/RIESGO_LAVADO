@@ -92,6 +92,7 @@ export class MatricesRiesgosService {
       .set('pagina', String(filtro.pagina ?? 1))
       .set('tamanoPagina', String(filtro.tamanoPagina ?? 10))
       .set('estado', filtro.estado ?? 'TODAS')
+      .set('archivado', filtro.archivado ?? 'NO_ARCHIVADAS')
       .set('vigencia', filtro.vigencia ?? 'TODAS');
     if (filtro.buscar?.trim()) params = params.set('buscar', filtro.buscar.trim());
     return this.http
@@ -162,6 +163,26 @@ export class MatricesRiesgosService {
         context: createHttpErrorScopeContext('local')
       })
       .pipe(map(response => response.success));
+  }
+
+  archivarFamiliaFormulario(id: number, motivo: string): Observable<boolean> {
+    return this.http.put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/archivar`, { motivo }, {
+      ...this.confirmadoJson,
+      context: createHttpErrorScopeContext('local')
+    }).pipe(map(response => response.success));
+  }
+
+  restaurarFamiliaFormulario(id: number): Observable<boolean> {
+    return this.http.put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/restaurar`, {}, {
+      ...this.confirmado,
+      context: createHttpErrorScopeContext('local')
+    }).pipe(map(response => response.success));
+  }
+
+  obtenerPurgaPrecheck(id: number): Observable<unknown> {
+    return this.http.get<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/purga-precheck`, {
+      context: createHttpErrorScopeContext('local')
+    }).pipe(map(response => response.datos));
   }
 
   obtenerVersionVigenteFormulario(familiaCodigo?: string): Observable<VersionFormularioDto> {

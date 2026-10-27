@@ -1,3 +1,12 @@
+## 2026-10-27 09:10 -06:00 - Ciclo de vida seguro de familias de formularios (COD)
+
+- **Baseline:** rama `desarrollo`; `BASELINE_HEAD=8482be1c`; igual a `origin/desarrollo` al inicio. Se preservaron y excluyeron del stage cambios y artefactos preexistentes ajenos.
+- **Objetivo:** archivado reversible, restauración como inactiva, filtros/listado, bloqueo de operaciones sobre archivadas, precheck de purga solo lectura y trazabilidad administrativa.
+- **Cambios:** persistencia idempotente para `FAM_ARCHIVADA`, fecha, usuario y motivo; endpoints admin de archivar/restaurar; auditoría, bloqueo de fila y transacciones; UI con filtros, estado ARCHIVADA, modal de justificación y restauración.
+- **Preservación:** la eliminación ordinaria sigue bloqueando familias con versiones. No se eliminó `PRUEBA_FORMULARIO`; la migración `54_ddl_ciclo_vida_familias_archivado.sql` quedó preparada, no ejecutada en Oracle.
+- **Pruebas:** build Release backend PASS; backend focalizado `62/62` PASS; frontend build PASS; frontend focalizado `29/29` PASS; validadores de estructura, base de datos y enlaces PASS; revisión de diálogos nativos PASS.
+- **Pendiente:** Oracle productivo, migración, E2E y quality gates completos quedan para CI/entorno autorizado. `main` no fue modificado.
+
 ## 2026-10-23 13:45 -06:00 - Cierre y Reconciliación Documental Final: Reparación Física Unicode Oracle (ANTIG)
 
 - **Baseline:** rama `desarrollo`; `PRE_UNICODE_DOC_HEAD=f49da4483bcf2c82215bf94ba0edbdb8fc2adf6d`, igual a `origin/desarrollo`. Runtime ejecutable certificado preservado: `CERTIFIED_RUNTIME_SHA=292af44c6399eb22931382a76677c926d469af51`.

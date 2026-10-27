@@ -29,6 +29,9 @@ export interface FamiliaFormularioDto {
   famActivo: boolean;
   /** Campo agregado por FP.2; opcional para compatibilidad con fixtures históricos. */
   famPredeterminada?: boolean;
+  famArchivada?: boolean;
+  famFechaArchivado?: string | null;
+  famUsuarioArchivado?: number | null;
   famFechaCreacion: string;
   totalVersiones: number;
   tieneVersionVigente: boolean;
@@ -39,6 +42,7 @@ export interface ConsultaFamiliasFormularioPaginada {
   tamanoPagina?: number;
   buscar?: string;
   estado?: 'TODAS' | 'ACTIVAS' | 'INACTIVAS';
+  archivado?: 'NO_ARCHIVADAS' | 'ARCHIVADAS' | 'TODAS';
   vigencia?: 'TODAS' | 'VIGENTES' | 'SIN_VIGENTE';
 }
 
@@ -52,6 +56,7 @@ export interface FamiliasFormularioPaginadasDto {
     totalFamilias: number;
     activas: number;
     inactivas: number;
+    archivadas?: number;
     totalVersiones: number;
   };
 }

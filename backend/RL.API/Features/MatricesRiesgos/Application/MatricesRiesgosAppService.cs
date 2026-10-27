@@ -95,12 +95,13 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult<long>.BadRequest($"La definición del formulario no es válida: {ex.Message}");
         }
 
-        long id = await _repo.CrearBorradorFormularioAsync(
-            familiaId,
-            codigoFormulario,
-            jsonConfig,
-            usuarioId);
-        return ServiceResult<long>.Ok(id, "Borrador de formulario creado exitosamente.");
+        try
+        {
+            long id = await _repo.CrearBorradorFormularioAsync(familiaId, codigoFormulario, jsonConfig, usuarioId);
+            return ServiceResult<long>.Ok(id, "Borrador de formulario creado exitosamente.");
+        }
+        catch (KeyNotFoundException ex) { return ServiceResult<long>.NotFound(ex.Message); }
+        catch (InvalidOperationException ex) { return ServiceResult<long>.Conflict(ex.Message); }
     }
 
     public async Task<ServiceResult<long>> ClonarVersionFormularioAsync(long versionOrigenId, long usuarioId)
@@ -331,6 +332,10 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (existente is null)
         {
             return ServiceResult.NotFound($"No se encontró la familia de formulario con ID {famId}.");
+        }
+        if (existente.FamArchivada)
+        {
+            return ServiceResult.Conflict("La familia archivada solo puede modificarse mediante restauración administrativa.");
         }
 //Validar que el nombre no sea nulo o vacio
         string nombreNormalizado = (dto.FamNombre ?? string.Empty).Trim();

@@ -12,6 +12,9 @@ public sealed class FamiliaFormularioDto
     public string? FamDescripcion { get; set; }
     public bool FamActivo { get; set; }
     public bool FamPredeterminada { get; set; }
+    public bool FamArchivada { get; set; }
+    public DateTime? FamFechaArchivado { get; set; }
+    public long? FamUsuarioArchivado { get; set; }
     public DateTime FamFechaCreacion { get; set; }
     public int TotalVersiones { get; set; }
     public bool TieneVersionVigente { get; set; }
@@ -35,6 +38,7 @@ public sealed class ConsultaFamiliasFormularioPaginadaDto
     public int TamanoPagina { get; set; } = 10;
     public string? Buscar { get; set; }
     public string Estado { get; set; } = "TODAS";
+    public string Archivado { get; set; } = "NO_ARCHIVADAS";
     public string Vigencia { get; set; } = "TODAS";
 }
 
@@ -43,6 +47,7 @@ public sealed class FamiliasFormularioTotalesDto
     public int TotalFamilias { get; init; }
     public int Activas { get; init; }
     public int Inactivas { get; init; }
+    public int Archivadas { get; init; }
     public int TotalVersiones { get; init; }
 }
 
@@ -75,4 +80,23 @@ public sealed class ActualizarFamiliaFormularioDto
     public string? FamDescripcion { get; set; }
 
     public bool FamActivo { get; set; } = true;
+}
+
+public sealed class FamiliaFormularioPurgaPrecheckDto
+{
+    public long FamiliaId { get; init; }
+    public string FamiliaCodigo { get; init; } = string.Empty;
+    public bool EsDatoDePrueba { get; init; }
+    public bool FamiliaActiva { get; init; }
+    public bool FamiliaArchivada { get; init; }
+    public bool FamiliaPredeterminada { get; init; }
+    public int TotalVersiones { get; init; }
+    public int VersionesPublicadas { get; init; }
+    public int VersionesPublicadasVigentes { get; init; }
+    public int TotalEvaluaciones { get; init; }
+    public int TotalUsosFormula { get; init; }
+    public int TotalReferenciasAuditoria { get; init; }
+    public bool DependenciasCompletamenteAuditadas { get; init; }
+    public bool PurgaElegible { get; init; }
+    public IReadOnlyList<string> MotivosBloqueo { get; init; } = Array.Empty<string>();
 }

@@ -105,7 +105,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             // transacción que calcula MAX+1. La UQ familia/versión queda como
             // última defensa frente a cualquier consumidor externo.
             const string sqlLockFam = @"
-                SELECT FAM_ID
+                SELECT FAM_ACTIVO, FAM_ARCHIVADA
                   FROM RL_MR_FAMILIAS_FORMULARIO
                  WHERE FAM_ID = :familiaId
                  FOR UPDATE";
@@ -113,10 +113,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
             {
                 cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
-                if (await cmdLockFam.ExecuteScalarAsync() is null)
+                await using var readerLockFam = await cmdLockFam.ExecuteReaderAsync();
+                if (!await readerLockFam.ReadAsync())
                 {
                     await trans.RollbackAsync();
                     throw new KeyNotFoundException($"No se encontró la familia de formulario ID {familiaId}.");
+                }
+                if (readerLockFam.GetInt32(0) != 1 || readerLockFam.GetInt32(1) == 1)
+                {
+                    await trans.RollbackAsync();
+                    throw new InvalidOperationException("No se pueden crear versiones en una familia inactiva o archivada.");
                 }
             }
 
@@ -491,6 +497,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    f.FAM_ACTIVO,
                    f.FAM_FECHA_CREACION,
                    f.FAM_PREDETERMINADA,
+                   f.FAM_ARCHIVADA,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
               FROM RL_MR_FAMILIAS_FORMULARIO f
@@ -512,8 +519,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 FamActivo = reader.GetInt32(4) == 1,
                  FamFechaCreacion = reader.GetDateTime(5),
                  FamPredeterminada = reader.GetInt32(6) == 1,
-                 TotalVersiones = Convert.ToInt32(reader.GetValue(7)),
-                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(8)) > 0
+                 FamArchivada = reader.GetInt32(7) == 1,
+                 TotalVersiones = Convert.ToInt32(reader.GetValue(8)),
+                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(9)) > 0
             };
         }
 
@@ -533,6 +541,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    f.FAM_ACTIVO,
                    f.FAM_FECHA_CREACION,
                    f.FAM_PREDETERMINADA,
+                   f.FAM_ARCHIVADA,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
               FROM RL_MR_FAMILIAS_FORMULARIO f
@@ -554,8 +563,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 FamActivo = reader.GetInt32(4) == 1,
                  FamFechaCreacion = reader.GetDateTime(5),
                  FamPredeterminada = reader.GetInt32(6) == 1,
-                 TotalVersiones = Convert.ToInt32(reader.GetValue(7)),
-                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(8)) > 0
+                 FamArchivada = reader.GetInt32(7) == 1,
+                 TotalVersiones = Convert.ToInt32(reader.GetValue(8)),
+                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(9)) > 0
             };
         }
 
@@ -781,6 +791,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    FAM_DESCRIPCION = :famDescripcion,
                    FAM_ACTIVO = :famActivo
              WHERE FAM_ID = :famId
+               AND FAM_ARCHIVADA = 0
                AND (FAM_PREDETERMINADA = 0 OR :famActivoGuard = 1)";
 
         await using var cmd = conn.CreateCommand();
@@ -1589,6 +1600,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     {
         int tamanoPagina = Math.Clamp(filtro.TamanoPagina, 1, 200);
         string estado = (filtro.Estado ?? "TODAS").Trim().ToUpperInvariant();
+        string archivado = (filtro.Archivado ?? "NO_ARCHIVADAS").Trim().ToUpperInvariant();
         string vigencia = (filtro.Vigencia ?? "TODAS").Trim().ToUpperInvariant();
         string buscar = (filtro.Buscar ?? string.Empty).Trim().ToUpperInvariant();
 
@@ -1603,11 +1615,13 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    f.FAM_ACTIVO,
                    f.FAM_FECHA_CREACION,
                    f.FAM_PREDETERMINADA,
+                   f.FAM_ARCHIVADA,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
               FROM RL_MR_FAMILIAS_FORMULARIO f
              WHERE (:buscar IS NULL OR UPPER(f.FAM_CODIGO) LIKE '%' || :buscar || '%' OR UPPER(f.FAM_NOMBRE) LIKE '%' || :buscar || '%')
                AND (:estado = 'TODAS' OR (:estado = 'ACTIVAS' AND f.FAM_ACTIVO = 1) OR (:estado = 'INACTIVAS' AND f.FAM_ACTIVO = 0))
+               AND (:archivado = 'TODAS' OR (:archivado = 'ARCHIVADAS' AND f.FAM_ARCHIVADA = 1) OR (:archivado = 'NO_ARCHIVADAS' AND f.FAM_ARCHIVADA = 0))
                AND (:vigencia = 'TODAS'
                     OR (:vigencia = 'VIGENTES' AND EXISTS (SELECT 1 FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1))
                     OR (:vigencia = 'SIN_VIGENTE' AND NOT EXISTS (SELECT 1 FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1)))";
@@ -1616,6 +1630,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         {
             cmd.Parameters.Add(new OracleParameter("buscar", string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar));
             cmd.Parameters.Add(new OracleParameter("estado", estado));
+            cmd.Parameters.Add(new OracleParameter("archivado", archivado));
             cmd.Parameters.Add(new OracleParameter("vigencia", vigencia));
         }
 
@@ -1631,6 +1646,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             SELECT COUNT(*) AS TOTAL_FAMILIAS,
                    NVL(SUM(CASE WHEN FAM_ACTIVO = 1 THEN 1 ELSE 0 END), 0) AS ACTIVAS,
                    NVL(SUM(CASE WHEN FAM_ACTIVO = 0 THEN 1 ELSE 0 END), 0) AS INACTIVAS,
+                   NVL(SUM(CASE WHEN FAM_ARCHIVADA = 1 THEN 1 ELSE 0 END), 0) AS ARCHIVADAS,
                    NVL(SUM(TOTAL_VERSIONES), 0) AS TOTAL_VERSIONES
               FROM ({baseSql}) q";
         AddFilterParameters(totalsCmd);
@@ -1641,6 +1657,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             TotalFamilias = Convert.ToInt32(totalsReader["TOTAL_FAMILIAS"]),
             Activas = Convert.ToInt32(totalsReader["ACTIVAS"]),
             Inactivas = Convert.ToInt32(totalsReader["INACTIVAS"]),
+            Archivadas = Convert.ToInt32(totalsReader["ARCHIVADAS"]),
             TotalVersiones = Convert.ToInt32(totalsReader["TOTAL_VERSIONES"])
         };
 
@@ -1678,6 +1695,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 FamActivo = Convert.ToInt32(reader["FAM_ACTIVO"]) == 1,
                 FamFechaCreacion = Convert.ToDateTime(reader["FAM_FECHA_CREACION"]),
                 FamPredeterminada = Convert.ToInt32(reader["FAM_PREDETERMINADA"]) == 1,
+                FamArchivada = Convert.ToInt32(reader["FAM_ARCHIVADA"]) == 1,
                 TotalVersiones = Convert.ToInt32(reader["TOTAL_VERSIONES"]),
                 TieneVersionVigente = Convert.ToInt32(reader["TIENE_VIGENTE"]) > 0
             });

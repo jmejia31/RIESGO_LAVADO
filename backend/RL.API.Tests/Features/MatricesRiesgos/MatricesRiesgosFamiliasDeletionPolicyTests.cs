@@ -11,7 +11,7 @@ public sealed class MatricesRiesgosFamiliasDeletionPolicyTests
         string source = LeerLifecycle();
         int deleteStart = source.IndexOf("EliminarFamiliaFormularioSeguraAsync", StringComparison.Ordinal);
         int helperStart = source.IndexOf(
-            "private async Task<FamiliaBloqueada?> ObtenerFamiliaBloqueadaAsync",
+            "public async Task<ResultadoArchivadoFamiliaFormulario> ArchivarFamiliaFormularioAtomicoAsync",
             deleteStart + 1,
             StringComparison.Ordinal);
         Assert.True(helperStart > deleteStart, "No se encontró el límite del método de eliminación.");
