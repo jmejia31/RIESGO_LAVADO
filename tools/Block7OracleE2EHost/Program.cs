@@ -15,6 +15,7 @@ using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Infrastructure.Database;
 using RL.API.Infrastructure.Caching;
+using RL.API.Core.Security;
 
 const string requiredFlag = "RL_BLOCK7_REAL_E2E_REQUIRED";
 if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "E2E", StringComparison.Ordinal)
@@ -468,7 +469,7 @@ public sealed class E2EAuthenticationHandler(IOptionsMonitor<AuthenticationSchem
         string modules = block9Enabled && !string.IsNullOrWhiteSpace(Request.Headers["X-E2E-Modules"].FirstOrDefault())
             ? Request.Headers["X-E2E-Modules"].FirstOrDefault()!
             : "10";
-        var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId), new Claim("modulos", modules)], Scheme.Name);
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, SystemRoles.Administrador), new Claim("modulos", modules)], Scheme.Name);
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name)));
     }
 }
