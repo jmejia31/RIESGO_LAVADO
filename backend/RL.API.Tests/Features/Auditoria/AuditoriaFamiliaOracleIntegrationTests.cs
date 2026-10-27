@@ -34,12 +34,14 @@ public sealed class AuditoriaFamiliaOracleIntegrationTests
         long otraFamiliaId = 0;
         string codigo = $"H02_{Guid.NewGuid():N}"[..30].ToUpperInvariant();
         string otroCodigo = $"H02_OTRA_{Guid.NewGuid():N}"[..30].ToUpperInvariant();
+        long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 100_000_000;
+        familiaId = 900_000_000 + stamp * 2;
+        otraFamiliaId = familiaId + 1;
+        long firstAuditId = 900_000_000_000 + stamp * 100;
 
         await using (OracleConnection seed = new(connectionString))
         {
             await seed.OpenAsync();
-            familiaId = await NextValueAsync(seed, "SEQ_RL_MR_FAMILIAS");
-            otraFamiliaId = await NextValueAsync(seed, "SEQ_RL_MR_FAMILIAS");
             await ExecuteAsync(seed,
                 "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (:id,:codigo,'H02 familia',1,0,SYSDATE)",
                 ("id", familiaId), ("codigo", codigo));
@@ -51,15 +53,15 @@ public sealed class AuditoriaFamiliaOracleIntegrationTests
             {
                 string registroId = index % 2 == 0 ? familiaId.ToString() : codigo;
                 await ExecuteAsync(seed,
-                    "INSERT INTO RL_AUDITORIA (AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_FECHA,AUD_MODULO) VALUES (SEQ_RL_AUDITORIA.NEXTVAL,'RL_MR_FAMILIAS_FORMULARIO',:registroId,:accion,TO_DATE('2026-10-27 00:00:00','YYYY-MM-DD HH24:MI:SS') - :orden/1440,'MatricesRiesgos')",
-                    ("registroId", registroId), ("accion", $"H02_EVENT_{index:00}"), ("orden", index));
+                    "INSERT INTO RL_AUDITORIA (AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_FECHA,AUD_MODULO) VALUES (:id,'RL_MR_FAMILIAS_FORMULARIO',:registroId,:accion,TO_DATE('2026-10-27 00:00:00','YYYY-MM-DD HH24:MI:SS') - :orden/1440,'MatricesRiesgos')",
+                    ("id", firstAuditId + index), ("registroId", registroId), ("accion", $"H02_EVENT_{index:00}"), ("orden", index));
             }
 
             for (int index = 0; index < 5; index++)
             {
                 await ExecuteAsync(seed,
-                    "INSERT INTO RL_AUDITORIA (AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_FECHA,AUD_MODULO) VALUES (SEQ_RL_AUDITORIA.NEXTVAL,'RL_MR_FAMILIAS_FORMULARIO',:registroId,:accion,SYSDATE,'MatricesRiesgos')",
-                    ("registroId", otraFamiliaId.ToString()), ("accion", $"H02_OTHER_{index:00}"));
+                    "INSERT INTO RL_AUDITORIA (AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_FECHA,AUD_MODULO) VALUES (:id,'RL_MR_FAMILIAS_FORMULARIO',:registroId,:accion,SYSDATE,'MatricesRiesgos')",
+                    ("id", firstAuditId + 100 + index), ("registroId", otraFamiliaId.ToString()), ("accion", $"H02_OTHER_{index:00}"));
             }
         }
 
@@ -97,12 +99,6 @@ public sealed class AuditoriaFamiliaOracleIntegrationTests
                 "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID IN (:id,:otroId)",
                 ("id", familiaId), ("otroId", otraFamiliaId));
         }
-    }
-
-    private static async Task<long> NextValueAsync(OracleConnection connection, string sequence)
-    {
-        await using var command = new OracleCommand($"SELECT {sequence}.NEXTVAL FROM DUAL", connection);
-        return Convert.ToInt64(await command.ExecuteScalarAsync());
     }
 
     private static async Task ExecuteAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
