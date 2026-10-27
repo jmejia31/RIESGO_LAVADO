@@ -61,6 +61,8 @@ public sealed class FamiliasFormularioLifecycleService
             ResultadoEliminacionFamiliaFormulario.TieneVersiones =>
                 ServiceResult.BadRequest(
                     "No se puede eliminar la familia porque posee versiones asociadas. Desactívela para conservar la trazabilidad histórica."),
+            ResultadoEliminacionFamiliaFormulario.EstaArchivada =>
+                ServiceResult.Conflict("Una familia archivada no puede eliminarse mediante la operacion ordinaria. Restaurela primero."),
             _ => ServiceResult.BadRequest("No se pudo eliminar la familia de formulario.")
         };
     }

@@ -167,6 +167,11 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
                 await transaction.RollbackAsync();
                 return ResultadoEliminacionFamiliaFormulario.NoExiste;
             }
+            if (familia.Archivada)
+            {
+                await transaction.RollbackAsync();
+                return ResultadoEliminacionFamiliaFormulario.EstaArchivada;
+            }
 
             const string sqlVersiones = @"
                 SELECT COUNT(*)

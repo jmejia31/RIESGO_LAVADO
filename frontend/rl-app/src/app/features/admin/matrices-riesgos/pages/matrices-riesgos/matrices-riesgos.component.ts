@@ -1119,6 +1119,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   confirmarEliminarFamilia(fam: FamiliaFormularioDto): void {
+    if (fam.famArchivada) return;
     void this.confirmation.confirm({
       title: `Eliminar familia ${fam.famCodigo}`,
       message: 'Esta operación eliminará permanentemente esta familia. Solo es posible porque actualmente no posee versiones asociadas.',

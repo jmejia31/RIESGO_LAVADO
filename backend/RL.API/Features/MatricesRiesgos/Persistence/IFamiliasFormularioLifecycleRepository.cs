@@ -33,7 +33,8 @@ public enum ResultadoEliminacionFamiliaFormulario
 {
     Exito,
     NoExiste,
-    TieneVersiones
+    TieneVersiones,
+    EstaArchivada
 }
 
 public interface IFamiliasFormularioLifecycleRepository
