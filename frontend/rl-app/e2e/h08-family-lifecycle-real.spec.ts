@@ -23,6 +23,7 @@ type LifecycleSnapshot = {
 const apiHeaders = { 'X-E2E-User': '987654', 'X-E2E-Modules': '10', 'Content-Type': 'application/json' };
 
 test.describe.configure({ retries: 0 });
+test.skip(process.env.RL_H08_FAMILY_LIFECYCLE_CERTIFICATION_REQUIRED !== 'true', 'H08 requires the disposable Oracle XE host and dedicated runner.');
 
 test('H08 certifica dos ciclos de archivado/restauracion y reutilizacion contra Angular, API y Oracle XE', async ({ page, request }) => {
   const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/family-lifecycle-fixture');
