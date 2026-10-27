@@ -58,7 +58,7 @@ for (int index = 0; index < canonicalRisks.Length; index++)
     await ExecuteAsync(oracle, "INSERT INTO RL_MR_RIESGOS (RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION) VALUES (:id,:code,:name,'Block 12 disposable canonical identity',1,:usr,SYSDATE)",
         ("id", canonicalRiskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
 }
-await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (1,'BLOCK7_FAMILIA','Familia E2E Block 7','Fixture desechable para certificacion',1,0,SYSDATE)");
+await ExecuteAsync(oracle, "MERGE INTO RL_MR_FAMILIAS_FORMULARIO destino USING (SELECT 1 FAM_ID FROM DUAL) origen ON (destino.FAM_ID = origen.FAM_ID) WHEN MATCHED THEN UPDATE SET FAM_CODIGO='BLOCK7_FAMILIA',FAM_NOMBRE='Familia E2E Block 7',FAM_DESCRIPCION='Fixture desechable para certificacion',FAM_ACTIVO=1,FAM_ARCHIVADA=0 WHEN NOT MATCHED THEN INSERT (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (1,'BLOCK7_FAMILIA','Familia E2E Block 7','Fixture desechable para certificacion',1,0,SYSDATE)");
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_E2E',1,:json,RPAD('B',64,'B'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
 var fullChainUiFixtures = new List<object>();
 bool fullChainSeeded = false;
