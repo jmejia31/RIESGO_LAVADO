@@ -297,6 +297,73 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
     [Fact]
     [Trait("Category", "OracleIntegration")]
+    public async Task Vigencia_ArchivadaBloqueaAmbosSentidos_YSolicitudRepetidaNoReescribeFechaHistorica()
+    {
+        if (!await ValidarEntornoEjecucionAsync())
+        {
+            return;
+        }
+
+        long familiaId;
+        long versionId;
+        await using (OracleConnection seed = CrearConexion())
+        {
+            await seed.OpenAsync();
+            await using OracleTransaction transaction = seed.BeginTransaction();
+            familiaId = await SiguienteSecuenciaAsync(seed, transaction, "SEQ_RL_MR_FAMILIAS");
+            versionId = await SiguienteSecuenciaAsync(seed, transaction, "SEQ_RL_MR_VERSIONES");
+            string suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+            await EjecutarAsync(seed, transaction,
+                "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (:id,:codigo,:nombre,1,0,SYSDATE)",
+                new OracleParameter("id", familiaId),
+                new OracleParameter("codigo", PrefijoPrueba + suffix),
+                new OracleParameter("nombre", "Familia H01 " + suffix));
+            await EjecutarAsync(seed, transaction,
+                "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:familia,:codigo,1,:json,:hash,'PUBLISHED',1,SYSDATE,NULL,SYSDATE,1)",
+                new OracleParameter("id", versionId),
+                new OracleParameter("familia", familiaId),
+                new OracleParameter("codigo", "H01_" + suffix),
+                CrearClob("json", "{\"sections\":[]}"),
+                new OracleParameter("hash", suffix.PadRight(64, '0')));
+            await transaction.CommitAsync();
+        }
+
+        try
+        {
+            var repository = new MatricesRiesgosRepository(
+                new OracleDbContext(_connectionString!),
+                InterfaceStub.Create<IAuditoriaRepository>(out _));
+
+            Assert.True(await repository.CambiarEstadoVigenciaFormularioAsync(versionId, false, 1));
+            await using OracleConnection verify = CrearConexion();
+            await verify.OpenAsync();
+            DateTime firstEndDate = Convert.ToDateTime(await ObtenerEscalarAsync(verify,
+                "SELECT VER_FECHA_FIN FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id",
+                new OracleParameter("id", versionId)));
+
+            Assert.True(await repository.CambiarEstadoVigenciaFormularioAsync(versionId, false, 1));
+            DateTime repeatedEndDate = Convert.ToDateTime(await ObtenerEscalarAsync(verify,
+                "SELECT VER_FECHA_FIN FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id",
+                new OracleParameter("id", versionId)));
+            Assert.Equal(firstEndDate, repeatedEndDate);
+
+            await EjecutarAsync(verify,
+                "UPDATE RL_MR_FAMILIAS_FORMULARIO SET FAM_ARCHIVADA=1 WHERE FAM_ID=:id",
+                new OracleParameter("id", familiaId));
+            Assert.False(await repository.CambiarEstadoVigenciaFormularioAsync(versionId, true, 1));
+            Assert.False(await repository.CambiarEstadoVigenciaFormularioAsync(versionId, false, 1));
+        }
+        finally
+        {
+            await using OracleConnection cleanup = CrearConexion();
+            await cleanup.OpenAsync();
+            await EjecutarAsync(cleanup, "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", new OracleParameter("id", versionId));
+            await EjecutarAsync(cleanup, "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", new OracleParameter("id", familiaId));
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "OracleIntegration")]
     public async Task Bloques4y6_ColumnasNuevasPersistenYSeProyectanDesdeOracle()
     {
         if (!await ValidarEntornoEjecucionAsync())
@@ -1271,6 +1338,26 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         };
         cmd.Parameters.AddRange(parameters);
         await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static async Task EjecutarAsync(
+        OracleConnection conn,
+        string sql,
+        params OracleParameter[] parameters)
+    {
+        await using var cmd = new OracleCommand(sql, conn) { BindByName = true };
+        cmd.Parameters.AddRange(parameters);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<object?> ObtenerEscalarAsync(
+        OracleConnection conn,
+        string sql,
+        params OracleParameter[] parameters)
+    {
+        await using var cmd = new OracleCommand(sql, conn) { BindByName = true };
+        cmd.Parameters.AddRange(parameters);
+        return await cmd.ExecuteScalarAsync();
     }
 
     private sealed record DatosCiclo(

@@ -317,42 +317,64 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         try
         {
-            if (vigente)
-            {
-                const string sqlSelectFam = @"
-                    SELECT VER_FAMILIA_ID
-                      FROM RL_MR_VERSIONES_FORMULARIO
-                     WHERE VER_ID = :versionId
-                     FOR UPDATE";
+            const string sqlLockVersion = @"
+                SELECT VER_FAMILIA_ID, VER_ESTADO, VER_VIGENTE
+                  FROM RL_MR_VERSIONES_FORMULARIO
+                 WHERE VER_ID = :versionId
+                 FOR UPDATE";
 
-                await using var cmdFam = CrearComando(sqlSelectFam, conn, trans);
-                cmdFam.Parameters.Add(new OracleParameter("versionId", versionId));
-                object? famIdObj = await cmdFam.ExecuteScalarAsync();
-                if (famIdObj is null)
+            long familiaId;
+            string estado;
+            bool estadoVigenciaActual;
+            await using (var cmdLockVersion = CrearComando(sqlLockVersion, conn, trans))
+            {
+                cmdLockVersion.Parameters.Add(new OracleParameter("versionId", versionId));
+                await using var readerVersion = await cmdLockVersion.ExecuteReaderAsync();
+                if (!await readerVersion.ReadAsync())
                 {
                     await trans.RollbackAsync();
                     return false;
                 }
 
-                long familiaId = Convert.ToInt64(famIdObj);
+                familiaId = readerVersion.GetInt64(0);
+                estado = readerVersion.GetString(1);
+                estadoVigenciaActual = readerVersion.GetInt32(2) == 1;
+            }
 
-                const string sqlLockFam = @"
-                    SELECT FAM_ACTIVO, FAM_ARCHIVADA
-                      FROM RL_MR_FAMILIAS_FORMULARIO
-                     WHERE FAM_ID = :familiaId
-                     FOR UPDATE";
+            if (!estado.Equals("PUBLISHED", StringComparison.OrdinalIgnoreCase))
+            {
+                await trans.RollbackAsync();
+                return false;
+            }
 
-                await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
+            const string sqlLockFam = @"
+                SELECT FAM_ACTIVO, FAM_ARCHIVADA
+                  FROM RL_MR_FAMILIAS_FORMULARIO
+                 WHERE FAM_ID = :familiaId
+                 FOR UPDATE";
+
+            await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
+            {
+                cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                await using var readerFam = await cmdLockFam.ExecuteReaderAsync();
+                if (!await readerFam.ReadAsync()
+                    || readerFam.GetInt32(0) != 1
+                    || readerFam.GetInt32(1) == 1)
                 {
-                    cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
-                    await using var readerFam = await cmdLockFam.ExecuteReaderAsync();
-                    if (!await readerFam.ReadAsync() || readerFam.GetInt32(0) != 1 || readerFam.GetInt32(1) == 1)
-                    {
-                        await trans.RollbackAsync();
-                        return false;
-                    }
+                    await trans.RollbackAsync();
+                    return false;
                 }
+            }
 
+            // An idempotent request must not rewrite VER_FECHA_FIN or any other history.
+            if (estadoVigenciaActual == vigente)
+            {
+                await trans.CommitAsync();
+                return true;
+            }
+
+            if (vigente)
+            {
                 const string sqlApagar = @"
                     UPDATE RL_MR_VERSIONES_FORMULARIO
                        SET VER_VIGENTE = 0,
