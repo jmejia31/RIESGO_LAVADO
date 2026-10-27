@@ -83,7 +83,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
   beforeEach(async () => {
     serviceMock = {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([mockFamilia])),
-      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [mockFamilia], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } })),
+     listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [mockFamilia], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, archivadas: 0, totalVersiones: 1 } })),
       listarVersionesFormulario: vi.fn().mockReturnValue(of([mockVersion])),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([mockVersion])),
       obtenerFormularioVigente: vi.fn().mockReturnValue(of({

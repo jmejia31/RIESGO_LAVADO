@@ -61,7 +61,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
       ])),
-      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 0 } })),
+     listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, archivadas: 0, totalVersiones: 0 } })),
       obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
         { codigo: 'APROBADA', etiqueta: 'Aprobada' },
         { codigo: 'BORRADOR', etiqueta: 'Borrador' },

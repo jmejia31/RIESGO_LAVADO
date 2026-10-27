@@ -91,13 +91,13 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
       tamanoPagina: 10,
       totalRegistros: familias.length,
       totalPaginas: 1,
-      totales: { totalFamilias: 4, activas: 3, inactivas: 1, totalVersiones: 11 }
+      totales: { totalFamilias: 4, activas: 3, inactivas: 1, archivadas: 0, totalVersiones: 11 }
     }));
     vi.spyOn(service, 'listarHistorialVersionesFormulario').mockReturnValue(of([]));
     vi.spyOn(service, 'obtenerVersionVigenteFormulario').mockReturnValue(of(versionVigente));
 
     component.familias.set(familias);
-    component.totalesFamiliasServidor.set({ totalFamilias: 4, activas: 3, inactivas: 1, totalVersiones: 11 });
+    component.totalesFamiliasServidor.set({ totalFamilias: 4, activas: 3, inactivas: 1, archivadas: 0, totalVersiones: 11 });
     component.totalRegistrosFamilias.set(4);
     component.totalPaginasFamiliasServidor.set(1);
     component.tab.set('plantillas');

@@ -71,7 +71,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(baseVersion)),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([baseVersion])),
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([{ famId: 1, famCodigo: 'MATRIZ_LAFT', famNombre: 'Matriz LAFT', famActivo: true, totalVersiones: 1, tieneVersionVigente: false }])),
-      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'MATRIZ_LAFT', famNombre: 'Matriz LAFT', famActivo: true, totalVersiones: 1, tieneVersionVigente: false }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } })),
+     listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'MATRIZ_LAFT', famNombre: 'Matriz LAFT', famActivo: true, totalVersiones: 1, tieneVersionVigente: false }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, archivadas: 0, totalVersiones: 1 } })),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
       publicarVersionFormulario: vi.fn().mockReturnValue(of({ success: true })),
       cambiarVigenciaFormulario: vi.fn().mockReturnValue(of({ success: true })),

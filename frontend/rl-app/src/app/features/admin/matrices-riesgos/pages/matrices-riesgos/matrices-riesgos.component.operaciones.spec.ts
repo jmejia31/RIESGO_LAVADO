@@ -67,7 +67,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'FORM_A', famNombre: 'Formulario A', famDescripcion: '', famActivo: true }
       ])),
-      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'FORM_A', famNombre: 'Formulario A', famDescripcion: '', famActivo: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 0 } })),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'FORM_A', famNombre: 'Formulario A', famDescripcion: '', famActivo: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, archivadas: 0, totalVersiones: 0 } })),
       obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({ famId: 1 })),
       crearFamiliaFormulario: vi.fn().mockReturnValue(of(2)),
       actualizarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),

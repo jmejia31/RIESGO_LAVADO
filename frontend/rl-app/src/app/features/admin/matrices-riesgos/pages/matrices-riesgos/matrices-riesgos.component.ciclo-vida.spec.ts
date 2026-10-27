@@ -66,7 +66,7 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
       listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([versionDraftNoVigente, versionPublishedVigente, versionPublishedHistorica])),
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([])),
-      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 } })),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, archivadas: 0, totalVersiones: 0 } })),
       obtenerVersionFormulario: vi.fn().mockImplementation((id: number) => {
         if (id === 101) return of(versionDraftNoVigente);
         if (id === 102) return of(versionPublishedVigente);

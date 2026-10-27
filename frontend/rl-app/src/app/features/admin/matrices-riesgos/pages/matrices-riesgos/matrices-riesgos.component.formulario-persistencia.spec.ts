@@ -77,7 +77,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
         famDescripcion: '',
         famActivo: true
       }])),
-      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 } })),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, archivadas: 0, totalVersiones: 0 } })),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true, mensaje: 'Guardado' })),
       metodologiaVigente: vi.fn().mockReturnValue(of({ versionFormularioId: 100, codigo: 'MATRIZ_LAFT_BIDIRECCIONAL', version: 1, secciones: [], catalogos: [], reglas: [] })),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({ versionFormularioId: 100, codigo: 'MATRIZ_LAFT_BIDIRECCIONAL', version: 1, secciones: [], catalogos: [], reglas: [] })),

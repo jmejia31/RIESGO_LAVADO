@@ -89,7 +89,7 @@ describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
   beforeEach(async () => {
     serviceMock = {
      listarFamiliasFormulario: vi.fn().mockReturnValue(of([])),
-     listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 } })),
+     listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, archivadas: 0, totalVersiones: 0 } })),
       listarRiesgos: vi.fn().mockReturnValue(of([])),
       listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of(paginado)),
