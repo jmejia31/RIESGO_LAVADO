@@ -2,6 +2,12 @@
 
 ## Archivado reversible y purga fail-closed
 
+## Cierre CI de correccion quirurgica - 2026-10-27 12:40 -06:00
+
+- `POINT_4_TESTS_CI_STATUS=PASS`: Quality Gates `40540713472` termino `completed/success` sobre `c052f044377dd6f3e6d3961d2f1fa92016b7c8c1`; incluyo validadores, build, pruebas backend, cobertura frontend, E2E Oracle XE y contenedores.
+- `FINAL_HEAD=c052f044377dd6f3e6d3961d2f1fa92016b7c8c1`; `FINAL_ORIGIN=origin/desarrollo`; cambios ajenos tracked/untracked permanecen preservados fuera del stage.
+- `PRODUCTION_QUERIED=NO`; `PRODUCTION_DML=0`; `PRODUCTION_DDL=0`; la migracion Oracle sigue preparada pero no ejecutada.
+
 ## Estado vigente - Correccion quirurgica de ciclo de vida de familias (COD) - 2026-10-27 09:58 -06:00
 
 - `POINT_1_AUDIT_IDENTITY_STATUS=PASS`: auditoria de familias usa `FAM_ID` canonico, conserva el codigo como identidad alternativa, expone historial paginado por entidad y registra eventos explicitos con justificacion.

@@ -1,5 +1,11 @@
 ## 2026-10-27 09:10 -06:00 - Ciclo de vida seguro de familias de formularios (COD)
 
+## 2026-10-27 12:40 -06:00 - Cierre CI de correccion quirurgica (COD)
+
+- **Resultado:** Quality Gates CI `40540713472` termino `completed/success` sobre `c052f044377dd6f3e6d3961d2f1fa92016b7c8c1`, incluyendo validadores, backend, cobertura, E2E Oracle XE y contenedores.
+- **Publicacion:** `HEAD=origin/desarrollo=c052f044`; se preservan cambios tracked/untracked ajenos fuera del stage.
+- **Cierre:** la correccion queda tecnicamente verificada en CI; Oracle productivo no fue ejecutado ni modificado. La migracion queda preparada y pendiente de autorizacion institucional.
+
 ## 2026-10-27 09:58 -06:00 - Correccion quirurgica del ciclo de vida de familias (COD)
 
 - **Baseline:** rama `desarrollo`, SHA inicial `c7663b248df7520648839a2f698538a717073db3`, igual a `origin/desarrollo`. Se preservaron cambios tracked/untracked ajenos y no se incluyeron en el stage.
