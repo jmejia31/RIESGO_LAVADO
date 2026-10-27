@@ -82,6 +82,8 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   readonly mostrandoHistorialCompleto = signal(false);
   readonly noEncontrada = signal(false);
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
+  readonly familiaArchivada = computed(() => this.detalle()?.famArchivada === true);
+  readonly puedeGestionarFamilia = computed(() => this.esAdministrador() && !this.familiaArchivada());
   readonly etiquetaRegresar = computed(() => this.origen === 'nueva-evaluacion' ? 'Regresar a Nueva Evaluación' : 'Regresar a Familias de Formularios');
 
   readonly versionesOrdenadas = computed(() =>
@@ -209,12 +211,12 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   solicitarEdicion(): void {
     const familia = this.detalle();
-    if (familia) this.editarFamilia.emit(familia);
+    if (familia && this.puedeGestionarFamilia()) this.editarFamilia.emit(familia);
   }
 
   solicitarNuevaVersion(): void {
     const familia = this.detalle();
-    if (familia) this.nuevaVersion.emit(familia);
+    if (familia && this.puedeGestionarFamilia()) this.nuevaVersion.emit(familia);
   }
 
   solicitarVerVersion(version: VersionFormularioDto): void {
@@ -224,29 +226,31 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   solicitarEditarVersion(version: VersionFormularioDto): void {
     const familia = this.detalle();
-    if (familia) this.verDefinicion.emit({ familia, version, modoEdicion: true });
+    if (familia && this.puedeGestionarFamilia() && version.verEstado === 'DRAFT' && !version.verVigente) {
+      this.verDefinicion.emit({ familia, version, modoEdicion: true });
+    }
   }
 
   solicitarPublicacion(version: VersionFormularioDto): void {
-    if (!this.operando() && version.verEstado === 'DRAFT' && !version.verVigente) {
+    if (!this.operando() && this.puedeGestionarFamilia() && version.verEstado === 'DRAFT' && !version.verVigente) {
       this.publicarVersionSolicitada.emit(version);
     }
   }
 
   solicitarCambioVigencia(version: VersionFormularioDto): void {
-    if (!this.operando() && version.verEstado === 'PUBLISHED') {
+    if (!this.operando() && this.puedeGestionarFamilia() && version.verEstado === 'PUBLISHED') {
       this.cambiarVigenciaSolicitada.emit({ version, vigente: !version.verVigente });
     }
   }
 
   solicitarEliminacion(version: VersionFormularioDto): void {
-    if (!this.operando() && version.verEstado === 'DRAFT' && !version.verVigente) {
+    if (!this.operando() && this.puedeGestionarFamilia() && version.verEstado === 'DRAFT' && !version.verVigente) {
       this.eliminarVersionSolicitada.emit(version);
     }
   }
 
   clonarVersion(version: VersionFormularioDto): void {
-    if (this.operando()) return;
+    if (this.operando() || !this.puedeGestionarFamilia()) return;
     this.operando.set(true);
     this.errorVersiones.set(null);
 
@@ -265,7 +269,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   async cambiarEstadoFamilia(): Promise<void> {
     const familia = this.detalle();
-    if (!familia || !this.esAdministrador() || this.operando()) return;
+    if (!familia || !this.puedeGestionarFamilia() || this.operando()) return;
 
     const accion = familia.famActivo ? 'desactivar' : 'activar';
     const confirmed = await this.confirmation.confirm({

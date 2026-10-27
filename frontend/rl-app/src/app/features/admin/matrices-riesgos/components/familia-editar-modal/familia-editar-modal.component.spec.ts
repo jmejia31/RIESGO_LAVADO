@@ -382,4 +382,25 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
     expect(component.error()).toBe('No autorizado.');
     expect(service.obtenerFamiliaFormularioPorId).toHaveBeenCalledWith(7);
   });
+
+  it('mantiene una familia archivada en solo lectura y bloquea sus acciones', async () => {
+    const archivada = { ...familiaBase, famArchivada: true, totalVersiones: 0, famActivo: false };
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(archivada));
+    await cambiarFamilia(11);
+
+    expect(component.puedeActivar()).toBe(false);
+    expect(component.puedeDesactivar()).toBe(false);
+    expect(component.puedeEliminar()).toBe(false);
+    expect(component.familiaArchivada()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('ARCHIVADA');
+    expect(fixture.nativeElement.textContent).toContain('Esta familia se encuentra archivada');
+
+    component.nombre = 'Cambio no permitido';
+    component.guardarCambios();
+    component.confirmarActivar();
+    component.confirmarEliminar();
+    expect(service.actualizarFamiliaFormulario).not.toHaveBeenCalled();
+    expect(service.activarFamiliaFormulario).not.toHaveBeenCalled();
+    expect(service.eliminarFamiliaFormulario).not.toHaveBeenCalled();
+  });
 });

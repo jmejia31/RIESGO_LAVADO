@@ -375,4 +375,24 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(titulos).toContain('Familia actualizada');
     expect(fixture.componentInstance.actividadReciente()[0].usuario).toBe('Usuario #8');
   });
+
+  it('bloquea mutaciones y muestra ARCHIVADA para una familia archivada', () => {
+    const archivada = { ...familia, famArchivada: true, famActivo: false };
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(archivada));
+    const fixture = crearComponente();
+    const editarSpy = vi.spyOn(fixture.componentInstance.editarFamilia, 'emit');
+    const nuevaVersionSpy = vi.spyOn(fixture.componentInstance.nuevaVersion, 'emit');
+    const publicarSpy = vi.spyOn(fixture.componentInstance.publicarVersionSolicitada, 'emit');
+
+    fixture.componentInstance.solicitarEdicion();
+    fixture.componentInstance.solicitarNuevaVersion();
+    fixture.componentInstance.solicitarPublicacion(versiones[0]);
+
+    expect(fixture.componentInstance.familiaArchivada()).toBe(true);
+    expect(editarSpy).not.toHaveBeenCalled();
+    expect(nuevaVersionSpy).not.toHaveBeenCalled();
+    expect(publicarSpy).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('ARCHIVADA');
+    expect(fixture.nativeElement.textContent).toContain('Esta familia se encuentra archivada');
+  });
 });

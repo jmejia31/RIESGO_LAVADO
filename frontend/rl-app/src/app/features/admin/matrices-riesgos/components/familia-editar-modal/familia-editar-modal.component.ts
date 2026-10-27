@@ -67,6 +67,8 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
   readonly mensaje = signal<string | null>(null);
   readonly noEncontrada = signal(false);
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
+  readonly familiaArchivada = computed(() => this.detalle()?.famArchivada === true);
+  readonly puedeGestionarFamilia = computed(() => this.esAdministrador() && !this.familiaArchivada());
 
   nombre = '';
   descripcion = '';
@@ -80,7 +82,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     const familia = this.detalle();
     return Boolean(
       familia
-      && this.esAdministrador()
+      && this.puedeGestionarFamilia()
       && familia.famActivo
       && !familia.tieneVersionVigente
       && !familia.famPredeterminada
@@ -93,7 +95,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     const familia = this.detalle();
     return Boolean(
       familia
-      && this.esAdministrador()
+      && this.puedeGestionarFamilia()
       && !familia.famActivo
       && !this.operando()
       && !this.guardando()
@@ -104,7 +106,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     const familia = this.detalle();
     return Boolean(
       familia
-      && this.esAdministrador()
+      && this.puedeGestionarFamilia()
       && Number(familia.totalVersiones) === 0
       && !this.operando()
       && !this.guardando()
@@ -180,7 +182,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
 
   guardarCambios(): void {
     const familia = this.detalle();
-    if (!familia || this.guardando() || this.operando() || !this.esAdministrador()) return;
+    if (!familia || this.guardando() || this.operando() || !this.puedeGestionarFamilia()) return;
 
     this.nombre = this.nombre.trim();
     this.descripcion = this.descripcion.trim();
@@ -330,7 +332,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
 
   private cambiarEstado(accion: 'ACTIVADA' | 'DESACTIVADA'): void {
     const familia = this.detalle();
-    if (!familia || this.operando() || this.guardando() || !this.esAdministrador()) return;
+    if (!familia || this.operando() || this.guardando() || !this.puedeGestionarFamilia()) return;
 
     this.operando.set(true);
     this.error.set(null);
