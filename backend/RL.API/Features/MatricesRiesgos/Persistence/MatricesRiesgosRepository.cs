@@ -234,7 +234,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         try
         {
             const string sqlSelect = @"
-                SELECT VER_FAMILIA_ID
+                SELECT VER_FAMILIA_ID, VER_ESTADO, VER_VIGENTE
                   FROM RL_MR_VERSIONES_FORMULARIO
                  WHERE VER_ID = :versionId
                    AND VER_ESTADO IN ('APPROVED', 'DRAFT')
@@ -242,17 +242,20 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             await using var cmdSelect = CrearComando(sqlSelect, conn, trans);
             cmdSelect.Parameters.Add(new OracleParameter("versionId", versionId));
-            object? familiaIdObj = await cmdSelect.ExecuteScalarAsync();
-            if (familiaIdObj is null)
+            await using var readerVersion = await cmdSelect.ExecuteReaderAsync();
+            if (!await readerVersion.ReadAsync())
             {
                 await trans.RollbackAsync();
                 return false;
             }
 
-            long familiaId = Convert.ToInt64(familiaIdObj);
+            long familiaId = readerVersion.GetInt64(0);
+            string estadoAnterior = readerVersion.GetString(1);
+            bool vigenteAnterior = readerVersion.GetInt32(2) == 1;
+            await readerVersion.DisposeAsync();
 
             const string sqlLockFam = @"
-                SELECT FAM_ACTIVO, FAM_ARCHIVADA
+                SELECT FAM_CODIGO, FAM_ACTIVO, FAM_ARCHIVADA
                   FROM RL_MR_FAMILIAS_FORMULARIO
                  WHERE FAM_ID = :familiaId
                  FOR UPDATE";
@@ -261,42 +264,107 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             {
                 cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
                 await using var readerFam = await cmdLockFam.ExecuteReaderAsync();
-                if (!await readerFam.ReadAsync() || readerFam.GetInt32(0) != 1 || readerFam.GetInt32(1) == 1)
+                if (!await readerFam.ReadAsync() || readerFam.GetInt32(1) != 1 || readerFam.GetInt32(2) == 1)
                 {
                     await trans.RollbackAsync();
                     return false;
                 }
-            }
 
-            const string sqlApagar = @"
-                UPDATE RL_MR_VERSIONES_FORMULARIO
-                   SET VER_VIGENTE = 0,
-                       VER_FECHA_FIN = SYSDATE
-                 WHERE VER_FAMILIA_ID = :familiaId
-                   AND VER_VIGENTE = 1
-                   AND VER_ID <> :versionId";
+                string familiaCodigo = readerFam.GetString(0);
 
-            await using var cmdApagar = CrearComando(sqlApagar, conn, trans);
-            cmdApagar.Parameters.Add(new OracleParameter("familiaId", familiaId));
-            cmdApagar.Parameters.Add(new OracleParameter("versionId", versionId));
-            await cmdApagar.ExecuteNonQueryAsync();
+                List<VersionAuditSnapshot> versionesVigentes = new();
+                const string sqlVersionesVigentes = @"
+                    SELECT VER_ID, VER_ESTADO, VER_VIGENTE
+                      FROM RL_MR_VERSIONES_FORMULARIO
+                     WHERE VER_FAMILIA_ID = :familiaId
+                       AND VER_VIGENTE = 1
+                       AND VER_ID <> :versionId
+                     FOR UPDATE";
+                await using var cmdVersionesVigentes = CrearComando(sqlVersionesVigentes, conn, trans);
+                cmdVersionesVigentes.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                cmdVersionesVigentes.Parameters.Add(new OracleParameter("versionId", versionId));
+                await using var readerVersionesVigentes = await cmdVersionesVigentes.ExecuteReaderAsync();
+                while (await readerVersionesVigentes.ReadAsync())
+                {
+                    versionesVigentes.Add(new VersionAuditSnapshot(
+                        readerVersionesVigentes.GetInt64(0),
+                        readerVersionesVigentes.GetString(1),
+                        true));
+                }
+                await readerVersionesVigentes.DisposeAsync();
+                await readerFam.DisposeAsync();
 
-            const string sqlPublicar = @"
-                UPDATE RL_MR_VERSIONES_FORMULARIO
-                   SET VER_ESTADO = 'PUBLISHED',
-                       VER_VIGENTE = 1,
-                       VER_HASH = :hash,
-                       VER_FECHA_INICIO = SYSDATE,
-                       VER_FECHA_FIN = NULL
-                 WHERE VER_ID = :versionId";
+                const string sqlApagar = @"
+                    UPDATE RL_MR_VERSIONES_FORMULARIO
+                       SET VER_VIGENTE = 0,
+                           VER_FECHA_FIN = SYSDATE
+                     WHERE VER_FAMILIA_ID = :familiaId
+                       AND VER_VIGENTE = 1
+                       AND VER_ID <> :versionId";
 
-            await using var cmdPublicar = CrearComando(sqlPublicar, conn, trans);
-            cmdPublicar.Parameters.Add(new OracleParameter("hash", hash));
-            cmdPublicar.Parameters.Add(new OracleParameter("versionId", versionId));
-            if (await cmdPublicar.ExecuteNonQueryAsync() != 1)
-            {
-                await trans.RollbackAsync();
-                return false;
+                await using var cmdApagar = CrearComando(sqlApagar, conn, trans);
+                cmdApagar.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                cmdApagar.Parameters.Add(new OracleParameter("versionId", versionId));
+                await cmdApagar.ExecuteNonQueryAsync();
+
+                const string sqlPublicar = @"
+                    UPDATE RL_MR_VERSIONES_FORMULARIO
+                       SET VER_ESTADO = 'PUBLISHED',
+                           VER_VIGENTE = 1,
+                           VER_HASH = :hash,
+                           VER_FECHA_INICIO = SYSDATE,
+                           VER_FECHA_FIN = NULL
+                     WHERE VER_ID = :versionId";
+
+                await using var cmdPublicar = CrearComando(sqlPublicar, conn, trans);
+                cmdPublicar.Parameters.Add(new OracleParameter("hash", hash));
+                cmdPublicar.Parameters.Add(new OracleParameter("versionId", versionId));
+                if (await cmdPublicar.ExecuteNonQueryAsync() != 1)
+                {
+                    await trans.RollbackAsync();
+                    return false;
+                }
+
+                foreach (VersionAuditSnapshot anterior in versionesVigentes)
+                {
+                    await _auditoriaRepository.RegistrarAsync(
+                        conn,
+                        trans,
+                        "RL_MR_VERSIONES_FORMULARIO",
+                        anterior.Id.ToString(),
+                        "VERSION_DEACTIVATED",
+                        SerializarEstadoVersion(anterior.Id, familiaId, familiaCodigo, anterior.State, true),
+                        SerializarEstadoVersion(anterior.Id, familiaId, familiaCodigo, anterior.State, false),
+                        usuarioId,
+                        null,
+                        null,
+                        ModuloAuditoria);
+                }
+
+                await _auditoriaRepository.RegistrarAsync(
+                    conn,
+                    trans,
+                    "RL_MR_VERSIONES_FORMULARIO",
+                    versionId.ToString(),
+                    "VERSION_PUBLISHED",
+                    SerializarEstadoVersion(versionId, familiaId, familiaCodigo, estadoAnterior, vigenteAnterior),
+                    SerializarEstadoVersion(versionId, familiaId, familiaCodigo, "PUBLISHED", true),
+                    usuarioId,
+                    null,
+                    null,
+                    ModuloAuditoria);
+                await _auditoriaRepository.RegistrarAsync(
+                    conn,
+                    trans,
+                    "RL_MR_VERSIONES_FORMULARIO",
+                    versionId.ToString(),
+                    "VERSION_ACTIVATED",
+                    SerializarEstadoVersion(versionId, familiaId, familiaCodigo, "PUBLISHED", vigenteAnterior),
+                    SerializarEstadoVersion(versionId, familiaId, familiaCodigo, "PUBLISHED", true),
+                    usuarioId,
+                    null,
+                    null,
+                    ModuloAuditoria);
             }
 
             await trans.CommitAsync();
@@ -326,6 +394,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             long familiaId;
             string estado;
             bool estadoVigenciaActual;
+            string familiaCodigo;
             await using (var cmdLockVersion = CrearComando(sqlLockVersion, conn, trans))
             {
                 cmdLockVersion.Parameters.Add(new OracleParameter("versionId", versionId));
@@ -348,7 +417,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
 
             const string sqlLockFam = @"
-                SELECT FAM_ACTIVO, FAM_ARCHIVADA
+                SELECT FAM_CODIGO, FAM_ACTIVO, FAM_ARCHIVADA
                   FROM RL_MR_FAMILIAS_FORMULARIO
                  WHERE FAM_ID = :familiaId
                  FOR UPDATE";
@@ -358,12 +427,14 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
                 await using var readerFam = await cmdLockFam.ExecuteReaderAsync();
                 if (!await readerFam.ReadAsync()
-                    || readerFam.GetInt32(0) != 1
-                    || readerFam.GetInt32(1) == 1)
+                    || readerFam.GetInt32(1) != 1
+                    || readerFam.GetInt32(2) == 1)
                 {
                     await trans.RollbackAsync();
                     return false;
                 }
+                familiaCodigo = readerFam.GetString(0);
+                await readerFam.DisposeAsync();
             }
 
             // An idempotent request must not rewrite VER_FECHA_FIN or any other history.
@@ -375,6 +446,28 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             if (vigente)
             {
+                List<VersionAuditSnapshot> versionesVigentes = new();
+                const string sqlVersionesVigentes = @"
+                    SELECT VER_ID, VER_ESTADO, VER_VIGENTE
+                      FROM RL_MR_VERSIONES_FORMULARIO
+                     WHERE VER_FAMILIA_ID = :familiaId
+                       AND VER_VIGENTE = 1
+                       AND VER_ID <> :versionId
+                     FOR UPDATE";
+                await using (var cmdVersionesVigentes = CrearComando(sqlVersionesVigentes, conn, trans))
+                {
+                    cmdVersionesVigentes.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                    cmdVersionesVigentes.Parameters.Add(new OracleParameter("versionId", versionId));
+                    await using var readerVersionesVigentes = await cmdVersionesVigentes.ExecuteReaderAsync();
+                    while (await readerVersionesVigentes.ReadAsync())
+                    {
+                        versionesVigentes.Add(new VersionAuditSnapshot(
+                            readerVersionesVigentes.GetInt64(0),
+                            readerVersionesVigentes.GetString(1),
+                            true));
+                    }
+                }
+
                 const string sqlApagar = @"
                     UPDATE RL_MR_VERSIONES_FORMULARIO
                        SET VER_VIGENTE = 0,
@@ -387,6 +480,22 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 cmdApagar.Parameters.Add(new OracleParameter("familiaId", familiaId));
                 cmdApagar.Parameters.Add(new OracleParameter("versionId", versionId));
                 await cmdApagar.ExecuteNonQueryAsync();
+
+                foreach (VersionAuditSnapshot anterior in versionesVigentes)
+                {
+                    await _auditoriaRepository.RegistrarAsync(
+                        conn,
+                        trans,
+                        "RL_MR_VERSIONES_FORMULARIO",
+                        anterior.Id.ToString(),
+                        "VERSION_DEACTIVATED",
+                        SerializarEstadoVersion(anterior.Id, familiaId, familiaCodigo, anterior.State, true),
+                        SerializarEstadoVersion(anterior.Id, familiaId, familiaCodigo, anterior.State, false),
+                        usuarioId,
+                        null,
+                        null,
+                        ModuloAuditoria);
+                }
             }
 
             if (!vigente)
@@ -435,6 +544,19 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             if (exito)
             {
+                string accion = vigente ? "VERSION_ACTIVATED" : "VERSION_DEACTIVATED";
+                await _auditoriaRepository.RegistrarAsync(
+                    conn,
+                    trans,
+                    "RL_MR_VERSIONES_FORMULARIO",
+                    versionId.ToString(),
+                    accion,
+                    SerializarEstadoVersion(versionId, familiaId, familiaCodigo, estado, estadoVigenciaActual),
+                    SerializarEstadoVersion(versionId, familiaId, familiaCodigo, estado, vigente),
+                    usuarioId,
+                    null,
+                    null,
+                    ModuloAuditoria);
                 await trans.CommitAsync();
                 return true;
             }
@@ -2869,6 +2991,23 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
             : predeterminado;
     }
+
+    private static string SerializarEstadoVersion(
+        long versionId,
+        long familiaId,
+        string familiaCodigo,
+        string estado,
+        bool vigente) =>
+        JsonSerializer.Serialize(new
+        {
+            VERSION_ID = versionId,
+            FAMILY_ID = familiaId,
+            FAMILY_CODE = familiaCodigo,
+            VERSION_STATE = estado,
+            VERSION_CURRENT = vigente
+        });
+
+    private sealed record VersionAuditSnapshot(long Id, string State, bool Current);
 
     private sealed record ProyeccionEvaluacion(
         string Area,

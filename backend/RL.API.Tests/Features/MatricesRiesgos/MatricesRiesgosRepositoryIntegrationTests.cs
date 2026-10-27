@@ -364,6 +364,95 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
     [Fact]
     [Trait("Category", "OracleIntegration")]
+    public async Task VersionLifecycle_AuditaPublicacionActivacionDesactivacionYReemplazoEnLaMismaTransaccion()
+    {
+        if (!await ValidarEntornoEjecucionAsync())
+        {
+            return;
+        }
+
+        long familiaId;
+        long versionActualId;
+        long versionBorradorId;
+        long usuarioId;
+        string codigoFamilia;
+        await using (OracleConnection seed = CrearConexion())
+        {
+            await seed.OpenAsync();
+            await using OracleTransaction transaction = seed.BeginTransaction();
+            familiaId = await SiguienteSecuenciaAsync(seed, transaction, "SEQ_RL_MR_FAMILIAS");
+            versionActualId = await SiguienteSecuenciaAsync(seed, transaction, "SEQ_RL_MR_VERSIONES");
+            versionBorradorId = await SiguienteSecuenciaAsync(seed, transaction, "SEQ_RL_MR_VERSIONES");
+            usuarioId = await ObtenerUsuarioValidoAsync(seed, transaction);
+            string suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+            codigoFamilia = PrefijoPrueba + "AUD_" + suffix;
+
+            await EjecutarAsync(seed, transaction,
+                "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (:id,:codigo,:nombre,1,0,SYSDATE)",
+                new OracleParameter("id", familiaId),
+                new OracleParameter("codigo", codigoFamilia),
+                new OracleParameter("nombre", "Familia H05 " + suffix));
+            await EjecutarAsync(seed, transaction,
+                "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:familia,:codigo,1,:json,:hash,'PUBLISHED',1,SYSDATE,SYSDATE,:usr)",
+                new OracleParameter("id", versionActualId),
+                new OracleParameter("familia", familiaId),
+                new OracleParameter("codigo", "H05_CURRENT_" + suffix),
+                CrearClob("json", "{\"sections\":[]}"),
+                new OracleParameter("hash", ("CURRENT_" + suffix).PadRight(64, '0')),
+                new OracleParameter("usr", usuarioId));
+            await EjecutarAsync(seed, transaction,
+                "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:familia,:codigo,2,:json,:hash,'DRAFT',0,SYSDATE,:usr)",
+                new OracleParameter("id", versionBorradorId),
+                new OracleParameter("familia", familiaId),
+                new OracleParameter("codigo", "H05_DRAFT_" + suffix),
+                CrearClob("json", "{\"sections\":[{\"id\":\"h05\"}]}"),
+                new OracleParameter("hash", ("DRAFT_" + suffix).PadRight(64, '0')),
+                new OracleParameter("usr", usuarioId));
+            await transaction.CommitAsync();
+        }
+
+        try
+        {
+            var repository = new MatricesRiesgosRepository(
+                new OracleDbContext(_connectionString!),
+                new AuditoriaRepository(new OracleDbContext(_connectionString!), new HttpContextAccessor()));
+
+            Assert.True(await repository.PublicarVersionFormularioAsync(versionBorradorId, "H05".PadRight(64, '0'), usuarioId));
+            Assert.Equal(1, await ContarVersionAuditAsync(versionActualId, "VERSION_DEACTIVATED"));
+            Assert.Equal(1, await ContarVersionAuditAsync(versionBorradorId, "VERSION_PUBLISHED"));
+            Assert.Equal(1, await ContarVersionAuditAsync(versionBorradorId, "VERSION_ACTIVATED"));
+
+            Assert.True(await repository.CambiarEstadoVigenciaFormularioAsync(versionBorradorId, false, usuarioId));
+            Assert.True(await repository.CambiarEstadoVigenciaFormularioAsync(versionBorradorId, true, usuarioId));
+            Assert.Equal(1, await ContarVersionAuditAsync(versionBorradorId, "VERSION_DEACTIVATED"));
+            Assert.Equal(2, await ContarVersionAuditAsync(versionBorradorId, "VERSION_ACTIVATED"));
+        }
+        finally
+        {
+            await using OracleConnection cleanup = CrearConexion();
+            await cleanup.OpenAsync();
+            await EjecutarAsync(cleanup,
+                "DELETE FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID IN (:actual,:borrador)",
+                new OracleParameter("actual", versionActualId.ToString()),
+                new OracleParameter("borrador", versionBorradorId.ToString()));
+            await EjecutarAsync(cleanup, "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id", new OracleParameter("id", familiaId));
+            await EjecutarAsync(cleanup, "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", new OracleParameter("id", familiaId));
+        }
+
+        async Task<int> ContarVersionAuditAsync(long versionId, string action)
+        {
+            await using OracleConnection connection = CrearConexion();
+            await connection.OpenAsync();
+            return Convert.ToInt32(await ObtenerEscalarAsync(
+                connection,
+                "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION=:accion",
+                new OracleParameter("id", versionId.ToString()),
+                new OracleParameter("accion", action)));
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "OracleIntegration")]
     public async Task Bloques4y6_ColumnasNuevasPersistenYSeProyectanDesdeOracle()
     {
         if (!await ValidarEntornoEjecucionAsync())
