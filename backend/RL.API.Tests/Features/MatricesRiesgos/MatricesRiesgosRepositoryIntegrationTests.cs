@@ -453,6 +453,79 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
     [Fact]
     [Trait("Category", "OracleIntegration")]
+    public async Task Borrador_ArchivadoConcurrenteBloqueaEliminacionYActualizacion()
+    {
+        if (!await ValidarEntornoEjecucionAsync())
+        {
+            return;
+        }
+
+        DraftRaceFixture deleteFixture = await CrearDraftRaceFixtureAsync("DELETE");
+        try
+        {
+            await using OracleConnection blocker = CrearConexion();
+            await blocker.OpenAsync();
+            await using OracleTransaction blockerTransaction = blocker.BeginTransaction();
+            await BloquearFamiliaAsync(blocker, blockerTransaction, deleteFixture.FamiliaId);
+
+            var repository = new MatricesRiesgosRepository(
+                new OracleDbContext(_connectionString!),
+                InterfaceStub.Create<IAuditoriaRepository>(out _));
+            Task<bool> deleteTask = repository.EliminarVersionFormularioAsync(deleteFixture.VersionId);
+            await Task.Delay(250);
+            await EjecutarAsync(blocker, blockerTransaction,
+                "UPDATE RL_MR_FAMILIAS_FORMULARIO SET FAM_ARCHIVADA=1 WHERE FAM_ID=:id",
+                new OracleParameter("id", deleteFixture.FamiliaId));
+            await blockerTransaction.CommitAsync();
+
+            Assert.False(await deleteTask);
+            await using OracleConnection verify = CrearConexion();
+            await verify.OpenAsync();
+            Assert.Equal(1, await ContarPorIdAsync(verify, "RL_MR_VERSIONES_FORMULARIO", "VER_ID", deleteFixture.VersionId));
+        }
+        finally
+        {
+            await LimpiarDraftRaceFixtureAsync(deleteFixture);
+        }
+
+        DraftRaceFixture updateFixture = await CrearDraftRaceFixtureAsync("UPDATE");
+        try
+        {
+            await using OracleConnection blocker = CrearConexion();
+            await blocker.OpenAsync();
+            await using OracleTransaction blockerTransaction = blocker.BeginTransaction();
+            await BloquearFamiliaAsync(blocker, blockerTransaction, updateFixture.FamiliaId);
+
+            var repository = new MatricesRiesgosRepository(
+                new OracleDbContext(_connectionString!),
+                InterfaceStub.Create<IAuditoriaRepository>(out _));
+            Task<bool> updateTask = repository.ActualizarBorradorFormularioAsync(
+                updateFixture.VersionId,
+                "{\"sections\":[{\"id\":\"should-not-commit\"}]}",
+                "H07".PadRight(64, '0'),
+                updateFixture.UsuarioId);
+            await Task.Delay(250);
+            await EjecutarAsync(blocker, blockerTransaction,
+                "UPDATE RL_MR_FAMILIAS_FORMULARIO SET FAM_ARCHIVADA=1 WHERE FAM_ID=:id",
+                new OracleParameter("id", updateFixture.FamiliaId));
+            await blockerTransaction.CommitAsync();
+
+            Assert.False(await updateTask);
+            await using OracleConnection verify = CrearConexion();
+            await verify.OpenAsync();
+            Assert.Equal("{\"sections\":[]}", await ObtenerEscalarAsync(
+                verify,
+                "SELECT VER_JSON FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id",
+                new OracleParameter("id", updateFixture.VersionId)));
+        }
+        finally
+        {
+            await LimpiarDraftRaceFixtureAsync(updateFixture);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "OracleIntegration")]
     public async Task Bloques4y6_ColumnasNuevasPersistenYSeProyectanDesdeOracle()
     {
         if (!await ValidarEntornoEjecucionAsync())
@@ -1402,6 +1475,63 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         return Convert.ToInt64(await cmd.ExecuteScalarAsync());
     }
 
+    private async Task<DraftRaceFixture> CrearDraftRaceFixtureAsync(string escenario)
+    {
+        await using OracleConnection connection = CrearConexion();
+        await connection.OpenAsync();
+        await using OracleTransaction transaction = connection.BeginTransaction();
+        long familiaId = await SiguienteSecuenciaAsync(connection, transaction, "SEQ_RL_MR_FAMILIAS");
+        long versionId = await SiguienteSecuenciaAsync(connection, transaction, "SEQ_RL_MR_VERSIONES");
+        long usuarioId = await ObtenerUsuarioValidoAsync(connection, transaction);
+        string suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+        await EjecutarAsync(connection, transaction,
+            "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (:id,:codigo,:nombre,1,0,SYSDATE)",
+            new OracleParameter("id", familiaId),
+            new OracleParameter("codigo", PrefijoPrueba + "RACE_" + escenario + "_" + suffix),
+            new OracleParameter("nombre", "Familia race " + escenario));
+        await EjecutarAsync(connection, transaction,
+            "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:familia,:codigo,1,:json,:hash,'DRAFT',0,SYSDATE,:usr)",
+            new OracleParameter("id", versionId),
+            new OracleParameter("familia", familiaId),
+            new OracleParameter("codigo", "RACE_" + escenario + "_" + suffix),
+            CrearClob("json", "{\"sections\":[]}"),
+            new OracleParameter("hash", ("RACE_" + suffix).PadRight(64, '0')),
+            new OracleParameter("usr", usuarioId));
+        await transaction.CommitAsync();
+        return new DraftRaceFixture(familiaId, versionId, usuarioId);
+    }
+
+    private static async Task BloquearFamiliaAsync(
+        OracleConnection connection,
+        OracleTransaction transaction,
+        long familiaId)
+    {
+        await using var command = new OracleCommand(
+            "SELECT FAM_ID FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id FOR UPDATE",
+            connection)
+        {
+            BindByName = true,
+            Transaction = transaction
+        };
+        command.Parameters.Add(new OracleParameter("id", familiaId));
+        Assert.Equal(familiaId, Convert.ToInt64(await command.ExecuteScalarAsync()));
+    }
+
+    private async Task LimpiarDraftRaceFixtureAsync(DraftRaceFixture fixture)
+    {
+        await using OracleConnection connection = CrearConexion();
+        await connection.OpenAsync();
+        await EjecutarAsync(connection,
+            "DELETE FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id",
+            new OracleParameter("id", fixture.VersionId.ToString()));
+        await EjecutarAsync(connection,
+            "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id",
+            new OracleParameter("id", fixture.VersionId));
+        await EjecutarAsync(connection,
+            "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id",
+            new OracleParameter("id", fixture.FamiliaId));
+    }
+
     private OracleConnection CrearConexion()
     {
         var builder = new OracleConnectionStringBuilder(_connectionString!)
@@ -1458,6 +1588,8 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         long FlujoId,
         long EvidenciaId,
         long UsuarioId);
+
+    private sealed record DraftRaceFixture(long FamiliaId, long VersionId, long UsuarioId);
 
     private sealed class AuditoriaFallaDespuesDeInsertar : IAuditoriaRepository
     {
