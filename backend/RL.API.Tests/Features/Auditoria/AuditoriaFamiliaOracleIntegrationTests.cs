@@ -15,6 +15,14 @@ public sealed class AuditoriaFamiliaOracleIntegrationTests
     [Trait("Category", "OracleIntegration")]
     public async Task HistorialFamilia_ResuelveIdYCodigoConPaginacionEstableYAislamiento()
     {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("RL_H02_ORACLE_HISTORY_CERTIFICATION_REQUIRED"),
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         IConfiguration configuration = new ConfigurationBuilder()
             .AddUserSecrets<AuditoriaFamiliaOracleIntegrationTests>(optional: true)
             .AddUserSecrets<OracleDbContext>(optional: true)

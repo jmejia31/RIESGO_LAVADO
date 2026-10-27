@@ -68,6 +68,20 @@ if [[ "$ready" != "true" ]]; then
 fi
 echo 'BLOCK7_REAL_API_ORACLE_READY=PASS'
 
+export RL_H02_ORACLE_HISTORY_CERTIFICATION_REQUIRED=true
+h02_output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj \
+  --configuration Release --no-build --no-restore \
+  --filter 'FullyQualifiedName~AuditoriaFamiliaOracleIntegrationTests' \
+  --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+if ! grep -Eq 'Passed: *1' <<<"$h02_output"; then
+  echo "H02 Oracle family audit history certification did not execute exactly one passing integration test." >&2
+  exit 1
+fi
+echo 'H02_ORACLE_HISTORY_TEST_EXECUTED=1'
+echo 'H02_ORACLE_HISTORY_ID_AND_CODE=PASS'
+echo 'H02_ORACLE_HISTORY_PAGINATION=25/25/10'
+echo 'H02_ORACLE_HISTORY_ISOLATION=PASS'
+
 block9_evidence_dir="${RUNNER_TEMP:-/tmp}/block9-browser-evidence"
 mkdir -p "$block9_evidence_dir"
 export BLOCK9_EVIDENCE_OUTPUT_DIR="$block9_evidence_dir"
