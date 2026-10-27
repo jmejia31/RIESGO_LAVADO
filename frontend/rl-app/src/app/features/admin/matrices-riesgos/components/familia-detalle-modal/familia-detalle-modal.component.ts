@@ -431,12 +431,10 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     }
 
     this.cargandoActividad.set(true);
-    this.suscripcionActividad = this.auditoriaService.getBitacora({
+    this.suscripcionActividad = this.auditoriaService.getHistorialFamilia({
+      familiaId: familia.famId,
       pagina,
-      limite: 25,
-      tabla: 'RL_MR_FAMILIAS_FORMULARIO',
-      registroId: familia.famId,
-      registroAlternativo: familia.famCodigo
+      limite: 25
     }, 'local').subscribe({
       next: respuesta => {
         this.cargandoActividad.set(false);

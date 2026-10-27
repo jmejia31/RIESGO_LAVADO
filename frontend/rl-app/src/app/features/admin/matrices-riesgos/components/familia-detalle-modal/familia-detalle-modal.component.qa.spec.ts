@@ -32,7 +32,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.QA transversal', () => {
       providers: [
         { provide: MatricesRiesgosService, useValue: service },
         { provide: AuthService, useValue: { tieneRol: () => true } },
-        { provide: AuditoriaService, useValue: { getBitacora: () => of({ datos: [], totalRegistros: 0 }) } }
+        { provide: AuditoriaService, useValue: { getHistorialFamilia: () => of({ datos: [], totalRegistros: 0 }) } }
       ]
     }).compileComponents();
 

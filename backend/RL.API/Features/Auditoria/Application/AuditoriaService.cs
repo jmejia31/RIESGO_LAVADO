@@ -27,6 +27,9 @@ public sealed class AuditoriaService : IAuditoriaService
     public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorEntidadPaginadaAsync(string tabla, string registroId, string? registroAlternativo, int pagina, int limite) =>
         _repository.ObtenerPorEntidadPaginadaAsync(tabla, registroId, registroAlternativo, pagina, limite);
 
+    public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorFamiliaPaginadaAsync(long familiaId, int pagina, int limite) =>
+        _repository.ObtenerPorFamiliaPaginadaAsync(familiaId, pagina, limite);
+
     public Task RegistrarExportacionAsync(RegistrarExportacionAuditoriaDto dto, long usuarioId, string? ip)
     {
         var datos = JsonConvert.SerializeObject(new

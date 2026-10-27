@@ -79,6 +79,28 @@ namespace RL.API.Features.Auditoria
             }
         }
 
+        [HttpGet("familia")]
+        [ModuloAuthorize(10)]
+        public async Task<IActionResult> ObtenerHistorialFamilia(
+            [FromQuery] long familiaId,
+            [FromQuery] int pagina = 1,
+            [FromQuery] int limite = 25)
+        {
+            if (familiaId <= 0)
+                return BadRequest(new { success = false, mensaje = "El identificador de familia es obligatorio." });
+
+            try
+            {
+                var (datos, total) = await _service.ObtenerPorFamiliaPaginadaAsync(familiaId, pagina, limite);
+                return Ok(new AuditoriaPaginadoDto { Datos = datos, TotalRegistros = total });
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Error al obtener el historial de auditoria de la familia {FamiliaId}", familiaId);
+                return StatusCode(500, new { success = false, mensaje = "Ocurrio un error interno al consultar el historial.", traceId = HttpContext.TraceIdentifier });
+            }
+        }
+
         [HttpPost("exportacion")]
         [ModuloAuthorize(4, 5, 7, 8, 9)]
         [AuditRequired("Exportación Excel/PDF o generación de reporte")]

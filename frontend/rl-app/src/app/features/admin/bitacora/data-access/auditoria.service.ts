@@ -63,4 +63,16 @@ export class AuditoriaService {
       context: createHttpErrorScopeContext(errorScope)
     });
   }
+
+  getHistorialFamilia(params: { familiaId: number; pagina?: number; limite?: number }, errorScope: HttpErrorScope = 'global'): Observable<AuditoriaPaginado> {
+    const httpParams = new HttpParams()
+      .set('familiaId', String(params.familiaId))
+      .set('pagina', String(params.pagina ?? 1))
+      .set('limite', String(params.limite ?? 25));
+
+    return this.http.get<AuditoriaPaginado>(`${this.apiUrl}/familia`, {
+      params: httpParams,
+      context: createHttpErrorScopeContext(errorScope)
+    });
+  }
 }

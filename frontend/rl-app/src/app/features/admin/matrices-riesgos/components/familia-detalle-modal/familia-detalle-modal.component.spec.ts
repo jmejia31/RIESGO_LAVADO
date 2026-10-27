@@ -97,7 +97,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     service = TestBed.inject(MatricesRiesgosService);
     auditoriaService = TestBed.inject(AuditoriaService);
     vi.spyOn(service, 'listarHistorialVersionesFormulario').mockReturnValue(of(versiones));
-    vi.spyOn(auditoriaService, 'getBitacora').mockReturnValue(of({ datos: [], totalRegistros: 0 }));
+    vi.spyOn(auditoriaService, 'getHistorialFamilia').mockReturnValue(of({ datos: [], totalRegistros: 0 }));
   });
 
   function crearComponente(id = 7): ComponentFixture<FamiliaDetalleModalComponent> {
@@ -220,7 +220,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
 
   it('9. construye actividad reciente únicamente con datos reales de auditoría, creación y versiones', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
-    vi.mocked(auditoriaService.getBitacora).mockReturnValue(of({
+    vi.mocked(auditoriaService.getHistorialFamilia).mockReturnValue(of({
       datos: [{
         audId: 91,
         tabla: 'RL_MR_FAMILIAS_FORMULARIO',
@@ -351,7 +351,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     const versionesSpy = vi.spyOn(service, 'listarHistorialVersionesFormulario')
       .mockReturnValueOnce(throwError(() => ({ error: { detail: 'Historial no disponible.' } })))
       .mockReturnValueOnce(of(versiones));
-    vi.mocked(auditoriaService.getBitacora).mockReturnValue(throwError(() => new Error('auditoría')));
+    vi.mocked(auditoriaService.getHistorialFamilia).mockReturnValue(throwError(() => new Error('auditoría')));
     const fixture = crearComponente();
 
     expect(fixture.componentInstance.errorVersiones()).toBe('Historial no disponible.');
@@ -363,7 +363,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
 
   it('18. mapea creación, actualización y acciones no mapeadas de auditoría', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
-    vi.mocked(auditoriaService.getBitacora).mockReturnValue(of({ datos: [
+    vi.mocked(auditoriaService.getHistorialFamilia).mockReturnValue(of({ datos: [
       { audId: 1, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: String(familia.famId), accion: 'CREATE', usrId: 8, fecha: '2026-08-22T10:00:00' },
       { audId: 2, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: String(familia.famId), accion: 'UPDATE', usrEmail: 'admin@ihss.hn', fecha: '2026-08-21T10:00:00' },
       { audId: 3, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: String(familia.famId), accion: 'OTHER', fecha: '2026-08-20T10:00:00' }

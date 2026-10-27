@@ -287,4 +287,27 @@ public class AuditoriaRepository : IAuditoriaRepository
         }
         return (datos, total);
     }
+
+    public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorFamiliaPaginadaAsync(long familiaId, int pagina, int limite)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        string? codigo;
+        await using (var family = conn.CreateCommand())
+        {
+            family.BindByName = true;
+            family.CommandText = "SELECT FAM_CODIGO FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:familiaId";
+            family.Parameters.Add(new OracleParameter("familiaId", familiaId));
+            codigo = (await family.ExecuteScalarAsync())?.ToString();
+        }
+
+        if (string.IsNullOrWhiteSpace(codigo)) return (new List<AuditoriaDto>(), 0);
+        return await ObtenerPorEntidadPaginadaAsync(
+            "RL_MR_FAMILIAS_FORMULARIO",
+            familiaId.ToString(),
+            codigo,
+            pagina,
+            limite);
+    }
 }
