@@ -80,6 +80,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   readonly errorVersiones = signal<string | null>(null);
   readonly errorActividad = signal<string | null>(null);
   readonly totalActividad = signal(0);
+  private paginaActividad = 0;
   readonly mostrandoHistorialCompleto = signal(false);
   readonly noEncontrada = signal(false);
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
@@ -152,6 +153,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
         this.detalle.set(null);
         this.versiones.set([]);
         this.auditoria.set([]);
+        this.paginaActividad = 0;
         this.cargando.set(false);
         this.error.set(null);
         this.noEncontrada.set(false);
@@ -415,7 +417,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   cargarMasActividad(): void {
     const familia = this.detalle();
     if (!familia || this.cargandoActividad() || this.auditoria().length >= this.totalActividad()) return;
-    this.cargarActividad(familia, Math.floor(this.auditoria().length / 25) + 1, true);
+    this.cargarActividad(familia, this.paginaActividad + 1, true);
   }
 
   mostrarHistorialCompleto(): void {
@@ -426,7 +428,10 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   private cargarActividad(familia: FamiliaFormularioDto, pagina = 1, agregar = false): void {
     this.suscripcionActividad?.unsubscribe();
     const solicitudActividad = ++this.secuenciaActividad;
-    if (!agregar) this.auditoria.set([]);
+    if (!agregar) {
+      this.auditoria.set([]);
+      this.paginaActividad = 0;
+    }
     this.errorActividad.set(null);
 
     if (!this.esAdministrador()) {
@@ -444,6 +449,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
         if (solicitudActividad !== this.secuenciaActividad || familia.famId !== this.familiaId) return;
         this.cargandoActividad.set(false);
         this.totalActividad.set(respuesta?.totalRegistros || 0);
+        this.paginaActividad = pagina;
         const actuales = agregar ? this.auditoria() : [];
         const porId = new Map(actuales.map(item => [item.audId, item]));
         for (const item of respuesta?.datos || []) porId.set(item.audId, item);
