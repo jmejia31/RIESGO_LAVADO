@@ -52,6 +52,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   private suscripcionVersiones: Subscription | null = null;
   private suscripcionActividad: Subscription | null = null;
   private secuenciaCarga = 0;
+  private secuenciaActividad = 0;
   private focoAnterior: HTMLElement | null = null;
 
   @Input({ required: true }) familiaId = 0;
@@ -95,8 +96,10 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     if (!fam) return [];
 
     const eventos: ActividadFamiliaViewModel[] = [];
-    const auditoriasFamilia = this.auditoria()
-      .filter(item => String(item.registroId) === String(fam.famId));
+    // El endpoint /auditoria/familia ya resolvió y autorizó la identidad canónica
+    // (FAM_ID) y la histórica (FAM_CODIGO). No volver a filtrar aquí por ID:
+    // hacerlo descartaría eventos legítimos registrados con el código histórico.
+    const auditoriasFamilia = this.auditoria();
 
     for (const item of auditoriasFamilia) {
       const accion = (item.accion || '').trim().toUpperCase();
@@ -422,6 +425,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   private cargarActividad(familia: FamiliaFormularioDto, pagina = 1, agregar = false): void {
     this.suscripcionActividad?.unsubscribe();
+    const solicitudActividad = ++this.secuenciaActividad;
     if (!agregar) this.auditoria.set([]);
     this.errorActividad.set(null);
 
@@ -437,12 +441,16 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
       limite: 25
     }, 'local').subscribe({
       next: respuesta => {
+        if (solicitudActividad !== this.secuenciaActividad || familia.famId !== this.familiaId) return;
         this.cargandoActividad.set(false);
         this.totalActividad.set(respuesta?.totalRegistros || 0);
         const actuales = agregar ? this.auditoria() : [];
-        this.auditoria.set([...actuales, ...(respuesta?.datos || [])]);
+        const porId = new Map(actuales.map(item => [item.audId, item]));
+        for (const item of respuesta?.datos || []) porId.set(item.audId, item);
+        this.auditoria.set([...porId.values()]);
       },
       error: () => {
+        if (solicitudActividad !== this.secuenciaActividad || familia.famId !== this.familiaId) return;
         this.cargandoActividad.set(false);
         this.auditoria.set([]);
         this.errorActividad.set('La actividad de auditoría no está disponible para esta consulta.');
@@ -512,6 +520,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     this.suscripcionVersiones = null;
     this.suscripcionActividad?.unsubscribe();
     this.suscripcionActividad = null;
+    this.secuenciaActividad++;
   }
 
   private obtenerMensajeError(error: unknown, fallback: string): string {

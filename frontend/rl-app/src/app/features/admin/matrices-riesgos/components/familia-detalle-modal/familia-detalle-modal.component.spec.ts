@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { AuditoriaService } from '../../../bitacora/data-access/auditoria.service';
+import { AuditoriaPaginado } from '../../../bitacora/models/auditoria.models';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
@@ -238,6 +239,74 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(actividad.some(item => item.titulo === 'Familia actualizada')).toBe(true);
     expect(actividad.some(item => item.titulo === 'Versión v4 publicada')).toBe(true);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Actividad reciente');
+  });
+
+  it('9b. conserva auditoría histórica identificada por el código canónico de la familia', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    vi.mocked(auditoriaService.getHistorialFamilia).mockReturnValue(of({
+      datos: [{
+        audId: 92,
+        tabla: 'RL_MR_FAMILIAS_FORMULARIO',
+        registroId: 'FAMILIA_AUTORITATIVA',
+        accion: 'UPDATE',
+        usrEmail: 'historico@ihss.hn',
+        fecha: '2026-08-20T11:00:00',
+        modulo: 'Matrices'
+      }],
+      totalRegistros: 1
+    }));
+    const fixture = crearComponente();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.actividadReciente().some(item => item.titulo === 'Familia actualizada')).toBe(true);
+  });
+
+  it('9c. pagina el historial por familia sin duplicar eventos ya cargados', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    vi.mocked(auditoriaService.getHistorialFamilia)
+      .mockReturnValueOnce(of({
+        datos: [{ audId: 101, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: '7', accion: 'UPDATE', fecha: '2026-08-20T10:00:00' }],
+        totalRegistros: 26
+      }))
+      .mockReturnValueOnce(of({
+        datos: [
+          { audId: 101, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: '7', accion: 'UPDATE', fecha: '2026-08-20T10:00:00' },
+          { audId: 102, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: 'FAMILIA_AUTORITATIVA', accion: 'UPDATE', fecha: '2026-08-19T10:00:00' }
+        ],
+        totalRegistros: 26
+      }));
+    const fixture = crearComponente();
+    fixture.componentInstance.mostrarHistorialCompleto();
+    fixture.detectChanges();
+
+    expect(auditoriaService.getHistorialFamilia).toHaveBeenNthCalledWith(2, { familiaId: 7, pagina: 2, limite: 25 }, 'local');
+    expect(fixture.componentInstance.auditoria().map(item => item.audId)).toEqual([101, 102]);
+  });
+
+  it('9d. descarta una respuesta de auditoría tardía al cambiar de familia', () => {
+    const familiaB: FamiliaFormularioDto = { ...familia, famId: 8, famCodigo: 'FAMILIA_B', famNombre: 'Familia B' };
+    const auditoriaA = new Subject<AuditoriaPaginado>();
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId')
+      .mockReturnValueOnce(of(familia))
+      .mockReturnValueOnce(of(familiaB));
+    vi.mocked(auditoriaService.getHistorialFamilia)
+      .mockReturnValueOnce(auditoriaA)
+      .mockReturnValueOnce(of({
+        datos: [{ audId: 202, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: 'FAMILIA_B', accion: 'UPDATE', fecha: '2026-08-21T10:00:00' }],
+        totalRegistros: 1
+      }));
+    const fixture = crearComponente(7);
+    fixture.componentRef.setInput('familiaId', 8);
+    fixture.detectChanges();
+    auditoriaA.next({
+      datos: [{ audId: 201, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: 'FAMILIA_AUTORITATIVA', accion: 'UPDATE', fecha: '2026-08-22T10:00:00' }],
+      totalRegistros: 1
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.detalle()?.famId).toBe(8);
+    expect(fixture.componentInstance.auditoria().map(item => item.audId)).toEqual([202]);
+    expect(fixture.componentInstance.auditoria().some(item => item.audId === 201)).toBe(false);
   });
 
   it('10. emite Editar familia, Nueva versión y Ver definición con la familia autoritativa', () => {

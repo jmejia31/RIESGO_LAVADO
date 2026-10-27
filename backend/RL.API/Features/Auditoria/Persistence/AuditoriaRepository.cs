@@ -303,10 +303,29 @@ public class AuditoriaRepository : IAuditoriaRepository
         }
 
         if (string.IsNullOrWhiteSpace(codigo)) return (new List<AuditoriaDto>(), 0);
+
+        // Un registro histórico puede usar el código de la familia. Si otra
+        // familia usa como código el ID numérico consultado, ese texto es
+        // ambiguo y no debe atribuirse arbitrariamente a ninguna entidad.
+        string? codigoHistorico = codigo;
+        await using (var ambiguity = conn.CreateCommand())
+        {
+            ambiguity.BindByName = true;
+            ambiguity.CommandText = @"
+                SELECT COUNT(*)
+                  FROM RL_MR_FAMILIAS_FORMULARIO
+                 WHERE FAM_ID <> :familiaId
+                   AND FAM_CODIGO = :registroId";
+            ambiguity.Parameters.Add(new OracleParameter("familiaId", familiaId));
+            ambiguity.Parameters.Add(new OracleParameter("registroId", familiaId.ToString()));
+            if (Convert.ToInt32(await ambiguity.ExecuteScalarAsync()) > 0)
+                codigoHistorico = null;
+        }
+
         return await ObtenerPorEntidadPaginadaAsync(
             "RL_MR_FAMILIAS_FORMULARIO",
             familiaId.ToString(),
-            codigo,
+            codigoHistorico,
             pagina,
             limite);
     }
