@@ -271,9 +271,9 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
             if (await cmd.ExecuteNonQueryAsync() != 1) { await transaction.RollbackAsync(); return ResultadoArchivadoFamiliaFormulario.YaArchivada; }
 
             (long? usuarioId, string? ip) = ObtenerContextoAuditoria();
-            await _auditoria.RegistrarAsync(conn, transaction, TablaFamilias, familia.Codigo, "ARCHIVE",
-                JsonSerializer.Serialize(new { familia.Codigo, familia.Activa, familia.Archivada }),
-                JsonSerializer.Serialize(new { familia.Codigo, FamActivo = false, FamArchivada = true, Motivo = motivo }),
+            await _auditoria.RegistrarAsync(conn, transaction, TablaFamilias, familia.Id.ToString(), "UPDATE",
+                JsonSerializer.Serialize(new { Evento = "FAMILY_ARCHIVED", FamilyId = familia.Id, FamilyCode = familia.Codigo, PreviousActive = familia.Activa, PreviousArchived = familia.Archivada }),
+                JsonSerializer.Serialize(new { Evento = "FAMILY_ARCHIVED", FamilyId = familia.Id, FamilyCode = familia.Codigo, NewActive = false, NewArchived = true, Justification = motivo }),
                 usuarioId, null, ip, ModuloAuditoria);
             await transaction.CommitAsync();
             return ResultadoArchivadoFamiliaFormulario.Exito;
@@ -281,7 +281,7 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
         catch { await transaction.RollbackAsync(); throw; }
     }
 
-    public async Task<ResultadoRestauracionFamiliaFormulario> RestaurarFamiliaFormularioAtomicoAsync(long famId)
+    public async Task<ResultadoRestauracionFamiliaFormulario> RestaurarFamiliaFormularioAtomicoAsync(long famId, string motivo)
     {
         await using OracleConnection conn = _db.CreateConnection();
         await conn.OpenAsync();
@@ -300,9 +300,9 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
             cmd.Parameters.Add(new OracleParameter("famId", famId));
             if (await cmd.ExecuteNonQueryAsync() != 1) { await transaction.RollbackAsync(); return ResultadoRestauracionFamiliaFormulario.NoEstaArchivada; }
             (long? usuarioId, string? ip) = ObtenerContextoAuditoria();
-            await _auditoria.RegistrarAsync(conn, transaction, TablaFamilias, familia.Codigo, "RESTORE",
-                JsonSerializer.Serialize(new { familia.Codigo, FamActivo = false, FamArchivada = true }),
-                JsonSerializer.Serialize(new { familia.Codigo, FamActivo = false, FamArchivada = false }),
+            await _auditoria.RegistrarAsync(conn, transaction, TablaFamilias, familia.Id.ToString(), "UPDATE",
+                JsonSerializer.Serialize(new { Evento = "FAMILY_RESTORED", FamilyId = familia.Id, FamilyCode = familia.Codigo, PreviousActive = false, PreviousArchived = true }),
+                JsonSerializer.Serialize(new { Evento = "FAMILY_RESTORED", FamilyId = familia.Id, FamilyCode = familia.Codigo, NewActive = false, NewArchived = false, Justification = motivo }),
                 usuarioId, null, ip, ModuloAuditoria);
             await transaction.CommitAsync();
             return ResultadoRestauracionFamiliaFormulario.Exito;
@@ -320,6 +320,7 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_ESTADO = 'PUBLISHED'),
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_ESTADO = 'PUBLISHED' AND v.VER_VIGENTE = 1),
                    (SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID = e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID = f.FAM_ID),
+                   (SELECT COUNT(*) FROM RL_MR_EVIDENCIAS_VINCULOS ev JOIN RL_MR_EVALUACIONES_RIESGO e ON ev.EVV_TIPO_ENTIDAD = 'EVALUACION' AND ev.EVV_ENTIDAD_ID = e.EVA_ID JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID = e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID = f.FAM_ID),
                    (SELECT COUNT(*) FROM RL_MR_FORMULA_USOS u JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID = u.FUS_VERSION_FORMULARIO_ID WHERE v.VER_FAMILIA_ID = f.FAM_ID),
                    (SELECT COUNT(*) FROM RL_MR_AUDITORIA a WHERE a.AUD_TABLA = 'RL_MR_FAMILIAS_FORMULARIO' AND (a.AUD_REGISTRO_ID = TO_CHAR(f.FAM_ID) OR a.AUD_REGISTRO_ID = f.FAM_CODIGO))
               FROM RL_MR_FAMILIAS_FORMULARIO f WHERE f.FAM_ID = :famId";
@@ -331,8 +332,9 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
         int publicadas = Convert.ToInt32(reader.GetValue(6));
         int vigentes = Convert.ToInt32(reader.GetValue(7));
         int evaluaciones = Convert.ToInt32(reader.GetValue(8));
-        int usosFormula = Convert.ToInt32(reader.GetValue(9));
-        int auditoria = Convert.ToInt32(reader.GetValue(10));
+        int evidencias = Convert.ToInt32(reader.GetValue(9));
+        int usosFormula = Convert.ToInt32(reader.GetValue(10));
+        int auditoria = Convert.ToInt32(reader.GetValue(11));
         var motivos = new List<string>();
         if (reader.GetInt32(4) == 1) motivos.Add("La familia es predeterminada.");
         if (reader.GetInt32(2) == 1) motivos.Add("La familia permanece activa.");
@@ -347,7 +349,7 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
             FamiliaId = reader.GetInt64(0), FamiliaCodigo = reader.GetString(1), EsDatoDePrueba = false,
             FamiliaActiva = reader.GetInt32(2) == 1, FamiliaArchivada = reader.GetInt32(3) == 1, FamiliaPredeterminada = reader.GetInt32(4) == 1,
             TotalVersiones = versiones, VersionesPublicadas = publicadas, VersionesPublicadasVigentes = vigentes,
-            TotalEvaluaciones = evaluaciones, TotalUsosFormula = usosFormula, TotalReferenciasAuditoria = auditoria,
+            TotalEvaluaciones = evaluaciones, TotalEvidenciasVinculadas = evidencias, TotalUsosFormula = usosFormula, TotalReferenciasAuditoria = auditoria,
             DependenciasCompletamenteAuditadas = false, PurgaElegible = false, MotivosBloqueo = motivos
         };
     }
@@ -358,7 +360,8 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
         long famId)
     {
             const string sql = @"
-                SELECT FAM_CODIGO,
+                SELECT FAM_ID,
+                       FAM_CODIGO,
                        FAM_NOMBRE,
                        FAM_DESCRIPCION,
                        FAM_ACTIVO,
@@ -377,12 +380,13 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
         }
 
         return new FamiliaBloqueada(
-            reader.GetString(0),
+            reader.GetInt64(0),
             reader.GetString(1),
-            reader.IsDBNull(2) ? null : reader.GetString(2),
-            reader.GetInt32(3) == 1,
+            reader.GetString(2),
+            reader.IsDBNull(3) ? null : reader.GetString(3),
             reader.GetInt32(4) == 1,
-            reader.GetInt32(5) == 1);
+            reader.GetInt32(5) == 1,
+            reader.GetInt32(6) == 1);
     }
 
     private async Task RegistrarCambioEstadoAsync(
@@ -396,10 +400,10 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
             conn,
             transaction,
             TablaFamilias,
-            familia.Codigo,
+            familia.Id.ToString(),
             "UPDATE",
-            JsonSerializer.Serialize(new { familia.Codigo, FamActivo = familia.Activa }),
-            JsonSerializer.Serialize(new { familia.Codigo, FamActivo = activoNuevo }),
+            JsonSerializer.Serialize(new { Evento = activoNuevo ? "FAMILY_ACTIVATED" : "FAMILY_DEACTIVATED", FamilyId = familia.Id, FamilyCode = familia.Codigo, PreviousActive = familia.Activa, PreviousArchived = familia.Archivada }),
+            JsonSerializer.Serialize(new { Evento = activoNuevo ? "FAMILY_ACTIVATED" : "FAMILY_DEACTIVATED", FamilyId = familia.Id, FamilyCode = familia.Codigo, NewActive = activoNuevo, NewArchived = familia.Archivada }),
             usuarioId,
             null,
             ip,
@@ -428,6 +432,7 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
     }
 
     private sealed record FamiliaBloqueada(
+        long Id,
         string Codigo,
         string Nombre,
         string? Descripcion,

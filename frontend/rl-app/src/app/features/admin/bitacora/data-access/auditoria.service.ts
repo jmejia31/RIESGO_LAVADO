@@ -19,6 +19,8 @@ export class AuditoriaService {
     accion?: string;
     modulo?: string;
     tabla?: string;
+    registroId?: string | number;
+    registroAlternativo?: string;
     fechaInicio?: string;
     fechaFin?: string;
   }, errorScope: HttpErrorScope = 'global'): Observable<AuditoriaPaginado> {
@@ -30,10 +32,33 @@ export class AuditoriaService {
     if (params.accion) httpParams = httpParams.set('accion', params.accion);
     if (params.modulo) httpParams = httpParams.set('modulo', params.modulo);
     if (params.tabla) httpParams = httpParams.set('tabla', params.tabla);
+    if (params.registroId !== undefined) httpParams = httpParams.set('registroId', String(params.registroId));
+    if (params.registroAlternativo) httpParams = httpParams.set('registroAlternativo', params.registroAlternativo);
     if (params.fechaInicio) httpParams = httpParams.set('fechaInicio', params.fechaInicio);
     if (params.fechaFin) httpParams = httpParams.set('fechaFin', params.fechaFin);
 
-    return this.http.get<AuditoriaPaginado>(this.apiUrl, {
+    const url = params.registroId !== undefined ? `${this.apiUrl}/entidad` : this.apiUrl;
+    return this.http.get<AuditoriaPaginado>(url, {
+      params: httpParams,
+      context: createHttpErrorScopeContext(errorScope)
+    });
+  }
+
+  getHistorialEntidad(params: {
+    tabla: string;
+    registroId: string | number;
+    registroAlternativo?: string;
+    pagina?: number;
+    limite?: number;
+  }, errorScope: HttpErrorScope = 'global'): Observable<AuditoriaPaginado> {
+    let httpParams = new HttpParams()
+      .set('tabla', params.tabla)
+      .set('registroId', String(params.registroId))
+      .set('pagina', String(params.pagina ?? 1))
+      .set('limite', String(params.limite ?? 25));
+    if (params.registroAlternativo) httpParams = httpParams.set('registroAlternativo', params.registroAlternativo);
+
+    return this.http.get<AuditoriaPaginado>(`${this.apiUrl}/entidad`, {
       params: httpParams,
       context: createHttpErrorScopeContext(errorScope)
     });

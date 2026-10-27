@@ -149,7 +149,12 @@
             </section>
 
             <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-actividad-familia">
-              <h4 id="titulo-actividad-familia" class="text-base font-bold text-gray-950">Actividad reciente</h4>
+              <div class="flex items-center justify-between gap-3">
+                <h4 id="titulo-actividad-familia" class="text-base font-bold text-gray-950">Actividad reciente</h4>
+                @if (totalActividad() > 4 && !mostrandoHistorialCompleto()) {
+                  <button type="button" class="text-xs font-bold text-ihss-700 hover:text-ihss-900" title="Ver historial completo de la familia" aria-label="Ver historial completo de la familia" (click)="mostrarHistorialCompleto()">Ver historial completo</button>
+                }
+              </div>
               @if (cargandoActividad()) {
                 <div class="mt-5 flex items-center gap-3 text-sm text-gray-500"><span class="h-4 w-4 animate-spin rounded-full border-2 border-ihss-600 border-t-transparent"></span>Cargando actividad...</div>
               } @else if (actividadReciente().length > 0) {
@@ -183,6 +188,9 @@
                   <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-ihss-700 text-white shadow-sm transition-colors hover:bg-ihss-800" title="Crear una nueva versión en esta familia" aria-label="Crear una nueva versión en esta familia" (click)="solicitarNuevaVersion()">
             <app-action-icon action="create"></app-action-icon>
           </button>
+              }
+              @if (mostrandoHistorialCompleto() && auditoria().length < totalActividad() && !cargandoActividad()) {
+                <button type="button" class="mt-4 w-full rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50" title="Cargar más actividad" aria-label="Cargar más actividad" (click)="cargarMasActividad()">Cargar más actividad</button>
               }
             </div>
 

@@ -172,9 +172,9 @@ export class MatricesRiesgosService {
     }).pipe(map(response => response.success));
   }
 
-  restaurarFamiliaFormulario(id: number): Observable<boolean> {
-    return this.http.put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/restaurar`, {}, {
-      ...this.confirmado,
+  restaurarFamiliaFormulario(id: number, motivo: string): Observable<boolean> {
+    return this.http.put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/restaurar`, { motivo }, {
+      ...this.confirmadoJson,
       context: createHttpErrorScopeContext('local')
     }).pipe(map(response => response.success));
   }

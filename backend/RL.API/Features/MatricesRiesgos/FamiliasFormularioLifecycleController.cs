@@ -69,9 +69,9 @@ public sealed class FamiliasFormularioLifecycleController : ControllerBase
     [HttpPut("{id:long}/restaurar")]
     [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Restauración administrativa de familia de formulario")]
-    public async Task<IActionResult> RestaurarFamiliaFormulario(long id)
+    public async Task<IActionResult> RestaurarFamiliaFormulario(long id, [FromBody] JustificacionFamiliaDto dto)
     {
-        try { return Responder(await _service.RestaurarFamiliaFormularioAsync(id)); }
+        try { return Responder(await _service.RestaurarFamiliaFormularioAsync(id, dto?.Motivo)); }
         catch (Exception ex) { _logger.LogError(ex, "Error al restaurar la familia de formulario ID {Id}", id); return Error500(); }
     }
 

@@ -78,6 +78,8 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   readonly error = signal<string | null>(null);
   readonly errorVersiones = signal<string | null>(null);
   readonly errorActividad = signal<string | null>(null);
+  readonly totalActividad = signal(0);
+  readonly mostrandoHistorialCompleto = signal(false);
   readonly noEncontrada = signal(false);
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
   readonly etiquetaRegresar = computed(() => this.origen === 'nueva-evaluacion' ? 'Regresar a Nueva Evaluación' : 'Regresar a Familias de Formularios');
@@ -133,7 +135,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     return eventos
       .filter(evento => Boolean(evento.fecha))
       .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-      .slice(0, 4);
+      .slice(0, this.mostrandoHistorialCompleto() ? undefined : 4);
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -403,9 +405,20 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     });
   }
 
-  private cargarActividad(familia: FamiliaFormularioDto): void {
+  cargarMasActividad(): void {
+    const familia = this.detalle();
+    if (!familia || this.cargandoActividad() || this.auditoria().length >= this.totalActividad()) return;
+    this.cargarActividad(familia, Math.floor(this.auditoria().length / 25) + 1, true);
+  }
+
+  mostrarHistorialCompleto(): void {
+    this.mostrandoHistorialCompleto.set(true);
+    this.cargarMasActividad();
+  }
+
+  private cargarActividad(familia: FamiliaFormularioDto, pagina = 1, agregar = false): void {
     this.suscripcionActividad?.unsubscribe();
-    this.auditoria.set([]);
+    if (!agregar) this.auditoria.set([]);
     this.errorActividad.set(null);
 
     if (!this.esAdministrador()) {
@@ -415,13 +428,17 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
     this.cargandoActividad.set(true);
     this.suscripcionActividad = this.auditoriaService.getBitacora({
-      pagina: 1,
-      limite: 100,
-      tabla: 'RL_MR_FAMILIAS_FORMULARIO'
+      pagina,
+      limite: 25,
+      tabla: 'RL_MR_FAMILIAS_FORMULARIO',
+      registroId: familia.famId,
+      registroAlternativo: familia.famCodigo
     }, 'local').subscribe({
       next: respuesta => {
         this.cargandoActividad.set(false);
-        this.auditoria.set((respuesta?.datos || []).filter(item => String(item.registroId) === String(familia.famId)));
+        this.totalActividad.set(respuesta?.totalRegistros || 0);
+        const actuales = agregar ? this.auditoria() : [];
+        this.auditoria.set([...actuales, ...(respuesta?.datos || [])]);
       },
       error: () => {
         this.cargandoActividad.set(false);
@@ -433,6 +450,20 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   private mapearAuditoria(item: AuditoriaDto, accion: string): ActividadFamiliaViewModel | null {
     const usuario = item.usrEmail?.trim() || (item.usrId ? `Usuario #${item.usrId}` : 'Usuario institucional');
+    let datosNvo: { Evento?: string; Justification?: string; NewActive?: boolean; NewArchived?: boolean } = {};
+    try { datosNvo = item.datosNvo ? JSON.parse(item.datosNvo) as typeof datosNvo : {}; } catch { datosNvo = {}; }
+    const evento = datosNvo.Evento?.toUpperCase();
+
+    if (evento === 'FAMILY_ARCHIVED' || evento === 'FAMILY_RESTORED' || evento === 'FAMILY_ACTIVATED' || evento === 'FAMILY_DEACTIVATED') {
+      const etiquetas: Record<string, [string, string, ActividadFamiliaViewModel['tono']]> = {
+        FAMILY_ARCHIVED: ['Familia archivada', 'La familia fue archivada.', 'amber'],
+        FAMILY_RESTORED: ['Familia restaurada', 'La familia fue restaurada como inactiva.', 'blue'],
+        FAMILY_ACTIVATED: ['Familia activada', 'La familia fue activada.', 'green'],
+        FAMILY_DEACTIVATED: ['Familia desactivada', 'La familia fue desactivada.', 'amber']
+      };
+      const [titulo, descripcion, tono] = etiquetas[evento];
+      return { id: `audit-${item.audId}`, titulo, descripcion: datosNvo.Justification ? `${descripcion} Motivo: ${datosNvo.Justification}` : descripcion, fecha: item.fecha, usuario, tono };
+    }
 
     if (accion.includes('CREATE') || accion.includes('INSERT') || accion.includes('CREAR')) {
       return {

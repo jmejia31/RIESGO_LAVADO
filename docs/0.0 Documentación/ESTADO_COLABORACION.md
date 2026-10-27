@@ -2,6 +2,16 @@
 
 ## Archivado reversible y purga fail-closed
 
+## Estado vigente - Correccion quirurgica de ciclo de vida de familias (COD) - 2026-10-27 09:58 -06:00
+
+- `POINT_1_AUDIT_IDENTITY_STATUS=PASS`: auditoria de familias usa `FAM_ID` canonico, conserva el codigo como identidad alternativa, expone historial paginado por entidad y registra eventos explicitos con justificacion.
+- `POINT_2_VERSION_GUARDS_STATUS=PASS`: operaciones de version, borrador, vigencia, evaluacion y familia predeterminada rechazan familias inactivas/archivadas donde corresponde; archivar/restaurar actualiza unicamente la familia y conserva versiones, evaluaciones, evidencias y auditoria. La confirmacion fisica en Oracle queda pendiente de un perfil `LOCAL_XE`/CI.
+- `POINT_3_UI_STATUS=PASS`: listado, filtros, estados, confirmaciones, motivos obligatorios y actividad reciente fueron alineados con el ciclo de vida; no se agregaron dialogos nativos ni se uso iconografia de eliminacion para archivar/restaurar.
+- `POINT_4_TESTS_CI_STATUS=PARTIAL`: `85/85` pruebas backend focalizadas PASS; suite backend completa `1085 PASS`, `2 SKIP`, `5 FAIL` por ausencia de `Database:Profile=LOCAL_XE`; validadores estructural/DB/documentacion PASS; `npm audit` PASS tras fijar `fast-uri@3.1.9`. Frontend build/test y E2E quedan pendientes por bloqueo local `EBUSY` en `node_modules` y deben ser confirmados por CI.
+- `CI_FAILURE_ROOT_CAUSE=fast-uri<3.1.9`; run previo `40528313606` fallo antes de build/tests. El fix no ejecuta `npm audit fix --force` ni cambia la version mayor de Angular.
+- `PRODUCTION_QUERIED=NO`, `PRODUCTION_DML=0`, `PRODUCTION_DDL=0`; no se ejecuto migracion Oracle ni se elimino `PRUEBA_FORMULARIO`.
+- **Siguiente accion:** commit/push del alcance propio en `origin/desarrollo`, esperar Quality Gates del SHA exacto, reconciliar CI y luego cerrar formalmente esta intervencion. Cambios ajenos del worktree permanecen preservados fuera del commit.
+
 - `FAMILY_ARCHIVE_LIFECYCLE=IMPLEMENTED`; `FAMILY_ARCHIVE_RESTORE=IMPLEMENTED`; restaurar deja la familia `INACTIVA` y no publica versiones automáticamente.
 - `FAMILY_ARCHIVE_HISTORY_PRESERVED=YES`; no se elimina `PRUEBA_FORMULARIO`; la eliminación ordinaria continúa bloqueada si existen versiones.
 - `FAMILY_ARCHIVE_ADMIN_ONLY=YES`; `FAMILY_ARCHIVE_AUDIT=YES`; `FAMILY_ARCHIVE_ATOMIC=YES`; `FAMILY_ARCHIVE_CONCURRENCY_LOCK=YES`; `FAMILY_ARCHIVE_CACHE_INVALIDATION=YES`.

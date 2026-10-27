@@ -50,6 +50,19 @@ public sealed class AuditoriaModuleCharacterizationTests
     }
 
     [Fact]
+    public async Task ObtenerHistorialEntidad_UsaIdentidadCanonicaYAlternativa()
+    {
+        var repository = new AuditoriaRepositoryFake { Datos = new List<AuditoriaDto> { new() { AudId = 7, RegistroId = "7" } }, Total = 1 };
+        var controller = CrearController(repository);
+
+        var result = Assert.IsType<OkObjectResult>(await controller.ObtenerHistorialEntidad("RL_MR_FAMILIAS_FORMULARIO", "7", "FAMILIA_A", 2, 25));
+        var response = Assert.IsType<AuditoriaPaginadoDto>(result.Value);
+
+        Assert.Single(response.Datos);
+        Assert.Equal(("RL_MR_FAMILIAS_FORMULARIO", "7", "FAMILIA_A", 2, 25), repository.UltimaEntidad);
+    }
+
+    [Fact]
     public async Task RegistrarExportacion_ConservaAccionExplicitaYContexto()
     {
         var repository = new AuditoriaRepositoryFake();
@@ -150,6 +163,7 @@ public sealed class AuditoriaModuleCharacterizationTests
         public int Total { get; init; }
         public bool LanzarEnConsulta { get; init; }
         public (int Pagina, int Limite, string? Buscar, string? Accion, string? Modulo, string? Tabla, DateTime? Inicio, DateTime? Fin)? UltimaConsulta { get; private set; }
+        public (string Tabla, string RegistroId, string? Alternativo, int Pagina, int Limite)? UltimaEntidad { get; private set; }
         public List<AuditoriaRegistro> Registros { get; } = new();
 
         public Task RegistrarAsync(string tabla, string registroId, string accion, string? datosAnt, string? datosNvo, long? usrId, string? email, string? ip, string? modulo)
@@ -164,6 +178,12 @@ public sealed class AuditoriaModuleCharacterizationTests
                 return Task.FromException<(List<AuditoriaDto> Datos, int Total)>(new InvalidOperationException("fallo interno de prueba"));
 
             UltimaConsulta = (pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
+            return Task.FromResult((Datos, Total));
+        }
+
+        public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorEntidadPaginadaAsync(string tabla, string registroId, string? registroAlternativo, int pagina, int limite)
+        {
+            UltimaEntidad = (tabla, registroId, registroAlternativo, pagina, limite);
             return Task.FromResult((Datos, Total));
         }
     }
