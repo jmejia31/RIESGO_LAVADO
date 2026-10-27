@@ -193,6 +193,31 @@ public class MatricesRiesgosCicloVidaVersionTests
     }
 
     [Fact]
+    public async Task CambiarVigencia_HistoricaConHashInconsistente_QuedaBloqueada()
+    {
+        var version = new VersionFormularioDto
+        {
+            VerId = 10,
+            VerFamiliaId = 1,
+            VerEstado = "PUBLISHED",
+            VerVigente = false,
+            VerJson = "{\"secciones\":[]}",
+            VerHash = "hash-historico-invalido"
+        };
+        var familia = new FamiliaFormularioDto { FamId = 1, FamCodigo = "FAM_A", FamActivo = true };
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repoStub);
+        repoStub.On("ObtenerVersionFormularioAsync", _ => Task.FromResult<VersionFormularioDto?>(version));
+        repoStub.On("ObtenerFamiliaFormularioPorIdAsync", _ => Task.FromResult<FamiliaFormularioDto?>(familia));
+        repoStub.On("CambiarEstadoVigenciaFormularioAsync", _ => Task.FromResult(true));
+
+        ServiceResult res = await service.CambiarEstadoVigenciaFormularioAsync(10, true, 99);
+
+        Assert.False(res.Success);
+        Assert.Equal(409, res.StatusCode);
+        Assert.Empty(repoStub.CallsTo("CambiarEstadoVigenciaFormularioAsync"));
+    }
+
+    [Fact]
     public async Task Eliminar_DraftNoVigente_Permite()
     {
         var version = new VersionFormularioDto
