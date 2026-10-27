@@ -82,6 +82,8 @@ echo 'H02_ORACLE_HISTORY_ID_AND_CODE=PASS'
 echo 'H02_ORACLE_HISTORY_PAGINATION=25/25/10'
 echo 'H02_ORACLE_HISTORY_ISOLATION=PASS'
 
+export RL_H08_FAMILY_LIFECYCLE_CERTIFICATION_REQUIRED=true
+
 block9_evidence_dir="${RUNNER_TEMP:-/tmp}/block9-browser-evidence"
 mkdir -p "$block9_evidence_dir"
 export BLOCK9_EVIDENCE_OUTPUT_DIR="$block9_evidence_dir"
@@ -99,6 +101,23 @@ if ! grep -Eq '3 passed' <<<"$browser_output"; then
   echo "Block 7/12 real browser suite did not execute exactly three passing tests." >&2
   exit 1
 fi
+pushd "$repo_root/frontend/rl-app" >/dev/null
+if ! h08_output="$(npm run e2e -- e2e/h08-family-lifecycle-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+  popd >/dev/null
+  echo 'H08 Oracle API host diagnostics (secrets omitted):' >&2
+  sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 160
+  exit 1
+fi
+popd >/dev/null
+if ! grep -Eq '1 passed' <<<"$h08_output"; then
+  echo "H08 real family lifecycle suite did not execute exactly one passing test." >&2
+  exit 1
+fi
+grep -Fq 'H08_FAMILY_LIFECYCLE_TWO_CYCLES=PASS' <<<"$h08_output"
+grep -Fq 'H08_FAMILY_REUSE_IDENTITIES_EVIDENCE=PASS' <<<"$h08_output"
+echo 'H08_FAMILY_LIFECYCLE_ORACLE_E2E=PASS'
+echo 'H08_FAMILY_LIFECYCLE_TWO_CYCLES=PASS'
+echo 'H08_FAMILY_REUSE_IDENTITIES_EVIDENCE=PASS'
 grep -Fq 'BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006' <<<"$browser_output"
 # Inspect only the API host log and report counts, never exception text or connection data.
 oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_log" || true)"

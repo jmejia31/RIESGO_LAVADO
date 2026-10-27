@@ -14,6 +14,7 @@ using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Infrastructure.Database;
+using RL.API.Infrastructure.Caching;
 
 const string requiredFlag = "RL_BLOCK7_REAL_E2E_REQUIRED";
 if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "E2E", StringComparison.Ordinal)
@@ -49,6 +50,12 @@ long areaOnlyUserId = stamp + 10;
 long ugrOnlyUserId = stamp + 11;
 long bothUserId = stamp + 12;
 long neitherUserId = stamp + 13;
+long lifecycleFamilyId = stamp + 900_000_000;
+long lifecycleVersionId = stamp + 900_000_001;
+long lifecycleEvaluationId = stamp + 900_000_002;
+long lifecycleEvidenceId = stamp + 900_000_003;
+long lifecycleEvidenceLinkId = stamp + 900_000_004;
+string lifecycleFamilyCode = $"H08-FAMILIA-{stamp}";
 string riskCode = canonicalRisks[0].Code;
 string ruleCode = $"B7-E2E-RULE-{stamp}";
 string definition = CreateDefinition(ruleCode);
@@ -72,6 +79,11 @@ foreach (string capability in new[] { "MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR
     await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,:capability,1)", ("id", bothUserId), ("capability", capability));
     await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,:capability,1)", ("id", userId), ("capability", capability));
 }
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'H08 ciclo de vida','Fixture desechable H08',1,0,0,SYSDATE)", ("id", lifecycleFamilyId), ("code", lifecycleFamilyCode));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,:code,1,'{}',RPAD('H',64,'H'),'RETIRED',0,SYSDATE,:usr)", ("id", lifecycleVersionId), ("family", lifecycleFamilyId), ("code", lifecycleFamilyCode), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,'{}','{}',SYSDATE,:usr,1,1)", ("id", lifecycleEvaluationId), ("risk", riskId), ("version", lifecycleVersionId), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVIDENCIAS (EVI_ID,EVI_NOMBRE_ARCHIVO,EVI_EXTENSION,EVI_TAMANO,EVI_HASH,EVI_RUTA,EVI_USR_CREACION) VALUES (:id,'h08-evidence.txt','txt',12,RPAD('E',64,'E'),'h08/:id',:usr)", ("id", lifecycleEvidenceId), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVIDENCIAS_VINCULOS (EVV_ID,EVV_EVIDENCIA_ID,EVV_TIPO_ENTIDAD,EVV_ENTIDAD_ID,EVV_USR_CREACION) VALUES (:id,:evidence,'EVALUACION',:evaluation,:usr)", ("id", lifecycleEvidenceLinkId), ("evidence", lifecycleEvidenceId), ("evaluation", lifecycleEvaluationId), ("usr", userId));
 await oracle.CloseAsync();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,10 +93,15 @@ builder.Services.AddAuthentication("Block7E2E")
     .AddScheme<AuthenticationSchemeOptions, E2EAuthenticationHandler>("Block7E2E", _ => { });
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
 builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
 builder.Services.AddSingleton(new OracleDbContext(connectionString));
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
+builder.Services.AddSingleton<IApplicationCache, ApplicationMemoryCache>();
+builder.Services.AddSingleton(new ApplicationCacheSettings());
 builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
+builder.Services.AddScoped<IFamiliasFormularioLifecycleRepository, FamiliasFormularioLifecycleRepository>();
+builder.Services.AddScoped<FamiliasFormularioLifecycleService>();
 builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGestionRepository>();
 builder.Services.AddScoped<IMatricesRiesgosGestionService, MatricesRiesgosGestionService>();
 builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
@@ -116,6 +133,23 @@ app.MapGet("/__e2e/readyz", async (OracleDbContext db, CancellationToken cancell
     return Results.Ok(new { status = "ready" });
 });
 app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId, definition = JsonDocument.Parse(definition).RootElement.Clone() }));
+app.MapGet("/__e2e/family-lifecycle-fixture", () => Results.Ok(new { lifecycleFamilyId, lifecycleFamilyCode, lifecycleVersionId, lifecycleEvaluationId, lifecycleEvidenceId, lifecycleEvidenceLinkId }));
+app.MapGet("/__e2e/family-lifecycle-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+    await using var command = new OracleCommand(@"
+        SELECT f.FAM_ID,f.FAM_CODIGO,f.FAM_ACTIVO,f.FAM_ARCHIVADA,
+               (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID=f.FAM_ID),
+               (SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=f.FAM_ID),
+               (SELECT COUNT(*) FROM RL_MR_EVIDENCIAS_VINCULOS ev JOIN RL_MR_EVALUACIONES_RIESGO e ON ev.EVV_ENTIDAD_ID=e.EVA_ID AND ev.EVV_TIPO_ENTIDAD='EVALUACION' JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=f.FAM_ID),
+               (SELECT COUNT(*) FROM RL_AUDITORIA a WHERE a.AUD_TABLA='RL_MR_FAMILIAS_FORMULARIO' AND a.AUD_REGISTRO_ID=TO_CHAR(f.FAM_ID))
+          FROM RL_MR_FAMILIAS_FORMULARIO f WHERE f.FAM_ID=:id", connection) { BindByName = true };
+    command.Parameters.Add(new OracleParameter("id", lifecycleFamilyId));
+    await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+    if (!await reader.ReadAsync(cancellationToken)) return Results.NotFound();
+    return Results.Ok(new { familyId = reader.GetInt64(0), code = reader.GetString(1), active = reader.GetInt32(2) == 1, archived = reader.GetInt32(3) == 1, versions = reader.GetInt32(4), evaluations = reader.GetInt32(5), evidences = reader.GetInt32(6), audit = reader.GetInt32(7) });
+});
 app.MapGet("/__e2e/risk-identities", () => Results.Ok(canonicalRisks.Select((risk, index) => new
 {
     ordinal = risk.Ordinal,
@@ -238,7 +272,12 @@ finally
     await ExecuteAsync(cleanup, "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
     await ExecuteAsync(cleanup, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId", ("riskId", riskId));
     foreach (long id in canonicalRiskIds)
-        await ExecuteAsync(cleanup, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", id));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", id));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_EVIDENCIAS_VINCULOS WHERE EVV_ID=:id", ("id", lifecycleEvidenceLinkId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID=:id", ("id", lifecycleEvidenceId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", lifecycleEvaluationId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", lifecycleVersionId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", lifecycleFamilyId));
 }
 
 static string FindOfficialWorkbook()
@@ -380,10 +419,12 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
         "CREATE TABLE RL_MR_EVIDENCIAS_VINCULOS (EVV_ID NUMBER(15) PRIMARY KEY,EVV_EVIDENCIA_ID NUMBER(15),EVV_TIPO_ENTIDAD VARCHAR2(30),EVV_ENTIDAD_ID NUMBER(15),EVV_USR_CREACION NUMBER(10),EVV_FECHA_CREACION DATE DEFAULT SYSDATE)",
         "CREATE TABLE RL_USUARIO_CAPACIDADES (UCP_USR_ID NUMBER(10),UCP_CAPACIDAD VARCHAR2(80),UCP_ACTIVO NUMBER(1))",
         "CREATE TABLE RL_USUARIOS (USR_ID NUMBER(10) PRIMARY KEY,USR_ACTIVO NUMBER(1),USR_NOMBRE VARCHAR2(120),USR_APELLIDO VARCHAR2(120),USR_EMAIL VARCHAR2(255))",
-        "CREATE TABLE RL_MR_FAMILIAS_FORMULARIO (FAM_ID NUMBER(15) PRIMARY KEY,FAM_CODIGO VARCHAR2(80),FAM_NOMBRE VARCHAR2(250),FAM_DESCRIPCION VARCHAR2(2000),FAM_ACTIVO NUMBER(1),FAM_ARCHIVADA NUMBER(1),FAM_FECHA_CREACION DATE)",
+        "CREATE TABLE RL_MR_FAMILIAS_FORMULARIO (FAM_ID NUMBER(15) PRIMARY KEY,FAM_CODIGO VARCHAR2(80),FAM_NOMBRE VARCHAR2(250),FAM_DESCRIPCION VARCHAR2(2000),FAM_ACTIVO NUMBER(1),FAM_ARCHIVADA NUMBER(1),FAM_PREDETERMINADA NUMBER(1),FAM_FECHA_CREACION DATE,FAM_FECHA_ARCHIVADO DATE,FAM_USR_ARCHIVADO NUMBER(10),FAM_MOTIVO_ARCHIVADO VARCHAR2(500))",
         "CREATE TABLE RL_MR_VERSIONES_FORMULARIO (VER_ID NUMBER(15) PRIMARY KEY,VER_FAMILIA_ID NUMBER(15),VER_CODIGO VARCHAR2(80),VER_VERSION NUMBER(10),VER_JSON CLOB,VER_HASH VARCHAR2(64),VER_ESTADO VARCHAR2(30),VER_VIGENTE NUMBER(1),VER_FECHA_INICIO DATE,VER_FECHA_FIN DATE,VER_FECHA_CREACION DATE,VER_USR_CREACION NUMBER(10))",
         "CREATE TABLE RL_MR_REGLAS_CALCULO (REG_ID NUMBER(15) PRIMARY KEY,REG_CODIGO VARCHAR2(80),REG_VERSION VARCHAR2(20),REG_NOMBRE VARCHAR2(250),REG_ALGORITMO_ID VARCHAR2(100),REG_ACTIVA NUMBER(1))",
-        "CREATE TABLE RL_AUDITORIA (AUD_ID NUMBER(15) PRIMARY KEY,AUD_TABLA VARCHAR2(128),AUD_REGISTRO_ID VARCHAR2(100),AUD_ACCION VARCHAR2(80),AUD_DATOS_ANT CLOB,AUD_DATOS_NVO CLOB,AUD_USR_ID NUMBER(10),AUD_USR_EMAIL VARCHAR2(255),AUD_IP VARCHAR2(64),AUD_FECHA DATE,AUD_MODULO VARCHAR2(80))"
+        "CREATE TABLE RL_AUDITORIA (AUD_ID NUMBER(15) PRIMARY KEY,AUD_TABLA VARCHAR2(128),AUD_REGISTRO_ID VARCHAR2(100),AUD_ACCION VARCHAR2(80),AUD_DATOS_ANT CLOB,AUD_DATOS_NVO CLOB,AUD_USR_ID NUMBER(10),AUD_USR_EMAIL VARCHAR2(255),AUD_IP VARCHAR2(64),AUD_FECHA DATE,AUD_MODULO VARCHAR2(80))",
+        "CREATE TABLE RL_MR_FORMULA_USOS (FUS_ID NUMBER(15) PRIMARY KEY,FUS_VERSION_FORMULARIO_ID NUMBER(15),FUS_CAMPO_CLAVE VARCHAR2(100),FUS_FORMULA_VERSION_ID NUMBER(15),FUS_FECHA_CREACION DATE,FUS_USR_CREACION NUMBER(10))",
+        "CREATE TABLE RL_MR_AUDITORIA (AUD_ID NUMBER(15) PRIMARY KEY,AUD_TABLA VARCHAR2(128),AUD_REGISTRO_ID VARCHAR2(100),AUD_ACCION VARCHAR2(80),AUD_DATOS_ANT CLOB,AUD_DATOS_NVO CLOB,AUD_USR_ID NUMBER(10),AUD_USR_EMAIL VARCHAR2(255),AUD_IP VARCHAR2(64),AUD_FECHA DATE,AUD_MODULO VARCHAR2(80))"
     ];
     foreach (string sql in ddl)
         try { await ExecuteAsync(connection, sql); } catch (OracleException exception) when (exception.Number == 955) { }
