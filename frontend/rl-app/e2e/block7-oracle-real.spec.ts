@@ -915,9 +915,12 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(flowStates).toContain('OBSERVADA');
   await page.locator('#seg-motivo').fill('E2E approval after observation');
   await page.locator('#seg-nuevo-estado').selectOption('APROBADA');
+  await expect.poll(() => page.locator('#seg-nuevo-estado').inputValue()).toBe('APROBADA');
   const observedToApproved = page.waitForResponse(response => response.request().method() === 'POST'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones`);
-  await followUpModal.getByRole('button', { name: /Aplicar transici.n de estado/ }).click();
+  const applyObservedTransition = followUpModal.getByRole('button', { name: /Aplicar transici.n de estado/ });
+  await expect(applyObservedTransition).toBeEnabled();
+  await applyObservedTransition.click();
   expect((await observedToApproved).status()).toBe(200);
   evaluation.state = 'APROBADA';
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Aprobada');
