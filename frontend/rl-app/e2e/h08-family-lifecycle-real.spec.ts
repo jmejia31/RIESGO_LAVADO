@@ -147,15 +147,17 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   const createEvaluation = async (): Promise<void> => {
     await page.getByRole('tab', { name: 'Evaluaciones' }).first().click();
     await page.getByRole('button', { name: 'Crear nueva evaluación' }).click();
+    const newEvaluationDialog = page.locator('dialog[aria-labelledby="titulo-modal-nueva-eval"]');
+    await expect(newEvaluationDialog).toBeVisible();
     await page.locator('#modal-selector-familia').selectOption(fixture.lifecycleFamilyCode);
     await page.locator('#modal-selector-riesgo').selectOption({ index: 1 });
     await expect(page.getByText('Versión activa:')).toBeVisible();
     const createResponse = page.waitForResponse(response => response.request().method() === 'POST'
       && new URL(response.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador'));
-    await page.getByRole('button', { name: 'Guardar borrador' }).last().click();
+    await newEvaluationDialog.getByRole('button', { name: 'Guardar borrador' }).click();
     const created = await createResponse;
     expect(created.status(), await created.text()).toBe(200);
-    await expect(page.locator('dialog[aria-labelledby="titulo-modal-nueva-eval"]')).toBeHidden();
+    await expect(newEvaluationDialog).toBeHidden();
     return;
   };
 
