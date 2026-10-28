@@ -9851,3 +9851,5 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** el spec pulsa y valida `confirmDialog(/archivar/i)` antes de interactuar con `#motivo-archivado`, preservando la secuencia Angular real.
 - **CI posterior:** `40723175726` sobre `e0ac9ec6` confirmó todos los gates H08-A y H08-B; H08-C se detuvo por strict mode al hallar dos tabs `Evaluaciones` y el host reportó DI faltante para `IAuditoriaService` al cargar auditoría.
 - **Correccion quirurgica:** el E2E usa el primer tab institucional de `Evaluaciones`; el host registra `IAuditoriaService` con la implementación real sobre `IAuditoriaRepository`. H08-C a H08-E siguen pendientes del siguiente CI.
+- **CI posterior:** `40724207947` sobre `22e0f26a` confirmó H08-A completo, pero H08-B falló únicamente por tres textos `PUBLICADA` dentro del detalle; además el host necesitaba registrar `ICalculoConfiguracionService` para el bootstrap del controlador de configuración de cálculo.
+- **Correccion:** el assert usa el primer estado `PUBLICADA` del detalle y el host registra el servicio real sobre el repositorio proxy disposable. Build local del host: 0 errores.

@@ -129,6 +129,7 @@ builder.Services.AddScoped<IMatricesRiesgosMonitoreoService, MatricesRiesgosMoni
 builder.Services.AddScoped<IFormularioValidador, FormularioValidador>();
 builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
 builder.Services.AddScoped(_ => DispatchProxy.Create<ICalculoConfiguracionRepository, EmptyCalculationConfigurationProxy>());
+builder.Services.AddScoped<ICalculoConfiguracionService, CalculoConfiguracionService>();
 builder.Services.AddScoped<DbDrivenCalculationRuntimeFactory>();
 builder.Services.AddScoped<VersionedCalculationRuntimeService>();
 builder.Services.AddScoped<MatricesRiesgosAppService>();

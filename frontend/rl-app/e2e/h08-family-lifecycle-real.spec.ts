@@ -136,7 +136,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await page.locator('#btn-publicar-builder').click();
     await confirmDialog(/publicar/i);
     await page.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
-    await expect(detail.getByText('PUBLICADA')).toBeVisible();
+    await expect(detail.getByText('PUBLICADA').first()).toBeVisible();
     await detail.getByRole('button', { name: /cerrar detalle/i }).click();
   };
   const createEvaluation = async (): Promise<void> => {
