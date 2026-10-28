@@ -755,8 +755,12 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   if (await pageAEditDialog.isVisible()) {
     await pageAEditDialog.locator('button[aria-label="Cerrar edición"]').click();
   }
+  const pageAEvaluationRead = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
   await pageA.locator('button[title^="Editar evaluaci"]').click();
-  const pageAMonitoringBlocks = pageA.locator('nav[aria-label^="Bloques funcionales"]');
+  expect((await pageAEvaluationRead).status()).toBe(200);
+  await expect(pageAEditDialog).toBeVisible();
+  const pageAMonitoringBlocks = pageAEditDialog.locator('nav[aria-label^="Bloques funcionales"]');
   await expect(pageAMonitoringBlocks.getByRole('button')).toHaveCount(6);
   const pageABlock6Read = pageA.waitForResponse(response =>
     response.request().method() === 'GET'
