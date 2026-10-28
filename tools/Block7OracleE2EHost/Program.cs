@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Configuracion.Application;
-using RL.API.Features.Configuracion.Persistence;
+using RL.API.Features.Configuracion.Contracts;
 using RL.API.Features.MatricesRiesgos;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
@@ -105,11 +105,9 @@ builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosContr
 builder.Services.AddSingleton(new OracleDbContext(connectionString));
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 // The real Angular bootstrap reads these endpoints before opening the lifecycle UI.
-// Keep the disposable host's registration aligned with the production composition root
-// so the browser test exercises the actual configuration controller contract.
-builder.Services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
-builder.Services.AddScoped<ConfiguracionService>();
-builder.Services.AddScoped<IConfiguracionService, CachedConfiguracionService>();
+// The disposable schema intentionally does not provision global configuration tables;
+// return an empty read-only contract without masking any H08 lifecycle request.
+builder.Services.AddSingleton<IConfiguracionService, E2EConfiguracionService>();
 builder.Services.AddSingleton<IApplicationCache, ApplicationMemoryCache>();
 builder.Services.AddSingleton(new ApplicationCacheSettings());
 builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
@@ -524,4 +522,16 @@ public class EmptyCalculationConfigurationProxy : DispatchProxy
             return Task.FromResult<IReadOnlyList<FormulaBindingDto>>(Array.Empty<FormulaBindingDto>());
         throw new NotSupportedException($"The disposable E2E schema has no calculation bindings: {targetMethod?.Name}.");
     }
+}
+
+sealed class E2EConfiguracionService : IConfiguracionService
+{
+    public Task<ConfigSistema?> ObtenerConfigSistemaAsync() => Task.FromResult<ConfigSistema?>(null);
+    public Task<List<LoginSlide>> ObtenerSlidesAsync() => Task.FromResult(new List<LoginSlide>());
+    public Task<List<LoginSlide>> ObtenerTodosSlidesAsync() => Task.FromResult(new List<LoginSlide>());
+    public Task<bool> GuardarConfigSistemaAsync(ConfigSistema config, long usuarioId, string? ip) => Task.FromResult(false);
+    public Task<bool> CrearSlideAsync(LoginSlide slide, long usuarioId, string? ip) => Task.FromResult(false);
+    public Task<bool> ActualizarSlideAsync(int id, LoginSlide slide, long usuarioId, string? ip) => Task.FromResult(false);
+    public Task<bool> EliminarSlideAsync(int id, long usuarioId, string? ip) => Task.FromResult(false);
+    public Task RegistrarCargaImagenAsync(string nombreOriginal, string nombreGuardado, string url, string tipoMime, long tamanioBytes, long usuarioId, string? ip) => Task.CompletedTask;
 }

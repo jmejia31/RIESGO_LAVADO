@@ -9800,3 +9800,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Verificacion local:** build Release del host PASS con 0 errores; `git diff --check` PASS. El frontend/Oracle XE completo queda pendiente de CI por ausencia de la infraestructura local requerida.
 - **Alcance:** no se accedio ni muto Oracle Produccion; no se toco `main`, `PRUEBA_FORMULARIO` ni migracion 54. Cambios ajenos tracked/untracked permanecen fuera del stage.
 - **Continuacion:** publicar esta correccion en `origin/desarrollo`, esperar el CI del SHA exacto y reconciliar los marcadores H08-A a H08-E. H08 ampliado sigue `PENDING_CI`; aceptacion manual sigue `PENDING_USER_EXECUTION`.
+
+## 2026-10-28 10:05 -06:00 - Aislamiento de tablas globales en host H08 (COD)
+
+- **CI exacto:** Quality Gates `40708908313`, SHA `3a85095de78c2aed988f180b42b0e0cca4c83f41`, ejecuto backend `1097 passed, 1 skipped` y alcanzo `H08_A_BASELINE=PASS`, pero fallo la navegacion en el mismo bootstrap por `ORA-00942` al consultar las tablas globales de configuracion no incluidas en el esquema disposable.
+- **Correccion:** se reemplazo solo en el host E2E la persistencia de configuracion por `E2EConfiguracionService`, contrato read-only vacio para `/api/configuracion/sistema` y `/api/configuracion/login`. No crea tablas, no realiza DML y no interviene ningun endpoint H08-A a H08-E, que siguen respaldados por Oracle XE real.
+- **Verificacion local:** host Release PASS con 0 errores; `git diff --check` PASS. El fallo CI no fue de la logica de ciclo de vida sino de infraestructura global ausente en el fixture.
+- **Continuacion:** actualizar handoff, publicar el nuevo SHA y esperar CI exacto. H08 ampliado continua `PENDING_CI`; aceptacion manual `PENDING_USER_EXECUTION`.

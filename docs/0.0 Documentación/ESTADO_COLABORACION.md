@@ -3287,3 +3287,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; no se declara PASS hasta obtener nuevamente los marcadores H08-A, H08-B, H08-C, H08-D y H08-E. `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
 - No hubo acceso o mutacion de Oracle Produccion, ni cambios en `main`, `PRUEBA_FORMULARIO` o migracion 54. Los cambios ajenos siguen preservados fuera del stage.
 - Punto exacto de continuacion: commit/push de la correccion y verificacion del CI del SHA final.
+
+## Estado vigente - Host H08 aislado de tablas globales, CI pendiente (COD) - 2026-10-28
+
+- El CI `40708908313` sobre `3a85095de78c2aed988f180b42b0e0cca4c83f41` resolvio la DI y paso backend `1097/1097`, pero el bootstrap Angular fallo con `ORA-00942` porque el esquema disposable no contiene `RL_CONFIG_SISTEMA` ni `RL_LOGIN_SLIDES`.
+- `tools/Block7OracleE2EHost/Program.cs` incorpora `E2EConfiguracionService`: contrato vacio read-only para que la aplicacion arranque sin crear tablas ni alterar el fixture; todos los endpoints H08 y sus datos continuan usando Oracle XE real.
+- Build Release local PASS, 0 errores. `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
+- No se accedio ni muto Oracle Produccion, ni se modifico `main`, `PRUEBA_FORMULARIO` o migracion 54. Cambios ajenos preservados fuera del stage.
+- Punto exacto: commit/push y nuevo CI del SHA publicado.
