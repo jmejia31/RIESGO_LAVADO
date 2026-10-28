@@ -3335,6 +3335,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; no se invento validacion humana ni sesion institucional.
 - CI ejecuto backend, analyzers, builds, Oracle XE disposable, E2E Angular/Playwright, validadores y contenedores. No se accedio Oracle productivo, no hubo DDL/DML productivo, no se modifico `main`, `PRUEBA_FORMULARIO` ni migracion 54.
 - Cambios ajenos tracked/untracked permanecen preservados fuera del stage. Punto exacto: publicar este registro y ejecutar las dos corridas restantes sobre el SHA final.
+- El run `40762086457` del SHA documental fallo por `net::ERR_ABORTED` en `page.reload()` del E2E Block 7 y paso en retry; se clasifica como `FLAKY_NOT_COUNTED`. La correccion usa navegacion controlada y requiere nuevo CI sobre el SHA siguiente.
 
 - Estado vigente - Diagnostico del control de archivado H08, CI pendiente (COD) - 2026-10-28
 

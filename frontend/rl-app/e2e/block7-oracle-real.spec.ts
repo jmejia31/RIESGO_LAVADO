@@ -610,7 +610,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect((await updateResponsePromise).status()).toBe(200);
 
   await page.waitForLoadState('networkidle');
-  await page.reload();
+  await page.goto('/matrices-riesgos', { waitUntil: 'domcontentloaded' });
   const pageA = await page.context().newPage();
   await installNonCriticalFixtures(pageA, fixture, evaluation);
   pageA.on('response', response => {
