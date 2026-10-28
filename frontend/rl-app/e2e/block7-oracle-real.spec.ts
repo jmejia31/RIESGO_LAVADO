@@ -844,9 +844,13 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   ])).digest('hex');
   await preWorkflowModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
+  const transitionsResponse = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/transiciones-permitidas`);
   await page.getByRole('button', { name: /Seguimiento de evaluaci/ }).click();
   const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
   await expect(followUpModal).toBeVisible();
+  expect((await transitionsResponse).status()).toBe(200);
+  await expect(followUpModal.getByText('Gestionar TransiciÃ³n de Estado')).toBeVisible();
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
   const firstDestinations = followUpModal.locator('#seg-nuevo-estado option');
   await expect(firstDestinations).toHaveCount(6);
