@@ -3327,6 +3327,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El CI `40717703233` llego al archivado real, pero el selector usaba `Archivar familia`; el botón Angular publicado tiene `aria-label="Archivar"`.
 - Se corrigio únicamente el locator del E2E para usar el nombre accesible real. `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
 - Produccion, `main`, `PRUEBA_FORMULARIO` y migracion 54 no fueron tocados.
+- Estado vigente - Cierre tecnico Bloque 7/12 y H08 ampliado (COD) - 2026-10-28
+
+- `CURRENT_BRANCH=desarrollo`; `CURRENT_HEAD=a0f7f489507738e344e9ea35552e6ac222008fee` antes del commit documental; remoto `origin/desarrollo` alineado.
+- Bloque 7: sincronizacion de transiciones, detalle de evaluacion y renderizado completo de 82 campos corregidos; `40755818185`, `40757887088` y `40759938403` pasaron sobre el SHA funcional.
+- H08 ampliado cubre H08-A baseline, H08-B vigencia/publicacion, H08-C evaluaciones pre/post restauracion, H08-D snapshots profundos y H08-E auditoria visible/API/Oracle XE. Las tres corridas terminaron success; faltan dos corridas independientes sobre el SHA documental final para cerrar cinco.
+- `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; no se invento validacion humana ni sesion institucional.
+- CI ejecuto backend, analyzers, builds, Oracle XE disposable, E2E Angular/Playwright, validadores y contenedores. No se accedio Oracle productivo, no hubo DDL/DML productivo, no se modifico `main`, `PRUEBA_FORMULARIO` ni migracion 54.
+- Cambios ajenos tracked/untracked permanecen preservados fuera del stage. Punto exacto: publicar este registro y ejecutar las dos corridas restantes sobre el SHA final.
+
 - Estado vigente - Diagnostico del control de archivado H08, CI pendiente (COD) - 2026-10-28
 
 - El CI `40718910269` sobre `525c53a122fc49c1baad0591a64081fb3e6dcfbc` supero `H08_A_BASELINE=PASS` y la desactivacion real, pero no encontro `aria-label="Archivar"` en la fila posterior a la recarga.

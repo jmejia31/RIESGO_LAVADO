@@ -9855,5 +9855,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** el assert usa el primer estado `PUBLICADA` del detalle y el host registra el servicio real sobre el repositorio proxy disposable. Build local del host: 0 errores.
 - **Correccion H08-C/H08-B:** `nuevaEvaluacion()` refresca familias desde el endpoint paginado antes de abrir el modal, eliminando la elegibilidad obsoleta después de publicar/reactivar. El proxy disposable implementa solo las lecturas tipadas de fórmulas, funciones, parámetros y bindings como listas vacías válidas para el fixture sin tablas de cálculo; mutaciones no soportadas continúan fail-closed. Se movió `H08_B_VERSION_REACTIVATION=PASS` después de la retirada y recuperación real de vigencia.
 - Ajuste de certificacion: `H08_B_GATE=PASS` queda despues de ejecutar y comprobar la retirada y recuperacion de vigencia; no se emiten gates anticipados.
+
+## 2026-10-28 - Cierre Bloque 7/12 y H08-B/C/D/E ampliado (COD)
+
+- Rama `desarrollo`; baseline `d97ffbbe8f325cd199d3b33efaabe3b47763215e`; cierre funcional `a0f7f489507738e344e9ea35552e6ac222008fee`.
+- Se corrigieron carreras del E2E de transiciones y detalle de evaluacion, renderizado completo de 82 campos, fixture de regla H08, creacion de borrador, refresh de elegibilidad, archivado/restauracion/reactivacion y locators accesibles exactos.
+- Archivos propios: `frontend/rl-app/e2e/block7-oracle-real.spec.ts`, `frontend/rl-app/e2e/h08-family-lifecycle-real.spec.ts`, `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`, `tools/Block7OracleE2EHost/Program.cs`, bitacora y estado.
+- CI sobre el SHA funcional: `40755818185`, `40757887088` y `40759938403` terminaron `completed/success`, sin retry observado en las corridas independientes. Los fallos previos se trataron como diagnostico.
+- Se requieren dos corridas independientes adicionales sobre el SHA documental final para completar el criterio de cinco. La aceptacion manual institucional H08 sigue `PENDING_USER_EXECUTION`.
+- No se accedio Oracle productivo, no hubo DDL/DML productivo, no se modifico `main`, `PRUEBA_FORMULARIO` ni migracion 54. Cambios ajenos tracked/untracked permanecen fuera del stage.
+- Punto de continuacion: publicar este cierre documental, identificar el nuevo HEAD y ejecutar dos Quality Gates manuales secuenciales; cerrar solo con cinco PASS independientes en el SHA final.
 - **Punto 1 / causa raíz:** CI `40728480187` reprodujo una carrera en `block7-oracle-real.spec.ts`: el modal de seguimiento era visible mientras `GET /evaluaciones/{id}/transiciones-permitidas` aún estaba en carga; el selector se renderiza únicamente después de `SUCCESS_WITH_DATA`. El reintento pasó, por lo que el gate se mantiene FAIL por flakiness.
 - **Correccion:** el E2E espera la respuesta HTTP 200 de transiciones y la sección funcional `Gestionar Transición de Estado` antes de contar opciones. La matriz de destinos y el código Angular no se relajan ni se modifican.
