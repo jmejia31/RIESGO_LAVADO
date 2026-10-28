@@ -85,7 +85,18 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await expect(familyRow().getByText('INACTIVA').first()).toBeVisible();
   };
   const archiveFamily = async (reason: string): Promise<void> => {
-    await familyRow().getByRole('button', { name: 'Archivar' }).click();
+    const archiveButton = familyRow().locator('button[aria-label="Archivar"]');
+    if (await archiveButton.count() !== 1) {
+      const diagnostics = await familyRow().evaluateAll(rows => rows.map(row => ({
+        text: row.textContent?.replace(/\s+/g, ' ').trim(),
+        buttons: Array.from(row.querySelectorAll('button')).map(button => ({
+          ariaLabel: button.getAttribute('aria-label'),
+          title: button.getAttribute('title')
+        }))
+      })));
+      throw new Error(`H08 archive control unavailable: ${JSON.stringify(diagnostics)}`);
+    }
+    await archiveButton.click();
     await page.locator('#motivo-archivado').fill(reason);
     await page.getByRole('button', { name: 'Confirmar archivado' }).click();
     await expect(familyRow()).toHaveCount(0);

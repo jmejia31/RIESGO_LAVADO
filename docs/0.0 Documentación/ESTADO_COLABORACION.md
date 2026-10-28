@@ -3327,3 +3327,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El CI `40717703233` llego al archivado real, pero el selector usaba `Archivar familia`; el botón Angular publicado tiene `aria-label="Archivar"`.
 - Se corrigio únicamente el locator del E2E para usar el nombre accesible real. `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
 - Produccion, `main`, `PRUEBA_FORMULARIO` y migracion 54 no fueron tocados.
+- Estado vigente - Diagnostico del control de archivado H08, CI pendiente (COD) - 2026-10-28
+
+- El CI `40718910269` sobre `525c53a122fc49c1baad0591a64081fb3e6dcfbc` supero `H08_A_BASELINE=PASS` y la desactivacion real, pero no encontro `aria-label="Archivar"` en la fila posterior a la recarga.
+- El spec ahora captura de forma explicita el texto y los botones accesibles de la fila cuando el control no aparece; se mantiene la interaccion Angular y no se sustituye por API directa.
+- `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. Produccion, `main`, `PRUEBA_FORMULARIO` y migracion 54 siguen intactos.

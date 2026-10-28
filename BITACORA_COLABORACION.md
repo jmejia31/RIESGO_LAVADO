@@ -9840,3 +9840,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **CI exacto:** Quality Gates `40717703233`, SHA `0352ed8bc19c8e93cf6256a6019501352003701c`; H08 confirmo `H08_A_BASELINE=PASS`, desactivacion real y modal institucional, pero el spec buscaba `Archivar familia` mientras el control Angular real expone `aria-label="Archivar"`.
 - **Correccion:** el E2E usa el nombre accesible real `Archivar`; no se cambia la UI ni se reemplaza la interacción por API directa.
 - **Continuacion:** publicar y ejecutar CI exacto nuevamente. H08 ampliado `PENDING_CI`; aceptación manual `PENDING_USER_EXECUTION`.
+## 2026-10-28 15:55 -06:00 - Diagnostico quirurgico del control de archivado H08 (COD)
+
+- **CI exacto:** Quality Gates `40718910269`, SHA `525c53a122fc49c1baad0591a64081fb3e6dcfbc`; H08 supero `H08_A_BASELINE=PASS` y la desactivacion real, pero no encontro el control `aria-label="Archivar"` dentro de la fila de la familia.
+- **Correccion diagnostica:** `frontend/rl-app/e2e/h08-family-lifecycle-real.spec.ts` valida que exista exactamente un control de archivado y, si falta, registra texto y botones reales de la fila. No se invoca el API directamente ni se relaja la condicion de familia no predeterminada.
+- **Verificacion local:** `git diff --check` pendiente de ejecutar tras el ajuste; frontend/Oracle XE completo pendiente del CI por ausencia de la infraestructura local requerida.
+- **Continuacion:** publicar el diagnostico, ejecutar CI exacto y aplicar solo la correccion que explique la evidencia. H08 ampliado sigue `PENDING_CI`; aceptacion manual `PENDING_USER_EXECUTION`.
