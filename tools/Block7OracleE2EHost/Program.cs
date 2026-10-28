@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Options;
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Catalogos.Application;
 using RL.API.Features.Catalogos.Contracts;
@@ -108,6 +109,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
 builder.Services.AddSingleton(new OracleDbContext(connectionString));
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
+builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddSingleton<ICatalogoService, E2ECatalogoService>();
 // The real Angular bootstrap reads these endpoints before opening the lifecycle UI.
 // The disposable schema intentionally does not provision global configuration tables;

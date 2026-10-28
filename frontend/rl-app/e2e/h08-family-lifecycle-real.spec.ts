@@ -140,7 +140,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await detail.getByRole('button', { name: /cerrar detalle/i }).click();
   };
   const createEvaluation = async (): Promise<void> => {
-    await page.getByRole('tab', { name: 'Evaluaciones' }).click();
+    await page.getByRole('tab', { name: 'Evaluaciones' }).first().click();
     await page.getByRole('button', { name: 'Crear nueva evaluación' }).click();
     await page.locator('#modal-selector-familia').selectOption(fixture.lifecycleFamilyCode);
     await page.locator('#modal-selector-riesgo').selectOption({ index: 1 });
