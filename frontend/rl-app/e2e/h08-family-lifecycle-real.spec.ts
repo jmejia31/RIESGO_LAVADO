@@ -68,6 +68,11 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   const newestDialog = () => page.locator('dialog[open]').last();
 
   const openFamilies = async (): Promise<void> => {
+    const editDialog = page.locator('dialog[aria-labelledby="titulo-modal-editar"]');
+    if (await editDialog.isVisible()) {
+      await editDialog.locator('button[aria-label^="Cerrar edici"]').click();
+      await expect(editDialog).toBeHidden();
+    }
     await page.getByRole('tab', { name: 'Plantillas' }).click();
     await expect(page.locator('#gestor-buscar-familia')).toBeVisible();
     await page.locator('#gestor-buscar-familia').fill(fixture.lifecycleFamilyCode);
