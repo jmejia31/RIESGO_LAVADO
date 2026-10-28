@@ -82,7 +82,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   const deactivateFamily = async (): Promise<void> => {
     await familyRow().getByRole('button', { name: 'Desactivar familia' }).click();
     await confirmDialog(/desactivar/i);
-    await expect(familyRow().getByText('INACTIVA')).toBeVisible();
+    await expect(familyRow().getByText('INACTIVA').first()).toBeVisible();
   };
   const archiveFamily = async (reason: string): Promise<void> => {
     await familyRow().getByRole('button', { name: 'Archivar familia' }).click();
@@ -97,13 +97,13 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await confirmDialog(/restaurar/i);
     await page.locator('#motivo-restauracion').fill(reason);
     await page.getByRole('button', { name: 'Confirmar restauración' }).click();
-    await expect(familyRow().getByText('INACTIVA')).toBeVisible();
+    await expect(familyRow().getByText('INACTIVA').first()).toBeVisible();
     await page.locator('#gestor-archivado-familia').selectOption('NO_ARCHIVADAS');
   };
   const activateFamily = async (): Promise<void> => {
     await familyRow().getByRole('button', { name: 'Activar familia' }).click();
     await confirmDialog(/activar/i);
-    await expect(familyRow().getByText('ACTIVA')).toBeVisible();
+    await expect(familyRow().getByText('ACTIVA').first()).toBeVisible();
   };
   const changeVersionVigency = async (vigente: boolean): Promise<void> => {
     await familyRow().getByRole('button', { name: 'Ver versiones' }).click();

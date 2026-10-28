@@ -9828,3 +9828,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** el spec H08 ahora espera y pulsa el boton de confirmacion del modal institucional real, validando su `aria-label` contra la accion esperada. No se usan fetch/evaluate para transiciones ni se evitan modales.
 - **Resultado heredado del mismo run:** el primer intento de Block 7 tuvo un timeout browser previo; el rerun permitio alcanzar H08, por lo que el ajuste es funcionalmente especifico de H08 y queda pendiente de nuevo CI.
 - **Continuacion:** publicar y verificar nuevamente A-E. Aceptacion manual `PENDING_USER_EXECUTION`; produccion intacta.
+
+## 2026-10-28 13:00 -06:00 - Aserciones H08 tolerantes a estados repetidos en fila (COD)
+
+- **CI exacto:** Quality Gates `40716804277`, SHA `47a7c572f110e7e24d4b9c17c32fe84ef873997d`; H08 alcanzo `H08_A_BASELINE=PASS` y ejecuto la desactivacion real, pero Playwright rechazo la asercion por strict mode: la fila contiene dos nodos visibles `INACTIVA` (familia y version).
+- **Correccion:** las aserciones de estado de familia usan el primer nodo visible dentro de la fila, sin cambiar la accion ni ocultar duplicados; se ajustaron `INACTIVA` y `ACTIVA` en ambos ciclos.
+- **Continuacion:** publicar y repetir CI exacto. H08 ampliado sigue `PENDING_CI`; manual `PENDING_USER_EXECUTION`.

@@ -3315,3 +3315,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El rerun del CI `40714192434` alcanzo `H08_A_BASELINE=PASS`; H08 fallo porque el helper buscaba un `dialog[open]`, mientras `InstitutionalConfirmationService` renderiza `.institutional-confirmation` con `.swal2-confirm`.
 - El E2E ahora valida y pulsa el boton real del modal institucional por `aria-label`, conservando la interaccion Angular visible y la confirmacion funcional.
 - `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. No hubo acceso/mutacion de Oracle Produccion ni cambios en `main`, `PRUEBA_FORMULARIO` o migracion 54.
+
+## Estado vigente - Aserciones de estado H08 ajustadas, CI pendiente (COD) - 2026-10-28
+
+- El CI `40716804277` demostro que el flujo real ya desactiva la familia; fallo únicamente por dos textos `INACTIVA` dentro de la fila y strict mode del locator.
+- El spec H08 usa `.first()` dentro de la fila para confirmar `INACTIVA`/`ACTIVA`, manteniendo la verificacion visible sin alterar la logica de negocio.
+- `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. Produccion, `main`, `PRUEBA_FORMULARIO` y migracion 54 siguen intactos.
