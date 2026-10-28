@@ -1,4 +1,4 @@
-import { expect, test, expectHttpResponse } from './support/telemetry-test';
+import { expect, test, expectHttpResponse, expectRequestFailure } from './support/telemetry-test';
 import type { Locator, Page, Response } from '@playwright/test';
 import { createHash } from 'node:crypto';
 
@@ -290,6 +290,14 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     method: 'PUT',
     pathIncludes: '/borrador',
     reason: 'The stale concurrent browser editor is expected to be rejected.',
+  });
+  expectRequestFailure({
+    method: 'POST',
+    path: '/api/matrices-riesgos/evaluaciones/calculo-preview',
+    protocol: 'http:',
+    errorText: 'net::ERR_ABORTED',
+    maxCount: 1,
+    reason: 'Angular may cancel an in-flight preview when the editor navigates or closes; server errors remain critical.',
   });
   await page.setViewportSize({ width: 1280, height: 900 });
 
