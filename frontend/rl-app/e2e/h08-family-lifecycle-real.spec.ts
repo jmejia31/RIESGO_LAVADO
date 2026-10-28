@@ -74,9 +74,10 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await expect(familyRow()).toHaveCount(1);
   };
   const confirmDialog = async (label: RegExp): Promise<void> => {
-    const dialog = newestDialog();
+    const dialog = page.locator('.institutional-confirmation');
     await expect(dialog).toBeVisible();
-    await dialog.getByRole('button', { name: label }).click();
+    await expect(dialog.locator('.swal2-confirm')).toHaveAttribute('aria-label', label);
+    await dialog.locator('.swal2-confirm').click();
   };
   const deactivateFamily = async (): Promise<void> => {
     await familyRow().getByRole('button', { name: 'Desactivar familia' }).click();

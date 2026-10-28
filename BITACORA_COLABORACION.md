@@ -9821,3 +9821,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** el `MERGE` de la familia base fija `FAM_PREDETERMINADA=0`; el host registra `E2ECatalogoService` read-only vacio para el bootstrap de modulos. Se mantienen reales las consultas/mutaciones de familias, versiones, evaluaciones, evidencias y auditoria H08.
 - **Verificacion local:** build Release del host PASS, 0 errores; `git diff --check` PASS. No se agregan tablas, datos funcionales falsos ni DML productivo.
 - **Continuacion:** publicar este ajuste y ejecutar CI exacto nuevamente. H08 ampliado sigue `PENDING_CI`; aceptacion manual `PENDING_USER_EXECUTION`.
+
+## 2026-10-28 12:15 -06:00 - Selector real de confirmaciones institucionales H08 (COD)
+
+- **CI/rerun:** run `40714192434` sobre `21ae7f43a6a330ad216453dcf06339b9ff7d821b` supero el bootstrap y marco `H08_A_BASELINE=PASS`, pero H08 se detuvo al esperar `dialog[open]`; las confirmaciones institucionales reales usan SweetAlert con `.institutional-confirmation` y `.swal2-confirm`, no un elemento HTML `dialog`.
+- **Correccion:** el spec H08 ahora espera y pulsa el boton de confirmacion del modal institucional real, validando su `aria-label` contra la accion esperada. No se usan fetch/evaluate para transiciones ni se evitan modales.
+- **Resultado heredado del mismo run:** el primer intento de Block 7 tuvo un timeout browser previo; el rerun permitio alcanzar H08, por lo que el ajuste es funcionalmente especifico de H08 y queda pendiente de nuevo CI.
+- **Continuacion:** publicar y verificar nuevamente A-E. Aceptacion manual `PENDING_USER_EXECUTION`; produccion intacta.

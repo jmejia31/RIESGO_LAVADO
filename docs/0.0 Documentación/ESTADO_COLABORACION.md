@@ -3309,3 +3309,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Se corrigio el fixture para persistir `FAM_PREDETERMINADA=0` y se agrego `E2ECatalogoService` read-only vacio para `/api/catalogos/modulos`; no se altera el runtime productivo.
 - Build local PASS, 0 errores. `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
 - No hubo acceso/mutacion de Oracle Produccion, ni cambios en `main`, `PRUEBA_FORMULARIO` o migracion 54. Cambios ajenos preservados fuera del stage.
+
+## Estado vigente - Confirmacion SweetAlert H08 corregida, CI pendiente (COD) - 2026-10-28
+
+- El rerun del CI `40714192434` alcanzo `H08_A_BASELINE=PASS`; H08 fallo porque el helper buscaba un `dialog[open]`, mientras `InstitutionalConfirmationService` renderiza `.institutional-confirmation` con `.swal2-confirm`.
+- El E2E ahora valida y pulsa el boton real del modal institucional por `aria-label`, conservando la interaccion Angular visible y la confirmacion funcional.
+- `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. No hubo acceso/mutacion de Oracle Produccion ni cambios en `main`, `PRUEBA_FORMULARIO` o migracion 54.
