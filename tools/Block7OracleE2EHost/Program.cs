@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Block5WorkbookFormulaOracle;
@@ -60,6 +61,9 @@ string lifecycleFamilyCode = $"H08-FAMILIA-{stamp}";
 string riskCode = canonicalRisks[0].Code;
 string ruleCode = $"B7-E2E-RULE-{stamp}";
 string definition = CreateDefinition(ruleCode);
+string lifecycleDefinition = CreateDefinition($"H08-LIFECYCLE-{stamp}");
+string lifecycleDefinitionHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(lifecycleDefinition))).ToLowerInvariant();
+string lifecycleEvidenceHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("h08-evidence"))).ToLowerInvariant();
 for (int index = 0; index < canonicalRisks.Length; index++)
 {
     var risk = canonicalRisks[index];
@@ -81,9 +85,9 @@ foreach (string capability in new[] { "MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR
     await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,:capability,1)", ("id", userId), ("capability", capability));
 }
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'H08 ciclo de vida','Fixture desechable H08',1,0,0,SYSDATE)", ("id", lifecycleFamilyId), ("code", lifecycleFamilyCode));
-await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,:code,1,'{}',RPAD('H',64,'H'),'RETIRED',0,SYSDATE,:usr)", ("id", lifecycleVersionId), ("family", lifecycleFamilyId), ("code", lifecycleFamilyCode), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,:code,1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", lifecycleVersionId), ("family", lifecycleFamilyId), ("code", lifecycleFamilyCode), ("json", lifecycleDefinition), ("hash", lifecycleDefinitionHash), ("usr", userId));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,'{}','{}',SYSDATE,:usr,1,1)", ("id", lifecycleEvaluationId), ("risk", riskId), ("version", lifecycleVersionId), ("usr", userId));
-await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVIDENCIAS (EVI_ID,EVI_NOMBRE_ARCHIVO,EVI_EXTENSION,EVI_TAMANO,EVI_HASH,EVI_RUTA,EVI_USR_CREACION) VALUES (:id,'h08-evidence.txt','txt',12,RPAD('E',64,'E'),'h08/:id',:usr)", ("id", lifecycleEvidenceId), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVIDENCIAS (EVI_ID,EVI_NOMBRE_ARCHIVO,EVI_EXTENSION,EVI_TAMANO,EVI_HASH,EVI_RUTA,EVI_USR_CREACION) VALUES (:id,'h08-evidence.txt','txt',12,:hash,'h08/:id',:usr)", ("id", lifecycleEvidenceId), ("hash", lifecycleEvidenceHash), ("usr", userId));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVIDENCIAS_VINCULOS (EVV_ID,EVV_EVIDENCIA_ID,EVV_TIPO_ENTIDAD,EVV_ENTIDAD_ID,EVV_USR_CREACION) VALUES (:id,:evidence,'EVALUACION',:evaluation,:usr)", ("id", lifecycleEvidenceLinkId), ("evidence", lifecycleEvidenceId), ("evaluation", lifecycleEvaluationId), ("usr", userId));
 await oracle.CloseAsync();
 
@@ -150,6 +154,36 @@ app.MapGet("/__e2e/family-lifecycle-snapshot", async (OracleDbContext db, Cancel
     await using var reader = await command.ExecuteReaderAsync(cancellationToken);
     if (!await reader.ReadAsync(cancellationToken)) return Results.NotFound();
     return Results.Ok(new { familyId = reader.GetInt64(0), code = reader.GetString(1), active = reader.GetInt32(2) == 1, archived = reader.GetInt32(3) == 1, versions = reader.GetInt32(4), evaluations = reader.GetInt32(5), evidences = reader.GetInt32(6), audit = reader.GetInt32(7) });
+});
+app.MapGet("/__e2e/family-lifecycle-deep-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+
+    async Task<List<Dictionary<string, object?>>> ReadAsync(string sql)
+    {
+        await using var command = new OracleCommand(sql, connection) { BindByName = true };
+        command.Parameters.Add(new OracleParameter("id", lifecycleFamilyId));
+        var rows = new List<Dictionary<string, object?>>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
+            {
+                object value = reader.GetValue(ordinal);
+                row[reader.GetName(ordinal)] = value == DBNull.Value ? null : value.ToString();
+            }
+            rows.Add(row);
+        }
+        return rows;
+    }
+
+    var versions = await ReadAsync("SELECT VER_ID,VER_VERSION,VER_ESTADO,VER_VIGENTE,VER_HASH,DBMS_LOB.SUBSTR(VER_JSON,4000,1) AS VER_JSON FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id ORDER BY VER_ID");
+    var evaluations = await ReadAsync("SELECT e.EVA_ID,e.EVA_VERSION_ID,DBMS_LOB.SUBSTR(e.EVA_DATOS_JSON,4000,1) AS EVA_DATOS_JSON,DBMS_LOB.SUBSTR(e.EVA_CALCULOS_JSON,4000,1) AS EVA_CALCULOS_JSON FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id ORDER BY e.EVA_ID");
+    var evidences = await ReadAsync("SELECT evi.EVI_ID,evi.EVI_HASH,evi.EVI_RUTA,evv.EVV_ID,evv.EVV_ENTIDAD_ID FROM RL_MR_EVIDENCIAS evi JOIN RL_MR_EVIDENCIAS_VINCULOS evv ON evv.EVV_EVIDENCIA_ID=evi.EVI_ID JOIN RL_MR_EVALUACIONES_RIESGO eva ON eva.EVA_ID=evv.EVV_ENTIDAD_ID JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=eva.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id ORDER BY evi.EVI_ID");
+    var audits = await ReadAsync("SELECT AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_USR_ID,AUD_FECHA,AUD_DATOS_ANT,AUD_DATOS_NVO FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_FAMILIAS_FORMULARIO' AND AUD_REGISTRO_ID=TO_CHAR(:id) ORDER BY AUD_FECHA,AUD_ID");
+    return Results.Ok(new { versions, evaluations, evidences, audits });
 });
 app.MapGet("/__e2e/risk-identities", () => Results.Ok(canonicalRisks.Select((risk, index) => new
 {

@@ -43,3 +43,7 @@ Backup/restore, monitoreo y contingencia se detallan en la [guía DBA](GUIA_DBA_
 ## Deuda explícita
 
 RTO/RPO no están definidos institucionalmente; restore Data Pump requiere un objetivo aislado y privilegios DBA. Permanecen documentados Jurídicas production-like, VER_ID 27/28, RBAC granular global y los dos placeholders de prueba.
+
+## H08 ampliado y límites de aceptación
+
+La certificación automatizada H08 usa solamente Oracle XE descartable, una familia sintética y el host E2E explícitamente habilitado. El test exige gates independientes H08-A a H08-E, verifica la ruta Angular real y compara identificadores, hash y JSON persistidos individualmente. La aceptación visual y la capacitación institucional permanecen `PENDING_USER_EXECUTION`; su procedimiento y matriz de evidencia están en [`GUIA_VALIDACION_MANUAL_H08.md`](GUIA_VALIDACION_MANUAL_H08.md).

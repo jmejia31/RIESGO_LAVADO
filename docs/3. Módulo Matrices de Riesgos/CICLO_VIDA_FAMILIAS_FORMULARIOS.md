@@ -27,3 +27,7 @@ Las mutaciones de versiones publicadas y su vigencia bloquean la versión y la f
 El historial de una familia se consulta mediante el endpoint específico `GET /api/auditoria/familia?familiaId=...`, autorizado para el módulo 10. El backend resuelve el código canónico y no acepta códigos alternativos arbitrarios para ampliar el alcance de la consulta. La paginación conserva orden descendente por fecha e ID y el frontend no re-filtra por una identidad aportada por el cliente.
 
 La eliminación ordinaria está bloqueada para familias archivadas aun cuando no tengan versiones. Las versiones históricas no se reactivan sin validar familia activa/no archivada, hash persistido, contrato de definición y dependencias del runtime. Ninguna de estas reglas autoriza cambios Oracle productivos: las pruebas de integración usan exclusivamente Oracle XE descartable.
+
+## Certificación H08 ampliada
+
+El runner H08 ampliado ejecuta en secuencia las interacciones Angular de desactivación, archivado, filtro de archivadas, restauración y activación; después valida vigencia, evaluaciones antes/después de restaurar, snapshots individuales de versiones/evaluaciones/evidencias y auditoría de ambos ciclos. La evidencia técnica automatizada se separa de la aceptación manual descrita en [`GUIA_VALIDACION_MANUAL_H08.md`](GUIA_VALIDACION_MANUAL_H08.md).

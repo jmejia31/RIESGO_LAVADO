@@ -3269,3 +3269,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Estado de Git: los cambios ajenos tracked/untracked identificados al inicio permanecen preservados y fuera del stage; los archivos propios de esta intervencion se publican con el commit documental siguiente. Punto de continuacion: cualquier cierre institucional o publicacion en `main` requiere aprobacion expresa de Javier Mejia.
 - CI documental del checkpoint: `40589595882=completed/success` sobre `905ddf12`. La intervencion H02+H08 queda tecnicamente certificada en `desarrollo`; cualquier cierre institucional o publicacion en `main` requiere aprobacion expresa de Javier Mejia.
 - Reconciliacion final: `FINAL_HEAD=9cd6574a`; Quality Gates `40591239365=completed/success` tras rerun del job browser flaky. H02 y H08 permanecen PASS; no se autoriza cierre institucional ni publicacion en `main` sin Javier Mejia.
+
+## Estado vigente - H08 ampliado en implementacion, CI pendiente (COD) - 2026-10-28
+
+- `CURRENT_BRANCH=desarrollo`; `BASELINE_HEAD=d97ffbbe8f325cd199d3b33efaabe3b47763215e`; `REMOTE_HEAD` coincidia al inicio. Cambios ajenos tracked/untracked continuan preservados fuera del stage.
+- Se amplio el runner H08 para certificar secuencialmente H08-A Angular real, H08-B Form Builder/publicacion/vigencia, H08-C evaluaciones antes/despues de restaurar, H08-D snapshots profundos de IDs/hash/JSON/evidencias y H08-E auditoria visible en Angular y Oracle XE.
+- Se agrego el filtro principal `Archivo` y la accion `Restaurar familia` en la tabla de Plantillas, porque el flujo anterior excluia la familia archivada y no permitia certificar la restauracion desde la pantalla principal.
+- Se creo `docs/3. Modulo Matrices de Riesgos/GUIA_VALIDACION_MANUAL_H08.md`. La aceptacion humana y la capacitacion de 82 campos permanecen `PENDING_USER_EXECUTION`; no se presentan como ejecutadas.
+- Verificado en esta intervencion: host Oracle XE `dotnet build` Release PASS, `0 errores`; `bash -n tools/run_block7_oracle_e2e.sh` PASS; `git diff --check` PASS. Frontend build/E2E Oracle no ejecutables localmente por ausencia de `@angular/build:application` y de las variables explicitas Oracle XE/certificacion.
+- No se accedio ni muto Oracle Produccion; no se modifico `PRUEBA_FORMULARIO`, no se ejecuto migracion 54 y no se toco `main`.
+- Continuacion exacta: revisar el diff propio, ejecutar validadores aplicables, commit/push normal a `origin/desarrollo` y verificar CI del SHA final. No declarar H08 ampliado PASS hasta que CI emita los marcadores A-E sobre ese SHA.

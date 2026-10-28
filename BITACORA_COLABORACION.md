@@ -1,5 +1,15 @@
 ## 2026-10-27 09:10 -06:00 - Ciclo de vida seguro de familias de formularios (COD)
 
+## 2026-10-28 - H08 ampliado: automatizacion Angular, vigencia, evaluacion, integridad y auditoria (COD)
+
+- **Baseline:** rama `desarrollo`, `INITIAL_HEAD=d97ffbbe8f325cd199d3b33efaabe3b47763215e`, igual a `origin/desarrollo`; se preservaron cambios ajenos sin stage. Se leyeron AGENTS, bitacora, estado, README, skills y documentacion del modulo.
+- **Alcance:** H08-A a H08-E en orden irrevocable, unicamente sobre fixture Oracle XE descartable. La intervencion no autoriza Oracle Produccion, `PRUEBA_FORMULARIO`, migracion 54 ni `main`.
+- **Codigo propio:** `frontend/rl-app/e2e/h08-family-lifecycle-real.spec.ts` ahora usa botones/modales Angular reales para desactivar, archivar con motivo, filtrar archivadas, restaurar con motivo, activar, publicar desde Form Builder, cambiar vigencia y crear evaluaciones. `tools/Block7OracleE2EHost/Program.cs` prepara un borrador sintetico con definicion y hashes SHA-256 reales y expone snapshot profundo read-only de versiones, evaluaciones, evidencias y auditoria. `tools/run_block7_oracle_e2e.sh` exige gates H08-A-H08-E y cero perdida/duplicados. La pantalla principal de Plantillas expone filtro `Archivo` y restauracion.
+- **Documentacion propia:** guia manual H08, ciclo de vida y manual tecnico actualizados separando automatizacion de aceptacion manual.
+- **Verificado:** `dotnet build tools/Block7OracleE2EHost/Block7OracleE2EHost.csproj --configuration Release --no-restore` PASS, `0 errores` (advertencias preexistentes); `bash -n tools/run_block7_oracle_e2e.sh` PASS; `git diff --check` PASS.
+- **No ejecutado:** Oracle XE/E2E real y build frontend local, porque no estan disponibles las variables explicitas del runner Oracle y falta `@angular/build:application` en `node_modules`. Queda pendiente CI; no se atribuye PASS anticipado.
+- **Punto de continuacion:** validar diff y enlaces, hacer commit/push a `origin/desarrollo`, revisar Quality Gates del SHA exacto y corregir cualquier fallo real antes de cerrar H08 ampliado. `MANUAL_FUNCTIONAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `FINAL_PROJECT_STATUS=NOT_CLOSED`.
+
 ## 2026-10-27 12:40 -06:00 - Cierre CI de correccion quirurgica (COD)
 
 - **Resultado:** Quality Gates CI `40540713472` termino `completed/success` sobre `c052f044377dd6f3e6d3961d2f1fa92016b7c8c1`, incluyendo validadores, backend, cobertura, E2E Oracle XE y contenedores.
