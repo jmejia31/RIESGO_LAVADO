@@ -9834,3 +9834,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **CI exacto:** Quality Gates `40716804277`, SHA `47a7c572f110e7e24d4b9c17c32fe84ef873997d`; H08 alcanzo `H08_A_BASELINE=PASS` y ejecuto la desactivacion real, pero Playwright rechazo la asercion por strict mode: la fila contiene dos nodos visibles `INACTIVA` (familia y version).
 - **Correccion:** las aserciones de estado de familia usan el primer nodo visible dentro de la fila, sin cambiar la accion ni ocultar duplicados; se ajustaron `INACTIVA` y `ACTIVA` en ambos ciclos.
 - **Continuacion:** publicar y repetir CI exacto. H08 ampliado sigue `PENDING_CI`; manual `PENDING_USER_EXECUTION`.
+
+## 2026-10-28 14:00 -06:00 - Selector exacto de archivado H08 (COD)
+
+- **CI exacto:** Quality Gates `40717703233`, SHA `0352ed8bc19c8e93cf6256a6019501352003701c`; H08 confirmo `H08_A_BASELINE=PASS`, desactivacion real y modal institucional, pero el spec buscaba `Archivar familia` mientras el control Angular real expone `aria-label="Archivar"`.
+- **Correccion:** el E2E usa el nombre accesible real `Archivar`; no se cambia la UI ni se reemplaza la interacción por API directa.
+- **Continuacion:** publicar y ejecutar CI exacto nuevamente. H08 ampliado `PENDING_CI`; aceptación manual `PENDING_USER_EXECUTION`.

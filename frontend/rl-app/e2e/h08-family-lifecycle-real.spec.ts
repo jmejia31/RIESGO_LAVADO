@@ -85,7 +85,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await expect(familyRow().getByText('INACTIVA').first()).toBeVisible();
   };
   const archiveFamily = async (reason: string): Promise<void> => {
-    await familyRow().getByRole('button', { name: 'Archivar familia' }).click();
+    await familyRow().getByRole('button', { name: 'Archivar' }).click();
     await page.locator('#motivo-archivado').fill(reason);
     await page.getByRole('button', { name: 'Confirmar archivado' }).click();
     await expect(familyRow()).toHaveCount(0);

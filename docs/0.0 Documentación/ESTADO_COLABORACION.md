@@ -3321,3 +3321,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El CI `40716804277` demostro que el flujo real ya desactiva la familia; fallo únicamente por dos textos `INACTIVA` dentro de la fila y strict mode del locator.
 - El spec H08 usa `.first()` dentro de la fila para confirmar `INACTIVA`/`ACTIVA`, manteniendo la verificacion visible sin alterar la logica de negocio.
 - `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. Produccion, `main`, `PRUEBA_FORMULARIO` y migracion 54 siguen intactos.
+
+## Estado vigente - Selector de archivado H08 alineado a UI real, CI pendiente (COD) - 2026-10-28
+
+- El CI `40717703233` llego al archivado real, pero el selector usaba `Archivar familia`; el botón Angular publicado tiene `aria-label="Archivar"`.
+- Se corrigio únicamente el locator del E2E para usar el nombre accesible real. `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
+- Produccion, `main`, `PRUEBA_FORMULARIO` y migracion 54 no fueron tocados.
