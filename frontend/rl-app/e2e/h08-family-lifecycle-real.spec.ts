@@ -145,7 +145,11 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await page.locator('#modal-selector-familia').selectOption(fixture.lifecycleFamilyCode);
     await page.locator('#modal-selector-riesgo').selectOption({ index: 1 });
     await expect(page.getByText('Versión activa:')).toBeVisible();
+    const createResponse = page.waitForResponse(response => response.request().method() === 'POST'
+      && new URL(response.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador'));
     await page.getByRole('button', { name: 'Guardar borrador' }).last().click();
+    const created = await createResponse;
+    expect(created.status(), await created.text()).toBe(200);
     await expect(page.getByRole('button', { name: 'Cancelar nueva evaluación' })).toBeVisible();
     await page.getByRole('button', { name: 'Cancelar nueva evaluación' }).click();
   };
