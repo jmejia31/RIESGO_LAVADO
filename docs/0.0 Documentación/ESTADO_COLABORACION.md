@@ -3337,3 +3337,4 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El CI `40723175726` completo H08-A y H08-B; H08-C quedo pendiente por dos tabs `Evaluaciones` y por DI faltante de `IAuditoriaService` en el host. Se corrigieron ambos puntos y el estado vuelve a `PENDING_CI`.
 - El CI `40724207947` confirmó H08-A completo; H08-B quedó en un ajuste de locator por estados `PUBLICADA` repetidos y DI faltante de `ICalculoConfiguracionService`. Ambos puntos fueron corregidos; estado `PENDING_CI`.
 - Fase 0 quedó diagnosticada: elegibilidad obsoleta y dependencia de cálculo incompleta son defectos independientes. Se corrigieron ambos y se reordenó el marcador de reactivación H08-B; estado actual `PENDING_CI`, H08-C bloqueado hasta evidencia del nuevo run.
+- El gate H08-B fue reordenado para emitirse únicamente después de la reactivación de vigencia verificada; el nuevo SHA requiere CI propio.
