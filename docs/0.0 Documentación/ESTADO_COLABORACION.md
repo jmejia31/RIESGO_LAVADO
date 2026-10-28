@@ -3332,3 +3332,4 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El CI `40718910269` sobre `525c53a122fc49c1baad0591a64081fb3e6dcfbc` supero `H08_A_BASELINE=PASS` y la desactivacion real, pero no encontro `aria-label="Archivar"` en la fila posterior a la recarga.
 - El spec ahora captura de forma explicita el texto y los botones accesibles de la fila cuando el control no aparece; se mantiene la interaccion Angular y no se sustituye por API directa.
 - `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. Produccion, `main`, `PRUEBA_FORMULARIO` y migracion 54 siguen intactos.
+- La evidencia del CI `40720981095` mostro que el control existia solo en un bloque secundario; se agrego la accion `Archivar` a la tabla principal con las precondiciones institucionales de familia inactiva, no archivada y no predeterminada. El nuevo SHA queda `PENDING_CI`.
