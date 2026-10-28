@@ -3279,3 +3279,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificado en esta intervencion: host Oracle XE `dotnet build` Release PASS, `0 errores`; `bash -n tools/run_block7_oracle_e2e.sh` PASS; `git diff --check` PASS. Frontend build/E2E Oracle no ejecutables localmente por ausencia de `@angular/build:application` y de las variables explicitas Oracle XE/certificacion.
 - No se accedio ni muto Oracle Produccion; no se modifico `PRUEBA_FORMULARIO`, no se ejecuto migracion 54 y no se toco `main`.
 - Continuacion exacta: revisar el diff propio, ejecutar validadores aplicables, commit/push normal a `origin/desarrollo` y verificar CI del SHA final. No declarar H08 ampliado PASS hasta que CI emita los marcadores A-E sobre ese SHA.
+
+## Estado vigente - Correccion DI H08 ampliado publicada pendiente de CI (COD) - 2026-10-28
+
+- El run `40707674809` sobre `2a2447554050a7bbb1610288efb45ab7b1ad9ef0` fallo en H08 porque el host Oracle disposable no tenia registrada la configuracion requerida por el bootstrap Angular real: `IConfiguracionService` producia HTTP 500 en `/api/configuracion/login` y `/api/configuracion/sistema`.
+- Se corrigio `tools/Block7OracleE2EHost/Program.cs` con los registros reales de `IConfiguracionRepository`, `ConfiguracionService` e `IConfiguracionService`/`CachedConfiguracionService`. Build Release local PASS, 0 errores.
+- `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; no se declara PASS hasta obtener nuevamente los marcadores H08-A, H08-B, H08-C, H08-D y H08-E. `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
+- No hubo acceso o mutacion de Oracle Produccion, ni cambios en `main`, `PRUEBA_FORMULARIO` o migracion 54. Los cambios ajenos siguen preservados fuera del stage.
+- Punto exacto de continuacion: commit/push de la correccion y verificacion del CI del SHA final.

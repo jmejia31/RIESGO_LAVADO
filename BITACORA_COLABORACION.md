@@ -9792,3 +9792,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 - **CI documental final:** Quality Gates `40589595882` termino `completed/success` sobre `905ddf12`; bitacora/estado, validacion de enlaces y gates completos quedaron certificados. Este registro se publica como cierre final de la intervencion.
 - **Reconciliacion final:** el commit documental posterior `9cd6574a` conserva el mismo contenido funcional; Quality Gates `40591239365` finalizo `completed/success` tras rerun del job flaky de browser. El SHA publicado final queda certificado.
+
+## 2026-10-28 09:00 -06:00 - Correccion de composicion DI del host H08 ampliado (COD)
+
+- **CI reproducido:** Quality Gates `40707674809`, SHA `2a2447554050a7bbb1610288efb45ab7b1ad9ef0`, fallo en el runner H08 ampliado. La prueba alcanzo `H08_A_BASELINE=PASS`, pero la navegacion Angular real recibio HTTP 500 en `/api/configuracion/login` y `/api/configuracion/sistema` porque el host disposable no registraba `IConfiguracionService`.
+- **Correccion quirurgica:** `tools/Block7OracleE2EHost/Program.cs` ahora registra `IConfiguracionRepository`, `ConfiguracionService` e `IConfiguracionService` con `CachedConfiguracionService`, alineado con la composicion real de `backend/RL.API/Program.cs`. No se debilitaron asserts, gates ni transiciones.
+- **Verificacion local:** build Release del host PASS con 0 errores; `git diff --check` PASS. El frontend/Oracle XE completo queda pendiente de CI por ausencia de la infraestructura local requerida.
+- **Alcance:** no se accedio ni muto Oracle Produccion; no se toco `main`, `PRUEBA_FORMULARIO` ni migracion 54. Cambios ajenos tracked/untracked permanecen fuera del stage.
+- **Continuacion:** publicar esta correccion en `origin/desarrollo`, esperar el CI del SHA exacto y reconciliar los marcadores H08-A a H08-E. H08 ampliado sigue `PENDING_CI`; aceptacion manual sigue `PENDING_USER_EXECUTION`.

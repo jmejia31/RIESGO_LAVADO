@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Options;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
+using RL.API.Features.Configuracion.Application;
+using RL.API.Features.Configuracion.Persistence;
 using RL.API.Features.MatricesRiesgos;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
@@ -102,6 +104,12 @@ builder.Services.AddMemoryCache();
 builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
 builder.Services.AddSingleton(new OracleDbContext(connectionString));
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
+// The real Angular bootstrap reads these endpoints before opening the lifecycle UI.
+// Keep the disposable host's registration aligned with the production composition root
+// so the browser test exercises the actual configuration controller contract.
+builder.Services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
+builder.Services.AddScoped<ConfiguracionService>();
+builder.Services.AddScoped<IConfiguracionService, CachedConfiguracionService>();
 builder.Services.AddSingleton<IApplicationCache, ApplicationMemoryCache>();
 builder.Services.AddSingleton(new ApplicationCacheSettings());
 builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
