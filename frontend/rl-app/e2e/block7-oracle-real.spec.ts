@@ -835,6 +835,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     .digest('hex');
   const preWorkflowModal = page.locator('[data-matrix-modal="complete"]');
   await expect(preWorkflowModal).toBeVisible();
+  await expect.poll(async () => new Set(await preWorkflowModal.locator('[data-matrix-field]').evaluateAll(elements =>
+    elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))), { timeout: 10000 }).toHaveLength(82);
   const preWorkflowRenderedFields = await preWorkflowModal.locator('[data-matrix-field]').evaluateAll(elements =>
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   expect(preWorkflowRenderedFields).toHaveLength(82);
@@ -1017,6 +1019,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(createHash('sha256').update(JSON.stringify(postWorkflowProjection.datos.fields.map(field => [field.fieldNumber, field.value, field.state]))).digest('hex')).toBe(preWorkflowHash);
   const postWorkflowMatrix = page.locator('[data-matrix-modal="complete"]');
   await expect(postWorkflowMatrix).toBeVisible();
+  await expect.poll(async () => new Set(await postWorkflowMatrix.locator('[data-matrix-field]').evaluateAll(elements =>
+    elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))), { timeout: 10000 }).toHaveLength(82);
   const postWorkflowFieldNumbers = await postWorkflowMatrix.locator('[data-matrix-field]').evaluateAll(elements =>
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   const postWorkflowWarning = await postWorkflowMatrix.getByText(/La evaluaci.n fue modificada por otra sesi.n o usuario/).count()
