@@ -108,9 +108,13 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await familyRow().getByRole('button', { name: 'Restaurar familia' }).click();
     await confirmDialog(/restaurar/i);
     await page.locator('#motivo-restauracion').fill(reason);
+    const restoreResponse = page.waitForResponse(response => response.request().method() === 'PUT'
+      && /\/api\/matrices-riesgos\/familias\/\d+\/restaurar$/.test(new URL(response.url()).pathname));
     await page.getByRole('button', { name: 'Confirmar restauración' }).click();
-    await expect(familyRow().getByText('INACTIVA').first()).toBeVisible();
+    expect((await restoreResponse).status()).toBe(200);
     await page.locator('#gestor-archivado-familia').selectOption('NO_ARCHIVADAS');
+    await expect(familyRow()).toHaveCount(1);
+    await expect(familyRow().getByText('INACTIVA').first()).toBeVisible();
   };
   const activateFamily = async (): Promise<void> => {
     await familyRow().getByRole('button', { name: 'Activar familia' }).click();
