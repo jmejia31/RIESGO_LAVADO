@@ -3302,3 +3302,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El spec H08 ahora fabrica un JWT unsigned sintetico con claims institucionales de prueba (`ADMINISTRADOR`, modulo `10`, usuario `987654`), sin tocar seguridad de runtime ni API.
 - `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. El nuevo CI debe demostrar la secuencia A-E.
 - No se accedio ni muto Oracle Produccion, no se modifico `main`, `PRUEBA_FORMULARIO` ni migracion 54; cambios ajenos preservados fuera del stage.
+
+## Estado vigente - Fixture H08 con predeterminada y catalogo aislados, CI pendiente (COD) - 2026-10-28
+
+- El CI `40712701277` sobre `5c486c6e1099a0fcc98c53370440974f751b02fb` ya valido JWT y entrada al gestor, pero el listado fallo por `FAM_PREDETERMINADA=NULL` y el bootstrap reporto DI ausente para `ICatalogoService`.
+- Se corrigio el fixture para persistir `FAM_PREDETERMINADA=0` y se agrego `E2ECatalogoService` read-only vacio para `/api/catalogos/modulos`; no se altera el runtime productivo.
+- Build local PASS, 0 errores. `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
+- No hubo acceso/mutacion de Oracle Produccion, ni cambios en `main`, `PRUEBA_FORMULARIO` o migracion 54. Cambios ajenos preservados fuera del stage.

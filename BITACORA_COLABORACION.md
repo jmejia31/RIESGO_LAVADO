@@ -9814,3 +9814,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** `frontend/rl-app/e2e/h08-family-lifecycle-real.spec.ts` genera ahora un JWT unsigned sintetico con `nameid=987654`, rol `ADMINISTRADOR`, modulo `10` y expiracion futura, siguiendo el patron de los E2E reales existentes. No se modifican guards, interceptores ni autorizacion del API.
 - **Verificacion local:** diff de Playwright revisado; host Release ya compilado con 0 errores antes de este cambio. El E2E completo queda pendiente del CI del nuevo SHA.
 - **Continuacion:** publicar, ejecutar CI exacto y verificar H08-A a H08-E. Aceptacion manual continua `PENDING_USER_EXECUTION`.
+
+## 2026-10-28 11:10 -06:00 - Correccion final de fixture global y catalogo H08 (COD)
+
+- **CI exacto:** Quality Gates `40712701277`, SHA `5c486c6e1099a0fcc98c53370440974f751b02fb`; la autenticacion ya funciono y se alcanzo la tabla Plantillas, pero el listado devolvio `ORA` por `FAM_PREDETERMINADA=NULL` y `/api/catalogos/modulos` no tenia servicio registrado.
+- **Correccion:** el `MERGE` de la familia base fija `FAM_PREDETERMINADA=0`; el host registra `E2ECatalogoService` read-only vacio para el bootstrap de modulos. Se mantienen reales las consultas/mutaciones de familias, versiones, evaluaciones, evidencias y auditoria H08.
+- **Verificacion local:** build Release del host PASS, 0 errores; `git diff --check` PASS. No se agregan tablas, datos funcionales falsos ni DML productivo.
+- **Continuacion:** publicar este ajuste y ejecutar CI exacto nuevamente. H08 ampliado sigue `PENDING_CI`; aceptacion manual `PENDING_USER_EXECUTION`.

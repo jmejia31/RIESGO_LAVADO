@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Options;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
+using RL.API.Features.Catalogos.Application;
+using RL.API.Features.Catalogos.Contracts;
+using CatalogoMatricesCatalogDto = RL.API.Features.Catalogos.Contracts.CatalogoMatricesDto;
+using CatalogoModulo = RL.API.Features.Catalogos.Contracts.Modulo;
 using RL.API.Features.Configuracion.Application;
 using RL.API.Features.Configuracion.Contracts;
 using RL.API.Features.MatricesRiesgos;
@@ -72,7 +76,7 @@ for (int index = 0; index < canonicalRisks.Length; index++)
     await ExecuteAsync(oracle, "INSERT INTO RL_MR_RIESGOS (RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION) VALUES (:id,:code,:name,'Block 12 disposable canonical identity',1,:usr,SYSDATE)",
         ("id", canonicalRiskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
 }
-await ExecuteAsync(oracle, "MERGE INTO RL_MR_FAMILIAS_FORMULARIO destino USING (SELECT 1 FAM_ID FROM DUAL) origen ON (destino.FAM_ID = origen.FAM_ID) WHEN MATCHED THEN UPDATE SET FAM_CODIGO='BLOCK7_FAMILIA',FAM_NOMBRE='Familia E2E Block 7',FAM_DESCRIPCION='Fixture desechable para certificacion',FAM_ACTIVO=1,FAM_ARCHIVADA=0 WHEN NOT MATCHED THEN INSERT (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (1,'BLOCK7_FAMILIA','Familia E2E Block 7','Fixture desechable para certificacion',1,0,SYSDATE)");
+await ExecuteAsync(oracle, "MERGE INTO RL_MR_FAMILIAS_FORMULARIO destino USING (SELECT 1 FAM_ID FROM DUAL) origen ON (destino.FAM_ID = origen.FAM_ID) WHEN MATCHED THEN UPDATE SET FAM_CODIGO='BLOCK7_FAMILIA',FAM_NOMBRE='Familia E2E Block 7',FAM_DESCRIPCION='Fixture desechable para certificacion',FAM_ACTIVO=1,FAM_ARCHIVADA=0,FAM_PREDETERMINADA=0 WHEN NOT MATCHED THEN INSERT (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (1,'BLOCK7_FAMILIA','Familia E2E Block 7','Fixture desechable para certificacion',1,0,0,SYSDATE)");
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_E2E',1,:json,RPAD('B',64,'B'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
 var fullChainUiFixtures = new List<object>();
 bool fullChainSeeded = false;
@@ -104,6 +108,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
 builder.Services.AddSingleton(new OracleDbContext(connectionString));
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
+builder.Services.AddSingleton<ICatalogoService, E2ECatalogoService>();
 // The real Angular bootstrap reads these endpoints before opening the lifecycle UI.
 // The disposable schema intentionally does not provision global configuration tables;
 // return an empty read-only contract without masking any H08 lifecycle request.
@@ -534,4 +539,16 @@ sealed class E2EConfiguracionService : IConfiguracionService
     public Task<bool> ActualizarSlideAsync(int id, LoginSlide slide, long usuarioId, string? ip) => Task.FromResult(false);
     public Task<bool> EliminarSlideAsync(int id, long usuarioId, string? ip) => Task.FromResult(false);
     public Task RegistrarCargaImagenAsync(string nombreOriginal, string nombreGuardado, string url, string tipoMime, long tamanioBytes, long usuarioId, string? ip) => Task.CompletedTask;
+}
+
+sealed class E2ECatalogoService : ICatalogoService
+{
+    public Task<List<KeyValuePair<int, string>>> ObtenerRolesAsync() => Task.FromResult(new List<KeyValuePair<int, string>>());
+    public Task<List<KeyValuePair<int, string>>> ObtenerDominiosAsync() => Task.FromResult(new List<KeyValuePair<int, string>>());
+    public Task<List<CatalogoModulo>> ObtenerModulosAsync() => Task.FromResult(new List<CatalogoModulo>());
+    public Task<List<CatalogoMatricesCatalogDto>> ListarMatricesAsync(bool incluirInactivos) => Task.FromResult(new List<CatalogoMatricesCatalogDto>());
+    public Task<long> CrearCatalogoMatricesAsync(CrearCatalogoMatricesDto dto) => Task.FromResult(0L);
+    public Task<bool> ActualizarCatalogoMatricesAsync(long id, ActualizarCatalogoMatricesDto dto) => Task.FromResult(false);
+    public Task<long> CrearElementoCatalogoMatricesAsync(long catalogoId, CrearElementoCatalogoMatricesDto dto) => Task.FromResult(0L);
+    public Task<bool> ActualizarElementoCatalogoMatricesAsync(long id, ActualizarElementoCatalogoMatricesDto dto) => Task.FromResult(false);
 }
