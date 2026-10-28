@@ -67,8 +67,9 @@ long lifecycleEvidenceLinkId = stamp + 900_000_004;
 string lifecycleFamilyCode = $"H08-FAMILIA-{stamp}";
 string riskCode = canonicalRisks[0].Code;
 string ruleCode = $"B7-E2E-RULE-{stamp}";
+string lifecycleRuleCode = $"H08-LIFECYCLE-{stamp}";
 string definition = CreateDefinition(ruleCode);
-string lifecycleDefinition = CreateDefinition($"H08-LIFECYCLE-{stamp}");
+string lifecycleDefinition = CreateDefinition(lifecycleRuleCode);
 string lifecycleDefinitionHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(lifecycleDefinition))).ToLowerInvariant();
 string lifecycleEvidenceHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("h08-evidence"))).ToLowerInvariant();
 for (int index = 0; index < canonicalRisks.Length; index++)
@@ -82,6 +83,7 @@ await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_F
 var fullChainUiFixtures = new List<object>();
 bool fullChainSeeded = false;
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable browser rule','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable H08 lifecycle rule','BLOCK7_LEGACY_TEST',1)", ("id", lifecycleVersionId), ("code", lifecycleRuleCode));
 foreach (long id in new[] { userId, areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId })
     await ExecuteAsync(oracle, "INSERT INTO RL_USUARIOS (USR_ID,USR_ACTIVO) VALUES (:id,1)", ("id", id));
 await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,'MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR',1)", ("id", areaOnlyUserId));
