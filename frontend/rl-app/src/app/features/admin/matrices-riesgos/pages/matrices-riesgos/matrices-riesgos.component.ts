@@ -1864,10 +1864,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.proyeccionEvaluacion.set(null);
     // La publicación o reactivación puede haber ocurrido después de la carga inicial.
     // Refrescar el contrato servidor antes de evaluar evita reutilizar una elegibilidad obsoleta.
-    this.cargarFamilias();
+    const codigoPredeterminado = this.familiaPredeterminada()?.familiaCodigo;
+    const familiaPredeterminadaActual = codigoPredeterminado
+      ? this.familias().find(familia => familia.famCodigo === codigoPredeterminado)
+      : null;
+    if (!familiaPredeterminadaActual?.tieneVersionVigente) this.cargarFamilias();
     this.modalNuevaEvaluacionAbierto.set(true);
 
-    const codigoPredeterminado = this.familiaPredeterminada()?.familiaCodigo;
     if (this.familiaPredeterminada()?.configurada && codigoPredeterminado) {
       this.seleccionarFamilia(codigoPredeterminado);
     }
