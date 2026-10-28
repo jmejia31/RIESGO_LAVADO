@@ -150,8 +150,8 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await page.getByRole('button', { name: 'Guardar borrador' }).last().click();
     const created = await createResponse;
     expect(created.status(), await created.text()).toBe(200);
-    await expect(page.getByRole('button', { name: 'Cancelar nueva evaluación' })).toBeVisible();
-    await page.getByRole('button', { name: 'Cancelar nueva evaluación' }).click();
+    await expect(page.locator('dialog[aria-labelledby="titulo-modal-nueva-eval"]')).toBeHidden();
+    return;
   };
 
   const before = await snapshot();
