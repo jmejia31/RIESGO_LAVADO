@@ -850,7 +850,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const followUpModal = page.locator('dialog[aria-labelledby="titulo-modal-seguimiento"]');
   await expect(followUpModal).toBeVisible();
   expect((await transitionsResponse).status()).toBe(200);
-  await expect(followUpModal.getByText('Gestionar TransiciÃ³n de Estado')).toBeVisible();
+  await expect(followUpModal.locator('#seg-nuevo-estado')).toBeVisible();
   await expect(followUpModal.locator('.modal-header-institutional p strong')).toHaveText('Borrador');
   const firstDestinations = followUpModal.locator('#seg-nuevo-estado option');
   await expect(firstDestinations).toHaveCount(6);
