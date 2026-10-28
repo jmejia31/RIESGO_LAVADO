@@ -133,7 +133,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await expect(detail).toBeVisible();
     await detail.getByRole('button', { name: vigente ? 'Activar versión' : 'Desactivar versión' }).click();
     await confirmDialog(vigente ? /activar/i : /desactivar/i);
-    await expect(detail.getByText(vigente ? 'VIGENTE' : 'NO VIGENTE')).toBeVisible();
+    await expect(detail.getByText(vigente ? 'VIGENTE' : 'NO VIGENTE', { exact: true })).toBeVisible();
     await detail.getByRole('button', { name: /cerrar detalle/i }).click();
   };
   const publishVersionThroughBuilder = async (): Promise<void> => {
