@@ -184,7 +184,6 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   console.log('H08_B_FORM_BUILDER_VALID=PASS');
   console.log('H08_B_VERSION_PUBLICATION=PASS');
   console.log('H08_B_VERSION_REVALIDATION=PASS');
-  console.log('H08_B_VERSION_REACTIVATION=PASS');
   console.log('H08_B_GATE=PASS');
 
   // H08-C: one evaluation is created before the second administrative cycle and one after it.
@@ -198,6 +197,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   await restoreFamily('H08-C ciclo 2: restaurar para registrar');
   await activateFamily();
   await changeVersionVigency(true);
+  console.log('H08_B_VERSION_REACTIVATION=PASS');
   await createEvaluation();
   const evaluationAfter = await snapshot();
   expect(evaluationAfter.evaluations).toBe(before.evaluations + 2);

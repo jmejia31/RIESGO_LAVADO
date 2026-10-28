@@ -1862,6 +1862,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.respuestas.set({});
     this.bloqueEvaluacionActual.set(1);
     this.proyeccionEvaluacion.set(null);
+    // La publicación o reactivación puede haber ocurrido después de la carga inicial.
+    // Refrescar el contrato servidor antes de evaluar evita reutilizar una elegibilidad obsoleta.
+    this.cargarFamilias();
     this.modalNuevaEvaluacionAbierto.set(true);
 
     const codigoPredeterminado = this.familiaPredeterminada()?.familiaCodigo;

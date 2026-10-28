@@ -526,8 +526,17 @@ public class EmptyCalculationConfigurationProxy : DispatchProxy
 {
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {
-        if (targetMethod?.Name == nameof(ICalculoConfiguracionRepository.ListarFormulaBindingsPorVersionFormularioAsync))
-            return Task.FromResult<IReadOnlyList<FormulaBindingDto>>(Array.Empty<FormulaBindingDto>());
+        switch (targetMethod?.Name)
+        {
+            case nameof(ICalculoConfiguracionRepository.ListarFormulasAsync):
+                return Task.FromResult<IReadOnlyList<FormulaDto>>(Array.Empty<FormulaDto>());
+            case nameof(ICalculoConfiguracionRepository.ListarFuncionesAsync):
+                return Task.FromResult<IReadOnlyList<FuncionDto>>(Array.Empty<FuncionDto>());
+            case nameof(ICalculoConfiguracionRepository.ListarParametrosAsync):
+                return Task.FromResult<IReadOnlyList<ParametroDto>>(Array.Empty<ParametroDto>());
+            case nameof(ICalculoConfiguracionRepository.ListarFormulaBindingsPorVersionFormularioAsync):
+                return Task.FromResult<IReadOnlyList<FormulaBindingDto>>(Array.Empty<FormulaBindingDto>());
+        }
         throw new NotSupportedException($"The disposable E2E schema has no calculation bindings: {targetMethod?.Name}.");
     }
 }
