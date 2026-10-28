@@ -197,6 +197,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   await createEvaluation();
   const evaluationBefore = await snapshot();
   expect(evaluationBefore.evaluations).toBe(before.evaluations + 1);
+  await openFamilies();
   await changeVersionVigency(false);
   await openFamilies();
   await deactivateFamily();
