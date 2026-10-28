@@ -97,6 +97,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
       throw new Error(`H08 archive control unavailable: ${JSON.stringify(diagnostics)}`);
     }
     await archiveButton.click();
+    await confirmDialog(/archivar/i);
     await page.locator('#motivo-archivado').fill(reason);
     await page.getByRole('button', { name: 'Confirmar archivado' }).click();
     await expect(familyRow()).toHaveCount(0);

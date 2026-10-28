@@ -9847,3 +9847,5 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Verificacion local:** `git diff --check` pendiente de ejecutar tras el ajuste; frontend/Oracle XE completo pendiente del CI por ausencia de la infraestructura local requerida.
 - **Continuacion:** publicar el diagnostico, ejecutar CI exacto y aplicar solo la correccion que explique la evidencia. H08 ampliado sigue `PENDING_CI`; aceptacion manual `PENDING_USER_EXECUTION`.
 - **Correccion funcional posterior:** la evidencia demostro que la accion existia solo en el bloque secundario de familias; se agrego al bloque principal `data-ui-fam-table="principal"` con las precondiciones `!famActivo && !famArchivada && !famPredeterminada`, reutilizando `confirmarArchivarFamilia(fam)`.
+- **CI posterior:** `40722198888` sobre `f0b41b9768a195769b6122eaedf8c5ef62add67d` confirmó que el botón ya aparece y H08 llega al flujo de archivado; falló al llenar el motivo porque faltaba confirmar primero el modal institucional de archivado.
+- **Correccion:** el spec pulsa y valida `confirmDialog(/archivar/i)` antes de interactuar con `#motivo-archivado`, preservando la secuencia Angular real.
