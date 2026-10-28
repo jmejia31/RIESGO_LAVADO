@@ -71,6 +71,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await page.getByRole('tab', { name: 'Plantillas' }).click();
     await expect(page.locator('#gestor-buscar-familia')).toBeVisible();
     await page.locator('#gestor-buscar-familia').fill(fixture.lifecycleFamilyCode);
+    await page.getByRole('tab', { name: 'Plantillas' }).click();
     await expect(familyRow()).toHaveCount(1);
   };
   const confirmDialog = async (label: RegExp): Promise<void> => {
