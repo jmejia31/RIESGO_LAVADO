@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { Buffer } from 'node:buffer';
 
 type LifecycleFixture = {
   lifecycleFamilyId: number;
@@ -30,16 +31,27 @@ type DeepSnapshot = {
 test.describe.configure({ retries: 0 });
 test.skip(process.env.RL_H08_FAMILY_LIFECYCLE_CERTIFICATION_REQUIRED !== 'true', 'H08 requires the disposable Oracle XE host and dedicated runner.');
 
+function unsignedTestToken(): string {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    nameid: '987654',
+    uid: 'h08-e2e',
+    role: 'ADMINISTRADOR',
+    modulos: '10',
+    exp: Math.floor(Date.now() / 1000) + 3600
+  })}.`;
+}
+
 test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integridad y auditoria contra Oracle XE', async ({ page, request }) => {
   const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/family-lifecycle-fixture');
   expect(fixtureResponse.status()).toBe(200);
   const fixture = await fixtureResponse.json() as LifecycleFixture;
 
-  await page.addInitScript(() => {
-    localStorage.setItem('access_token', 'e2e-h08');
+  await page.addInitScript(accessToken => {
+    localStorage.setItem('access_token', accessToken);
     localStorage.setItem('refresh_token', 'e2e-h08');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
-  });
+  }, unsignedTestToken());
   await page.goto('/matrices-riesgos');
 
   const snapshot = async (): Promise<LifecycleSnapshot> => {

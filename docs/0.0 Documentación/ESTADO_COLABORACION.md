@@ -3295,3 +3295,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Build Release local PASS, 0 errores. `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`.
 - No se accedio ni muto Oracle Produccion, ni se modifico `main`, `PRUEBA_FORMULARIO` o migracion 54. Cambios ajenos preservados fuera del stage.
 - Punto exacto: commit/push y nuevo CI del SHA publicado.
+
+## Estado vigente - JWT E2E H08 corregido, CI pendiente (COD) - 2026-10-28
+
+- El CI `40710094242` sobre `586b38b5cf667c95123e11afe2ab3f646e744c88` confirmo que el host ya superaba bootstrap/Oracle, pero el navegador quedaba en Login: `e2e-h08` no era JWT valido para Angular y la guardia rechazo la sesion.
+- El spec H08 ahora fabrica un JWT unsigned sintetico con claims institucionales de prueba (`ADMINISTRADOR`, modulo `10`, usuario `987654`), sin tocar seguridad de runtime ni API.
+- `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`. El nuevo CI debe demostrar la secuencia A-E.
+- No se accedio ni muto Oracle Produccion, no se modifico `main`, `PRUEBA_FORMULARIO` ni migracion 54; cambios ajenos preservados fuera del stage.

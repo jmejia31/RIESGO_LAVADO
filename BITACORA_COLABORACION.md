@@ -9807,3 +9807,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** se reemplazo solo en el host E2E la persistencia de configuracion por `E2EConfiguracionService`, contrato read-only vacio para `/api/configuracion/sistema` y `/api/configuracion/login`. No crea tablas, no realiza DML y no interviene ningun endpoint H08-A a H08-E, que siguen respaldados por Oracle XE real.
 - **Verificacion local:** host Release PASS con 0 errores; `git diff --check` PASS. El fallo CI no fue de la logica de ciclo de vida sino de infraestructura global ausente en el fixture.
 - **Continuacion:** actualizar handoff, publicar el nuevo SHA y esperar CI exacto. H08 ampliado continua `PENDING_CI`; aceptacion manual `PENDING_USER_EXECUTION`.
+
+## 2026-10-28 10:35 -06:00 - Correccion de token JWT del E2E H08 (COD)
+
+- **CI exacto:** Quality Gates `40710094242`, SHA `586b38b5cf667c95123e11afe2ab3f646e744c88`, backend `1097 passed, 1 skipped`; H08 alcanzo `H08_A_BASELINE=PASS` pero Playwright no encontro la pestaña `Plantillas` porque la prueba habia guardado `e2e-h08`, valor que no es un JWT valido y provoco redireccion legitima a Login.
+- **Correccion:** `frontend/rl-app/e2e/h08-family-lifecycle-real.spec.ts` genera ahora un JWT unsigned sintetico con `nameid=987654`, rol `ADMINISTRADOR`, modulo `10` y expiracion futura, siguiendo el patron de los E2E reales existentes. No se modifican guards, interceptores ni autorizacion del API.
+- **Verificacion local:** diff de Playwright revisado; host Release ya compilado con 0 errores antes de este cambio. El E2E completo queda pendiente del CI del nuevo SHA.
+- **Continuacion:** publicar, ejecutar CI exacto y verificar H08-A a H08-E. Aceptacion manual continua `PENDING_USER_EXECUTION`.
