@@ -66,7 +66,7 @@
     }
   </div>
 
-  @if (error(); as errorTexto) {
+  @if (!versionEditando() && error(); as errorTexto) {
     <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive" data-uat="feedback-page-error">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="flex-1 font-medium">{{ errorTexto }}</span>
@@ -75,7 +75,7 @@
           </button>
     </div>
   }
-  @if (mensaje(); as mensajeTexto) {
+  @if (!versionEditando() && mensaje(); as mensajeTexto) {
     <output class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm animate-fade-in" aria-live="polite">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="flex-1 font-medium">{{ mensajeTexto }}</span>
@@ -857,9 +857,13 @@
                           [puedePublicar]="!soloLecturaDefinicion() && versionActual.verEstado === 'DRAFT' && !versionActual.verVigente && esAdministrador()"
                           [procesando]="guardando()"
                           [operacion]="operacionBuilderEnCurso()"
+                          [errorFeedback]="errorFormBuilder()"
+                          [mensajeFeedback]="mensajeFormBuilder()"
                           [formulasDisponibles]="formulasCentralDisponibles()"
                           (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
-                          (publicar)="publicarVersion(versionActual)"
+                          (publicar)="publicarVersionDesdeBuilder(versionActual, $event)"
+                          (cerrarErrorFeedback)="errorFormBuilder.set(null)"
+                          (cerrarMensajeFeedback)="mensajeFormBuilder.set(null)"
                           (cerrar)="cerrarDefinicion()">
         </app-form-builder>
        </div>

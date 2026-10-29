@@ -51,7 +51,7 @@ import { canonicalCatalogOptions, canonicalRiskLevelLabel, canonicalRiskResponse
 import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_BLOCK_6_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
-type AlertScope = 'page' | 'newEvaluation' | 'editEvaluation';
+type AlertScope = 'page' | 'newEvaluation' | 'editEvaluation' | 'formBuilder';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
@@ -116,6 +116,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly mensajeNuevaEvaluacion = signal<string | null>(null);
   readonly errorEdicionEvaluacion = signal<string | null>(null);
   readonly mensajeEdicionEvaluacion = signal<string | null>(null);
+  readonly errorFormBuilder = signal<string | null>(null);
+  readonly mensajeFormBuilder = signal<string | null>(null);
   readonly errorModal = signal<string | null>(null);
 
   readonly cargandoEvaluaciones = signal(false);
@@ -2991,6 +2993,79 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       }));
   }
 
+  publicarVersionDesdeBuilder(version: VersionFormularioDto, definicionActual: string): void {
+    if (!this.esAdministrador() || !definicionActual.trim()) return;
+    void this.confirmation.confirm({
+      title: 'Publicar versión oficial?',
+      message: `Se validará, guardará y publicará la definición visible de la versión ID #${version.verId}.`,
+      icon: 'question',
+      confirmLabel: 'Sí, publicar versión',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'publish',
+      confirmVariant: 'primary'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.guardando.set(true);
+      this.operacionBuilderEnCurso.set('publicar');
+      this.limpiarAlertas();
+      const publicar = () => this.ejecutarPublicacionDesdeBuilder(version);
+      if (sonJsonSemanticamenteEquivalentes(version.verJson, definicionActual)) {
+        publicar();
+        return;
+      }
+      this.service.actualizarBorradorFormulario(version.verId, definicionActual).subscribe({
+        next: () => this.sincronizarUsosFormula(version.verId, definicionActual).subscribe({
+          next: () => this.service.obtenerVersionFormulario(version.verId).subscribe({
+            next: persistida => {
+              if (!sonJsonSemanticamenteEquivalentes(definicionActual, persistida.verJson)) {
+                this.finalizarOperacionBuilder('La definición visible no coincide con la definición persistida. No se publicó la versión.');
+                return;
+              }
+              publicar();
+            },
+            error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo verificar la definición antes de publicarla.'))
+          }),
+          error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudieron actualizar las dependencias de fórmula antes de publicar.'))
+        }),
+        error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo guardar la definición actual antes de publicarla.'))
+      });
+    });
+  }
+
+  private ejecutarPublicacionDesdeBuilder(version: VersionFormularioDto): void {
+    this.service.publicarVersionFormulario(version.verId).subscribe({
+      next: () => this.service.obtenerVersionFormulario(version.verId).subscribe({
+        next: fresca => {
+          this.guardando.set(false);
+          this.operacionBuilderEnCurso.set(null);
+          this.versionEditando.set(fresca);
+          this.soloLecturaDefinicion.set(true);
+          this.definicionTecnica = this.formatearDefinicion(fresca.verJson);
+          this.cargarVersiones();
+          this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
+          if (fresca.verEstado === 'PUBLISHED' && fresca.verVigente) {
+            this.globalState.limpiarError();
+            this.mostrarMensaje('Versión publicada correctamente. La versión quedó publicada y vigente; su definición histórica permanece protegida contra modificaciones.');
+          } else {
+            this.mostrarError('La publicación fue aceptada, pero la versión no quedó confirmada como PUBLICADA y VIGENTE. No se reporta éxito.');
+          }
+        },
+        error: () => {
+          this.guardando.set(false);
+          this.operacionBuilderEnCurso.set(null);
+          this.mostrarError('La solicitud de publicación fue aceptada, pero no se pudo verificar el estado final. Consulte nuevamente la versión; no se reporta rechazo del backend.');
+        }
+      }),
+      error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo publicar la versión del formulario.'))
+    });
+  }
+
+  private finalizarOperacionBuilder(mensaje: string): void {
+    this.guardando.set(false);
+    this.operacionBuilderEnCurso.set(null);
+    this.mostrarError(mensaje);
+  }
+
   publicarVersion(version: VersionFormularioDto): void {
     if (!this.esAdministrador()) return;
     void this.confirmation.confirm({
@@ -3114,6 +3189,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cerrarDefinicion(): void {
+    this.limpiarAlertasPorScope('formBuilder');
     this.versionEditando.set(null);
     this.mostrarDetalleComoContexto();
     // Return focus after Angular's change-detection turn removes the builder.
@@ -3287,6 +3363,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private obtenerScopeAlerta(): AlertScope {
+    if (this.versionEditando()) return 'formBuilder';
     if (this.modalEditarAbierto()) return 'editEvaluation';
     if (this.modalNuevaEvaluacionAbierto()) return 'newEvaluation';
     return 'page';
@@ -3307,6 +3384,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     } else if (scope === 'editEvaluation') {
       this.errorEdicionEvaluacion.set(error);
       this.mensajeEdicionEvaluacion.set(mensaje);
+    } else if (scope === 'formBuilder') {
+      this.errorFormBuilder.set(error);
+      this.mensajeFormBuilder.set(mensaje);
     } else {
       this.error.set(error);
       this.mensaje.set(mensaje);
@@ -3332,7 +3412,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private limpiarAutoDismiss(scope?: AlertScope): void {
-    const scopes: AlertScope[] = scope ? [scope] : ['page', 'newEvaluation', 'editEvaluation'];
+    const scopes: AlertScope[] = scope ? [scope] : ['page', 'newEvaluation', 'editEvaluation', 'formBuilder'];
     for (const current of scopes) {
       const timer = this.autoDismissTimers[current];
       if (timer) clearTimeout(timer);
@@ -3355,6 +3435,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       || errorValidacion
       || respuesta?.error?.title
       || mensaje;
+  }
+
+  private obtenerMensajeErrorPublicacion(error: unknown, mensaje: string): string {
+    const respuesta = error as { error?: { detail?: string; mensaje?: string; title?: string; errors?: Record<string, string[]> } };
+    const errorValidacion = Object.values(respuesta?.error?.errors ?? {}).flat().find(Boolean);
+    return respuesta?.error?.detail || respuesta?.error?.mensaje || errorValidacion || respuesta?.error?.title || mensaje;
   }
   private obtenerMensajeError(error: unknown, mensaje: string): string {
     const respuesta = error as {

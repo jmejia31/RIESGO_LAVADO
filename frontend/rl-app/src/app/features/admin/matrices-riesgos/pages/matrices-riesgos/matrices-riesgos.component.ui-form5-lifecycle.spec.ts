@@ -223,7 +223,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       component.guardarDefinicion();
 
       expect(component.versionEditando()).not.toBeNull();
-      expect(component.error()).toContain('no coincide semánticamente');
+      expect(component.errorFormBuilder()).toContain('no coincide semánticamente');
       expect(component.guardando()).toBe(false);
       expect(component.operacionBuilderEnCurso()).toBeNull();
     });
@@ -296,9 +296,45 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       await new Promise(resolve => setTimeout(resolve, 50));
 
       expect(component.versionEditando()).toBeNull();
-      expect(component.error()).toContain('Error al recuperar versión fresca');
+      expect(component.errorFormBuilder()).toContain('Error al recuperar versión fresca');
       expect(component.guardando()).toBe(false);
       expect(component.operacionBuilderEnCurso()).toBeNull();
+    });
+  });
+
+  describe('builder publication contract', () => {
+    it('saves and verifies the visible definition before publishing', async () => {
+      const jsonActual = JSON.stringify({ ...JSON.parse(baseVersion.verJson), nombreFormulario: 'Updated form' });
+      const persistida = { ...baseVersion, verJson: jsonActual };
+      const publicada = { ...persistida, verEstado: 'PUBLISHED' as const, verVigente: true };
+      service.obtenerVersionFormulario.mockReturnValueOnce(of(persistida)).mockReturnValueOnce(of(publicada));
+
+      component.versionEditando.set(baseVersion);
+      component.soloLecturaDefinicion.set(false);
+      component.publicarVersionDesdeBuilder(baseVersion, jsonActual);
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(200, jsonActual);
+      expect(service.publicarVersionFormulario).toHaveBeenCalledWith(200);
+      expect(component.versionEditando()?.verEstado).toBe('PUBLISHED');
+      expect(component.versionEditando()?.verVigente).toBe(true);
+      expect(component.mensajeFormBuilder()).toContain('Versión publicada correctamente');
+    });
+
+    it('shows a publication rejection inside the builder and preserves its context', async () => {
+      service.publicarVersionFormulario.mockReturnValue(throwError(() => ({
+        status: 409,
+        error: { mensaje: 'Version is no longer available for publication.' }
+      })));
+      component.versionEditando.set(baseVersion);
+      component.soloLecturaDefinicion.set(false);
+
+      component.publicarVersionDesdeBuilder(baseVersion, baseVersion.verJson);
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      expect(component.errorFormBuilder()).toContain('Version is no longer available');
+      expect(component.versionEditando()).not.toBeNull();
+      expect(component.guardando()).toBe(false);
     });
   });
 });

@@ -74,9 +74,13 @@ export class FormBuilderComponent implements OnInit {
   @Input() procesando: boolean = false;
   @Input() operacion: 'guardar' | 'publicar' | null = null;
   @Input() formulasDisponibles: FormulaVersionSelectorOption[] = [];
+  @Input() errorFeedback: string | null = null;
+  @Input() mensajeFeedback: string | null = null;
 
   @Output() guardarJson = new EventEmitter<string>();
-  @Output() publicar = new EventEmitter<void>();
+  @Output() publicar = new EventEmitter<string>();
+  @Output() cerrarErrorFeedback = new EventEmitter<void>();
+  @Output() cerrarMensajeFeedback = new EventEmitter<void>();
   @Output() cerrar = new EventEmitter<void>();
 
   readonly model = signal<FormBuilderModel>({
@@ -579,6 +583,7 @@ export class FormBuilderComponent implements OnInit {
       tipo: campo.tipo,
       tipoOriginal: campo.tipoOriginal ?? null,
       codigoCatalogo: campo.codigoCatalogo ?? null,
+      permiteValorManual: campo.permiteValorManual ?? false,
       opciones: campo.opciones ?? null,
       formula: campo.formula ?? null,
       obligatorio: campo.obligatorio,
@@ -621,6 +626,7 @@ export class FormBuilderComponent implements OnInit {
 
   emitirPublicar(): void {
     if (this.bloqueadoParaMutacion || !this.puedePublicar) return;
-    this.publicar.emit();
+    if (!this.validarYObtenerErrores()) return;
+    this.publicar.emit(serializarBuilderModelAJson(this.model()));
   }
 }

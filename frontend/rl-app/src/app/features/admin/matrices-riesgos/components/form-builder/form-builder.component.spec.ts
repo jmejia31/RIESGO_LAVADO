@@ -293,6 +293,14 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component.campoActivo()?.id).toBe(campos[2].id);
   });
 
+  it('conserva permiteValorManual en la vista previa del campo', () => {
+    const campo = component.model().secciones[0].campos[0];
+    campo.tipo = 'selector-catalogo';
+    campo.permiteValorManual = true;
+
+    expect(component.campoPreview(campo).permiteValorManual).toBe(true);
+  });
+
   it('reordena campos dentro de limites validos y actualiza columnas', () => {
     const seccionId = component.model().secciones[0].id;
     const texto = component.tiposControles.find(t => t.tipo === 'texto')!;
@@ -499,7 +507,9 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
 
     it('emitirPublicar emite evento publicar cuando puedePublicar es true', () => {
       let publicado = false;
+      let jsonPublicado = '';
       component.publicar.subscribe(() => publicado = true);
+      component.publicar.subscribe(json => jsonPublicado = json);
 
       component.soloLectura = false;
       component.procesando = false;
@@ -507,6 +517,21 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       component.emitirPublicar();
 
       expect(publicado).toBe(true);
+      expect(JSON.parse(jsonPublicado).codigoFormulario).toBe('MATRIZ_LAFT_TEST');
+    });
+
+    it('emitirPublicar valida el modelo y no emite una definición inválida', () => {
+      let publicado = false;
+      component.publicar.subscribe(() => publicado = true);
+      component.soloLectura = false;
+      component.procesando = false;
+      component.puedePublicar = true;
+      component.model.update(model => ({ ...model, secciones: [] }));
+
+      component.emitirPublicar();
+
+      expect(publicado).toBe(false);
+      expect(component.erroresValidacion().length).toBeGreaterThan(0);
     });
 
     it('emitirPublicar queda bloqueado si puedePublicar es false, soloLectura es true o procesando es true', () => {
