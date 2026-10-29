@@ -543,7 +543,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.definicionTecnica = '{invalido';
     component.guardarDefinicion();
     expect(service.actualizarBorradorFormulario).not.toHaveBeenCalled();
-    expect(component.error()).toContain('JSON');
+    expect(component.errorFormBuilder()).toContain('JSON');
 
     component.definicionTecnica = '{"codigoFormulario":"FORM_A","secciones":[]}';
     service.obtenerVersionFormulario.mockReturnValue(of({ ...version, verJson: component.definicionTecnica }));

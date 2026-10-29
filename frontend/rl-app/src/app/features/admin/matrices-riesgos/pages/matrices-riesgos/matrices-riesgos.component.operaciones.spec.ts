@@ -250,7 +250,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.abrirDefinicion(version);
     expect(component.soloLecturaDefinicion()).toBe(true);
     component.eliminarVersionFormulario(version);
-    expect(component.error()).toContain('eliminarse');
+    expect(component.errorFormBuilder()).toContain('eliminarse');
     expect(service['eliminarVersionFormulario']).not.toHaveBeenCalled();
   });
 

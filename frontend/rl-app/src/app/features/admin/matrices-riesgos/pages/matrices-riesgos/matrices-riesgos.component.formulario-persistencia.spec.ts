@@ -233,7 +233,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     // No debe haber cerrado el modal
     expect(component.versionEditando()).not.toBeNull();
     expect(component.definicionTecnica).toBe(jsonEnviado);
-    expect(component.error()).toContain('no coincide semánticamente');
+    expect(component.errorFormBuilder()).toContain('no coincide semánticamente');
     expect(component.mensaje()).toBeFalsy();
   });
 
@@ -260,7 +260,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     component.guardarDefinicion();
 
     expect(component.versionEditando()).not.toBeNull();
-    expect(component.error()).toContain('no coincide semánticamente');
+    expect(component.errorFormBuilder()).toContain('no coincide semánticamente');
   });
 
   it('6. Error en GET post-save: falla de forma segura (fail-closed) sin cerrar el editor', () => {
@@ -275,7 +275,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     component.guardarDefinicion();
 
     expect(component.versionEditando()).not.toBeNull();
-    expect(component.error()).toContain('No se pudo verificar la persistencia');
+    expect(component.errorFormBuilder()).toContain('No se pudo verificar la persistencia');
   });
 
   it('7. Ciclo cerrar -> reabrir conserva la misma definición sin pérdida', () => {

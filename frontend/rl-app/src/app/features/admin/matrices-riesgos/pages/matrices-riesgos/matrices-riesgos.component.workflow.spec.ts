@@ -292,7 +292,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.guardarDefinicion();
 
     expect(service['actualizarBorradorFormulario']).not.toHaveBeenCalled();
-    expect(component.error()).toContain('La definición JSON no es válida');
+    expect(component.errorFormBuilder()).toContain('La definición JSON no es válida');
   });
 
   it('publica una versión no vigente tras la confirmación institucional', async () => {
