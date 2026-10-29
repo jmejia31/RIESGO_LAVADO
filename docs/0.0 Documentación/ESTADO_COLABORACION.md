@@ -3381,11 +3381,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Punto 1 Bloque 7/9: causa raíz confirmada como carrera de lectura del E2E antes de completar `transiciones-permitidas`. Se añadió espera por respuesta 200 y por renderizado `SUCCESS_WITH_DATA`; gate permanece `PENDING_CI` hasta cinco ejecuciones independientes sin reintentos.
 - Estado vigente - Correccion P0 de publicacion desde Form Builder (COD) - 2026-10-29
 
-- Base `04f42039e9ad997a567d1b6ed1dedf4854f8b975`; cambios funcionales publicados en `desarrollo` mediante `d04cf1e0` y `e0d4537e`; documentacion publicada en SHA final `8cec7c208ee3c0c2ca100909a4bfd0fbe0a12f08`.
+- Base `04f42039e9ad997a567d1b6ed1dedf4854f8b975`; cambios funcionales publicados en `desarrollo` mediante `d04cf1e0` y `e0d4537e`; documentacion publicada en el `HEAD` de `desarrollo`.
 - El constructor valida el modelo visible y emite su JSON; el padre guarda y verifica semanticamente la definicion, sincroniza formulas, publica solo despues del readback y confirma estado `PUBLISHED` + vigente antes de informar exito.
 - Los errores y mensajes de publicacion ahora tienen alcance `formBuilder` y se renderizan dentro del modal. `permiteValorManual` se conserva en la vista previa. No hubo cambios backend, Oracle, migraciones, `main`, datos productivos ni contratos.
 - Verificacion fresca: frontend `91/91` archivos y `950/950` pruebas PASS; lint y build Angular PASS; build de solucion PASS con 0 errores; validadores de estructura, SQL y enlaces PASS. Backend `dotnet test`: 1.088 PASS, 2 SKIP y 8 fallos por ausencia explicita de `Database:Profile=LOCAL_XE`.
 - E2E real Angular/backend/Oracle XE, `python tools/validate_agent_skills.py` y cinco Quality Gates quedan `PENDING_CI` por infraestructura local. El intento HTTP original no esta disponible; no se declara status real.
 - `INDEPENDENT_FINAL_SHA_RUNS=0/5`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; M03 queda pendiente de reejecucion; `BLOCK10_AUTHORIZED=NO`.
-- Punto exacto: ejecutar CI y congelar el SHA final `8cec7c208ee3c0c2ca100909a4bfd0fbe0a12f08` para cinco corridas independientes sin commits intermedios.
+- Punto exacto: ejecutar CI y congelar el SHA actual de `desarrollo` para cinco corridas independientes sin commits intermedios.
 
