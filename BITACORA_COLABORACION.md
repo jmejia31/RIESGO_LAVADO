@@ -9835,6 +9835,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** las aserciones de estado de familia usan el primer nodo visible dentro de la fila, sin cambiar la accion ni ocultar duplicados; se ajustaron `INACTIVA` y `ACTIVA` en ambos ciclos.
 - **Continuacion:** publicar y repetir CI exacto. H08 ampliado sigue `PENDING_CI`; manual `PENDING_USER_EXECUTION`.
 
+## 2026-10-29 - Delegacion Safe de desvinculacion de evidencias (COD)
+
+- **Base y evidencia:** SHA inicial `c01e989b634d281e400457cac0328e1bb2f21814`; CI `40905566838` fallo antes de H08 en `DELETE /api/matrices-riesgos/evidencias/vinculos`, HTTP esperado `200`, recibido `500`. El flujo posterior no alcanzo sus telemetrias de calculo/borrador.
+- **Causa confirmada:** `IMatricesRiesgosRepository.DesvincularEvidenciaAsync` tiene fallback `NotSupportedException`; `MatricesRiesgosRepository` contiene la operacion Oracle real; `SafeMatricesRiesgosRepository` carecia de la delegacion. El servicio invoca la interfaz y el controlador convertia la excepcion no controlada en HTTP 500.
+- **Correccion quirurgica:** se agrego en `backend/RL.API/Features/MatricesRiesgos/Persistence/SafeMatricesRiesgosRepository.cs` la delegacion exacta a `_inner.DesvincularEvidenciaAsync(dto, usuarioId, ip)`. No se duplico SQL, transaccion, auditoria ni contrato HTTP; no se modifico el host ni H08-C/D.
+- **Validacion local:** build Release de la solucion PASS con `0 errores`; pruebas unitarias pertinentes `MatricesRiesgosFamiliasF65Fam1Tests` PASS; `git diff --check` PASS. La secuencia Oracle XE/Bloque 7/9/12 y H08 completa queda pendiente del CI del nuevo SHA.
+- **Estado:** nuevo commit reinicia `INDEPENDENT_FINAL_SHA_RUNS=0/5`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+
 ## 2026-10-29 - Paridad DI del host H08 con SafeMatricesRiesgosRepository (COD)
 
 - **Base y evidencia:** rama `desarrollo`, SHA inicial `4b5cecb6cd59d1e7ad77412ab6a421fac917b533`; CI `40903087541` paso H08-A/B/C/D y fallo H08-E porque `FAMILY_DEACTIVATED` fue `0/2`.

@@ -302,6 +302,9 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
     public Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip) =>
         _inner.VincularEvidenciaAsync(dto, usuarioId, ip);
 
+    public Task<bool> DesvincularEvidenciaAsync(DesvincularEvidenciaDto dto, long usuarioId, string? ip) =>
+        _inner.DesvincularEvidenciaAsync(dto, usuarioId, ip);
+
     public Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(
         long evidenciaId,
         Func<Task<bool>> eliminarArchivoFisico,

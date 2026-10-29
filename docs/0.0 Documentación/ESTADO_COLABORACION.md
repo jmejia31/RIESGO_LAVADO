@@ -3343,6 +3343,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - CI `40892070233` sobre `388bdd23` fallo en una comparacion del valor interno Angular `[ngValue]` (`37: <id>`), no en la seleccion visual ni en la persistencia Oracle; se retiro esa asercion no contractual y el siguiente SHA debe reiniciar `0/5`.
 - CI `40893130639` sobre `64b95de3` paso H08-A/B/C/D y detecto que el conteo H08-E por acción devolvia 6; se reforzo el snapshot con `AUD_EVENT` y `AUD_JUSTIFICATION` derivados de Oracle para certificar cada evento individual sin exponer JSON completo. El siguiente SHA debe reiniciar `0/5`.
 
+- Estado vigente - Delegacion Safe de desvinculacion de evidencias (COD) - 2026-10-29
+
+- El CI `40905566838` fallo antes de H08 en `DELETE /api/matrices-riesgos/evidencias/vinculos` con HTTP 500; el escenario se interrumpio antes de sus telemetrias posteriores.
+- La interfaz tiene fallback `NotSupportedException`, el repositorio interno implementa la operacion Oracle y el decorador seguro omitia solo la delegacion. Se agrego `_inner.DesvincularEvidenciaAsync(dto, usuarioId, ip)` en `SafeMatricesRiesgosRepository`.
+- No se alteraron host E2E, H08-C/D, parser CLOB, SQL, auditoria, migraciones ni contratos. Build Release de solucion y pruebas `MatricesRiesgosFamiliasF65Fam1Tests` PASS, 0 errores.
+- `INDEPENDENT_FINAL_SHA_RUNS=0/5`; Oracle XE/Bloque 7/9/12/H08 completo quedan `PENDING_CI`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: publicar el commit, validar el flujo real de desvinculacion y solo con CI completo exitoso iniciar cinco corridas secuenciales sobre SHA congelado.
+
 - Estado vigente - Paridad DI del host H08 con SafeMatricesRiesgosRepository (COD) - 2026-10-29
 
 - Baseline `4b5cecb6cd59d1e7ad77412ab6a421fac917b533`; CI `40903087541` pasó H08-A/B/C/D, pero H08-E recibió `FAMILY_DEACTIVATED=0` en lugar de `2`.
