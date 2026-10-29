@@ -9835,6 +9835,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** las aserciones de estado de familia usan el primer nodo visible dentro de la fila, sin cambiar la accion ni ocultar duplicados; se ajustaron `INACTIVA` y `ACTIVA` en ambos ciclos.
 - **Continuacion:** publicar y repetir CI exacto. H08 ampliado sigue `PENDING_CI`; manual `PENDING_USER_EXECUTION`.
 
+## 2026-10-29 - Paridad DI del host H08 con SafeMatricesRiesgosRepository (COD)
+
+- **Base y evidencia:** rama `desarrollo`, SHA inicial `4b5cecb6cd59d1e7ad77412ab6a421fac917b533`; CI `40903087541` paso H08-A/B/C/D y fallo H08-E porque `FAMILY_DEACTIVATED` fue `0/2`.
+- **Causa causal confirmada:** el backend registra `MatricesRiesgosRepository` concreto, `IFamiliasFormularioLifecycleRepository` y `SafeMatricesRiesgosRepository` como resolución final de `IMatricesRiesgosRepository`. El host solo resolvía `IMatricesRiesgosRepository` directamente a `MatricesRiesgosRepository`, omitiendo el decorador seguro. Por ello la ruta Angular de desactivación no delegaba al repositorio de ciclo de vida que persiste la auditoría Oracle.
+- **Correccion:** `tools/Block7OracleE2EHost/Program.cs` registra el repositorio interno concreto, conserva `IFamiliasFormularioLifecycleRepository` y resuelve `IMatricesRiesgosRepository` mediante `SafeMatricesRiesgosRepository`. No se modifica código productivo, H08-C/D, aserciones, esquema ni migraciones; no hay ciclo DI porque el decorador recibe el concreto y el repositorio de ciclo de vida de forma independiente.
+- **Validacion local:** host Release y solución Release compilados con `0 errores`; `git diff --check` PASS. Oracle XE/Playwright H08 completo queda pendiente del CI del nuevo SHA.
+- **Estado:** `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`, `INDEPENDENT_FINAL_SHA_RUNS=0/5`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+
 ## 2026-10-29 - Correccion P0 de compatibilidad Oracle 11g en H08-E (COD)
 
 - **Base verificada:** rama `desarrollo`, `HEAD=origin/desarrollo=b7b7d3d53a12c9ef16849928f81dbd147d85eb06`; modificaciones ajenas preservadas fuera del stage.

@@ -3343,6 +3343,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - CI `40892070233` sobre `388bdd23` fallo en una comparacion del valor interno Angular `[ngValue]` (`37: <id>`), no en la seleccion visual ni en la persistencia Oracle; se retiro esa asercion no contractual y el siguiente SHA debe reiniciar `0/5`.
 - CI `40893130639` sobre `64b95de3` paso H08-A/B/C/D y detecto que el conteo H08-E por acción devolvia 6; se reforzo el snapshot con `AUD_EVENT` y `AUD_JUSTIFICATION` derivados de Oracle para certificar cada evento individual sin exponer JSON completo. El siguiente SHA debe reiniciar `0/5`.
 
+- Estado vigente - Paridad DI del host H08 con SafeMatricesRiesgosRepository (COD) - 2026-10-29
+
+- Baseline `4b5cecb6cd59d1e7ad77412ab6a421fac917b533`; CI `40903087541` pasó H08-A/B/C/D, pero H08-E recibió `FAMILY_DEACTIVATED=0` en lugar de `2`.
+- Causa confirmada: el host resolvía `IMatricesRiesgosRepository` como `MatricesRiesgosRepository` directo, mientras el backend real conserva el concreto, registra `IFamiliasFormularioLifecycleRepository` y expone `SafeMatricesRiesgosRepository` como resolución final de la interfaz. La ruta segura delega la desactivación al repositorio de ciclo de vida, que registra `FAMILY_DEACTIVATED` en Oracle.
+- Corrección mínima en `tools/Block7OracleE2EHost/Program.cs`: registro concreto de `MatricesRiesgosRepository` y resolución de `IMatricesRiesgosRepository` mediante `SafeMatricesRiesgosRepository`; no se tocó código productivo, H08-C/D, parser CLOB, SQL Oracle, esquema ni aserciones.
+- Verificado: build Release host y solución con `0 errores`; `git diff --check` PASS. H08 Oracle XE completo queda `PENDING_CI`; nuevo contador estricto `0/5`.
+- `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`. El siguiente punto es publicar, validar el CI del nuevo SHA y solo después congelarlo para cinco corridas secuenciales.
+
 - Estado vigente - Correccion P0 Oracle 11g H08-E publicada pendiente (COD) - 2026-10-29
 
 - Baseline: `desarrollo` en `b7b7d3d53a12c9ef16849928f81dbd147d85eb06`; CI `40895075147` fallo con `ORA-00904 JSON_VALUE` en el snapshot profundo.
