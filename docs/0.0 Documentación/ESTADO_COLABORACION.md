@@ -3340,6 +3340,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificacion fresca: host Release `0 errores`; `git diff --check=PASS`. TypeScript/Playwright/lint local `PENDIENTE_LOCAL` por `typescript`, `@playwright/test` y `typescript-eslint` ausentes; la evidencia Oracle XE debe provenir de CI.
 - Punto exacto de continuacion: commit quirurgico y congelamiento del SHA; despues ejecutar cinco Quality Gates secuenciales sobre ese mismo SHA, sin commits documentales intermedios.
 - CI `40892070233` sobre `388bdd23` fallo en una comparacion del valor interno Angular `[ngValue]` (`37: <id>`), no en la seleccion visual ni en la persistencia Oracle; se retiro esa asercion no contractual y el siguiente SHA debe reiniciar `0/5`.
+- CI `40893130639` sobre `64b95de3` paso H08-A/B/C/D y detecto que el conteo H08-E por acción devolvia 6; se reforzo el snapshot con `AUD_EVENT` y `AUD_JUSTIFICATION` derivados de Oracle para certificar cada evento individual sin exponer JSON completo. El siguiente SHA debe reiniciar `0/5`.
 
 - Estado vigente - Diagnostico del control de archivado H08, CI pendiente (COD) - 2026-10-28
 

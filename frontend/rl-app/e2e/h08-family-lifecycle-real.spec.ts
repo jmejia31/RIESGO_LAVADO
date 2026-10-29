@@ -305,7 +305,11 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     expect(Number.isNaN(Date.parse(row.AUD_FECHA!))).toBe(false);
   }
   const eventCount = (table: string, action: string, recordId: string) => auditRows.filter(row => row.AUD_TABLA === table && row.AUD_ACCION === action && row.AUD_REGISTRO_ID === recordId).length;
-  expect(eventCount('RL_MR_FAMILIAS_FORMULARIO', 'UPDATE', String(fixture.lifecycleFamilyId))).toBe(8);
+  const familyEventCount = (event: string) => auditRows.filter(row => row.AUD_TABLA === 'RL_MR_FAMILIAS_FORMULARIO' && row.AUD_EVENT === event && row.AUD_REGISTRO_ID === String(fixture.lifecycleFamilyId)).length;
+  expect(familyEventCount('FAMILY_DEACTIVATED')).toBe(2);
+  expect(familyEventCount('FAMILY_ARCHIVED')).toBe(2);
+  expect(familyEventCount('FAMILY_RESTORED')).toBe(2);
+  expect(familyEventCount('FAMILY_ACTIVATED')).toBe(2);
   expect(eventCount('RL_MR_VERSIONES_FORMULARIO', 'VERSION_PUBLISHED', String(fixture.lifecycleVersionId))).toBe(1);
   expect(eventCount('RL_MR_VERSIONES_FORMULARIO', 'VERSION_DEACTIVATED', String(fixture.lifecycleVersionId))).toBe(1);
   expect(eventCount('RL_MR_VERSIONES_FORMULARIO', 'VERSION_ACTIVATED', String(fixture.lifecycleVersionId))).toBe(2);
@@ -313,6 +317,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   expect(evaluationAuditRows).toHaveLength(2);
   expect(new Set(evaluationAuditRows.map(row => row.AUD_REGISTRO_ID)).size).toBe(2);
   expect(evaluationAuditRows.every(row => row.AUD_REGISTRO_ID && row.AUD_REGISTRO_ID !== String(fixture.lifecycleEvaluationId))).toBe(true);
+  expect(auditRows.filter(row => ['FAMILY_ARCHIVED', 'FAMILY_RESTORED'].includes(row.AUD_EVENT ?? '')).every(row => row.AUD_JUSTIFICATION)).toBe(true);
   console.log('H08_E_REAL_AUDIT_EVENTS=PASS');
   console.log('H08_E_FAMILY_EVENTS=PASS');
   console.log('H08_E_VERSION_EVENTS=PASS');
