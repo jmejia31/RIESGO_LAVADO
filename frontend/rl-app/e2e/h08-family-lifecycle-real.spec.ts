@@ -8,7 +8,11 @@ type LifecycleFixture = {
   lifecycleEvaluationId: number;
   lifecycleEvidenceId: number;
   lifecycleEvidenceLinkId: number;
+  lifecycleRiskId: number;
+  lifecycleRiskCode: string;
 };
+
+type ClobIntegrity = { state: 'NULL' | 'EMPTY' | 'VALUE'; charLength: number; sha256: string | null };
 
 type LifecycleSnapshot = {
   familyId: number;
@@ -63,6 +67,11 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     const response = await request.get('http://127.0.0.1:5043/__e2e/family-lifecycle-deep-snapshot');
     expect(response.status()).toBe(200);
     return await response.json() as DeepSnapshot;
+  };
+  const clobNegative = async (): Promise<{ before: ClobIntegrity; after: ClobIntegrity; prefixEqual: boolean; detectedAfterPrefix: boolean }> => {
+    const response = await request.get('http://127.0.0.1:5043/__e2e/family-lifecycle-clob-negative');
+    expect(response.status()).toBe(200);
+    return await response.json() as { before: ClobIntegrity; after: ClobIntegrity; prefixEqual: boolean; detectedAfterPrefix: boolean };
   };
   const familyRow = () => page.locator('table[data-ui-fam-table="principal"] tbody tr').filter({ hasText: fixture.lifecycleFamilyCode });
   const newestDialog = () => page.locator('dialog[open]').last();
@@ -155,7 +164,19 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     const newEvaluationDialog = page.locator('dialog[aria-labelledby="titulo-modal-nueva-eval"]');
     await expect(newEvaluationDialog).toBeVisible();
     await page.locator('#modal-selector-familia').selectOption(fixture.lifecycleFamilyCode);
-    await page.locator('#modal-selector-riesgo').selectOption({ index: 1 });
+    const riskCombo = newEvaluationDialog.getByRole('combobox', { name: 'Riesgo Institucional a Evaluar' });
+    await expect(riskCombo).toBeVisible();
+    await expect(riskCombo).toBeEnabled();
+    await riskCombo.click();
+    await expect(riskCombo).toHaveAttribute('aria-expanded', 'true');
+    const riskOption = newEvaluationDialog.locator('[data-ui-bounded-select-scroll] [role="option"]')
+      .filter({ hasText: new RegExp(`^${fixture.lifecycleRiskCode}\\b`) });
+    await expect(riskOption).toHaveCount(1);
+    await riskOption.click();
+    await expect(riskCombo).toHaveAttribute('aria-expanded', 'false');
+    await expect(riskCombo).toContainText(fixture.lifecycleRiskCode);
+    await expect(page.locator('#modal-selector-riesgo option:checked')).toContainText(fixture.lifecycleRiskCode);
+    await expect.poll(async () => await page.locator('#modal-selector-riesgo').inputValue()).toBe(String(fixture.lifecycleRiskId));
     await expect(page.getByText('Versión activa:')).toBeVisible();
     const createResponse = page.waitForResponse(response => response.request().method() === 'POST'
       && new URL(response.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador'));
@@ -223,14 +244,29 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   console.log('H08_C_REAL_ANGULAR_WORKFLOW=PASS');
   console.log('H08_C_REAL_API_PERSISTENCE=PASS');
   console.log('H08_C_REAL_ORACLE_PERSISTENCE=PASS');
+  console.log('H08_C_EVALUATION_IDENTITY=PASS');
   console.log('H08_C_VERSION_REFERENCE=PASS');
   console.log('H08_C_GATE=PASS');
 
   // H08-D: compare individual protected identities and hashes, allowing only expected admin changes.
   const deepAfter = await deepSnapshot();
+  const clobProbe = await clobNegative();
+  expect(clobProbe.before.state).toBe('VALUE');
+  expect(clobProbe.after.state).toBe('VALUE');
+  expect(clobProbe.before.charLength).toBeGreaterThan(4_000);
+  expect(clobProbe.after.charLength).toBe(clobProbe.before.charLength);
+  expect(clobProbe.prefixEqual).toBe(true);
+  expect(clobProbe.detectedAfterPrefix).toBe(true);
   expect(deepAfter.versions.map(row => ({ VER_ID: row.VER_ID, VER_HASH: row.VER_HASH, VER_JSON: row.VER_JSON, VER_VERSION: row.VER_VERSION }))).toEqual(deepBefore.versions.map(row => ({ VER_ID: row.VER_ID, VER_HASH: row.VER_HASH, VER_JSON: row.VER_JSON, VER_VERSION: row.VER_VERSION })));
   expect(deepAfter.evidences).toEqual(deepBefore.evidences);
   expect(deepAfter.evaluations.filter(row => row.EVA_ID === String(fixture.lifecycleEvaluationId))).toEqual(deepBefore.evaluations);
+  const createdEvaluations = deepAfter.evaluations.filter(row => row.EVA_ID !== String(fixture.lifecycleEvaluationId));
+  expect(createdEvaluations).toHaveLength(2);
+  expect(new Set(createdEvaluations.map(row => row.EVA_ID)).size).toBe(2);
+  for (const createdEvaluation of createdEvaluations) {
+    expect(createdEvaluation.EVA_RIESGO_ID).toBe(String(fixture.lifecycleRiskId));
+    expect(createdEvaluation.EVA_VERSION_ID).toBe(String(fixture.lifecycleVersionId));
+  }
   expect(deepAfter.evidences.map(row => row.EVI_ID)).toEqual(deepBefore.evidences.map(row => row.EVI_ID));
   expect(new Set(deepAfter.evaluations.map(row => row.EVA_ID)).size).toBe(deepAfter.evaluations.length);
   console.log('H08_D_FAMILY_ID_PRESERVED=PASS');
@@ -242,6 +278,8 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   console.log('H08_D_EVIDENCE_IDS_PRESERVED=PASS');
   console.log('H08_D_EVIDENCE_HASHES_PRESERVED=PASS');
   console.log('H08_D_EVIDENCE_LINKS_PRESERVED=PASS');
+  console.log('H08_D_FULL_CLOB_INTEGRITY=PASS');
+  console.log('H08_D_OVER_4000_NEGATIVE_TEST=PASS');
   console.log('H08_D_UNEXPECTED_DATA_LOSS=0');
   console.log('H08_D_UNEXPECTED_DUPLICATES=0');
   console.log('H08_D_GATE=PASS');
@@ -254,11 +292,33 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
   await detail.getByRole('button', { name: 'Ver historial completo' }).click();
   await expect(detail.getByText('Familia archivada').first()).toBeVisible();
   await expect(detail.getByText('Familia restaurada').first()).toBeVisible();
+  await expect(detail.getByText('H08-A ciclo 1: conservar trazabilidad')).toBeVisible();
+  await expect(detail.getByText('H08-A ciclo 1: restaurar para reutilizar')).toBeVisible();
+  await expect(detail.getByText('H08-C ciclo 2: conservar evaluaciones')).toBeVisible();
+  await expect(detail.getByText('H08-C ciclo 2: restaurar para registrar')).toBeVisible();
   const finalDeep = await deepSnapshot();
-  expect(finalDeep.audits.filter(row => row.AUD_DATOS_NVO?.includes('FAMILY_ARCHIVED'))).toHaveLength(2);
-  expect(finalDeep.audits.filter(row => row.AUD_DATOS_NVO?.includes('FAMILY_RESTORED'))).toHaveLength(2);
+  const auditRows = finalDeep.audits;
+  expect(new Set(auditRows.map(row => row.AUD_ID)).size).toBe(auditRows.length);
+  expect(auditRows.length).toBeGreaterThanOrEqual(12);
+  for (const row of auditRows) {
+    expect(row.AUD_USR_ID).toBe('987654');
+    expect(row.AUD_FECHA).toEqual(expect.any(String));
+    expect(Number.isNaN(Date.parse(row.AUD_FECHA!))).toBe(false);
+  }
+  const eventCount = (table: string, action: string, recordId: string) => auditRows.filter(row => row.AUD_TABLA === table && row.AUD_ACCION === action && row.AUD_REGISTRO_ID === recordId).length;
+  expect(eventCount('RL_MR_FAMILIAS_FORMULARIO', 'UPDATE', String(fixture.lifecycleFamilyId))).toBe(8);
+  expect(eventCount('RL_MR_VERSIONES_FORMULARIO', 'VERSION_PUBLISHED', String(fixture.lifecycleVersionId))).toBe(1);
+  expect(eventCount('RL_MR_VERSIONES_FORMULARIO', 'VERSION_DEACTIVATED', String(fixture.lifecycleVersionId))).toBe(1);
+  expect(eventCount('RL_MR_VERSIONES_FORMULARIO', 'VERSION_ACTIVATED', String(fixture.lifecycleVersionId))).toBe(2);
+  const evaluationAuditRows = auditRows.filter(row => row.AUD_TABLA === 'RL_MR_EVALUACIONES_RIESGO' && row.AUD_ACCION === 'INSERT');
+  expect(evaluationAuditRows).toHaveLength(2);
+  expect(new Set(evaluationAuditRows.map(row => row.AUD_REGISTRO_ID)).size).toBe(2);
+  expect(evaluationAuditRows.every(row => row.AUD_REGISTRO_ID && row.AUD_REGISTRO_ID !== String(fixture.lifecycleEvaluationId))).toBe(true);
   console.log('H08_E_REAL_AUDIT_EVENTS=PASS');
   console.log('H08_E_FAMILY_EVENTS=PASS');
+  console.log('H08_E_VERSION_EVENTS=PASS');
+  console.log('H08_E_EVALUATION_EVENTS=PASS');
+  console.log('H08_E_EVENT_IDENTITY_DATES=PASS');
   console.log('H08_E_FIRST_CYCLE_HISTORY=PASS');
   console.log('H08_E_SECOND_CYCLE_HISTORY=PASS');
   console.log('H08_E_FRONTEND_HISTORY=PASS');

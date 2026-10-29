@@ -3336,6 +3336,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - CI ejecuto backend, analyzers, builds, Oracle XE disposable, E2E Angular/Playwright, validadores y contenedores. No se accedio Oracle productivo, no hubo DDL/DML productivo, no se modifico `main`, `PRUEBA_FORMULARIO` ni migracion 54.
 - Cambios ajenos tracked/untracked permanecen preservados fuera del stage. Punto exacto: publicar este registro y ejecutar las dos corridas restantes sobre el SHA final.
 - El run `40762086457` del SHA documental fallo por `net::ERR_ABORTED` en `page.reload()` del E2E Block 7 y paso en retry; se clasifica como `FLAKY_NOT_COUNTED`. La correccion usa navegacion controlada y requiere nuevo CI sobre el SHA siguiente.
+- Orden P0 H08 retomada sobre `944b1d1d`: H08-C usa ahora el combobox visual `app-bounded-select` y verifica riesgo/ID; H08-D lee CLOB completos mediante `OracleClob`, conserva estado/longitud y SHA-256 y prueba diferencias posteriores a 4.000 caracteres; H08-E consulta auditoria de familia, versiones y evaluaciones y valida IDs, usuario, fechas y motivos.
+- Verificacion fresca: host Release `0 errores`; `git diff --check=PASS`. TypeScript/Playwright/lint local `PENDIENTE_LOCAL` por `typescript`, `@playwright/test` y `typescript-eslint` ausentes; la evidencia Oracle XE debe provenir de CI.
+- Punto exacto de continuacion: commit quirurgico y congelamiento del SHA; despues ejecutar cinco Quality Gates secuenciales sobre ese mismo SHA, sin commits documentales intermedios.
 
 - Estado vigente - Diagnostico del control de archivado H08, CI pendiente (COD) - 2026-10-28
 

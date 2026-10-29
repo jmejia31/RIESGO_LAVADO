@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Block5WorkbookFormulaOracle;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Options;
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Catalogos.Application;
@@ -154,7 +156,7 @@ app.MapGet("/__e2e/readyz", async (OracleDbContext db, CancellationToken cancell
     return Results.Ok(new { status = "ready" });
 });
 app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId, definition = JsonDocument.Parse(definition).RootElement.Clone() }));
-app.MapGet("/__e2e/family-lifecycle-fixture", () => Results.Ok(new { lifecycleFamilyId, lifecycleFamilyCode, lifecycleVersionId, lifecycleEvaluationId, lifecycleEvidenceId, lifecycleEvidenceLinkId }));
+app.MapGet("/__e2e/family-lifecycle-fixture", () => Results.Ok(new { lifecycleFamilyId, lifecycleFamilyCode, lifecycleVersionId, lifecycleEvaluationId, lifecycleEvidenceId, lifecycleEvidenceLinkId, lifecycleRiskId = riskId, lifecycleRiskCode = riskCode }));
 app.MapGet("/__e2e/family-lifecycle-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
 {
     await using var connection = db.CreateConnection();
@@ -188,18 +190,46 @@ app.MapGet("/__e2e/family-lifecycle-deep-snapshot", async (OracleDbContext db, C
             for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
             {
                 object value = reader.GetValue(ordinal);
-                row[reader.GetName(ordinal)] = value == DBNull.Value ? null : value.ToString();
+                row[reader.GetName(ordinal)] = value is OracleClob clob
+                    ? ReadClobIntegrity(clob)
+                    : value == DBNull.Value ? null : value.ToString();
             }
             rows.Add(row);
         }
         return rows;
     }
 
-    var versions = await ReadAsync("SELECT VER_ID,VER_VERSION,VER_ESTADO,VER_VIGENTE,VER_HASH,DBMS_LOB.SUBSTR(VER_JSON,4000,1) AS VER_JSON FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id ORDER BY VER_ID");
-    var evaluations = await ReadAsync("SELECT e.EVA_ID,e.EVA_VERSION_ID,DBMS_LOB.SUBSTR(e.EVA_DATOS_JSON,4000,1) AS EVA_DATOS_JSON,DBMS_LOB.SUBSTR(e.EVA_CALCULOS_JSON,4000,1) AS EVA_CALCULOS_JSON FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id ORDER BY e.EVA_ID");
+    var versions = await ReadAsync("SELECT VER_ID,VER_VERSION,VER_ESTADO,VER_VIGENTE,VER_HASH,VER_JSON FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id ORDER BY VER_ID");
+    var evaluations = await ReadAsync("SELECT e.EVA_ID,e.EVA_RIESGO_ID,e.EVA_VERSION_ID,e.EVA_DATOS_JSON,e.EVA_CALCULOS_JSON FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id ORDER BY e.EVA_ID");
     var evidences = await ReadAsync("SELECT evi.EVI_ID,evi.EVI_HASH,evi.EVI_RUTA,evv.EVV_ID,evv.EVV_ENTIDAD_ID FROM RL_MR_EVIDENCIAS evi JOIN RL_MR_EVIDENCIAS_VINCULOS evv ON evv.EVV_EVIDENCIA_ID=evi.EVI_ID JOIN RL_MR_EVALUACIONES_RIESGO eva ON eva.EVA_ID=evv.EVV_ENTIDAD_ID JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=eva.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id ORDER BY evi.EVI_ID");
-    var audits = await ReadAsync("SELECT AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_USR_ID,AUD_FECHA,AUD_DATOS_ANT,AUD_DATOS_NVO FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_FAMILIAS_FORMULARIO' AND AUD_REGISTRO_ID=TO_CHAR(:id) ORDER BY AUD_FECHA,AUD_ID");
+    var audits = await ReadAsync(@"
+        SELECT AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_USR_ID,TO_CHAR(AUD_FECHA,'YYYY-MM-DD HH24:MI:SS') AS AUD_FECHA
+          FROM RL_AUDITORIA
+         WHERE (AUD_TABLA='RL_MR_FAMILIAS_FORMULARIO' AND AUD_REGISTRO_ID=TO_CHAR(:id))
+            OR (AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID IN (SELECT TO_CHAR(VER_ID) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id))
+            OR (AUD_TABLA='RL_MR_EVALUACIONES_RIESGO' AND AUD_REGISTRO_ID IN (SELECT TO_CHAR(e.EVA_ID) FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id))
+         ORDER BY AUD_FECHA,AUD_ID");
     return Results.Ok(new { versions, evaluations, evidences, audits });
+});
+app.MapGet("/__e2e/family-lifecycle-clob-negative", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    string prefix = new('A', 4_100);
+    string original = $"{{\"payload\":\"{prefix}\"}}";
+    string changed = $"{{\"payload\":\"{new string('A', 4_099)}B\"}}";
+    async Task<ClobIntegrity> ReadProbeAsync(OracleConnection connection, string payload)
+    {
+        await using var command = new OracleCommand("SELECT TO_CLOB(:payload) FROM DUAL", connection) { BindByName = true };
+        command.Parameters.Add(new OracleParameter("payload", OracleDbType.Clob) { Value = payload });
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) throw new InvalidOperationException("The disposable CLOB probe returned no row.");
+        return ReadClobIntegrity(reader.GetOracleClob(0));
+    }
+
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+    ClobIntegrity before = await ReadProbeAsync(connection, original);
+    ClobIntegrity after = await ReadProbeAsync(connection, changed);
+    return Results.Ok(new { before, after, prefixLength = 4_000, prefixEqual = original[..4_000] == changed[..4_000], detectedAfterPrefix = before.Sha256 != after.Sha256 && before.CharLength == after.CharLength });
 });
 app.MapGet("/__e2e/risk-identities", () => Results.Ok(canonicalRisks.Select((risk, index) => new
 {
@@ -496,6 +526,14 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
         try { await ExecuteAsync(connection, $"CREATE SEQUENCE {sequence} START WITH 200000000 INCREMENT BY 1 NOCACHE"); } catch (OracleException exception) when (exception.Number == 955) { }
 }
 
+static ClobIntegrity ReadClobIntegrity(OracleClob clob)
+{
+    if (clob.IsNull) return new ClobIntegrity("NULL", 0, null);
+    string value = clob.Value;
+    if (value.Length == 0) return new ClobIntegrity("EMPTY", 0, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant());
+    return new ClobIntegrity("VALUE", value.Length, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant());
+}
+
 static async Task ExecuteAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
 {
     await using var command = new OracleCommand(sql, connection) { BindByName = true };
@@ -566,3 +604,5 @@ sealed class E2ECatalogoService : ICatalogoService
     public Task<long> CrearElementoCatalogoMatricesAsync(long catalogoId, CrearElementoCatalogoMatricesDto dto) => Task.FromResult(0L);
     public Task<bool> ActualizarElementoCatalogoMatricesAsync(long id, ActualizarElementoCatalogoMatricesDto dto) => Task.FromResult(false);
 }
+
+public sealed record ClobIntegrity(string State, int CharLength, string? Sha256);
