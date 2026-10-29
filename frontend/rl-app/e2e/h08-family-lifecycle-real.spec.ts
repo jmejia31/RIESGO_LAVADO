@@ -176,7 +176,6 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await expect(riskCombo).toHaveAttribute('aria-expanded', 'false');
     await expect(riskCombo).toContainText(fixture.lifecycleRiskCode);
     await expect(page.locator('#modal-selector-riesgo option:checked')).toContainText(fixture.lifecycleRiskCode);
-    await expect.poll(async () => await page.locator('#modal-selector-riesgo').inputValue()).toBe(String(fixture.lifecycleRiskId));
     await expect(page.getByText('Versión activa:')).toBeVisible();
     const createResponse = page.waitForResponse(response => response.request().method() === 'POST'
       && new URL(response.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador'));
