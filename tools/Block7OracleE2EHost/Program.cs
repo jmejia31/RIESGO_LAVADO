@@ -202,15 +202,45 @@ app.MapGet("/__e2e/family-lifecycle-deep-snapshot", async (OracleDbContext db, C
     var versions = await ReadAsync("SELECT VER_ID,VER_VERSION,VER_ESTADO,VER_VIGENTE,VER_HASH,VER_JSON FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id ORDER BY VER_ID");
     var evaluations = await ReadAsync("SELECT e.EVA_ID,e.EVA_RIESGO_ID,e.EVA_VERSION_ID,e.EVA_DATOS_JSON,e.EVA_CALCULOS_JSON FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id ORDER BY e.EVA_ID");
     var evidences = await ReadAsync("SELECT evi.EVI_ID,evi.EVI_HASH,evi.EVI_RUTA,evv.EVV_ID,evv.EVV_ENTIDAD_ID FROM RL_MR_EVIDENCIAS evi JOIN RL_MR_EVIDENCIAS_VINCULOS evv ON evv.EVV_EVIDENCIA_ID=evi.EVI_ID JOIN RL_MR_EVALUACIONES_RIESGO eva ON eva.EVA_ID=evv.EVV_ENTIDAD_ID JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=eva.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id ORDER BY evi.EVI_ID");
-    var audits = await ReadAsync(@"
-        SELECT AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_USR_ID,TO_CHAR(AUD_FECHA,'YYYY-MM-DD HH24:MI:SS') AS AUD_FECHA,
-               JSON_VALUE(AUD_DATOS_NVO,'$.Evento') AS AUD_EVENT,
-               JSON_VALUE(AUD_DATOS_NVO,'$.Justification') AS AUD_JUSTIFICATION
-          FROM RL_AUDITORIA
-         WHERE (AUD_TABLA='RL_MR_FAMILIAS_FORMULARIO' AND AUD_REGISTRO_ID=TO_CHAR(:id))
-            OR (AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID IN (SELECT TO_CHAR(VER_ID) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id))
-            OR (AUD_TABLA='RL_MR_EVALUACIONES_RIESGO' AND AUD_REGISTRO_ID IN (SELECT TO_CHAR(e.EVA_ID) FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id))
-         ORDER BY AUD_FECHA,AUD_ID");
+    async Task<List<Dictionary<string, object?>>> ReadAuditsAsync()
+    {
+        await using var command = new OracleCommand(@"
+            SELECT AUD_ID,AUD_TABLA,AUD_REGISTRO_ID,AUD_ACCION,AUD_USR_ID,
+                   TO_CHAR(AUD_FECHA,'YYYY-MM-DD HH24:MI:SS') AS AUD_FECHA,
+                   AUD_DATOS_NVO
+              FROM RL_AUDITORIA
+             WHERE (AUD_TABLA='RL_MR_FAMILIAS_FORMULARIO' AND AUD_REGISTRO_ID=TO_CHAR(:id))
+                OR (AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID IN (SELECT TO_CHAR(VER_ID) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id))
+                OR (AUD_TABLA='RL_MR_EVALUACIONES_RIESGO' AND AUD_REGISTRO_ID IN (SELECT TO_CHAR(e.EVA_ID) FROM RL_MR_EVALUACIONES_RIESGO e JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID=e.EVA_VERSION_ID WHERE v.VER_FAMILIA_ID=:id))
+             ORDER BY AUD_FECHA,AUD_ID", connection) { BindByName = true };
+        command.Parameters.Add(new OracleParameter("id", lifecycleFamilyId));
+        var rows = new List<Dictionary<string, object?>>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
+            {
+                string name = reader.GetName(ordinal);
+                if (string.Equals(name, "AUD_DATOS_NVO", StringComparison.OrdinalIgnoreCase))
+                {
+                    (string? auditEvent, string? justification) = reader.IsDBNull(ordinal)
+                        ? (null, null)
+                        : ReadAuditJson(reader.GetOracleClob(ordinal));
+                    row["AUD_EVENT"] = auditEvent;
+                    row["AUD_JUSTIFICATION"] = justification;
+                    continue;
+                }
+
+                object value = reader.GetValue(ordinal);
+                row[name] = value == DBNull.Value ? null : value.ToString();
+            }
+            rows.Add(row);
+        }
+        return rows;
+    }
+
+    var audits = await ReadAuditsAsync();
     return Results.Ok(new { versions, evaluations, evidences, audits });
 });
 app.MapGet("/__e2e/family-lifecycle-clob-negative", async (OracleDbContext db, CancellationToken cancellationToken) =>
@@ -534,6 +564,29 @@ static ClobIntegrity ReadClobIntegrity(OracleClob clob)
     string value = clob.Value;
     if (value.Length == 0) return new ClobIntegrity("EMPTY", 0, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant());
     return new ClobIntegrity("VALUE", value.Length, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant());
+}
+
+static (string? AuditEvent, string? Justification) ReadAuditJson(OracleClob clob)
+{
+    if (clob.IsNull) return (null, null);
+
+    string json = clob.Value;
+    if (json.Length == 0) throw new InvalidOperationException("An audit CLOB was empty and could not be interpreted as JSON.");
+
+    using JsonDocument document = JsonDocument.Parse(json);
+    if (document.RootElement.ValueKind != JsonValueKind.Object)
+        throw new InvalidOperationException("An audit CLOB did not contain a JSON object.");
+
+    return (ReadAuditStringProperty(document.RootElement, "Evento"), ReadAuditStringProperty(document.RootElement, "Justification"));
+}
+
+static string? ReadAuditStringProperty(JsonElement root, string propertyName)
+{
+    if (!root.TryGetProperty(propertyName, out JsonElement property)) return null;
+    if (property.ValueKind is JsonValueKind.Null) return null;
+    if (property.ValueKind is not JsonValueKind.String)
+        throw new InvalidOperationException($"Audit JSON property '{propertyName}' must be a JSON string.");
+    return property.GetString();
 }
 
 static async Task ExecuteAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)

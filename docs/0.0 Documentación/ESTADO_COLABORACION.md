@@ -3343,6 +3343,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - CI `40892070233` sobre `388bdd23` fallo en una comparacion del valor interno Angular `[ngValue]` (`37: <id>`), no en la seleccion visual ni en la persistencia Oracle; se retiro esa asercion no contractual y el siguiente SHA debe reiniciar `0/5`.
 - CI `40893130639` sobre `64b95de3` paso H08-A/B/C/D y detecto que el conteo H08-E por acción devolvia 6; se reforzo el snapshot con `AUD_EVENT` y `AUD_JUSTIFICATION` derivados de Oracle para certificar cada evento individual sin exponer JSON completo. El siguiente SHA debe reiniciar `0/5`.
 
+- Estado vigente - Correccion P0 Oracle 11g H08-E publicada pendiente (COD) - 2026-10-29
+
+- Baseline: `desarrollo` en `b7b7d3d53a12c9ef16849928f81dbd147d85eb06`; CI `40895075147` fallo con `ORA-00904 JSON_VALUE` en el snapshot profundo.
+- El host ya no ejecuta `JSON_VALUE`: recupera `AUD_DATOS_NVO` completo como CLOB y .NET usa `System.Text.Json` para derivar `AUD_EVENT`/`AUD_JUSTIFICATION`, rechazando JSON vacio, no objeto o tipos incompatibles.
+- H08-D conserva lectura integral, SHA-256, longitudes/estados y prueba posterior a 4.000 caracteres. No se tocaron H08-C, codigo productivo, Angular, migracion 54, `main` ni Oracle productivo.
+- Verificado: build Release host `0 errores`, escaneo SQL sin `JSON_VALUE`/`DBMS_LOB.SUBSTR`, `git diff --check` PASS. Integracion Oracle XE/Playwright queda `PENDING_CI`.
+- `INDEPENDENT_FINAL_SHA_RUNS=0/5`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`. Punto exacto: publicar, verificar CI y congelar el nuevo SHA antes de cinco corridas secuenciales.
+
 - Estado vigente - Diagnostico del control de archivado H08, CI pendiente (COD) - 2026-10-28
 
 - El CI `40718910269` sobre `525c53a122fc49c1baad0591a64081fb3e6dcfbc` supero `H08_A_BASELINE=PASS` y la desactivacion real, pero no encontro `aria-label="Archivar"` en la fila posterior a la recarga.

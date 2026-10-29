@@ -9835,6 +9835,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion:** las aserciones de estado de familia usan el primer nodo visible dentro de la fila, sin cambiar la accion ni ocultar duplicados; se ajustaron `INACTIVA` y `ACTIVA` en ambos ciclos.
 - **Continuacion:** publicar y repetir CI exacto. H08 ampliado sigue `PENDING_CI`; manual `PENDING_USER_EXECUTION`.
 
+## 2026-10-29 - Correccion P0 de compatibilidad Oracle 11g en H08-E (COD)
+
+- **Base verificada:** rama `desarrollo`, `HEAD=origin/desarrollo=b7b7d3d53a12c9ef16849928f81dbd147d85eb06`; modificaciones ajenas preservadas fuera del stage.
+- **Evidencia causal:** CI `40895075147` fallo en `__e2e/family-lifecycle-deep-snapshot` con HTTP 500 y `ORA-00904: "JSON_VALUE": invalid identifier` contra Oracle XE 11.2.0.2.
+- **Correccion quirurgica:** `tools/Block7OracleE2EHost/Program.cs` recupera `AUD_DATOS_NVO` como CLOB con SQL Oracle 11g compatible y lo interpreta con `System.Text.Json`; conserva `AUD_EVENT`/`AUD_JUSTIFICATION`, identidad, orden y filtros por fixture. No se modificaron Angular, DTO productivos, esquema Oracle ni H08-C/D.
+- **Validacion local:** host Release PASS con `0 errores`; escaneo H08 PASS sin `JSON_VALUE` ni `DBMS_LOB.SUBSTR`; `git diff --check` PASS para cambios propios. Oracle XE/Playwright completos quedan pendientes del CI autorizado.
+- **Estado:** `H08_AMPLIADO_AUTOMATED_STATUS=PENDING_CI`, nuevo SHA en `0/5`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- **Continuacion:** revisar diff, commit/push exclusivo a `origin/desarrollo`, verificar CI y congelar SHA solo tras PASS antes de las cinco corridas secuenciales.
+
 ## 2026-10-28 14:00 -06:00 - Selector exacto de archivado H08 (COD)
 
 - **CI exacto:** Quality Gates `40717703233`, SHA `0352ed8bc19c8e93cf6256a6019501352003701c`; H08 confirmo `H08_A_BASELINE=PASS`, desactivacion real y modal institucional, pero el spec buscaba `Archivar familia` mientras el control Angular real expone `aria-label="Archivar"`.
