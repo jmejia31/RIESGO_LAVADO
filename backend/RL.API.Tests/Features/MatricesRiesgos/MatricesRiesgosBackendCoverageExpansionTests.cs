@@ -474,7 +474,7 @@ public sealed class MatricesRiesgosAppServiceBoundaryCoverageTests
 
     [Theory]
     [InlineData(true, 200)]
-    [InlineData(false, 400)]
+    [InlineData(false, 409)]
     public async Task EliminarVersion_NoVigente_ConservaResultadoRepositorio(bool eliminado, int statusCode)
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);

@@ -3424,3 +3424,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - No se tocaron `main`, Oracle productivo, migracion 54, familia GTIC ni datos institucionales. `NEW_SHA_CERTIFICATION=0/5`; `H08-M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: revisar diff y pruebas, publicar en `origin/desarrollo`, luego ejecutar fixture disposable Oracle XE y confirmar DELETE/readback/auditoria.
 
+- Estado vigente - Correccion del Quality Gate 41086691191 y routing contextual (COD) - 2026-10-30
+
+- Baseline verificado: `desarrollo` en `449c66a0`; el run `41086691191` fallo solo por una asercion heredada que esperaba HTTP 400 cuando el repositorio devuelve `false` por conflicto y el servicio lo traduce correctamente a 409.
+- Se actualizo la caracterizacion sin eliminar negativos: 400 queda para solicitud invalida/version publicada o vigente; 409 para conflicto de estado, concurrencia o dependencias protegidas.
+- El routing ahora prioriza `formBuilder`, luego evaluaciones, luego Detalle de Familia visible y finalmente pagina. El detalle oculto ya no recibe confirmaciones del constructor.
+- El refresco post-eliminacion actualiza listado, auditoria, resumen de familia y KPI; conserva la familia, modal abierto y feedback. El readback sigue siendo fail-closed: GET 404 confirma; GET 200 u otro error no confirma.
+- Verificado: backend focalizado 24/24; frontend focalizado 64/64; build Angular PASS; validadores estructura/base de datos/documentacion PASS. Suite backend completa 1089 PASS, 8 fallos Oracle por falta de `Database:Profile=LOCAL_XE`, 2 SKIP.
+- Pendiente externo: E2E real con Oracle XE, DELETE/readback 404, dependencias `RL_MR_FORMULA_USOS`, auditoria y Quality Gates. `QUALITY_GATES=0/5`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: commit/push de esta correccion y ejecucion CI sobre el SHA final.
+

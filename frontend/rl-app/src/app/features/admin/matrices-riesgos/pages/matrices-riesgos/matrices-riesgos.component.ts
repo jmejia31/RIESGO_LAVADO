@@ -3183,6 +3183,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               this.globalState.limpiarError();
               this.confirmarEliminacionVersion(version);
               this.cargarVersiones();
+              this.cargarFamilias();
             },
             error: error => {
               this.guardando.set(false);
@@ -3367,25 +3368,35 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private mostrarMensaje(texto: string): void {
+    const scope = this.obtenerScopeAlerta();
+    if (scope !== 'page') {
+      this.establecerMensaje(scope, texto);
+      this.programarAutoDismiss(5000, scope);
+      return;
+    }
     const detalle = this.detalleFamiliaRef?.instance;
     if (this.detalleFamiliaDinamicoAbierto() && detalle) {
       detalle.mostrarFeedbackVersiones('success', texto);
       this.detalleFamiliaRef?.changeDetectorRef.detectChanges();
       return;
     }
-    const scope = this.obtenerScopeAlerta();
     this.establecerMensaje(scope, texto);
     this.programarAutoDismiss(5000, scope);
   }
 
   private mostrarError(texto: string): void {
+    const scope = this.obtenerScopeAlerta();
+    if (scope !== 'page') {
+      this.establecerError(scope, texto);
+      this.programarAutoDismiss(8000, scope);
+      return;
+    }
     const detalle = this.detalleFamiliaRef?.instance;
     if (this.detalleFamiliaDinamicoAbierto() && detalle) {
       detalle.mostrarFeedbackVersiones('error', texto);
       this.detalleFamiliaRef?.changeDetectorRef.detectChanges();
       return;
     }
-    const scope = this.obtenerScopeAlerta();
     this.establecerError(scope, texto);
     this.programarAutoDismiss(8000, scope);
   }

@@ -9952,3 +9952,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: el nuevo commit reinicia `NEW_SHA_CERTIFICATION=0/5`; H08-M03 sigue `PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - Punto de continuacion: revisar diff, ejecutar validadores, commit/push a `origin/desarrollo` y correr Quality Gate/E2E con Oracle XE disposable.
 
+- ## 2026-10-30 10:20 -06:00 - Correccion P0 post-Quality Gate 41086691191 (COD)
+
+- Base verificada: rama `desarrollo`, SHA `449c66a0a076ee4cb92c28afccef172dbb57b613`, remoto alineado. Untracked ajenos preservados.
+- Evidencia CI: run `41086691191`, job `124169575462`, fallo unico en `MatricesRiesgosAppServiceBoundaryCoverageTests.EliminarVersion_NoVigente_ConservaResultadoRepositorio`; ejecucion `1097 PASS`, `1 FAIL`, `1 SKIP`, total `1099`. La asercion esperaba 400 para `repo=false`, pero el contrato de conflicto concurrente/dependencia es 409. Analizadores, build, npm audit, validadores y preparacion Oracle pasaron antes del fallo.
+- Correccion: la caracterizacion ahora separa exito 200 y rechazo 409; se conserva 400 para versiones publicadas/vigentes. El routing de alertas prioriza Form Builder y modales de evaluacion antes del detalle oculto; el detalle solo recibe feedback cuando es el contexto visible. Se refrescan tabla, auditoria, resumen de familia y KPI sin reinicializar destructivamente.
+- Archivos propios: prueba backend de cobertura, pagina Angular de matrices, componente Angular de detalle, bitacora y estado.
+- Verificaciones frescas: backend focalizado `24/24 PASS`; frontend focalizado (persistencia/publicacion Form Builder, operaciones de eliminacion y detalle) `64/64 PASS`; build Angular PASS con warnings preexistentes; validadores de estructura, base de datos y documentacion PASS. Suite backend completa: `1089 PASS`, `8 FAIL` por ausencia local de `Database:Profile=LOCAL_XE`, `2 SKIP`, total `1099`; los 8 fallos son integraciones Oracle no ejecutables localmente.
+- No ejecutado: E2E Angular/API/Oracle XE y auditoria real de eliminacion; requieren runner CI o Oracle XE disposable. No se modificaron migraciones, Oracle institucional, GTIC ni `main`.
+- Estado: nuevo commit reinicia `QUALITY_GATES=0/5`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: revisar diff, commit/push, esperar Quality Gate del SHA final y verificar E2E de eliminacion/readback/auditoria.
+

@@ -191,6 +191,9 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     if (!familia) return;
     this.cargarVersiones(familia);
     this.cargarActividad(familia);
+    this.service.obtenerFamiliaFormularioPorId(this.familiaId).subscribe({
+      next: familiaActualizada => this.detalle.set(familiaActualizada)
+    });
   }
 
   mostrarFeedbackVersiones(tipo: FeedbackVersiones['tipo'], mensaje: string): void {
