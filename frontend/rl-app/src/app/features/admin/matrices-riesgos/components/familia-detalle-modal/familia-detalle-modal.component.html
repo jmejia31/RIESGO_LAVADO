@@ -210,7 +210,7 @@
                 [class.text-red-800]="feedback.tipo === 'error'"
                 [attr.role]="feedback.tipo === 'error' ? 'alert' : 'status'">
                 <span>{{ feedback.mensaje }}</span>
-                <button type="button" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg" aria-label="Cerrar mensaje" title="Cerrar mensaje" (click)="cerrarFeedbackVersiones()">×</button>
+                <button type="button" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg" aria-label="Cerrar mensaje" title="Cerrar mensaje" (click)="cerrarFeedbackVersiones()"><app-action-icon action="close"></app-action-icon></button>
               </div>
             }
 

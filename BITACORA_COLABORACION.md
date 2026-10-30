@@ -9973,3 +9973,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - No ejecutado: Oracle XE, E2E Angular/API, persistencia real de DELETE, dependencias `RL_MR_FORMULA_USOS`, auditoria real y cinco Quality Gates. La certificacion de integracion queda bloqueada hasta runner autorizado.
 - Punto de continuacion: revisar diff, commit/push del nuevo SHA, ejecutar Quality Gate y solo despues contabilizar corridas independientes.
 
+- ## 2026-10-30 10:49 -06:00 - Correccion P0 de iconografia del feedback (COD)
+
+- Base: `desarrollo` en `3541094447a1704d7f10713b1702943bdcc62b7d`, remoto sincronizado; untracked ajenos preservados.
+- CI verificado: run `41088917012` fallo en `ux-action-icon-only.regression.spec.ts` por `familia-detalle-modal.component.html:213` sin icono semantico; run `41091019240` fallo por la misma causa sobre el SHA `35410944`. El log frontend reporto `90 PASS`, `2 FAIL`, total `953` tests en `91` archivos.
+- Cambio quirurgico: en la linea 213 se sustituyo exclusivamente `×` por `<app-action-icon action="close"></app-action-icon>`; se conservaron `(click)="cerrarFeedbackVersiones()"`, `aria-label`, `title`, boton y layout.
+- Verificaciones frescas: regresiones obligatorias `47/47 PASS`; suite frontend `953/953 PASS`; build Angular PASS con warnings preexistentes SCSS/CommonJS; validadores estructura/base de datos/documentacion PASS; E2E local `72 PASS`, `2 FAIL` (timeout/socket preexistentes), `4 SKIP`.
+- No certificado aun: E2E real Angular+API+Oracle XE, DELETE/readback 404, integridad de versiones/asociaciones, contador y auditoria requieren el runner CI; el run previo se detuvo antes de completar esos pasos. `QUALITY_GATES=0/5` para el nuevo SHA.
+- Archivos propios: plantilla HTML del modal, bitacora y estado colaborativo. No se modificaron Oracle institucional, migraciones, `main`, `PRUEBA_FORMULARIO` ni GTIC.
+- Punto de continuacion: commit/push del SHA final, verificar el nuevo Quality Gate y solo contabilizar cinco corridas independientes exitosas sobre ese mismo SHA.
+

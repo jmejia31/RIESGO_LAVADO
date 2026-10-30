@@ -3443,3 +3443,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El nuevo commit reinicia `QUALITY_GATES=0/5`; mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: commit/push y ejecucion de CI sobre el SHA final; luego comprobar DELETE/readback, contadores, integridad y auditoria con fixture disposable.
 
+- Estado vigente - Correccion P0 de iconografia del feedback (COD) - 2026-10-30
+
+- Los runs `41088917012` y `41091019240` fallaron por la misma causa confirmada: `familia-detalle-modal.component.html:213` usaba `×` en `Cerrar mensaje`; el validador exigia exactamente un `<app-action-icon action="close">`.
+- Correccion aplicada sin cambiar comportamiento: se preservan handler, aria-label, title, semantica, dimensiones y alineacion del boton.
+- Verificado localmente: regresiones `47/47`, suite frontend `953/953`, build Angular PASS y validadores de estructura/base de datos/documentacion PASS. E2E local `72 PASS`, `2 FAIL` por timeout/socket y `4 SKIP`; no equivale a E2E real con API+Oracle XE.
+- Oracle XE/auditoria: el runner previo levanto Oracle XE, pero el job fallo antes de completar la certificacion de eliminacion; DELETE real, GET 404, integridad, contador y auditoria siguen pendientes. No se declara P0 certificado.
+- El nuevo commit reiniciara `QUALITY_GATES=0/5`; mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: publicar el nuevo SHA y revisar su CI; luego exigir cinco Quality Gates independientes exitosos sobre el SHA definitivo.
+
