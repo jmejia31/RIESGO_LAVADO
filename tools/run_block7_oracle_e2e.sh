@@ -83,6 +83,7 @@ echo 'H02_ORACLE_HISTORY_PAGINATION=25/25/10'
 echo 'H02_ORACLE_HISTORY_ISOLATION=PASS'
 
 export RL_H08_FAMILY_LIFECYCLE_CERTIFICATION_REQUIRED=true
+export RL_P0_DELETE_REAL_E2E_REQUIRED=true
 
 block9_evidence_dir="${RUNNER_TEMP:-/tmp}/block9-browser-evidence"
 mkdir -p "$block9_evidence_dir"
@@ -126,6 +127,44 @@ for marker in \
 done
 echo 'H08_FAMILY_LIFECYCLE_ORACLE_E2E=PASS'
 echo 'H08_EXTENDED_A_TO_E=PASS'
+pushd "$repo_root/frontend/rl-app" >/dev/null
+if ! p0_delete_output="$(npm run e2e -- e2e/h08-version-delete-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+  popd >/dev/null
+  echo 'P0 delete Oracle API host diagnostics (secrets omitted):' >&2
+  sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 160
+  exit 1
+fi
+popd >/dev/null
+if ! grep -Eq '1 passed' <<<"$p0_delete_output"; then
+  echo "P0 real version deletion suite did not execute exactly one passing test." >&2
+  exit 1
+fi
+for marker in \
+  P0_DELETE_REAL_BROWSER=PASS \
+  P0_DELETE_REAL_ANGULAR=PASS \
+  P0_DELETE_REAL_API=PASS \
+  P0_DELETE_REAL_ORACLE_XE=PASS \
+  P0_DELETE_FIXTURE=PASS \
+  P0_DELETE_HTTP_STATUS=2XX \
+  P0_DELETE_TARGET_REMOVED=YES \
+  P0_DELETE_OTHER_VERSION_PRESERVED=YES \
+  P0_DELETE_FAMILY_PRESERVED=YES \
+  P0_DELETE_READBACK_STATUS=404 \
+  P0_DELETE_COUNTER_UPDATED=YES \
+  P0_DELETE_MODAL_REMAINS_OPEN=YES \
+  P0_DELETE_FEEDBACK=PASS \
+  P0_DELETE_ACCESSIBILITY=PASS \
+  P0_DELETE_AUDIT=PASS \
+  P0_DELETE_AUDIT_DUPLICATES=0 \
+  P0_DELETE_ORACLE_INTEGRITY=PASS \
+  P0_DELETE_FORMULA_DEPENDENCY_CONFLICT=PASS \
+  P0_DELETE_FORMULA_DEPENDENCY_PRESERVED=YES \
+  P0_DELETE_EVALUATION_DEPENDENCY_CONFLICT=PASS \
+  P0_DELETE_EVALUATION_PRESERVED=YES \
+  P0_VERSION_DELETE_E2E=PASS; do
+  grep -Fq "$marker" <<<"$p0_delete_output"
+done
+echo 'P0_DELETE_REAL_BROWSER_E2E=PASS'
 grep -Fq 'BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006' <<<"$browser_output"
 # Inspect only the API host log and report counts, never exception text or connection data.
 oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_log" || true)"

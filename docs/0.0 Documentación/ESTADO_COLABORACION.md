@@ -3459,5 +3459,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Bloqueo de certificacion final: no existe prueba versionada que haga DELETE de una version DRAFT elegible desde Angular real contra API+Oracle XE y verifique GET 404, preservacion de otra version, contador, familia/modal, feedback, auditoria y dependencia `RL_MR_FORMULA_USOS`. H08 existente cubre otro ciclo y solo hace limpieza SQL.
 - No se ejecutan cuatro gates adicionales mientras falte esa evidencia; repetirlos antes seria contar ejecuciones sin cumplir la precondicion solicitada. Incorporar la prueba cambiara el SHA y reiniciara `QUALITY_GATES=0/5`.
 - Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+
+- Estado vigente - Fixture y E2E real P0 de eliminacion permanente (COD) - 2026-10-30
+
+- Base verificada: `desarrollo` en `1280078478d303b7fdf947a2f500124426bf6787`; cambios pendientes de commit/push; untracked ajenos preservados.
+- Se agrego fixture sintetico disposable al host Oracle XE para una familia con dos DRAFT elegibles, mas fixtures de dependencias `RL_MR_FORMULA_USOS` y evaluacion. Se agrego snapshot Oracle de solo lectura para contar versiones, validar CLOB/hash, familia, dependencias y auditoria.
+- Se agrego `h08-version-delete-real.spec.ts`: abre el modal real Angular, elimina `P0_DELETE_A` por la UI/API real, exige DELETE 2xx y GET 404, conserva `P0_DELETE_B`, familia, contador, modal y feedback, verifica auditoria y rechaza dependencias protegidas. El runner `run_block7_oracle_e2e.sh` lo hace obligatorio y valida sus marcadores.
+- Verificado localmente: frontend `953/953`; regresiones `47/47`; backend focalizado `38/38`; build Angular PASS; host Release `0 errores`; validadores estructura/base de datos/documentacion PASS; diff y sintaxis shell PASS.
+- Bloqueo externo: Docker/XE local no disponible (`DOCKER_UNAVAILABLE`), por lo que no se ejecuta ni se certifica el DELETE real localmente. CI debe probar el fixture disposable; no se usa mock como evidencia positiva.
+- El nuevo SHA reinicia `QUALITY_GATES=0/5`. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: commit/push, esperar el Quality Gate completo del nuevo SHA y contar cinco ejecuciones independientes solo si el E2E P0 y todos los marcadores Oracle pasan.
 - Punto exacto: diseño e implementación mínima del fixture/E2E de eliminación real; después publicar y certificar cinco gates secuenciales sobre el nuevo SHA.
 

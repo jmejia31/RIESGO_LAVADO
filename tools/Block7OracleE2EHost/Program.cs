@@ -66,7 +66,19 @@ long lifecycleVersionId = stamp + 900_000_001;
 long lifecycleEvaluationId = stamp + 900_000_002;
 long lifecycleEvidenceId = stamp + 900_000_003;
 long lifecycleEvidenceLinkId = stamp + 900_000_004;
+long deleteFamilyId = stamp + 910_000_000;
+long deleteVersionAId = stamp + 910_000_001;
+long deleteVersionBId = stamp + 910_000_002;
+long formulaFamilyId = stamp + 920_000_000;
+long formulaVersionId = stamp + 920_000_001;
+long formulaUsageId = stamp + 920_000_002;
+long evaluationFamilyId = stamp + 930_000_000;
+long evaluationVersionId = stamp + 930_000_001;
+long evaluationId = stamp + 930_000_002;
 string lifecycleFamilyCode = $"H08-FAMILIA-{stamp}";
+string deleteFamilyCode = $"P0_DELETE_{stamp}";
+string formulaFamilyCode = $"P0_FORMULA_{stamp}";
+string evaluationFamilyCode = $"P0_EVALUATION_{stamp}";
 string riskCode = canonicalRisks[0].Code;
 string ruleCode = $"B7-E2E-RULE-{stamp}";
 string lifecycleRuleCode = $"H08-LIFECYCLE-{stamp}";
@@ -100,6 +112,17 @@ await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_F
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,'{}','{}',SYSDATE,:usr,1,1)", ("id", lifecycleEvaluationId), ("risk", riskId), ("version", lifecycleVersionId), ("usr", userId));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVIDENCIAS (EVI_ID,EVI_NOMBRE_ARCHIVO,EVI_EXTENSION,EVI_TAMANO,EVI_HASH,EVI_RUTA,EVI_USR_CREACION) VALUES (:id,'h08-evidence.txt','txt',12,:hash,'h08/:id',:usr)", ("id", lifecycleEvidenceId), ("hash", lifecycleEvidenceHash), ("usr", userId));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVIDENCIAS_VINCULOS (EVV_ID,EVV_EVIDENCIA_ID,EVV_TIPO_ENTIDAD,EVV_ENTIDAD_ID,EVV_USR_CREACION) VALUES (:id,:evidence,'EVALUACION',:evaluation,:usr)", ("id", lifecycleEvidenceLinkId), ("evidence", lifecycleEvidenceId), ("evaluation", lifecycleEvaluationId), ("usr", userId));
+string deleteDefinition = CreateDefinition($"P0-DELETE-{stamp}");
+string deleteHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(deleteDefinition))).ToLowerInvariant();
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'P0 Delete E2E', 'Fixture disposable P0',1,0,0,SYSDATE)", ("id", deleteFamilyId), ("code", deleteFamilyCode));
+foreach ((long id, string code, int version) in new[] { (deleteVersionAId, "P0_DELETE_A", 1), (deleteVersionBId, "P0_DELETE_B", 2) })
+    await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,:code,:version,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", id), ("family", deleteFamilyId), ("code", code), ("version", version), ("json", deleteDefinition), ("hash", deleteHash), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'P0 Formula dependency', 'Fixture disposable P0',1,0,0,SYSDATE)", ("id", formulaFamilyId), ("code", formulaFamilyCode));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,'P0_FORMULA_V1',1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", formulaVersionId), ("family", formulaFamilyId), ("json", deleteDefinition), ("hash", deleteHash), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_FORMULA_USOS (FUS_ID,FUS_VERSION_FORMULARIO_ID,FUS_CAMPO_CLAVE,FUS_FORMULA_VERSION_ID,FUS_FECHA_CREACION,FUS_USR_CREACION) VALUES (:id,:version,'frecuencia_inherente',:formula,SYSDATE,:usr)", ("id", formulaUsageId), ("version", formulaVersionId), ("formula", deleteVersionBId), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'P0 Evaluation dependency', 'Fixture disposable P0',1,0,0,SYSDATE)", ("id", evaluationFamilyId), ("code", evaluationFamilyCode));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,'P0_EVALUATION_V1',1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", evaluationVersionId), ("family", evaluationFamilyId), ("json", deleteDefinition), ("hash", deleteHash), ("usr", userId));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,:version,'{}','{}',SYSDATE,:usr,1,1)", ("id", evaluationId), ("risk", riskId), ("version", evaluationVersionId), ("usr", userId));
 await oracle.CloseAsync();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -161,6 +184,54 @@ app.MapGet("/__e2e/readyz", async (OracleDbContext db, CancellationToken cancell
 });
 app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId, definition = JsonDocument.Parse(definition).RootElement.Clone() }));
 app.MapGet("/__e2e/family-lifecycle-fixture", () => Results.Ok(new { lifecycleFamilyId, lifecycleFamilyCode, lifecycleVersionId, lifecycleEvaluationId, lifecycleEvidenceId, lifecycleEvidenceLinkId, lifecycleRiskId = riskId, lifecycleRiskCode = riskCode }));
+app.MapGet("/__e2e/version-delete-fixture", () => Results.Ok(new
+{
+    familyId = deleteFamilyId,
+    familyCode = deleteFamilyCode,
+    versionAId = deleteVersionAId,
+    versionBId = deleteVersionBId,
+    formulaVersionId,
+    formulaUsageId,
+    evaluationVersionId,
+    evaluationId
+}));
+app.MapGet("/__e2e/version-delete-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+    async Task<int> CountAsync(string sql, long id)
+    {
+        await using var command = new OracleCommand(sql, connection) { BindByName = true };
+        command.Parameters.Add(new OracleParameter("id", id));
+        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+    }
+    async Task<Dictionary<string, object?>> ReadVersionAsync(long id)
+    {
+        await using var command = new OracleCommand("SELECT VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_ESTADO,VER_VIGENTE,VER_HASH,VER_JSON FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", connection) { BindByName = true };
+        command.Parameters.Add(new OracleParameter("id", id));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return new Dictionary<string, object?>();
+        return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["VER_ID"] = reader.GetInt64(0), ["VER_FAMILIA_ID"] = reader.GetInt64(1), ["VER_CODIGO"] = reader.GetString(2),
+            ["VER_VERSION"] = reader.GetInt32(3), ["VER_ESTADO"] = reader.GetString(4), ["VER_VIGENTE"] = reader.GetInt32(5),
+            ["VER_HASH"] = reader.GetString(6), ["VER_JSON"] = ReadClobIntegrity(reader.GetOracleClob(7))
+        };
+    }
+    var family = await ReadVersionAsync(deleteVersionBId);
+    return Results.Ok(new
+    {
+        familyId = deleteFamilyId,
+        familyCode = deleteFamilyCode,
+        targetCount = await CountAsync("SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", deleteVersionAId),
+        otherVersionCount = await CountAsync("SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", deleteVersionBId),
+        familyVersionCount = await CountAsync("SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID=:id", deleteFamilyId),
+        formulaVersionCount = await CountAsync("SELECT COUNT(*) FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID=:id", formulaVersionId),
+        evaluationCount = await CountAsync("SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_VERSION_ID=:id", evaluationVersionId),
+        otherVersion = family,
+        deleteAuditCount = await CountAsync("SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION='VERSION_DRAFT_DELETED'", deleteVersionAId)
+    });
+});
 app.MapGet("/__e2e/family-lifecycle-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
 {
     await using var connection = db.CreateConnection();
@@ -366,6 +437,11 @@ try
 finally
 {
     await using var cleanup = await OpenOracleWithRetryAsync(connectionString);
+    await ExecuteAsync(cleanup, "DELETE FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID IN (:deleteVersion,:formulaVersion,:evaluationVersion)", ("deleteVersion", deleteVersionAId.ToString()), ("formulaVersion", formulaVersionId.ToString()), ("evaluationVersion", evaluationVersionId.ToString()));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_FORMULA_USOS WHERE FUS_ID=:id", ("id", formulaUsageId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FAMILIA_ID IN (:formulaFamily,:evaluationFamily,:deleteFamily)", ("formulaFamily", formulaFamilyId), ("evaluationFamily", evaluationFamilyId), ("deleteFamily", deleteFamilyId));
+    await ExecuteAsync(cleanup, "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID IN (:formulaFamily,:evaluationFamily,:deleteFamily)", ("formulaFamily", formulaFamilyId), ("evaluationFamily", evaluationFamilyId), ("deleteFamily", deleteFamilyId));
     await ExecuteAsync(cleanup, @"DELETE FROM RL_MR_EVIDENCIAS_VINCULOS
         WHERE (EVV_ENTIDAD_ID IN (
             SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO

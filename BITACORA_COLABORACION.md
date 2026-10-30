@@ -9993,3 +9993,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Sin cambios funcionales en esta intervencion; solo se actualiza continuidad. No se tocaron `main`, produccion, Oracle institucional, GTIC, migraciones ni `PRUEBA_FORMULARIO`.
 - Punto de continuacion: agregar, con autorizacion operativa, un fixture disposable y E2E especifico de eliminacion; publicar nuevo SHA; repetir Quality Gate y luego cuatro gates secuenciales independientes.
 
+- ## 2026-10-30 11:45 -06:00 - Fixture y E2E real P0 de eliminacion permanente (COD)
+
+- Base: `desarrollo` en `1280078478d303b7fdf947a2f500124426bf6787`; cambios propios pendientes de commit y push. Untracked ajenos preservados fuera del stage.
+- Objetivo: cerrar el bloqueo `P0_DELETE_E2E=NOT_IMPLEMENTED` agregando fixture Oracle XE disposable y una prueba Playwright real para eliminar una version DRAFT mediante Angular/API y verificar readback, integridad, contador, modal, feedback, dependencias y auditoria.
+- Cambios propios: `tools/Block7OracleE2EHost/Program.cs` crea fixtures sinteticos P0 y snapshots Oracle de solo lectura; `frontend/rl-app/e2e/h08-version-delete-real.spec.ts` ejecuta el flujo real y escenarios de conflicto de formula/evaluacion; `tools/run_block7_oracle_e2e.sh` lo hace obligatorio y valida todos los marcadores P0. No se modifico codigo productivo, migraciones, Oracle institucional, `main`, GTIC ni `PRUEBA_FORMULARIO`.
+- Verificaciones frescas: suite frontend `91 archivos / 953 PASS`; regresiones focalizadas `47/47 PASS`; backend focalizado `38/38 PASS`; build Angular PASS; host Release `0 errores`; validadores de estructura, base de datos y documentacion PASS; `git diff --check` PASS; sintaxis del runner PASS.
+- No ejecutado localmente: `P0_VERSION_DELETE_E2E`; Docker/XE no esta disponible (`DOCKER_UNAVAILABLE`). Por tanto DELETE 2xx, GET 404, Oracle, integridad y auditoria quedan pendientes de CI disposable y no se declaran certificados.
+- Estado: el commit de esta intervencion reiniciara `QUALITY_GATES=0/5`; conservar `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: revisar y publicar este commit en `origin/desarrollo`; verificar el Quality Gate del SHA unico y, solo si el E2E P0 pasa, ejecutar cuatro `workflow_dispatch` secuenciales independientes.
+
