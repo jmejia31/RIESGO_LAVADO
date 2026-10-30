@@ -10044,3 +10044,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `P0_TECHNICAL_CERTIFICATION=BLOCKED` hasta que CI ejecute el host contra Oracle XE restrictivo, valide PUT/publicación/DELETE/readback/auditoría y confirme los negativos de dependencias y atomicidad. `QUALITY_GATES=0/5` para este nuevo SHA. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - **Punto exacto de continuación:** revisar el Quality Gate del SHA `eac505b9`; si el esquema restrictivo revela otra acción incompatible, corregir solo el productor afectado y reiniciar la certificación. Si pasa, ejecutar cuatro gates adicionales secuenciales sobre el mismo SHA, sin contar fallos/reruns.
 
+## 2026-10-30 14:55 -06:00 - Hotfix P0 UTF-8 del escenario de publicación (COD)
+
+- **Baseline:** rama `desarrollo`, SHA inicial `fc35fca5542be5f33d02da951a553e963ed53630`, igual a `origin/desarrollo`; se preservaron los untracked ajenos sin stage.
+- **Causa exacta:** `frontend/rl-app/e2e/p0-publication-with-changes-real.spec.ts` contenía dos cadenas doblemente mojibake en los nombres accesibles de los botones, provocando `TEXT_ENCODING_INTEGRITY=FAIL` y `MOJIBAKE_FINDINGS=2`.
+- **Cambio único de código:** se sustituyeron únicamente `Editar definición de la versión` y `Constructor de Formularios Dinámicos`. No se modificaron backend, auditoría, Oracle, migraciones, selectores, lógica funcional ni otros componentes.
+- **Verificado:** escaneo UTF-8 equivalente `TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`; textos coinciden con los nombres accesibles del componente; regresión frontend focalizada `14/14 PASS`; Playwright lista `1` prueba; `git diff --check` PASS.
+- **Validador oficial:** `tools/validate_text_encoding.ps1` fue ejecutado, pero no pudo completar porque el host solo dispone de Windows PowerShell 5.1 y el script invoca `[IO.Path]::GetRelativePath`, no disponible en esa versión. No se alteró el validador; queda pendiente confirmación en CI/PowerShell moderno.
+- **Publicación:** se preparará un único commit de código más este handoff en `origin/desarrollo`; el SHA final se congelará al finalizar esta intervención. No se hará un commit documental posterior.
+- **Estado:** `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; no se cuentan gates que omitan `P0_DIRECT_PUBLICATION_ORACLE_E2E`, `P0_DIRTY_PUBLICATION_ORACLE_E2E` o `P0_DELETE_REAL_BROWSER_E2E`. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- **Punto exacto:** revisar el siguiente Quality Gate del SHA final y exigir UTF-8 PASS más los tres escenarios Oracle E2E completos antes de contabilizarlo.
+

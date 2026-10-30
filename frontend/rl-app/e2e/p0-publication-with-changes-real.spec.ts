@@ -40,8 +40,8 @@ test('P0 certifica guardado real y publicacion de una definicion modificada', as
   await expect(familyRow).toHaveCount(1);
   await familyRow.getByRole('button', { name: 'Ver versiones' }).click();
   const detail = page.locator('dialog[open]').filter({ hasText: 'Detalle de Familia' });
-  await detail.locator('table tbody tr').filter({ hasText: 'P0_DIRTY_PUBLISH_V1' }).getByRole('button', { name: 'Editar definiciÃ³n de la versiÃ³n' }).click();
-  const builder = page.locator('dialog[open]').filter({ hasText: 'Constructor de Formularios DinÃ¡micos' });
+  await detail.locator('table tbody tr').filter({ hasText: 'P0_DIRTY_PUBLISH_V1' }).getByRole('button', { name: 'Editar definición de la versión' }).click();
+  const builder = page.locator('dialog[open]').filter({ hasText: 'Constructor de Formularios Dinámicos' });
   await expect(builder).toBeVisible();
   const editedTitle = 'Identificación del riesgo GTIC modificado';
   const titleInput = builder.locator('input[id^="seccion-titulo-"]').first();

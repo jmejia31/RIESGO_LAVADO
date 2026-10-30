@@ -3502,3 +3502,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `QUALITY_GATES=0/5`; no se cuenta `41093552061` porque corresponde a un SHA anterior. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: inspeccionar el Quality Gate del SHA `eac505b9`; no iniciar gates adicionales hasta que el escenario Oracle restrictivo y los negativos obligatorios sean PASS.
 
+- Estado vigente - Hotfix P0 UTF-8 del escenario de publicación (COD) - 2026-10-30
+
+- Baseline `fc35fca5542be5f33d02da951a553e963ed53630` en `desarrollo`.
+- Se corrigieron únicamente dos cadenas mojibake de `frontend/rl-app/e2e/p0-publication-with-changes-real.spec.ts`: nombres accesibles de editar versión y constructor dinámico.
+- Evidencia fresca: `TEXT_ENCODING_INTEGRITY=PASS` mediante escaneo equivalente, `MOJIBAKE_FINDINGS=0`, regresión round-trip `14/14 PASS`, listado Playwright `1`, `git diff --check PASS`.
+- `tools/validate_text_encoding.ps1` queda pendiente en este entorno por incompatibilidad de Windows PowerShell 5.1 con `[IO.Path]::GetRelativePath`; CI debe ejecutar el validador en PowerShell moderno y confirmar el resultado oficial.
+- No se tocaron backend, auditoría, Oracle, migraciones, selectores ni lógica funcional. Untracked ajenos preservados.
+- `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`. El siguiente gate solo cuenta si contiene y supera `P0_DIRECT_PUBLICATION_ORACLE_E2E=PASS`, `P0_DIRTY_PUBLICATION_ORACLE_E2E=PASS` y `P0_DELETE_REAL_BROWSER_E2E=PASS`, además de HTTP, integridad y auditoría.
+- Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+
