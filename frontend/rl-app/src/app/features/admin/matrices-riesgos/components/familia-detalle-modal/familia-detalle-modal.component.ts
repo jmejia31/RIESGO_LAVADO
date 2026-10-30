@@ -53,8 +53,10 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   private suscripcionDetalle: Subscription | null = null;
   private suscripcionVersiones: Subscription | null = null;
   private suscripcionActividad: Subscription | null = null;
+  private suscripcionResumen: Subscription | null = null;
   private secuenciaCarga = 0;
   private secuenciaActividad = 0;
+  private secuenciaResumen = 0;
   private focoAnterior: HTMLElement | null = null;
 
   @Input({ required: true }) familiaId = 0;
@@ -191,8 +193,17 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     if (!familia) return;
     this.cargarVersiones(familia);
     this.cargarActividad(familia);
-    this.service.obtenerFamiliaFormularioPorId(this.familiaId).subscribe({
-      next: familiaActualizada => this.detalle.set(familiaActualizada)
+    this.suscripcionResumen?.unsubscribe();
+    const solicitudResumen = ++this.secuenciaResumen;
+    this.suscripcionResumen = this.service.obtenerFamiliaFormularioPorId(this.familiaId).subscribe({
+      next: familiaActualizada => {
+        if (solicitudResumen !== this.secuenciaResumen || familiaActualizada.famId !== this.familiaId) return;
+        this.detalle.set(familiaActualizada);
+      },
+      error: error => {
+        if (solicitudResumen !== this.secuenciaResumen) return;
+        this.mostrarFeedbackVersiones('error', this.obtenerMensajeError(error, 'No se pudo actualizar el resumen de la familia.'));
+      }
     });
   }
 
@@ -551,7 +562,10 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     this.suscripcionVersiones = null;
     this.suscripcionActividad?.unsubscribe();
     this.suscripcionActividad = null;
+    this.suscripcionResumen?.unsubscribe();
+    this.suscripcionResumen = null;
     this.secuenciaActividad++;
+    this.secuenciaResumen++;
   }
 
   private obtenerMensajeError(error: unknown, fallback: string): string {

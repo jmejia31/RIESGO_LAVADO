@@ -9963,3 +9963,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: nuevo commit reinicia `QUALITY_GATES=0/5`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - Punto de continuacion: revisar diff, commit/push, esperar Quality Gate del SHA final y verificar E2E de eliminacion/readback/auditoria.
 
+- ## 2026-10-30 10:35 -06:00 - Cierre P0 del readback y consistencia del resumen (COD)
+
+- Base: `desarrollo` en `3f30bf56547d86f9ea1aec7a508422c626de3193`, remoto sincronizado; untracked ajenos preservados.
+- Causa corregida: `confirmarEliminacionVersion()` tenia un fallback que informaba exito si el metodo GET no existia. Ahora invoca obligatoriamente `obtenerVersionFormulario(version.verId)` y solo acepta GET 404; GET 200, 401, 403, 500, timeout o error de disponibilidad permanecen no confirmados.
+- Consistencia corregida: `refrescarVersionesDespuesDeAccion()` cancela la consulta de resumen anterior, usa secuencia contra respuestas obsoletas, ignora familias cambiadas, conserva feedback/modal y comunica errores sin reinicializacion destructiva. El padre refresca tambien familias/KPI.
+- Pruebas agregadas/ajustadas: regresion de readback GET 200 no confirmado y regresion de actualizacion de `totalVersiones` conservando familia y feedback.
+- Verificaciones frescas: backend focalizado `24/24 PASS`; frontend focalizado `83/83 PASS` en 5 archivos; build Angular PASS con warnings preexistentes de SCSS/CommonJS; suite backend completa heredada de esta intervencion `1089 PASS`, `8 FAIL` por falta de `Database:Profile=LOCAL_XE`, `2 SKIP`.
+- No ejecutado: Oracle XE, E2E Angular/API, persistencia real de DELETE, dependencias `RL_MR_FORMULA_USOS`, auditoria real y cinco Quality Gates. La certificacion de integracion queda bloqueada hasta runner autorizado.
+- Punto de continuacion: revisar diff, commit/push del nuevo SHA, ejecutar Quality Gate y solo despues contabilizar corridas independientes.
+

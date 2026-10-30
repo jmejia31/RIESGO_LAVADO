@@ -3347,15 +3347,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private confirmarEliminacionVersion(version: VersionFormularioDto): void {
-    const obtenerVersion = (this.service as MatricesRiesgosService & {
-      obtenerVersionFormulario?: (id: number) => Observable<VersionFormularioDto>;
-    }).obtenerVersionFormulario;
-    if (typeof obtenerVersion !== 'function') {
-      this.mostrarMensaje(`Formulario ID #${version.verId} eliminado correctamente.`);
-      return;
-    }
-
-    obtenerVersion.call(this.service, version.verId).subscribe({
+    this.service.obtenerVersionFormulario(version.verId).subscribe({
       next: () => this.mostrarError('La API confirmó la eliminación, pero la lectura aún encontró la versión. No se reporta éxito.'),
       error: error => {
         if ((error as { status?: number })?.status === 404) {

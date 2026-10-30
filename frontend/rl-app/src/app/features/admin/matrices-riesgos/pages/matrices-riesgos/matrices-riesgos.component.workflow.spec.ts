@@ -321,11 +321,22 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
   it('elimina permanentemente una versión inactiva tras la confirmación institucional', async () => {
     const inactivaVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
+    service['obtenerVersionFormulario'].mockReturnValueOnce(throwError(() => ({ status: 404 })));
     component.eliminarVersionFormulario(inactivaVersion);
 
     await new Promise(resolve => setTimeout(resolve, 50));
     expect(service['eliminarVersionFormulario']).toHaveBeenCalledWith(10);
     expect(component.mensaje()).toContain('eliminado correctamente');
+  });
+
+  it('no confirma la eliminación si el readback todavía encuentra la versión', async () => {
+    const inactivaVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
+    service['obtenerVersionFormulario'].mockReturnValueOnce(of(inactivaVersion));
+    component.eliminarVersionFormulario(inactivaVersion);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(component.error()).toContain('lectura aún encontró');
+    expect(component.mensaje()).toBeNull();
   });
 
   it('bloquea eliminar versión cuando es vigente mostrando error', () => {

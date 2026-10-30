@@ -445,6 +445,20 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(fixture.componentInstance.actividadReciente()[0].usuario).toBe('Usuario #8');
   });
 
+  it('actualiza el resumen de la familia sin reinicializar el modal', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const fixture = crearComponente();
+    const actualizada = { ...familia, totalVersiones: 1 };
+    vi.mocked(service.obtenerFamiliaFormularioPorId).mockReturnValue(of(actualizada));
+
+    fixture.componentInstance.mostrarFeedbackVersiones('success', 'Eliminada.');
+    fixture.componentInstance.refrescarVersionesDespuesDeAccion();
+
+    expect(fixture.componentInstance.detalle()?.famId).toBe(familia.famId);
+    expect(fixture.componentInstance.detalle()?.totalVersiones).toBe(1);
+    expect(fixture.componentInstance.feedbackVersiones()?.mensaje).toBe('Eliminada.');
+  });
+
   it('bloquea mutaciones y muestra ARCHIVADA para una familia archivada', () => {
     const archivada = { ...familia, famArchivada: true, famActivo: false };
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(archivada));

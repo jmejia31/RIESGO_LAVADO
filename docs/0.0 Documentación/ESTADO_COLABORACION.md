@@ -3434,3 +3434,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Pendiente externo: E2E real con Oracle XE, DELETE/readback 404, dependencias `RL_MR_FORMULA_USOS`, auditoria y Quality Gates. `QUALITY_GATES=0/5`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: commit/push de esta correccion y ejecucion CI sobre el SHA final.
 
+- Estado vigente - Cierre P0 de readback y resumen de familia (COD) - 2026-10-30
+
+- El fallback de confirmacion positiva fue eliminado. El contrato frontend es fail-closed: DELETE 2xx requiere GET 404 sobre el mismo `verId`; cualquier otro resultado no confirma.
+- La consulta de resumen de familia ahora tiene ciclo de vida controlado, secuencias contra respuestas obsoletas, cancelacion al cerrar/cambiar familia y error contextual sin borrar tabla ni feedback. El KPI y listado superior se refrescan mediante `cargarFamilias()`.
+- Verificado localmente: backend focalizado 24/24; frontend focalizado 83/83; build Angular PASS; no se tocaron migraciones, Oracle institucional, GTIC ni `main`.
+- Suite backend completa: 1089 PASS, 8 fallos de integracion por ausencia de `Database:Profile=LOCAL_XE`, 2 SKIP. Oracle XE/E2E/auditoria y dependencias reales siguen pendientes; no se declaran certificados.
+- El nuevo commit reinicia `QUALITY_GATES=0/5`; mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: commit/push y ejecucion de CI sobre el SHA final; luego comprobar DELETE/readback, contadores, integridad y auditoria con fixture disposable.
+
