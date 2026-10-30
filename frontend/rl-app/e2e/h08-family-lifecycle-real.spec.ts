@@ -146,14 +146,43 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await detail.getByRole('button', { name: /cerrar detalle/i }).click();
   };
   const publishVersionThroughBuilder = async (): Promise<void> => {
+    const publicationTrace: Array<{ method: string; path: string; status: number }> = [];
+    const traceResponse = (response: import('@playwright/test').Response): void => {
+      const path = new URL(response.url()).pathname;
+      if (path.includes('/api/matrices-riesgos/formularios/') || path.includes('/api/matrices-riesgos/formula-usos/')) {
+        publicationTrace.push({ method: response.request().method(), path, status: response.status() });
+      }
+    };
+    page.on('response', traceResponse);
     await familyRow().getByRole('button', { name: 'Ver versiones' }).click();
     const detail = page.locator('dialog[open]').filter({ hasText: 'Detalle de Familia' });
     await detail.getByRole('button', { name: 'Editar definición de la versión' }).click();
     await expect(page.locator('#titulo-modal-builder')).toBeVisible();
+    const saveResponse = page.waitForResponse(response => response.request().method() === 'PUT'
+      && /\/api\/matrices-riesgos\/formularios\/\d+$/.test(new URL(response.url()).pathname));
     await page.locator('#btn-guardar-builder').click();
+    const save = await saveResponse;
+    expect(save.status()).toBeGreaterThanOrEqual(200);
+    expect(save.status()).toBeLessThan(300);
     await expect(page.locator('#btn-publicar-builder')).toBeEnabled();
+    const publishResponse = page.waitForResponse(response => response.request().method() === 'POST'
+      && /\/api\/matrices-riesgos\/formularios\/\d+\/publicar$/.test(new URL(response.url()).pathname));
+    const finalReadback = page.waitForResponse(response => response.request().method() === 'GET'
+      && /\/api\/matrices-riesgos\/formularios\/\d+$/.test(new URL(response.url()).pathname));
     await page.locator('#btn-publicar-builder').click();
     await confirmDialog(/publicar/i);
+    const publish = await publishResponse;
+    const readback = await finalReadback;
+    expect(publish.status()).toBeGreaterThanOrEqual(200);
+    expect(publish.status()).toBeLessThan(300);
+    expect(readback.status()).toBeGreaterThanOrEqual(200);
+    expect(readback.status()).toBeLessThan(300);
+    expect(publicationTrace.filter(item => item.method === 'PUT' && item.path.includes('/formula-usos/'))
+      .every(item => item.status >= 200 && item.status < 300)).toBe(true);
+    await test.info().attach('h08-publication-http-sequence', {
+      body: JSON.stringify(publicationTrace, null, 2),
+      contentType: 'application/json'
+    });
     await page.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
     await expect(detail.getByText('PUBLICADA').first()).toBeVisible();
     await detail.getByRole('button', { name: /cerrar detalle/i }).click();

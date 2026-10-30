@@ -3025,9 +3025,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             },
             error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo verificar la definición antes de publicarla.'))
           }),
-          error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudieron actualizar las dependencias de fórmula antes de publicar.'))
+          error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'La definición se guardó, pero no se pudieron sincronizar las dependencias de fórmula. La versión no se publicó; revise la configuración y vuelva a intentar.'))
         }),
-        error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo guardar la definición actual antes de publicarla.'))
+        error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo guardar la definición actual; la versión no se publicó.'))
       });
     });
   }
@@ -3056,7 +3056,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           this.mostrarError('La solicitud de publicación fue aceptada, pero no se pudo verificar el estado final. Consulte nuevamente la versión; no se reporta rechazo del backend.');
         }
       }),
-      error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo publicar la versión del formulario.'))
+      error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'La definición se guardó, pero el servidor rechazó la publicación. La versión no se publicó.'))
     });
   }
 
@@ -3440,7 +3440,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private obtenerMensajeErrorPublicacion(error: unknown, mensaje: string): string {
     const respuesta = error as { error?: { detail?: string; mensaje?: string; title?: string; errors?: Record<string, string[]> } };
     const errorValidacion = Object.values(respuesta?.error?.errors ?? {}).flat().find(Boolean);
-    return respuesta?.error?.detail || respuesta?.error?.mensaje || errorValidacion || respuesta?.error?.title || mensaje;
+    const detalle = respuesta?.error?.detail || respuesta?.error?.mensaje || errorValidacion || respuesta?.error?.title;
+    return detalle && detalle !== mensaje ? `${mensaje} Detalle del servidor: ${detalle}` : mensaje;
   }
   private obtenerMensajeError(error: unknown, mensaje: string): string {
     const respuesta = error as {

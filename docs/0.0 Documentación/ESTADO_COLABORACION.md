@@ -3359,6 +3359,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificado: build Release host y solución con `0 errores`; `git diff --check` PASS. H08 Oracle XE completo queda `PENDING_CI`; nuevo contador estricto `0/5`.
 - `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`. El siguiente punto es publicar, validar el CI del nuevo SHA y solo después congelarlo para cinco corridas secuenciales.
 
+- Estado vigente - Correccion P0 del bloqueo de sincronizacion H08 (COD) - 2026-10-30
+
+- Base `579a52d86b1c2a907dee549fdb1c44d0bc793e04` en `desarrollo`, remoto alineado antes del cambio.
+- El host E2E habilita solo `ReemplazarFormulaUsosAsync` con persistencia Oracle disposable transaccional, auditoria y secuencia `SEQ_RL_MR_FORMULA_USOS`; las lecturas globales no provisionadas siguen vacias y fail-closed.
+- El frontend distingue guardado/sincronizacion/publicacion, conserva el editor ante error parcial y renderiza feedback dentro del `form-builder-shell`. H08 registra HTTP real y conserva `PUBLICADA`/`VIGENTE`.
+- Verificado: host Release 0 errores; frontend focalizado 65/65 PASS; build Angular PASS; Playwright lista 1 test; diff check PASS. Backend 1.088 PASS, 2 SKIP y 8 fallos Oracle por falta de `Database:Profile=LOCAL_XE`.
+- Pendiente externo: Oracle XE/browser H08, Quality Gate, validador Python y cinco corridas. `NEW_SHA_CERTIFICATION=0/5`; `H08-M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: commit/push en `origin/desarrollo`, CI completo sobre el nuevo SHA y revision de evidencia HTTP.
+
 - Estado vigente - Correccion P0 Oracle 11g H08-E publicada pendiente (COD) - 2026-10-29
 
 - Baseline: `desarrollo` en `b7b7d3d53a12c9ef16849928f81dbd147d85eb06`; CI `40895075147` fallo con `ORA-00904 JSON_VALUE` en el snapshot profundo.

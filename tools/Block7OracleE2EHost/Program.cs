@@ -133,7 +133,10 @@ builder.Services.AddScoped<IMatricesRiesgosMonitoreoRepository, MatricesRiesgosM
 builder.Services.AddScoped<IMatricesRiesgosMonitoreoService, MatricesRiesgosMonitoreoService>();
 builder.Services.AddScoped<IFormularioValidador, FormularioValidador>();
 builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
-builder.Services.AddScoped(_ => DispatchProxy.Create<ICalculoConfiguracionRepository, EmptyCalculationConfigurationProxy>());
+builder.Services.AddScoped<ICalculoConfiguracionRepository>(services =>
+    EmptyCalculationConfigurationProxy.Create(
+        services.GetRequiredService<OracleDbContext>(),
+        services.GetRequiredService<IAuditoriaRepository>()));
 builder.Services.AddScoped<ICalculoConfiguracionService, CalculoConfiguracionService>();
 builder.Services.AddScoped<DbDrivenCalculationRuntimeFactory>();
 builder.Services.AddScoped<VersionedCalculationRuntimeService>();
@@ -554,7 +557,8 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
     {
         "SEQ_RL_MR_EVALUACIONES", "SEQ_RL_MR_PROYECCIONES", "SEQ_RL_MR_FLUJOS", "SEQ_RL_AUDITORIA",
         "SEQ_RL_MR_CONTROLES", "SEQ_RL_MR_PLANES", "SEQ_RL_MR_ACTIVIDADES", "SEQ_RL_MR_SENALES",
-        "SEQ_RL_MR_AUTOMONITOREO", "SEQ_RL_MR_EVIDENCIAS", "SEQ_RL_MR_EVI_VINCULOS"
+        "SEQ_RL_MR_AUTOMONITOREO", "SEQ_RL_MR_EVIDENCIAS", "SEQ_RL_MR_EVI_VINCULOS",
+        "SEQ_RL_MR_FORMULA_USOS"
     })
         try { await ExecuteAsync(connection, $"CREATE SEQUENCE {sequence} START WITH 200000000 INCREMENT BY 1 NOCACHE"); } catch (OracleException exception) when (exception.Number == 955) { }
 }
@@ -620,6 +624,16 @@ public sealed class E2EAuthenticationHandler(IOptionsMonitor<AuthenticationSchem
 
 public class EmptyCalculationConfigurationProxy : DispatchProxy
 {
+    private DisposableCalculationConfigurationMutationHandler? _mutationHandler;
+
+    public static ICalculoConfiguracionRepository Create(OracleDbContext db, IAuditoriaRepository auditoria)
+    {
+        var proxy = DispatchProxy.Create<ICalculoConfiguracionRepository, EmptyCalculationConfigurationProxy>();
+        ((EmptyCalculationConfigurationProxy)(object)proxy)._mutationHandler =
+            new DisposableCalculationConfigurationMutationHandler(db, auditoria);
+        return proxy;
+    }
+
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {
         switch (targetMethod?.Name)
@@ -632,8 +646,112 @@ public class EmptyCalculationConfigurationProxy : DispatchProxy
                 return Task.FromResult<IReadOnlyList<ParametroDto>>(Array.Empty<ParametroDto>());
             case nameof(ICalculoConfiguracionRepository.ListarFormulaBindingsPorVersionFormularioAsync):
                 return Task.FromResult<IReadOnlyList<FormulaBindingDto>>(Array.Empty<FormulaBindingDto>());
+            case nameof(ICalculoConfiguracionRepository.ReemplazarFormulaUsosAsync):
+                if (_mutationHandler is null || args is null || args.Length < 4)
+                    throw new InvalidOperationException("The disposable E2E calculation configuration handler was not initialized.");
+                return _mutationHandler.ReemplazarFormulaUsosAsync(
+                    (long)args[0]!,
+                    (IReadOnlyList<CrearFormulaUsoDto>)args[1]!,
+                    (long)args[2]!,
+                    (string?)args[3]);
         }
         throw new NotSupportedException($"The disposable E2E schema has no calculation bindings: {targetMethod?.Name}.");
+    }
+}
+
+sealed class DisposableCalculationConfigurationMutationHandler
+{
+    private const string Module = "MATRICES_RIESGO";
+    private readonly OracleDbContext _db;
+    private readonly IAuditoriaRepository _auditoria;
+
+    public DisposableCalculationConfigurationMutationHandler(OracleDbContext db, IAuditoriaRepository auditoria)
+    {
+        _db = db;
+        _auditoria = auditoria;
+    }
+
+    public async Task<bool> ReemplazarFormulaUsosAsync(long versionFormularioId, IReadOnlyList<CrearFormulaUsoDto> usos, long usuarioId, string? ip)
+    {
+        await using var connection = _db.CreateConnection();
+        await connection.OpenAsync();
+        await using var transaction = connection.BeginTransaction();
+        try
+        {
+            string? estado;
+            await using (var command = CreateCommand(connection, transaction,
+                "SELECT VER_ESTADO FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id FOR UPDATE"))
+            {
+                command.Parameters.Add(new OracleParameter("id", versionFormularioId));
+                estado = (await command.ExecuteScalarAsync())?.ToString();
+            }
+
+            if (estado is null)
+                throw new KeyNotFoundException("La versión de formulario no existe.");
+            if (!estado.Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Los usos de fórmula solo pueden modificarse en una versión de formulario en borrador.");
+
+            var existingIds = new List<long>();
+            await using (var command = CreateCommand(connection, transaction,
+                "SELECT FUS_ID FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID=:id FOR UPDATE"))
+            {
+                command.Parameters.Add(new OracleParameter("id", versionFormularioId));
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync()) existingIds.Add(reader.GetInt64(0));
+            }
+
+            await using (var command = CreateCommand(connection, transaction,
+                "DELETE FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID=:id"))
+            {
+                command.Parameters.Add(new OracleParameter("id", versionFormularioId));
+                await command.ExecuteNonQueryAsync();
+            }
+
+            foreach (long existingId in existingIds)
+                await _auditoria.RegistrarAsync(connection, transaction, "RL_MR_FORMULA_USOS", existingId.ToString(), "DELETE", null,
+                    JsonSerializer.Serialize(new { versionFormularioId, state = "REMOVED" }), usuarioId, null, ip, Module);
+
+            foreach (var uso in usos)
+            {
+                long id;
+                await using (var command = CreateCommand(connection, transaction,
+                    "SELECT SEQ_RL_MR_FORMULA_USOS.NEXTVAL FROM DUAL"))
+                    id = Convert.ToInt64(await command.ExecuteScalarAsync());
+
+                await using (var command = CreateCommand(connection, transaction, @"
+                    INSERT INTO RL_MR_FORMULA_USOS
+                        (FUS_ID,FUS_VERSION_FORMULARIO_ID,FUS_CAMPO_CLAVE,FUS_FORMULA_VERSION_ID,FUS_FECHA_CREACION,FUS_USR_CREACION)
+                    VALUES (:id,:versionFormularioId,:campoClave,:formulaVersionId,SYSDATE,:usuarioId)"))
+                {
+                    command.Parameters.Add(new OracleParameter("id", id));
+                    command.Parameters.Add(new OracleParameter("versionFormularioId", versionFormularioId));
+                    command.Parameters.Add(new OracleParameter("campoClave", uso.CampoClave.Trim()));
+                    command.Parameters.Add(new OracleParameter("formulaVersionId", uso.FormulaVersionId));
+                    command.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                await _auditoria.RegistrarAsync(connection, transaction, "RL_MR_FORMULA_USOS", id.ToString(), "INSERT", null,
+                    JsonSerializer.Serialize(new { campoClave = uso.CampoClave.Trim(), state = "ACTIVE" }), usuarioId, null, ip, Module);
+            }
+
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    private static OracleCommand CreateCommand(OracleConnection connection, OracleTransaction transaction, string sql)
+    {
+        var command = connection.CreateCommand();
+        command.BindByName = true;
+        command.Transaction = transaction;
+        command.CommandText = sql;
+        return command;
     }
 }
 

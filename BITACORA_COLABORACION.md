@@ -9899,6 +9899,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - CI `40893130639` sobre `64b95de3` paso H08-A/B/C/D, pero H08-E recibio 6 auditorias de familia al contar por `AUD_ACCION=UPDATE` en lugar de demostrar eventos individuales. Se agregan campos derivados seguros `AUD_EVENT` y `AUD_JUSTIFICATION` al snapshot para validar `FAMILY_DEACTIVATED/ARCHIVED/RESTORED/ACTIVATED` sin exponer CLOB de auditoria; el siguiente SHA reinicia `0/5`.
 - **Punto 1 / causa raíz:** CI `40728480187` reprodujo una carrera en `block7-oracle-real.spec.ts`: el modal de seguimiento era visible mientras `GET /evaluaciones/{id}/transiciones-permitidas` aún estaba en carga; el selector se renderiza únicamente después de `SUCCESS_WITH_DATA`. El reintento pasó, por lo que el gate se mantiene FAIL por flakiness.
 - **Correccion:** el E2E espera la respuesta HTTP 200 de transiciones y la sección funcional `Gestionar Transición de Estado` antes de contar opciones. La matriz de destinos y el código Angular no se relajan ni se modifican.
+- ## 2026-10-30 09:05 -06:00 - Correccion P0 del bloqueo de sincronizacion H08 (COD)
+
+- Base: rama `desarrollo`, SHA inicial `579a52d86b1c2a907dee549fdb1c44d0bc793e04`; remoto alineado. Untracked ajenos preservados fuera del stage.
+- Causa confirmada: el PUT de `formula-usos/versiones-formulario/{id}` devolvia 500 porque el proxy E2E lanzaba `NotSupportedException` en `ReemplazarFormulaUsosAsync`.
+- Correccion host: solo esa mutacion usa persistencia disposable con bloqueo `FOR UPDATE`, reemplazo completo, auditoria y commit/rollback transaccional; se agrego `SEQ_RL_MR_FORMULA_USOS`. Las lecturas globales no provisionadas siguen fail-closed.
+- Correccion frontend: mensajes diferenciados para guardado, sincronizacion y publicacion; feedback dentro de `form-builder-shell`; H08 registra HTTP real y mantiene `PUBLICADA`/`VIGENTE`.
+- Verificaciones: host Release 0 errores; frontend focalizado 65/65 PASS; build Angular PASS; Playwright lista 1 test; diff check PASS. Backend: 1.088 PASS, 2 SKIP y 8 fallos por falta local de `Database:Profile=LOCAL_XE`.
+- Pendiente: Oracle XE/browser H08, Quality Gate, validador Python y cinco corridas. `NEW_SHA_CERTIFICATION=0/5`; `H08-M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: commit/push en `origin/desarrollo`, luego CI completo y revision de traza HTTP.
+
 - ## 2026-10-29 16:05 -06:00 - Correccion P0 de publicacion desde Form Builder (COD)
 
 - **Base:** rama `desarrollo`, SHA inicial `04f42039e9ad997a567d1b6ed1dedf4854f8b975`; commits funcionales `d04cf1e0` y `e0d4537e`; publicacion aceptada en `origin/desarrollo`.
