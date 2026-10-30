@@ -9911,3 +9911,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado H08:** M01/M02 y M05/M06 permanecen confirmados por la evidencia heredada; M03 requiere reejecucion manual/CI con la correccion. Aceptacion manual pendiente; Bloque 10 no autorizado.
 - **Punto de continuacion:** el registro documental queda publicado en el `HEAD` de `desarrollo`; ejecutar CI sin nuevos commits durante la certificacion; contador de corridas independientes inicia en `0/5` para ese SHA.
 
+- ## 2026-10-30 - Correccion P0 de binding HTTP de borrador (COD)
+
+- **Reproduccion real:** Quality Gate `40963395575` sobre el SHA anterior reprodujo el flujo Oracle XE/browser. El constructor envio `PUT /api/matrices-riesgos/formularios/1411835310` con JSON valido de 1810 bytes; la respuesta fue `HTTP 400 Bad Request`.
+- **Evidencia contractual:** `status=400`, `title=One or more validation errors occurred`, errores `jsonConfig field is required` y `The JSON value could not be converted to Newtonsoft.Json.Linq.JToken`, `traceId=00-30f5aa24b88831ccb2b1252fb2d9894d-0d7a1446474990e1-00`. El POST de publicacion no se alcanzo porque el guardado previo fallo.
+- **Causa raiz:** el endpoint `PUT /formularios/{id}` recibia `[FromBody] Newtonsoft.Json.Linq.JToken` mientras el formatter activo era System.Text.Json; el binding fallaba antes de ejecutar el servicio. Esto era una causa backend real adicional al problema previo de modelo visible y alcance de alertas.
+- **Correccion:** `MatricesRiesgosController.ActualizarBorradorFormulario` recibe ahora `System.Text.Json.JsonElement` y pasa `GetRawText()` al servicio. Se conserva ruta, metodo, payload, autorizacion, auditoria, validacion de negocio, hash, persistencia y contratos de creacion que aun usan `JToken`.
+- **Pruebas:** `dotnet test ... --filter "MatricesRiesgosControllerTests|MatricesRiesgosNewCodeCoverageP3P4Tests|MatricesRiesgosPhase13UatContractTests"` = `23/23 PASS`; `git diff --check` PASS. El Quality Gate anterior fallo unicamente en la reproduccion browser por el 400 documentado; los pasos previos de validadores, analyzers, build y lint fueron PASS.
+- **Git:** commit de correccion `d4bea1f3` publicado en `origin/desarrollo`; los artefactos ajenos permanecen sin stage. El siguiente commit documental congelara el nuevo SHA y reiniciara `NEW_SHA_CERTIFICATION=0/5`.
+- **Pendiente:** repetir Quality Gate/E2E Oracle XE sobre el SHA final, verificar `PUT=2xx`, `POST /formularios/{id}/publicar`, readback, `PUBLISHED/VIGENTE` y auditoria. No se modifico Oracle productivo ni la familia GTIC del usuario.
+

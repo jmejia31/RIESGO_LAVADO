@@ -3389,3 +3389,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `INDEPENDENT_FINAL_SHA_RUNS=0/5`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; M03 queda pendiente de reejecucion; `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: ejecutar CI y congelar el SHA actual de `desarrollo` para cinco corridas independientes sin commits intermedios.
 
+- Estado vigente - Correccion P0 de binding HTTP en publicacion de Form Builder (COD) - 2026-10-30
+
+- El run `40963395575` reprodujo el defecto real en Oracle XE/browser: `PUT /api/matrices-riesgos/formularios/1411835310` devolvio `400` antes del POST de publicacion. El response incluyo `jsonConfig field is required`, conversion fallida a `Newtonsoft.Json.Linq.JToken` y trace `00-30f5aa24b88831ccb2b1252fb2d9894d-0d7a1446474990e1-00`.
+- Causa confirmada: incompatibilidad del binding `[FromBody] JToken` con el formatter System.Text.Json. Correccion quirurgica publicada en `d4bea1f3`: `JsonElement` + `GetRawText()`, sin cambiar endpoint, payload, autorizacion, auditoria ni reglas de negocio.
+- Regresion focalizada fresca: `23/23 PASS` en contratos/controlador/cobertura del endpoint. No se tocaron Oracle, migraciones, `main`, datos institucionales ni la familia GTIC del usuario.
+- `NEW_SHA_CERTIFICATION=0/5`; el SHA documental actual de `desarrollo` queda pendiente de nuevo CI. H08-M03 permanece `PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: ejecutar el Quality Gate completo sobre el nuevo HEAD y comprobar que el guardado responde 2xx, la publicacion alcanza POST/readback y H08-A/B/C/D/E permanece íntegro.
+
