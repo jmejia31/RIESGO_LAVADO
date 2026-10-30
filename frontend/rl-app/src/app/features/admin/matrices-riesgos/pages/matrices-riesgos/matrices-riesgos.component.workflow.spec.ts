@@ -305,6 +305,15 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.mensaje()).toBe('Versión publicada y establecida como vigente correctamente.');
   });
 
+  it('no termina silenciosamente si el constructor no entrega una definición', () => {
+    const draftVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
+    component.versionEditando.set(draftVersion);
+    component.publicarVersionDesdeBuilder(draftVersion, '');
+
+    expect(confirmationMock.confirm).not.toHaveBeenCalled();
+    expect(component.errorFormBuilder()).toContain('no entregó una definición publicable');
+  });
+
   it('cambia la vigencia de una versión (activar / desactivar) tras la confirmación institucional', async () => {
     const draftVersion = { ...version, verVigente: false };
     component.cambiarVigenciaVersion(draftVersion, true);

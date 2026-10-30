@@ -19,7 +19,12 @@ type VersionDeleteSnapshot = {
   otherVersionCount: number;
   familyVersionCount: number;
   formulaVersionCount: number;
+  formulaUsageCount: number;
+  formulaUsageFormVersionId: number;
+  formulaUsageFormulaVersionId: number;
   evaluationCount: number;
+  evaluationVersionCount: number;
+  evaluationVersionReferenceId: number;
   otherVersion: Record<string, unknown>;
   deleteAuditCount: number;
 };
@@ -60,7 +65,12 @@ test('P0 certifica eliminación permanente de DRAFT mediante Angular, API y Orac
     otherVersionCount: 1,
     familyVersionCount: 2,
     formulaVersionCount: 1,
+    formulaUsageCount: 1,
+    formulaUsageFormVersionId: fixture.formulaVersionId,
+    formulaUsageFormulaVersionId: fixture.formulaVersionId,
     evaluationCount: 1,
+    evaluationVersionCount: 1,
+    evaluationVersionReferenceId: fixture.evaluationVersionId,
     deleteAuditCount: 0
   });
   const otherBefore = initial.otherVersion;
@@ -82,8 +92,8 @@ test('P0 certifica eliminación permanente de DRAFT mediante Angular, API y Orac
   const otherRow = versionRows.filter({ hasText: 'P0_DELETE_B' });
   await expect(targetRow).toHaveCount(1);
   await expect(otherRow).toHaveCount(1);
-  await expect(targetRow).toContainText('DRAFT');
-  await expect(otherRow).toContainText('DRAFT');
+  await expect(targetRow).toContainText('BORRADOR');
+  await expect(otherRow).toContainText('BORRADOR');
 
   await targetRow.getByRole('button', { name: 'Eliminar versión' }).click();
   const confirmation = page.locator('.institutional-confirmation');
@@ -129,12 +139,17 @@ test('P0 certifica eliminación permanente de DRAFT mediante Angular, API y Orac
   expect(formulaDelete.status()).toBe(409);
   const afterFormulaConflict = await snapshot();
   expect(afterFormulaConflict.formulaVersionCount).toBe(1);
+  expect(afterFormulaConflict.formulaUsageCount).toBe(1);
+  expect(afterFormulaConflict.formulaUsageFormVersionId).toBe(fixture.formulaVersionId);
+  expect(afterFormulaConflict.formulaUsageFormulaVersionId).toBe(fixture.formulaVersionId);
   expect(afterFormulaConflict.deleteAuditCount).toBe(1);
 
   const evaluationDelete = await request.delete(`http://127.0.0.1:5043/api/matrices-riesgos/formularios/${fixture.evaluationVersionId}`);
   expect(evaluationDelete.status()).toBe(409);
   const afterEvaluationConflict = await snapshot();
   expect(afterEvaluationConflict.evaluationCount).toBe(1);
+  expect(afterEvaluationConflict.evaluationVersionCount).toBe(1);
+  expect(afterEvaluationConflict.evaluationVersionReferenceId).toBe(fixture.evaluationVersionId);
   expect(afterEvaluationConflict.deleteAuditCount).toBe(1);
 
   console.log('P0_DELETE_REAL_BROWSER=PASS');

@@ -3469,5 +3469,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Bloqueo externo: Docker/XE local no disponible (`DOCKER_UNAVAILABLE`), por lo que no se ejecuta ni se certifica el DELETE real localmente. CI debe probar el fixture disposable; no se usa mock como evidencia positiva.
 - El nuevo SHA reinicia `QUALITY_GATES=0/5`. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: commit/push, esperar el Quality Gate completo del nuevo SHA y contar cinco ejecuciones independientes solo si el E2E P0 y todos los marcadores Oracle pasan.
+
+- Estado vigente - Correccion de E2E P0 y publicacion directa (COD) - 2026-10-30
+
+- Base: SHA publicado `015b7ebf691b592c6a5129964f2ae1f214596a4b`; Quality Gate `41101345866` fallo en la asercion tecnica `DRAFT` frente a la etiqueta UI correcta `BORRADOR`.
+- El fixture de formulas ahora contiene `RL_MR_FORMULAS`, `RL_MR_FORMULA_VERSIONES` y claves foraneas reales hacia `RL_MR_FORMULA_USOS`; el snapshot expone existencia y referencias protegidas. El E2E DELETE conserva la asercion separada Oracle/UI.
+- Se agrego fixture y E2E de publicacion directa sin guardado previo: confirmacion institucional, POST 2xx, GET, `PUBLISHED`, vigente, auditoria y feedback. Los guardas silenciosos del padre ahora muestran error contextual.
+- El HTTP 500 del Detalle no fue reproducido en el run base; no se declara causa ni resolucion sin endpoint, trace y excepcion correlacionados. El manejo de auditoria permanece contextual y sin exito falso.
+- Verificado localmente: host Release `0 errores`; suite frontend previa `953/953`; workflow de matrices `19/19`; sintaxis runner y diff check PASS. Oracle XE y los dos E2E nuevos quedan pendientes del siguiente CI.
+- El nuevo commit reinicia `QUALITY_GATES=0/5` y `P0_TECHNICAL_CERTIFICATION=BLOCKED`. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: commit/push, revisar CI; si el HTTP 500 sigue sin evidencia, solicitar trace/endpoint autorizado antes de declarar ese frente resuelto.
 - Punto exacto: diseño e implementación mínima del fixture/E2E de eliminación real; después publicar y certificar cinco gates secuenciales sobre el nuevo SHA.
 

@@ -10003,3 +10003,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: el commit de esta intervencion reiniciara `QUALITY_GATES=0/5`; conservar `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto de continuacion: revisar y publicar este commit en `origin/desarrollo`; verificar el Quality Gate del SHA unico y, solo si el E2E P0 pasa, ejecutar cuatro `workflow_dispatch` secuenciales independientes.
 
+- ## 2026-10-30 12:25 -06:00 - Correccion de E2E P0 y publicacion directa (COD)
+
+- Base: SHA publicado `015b7ebf691b592c6a5129964f2ae1f214596a4b`; Quality Gate `41101345866` termino FAILURE en `h08-version-delete-real.spec.ts`, antes de ejecutar una eliminacion, porque la interfaz muestra `BORRADOR` para el estado Oracle `DRAFT`.
+- Correcciones: la asercion verifica separadamente `ORACLE_STATE=DRAFT` y `UI_STATE=BORRADOR`; el fixture ya no usa un ID de version de formulario como formula. Se agregaron `RL_MR_FORMULAS`, `RL_MR_FORMULA_VERSIONES`, FK de `RL_MR_FORMULA_USOS` y snapshots de referencias protegidas.
+- Publicacion: se agrego fixture `P0_PUBLISH`, E2E real de publicacion directa sin guardado previo, POST 2xx, GET autoritativo, estado `PUBLISHED`, vigencia, auditoria y feedback. Los retornos silenciosos del padre ahora muestran error contextual cuando falta autorizacion o definicion.
+- HTTP 500 de Detalle: el run base no registro un HTTP 500 reproducible en la cadena P0; no se atribuye causa sin endpoint, trace y excepcion correlacionados. La ruta de auditoria ya conserva el fallo localmente sin exito falso; la reproduccion especifica queda pendiente de evidencia autorizada.
+- Verificaciones: host Release `0 errores`; frontend completo previo `953/953`; regresion workflow fresca `19/19`; sintaxis runner y diff check PASS. Oracle XE y los dos E2E nuevos requieren el siguiente Quality Gate remoto.
+- Estado: cualquier commit nuevo reinicia `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: revisar diff, ejecutar validadores, commit/push y comprobar publication/delete E2E real en Oracle XE antes de contabilizar gates.
+

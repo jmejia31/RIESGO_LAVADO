@@ -2999,7 +2999,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   publicarVersionDesdeBuilder(version: VersionFormularioDto, definicionActual: string): void {
-    if (!this.esAdministrador() || !definicionActual.trim()) return;
+    if (!this.esAdministrador()) {
+      this.mostrarError('No cuenta con autorización administrativa para publicar esta versión.');
+      return;
+    }
+    if (!definicionActual.trim()) {
+      this.mostrarError('El constructor no entregó una definición publicable. Revise el borrador e intente nuevamente.');
+      return;
+    }
     void this.confirmation.confirm({
       title: 'Publicar versión oficial?',
       message: `Se validará, guardará y publicará la definición visible de la versión ID #${version.verId}.`,

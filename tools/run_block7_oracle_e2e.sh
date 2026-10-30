@@ -128,6 +128,32 @@ done
 echo 'H08_FAMILY_LIFECYCLE_ORACLE_E2E=PASS'
 echo 'H08_EXTENDED_A_TO_E=PASS'
 pushd "$repo_root/frontend/rl-app" >/dev/null
+if ! p0_publish_output="$(npm run e2e -- e2e/p0-direct-publication-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+  popd >/dev/null
+  echo 'P0 direct publication E2E failed.' >&2
+  exit 1
+fi
+popd >/dev/null
+if ! grep -Eq '1 passed' <<<"$p0_publish_output"; then
+  echo 'P0 direct publication suite did not execute exactly one passing test.' >&2
+  exit 1
+fi
+for marker in \
+  P0_PUBLISH_DIRECT_BROWSER=PASS \
+  P0_PUBLISH_DIRECT_ANGULAR=PASS \
+  P0_PUBLISH_DIRECT_API=PASS \
+  P0_PUBLISH_DIRECT_ORACLE_XE=PASS \
+  P0_PUBLISH_DIRECT_STATUS=2XX \
+  P0_PUBLISH_DIRECT_READBACK=PASS \
+  P0_PUBLISH_DIRECT_STATE=PUBLISHED \
+  P0_PUBLISH_DIRECT_VIGENCY=1 \
+  P0_PUBLISH_DIRECT_AUDIT=PASS \
+  P0_PUBLISH_DIRECT_FEEDBACK=PASS \
+  P0_PUBLICATION_ORACLE_E2E=PASS; do
+  grep -Fq "$marker" <<<"$p0_publish_output"
+done
+echo 'P0_DIRECT_PUBLICATION_ORACLE_E2E=PASS'
+pushd "$repo_root/frontend/rl-app" >/dev/null
 if ! p0_delete_output="$(npm run e2e -- e2e/h08-version-delete-real.spec.ts 2>&1 | tee /dev/stderr)"; then
   popd >/dev/null
   echo 'P0 delete Oracle API host diagnostics (secrets omitted):' >&2
