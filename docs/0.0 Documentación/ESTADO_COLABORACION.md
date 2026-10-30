@@ -3491,3 +3491,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Punto exacto: obtener trace/excepción/código Oracle o reproducir el caso GTIC equivalente en Oracle XE disposable antes de corregir y reiniciar certificación.
 - Punto exacto: diseño e implementación mínima del fixture/E2E de eliminación real; después publicar y certificar cinco gates secuenciales sobre el nuevo SHA.
 
+- Estado vigente - Corrección P0 del contrato de auditoría de versiones (COD) - 2026-10-30
+
+- Baseline `cc37ea419647f94fa7684976f8cc5fca8746515a`; cambio publicado en `desarrollo` como `eac505b9`.
+- Se confirmó por código/DDL la incompatibilidad: productores de versiones usaban acciones largas en `RL_AUDITORIA.AUD_ACCION`, pero el contrato versionado permite solo acciones generales de máximo 10 caracteres. El runtime institucional permanece `RUNTIME_SCHEMA=NOT_VERIFIED` por falta de acceso autorizado.
+- Se corrigió el contrato sin tocar Oracle institucional ni migraciones: `UPDATE`/`DELETE` en `AUD_ACCION` y evento específico en JSON (`Evento`). El host Oracle XE disposable ahora crea `AUD_ACCION VARCHAR2(10)` y el `CHECK` institucional para impedir falsos verdes.
+- Se agregó el E2E real de publicación con cambios y se actualizaron asserts H08/DELETE para comprobar eventos JSON. El runner conserva la secuencia API+Oracle+Angular y añade PUT/readback/hash/JSON/auditoría.
+- Verificado en esta intervención: build host/backend PASS; round-trip frontend `14/14 PASS`; Playwright lista `1`; shell/estructura/base de datos/documentación/diff PASS.
+- Pendiente externo: Oracle XE descartable no disponible localmente (`Database:Profile=LOCAL_XE` ausente y Docker no disponible), por lo que PUT real, publicación modificada, DELETE/readback 404, integridad, auditoría y rollback por fallo de auditoría deben verificarse en CI. Skill validator también pendiente por falta de Python 3.
+- `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `QUALITY_GATES=0/5`; no se cuenta `41093552061` porque corresponde a un SHA anterior. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: inspeccionar el Quality Gate del SHA `eac505b9`; no iniciar gates adicionales hasta que el escenario Oracle restrictivo y los negativos obligatorios sean PASS.
+
