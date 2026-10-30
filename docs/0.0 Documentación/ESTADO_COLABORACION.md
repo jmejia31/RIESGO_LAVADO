@@ -3415,3 +3415,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `NEW_SHA_CERTIFICATION=0/5`; el SHA documental actual de `desarrollo` queda pendiente de nuevo CI. H08-M03 permanece `PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: ejecutar el Quality Gate completo sobre el nuevo HEAD y comprobar que el guardado responde 2xx, la publicacion alcanza POST/readback y H08-A/B/C/D/E permanece íntegro.
 
+- Estado vigente - Correccion P0 eliminacion de versiones y feedback contextual (COD) - 2026-10-30
+
+- Base: `desarrollo` en `c3c98aad5d3543332cef3180554b7ea55daf01ab`; cambios de esta intervencion pendientes de commit/push.
+- La cadena DELETE fue revisada: el repositorio bloquea familias inactivas/archivadas y Oracle protege referencias desde evaluaciones y usos de formulas. Ahora devuelve conflicto explicable y conserva lock, rollback y auditoria.
+- El feedback de eliminacion se muestra dentro del modal dinamico, con `role=alert/status`, cierre accesible y refresco contextual de versiones/actividad. Se agrego lectura posterior: el exito solo se informa cuando el GET devuelve 404; si la version persiste, se informa inconsistencia.
+- Verificado localmente: backend Release compilado; 14/14 pruebas focalizadas de ciclo de vida; Angular modal 26/26; build Angular PASS con warnings preexistentes. Oracle XE, E2E real, auditoria HTTP, validadores completos y Quality Gate remoto quedan pendientes.
+- No se tocaron `main`, Oracle productivo, migracion 54, familia GTIC ni datos institucionales. `NEW_SHA_CERTIFICATION=0/5`; `H08-M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: revisar diff y pruebas, publicar en `origin/desarrollo`, luego ejecutar fixture disposable Oracle XE y confirmar DELETE/readback/auditoria.
+

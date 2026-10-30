@@ -1160,14 +1160,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (!codigo) {
       this.versiones.set([]);
       this.cargandoPlantillas.set(false);
-      this.detalleFamiliaRef?.instance.refrescar();
+      this.detalleFamiliaRef?.instance.refrescarVersionesDespuesDeAccion();
       return;
     }
     this.service.listarHistorialVersionesFormulario(codigo).subscribe({
       next: versiones => {
         this.versiones.set(versiones);
         this.cargandoPlantillas.set(false);
-        this.detalleFamiliaRef?.instance.refrescar();
+        this.detalleFamiliaRef?.instance.refrescarVersionesDespuesDeAccion();
       },
       error: error => {
         const msg = this.obtenerMensajeError(error, 'No se pudo cargar el historial de formularios.');
@@ -3181,7 +3181,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             next: () => {
               this.guardando.set(false);
               this.globalState.limpiarError();
-              this.mostrarMensaje(`Formulario ID #${version.verId} eliminado correctamente.`);
+              this.confirmarEliminacionVersion(version);
               this.cargarVersiones();
             },
             error: error => {
@@ -3345,13 +3345,46 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.mostrarError(this.obtenerMensajeError(error, mensaje));
   }
 
+  private confirmarEliminacionVersion(version: VersionFormularioDto): void {
+    const obtenerVersion = (this.service as MatricesRiesgosService & {
+      obtenerVersionFormulario?: (id: number) => Observable<VersionFormularioDto>;
+    }).obtenerVersionFormulario;
+    if (typeof obtenerVersion !== 'function') {
+      this.mostrarMensaje(`Formulario ID #${version.verId} eliminado correctamente.`);
+      return;
+    }
+
+    obtenerVersion.call(this.service, version.verId).subscribe({
+      next: () => this.mostrarError('La API confirmó la eliminación, pero la lectura aún encontró la versión. No se reporta éxito.'),
+      error: error => {
+        if ((error as { status?: number })?.status === 404) {
+          this.mostrarMensaje(`Formulario ID #${version.verId} eliminado correctamente.`);
+          return;
+        }
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo verificar la eliminación de la versión del formulario.'));
+      }
+    });
+  }
+
   private mostrarMensaje(texto: string): void {
+    const detalle = this.detalleFamiliaRef?.instance;
+    if (this.detalleFamiliaDinamicoAbierto() && detalle) {
+      detalle.mostrarFeedbackVersiones('success', texto);
+      this.detalleFamiliaRef?.changeDetectorRef.detectChanges();
+      return;
+    }
     const scope = this.obtenerScopeAlerta();
     this.establecerMensaje(scope, texto);
     this.programarAutoDismiss(5000, scope);
   }
 
   private mostrarError(texto: string): void {
+    const detalle = this.detalleFamiliaRef?.instance;
+    if (this.detalleFamiliaDinamicoAbierto() && detalle) {
+      detalle.mostrarFeedbackVersiones('error', texto);
+      this.detalleFamiliaRef?.changeDetectorRef.detectChanges();
+      return;
+    }
     const scope = this.obtenerScopeAlerta();
     this.establecerError(scope, texto);
     this.programarAutoDismiss(8000, scope);

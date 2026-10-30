@@ -699,6 +699,29 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 }
             }
 
+            const string sqlDependencies = @"
+                SELECT
+                    (SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_VERSION_ID = :versionId),
+                    (SELECT COUNT(*) FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID = :versionId)
+                  FROM DUAL";
+            await using (var cmdDependencies = CrearComando(sqlDependencies, conn, trans))
+            {
+                cmdDependencies.Parameters.Add(new OracleParameter("versionId", versionId));
+                await using var readerDependencies = await cmdDependencies.ExecuteReaderAsync();
+                if (await readerDependencies.ReadAsync())
+                {
+                    var evaluaciones = readerDependencies.GetInt32(0);
+                    var usosFormula = readerDependencies.GetInt32(1);
+                    if (evaluaciones > 0 || usosFormula > 0)
+                    {
+                        throw new InvalidOperationException(
+                            "No se puede eliminar la versión porque tiene dependencias persistidas "
+                            + $"({evaluaciones} evaluación(es), {usosFormula} uso(s) de fórmula). "
+                            + "Conserve la versión para mantener la integridad histórica.");
+                    }
+                }
+            }
+
             const string sqlDelete = @"
                 DELETE FROM RL_MR_VERSIONES_FORMULARIO
                  WHERE VER_ID = :versionId

@@ -200,6 +200,20 @@
               }
             </div>
 
+            @if (feedbackVersiones(); as feedback) {
+              <div class="m-4 flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-xs"
+                [class.border-emerald-200]="feedback.tipo === 'success'"
+                [class.bg-emerald-50]="feedback.tipo === 'success'"
+                [class.text-emerald-800]="feedback.tipo === 'success'"
+                [class.border-red-200]="feedback.tipo === 'error'"
+                [class.bg-red-50]="feedback.tipo === 'error'"
+                [class.text-red-800]="feedback.tipo === 'error'"
+                [attr.role]="feedback.tipo === 'error' ? 'alert' : 'status'">
+                <span>{{ feedback.mensaje }}</span>
+                <button type="button" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg" aria-label="Cerrar mensaje" title="Cerrar mensaje" (click)="cerrarFeedbackVersiones()">×</button>
+              </div>
+            }
+
             @if (errorVersiones(); as errorVersion) {
               <div class="m-4 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
                 <span>{{ errorVersion }}</span><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded-lg" title="Reintentar carga de versiones" aria-label="Reintentar carga de versiones" (click)="reintentarVersiones()">

@@ -237,6 +237,27 @@ public class MatricesRiesgosCicloVidaVersionTests
     }
 
     [Fact]
+    public async Task Eliminar_DependenciaPersistida_DevuelveConflictoExplicable()
+    {
+        var version = new VersionFormularioDto
+        {
+            VerId = 10,
+            VerEstado = "DRAFT",
+            VerVigente = false
+        };
+
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repoStub);
+        repoStub.On("ObtenerVersionFormularioAsync", _ => Task.FromResult<VersionFormularioDto?>(version));
+        repoStub.On("EliminarVersionFormularioAsync", _ => throw new InvalidOperationException("No se puede eliminar la versión porque tiene dependencias persistidas."));
+
+        ServiceResult res = await service.EliminarVersionFormularioAsync(10);
+
+        Assert.False(res.Success);
+        Assert.Equal(409, res.StatusCode);
+        Assert.Contains("dependencias", res.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Eliminar_PublishedVigente_BloqueaYNoInvocaRepositorio()
     {
         var version = new VersionFormularioDto

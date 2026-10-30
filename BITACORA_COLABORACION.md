@@ -9941,3 +9941,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Git:** commit de correccion `d4bea1f3` publicado en `origin/desarrollo`; los artefactos ajenos permanecen sin stage. El siguiente commit documental congelara el nuevo SHA y reiniciara `NEW_SHA_CERTIFICATION=0/5`.
 - **Pendiente:** repetir Quality Gate/E2E Oracle XE sobre el SHA final, verificar `PUT=2xx`, `POST /formularios/{id}/publicar`, readback, `PUBLISHED/VIGENTE` y auditoria. No se modifico Oracle productivo ni la familia GTIC del usuario.
 
+- ## 2026-10-30 10:05 -06:00 - Correccion P0 de eliminacion de versiones y feedback contextual (COD)
+
+- Base: rama `desarrollo`, `c3c98aad5d3543332cef3180554b7ea55daf01ab`; cambios propios aun pendientes de commit y push. Untracked ajenos preservados fuera del stage.
+- Diagnostico confirmado por codigo: el modal dinamico no tenia canal de feedback para operaciones; el padre enviaba mensajes al alert de pagina. El DELETE tambien podia quedar bloqueado por familia inactiva/archivada o por FK de `RL_MR_EVALUACIONES_RIESGO` / `RL_MR_FORMULA_USOS`, sin mensaje funcional explicable.
+- Cambios: feedback contextual accesible dentro de “Versiones del formulario”, refresco de versiones/actividad sin destruir el modal ni el resultado, lectura posterior para no reportar exito si la version aun existe, y conflictos 409 explicables para dependencias persistidas/concurrencia. Se conserva bloqueo transaccional, auditoria y restricciones DRAFT/no vigente.
+- Archivos propios: `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`, `backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs`, prueba de ciclo de vida backend, componente/plantilla de detalle y pagina Angular de matrices.
+- Verificaciones ejecutadas: build Release del backend sin errores de compilacion; prueba backend focalizada `MatricesRiesgosCicloVidaVersionTests` = 14/14 PASS; prueba Angular focalizada del modal = 26/26 PASS; `npm run build` PASS con warnings existentes de presupuesto SCSS/CommonJS.
+- No ejecutado: Oracle XE real, E2E HTTP/auditoria, Quality Gate remoto, validadores Python/PowerShell completos. La reproduccion con familia GTIC y datos productivos no se realizo. Requiere retest con fixture disposable y evidencia de DELETE, readback 404 y auditoria.
+- Estado: el nuevo commit reinicia `NEW_SHA_CERTIFICATION=0/5`; H08-M03 sigue `PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: revisar diff, ejecutar validadores, commit/push a `origin/desarrollo` y correr Quality Gate/E2E con Oracle XE disposable.
+

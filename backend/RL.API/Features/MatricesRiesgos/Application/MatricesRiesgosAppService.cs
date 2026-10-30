@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -272,10 +273,21 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("Las versiones publicadas forman parte del historial y no pueden eliminarse. Solo los borradores (DRAFT) no vigentes pueden eliminarse.");
         }
 
-        bool eliminado = await _repo.EliminarVersionFormularioAsync(versionId);
-        return eliminado
-            ? ServiceResult.Ok("Formulario eliminado correctamente.")
-            : ServiceResult.BadRequest("No se pudo eliminar el formulario. Verifique que sea un borrador (DRAFT) no vigente.");
+        try
+        {
+            bool eliminado = await _repo.EliminarVersionFormularioAsync(versionId);
+            return eliminado
+                ? ServiceResult.Ok("Formulario eliminado correctamente.")
+                : ServiceResult.Conflict("La versión no pudo eliminarse porque cambió de estado o fue modificada por otra operación.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ServiceResult.Conflict(ex.Message);
+        }
+        catch (OracleException ex) when (ex.Number == 2292)
+        {
+            return ServiceResult.Conflict("No se puede eliminar la versión porque tiene dependencias persistidas. Conserve la versión para mantener la integridad histórica.");
+        }
     }
 
     public async Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo)

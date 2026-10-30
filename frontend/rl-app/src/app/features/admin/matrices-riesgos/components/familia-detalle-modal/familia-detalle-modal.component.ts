@@ -32,6 +32,8 @@ interface ActividadFamiliaViewModel {
   tono: 'green' | 'blue' | 'purple' | 'amber';
 }
 
+type FeedbackVersiones = { tipo: 'success' | 'error'; mensaje: string };
+
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 
 @Component({
@@ -78,6 +80,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   readonly operando = signal(false);
   readonly error = signal<string | null>(null);
   readonly errorVersiones = signal<string | null>(null);
+  readonly feedbackVersiones = signal<FeedbackVersiones | null>(null);
   readonly errorActividad = signal<string | null>(null);
   readonly totalActividad = signal(0);
   private paginaActividad = 0;
@@ -181,6 +184,25 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   refrescar(): void {
     this.cargarDetalle();
+  }
+
+  refrescarVersionesDespuesDeAccion(): void {
+    const familia = this.detalle();
+    if (!familia) return;
+    this.cargarVersiones(familia);
+    this.cargarActividad(familia);
+  }
+
+  mostrarFeedbackVersiones(tipo: FeedbackVersiones['tipo'], mensaje: string): void {
+    this.feedbackVersiones.set({ tipo, mensaje });
+  }
+
+  cerrarFeedbackVersiones(): void {
+    this.feedbackVersiones.set(null);
+  }
+
+  finalizarOperacionVersion(): void {
+    this.operando.set(false);
   }
 
   enfocarContexto(): void {
