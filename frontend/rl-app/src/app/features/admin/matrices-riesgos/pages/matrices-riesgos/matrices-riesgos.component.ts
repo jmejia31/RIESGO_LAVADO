@@ -2940,14 +2940,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           error: error => {
             this.guardando.set(false);
             this.operacionBuilderEnCurso.set(null);
-            this.mostrarError(this.obtenerMensajeError(error, 'No se pudieron actualizar los usos de fórmula del borrador.'));
+            this.mostrarError(this.obtenerMensajeErrorPublicacion(error, 'No se pudieron actualizar los usos de fórmula del borrador; la versión permanece en borrador.'));
           }
         });
       },
       error: error => {
         this.guardando.set(false);
         this.operacionBuilderEnCurso.set(null);
-        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la definición del formulario.'));
+        this.mostrarError(this.obtenerMensajeErrorPublicacion(error, 'No se pudo actualizar la definición del formulario; la versión permanece en borrador.'));
       }
     });
   }
@@ -2964,9 +2964,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           return;
         }
 
-        this.versionEditando.set(null);
+        this.versionEditando.set(versionPersistida);
+        this.soloLecturaDefinicion.set(
+          !this.esAdministrador() ||
+          versionPersistida.verVigente ||
+          versionPersistida.verEstado !== 'DRAFT'
+        );
         this.globalState.limpiarError();
-        this.mostrarMensaje('Definición del formulario actualizada y verificada correctamente.');
+        this.mostrarMensaje('Definición guardada correctamente y verificada.');
         this.cargarVersiones();
       },
       error: getError => {

@@ -13,6 +13,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
   let component: MatricesRiesgosComponent;
   let authServiceMock: { tieneRol: ReturnType<typeof vi.fn> };
   let confirmationMock: { confirm: ReturnType<typeof vi.fn> };
+  let calculoConfigMock: { listarFormulas: ReturnType<typeof vi.fn>; reemplazarFormulaUsos: ReturnType<typeof vi.fn> };
   let service: {
     obtenerVersionFormulario: ReturnType<typeof vi.fn>;
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
@@ -65,6 +66,10 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     authServiceMock = {
       tieneRol: vi.fn().mockReturnValue(true)
     };
+    calculoConfigMock = {
+      listarFormulas: vi.fn().mockReturnValue(of([])),
+      reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true }))
+    };
 
     service = {
       obtenerVersionFormulario: vi.fn().mockReturnValue(of(baseVersion)),
@@ -94,7 +99,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
         { provide: AuthService, useValue: authServiceMock },
         { provide: InstitutionalConfirmationService, useValue: confirmationMock },
         { provide: MatricesRiesgosService, useValue: service },
-        { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } }
+        { provide: CalculoConfiguracionService, useValue: calculoConfigMock }
       ]
     }).compileComponents();
 
@@ -198,8 +203,10 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
 
       expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(200, jsonModificado);
       expect(service.publicarVersionFormulario).not.toHaveBeenCalled();
-      expect(component.mensaje()).toContain('verificada correctamente');
-      expect(component.versionEditando()).toBeNull();
+      expect(component.mensajeFormBuilder()).toContain('Definición guardada correctamente');
+      expect(component.versionEditando()?.verId).toBe(200);
+      expect(component.versionEditando()?.verEstado).toBe('DRAFT');
+      expect(component.soloLecturaDefinicion()).toBe(false);
       expect(component.guardando()).toBe(false);
       expect(component.operacionBuilderEnCurso()).toBeNull();
     });
@@ -228,6 +235,22 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       expect(component.operacionBuilderEnCurso()).toBeNull();
     });
   });
+
+    it('conserva el borrador abierto y no publica si falla la sincronizacion de formulas', () => {
+      component.abrirDefinicion(baseVersion);
+      const jsonModificado = JSON.stringify({ ...JSON.parse(baseVersion.verJson), nombreFormulario: 'Sync failure' });
+      component.definicionTecnica = jsonModificado;
+      calculoConfigMock.reemplazarFormulaUsos.mockReturnValue(throwError(() => ({ status: 500, error: { detail: 'sync failed' } })));
+
+      component.guardarDefinicion();
+
+      expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(200, jsonModificado);
+      expect(component.versionEditando()?.verId).toBe(200);
+      expect(component.guardando()).toBe(false);
+      expect(component.operacionBuilderEnCurso()).toBeNull();
+      expect(service.publicarVersionFormulario).not.toHaveBeenCalled();
+      expect(component.errorFormBuilder()).toContain('usos de fórmula');
+    });
 
   describe('4. Publicación y Reconciliación Autoritativa', () => {
     it('publica versión y refresca el builder a modo solo lectura si la versión estaba abierta', async () => {

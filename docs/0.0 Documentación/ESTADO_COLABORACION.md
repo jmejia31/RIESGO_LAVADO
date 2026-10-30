@@ -3359,6 +3359,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificado: build Release host y solución con `0 errores`; `git diff --check` PASS. H08 Oracle XE completo queda `PENDING_CI`; nuevo contador estricto `0/5`.
 - `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`. El siguiente punto es publicar, validar el CI del nuevo SHA y solo después congelarlo para cinco corridas secuenciales.
 
+- Estado vigente - Correccion P0 de continuidad del Form Builder (COD) - 2026-10-30
+
+- Base `e221ded14b85889a538f71d215435044951fa65c`; Quality Gate `41077797929` confirmo HTTP 200 en guardado, sincronizacion y readback, pero el estado Angular cerro el builder antes de publicar.
+- Correccion aplicada: guardar conserva la version autoritativa en DRAFT/editable y deja publicar habilitado; cerrar es explicito; mensajes permanecen en `formBuilder`.
+- H08 exige ahora sincronizacion efectiva en la ruta completa `/configuracion-calculo/formula-usos/versiones-formulario/{id}`, HTTP 2xx, readback, builder abierto y orden antes del POST; no acepta arreglo vacio mediante `every()`.
+- Verificado: 58/58 pruebas focalizadas PASS; build Angular PASS; Playwright lista 1 test; ESLint TypeScript/E2E PASS; diff check PASS. Oracle XE, auditoria y Quality Gate quedan pendientes de CI.
+- Nuevo SHA reinicia `NEW_SHA_CERTIFICATION=0/5`; `H08-M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: publicar el hotfix y ejecutar CI H08 real sin alterar backend, Oracle institucional, datos GTIC ni untracked ajenos.
+
 - Estado vigente - Correccion P0 del bloqueo de sincronizacion H08 (COD) - 2026-10-30
 
 - Base `579a52d86b1c2a907dee549fdb1c44d0bc793e04` en `desarrollo`, remoto alineado antes del cambio.

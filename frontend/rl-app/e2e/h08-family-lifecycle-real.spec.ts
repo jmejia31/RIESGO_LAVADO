@@ -146,11 +146,11 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await detail.getByRole('button', { name: /cerrar detalle/i }).click();
   };
   const publishVersionThroughBuilder = async (): Promise<void> => {
-    const publicationTrace: Array<{ method: string; path: string; status: number }> = [];
+    const publicationTrace: Array<{ order: number; method: string; path: string; status: number }> = [];
     const traceResponse = (response: import('@playwright/test').Response): void => {
       const path = new URL(response.url()).pathname;
-      if (path.includes('/api/matrices-riesgos/formularios/') || path.includes('/api/matrices-riesgos/formula-usos/')) {
-        publicationTrace.push({ method: response.request().method(), path, status: response.status() });
+      if (path.includes('/api/matrices-riesgos/formularios/') || path.includes('/api/matrices-riesgos/configuracion-calculo/formula-usos/')) {
+        publicationTrace.push({ order: publicationTrace.length, method: response.request().method(), path, status: response.status() });
       }
     };
     page.on('response', traceResponse);
@@ -160,10 +160,22 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     await expect(page.locator('#titulo-modal-builder')).toBeVisible();
     const saveResponse = page.waitForResponse(response => response.request().method() === 'PUT'
       && /\/api\/matrices-riesgos\/formularios\/\d+$/.test(new URL(response.url()).pathname));
+    const syncResponse = page.waitForResponse(response => response.request().method() === 'PUT'
+      && /\/api\/matrices-riesgos\/configuracion-calculo\/formula-usos\/versiones-formulario\/\d+$/.test(new URL(response.url()).pathname));
+    const readbackResponse = page.waitForResponse(response => response.request().method() === 'GET'
+      && /\/api\/matrices-riesgos\/formularios\/\d+$/.test(new URL(response.url()).pathname));
     await page.locator('#btn-guardar-builder').click();
     const save = await saveResponse;
+    const sync = await syncResponse;
+    const saveReadback = await readbackResponse;
     expect(save.status()).toBeGreaterThanOrEqual(200);
     expect(save.status()).toBeLessThan(300);
+    expect(sync.status()).toBeGreaterThanOrEqual(200);
+    expect(sync.status()).toBeLessThan(300);
+    expect(new URL(sync.url()).pathname).toMatch(/\/versiones-formulario\/\d+$/);
+    expect(saveReadback.status()).toBeGreaterThanOrEqual(200);
+    expect(saveReadback.status()).toBeLessThan(300);
+    await expect(page.locator('#titulo-modal-builder')).toBeVisible();
     await expect(page.locator('#btn-publicar-builder')).toBeEnabled();
     const publishResponse = page.waitForResponse(response => response.request().method() === 'POST'
       && /\/api\/matrices-riesgos\/formularios\/\d+\/publicar$/.test(new URL(response.url()).pathname));
@@ -177,8 +189,15 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     expect(publish.status()).toBeLessThan(300);
     expect(readback.status()).toBeGreaterThanOrEqual(200);
     expect(readback.status()).toBeLessThan(300);
-    expect(publicationTrace.filter(item => item.method === 'PUT' && item.path.includes('/formula-usos/'))
-      .every(item => item.status >= 200 && item.status < 300)).toBe(true);
+    const syncTrace = publicationTrace.filter(item => item.method === 'PUT'
+      && /\/api\/matrices-riesgos\/configuracion-calculo\/formula-usos\/versiones-formulario\/\d+$/.test(item.path));
+    expect(syncTrace).toHaveLength(1);
+    expect(syncTrace[0].status).toBeGreaterThanOrEqual(200);
+    expect(syncTrace[0].status).toBeLessThan(300);
+    const publishTrace = publicationTrace.find(item => item.method === 'POST' && item.path.endsWith('/publicar'));
+    expect(publishTrace).toBeDefined();
+    expect(syncTrace[0].order).toBeLessThan(publishTrace!.order);
+    page.off('response', traceResponse);
     await test.info().attach('h08-publication-http-sequence', {
       body: JSON.stringify(publicationTrace, null, 2),
       contentType: 'application/json'

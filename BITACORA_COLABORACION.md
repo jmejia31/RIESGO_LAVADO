@@ -9899,6 +9899,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - CI `40893130639` sobre `64b95de3` paso H08-A/B/C/D, pero H08-E recibio 6 auditorias de familia al contar por `AUD_ACCION=UPDATE` en lugar de demostrar eventos individuales. Se agregan campos derivados seguros `AUD_EVENT` y `AUD_JUSTIFICATION` al snapshot para validar `FAMILY_DEACTIVATED/ARCHIVED/RESTORED/ACTIVATED` sin exponer CLOB de auditoria; el siguiente SHA reinicia `0/5`.
 - **Punto 1 / causa raíz:** CI `40728480187` reprodujo una carrera en `block7-oracle-real.spec.ts`: el modal de seguimiento era visible mientras `GET /evaluaciones/{id}/transiciones-permitidas` aún estaba en carga; el selector se renderiza únicamente después de `SUCCESS_WITH_DATA`. El reintento pasó, por lo que el gate se mantiene FAIL por flakiness.
 - **Correccion:** el E2E espera la respuesta HTTP 200 de transiciones y la sección funcional `Gestionar Transición de Estado` antes de contar opciones. La matriz de destinos y el código Angular no se relajan ni se modifican.
+- ## 2026-10-30 09:25 -06:00 - Correccion P0 de continuidad del Form Builder (COD)
+
+- Base `e221ded14b85889a538f71d215435044951fa65c`; rama `desarrollo`; se preservaron todos los untracked ajenos.
+- Causa confirmada por Quality Gate `41077797929`: despues del readback exitoso de guardar, `verificarDefinicionPersistida()` ejecutaba `versionEditando.set(null)`, destruyendo el builder y dejando `#btn-publicar-builder` ausente/deshabilitado antes del POST. Backend y sincronizacion ya estaban en HTTP 200 y no se reconstruyeron.
+- Correccion: guardar conserva `versionEditando` autoritativo, mantiene DRAFT/editable, limpia `guardando`/operacion y muestra confirmacion en `mensajeFormBuilder`; el cierre continua siendo explicito. Fallos de guardado/sincronizacion conservan contexto dentro del builder.
+- Regresiones: expectativas de persistencia actualizadas; se agrego prueba de cierre explicito y prueba de sincronizacion fallida sin POST; H08 exige PUT de guardado, PUT exacto de sincronizacion, GET readback, builder abierto, boton habilitado, POST y GET final. La traza exige una sincronizacion efectiva antes del POST.
+- Verificaciones: 3 archivos focalizados, `58/58 PASS`; build Angular PASS con warnings preexistentes; Playwright `--list` detecta 1 test; ESLint TypeScript/E2E PASS; `git diff --check` PASS. Oracle XE/Quality Gate completo queda pendiente de CI.
+- Estado: nuevo commit reinicia `NEW_SHA_CERTIFICATION=0/5`; `H08-M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: revisar diff, commit/push en `origin/desarrollo`, ejecutar H08 real y conservar evidencia HTTP/Oracle/auditoria antes de cualquier declaracion de exito.
+
 - ## 2026-10-30 09:05 -06:00 - Correccion P0 del bloqueo de sincronizacion H08 (COD)
 
 - Base: rama `desarrollo`, SHA inicial `579a52d86b1c2a907dee549fdb1c44d0bc793e04`; remoto alineado. Untracked ajenos preservados fuera del stage.

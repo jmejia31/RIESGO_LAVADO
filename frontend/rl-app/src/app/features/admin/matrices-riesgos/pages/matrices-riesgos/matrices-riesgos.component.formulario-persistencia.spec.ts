@@ -198,9 +198,12 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
 
     expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(100, jsonModificado);
     expect(service.obtenerVersionFormulario).toHaveBeenCalledWith(100);
-    // Cierre exitoso y mensaje
-    expect(component.versionEditando()).toBeNull();
-    expect(component.mensaje()).toContain('actualizada y verificada');
+    // El guardado exitoso conserva el constructor abierto y reactiva Publicar.
+    expect(component.versionEditando()?.verId).toBe(100);
+    expect(component.versionEditando()?.verEstado).toBe('DRAFT');
+    expect(component.soloLecturaDefinicion()).toBe(false);
+    expect(component.guardando()).toBe(false);
+    expect(component.mensajeFormBuilder()).toContain('Definición guardada correctamente');
   });
 
   it('4. Discrepancia semántica post-save: bloquea el cierre (fail-closed), no muestra éxito y preserva el contexto de edición', () => {
@@ -283,8 +286,8 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     component.abrirDefinicion(versionMock);
     expect(component.definicionTecnica).toContain('MATRIZ_LAFT_BIDIRECCIONAL');
 
-    // 2. Cerrar
-    component.versionEditando.set(null);
+    // 2. Cerrar explícitamente mediante la acción del constructor
+    component.cerrarDefinicion();
     expect(component.versionEditando()).toBeNull();
 
     // 3. Reabrir misma versión

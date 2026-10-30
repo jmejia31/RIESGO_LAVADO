@@ -549,7 +549,9 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     service.obtenerVersionFormulario.mockReturnValue(of({ ...version, verJson: component.definicionTecnica }));
     component.guardarDefinicion();
     expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(10, component.definicionTecnica);
-    expect(component.versionEditando()).toBeNull();
+    expect(component.versionEditando()?.verId).toBe(10);
+    expect(component.versionEditando()?.verEstado).toBe('DRAFT');
+    expect(component.guardando()).toBe(false);
   });
 
   it('crea una nueva versión directamente desde el Detalle de Familia y vincula evidencia', () => {
