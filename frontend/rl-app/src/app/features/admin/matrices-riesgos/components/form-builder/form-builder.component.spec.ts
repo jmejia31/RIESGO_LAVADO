@@ -569,12 +569,13 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       const boton = (fixture.nativeElement as HTMLElement).querySelector('#btn-publicar-builder-footer') as HTMLButtonElement;
       expect(boton).toBeTruthy();
       expect(boton.disabled).toBe(false);
-      expect(boton.textContent).toContain('Publicar versión');
+      expect(boton.querySelector('app-action-icon[action="publish"]')).toBeTruthy();
+      expect(boton.textContent).not.toContain('Publicar versión');
 
       const emitir = vi.spyOn(component.publicar, 'emit');
       boton.click();
       expect(emitir).toHaveBeenCalledTimes(1);
-      expect(JSON.parse(emitir.mock.calls[0][0]).codigoFormulario).toBe('MATRIZ_LAFT_TEST');
+      expect(JSON.parse(emitir.mock.calls[0][0]!).codigoFormulario).toBe('MATRIZ_LAFT_TEST');
     });
 
     it('presenta el error visible en el mismo modal al publicar una definición inválida desde el footer', () => {

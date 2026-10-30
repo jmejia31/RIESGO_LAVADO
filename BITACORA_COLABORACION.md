@@ -10055,3 +10055,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; no se cuentan gates que omitan `P0_DIRECT_PUBLICATION_ORACLE_E2E`, `P0_DIRTY_PUBLICATION_ORACLE_E2E` o `P0_DELETE_REAL_BROWSER_E2E`. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - **Punto exacto:** revisar el siguiente Quality Gate del SHA final y exigir UTF-8 PASS más los tres escenarios Oracle E2E completos antes de contabilizarlo.
 
+## 2026-10-30 15:52 -06:00 - Corrección P0 del botón Publicar del footer (COD)
+
+- **Baseline:** rama `desarrollo`, `INITIAL_HEAD=c9405b2b1f18710e99a4c11159c963af571e3476`, igual a `origin/desarrollo`; untracked ajenos preservados.
+- **Fallo confirmado:** Quality Gate `41132203759` falló en `Validate institutional modal standard and dynamic system theme`; el footer de Form Builder tenía clases/color locales y texto visible, generando `ICON_CONTRAST_VALIDATOR=FAIL`, `MODAL_FOOTER_TEXT_ACTIONS=1`.
+- **Corrección quirúrgica:** `form-builder-statusbar.component.html` conserva el botón superior y el `id`, `title`, `aria-label`, `[disabled]` y `publicar.emit()`, pero usa `modal-action-icon modal-action-icon--primary` y únicamente `<app-action-icon action="publish">`. Se eliminó solo el texto visible y las utilidades de color locales.
+- **Regresión de prueba:** `form-builder.component.spec.ts` ahora comprueba el icono institucional y la ausencia de texto visible; se añadió únicamente el operador no-null necesario para compilar la aserción existente.
+- **Verificado:** validadores institucionales icon contrast, modal standard, dynamic theme y premium design PASS; Form Builder/Toolbar/JSON gate `70/70 PASS`; build Angular PASS; validadores estructura/DB/documentación PASS; `git diff --check` PASS.
+- **Pendiente:** rollback real ante fallo de auditoría en Oracle XE descartable aún no cuenta con una prueba específica; no se declara certificado. E2E Oracle y cinco Quality Gates del SHA final quedan pendientes de CI.
+- **Estado obligatorio:** `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- **Punto exacto:** revisar el Quality Gate del SHA publicado; exigir publicación directa, publicación modificada, DELETE/readback y rollback Oracle antes de contabilizar gates.
+

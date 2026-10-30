@@ -21,9 +21,8 @@
           <app-action-icon action="save"></app-action-icon>
         </button>
         @if (puedePublicar) {
-          <button type="button" id="btn-publicar-builder-footer" class="form-builder-statusbar__publish inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-bold text-ihss-900 shadow-sm transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50" title="Publicar Versión" aria-label="Publicar Versión" [disabled]="!puedeGuardar" (click)="publicar.emit()">
+          <button type="button" id="btn-publicar-builder-footer" class="form-builder-statusbar__publish modal-action-icon modal-action-icon--primary" title="Publicar Versión" aria-label="Publicar Versión" [disabled]="!puedeGuardar" (click)="publicar.emit()">
             <app-action-icon action="publish"></app-action-icon>
-            <span>Publicar versión</span>
           </button>
         }
       }

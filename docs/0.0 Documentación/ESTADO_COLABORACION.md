@@ -3512,3 +3512,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`. El siguiente gate solo cuenta si contiene y supera `P0_DIRECT_PUBLICATION_ORACLE_E2E=PASS`, `P0_DIRTY_PUBLICATION_ORACLE_E2E=PASS` y `P0_DELETE_REAL_BROWSER_E2E=PASS`, además de HTTP, integridad y auditoría.
 - Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 
+- Estado vigente - Corrección P0 del botón Publicar del footer (COD) - 2026-10-30
+
+- Baseline `c9405b2b1f18710e99a4c11159c963af571e3476`, rama `desarrollo`.
+- Se corrigió exclusivamente el footer de Form Builder: acción icon-only institucional, sin texto visible ni colores locales; se preservaron publicación superior, evento, deshabilitación y accesibilidad.
+- Quality Gate fallido `41132203759` diagnosticado con evidencia exacta: `MODAL_FOOTER_TEXT_ACTIONS=1` y clases/color no institucionales.
+- Verificado localmente: validadores institucionales PASS; Form Builder/Toolbar/JSON gate `70/70 PASS`; build Angular PASS; validadores estructura/DB/documentación/diff PASS.
+- Rollback Oracle XE por fallo de auditoría, E2E Oracle completo y cinco gates independientes siguen pendientes; no se declara cierre P0.
+- Mantener `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuación: revisar el siguiente CI del SHA final y no contabilizarlo si omite cualquiera de las certificaciones Oracle obligatorias.
+
