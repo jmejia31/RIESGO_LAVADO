@@ -3452,3 +3452,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El nuevo commit reiniciara `QUALITY_GATES=0/5`; mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: publicar el nuevo SHA y revisar su CI; luego exigir cinco Quality Gates independientes exitosos sobre el SHA definitivo.
 
+- Estado vigente - Reconciliacion P0 y bloqueo de DELETE real especifico (COD) - 2026-10-30
+
+- `41093552061` esta verificado como SUCCESS, intento 1, SHA `cfcfdd72`; H08-A/B/C/D/E, Oracle XE H08 y auditoria general pasaron. Esto mantiene la evidencia `QUALITY_GATES=1/5` reportada para ese SHA.
+- Los dos fallos E2E locales fueron reproducidos aisladamente con PASS: `login-and-routing.spec.ts:464` y `matrices-authorization.spec.ts:156`. El lote con seis workers sufrio timeout/socket del servidor local; no se modifico codigo ni se agregaron retries.
+- Bloqueo de certificacion final: no existe prueba versionada que haga DELETE de una version DRAFT elegible desde Angular real contra API+Oracle XE y verifique GET 404, preservacion de otra version, contador, familia/modal, feedback, auditoria y dependencia `RL_MR_FORMULA_USOS`. H08 existente cubre otro ciclo y solo hace limpieza SQL.
+- No se ejecutan cuatro gates adicionales mientras falte esa evidencia; repetirlos antes seria contar ejecuciones sin cumplir la precondicion solicitada. Incorporar la prueba cambiara el SHA y reiniciara `QUALITY_GATES=0/5`.
+- Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: diseño e implementación mínima del fixture/E2E de eliminación real; después publicar y certificar cinco gates secuenciales sobre el nuevo SHA.
+

@@ -9983,3 +9983,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Archivos propios: plantilla HTML del modal, bitacora y estado colaborativo. No se modificaron Oracle institucional, migraciones, `main`, `PRUEBA_FORMULARIO` ni GTIC.
 - Punto de continuacion: commit/push del SHA final, verificar el nuevo Quality Gate y solo contabilizar cinco corridas independientes exitosas sobre ese mismo SHA.
 
+- ## 2026-10-30 11:08 -06:00 - Reconciliacion de certificacion P0 y E2E local (COD)
+
+- Base verificada: `desarrollo` en `cfcfdd724300a169f9ce58a35bbdddf58b549be9`, remoto alineado; untracked ajenos preservados.
+- CI fresco verificado: run `41093552061`, `SUCCESS`, `run_attempt=1`, SHA exacto; job `124193333506` SUCCESS. Logs evidencian H08-A/B/C/D/E PASS, `H08_FAMILY_LIFECYCLE_ORACLE_E2E=PASS`, `AUDIT_HISTORY_CREATED=PASS`, suite frontend `953/953` y E2E general reportado `74 PASS`, `4 SKIP`.
+- E2E local reconciliado: los dos fallos del lote concurrente fueron `login-and-routing.spec.ts:464` (timeout) y `matrices-authorization.spec.ts:156` (`ERR_SOCKET_NOT_CONNECTED`). Cada uno repetido aisladamente con `--workers=1` paso `1/1`; causa demostrada: contencion/temporizacion del servidor local con seis workers, no fallo funcional. No se agregaron retries ni cambios de codigo.
+- Evidencia faltante: la busqueda del repositorio no encontro un escenario automatizado que cree dos DRAFT, elimine una version mediante Angular real+API+Oracle XE y compruebe DELETE 2xx, GET 404, contador, modal, feedback, auditoria y `RL_MR_FORMULA_USOS`. El host actual solo limpia datos por SQL y H08 no ejecuta DELETE de version.
+- Accion: no se lanzaron cuatro `workflow_dispatch` adicionales porque la precondicion de DELETE real especifico no esta satisfecha y no existe herramienta de dispatch disponible en este entorno. Incorporar la prueba minima requerira cambios versionados y reiniciara la certificacion a `0/5`.
+- Sin cambios funcionales en esta intervencion; solo se actualiza continuidad. No se tocaron `main`, produccion, Oracle institucional, GTIC, migraciones ni `PRUEBA_FORMULARIO`.
+- Punto de continuacion: agregar, con autorizacion operativa, un fixture disposable y E2E especifico de eliminacion; publicar nuevo SHA; repetir Quality Gate y luego cuatro gates secuenciales independientes.
+
