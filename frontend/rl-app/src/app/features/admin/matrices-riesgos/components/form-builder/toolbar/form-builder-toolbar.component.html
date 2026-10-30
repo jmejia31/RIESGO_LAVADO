@@ -50,7 +50,7 @@
       @if (!soloLectura) { <button type="button" id="btn-guardar-builder" title="{{ labelGuardar }}" aria-label="{{ labelGuardar }}" (click)="guardar.emit()" [disabled]="estaProcesando" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ihss-200 bg-white text-ihss-700 shadow-sm">
             <app-action-icon action="save"></app-action-icon>
           </button> }
-      @if (!soloLectura && puedePublicar) { <button type="button" id="btn-publicar-builder" title="{{ labelPublicar }}" aria-label="{{ labelPublicar }}" (click)="publicar.emit()" [disabled]="estaProcesando" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-ihss-600 text-white shadow-sm">
+      @if (!soloLectura && puedePublicar) { <button type="button" id="btn-publicar-builder" title="{{ labelPublicar }}" aria-label="{{ labelPublicar }}" (click)="publicar.emit()" [disabled]="estaProcesando" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-ihss-600 text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50">
             <app-action-icon action="publish"></app-action-icon>
           </button> }
     </div>

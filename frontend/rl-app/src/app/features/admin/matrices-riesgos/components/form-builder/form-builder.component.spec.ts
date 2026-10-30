@@ -560,6 +560,54 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       expect(conteo).toBe(0);
     });
 
+    it('permite publicar desde un botón visible en el pie de página del constructor', () => {
+      component.puedePublicar = true;
+      component.estadoVersion = 'DRAFT';
+      component.soloLectura = false;
+      fixture.detectChanges();
+
+      const boton = (fixture.nativeElement as HTMLElement).querySelector('#btn-publicar-builder-footer') as HTMLButtonElement;
+      expect(boton).toBeTruthy();
+      expect(boton.disabled).toBe(false);
+      expect(boton.textContent).toContain('Publicar versión');
+
+      const emitir = vi.spyOn(component.publicar, 'emit');
+      boton.click();
+      expect(emitir).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(emitir.mock.calls[0][0]).codigoFormulario).toBe('MATRIZ_LAFT_TEST');
+    });
+
+    it('presenta el error visible en el mismo modal al publicar una definición inválida desde el footer', () => {
+      component.puedePublicar = true;
+      component.estadoVersion = 'DRAFT';
+      component.model.update(model => ({ ...model, secciones: [] }));
+      fixture.detectChanges();
+
+      const emitir = vi.spyOn(component.publicar, 'emit');
+      const boton = (fixture.nativeElement as HTMLElement).querySelector('#btn-publicar-builder-footer') as HTMLButtonElement;
+      boton.click();
+      fixture.detectChanges();
+
+      const alerta = (fixture.nativeElement as HTMLElement).querySelector('.form-builder-validation-banner[role="alert"]');
+      expect(alerta).toBeTruthy();
+      expect(alerta?.textContent).toContain('al menos una sección');
+      expect(emitir).not.toHaveBeenCalled();
+      expect(component.model().secciones).toHaveLength(0);
+    });
+
+    it('deshabilita publicación en footer durante una operación sin mostrar un falso estado listo', () => {
+      component.puedePublicar = true;
+      component.estadoVersion = 'DRAFT';
+      component.procesando = true;
+      component.operacion = 'publicar';
+      fixture.detectChanges();
+
+      const boton = (fixture.nativeElement as HTMLElement).querySelector('#btn-publicar-builder-footer') as HTMLButtonElement;
+      expect(boton).toBeTruthy();
+      expect(boton.disabled).toBe(true);
+      expect((fixture.nativeElement as HTMLElement).querySelector('app-form-builder-statusbar')?.textContent).toContain('Publicando...');
+    });
+
     it('Arquitectura limpia: FormBuilderComponent no depende de servicios HTTP o MatricesRiesgosService', () => {
       // El componente se instancia únicamente con Inputs/Outputs presentacionales
       expect(component).toBeDefined();

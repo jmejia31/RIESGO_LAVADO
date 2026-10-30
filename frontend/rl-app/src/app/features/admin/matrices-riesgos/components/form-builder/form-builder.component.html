@@ -19,7 +19,7 @@
   </div>
 }
 
-<section class="form-builder-shell" data-form-builder-shell="true" aria-label="Espacio de trabajo del constructor de formularios">
+<section class="form-builder-shell" [class.form-builder-shell--has-feedback]="!!errorFeedback || !!mensajeFeedback" [class.form-builder-shell--has-both-feedback]="!!errorFeedback && !!mensajeFeedback" data-form-builder-shell="true" aria-label="Espacio de trabajo del constructor de formularios">
   <app-form-builder-toolbar
     [title]="'Constructor de Formularios Dinámicos'"
     [versionCodigo]="versionCodigo"
@@ -307,9 +307,13 @@
     [estadoVersion]="estadoVersion"
     [soloLectura]="soloLectura"
     [puedeGuardar]="!bloqueadoParaMutacion"
+    [puedePublicar]="puedePublicar && !soloLectura"
+    [procesando]="procesando"
+    [operacion]="operacion"
     [seccionesCount]="model().secciones.length"
     [catalogosCount]="catalogosList().length"
     (cancelar)="cerrar.emit()"
-    (guardar)="emitirGuardado()">
+    (guardar)="emitirGuardado()"
+    (publicar)="emitirPublicar()">
   </app-form-builder-statusbar>
 </section>

@@ -18,8 +18,19 @@ export class FormBuilderStatusbarComponent {
   @Input() seccionesCount: number = 0;
   @Input() catalogosCount: number = 0;
   @Input() puedeGuardar: boolean = false;
+  @Input() puedePublicar: boolean = false;
+  @Input() procesando: boolean = false;
+  @Input() operacion: 'guardar' | 'publicar' | null = null;
   @Output() cancelar = new EventEmitter<void>();
   @Output() guardar = new EventEmitter<void>();
+  @Output() publicar = new EventEmitter<void>();
+
+  get etiquetaModo(): string {
+    if (this.operacion === 'publicar') return 'Publicando...';
+    if (this.operacion === 'guardar') return 'Guardando...';
+    if (this.procesando) return 'Procesando...';
+    return this.soloLectura ? 'Solo lectura' : 'Listo para editar';
+  }
 
   get estadoEtiqueta(): string {
     const mapa: Record<EstadoFormulario, string> = {

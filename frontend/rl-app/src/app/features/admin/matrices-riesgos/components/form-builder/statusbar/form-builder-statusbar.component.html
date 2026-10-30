@@ -2,7 +2,7 @@
   <div class="form-builder-statusbar__content">
     <div class="form-builder-statusbar__state">
       <span class="form-builder-statusbar__indicator" [class.form-builder-statusbar__indicator--readonly]="soloLectura"></span>
-      <span class="form-builder-statusbar__mode" [class.form-builder-statusbar__mode--readonly]="soloLectura" [class.form-builder-statusbar__mode--draft]="!soloLectura">{{ soloLectura ? 'Solo lectura' : 'Listo para editar' }}</span>
+      <span class="form-builder-statusbar__mode" [class.form-builder-statusbar__mode--readonly]="soloLectura || procesando || operacion !== null" [class.form-builder-statusbar__mode--draft]="!soloLectura && !procesando && operacion === null">{{ etiquetaModo }}</span>
       <span class="form-builder-statusbar__separator">&middot;</span><span>{{ estadoEtiqueta }}</span>
       <span class="form-builder-statusbar__separator">&middot;</span><span>Versi&oacute;n {{ versionCodigo }}</span>
       <span class="form-builder-statusbar__separator">&middot;</span><span>{{ seccionesCount }} secci&oacute;n(es)</span>
@@ -20,6 +20,12 @@
         <button type="button" class="form-builder-statusbar__save modal-action-icon modal-action-icon--primary" title="Guardar cambios" aria-label="Guardar cambios" [disabled]="!puedeGuardar" (click)="guardar.emit()">
           <app-action-icon action="save"></app-action-icon>
         </button>
+        @if (puedePublicar) {
+          <button type="button" id="btn-publicar-builder-footer" class="form-builder-statusbar__publish inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-bold text-ihss-900 shadow-sm transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50" title="Publicar Versión" aria-label="Publicar Versión" [disabled]="!puedeGuardar" (click)="publicar.emit()">
+            <app-action-icon action="publish"></app-action-icon>
+            <span>Publicar versión</span>
+          </button>
+        }
       }
     </div>
   </div>
