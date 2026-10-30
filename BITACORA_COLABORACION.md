@@ -10066,3 +10066,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado obligatorio:** `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - **Punto exacto:** revisar el Quality Gate del SHA publicado; exigir publicación directa, publicación modificada, DELETE/readback y rollback Oracle antes de contabilizar gates.
 
+- ## 2026-10-30 16:03 -06:00 - Diagnóstico HTTP 500 del Constructor (COD)
+- Base `desarrollo`, SHA `e934cec4f6ac265de25d6b17d8487da3d672eeec`; untracked ajenos preservados.
+- Reproducción real en log: `PUT /api/matrices-riesgos/formularios/93` terminó HTTP 500 por `JsonElement.GetRawText()` en `ActualizarBorradorFormulario`.
+- Causa confirmada: `Program.cs` usa `AddNewtonsoftJson`, pero el endpoint recibía `System.Text.Json.JsonElement`; el binder entregó `Undefined`.
+- Hotfix mínimo: binding `Newtonsoft.Json.Linq.JToken` y `ToString(Formatting.None)`; solo se alinearon tres pruebas de contrato. No se tocó servicio, repositorio, auditoría, Oracle, migraciones ni autorización.
+- Verificado: backend focalizado `23/23 PASS`; build API Release PASS; frontend Form Builder `187/187 PASS`; build Angular PASS; diff check PASS.
+- API activa `Database:Profile=PRODUCTION`; no se mutaron datos ni se reiniciaron procesos de propiedad no confirmada. Oracle XE, E2E, auditoría, rollback, DELETE y H08 quedan pendientes.
+- Estado: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.

@@ -6,7 +6,6 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -256,7 +255,7 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         serviceStub.On(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync), _ =>
             Task.FromResult(ServiceResult.Ok("Borrador actualizado")));
 
-        JsonElement documento = JsonDocument.Parse("{\"secciones\":[]}").RootElement;
+        JToken documento = JToken.Parse("{\"secciones\":[]}");
         IActionResult okResult = await controller.ActualizarBorradorFormulario(10, documento);
         Assert.IsType<OkObjectResult>(okResult);
 

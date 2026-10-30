@@ -3522,3 +3522,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Mantener `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto de continuación: revisar el siguiente CI del SHA final y no contabilizarlo si omite cualquiera de las certificaciones Oracle obligatorias.
 
+- Estado vigente - Diagnóstico HTTP 500 del Constructor (COD) - 2026-10-30
+- Log real: PUT de borrador terminó HTTP 500 en `JsonElement.GetRawText()`; causa confirmada por incompatibilidad entre `AddNewtonsoftJson` y `System.Text.Json.JsonElement`.
+- Hotfix aplicado: `JToken` + `Formatting.None`; pruebas focalizadas y build verificadas. No se tocó Oracle ni lógica funcional.
+- La API activa usa `Database:Profile=PRODUCTION`; no se ejecutaron mutaciones ni E2E Oracle. `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `QUALITY_GATES=0/5`.
+- Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
