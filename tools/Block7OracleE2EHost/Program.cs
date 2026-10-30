@@ -78,11 +78,14 @@ long evaluationVersionId = stamp + 930_000_001;
 long evaluationId = stamp + 930_000_002;
 long publishFamilyId = stamp + 940_000_000;
 long publishVersionId = stamp + 940_000_001;
+long dirtyPublishFamilyId = stamp + 950_000_000;
+long dirtyPublishVersionId = stamp + 950_000_001;
 string lifecycleFamilyCode = $"H08-FAMILIA-{stamp}";
 string deleteFamilyCode = $"P0_DELETE_{stamp}";
 string formulaFamilyCode = $"P0_FORMULA_{stamp}";
 string evaluationFamilyCode = $"P0_EVALUATION_{stamp}";
 string publishFamilyCode = $"P0_PUBLISH_{stamp}";
+string dirtyPublishFamilyCode = $"P0_DIRTY_PUBLISH_{stamp}";
 string riskCode = canonicalRisks[0].Code;
 string ruleCode = $"B7-E2E-RULE-{stamp}";
 string lifecycleRuleCode = $"H08-LIFECYCLE-{stamp}";
@@ -135,6 +138,10 @@ string publishDefinition = CreateDefinition($"P0-PUBLISH-{stamp}");
 string publishHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(publishDefinition))).ToLowerInvariant();
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'P0 Direct Publish', 'Fixture disposable P0',1,0,0,SYSDATE)", ("id", publishFamilyId), ("code", publishFamilyCode));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,'P0_PUBLISH_V1',1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", publishVersionId), ("family", publishFamilyId), ("json", publishDefinition), ("hash", publishHash), ("usr", userId));
+string dirtyPublishDefinition = CreateDefinition($"P0-DIRTY-PUBLISH-{stamp}");
+string dirtyPublishHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dirtyPublishDefinition))).ToLowerInvariant();
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'P0 Dirty Publish', 'Fixture disposable P0',1,0,0,SYSDATE)", ("id", dirtyPublishFamilyId), ("code", dirtyPublishFamilyCode));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,'P0_DIRTY_PUBLISH_V1',1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", dirtyPublishVersionId), ("family", dirtyPublishFamilyId), ("json", dirtyPublishDefinition), ("hash", dirtyPublishHash), ("usr", userId));
 await oracle.CloseAsync();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -208,6 +215,7 @@ app.MapGet("/__e2e/version-delete-fixture", () => Results.Ok(new
     evaluationId
 }));
 app.MapGet("/__e2e/version-publish-fixture", () => Results.Ok(new { familyId = publishFamilyId, familyCode = publishFamilyCode, versionId = publishVersionId }));
+app.MapGet("/__e2e/version-publish-dirty-fixture", () => Results.Ok(new { familyId = dirtyPublishFamilyId, familyCode = dirtyPublishFamilyCode, versionId = dirtyPublishVersionId }));
 app.MapGet("/__e2e/version-publish-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
 {
     await using var connection = db.CreateConnection();
@@ -224,7 +232,31 @@ app.MapGet("/__e2e/version-publish-snapshot", async (OracleDbContext db, Cancell
         familyCode = publishFamilyCode,
         state = await ScalarAsync("SELECT VER_ESTADO FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", publishVersionId),
         vigency = Convert.ToInt32(await ScalarAsync("SELECT VER_VIGENTE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", publishVersionId)),
-        auditCount = Convert.ToInt32(await ScalarAsync("SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION='VERSION_PUBLISHED'", publishVersionId))
+        auditCount = Convert.ToInt32(await ScalarAsync("SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION='UPDATE' AND DBMS_LOB.INSTR(AUD_DATOS_NVO, 'VERSION_PUBLISHED') > 0", publishVersionId))
+    });
+});
+app.MapGet("/__e2e/version-publish-dirty-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+    await using var command = new OracleCommand(@"
+        SELECT VER_ESTADO,VER_VIGENTE,VER_HASH,VER_JSON,
+               (SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION='UPDATE' AND DBMS_LOB.INSTR(AUD_DATOS_NVO, 'VERSION_DRAFT_UPDATED') > 0),
+               (SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION='UPDATE' AND DBMS_LOB.INSTR(AUD_DATOS_NVO, 'VERSION_PUBLISHED') > 0)
+          FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", connection) { BindByName = true };
+    command.Parameters.Add(new OracleParameter("id", dirtyPublishVersionId));
+    await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+    if (!await reader.ReadAsync(cancellationToken)) return Results.NotFound();
+    return Results.Ok(new
+    {
+        familyId = dirtyPublishFamilyId,
+        familyCode = dirtyPublishFamilyCode,
+        state = reader.GetString(0),
+        vigency = reader.GetInt32(1),
+        hash = reader.GetString(2),
+        json = reader.GetOracleClob(3).Value,
+        updateAuditCount = reader.GetInt32(4),
+        publishAuditCount = reader.GetInt32(5)
     });
 });
 app.MapGet("/__e2e/version-delete-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
@@ -272,7 +304,7 @@ app.MapGet("/__e2e/version-delete-snapshot", async (OracleDbContext db, Cancella
         evaluationVersionCount = await CountAsync("SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", evaluationVersionId),
         evaluationVersionReferenceId = await ReadLongAsync("SELECT EVA_VERSION_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", evaluationId),
         otherVersion = family,
-        deleteAuditCount = await CountAsync("SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION='VERSION_DRAFT_DELETED'", deleteVersionAId)
+        deleteAuditCount = await CountAsync("SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION='DELETE' AND DBMS_LOB.INSTR(AUD_DATOS_ANT, 'VERSION_DRAFT_DELETED') > 0", deleteVersionAId)
     });
 });
 app.MapGet("/__e2e/family-lifecycle-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
@@ -663,7 +695,7 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
         "CREATE TABLE RL_MR_FAMILIAS_FORMULARIO (FAM_ID NUMBER(15) PRIMARY KEY,FAM_CODIGO VARCHAR2(80),FAM_NOMBRE VARCHAR2(250),FAM_DESCRIPCION VARCHAR2(2000),FAM_ACTIVO NUMBER(1),FAM_ARCHIVADA NUMBER(1),FAM_PREDETERMINADA NUMBER(1),FAM_FECHA_CREACION DATE,FAM_FECHA_ARCHIVADO DATE,FAM_USR_ARCHIVADO NUMBER(10),FAM_MOTIVO_ARCHIVADO VARCHAR2(500))",
         "CREATE TABLE RL_MR_VERSIONES_FORMULARIO (VER_ID NUMBER(15) PRIMARY KEY,VER_FAMILIA_ID NUMBER(15),VER_CODIGO VARCHAR2(80),VER_VERSION NUMBER(10),VER_JSON CLOB,VER_HASH VARCHAR2(64),VER_ESTADO VARCHAR2(30),VER_VIGENTE NUMBER(1),VER_FECHA_INICIO DATE,VER_FECHA_FIN DATE,VER_FECHA_CREACION DATE,VER_USR_CREACION NUMBER(10))",
         "CREATE TABLE RL_MR_REGLAS_CALCULO (REG_ID NUMBER(15) PRIMARY KEY,REG_CODIGO VARCHAR2(80),REG_VERSION VARCHAR2(20),REG_NOMBRE VARCHAR2(250),REG_ALGORITMO_ID VARCHAR2(100),REG_ACTIVA NUMBER(1))",
-        "CREATE TABLE RL_AUDITORIA (AUD_ID NUMBER(15) PRIMARY KEY,AUD_TABLA VARCHAR2(128),AUD_REGISTRO_ID VARCHAR2(100),AUD_ACCION VARCHAR2(80),AUD_DATOS_ANT CLOB,AUD_DATOS_NVO CLOB,AUD_USR_ID NUMBER(10),AUD_USR_EMAIL VARCHAR2(255),AUD_IP VARCHAR2(64),AUD_FECHA DATE,AUD_MODULO VARCHAR2(80))",
+        "CREATE TABLE RL_AUDITORIA (AUD_ID NUMBER(15) PRIMARY KEY,AUD_TABLA VARCHAR2(128),AUD_REGISTRO_ID VARCHAR2(100),AUD_ACCION VARCHAR2(10) NOT NULL,AUD_DATOS_ANT CLOB,AUD_DATOS_NVO CLOB,AUD_USR_ID NUMBER(10),AUD_USR_EMAIL VARCHAR2(255),AUD_IP VARCHAR2(64),AUD_FECHA DATE,AUD_MODULO VARCHAR2(80),CONSTRAINT CK_E2E_RL_AUD_ACCION CHECK (AUD_ACCION IN ('INSERT','UPDATE','DELETE','LOGIN','LOGOUT')))",
         "CREATE TABLE RL_MR_FORMULAS (FOR_ID NUMBER(15) PRIMARY KEY,FOR_CODIGO VARCHAR2(80) UNIQUE,FOR_NOMBRE VARCHAR2(150) NOT NULL,FOR_DESCRIPCION VARCHAR2(1000),FOR_ESTADO VARCHAR2(20) NOT NULL,FOR_METADATA_JSON CLOB,FOR_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,FOR_USR_CREACION NUMBER(10) NOT NULL,FOR_VERSION_ROW NUMBER(10) DEFAULT 1 NOT NULL,CONSTRAINT CK_P0_FOR_EST CHECK (FOR_ESTADO IN ('ACTIVE','INACTIVE','RETIRED')))",
         "CREATE TABLE RL_MR_FORMULA_VERSIONES (FOV_ID NUMBER(15) PRIMARY KEY,FOV_FORMULA_ID NUMBER(15) NOT NULL,FOV_VERSION NUMBER(5) NOT NULL,FOV_EXPRESION CLOB NOT NULL,FOV_TIPO_RESULTADO VARCHAR2(20) NOT NULL,FOV_ESTADO VARCHAR2(20) NOT NULL,FOV_HASH VARCHAR2(64) NOT NULL,FOV_FECHA_INICIO DATE,FOV_FECHA_FIN DATE,FOV_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,FOV_USR_CREACION NUMBER(10) NOT NULL,FOV_VERSION_ROW NUMBER(10) DEFAULT 1 NOT NULL,CONSTRAINT FK_P0_FOV_FOR FOREIGN KEY (FOV_FORMULA_ID) REFERENCES RL_MR_FORMULAS(FOR_ID))",
         "CREATE TABLE RL_MR_FORMULA_USOS (FUS_ID NUMBER(15) PRIMARY KEY,FUS_VERSION_FORMULARIO_ID NUMBER(15) NOT NULL,FUS_CAMPO_CLAVE VARCHAR2(150) NOT NULL,FUS_FORMULA_VERSION_ID NUMBER(15) NOT NULL,FUS_FECHA_CREACION DATE,FUS_USR_CREACION NUMBER(10) NOT NULL,CONSTRAINT FK_P0_FUS_VERF FOREIGN KEY (FUS_VERSION_FORMULARIO_ID) REFERENCES RL_MR_VERSIONES_FORMULARIO(VER_ID),CONSTRAINT FK_P0_FUS_FOV FOREIGN KEY (FUS_FORMULA_VERSION_ID) REFERENCES RL_MR_FORMULA_VERSIONES(FOV_ID))",

@@ -445,9 +445,9 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             await connection.OpenAsync();
             return Convert.ToInt32(await ObtenerEscalarAsync(
                 connection,
-                "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION=:accion",
+                "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id AND AUD_ACCION IN ('UPDATE','DELETE') AND DBMS_LOB.INSTR(COALESCE(AUD_DATOS_NVO, AUD_DATOS_ANT), :evento) > 0",
                 new OracleParameter("id", versionId.ToString()),
-                new OracleParameter("accion", action)));
+                new OracleParameter("evento", action)));
         }
     }
 

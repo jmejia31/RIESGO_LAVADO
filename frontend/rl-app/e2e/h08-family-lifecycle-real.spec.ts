@@ -352,7 +352,7 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     expect(row.AUD_FECHA).toEqual(expect.any(String));
     expect(Number.isNaN(Date.parse(row.AUD_FECHA!))).toBe(false);
   }
-  const eventCount = (table: string, action: string, recordId: string) => auditRows.filter(row => row.AUD_TABLA === table && row.AUD_ACCION === action && row.AUD_REGISTRO_ID === recordId).length;
+  const eventCount = (table: string, event: string, recordId: string) => auditRows.filter(row => row.AUD_TABLA === table && row.AUD_EVENT === event && row.AUD_REGISTRO_ID === recordId).length;
   const familyEventCount = (event: string) => auditRows.filter(row => row.AUD_TABLA === 'RL_MR_FAMILIAS_FORMULARIO' && row.AUD_EVENT === event && row.AUD_REGISTRO_ID === String(fixture.lifecycleFamilyId)).length;
   expect(familyEventCount('FAMILY_DEACTIVATED')).toBe(2);
   expect(familyEventCount('FAMILY_ARCHIVED')).toBe(2);

@@ -154,6 +154,32 @@ for marker in \
 done
 echo 'P0_DIRECT_PUBLICATION_ORACLE_E2E=PASS'
 pushd "$repo_root/frontend/rl-app" >/dev/null
+if ! p0_dirty_publish_output="$(npm run e2e -- e2e/p0-publication-with-changes-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+  popd >/dev/null
+  echo 'P0 dirty publication Oracle API host diagnostics (secrets omitted):' >&2
+  sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 160 >&2
+  exit 1
+fi
+popd >/dev/null
+if ! grep -Eq '1 passed' <<<"$p0_dirty_publish_output"; then
+  echo 'P0 dirty publication suite did not execute exactly one passing test.' >&2
+  exit 1
+fi
+for marker in \
+  P0_PUBLISH_DIRTY_BROWSER=PASS \
+  P0_PUBLISH_DIRTY_PUT_STATUS=2XX \
+  P0_PUBLISH_DIRTY_PUT_READBACK=PASS \
+  P0_PUBLISH_DIRTY_JSON_HASH=PASS \
+  P0_PUBLISH_DIRTY_POST_STATUS=2XX \
+  P0_PUBLISH_DIRTY_STATE=PUBLISHED \
+  P0_PUBLISH_DIRTY_VIGENCY=1 \
+  P0_PUBLISH_DIRTY_AUDIT=PASS \
+  P0_PUBLISH_DIRTY_FEEDBACK=PASS \
+  P0_PUBLICATION_DIRTY_ORACLE_E2E=PASS; do
+  grep -Fq "$marker" <<<"$p0_dirty_publish_output"
+done
+echo 'P0_DIRTY_PUBLICATION_ORACLE_E2E=PASS'
+pushd "$repo_root/frontend/rl-app" >/dev/null
 if ! p0_delete_output="$(npm run e2e -- e2e/h08-version-delete-real.spec.ts 2>&1 | tee /dev/stderr)"; then
   popd >/dev/null
   echo 'P0 delete Oracle API host diagnostics (secrets omitted):' >&2
