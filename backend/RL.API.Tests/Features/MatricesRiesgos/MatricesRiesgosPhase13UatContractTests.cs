@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -117,7 +118,10 @@ public sealed class MatricesRiesgosPhase13UatContractTests
             MethodInfo method = typeof(MatricesRiesgosController).GetMethod(methodName)!;
             ParameterInfo body = Assert.Single(method.GetParameters().Where(parameter => parameter.Name == "jsonConfig"));
 
-            Assert.Equal(typeof(JToken), body.ParameterType);
+            Type expectedType = methodName == nameof(MatricesRiesgosController.ActualizarBorradorFormulario)
+                ? typeof(JsonElement)
+                : typeof(JToken);
+            Assert.Equal(expectedType, body.ParameterType);
             Assert.NotNull(body.GetCustomAttribute<FromBodyAttribute>());
         }
     }

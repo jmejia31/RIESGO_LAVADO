@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -81,11 +82,11 @@ public sealed class MatricesRiesgosController : ControllerBase
     [HttpPut("formularios/{id:long}")]
     [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Actualización de borrador de formulario")]
-    public async Task<IActionResult> ActualizarBorradorFormulario(long id, [FromBody] JToken jsonConfig)
+    public async Task<IActionResult> ActualizarBorradorFormulario(long id, [FromBody] JsonElement jsonConfig)
     {
         try
         {
-            var result = await _service.ActualizarBorradorFormularioAsync(id, jsonConfig.ToString(Formatting.None), ObtenerUsuarioId());
+            var result = await _service.ActualizarBorradorFormularioAsync(id, jsonConfig.GetRawText(), ObtenerUsuarioId());
             return Responder(result);
         }
         catch (Exception ex)

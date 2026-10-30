@@ -153,7 +153,7 @@ public sealed class MatricesRiesgosControllerTests
         service.On(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync), _ =>
             Task.FromResult(ServiceResult.Ok()));
         const string contenido = "{\"secciones\":[{\"clave\":\"prueba1\"}]}";
-        JToken documento = JToken.Parse(contenido);
+        JsonElement documento = JsonDocument.Parse(contenido).RootElement;
 
         IActionResult result = await controller.ActualizarBorradorFormulario(17, documento);
 

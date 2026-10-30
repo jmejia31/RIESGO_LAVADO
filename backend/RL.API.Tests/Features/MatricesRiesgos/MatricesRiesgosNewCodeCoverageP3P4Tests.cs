@@ -6,6 +6,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -255,14 +256,15 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         serviceStub.On(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync), _ =>
             Task.FromResult(ServiceResult.Ok("Borrador actualizado")));
 
-        IActionResult okResult = await controller.ActualizarBorradorFormulario(10, JToken.Parse("{\"secciones\":[]}"));
+        JsonElement documento = JsonDocument.Parse("{\"secciones\":[]}").RootElement;
+        IActionResult okResult = await controller.ActualizarBorradorFormulario(10, documento);
         Assert.IsType<OkObjectResult>(okResult);
 
         // 2. Rama Catch Exception -> 500 (Líneas 89-92)
         serviceStub.On(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync), _ =>
             throw new InvalidOperationException("Error interno en base de datos"));
 
-        IActionResult errResult = await controller.ActualizarBorradorFormulario(10, JToken.Parse("{\"secciones\":[]}"));
+        IActionResult errResult = await controller.ActualizarBorradorFormulario(10, documento);
         ObjectResult objResult = Assert.IsType<ObjectResult>(errResult);
         Assert.Equal(500, objResult.StatusCode);
     }
