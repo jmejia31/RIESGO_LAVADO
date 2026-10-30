@@ -3479,5 +3479,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificado localmente: host Release `0 errores`; suite frontend previa `953/953`; workflow de matrices `19/19`; sintaxis runner y diff check PASS. Oracle XE y los dos E2E nuevos quedan pendientes del siguiente CI.
 - El nuevo commit reinicia `QUALITY_GATES=0/5` y `P0_TECHNICAL_CERTIFICATION=BLOCKED`. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: commit/push, revisar CI; si el HTTP 500 sigue sin evidencia, solicitar trace/endpoint autorizado antes de declarar ese frente resuelto.
+- Diagnóstico posterior: el gate `41106133025` del SHA `a4a61b5619300a03338f8bd06833b15b60c4d751` terminó FAILURE en el E2E de publicación directa, con timeout de 30 s antes del POST. Oracle XE, H08 y bloques previos pasaron; publicación y DELETE P0 no se certifican.
+- Se ajustó únicamente el E2E para usar `#btn-publicar-builder` y exigir visibilidad/habilitación antes del click. Requiere commit, push y nuevo CI.
+- El HTTP 500 del Detalle sigue `NOT_REPRODUCED`; no hay endpoint, trace ni excepción correlacionados. `P0_TECHNICAL_CERTIFICATION=BLOCKED`.
+- `QUALITY_GATES=0/5` para el siguiente SHA. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: validar, publicar el cambio del E2E y revisar el siguiente Quality Gate sin contabilizar el gate fallido ni reruns.
 - Punto exacto: diseño e implementación mínima del fixture/E2E de eliminación real; después publicar y certificar cinco gates secuenciales sobre el nuevo SHA.
 

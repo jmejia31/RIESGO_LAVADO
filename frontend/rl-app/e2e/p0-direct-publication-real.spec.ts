@@ -48,7 +48,10 @@ test('P0 certifica publicacion directa de DRAFT mediante Angular, API y Oracle X
   const confirmation = page.locator('.institutional-confirmation');
   const publishPost = page.waitForResponse(response => response.request().method() === 'POST'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/formularios/${fixture.versionId}/publicar`);
-  await builder.getByRole('button', { name: /Publicar versión/ }).click();
+  const publishButton = builder.locator('#btn-publicar-builder');
+  await expect(publishButton).toBeVisible();
+  await expect(publishButton).toBeEnabled();
+  await publishButton.click();
   await expect(confirmation).toBeVisible();
   await expect(confirmation).toContainText(String(fixture.versionId));
   const readback = page.waitForResponse(response => response.request().method() === 'GET'

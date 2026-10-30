@@ -10013,3 +10013,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: cualquier commit nuevo reinicia `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto de continuacion: revisar diff, ejecutar validadores, commit/push y comprobar publication/delete E2E real en Oracle XE antes de contabilizar gates.
 
+- ## 2026-10-30 12:40 -06:00 - Diagnostico del Quality Gate 41106133025 (COD)
+
+- CI verificado: `41106133025`, intento 1, SHA `a4a61b5619300a03338f8bd06833b15b60c4d751`, FAILURE. Oracle XE, build, validadores, Block 7, Block 12 y H08-A/B/C/E pasaron antes del fallo.
+- Fallo exacto: `p0-direct-publication-real.spec.ts` agotó 30 s en el click de publicación esperando el POST; el E2E no emitió marcadores P0 de publicación y el runner no llegó al DELETE obligatorio. No se declara publicación ni eliminación certificada.
+- Corrección acotada preparada: el E2E usará el selector contractual `#btn-publicar-builder` y exigirá explícitamente visibilidad y habilitación antes del click.
+- HTTP 500 de Detalle continúa `NOT_REPRODUCED`; no existe endpoint/trace/excepción correlacionados en este gate. `P0_TECHNICAL_CERTIFICATION=BLOCKED`.
+- Estado: el siguiente commit reinicia `QUALITY_GATES=0/5`; conservar `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`. Untracked ajenos preservados.
+- Punto de continuación: validar el cambio del E2E, commit/push, revisar el siguiente gate y solo contar Oracle DELETE/publicación y gates independientes cuando todos los marcadores obligatorios pasen.
+
