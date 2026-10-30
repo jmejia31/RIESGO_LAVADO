@@ -10022,3 +10022,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: el siguiente commit reinicia `QUALITY_GATES=0/5`; conservar `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`. Untracked ajenos preservados.
 - Punto de continuación: validar el cambio del E2E, commit/push, revisar el siguiente gate y solo contar Oracle DELETE/publicación y gates independientes cuando todos los marcadores obligatorios pasen.
 
+- ## 2026-10-30 14:05 -06:00 - Investigación del HTTP 500 GTIC (COD)
+
+- Base verificada: `desarrollo`, SHA `cfb1ac07091bdc39489495ff7442bee00c19ba99`; Quality Gate `41115376916=SUCCESS`, intento 1. El gate verde no reprodujo el incidente GTIC: su fixture disposable usa `AUD_ACCION VARCHAR2(80)` sin el constraint histórico del script base.
+- Revisión de cadena PUT: controlador `MatricesRiesgosController.ActualizarBorradorFormulario`, servicio, repositorio transaccional y `AuditoriaRepository.RegistrarAsync` fueron inspeccionados. La transacción ejecuta locks, UPDATE CLOB/hash, auditoría y COMMIT con rollback ante excepción.
+- Resultado causal: `HTTP500_EXCEPTION=NOT_VERIFIED`, `ORACLE_ERROR_CODE=NOT_VERIFIED`, `FAILING_OPERATION=NOT_VERIFIED`, porque no hay acceso al log del backend donde ocurrió el caso GTIC ni `traceId` correlacionado. La posible incompatibilidad `AUD_ACCION` histórica (longitud/constraint frente a acciones `VERSION_DRAFT_UPDATED`) queda como hipótesis, no como causa confirmada.
+- Round-trip frontend: pruebas existentes de normalización/serialización/comparación `14/14 PASS`; no representan todavía el JSON GTIC real ni sustituyen el PUT Oracle institucional/disposable requerido.
+- No se modificó código funcional, migraciones, esquema, Oracle institucional ni pruebas para ocultar el fallo. Certificación P0 permanece bloqueada hasta obtener `TRACE_ID`, excepción original/código Oracle y reproducir dos escenarios PUT real: sin cambios y con cambio válido.
+- Estado conservado: `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuación: ejecutar el fixture GTIC equivalente con PUT modificado contra Oracle XE disposable y capturar método/endpoint/status/trace/exception/SQL operation sin datos sensibles; solo después aplicar una corrección causal.
+

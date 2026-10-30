@@ -3484,5 +3484,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El HTTP 500 del Detalle sigue `NOT_REPRODUCED`; no hay endpoint, trace ni excepción correlacionados. `P0_TECHNICAL_CERTIFICATION=BLOCKED`.
 - `QUALITY_GATES=0/5` para el siguiente SHA. Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: validar, publicar el cambio del E2E y revisar el siguiente Quality Gate sin contabilizar el gate fallido ni reruns.
+- Investigación HTTP 500 GTIC (2026-10-30): el SHA `cfb1ac07091bdc39489495ff7442bee00c19ba99` y gate `41115376916` están verdes, pero el fixture CI no reproduce el esquema institucional histórico (`AUD_ACCION` allí es `VARCHAR2(80)` sin constraint). No demuestra el caso GTIC.
+- Se inspeccionaron controlador, servicio, repositorio y auditoría del PUT. La causa original sigue `HTTP500_EXCEPTION=NOT_VERIFIED`, `ORACLE_ERROR_CODE=NOT_VERIFIED`, `FAILING_OPERATION=NOT_VERIFIED`: falta log backend/trace correlacionado.
+- Round-trip del builder: `14/14 PASS` en pruebas existentes; JSON GTIC real y PUT con cambio válido contra Oracle XE aún `NOT_VERIFIED`. La incompatibilidad histórica de `AUD_ACCION` es solo hipótesis.
+- No se aplicó parche especulativo ni se tocaron migraciones/Oracle institucional. `P0_TECHNICAL_CERTIFICATION=BLOCKED`; conservar `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: obtener trace/excepción/código Oracle o reproducir el caso GTIC equivalente en Oracle XE disposable antes de corregir y reiniciar certificación.
 - Punto exacto: diseño e implementación mínima del fixture/E2E de eliminación real; después publicar y certificar cinco gates secuenciales sobre el nuevo SHA.
 
