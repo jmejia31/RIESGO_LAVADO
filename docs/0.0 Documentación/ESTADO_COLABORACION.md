@@ -3534,3 +3534,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Oracle XE disposable y E2E reales no se ejecutaron localmente porque el proceso activo usa Database:Profile=PRODUCTION; quedan pendientes del CI. No se contaron resultados heredados.
 - Estado obligatorio: QUALITY_GATES=0/5; P0_TECHNICAL_CERTIFICATION=BLOCKED; H08_M03=PENDING_USER_RETEST; H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION; BLOCK10_AUTHORIZED=NO.
 - Punto de continuacion: publicar el cambio minimo, revisar el siguiente gate y no contar gates que omitan PUT/readback, publicacion, DELETE, integridad o rollback Oracle.
+- Estado vigente - Correccion P0 de seguridad npm (COD) - 2026-10-31
+- Baseline `d00716f724526705a506a1238626f3b39de252df`; gate fallido `41214528311`. `npm audit` identifico `17` vulnerabilidades moderadas por `GHSA-g3hv-75wg-m249` en rutas de `minimatch` menores que `11.0.1`.
+- Se agrego override raiz `minimatch=11.0.1` y se regenero `package-lock.json`. Todas las ramas de ESLint/TypeScript-ESLint/ExcelJS quedaron en `11.0.1`; consumidores principales cargaron correctamente.
+- Evidencia limpia: `npm ci --ignore-scripts` PASS, `npm audit` con `0`, lint PASS, build Angular PASS y suite frontend `957/957 PASS`. Un timeout inicial aislado fue reproducido y luego la suite completa paso.
+- `npm ci` local quedo pendiente por bloqueo Windows EBUSY en `sass-embedded`; la prueba temporal limpia fue exitosa. Oracle XE y E2E P0 siguen pendientes del CI.
+- Estado obligatorio: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
