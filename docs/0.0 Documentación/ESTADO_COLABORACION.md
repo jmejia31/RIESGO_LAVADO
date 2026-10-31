@@ -3545,3 +3545,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Se actualizo solo `block7-oracle-real.spec.ts` para validar cuerpo real y telemetria 200. Los payloads invalidos siguen cubiertos con 400 en la integracion Oracle.
 - Verificado: ESLint E2E PASS, Playwright list 3, backend focalizado 23/23 y diff check PASS. Oracle E2E completo y rollback siguen pendientes.
 - Estado obligatorio: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Estado vigente - Hotfix P0 de telemetria Block7/9 (COD) - 2026-10-31
+- Baseline `76b8e4f4d702e2116fa296daea60999b7d844efa`; gate `41230771286` fallo porque `expectHttpResponse` no puede observar respuestas 200 mediante `telemetry.httpErrors`.
+- Se elimino exclusivamente esa expectativa HTTP 200 del E2E. Permanecen las comprobaciones directas del preview incompleto, el 409 de concurrencia, la deteccion de errores inesperados y los 400 negativos.
+- Verificado: ESLint E2E PASS, Playwright list 3, validadores estructura/DB/documentacion PASS y diff check PASS. Oracle E2E y rollback quedan pendientes.
+- Estado obligatorio: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.

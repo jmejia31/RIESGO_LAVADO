@@ -10099,3 +10099,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El contrato negativo permanece cubierto por `InstitutionalProjectionOracleIntegrationTests`: identidad manipulada y campos no autorizados esperan HTTP 400.
 - Verificado: E2E ESLint PASS; Playwright list `3 tests`; backend focalizado `23/23 PASS`; `git diff --check` PASS. El E2E Oracle completo, H08, Block9/12 y rollback de auditoria quedan para CI/Oracle XE.
 - Estado: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`. Punto exacto: publicar y revisar el nuevo gate sin contar `41216159753`.
+- ## 2026-10-31 - Hotfix P0 de telemetria Block7/9 (COD)
+- Baseline: `76b8e4f4d702e2116fa296daea60999b7d844efa`; gate fallido `41230771286`; la causa fue una expectativa HTTP 200 registrada mediante un canal que solo observa errores >=400.
+- Correccion exclusiva: se elimino del E2E la expectativa `expectHttpResponse` de HTTP 200 para `calculo-preview`. Se conservaron las aserciones directas de status/cuerpo, la expectativa PUT 409, los controles de errores inesperados y los rechazos 400 de payload invalido.
+- Verificado: ESLint E2E PASS; Playwright list `3 tests`; validadores estructura, base de datos y documentacion PASS; `git diff --check` PASS. No se modificaron backend, telemetria, npm, Oracle ni pruebas mutantes locales.
+- Oracle XE E2E completo, H08 A-E y rollback de auditoria quedan pendientes del nuevo Quality Gate. Estado: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: publicar el SHA final y revisar Block7/9, Block12, H08, publicacion, DELETE y rollback antes de iniciar cinco gates independientes.
