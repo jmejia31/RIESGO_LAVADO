@@ -187,7 +187,16 @@ async function fillAndWaitForIncompleteCalculation(page: Page, action: () => Pro
     response.request().method() === 'POST'
     && new URL(response.url()).pathname === '/api/matrices-riesgos/evaluaciones/calculo-preview');
   await action();
-  expect((await responsePromise).status()).toBe(400);
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  const body = await response.json() as {
+    success?: boolean;
+    datos?: { listo?: boolean; obligatoriosPendientes?: string[]; mensaje?: string };
+  };
+  expect(body.success).toBe(true);
+  expect(body.datos?.listo).toBe(false);
+  expect(body.datos?.obligatoriosPendientes?.length ?? 0).toBeGreaterThan(0);
+  console.log(`BLOCK7_PREVIEW_INCOMPLETE=PASS;pending=${body.datos?.obligatoriosPendientes?.length ?? 0}`);
 }
 
 function unsignedTestToken(): string {
@@ -278,7 +287,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
   test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');
   expectHttpResponse({
-    status: 400,
+    status: 200,
     method: 'POST',
     path: '/api/matrices-riesgos/evaluaciones/calculo-preview',
     minCount: 4,

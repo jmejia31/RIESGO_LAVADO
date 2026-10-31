@@ -3540,3 +3540,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia limpia: `npm ci --ignore-scripts` PASS, `npm audit` con `0`, lint PASS, build Angular PASS y suite frontend `957/957 PASS`. Un timeout inicial aislado fue reproducido y luego la suite completa paso.
 - `npm ci` local quedo pendiente por bloqueo Windows EBUSY en `sass-embedded`; la prueba temporal limpia fue exitosa. Oracle XE y E2E P0 siguen pendientes del CI.
 - Estado obligatorio: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Estado vigente - Hotfix P0 contrato semantico Block7 preview (COD) - 2026-10-31
+- Baseline `7dba5268bb923b41e8773777c2bf66d3fd9ed028`; gate `41216159753` fallo unicamente porque Block7 esperaba HTTP 400 para formulario incompleto; backend devuelve 200 contractual con `listo=false` y pendientes obligatorios.
+- Se actualizo solo `block7-oracle-real.spec.ts` para validar cuerpo real y telemetria 200. Los payloads invalidos siguen cubiertos con 400 en la integracion Oracle.
+- Verificado: ESLint E2E PASS, Playwright list 3, backend focalizado 23/23 y diff check PASS. Oracle E2E completo y rollback siguen pendientes.
+- Estado obligatorio: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
