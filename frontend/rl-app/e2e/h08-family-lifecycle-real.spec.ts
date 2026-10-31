@@ -166,10 +166,12 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
       && /\/api\/matrices-riesgos\/formularios\/\d+$/.test(new URL(response.url()).pathname));
     await page.locator('#btn-guardar-builder').click();
     const save = await saveResponse;
+    if (save.status() < 200 || save.status() >= 300) {
+      const responseBody = (await save.text()).slice(0, 2000);
+      throw new Error(`PUT /formularios returned HTTP ${save.status()}: ${responseBody}`);
+    }
     const sync = await syncResponse;
     const saveReadback = await readbackResponse;
-    expect(save.status()).toBeGreaterThanOrEqual(200);
-    expect(save.status()).toBeLessThan(300);
     expect(sync.status()).toBeGreaterThanOrEqual(200);
     expect(sync.status()).toBeLessThan(300);
     expect(new URL(sync.url()).pathname).toMatch(/\/versiones-formulario\/\d+$/);

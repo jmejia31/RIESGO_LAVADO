@@ -152,7 +152,13 @@ builder.Services.AddAuthentication("Block7E2E")
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
-builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(MatricesRiesgosController).Assembly)
+    .AddNewtonsoftJson(opts =>
+    {
+        opts.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+        opts.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+    });
 builder.Services.AddSingleton(new OracleDbContext(connectionString));
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();

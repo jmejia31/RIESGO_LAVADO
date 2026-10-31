@@ -3527,3 +3527,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Hotfix aplicado: `JToken` + `Formatting.None`; pruebas focalizadas y build verificadas. No se tocó Oracle ni lógica funcional.
 - La API activa usa `Database:Profile=PRODUCTION`; no se ejecutaron mutaciones ni E2E Oracle. `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `QUALITY_GATES=0/5`.
 - Mantener `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Estado vigente - Correccion P0 de paridad JSON en host Oracle XE (COD) - 2026-10-31
+- Baseline 28d210f9249388071d09841fb0a1cd966ca76fb5; gate fallido 41135734671. Causa confirmada: host Block7 sin AddNewtonsoftJson no enlazaba el parametro JToken, devolvia ValidationProblemDetails HTTP 400 y H08 esperaba respuestas posteriores.
+- Cambio minimo: Program.cs del host replica la configuracion Newtonsoft de la API; H08 inspecciona inmediatamente el primer PUT y muestra el cuerpo seguro del error.
+- Verificado: host Release PASS, backend focalizado 23/23, Form Builder 187/187, build Angular PASS, validadores estructura/DB/documentacion PASS y diff check PASS. Advertencias existentes no bloqueantes.
+- Oracle XE disposable y E2E reales no se ejecutaron localmente porque el proceso activo usa Database:Profile=PRODUCTION; quedan pendientes del CI. No se contaron resultados heredados.
+- Estado obligatorio: QUALITY_GATES=0/5; P0_TECHNICAL_CERTIFICATION=BLOCKED; H08_M03=PENDING_USER_RETEST; H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION; BLOCK10_AUTHORIZED=NO.
+- Punto de continuacion: publicar el cambio minimo, revisar el siguiente gate y no contar gates que omitan PUT/readback, publicacion, DELETE, integridad o rollback Oracle.
