@@ -293,6 +293,8 @@ async function installNonCriticalFixtures(
 }
 
 test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidence against Oracle', async ({ page, request }, testInfo) => {
+  // Real Oracle lifecycle includes several sequential UI/API flows; the default 30s can expire before the final assertions.
+  test.setTimeout(90_000);
   const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true'
     && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
   test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');
