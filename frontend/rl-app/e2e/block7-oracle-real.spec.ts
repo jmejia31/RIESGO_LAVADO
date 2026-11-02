@@ -192,9 +192,24 @@ async function fillAndWaitForIncompleteCalculation(page: Page, action: () => Pro
     expect(response.status()).toBe(400);
     const rawBody = await response.text();
     expect(rawBody.trim().length).toBeGreaterThan(0);
-    const body = JSON.parse(rawBody) as { success?: boolean; mensaje?: string };
-    expect(body.success).toBe(false);
-    expect(body.mensaje?.trim().length ?? 0).toBeGreaterThan(0);
+    const body = JSON.parse(rawBody) as {
+      success?: boolean; mensaje?: string;
+      status?: number; title?: string; errors?: Record<string, unknown>;
+    };
+    // The historical host uses AddControllers without Newtonsoft. ApiController model binding
+    // can reject this preview with HTTP 400 ValidationProblemDetails (no success/mensaje).
+    if (body.success === false) {
+      expect(body.mensaje?.trim().length ?? 0).toBeGreaterThan(0);
+    } else {
+      expect(body.success).toBeUndefined();
+      expect(body.status).toBe(400);
+      expect(body.title?.trim().length ?? 0).toBeGreaterThan(0);
+      expect(body.errors && typeof body.errors === 'object' && !Array.isArray(body.errors)).toBe(true);
+      const validationMessages = Object.values(body.errors ?? {}).flatMap(value =>
+        Array.isArray(value) ? value : []);
+      expect(validationMessages.length).toBeGreaterThan(0);
+      expect(validationMessages.every(value => typeof value === 'string' && value.trim().length > 0)).toBe(true);
+    }
     console.log('BLOCK12_PREFX_PREVIEW_HTTP=400;BODY_CAPTURED=YES;ERROR_CONTRACT=PASS');
     return;
   }
