@@ -188,6 +188,16 @@ async function fillAndWaitForIncompleteCalculation(page: Page, action: () => Pro
     && new URL(response.url()).pathname === '/api/matrices-riesgos/evaluaciones/calculo-preview');
   await action();
   const response = await responsePromise;
+  if (process.env['BLOCK12_EXPECT_PREFX_REPRODUCTION'] === 'true') {
+    expect(response.status()).toBe(400);
+    const rawBody = await response.text();
+    expect(rawBody.trim().length).toBeGreaterThan(0);
+    const body = JSON.parse(rawBody) as { success?: boolean; mensaje?: string };
+    expect(body.success).toBe(false);
+    expect(body.mensaje?.trim().length ?? 0).toBeGreaterThan(0);
+    console.log('BLOCK12_PREFX_PREVIEW_HTTP=400;BODY_CAPTURED=YES;ERROR_CONTRACT=PASS');
+    return;
+  }
   expect(response.status()).toBe(200);
   const body = await response.json() as {
     success?: boolean;
@@ -286,6 +296,16 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true'
     && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
   test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');
+  if (process.env['BLOCK12_EXPECT_PREFX_REPRODUCTION'] === 'true') {
+    expectHttpResponse({
+      status: 400,
+      method: 'POST',
+      path: '/api/matrices-riesgos/evaluaciones/calculo-preview',
+      minCount: 4,
+      maxCount: 8,
+      reason: 'The historical pre-fix fixture rejects incomplete preview requests before the full-matrix defect.',
+    });
+  }
   expectHttpResponse({
     status: 409,
     method: 'PUT',

@@ -10105,3 +10105,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificado: ESLint E2E PASS; Playwright list `3 tests`; validadores estructura, base de datos y documentacion PASS; `git diff --check` PASS. No se modificaron backend, telemetria, npm, Oracle ni pruebas mutantes locales.
 - Oracle XE E2E completo, H08 A-E y rollback de auditoria quedan pendientes del nuevo Quality Gate. Estado: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: publicar el SHA final y revisar Block7/9, Block12, H08, publicacion, DELETE y rollback antes de iniciar cinco gates independientes.
+
+## 2026-11-02 - Compatibilidad P0 de reproduccion historica Block12 (COD)
+
+- Baseline: rama `desarrollo`, SHA `239d5eb2d0cdee7c4925b592435b1754dfda019f`; Quality Gate fallido `41235149265`. Se preservaron los untracked ajenos sin stage.
+- Causa confirmada: el modo historico (`BLOCK12_EXPECT_PREFX_REPRODUCTION=true`) reutiliza el helper actual del preview incompleto, que exige HTTP 200 antes de leer el cuerpo. El backend historico devuelve el contrato negativo HTTP 400 (`success=false`, `mensaje` no vacio), por lo que la prueba abortaba antes de alcanzar la reproduccion del defecto Full Matrix y la telemetria lo clasificaba como inesperado.
+- Correccion minima: `frontend/rl-app/e2e/block7-oracle-real.spec.ts` ahora bifurca estrictamente por la variable historica. El modo actual conserva HTTP 200, `success=true`, `datos.listo=false` y pendientes; el modo historico exige HTTP 400, captura y valida `success=false`/`mensaje`, y registra solo esos POST 400 como esperados mediante la telemetria existente. No se modificaron backend ni `support/telemetry-test.ts`.
+- La asercion historica posterior de proyeccion 409, estado `APROBADA`, preservacion de datos, warning falso y cero campos renderizados permanece intacta y sigue siendo la evidencia del defecto original.
+- Verificado en esta intervencion: ESLint E2E PASS; Playwright list `3 tests`; validadores de estructura, base de datos y documentacion PASS; `git diff --check` PASS. `python tools/validate_agent_skills.py` queda pendiente porque Python 3 no esta instalado localmente.
+- Pendiente externo: reproduccion Block12 contra Oracle XE disposable, E2E Oracle actual, rollback real ante fallo de auditoria y Quality Gates remotos. No se uso Oracle institucional ni el proceso local con perfil de produccion.
+- Estado: `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto de continuacion: commit/push de este cambio minimo, revisar el nuevo Quality Gate y exigir `BLOCK12_PRE_FIX_FULL_MATRIX_DEFECT_REPRODUCED=YES` junto con todos los E2E Oracle obligatorios antes de contar gates.

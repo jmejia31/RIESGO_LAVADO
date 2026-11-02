@@ -3540,6 +3540,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia limpia: `npm ci --ignore-scripts` PASS, `npm audit` con `0`, lint PASS, build Angular PASS y suite frontend `957/957 PASS`. Un timeout inicial aislado fue reproducido y luego la suite completa paso.
 - `npm ci` local quedo pendiente por bloqueo Windows EBUSY en `sass-embedded`; la prueba temporal limpia fue exitosa. Oracle XE y E2E P0 siguen pendientes del CI.
 - Estado obligatorio: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+
+- Estado vigente - Compatibilidad P0 de reproduccion historica Block12 (COD) - 2026-11-02
+- Baseline `239d5eb2d0cdee7c4925b592435b1754dfda019f`; gate fallido `41235149265`. El fallo no era del contrato actual: el modo historico devolvia HTTP 400 para preview incompleto, pero el helper actual esperaba 200 antes de leer el cuerpo.
+- Se modifico solo `frontend/rl-app/e2e/block7-oracle-real.spec.ts`: modo actual sigue exigiendo HTTP 200 con `success=true`, `listo=false` y pendientes; modo historico exige 400, valida `success=false` y `mensaje`, y registra esos 400 con la telemetria ya existente. No se tocaron backend, telemetria ni Oracle.
+- Verificado localmente: ESLint E2E PASS, Playwright list 3, validadores estructura/DB/documentacion PASS y `git diff --check` PASS. El validador de skills queda pendiente por ausencia de Python 3.
+- Oracle XE disposable, reproduccion historica completa, E2E actual, rollback de auditoria y Quality Gates quedan pendientes del CI. No se declara PASS heredado ni certificacion.
+- Estado obligatorio: `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: publicar el SHA minimo, revisar el gate y no contar ninguna ejecucion si no demuestra el defecto Full Matrix historico y los escenarios Oracle obligatorios.
 - Estado vigente - Hotfix P0 contrato semantico Block7 preview (COD) - 2026-10-31
 - Baseline `7dba5268bb923b41e8773777c2bf66d3fd9ed028`; gate `41216159753` fallo unicamente porque Block7 esperaba HTTP 400 para formulario incompleto; backend devuelve 200 contractual con `listo=false` y pendientes obligatorios.
 - Se actualizo solo `block7-oracle-real.spec.ts` para validar cuerpo real y telemetria 200. Los payloads invalidos siguen cubiertos con 400 en la integracion Oracle.
