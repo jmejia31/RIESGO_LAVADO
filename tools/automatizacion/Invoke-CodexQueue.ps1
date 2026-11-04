@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,
+    [string]$RepoRoot = '',
     [string]$QueuePath = '',
     [switch]$DryRun = $true,
     [switch]$AllowExecution,
@@ -10,6 +10,7 @@ param(
     [switch]$SimulateFailure
 )
 $ErrorActionPreference = 'Stop'
+if([string]::IsNullOrWhiteSpace($RepoRoot)){if([string]::IsNullOrWhiteSpace($PSScriptRoot)){throw 'Cannot resolve canonical repository path'};$RepoRoot=(Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path}
 if ($AllowExecution) { $DryRun = $false }
 if ([string]::IsNullOrWhiteSpace($QueuePath)) { $QueuePath = Join-Path $RepoRoot 'docs\automatizacion\TAREAS_CODEX.json' }
 if ([string]::IsNullOrWhiteSpace($StatePath)) { $StatePath = Join-Path $RepoRoot 'docs\automatizacion\ESTADO_TAREAS.json' }
@@ -18,7 +19,10 @@ $isRepoQueue = [IO.Path]::GetFullPath($QueuePath) -eq [IO.Path]::GetFullPath((Jo
 if (-not $DryRun -and (-not $isRepoQueue -or $SkipRemoteSync)) { Write-Output 'EXECUTION_BLOCKED=REAL_EXECUTION_REQUIRES_CANONICAL_GITHUB_QUEUE'; Write-Output 'CODEX_INVOKED=NO'; exit 3 }
 if ($SimulateFailure -and (-not $DryRun -or $isRepoQueue)) { Write-Output 'EXECUTION_BLOCKED=SIMULATED_FAILURE_REQUIRES_DRYRUN_FIXTURE'; Write-Output 'CODEX_INVOKED=NO'; exit 3 }
 $validator = Join-Path $PSScriptRoot 'Test-CodexQueue.ps1'
-$runtime = if ([string]::IsNullOrWhiteSpace($RuntimePath)) { Join-Path $env:LOCALAPPDATA 'RiesgoLavado\CodexQueue' } else { $RuntimePath }
+$canonicalStatePath=[IO.Path]::GetFullPath((Join-Path $RepoRoot 'docs\automatizacion\ESTADO_TAREAS.json'))
+$canonicalRuntimePath=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'RiesgoLavado\CodexQueue'))
+$runtime = if ([string]::IsNullOrWhiteSpace($RuntimePath)) { $canonicalRuntimePath } else { [IO.Path]::GetFullPath($RuntimePath) }
+if (-not $DryRun -and ([IO.Path]::GetFullPath($StatePath) -ne $canonicalStatePath -or $runtime -ne $canonicalRuntimePath)) { Write-Output 'EXECUTION_BLOCKED=REAL_EXECUTION_REQUIRES_CANONICAL_CONTROL_PATHS'; Write-Output 'CODEX_INVOKED=NO'; exit 3 }
 New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 
 function Stop-Safely([string]$Reason) {

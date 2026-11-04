@@ -1,9 +1,13 @@
 [CmdletBinding()]
 param(
-    [string]$QueuePath = (Join-Path $PSScriptRoot '..\..\docs\automatizacion\TAREAS_CODEX.json'),
+    [string]$QueuePath = '',
     [switch]$Quiet
 )
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($QueuePath)) {
+    if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) { throw 'Cannot resolve canonical queue path' }
+    $QueuePath = Join-Path $PSScriptRoot '..\..\docs\automatizacion\TAREAS_CODEX.json'
+}
 
 function Fail([string]$Message) { Write-Output "QUEUE_VALIDATION=FAIL: $Message"; exit 2 }
 if (-not (Test-Path -LiteralPath $QueuePath -PathType Leaf)) { Fail "queue not found: $QueuePath" }

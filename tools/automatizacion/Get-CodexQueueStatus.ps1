@@ -1,6 +1,7 @@
 [CmdletBinding()]
-param([string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,[string]$StatePath='',[string]$RuntimePath='')
+param([string]$RepoRoot='',[string]$StatePath='',[string]$RuntimePath='')
 $ErrorActionPreference='Stop'
+if([string]::IsNullOrWhiteSpace($RepoRoot)){if([string]::IsNullOrWhiteSpace($PSScriptRoot)){throw 'Cannot resolve canonical repository path'};$RepoRoot=(Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path}
 $queue=Get-Content -Raw (Join-Path $RepoRoot 'docs\automatizacion\TAREAS_CODEX.json')|ConvertFrom-Json
 $stateFile=if([string]::IsNullOrWhiteSpace($StatePath)){Join-Path $RepoRoot 'docs\automatizacion\ESTADO_TAREAS.json'}else{$StatePath}
 $state=Get-Content -Raw $stateFile|ConvertFrom-Json
