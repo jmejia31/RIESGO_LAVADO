@@ -4,7 +4,7 @@
   "repository": "jmejia31/RIESGO_LAVADO",
   "branch": "desarrollo",
   "source_of_truth": "github",
-  "queue_mode": "DRY_RUN",
+  "queue_mode": "CONTROLLED",
   "tasks": [
     {
       "id": "ISSUE24-SYNTHETIC-001",
@@ -39,6 +39,41 @@
         "approved": true,
         "approved_by": "jmejia31",
         "context": "Autorizacion expresa en chat del propietario, 2026-11-04: exactamente una prueba sintetica LOW, manual y controlada; watcher Windows deshabilitado. Publicacion READY solo preparada en DRY_RUN hasta preflight; no permite tareas de negocio, Oracle, QA ni despliegues."
+      }
+    },
+    {
+      "id": "ISSUE24-AUTO-ACCEPTANCE-002",
+      "title": "Acceptance #24: watcher CONTROLLED autonomo crea comprobante LOW inerte",
+      "status": "READY",
+      "priority": "P3",
+      "dependencies": [],
+      "owner": "COD",
+      "risk": "LOW",
+      "branch": "desarrollo",
+      "allowed_paths": [
+        "docs/automatizacion/ISSUE24_AUTO_ACCEPTANCE_PROOF.txt"
+      ],
+      "acceptance": [
+        "Crear EXCLUSIVAMENTE el archivo nuevo docs/automatizacion/ISSUE24_AUTO_ACCEPTANCE_PROOF.txt.",
+        "Contenido exacto de 2 lineas ASCII, una por linea: ISSUE24_AUTO_WATCHER=PASS y PRODUCTION_ORACLE_TOUCHED=NO. Terminar con LF final.",
+        "No modificar codigo, otros documentos, CI, config, estado de cola, credenciales, Oracle, QA, produccion ni archivos ajenos.",
+        "Dejar tarea en IMPLEMENTED_PENDING_REVIEW para revision del propietario sin autoaprobar; la publicacion y el estado pertenecen al ejecutor padre."
+      ],
+      "verification": [
+        "Comprobar ruta permitida exacta, estructura JSON y git diff --check.",
+        "Escanear archivo nuevo por secretos y bloquear coincidencias o fallos del scanner.",
+        "Comprobar commit y push selectivos a desarrollo, estados CLAIMED/RUNNING/IMPLEMENTED_PENDING_REVIEW y no repeticion.",
+        "Confirmar notificacion de revision via GitHub Issue; mantener main/Oracle/QA protegidos."
+      ],
+      "verification_commands": [
+        "queue-schema",
+        "git diff --check",
+        "secret-scan"
+      ],
+      "authorization": {
+        "approved": true,
+        "approved_by": "jmejia31",
+        "context": "Autorizacion expresa del propietario en conversacion 2026-11-04: 'ADELANTE CON ESTO TAMBIEN Y YA FINALICEMOS TODO' para completar GitHub->watcher->Codex->revision, reiterada 'CONTINUA DONDE TE QUEDASTE'; aplicable solo a la prueba inerte LOW de aceptacion automatica. No es aprobacion de tareas reales sin contrato ni de Block 10. Se requiere instalacion controlada local y revision humana final."
       }
     }
   ]
