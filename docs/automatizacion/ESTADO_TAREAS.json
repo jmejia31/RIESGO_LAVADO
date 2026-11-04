@@ -1,16 +1,26 @@
-{
-  "$schema": "./ESTADO_TAREAS.schema.json",
-  "schema_version": 1,
-  "repository": "jmejia31/RIESGO_LAVADO",
-  "branch": "desarrollo",
-  "executor": "COD",
-  "states": [],
-  "controls": {
-    "pause": false,
-    "stop": false,
-    "dry_run_default": true,
-    "max_parallel": 1,
-    "max_attempts": 2,
-    "auto_approve": false
-  }
+﻿{
+    "$schema":  "./ESTADO_TAREAS.schema.json",
+    "schema_version":  1,
+    "repository":  "jmejia31/RIESGO_LAVADO",
+    "branch":  "desarrollo",
+    "executor":  "COD",
+    "states":  [
+                   {
+                       "attempt":  1,
+                       "task_id":  "ISSUE24-SYNTHETIC-001",
+                       "review_required":  true,
+                       "reason":  "",
+                       "executor":  "COD",
+                       "status":  "CLAIMED",
+                       "updated_at":  "2026-11-04T19:42:08.1114792Z"
+                   }
+               ],
+    "controls":  {
+                     "pause":  false,
+                     "stop":  false,
+                     "dry_run_default":  true,
+                     "max_parallel":  1,
+                     "max_attempts":  2,
+                     "auto_approve":  false
+                 }
 }
