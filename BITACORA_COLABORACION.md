@@ -10137,3 +10137,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **No ejecutado:** Oracle, API, frontend, E2E, nuevos Quality Gates, Issue #24 y limpieza destructiva de temporales. Los paquetes independientes no disponibles permanecen `MISSING_LOCAL_SOURCE`.
 - **Publicación:** commit documental `87a48cb0` creado con hooks activos; push y verificación remota quedan pendientes en este punto de continuidad.
 - **Punto de continuación:** ejecutar hook sin bypass, crear commits documentales selectivos, push a `origin/desarrollo`, leer remotamente índice/dictamen/evidencias mediante GitHub y registrar SHA final.
+## 2026-11-04 - Issue #23 remote publication verified (COD)
+
+- Python 3.12 user-scope installation enabled the institutional hook; `tools/validate_agent_skills.py` returned `PASS (14 skills)` without bypass.
+- Published document commits: `87a48cb0` and `01dc9716fb3e00800a74752b68893673dae474cd`; local HEAD, `origin/desarrollo`, and the remote branch all coincide at the latter SHA.
+- GitHub evidence links are anchored to `87a48cb0`. `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b` remains intact; no functional code changed and unrelated untracked files were preserved.
+- Verified: JSON parsing, diff checks, and document scan without secrets, PII, tokens, cookies, or connection strings. Oracle, API, frontend, E2E, new Quality Gates, and Issue #24 were not executed.
+- `ISSUE_23_REMOTE_PUBLICATION=YES`; `GITHUB_REMOTE_VERIFIED=YES`; `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.

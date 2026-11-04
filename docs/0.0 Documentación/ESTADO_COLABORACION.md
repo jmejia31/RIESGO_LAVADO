@@ -3578,3 +3578,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ISSUE_23_REMOTE_PUBLICATION=COMMIT_CREATED`; `DOCUMENTATION_COMMIT_SHA=87a48cb0`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`.
 - Se mantienen `TX12_FRONTEND=NOT_VERIFIED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Siguiente paso exacto: commit documental selectivo, push normal a `origin/desarrollo`, verificación GitHub de archivos y enlaces, y cierre de Issue #23. No iniciar Issue #24.
+## Estado vigente - Issue #23 remote publication verified (COD) - 2026-11-04
+
+- `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; remains intact as historical reference and no functional code was modified.
+- Published commits: `87a48cb0` and `01dc9716fb3e00800a74752b68893673dae474cd`; `HEAD=origin/desarrollo=01dc9716fb3e00800a74752b68893673dae474cd`.
+- `ISSUE_23_REMOTE_PUBLICATION=YES`; `GITHUB_REMOTE_VERIFIED=YES`; `PYTHON3_VALIDATOR=PASS (14 skills)`; `JSON_VALIDATION=PASS`; `DIFF_CHECK=PASS`; `SECRET_AND_PII_SCAN=PASS`; `FUNCTIONAL_CODE_CHANGED=NO`; `UNTRACKED_AJENO_PRESERVED=YES`.
+- Oracle, API, frontend, E2E, new Quality Gates, and Issue #24 were not executed. Missing independent packages remain `MISSING_LOCAL_SOURCE`.
+- `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
