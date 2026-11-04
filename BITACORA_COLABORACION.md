@@ -10171,3 +10171,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `QUEUE_SCHEMA_VALIDATED=PASS`; `DRY_RUN_TESTS=PASS`; `CODEX_CLI_EXEC_AVAILABLE=YES`; `SANDBOX_POLICY=workspace-write_REQUIRED`; `IDLE_CODEX_PROCESS=NO`.
 - `WATCHER_INSTALLED=NO` y `WATCHER_ENABLED=NO`: solo se ejecuto el preview, sin crear una tarea del Task Scheduler. No se uso bypass, YOLO, Oracle, QA ni credenciales.
 - `SOURCE_SHA=3cfa6dc8604122eecf311d8d7b8ebd1a3462a219`; no se modifico codigo funcional. Siguiente punto: mantener cola vacia hasta una tarea expresamente autorizada y una decision local de activacion.
+## 2026-11-04 - Issue #24 subsanacion de brechas y certificacion DRY_RUN (COD)
+
+- Revision independiente `6636739371` atendida sin reconstruir el bootstrap: se endurecieron sincronizacion GitHub, hash normalizado de cola, rechazo de worktree/cola obsoleta, riesgo alto, identidad de aprobador, comandos allowlisted, persistencia de estados y publicacion selectiva.
+- Commits publicados: `343a2325`, `59a1da6e` y `8e4b4bf3`; `HEAD=origin/desarrollo=8e4b4bf31d5391bbfbd6edb8dce5d6bccce44e3d`.
+- Verificado localmente: cola vacia contra remoto con `REMOTE_HEAD=8e4b4bf3`, `QUEUE_SHA256=21ba05f5...`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`, `CODEX_INVOKED=NO`.
+- Escenarios simulados verificados: cola vacia, READY DRY_RUN, aprobacion falsa, alto riesgo, dependencia faltante, ruta protegida, PAUSE, STOP, mutex y guard de fuente GitHub (`SIMULATED_SCENARIOS=10`).
+- No ejecutados: Codex real, modo CONTROLLED, commits de tareas, Task Scheduler real, QA, Oracle y credenciales. `BLOCK10_AUTHORIZED=NO`.
+- Siguiente punto: mantener `DRY_RUN`, revisar independientemente la implementacion y no cerrar Issue #24 mientras permanezca pendiente la activacion/aceptacion del watcher.

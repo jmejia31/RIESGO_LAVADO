@@ -3614,3 +3614,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`; instalacion real no ejecutada, solo preview sin mutacion de Task Scheduler.
 - `SOURCE_SHA=3cfa6dc8604122eecf311d8d7b8ebd1a3462a219`; no Oracle institucional, QA, credenciales, produccion, `main`, migracion 54 ni Issue #25.
 - `BLOCK10_AUTHORIZED=NO`; siguiente punto: esperar tareas remotas `READY` con autorizacion verificable; no ejecutar nada mientras la cola este vacia.
+## Estado vigente - Issue #24 brechas subsanadas y DRY_RUN certificado (COD) - 2026-11-04
+
+- `FINAL_COMMIT_SHA=8e4b4bf31d5391bbfbd6edb8dce5d6bccce44e3d`; `REMOTE_SYNC=YES`; lectura local/remota de `origin/desarrollo` confirmada.
+- `QUEUE_SCHEMA_VALIDATED=PASS`; `QUEUE_MODE=DRY_RUN`; `READY_TASKS=0`; `RUNNING_TASKS=0`; `PENDING_REVIEW_TASKS=0`; `BLOCKED_TASKS=0`.
+- `GITHUB_SOURCE_GUARD=PASS`; `QUEUE_SHA256=21ba05f5dc4313e689a4569332e1e83e104ec5a1443165ecb0855c204dd46e39`; no se acepta cola local obsoleta.
+- `STATE_PERSISTENCE_IMPLEMENTED=YES`; `VERIFICATION_GATES_IMPLEMENTED=YES`; `SELECTIVE_PUBLISH_GUARD=YES`; `HIGH_RISK_GUARD=PASS`; `LOCAL_LOCK_GUARD=PASS`.
+- `DRY_RUN_TESTS=PASS`; `SIMULATED_SCENARIOS=10`; `CODEX_REAL_INVOKED=NO`; `IDLE_CODEX_PROCESS=NO`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`.
+- No Oracle institucional, QA, credenciales, produccion, `main`, migracion 54 ni Issue #25. `BLOCK10_AUTHORIZED=NO`.
+- Issue #24 permanece abierta: falta la activacion/aceptacion local del watcher y cualquier tarea inofensiva real sigue prohibida hasta una compuerta humana posterior. 
