@@ -10195,3 +10195,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Resultado: `SIMULATED_SCENARIOS=17`, `DRY_RUN_TESTS=PASS`, `CODEX_REAL_INVOKED=NO`, `ORACLE_TOUCHED=NO`, `WATCHER_INSTALLED=NO`, `WATCHER_ENABLED=NO`.
 - Ejecucion canonica limpia: `REMOTE_HEAD=7beffeca`, `QUEUE_SHA256=21ba05f5...`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`.
 - Issue #24 permanece abierta y `BLOCK10_AUTHORIZED=NO`; falta la prueba real inofensiva y la aceptación local expresa.
+## 2026-11-04 - Issue #24 fix de preflight Windows y rutas de control (COD)
+
+- Revision independiente `6637594288`/`6637642898` atendida. Defaults de `Test-CodexQueue.ps1`, `Get-CodexQueueStatus.ps1` e `Invoke-CodexQueue.ps1` se resuelven despues de `param()`; no dependen de una ruta absoluta del equipo.
+- Ejecucion real rechaza `StatePath` y `RuntimePath` alternativos; fixtures solo funcionan en DRY_RUN. Se agregaron pruebas negativas especificas.
+- Commit publicado: `f93d7f0b359a86295e68f9f2e960237b93a4172c`; `HEAD=origin/desarrollo`; untracked ajenos preservados.
+- Entry points independientes PowerShell: validator PASS/exit 0; status PASS/exit 0; escenarios PASS/exit 0; watcher CONTROLLED preview PASS/exit 0; invocador DRY_RUN PASS/exit 0.
+- `SIMULATED_SCENARIOS=19`; `QUEUE_VALIDATOR_NO_ARGS=PASS`; `QUEUE_STATUS_NO_ARGS=PASS`; `REAL_CONTROL_PATH_GUARD=PASS`; `WATCHER_INSTALLED=NO`; `CODEX_REAL_INVOKED=NO`.
+- Estado: cola vacia, `QUEUE_MODE=DRY_RUN`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`, `ORACLE_TOUCHED=NO`, `QA_CREDENTIALS_USED=NO`, `BLOCK10_AUTHORIZED=NO`.
