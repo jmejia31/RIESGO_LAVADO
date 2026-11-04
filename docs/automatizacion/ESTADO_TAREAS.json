@@ -36,10 +36,10 @@
                        "attempt":  1,
                        "task_id":  "ISSUE25-QA-PLAN-001",
                        "review_required":  true,
-                       "reason":  "",
+                       "reason":  "CODEX_FAILED",
                        "executor":  "COD",
-                       "status":  "RUNNING",
-                       "updated_at":  "2026-11-04T21:53:08.3956965Z"
+                       "status":  "FAILED",
+                       "updated_at":  "2026-11-04T21:53:13.3421933Z"
                    }
                ],
     "controls":  {
