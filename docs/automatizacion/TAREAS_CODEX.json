@@ -9,7 +9,7 @@
     {
       "id": "ISSUE24-SYNTHETIC-001",
       "title": "Aceptacion local #24: crear un comprobante sintetico inerte",
-      "status": "READY",
+      "status": "IMPLEMENTED_PENDING_REVIEW",
       "priority": "P3",
       "dependencies": [],
       "owner": "COD",
