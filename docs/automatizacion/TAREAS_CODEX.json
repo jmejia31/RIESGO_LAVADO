@@ -44,7 +44,7 @@
     {
       "id": "ISSUE24-AUTO-ACCEPTANCE-002",
       "title": "Acceptance #24: watcher CONTROLLED autonomo crea comprobante LOW inerte",
-      "status": "READY",
+      "status": "IMPLEMENTED_PENDING_REVIEW",
       "priority": "P3",
       "dependencies": [],
       "owner": "COD",
@@ -74,6 +74,154 @@
         "approved": true,
         "approved_by": "jmejia31",
         "context": "Autorizacion expresa del propietario en conversacion 2026-11-04: 'ADELANTE CON ESTO TAMBIEN Y YA FINALICEMOS TODO' para completar GitHub->watcher->Codex->revision, reiterada 'CONTINUA DONDE TE QUEDASTE'; aplicable solo a la prueba inerte LOW de aceptacion automatica. No es aprobacion de tareas reales sin contrato ni de Block 10. Se requiere instalacion controlada local y revision humana final."
+      }
+    },
+    {
+      "id": "ISSUE25-QA-PLAN-001",
+      "title": "Issue #25: plan y catálogo estático de preparación QA sin secretos ni conexiones",
+      "status": "READY",
+      "priority": "P1",
+      "dependencies": [],
+      "owner": "COD",
+      "risk": "LOW",
+      "branch": "desarrollo",
+      "allowed_paths": [
+        "docs/qa/PLAN_PREPARACION_QA.md",
+        "docs/qa/CATALOGO_VARIABLES_QA.md"
+      ],
+      "acceptance": [
+        "Leer las instrucciones de AGENTS.md, Issue #25 y documentación de QA disponible; crear EXCLUSIVAMENTE los dos .md autorizados, sin valores de secretos, tokens, datos institucionales reales ni direcciones internas.",
+        "PLAN_PREPARACION_QA.md: diseñar pasos y compuertas para GitHub QA, verificación no conectada de acceso, entorno/runner, identidad exacta de base y usuario de solo lectura; reconocer que desarrollo carece de protección efectiva y no recomendar cargar secretos en rama mutable.",
+        "CATALOGO_VARIABLES_QA.md: tabla de nombres y finalidad de variables/secrets listados en Issue #25 (SOLO nombres, nunca valores); estado de existencia como NO_VERIFICADO si no hay verificación segura; matriz PENDING/BLOCKED por control.",
+        "No crear workflows, scripts, archivos JSON de control, credenciales, usuarios, conexiones, cuentas, ni editar docs/automatizacion/qa. No contactar Oracle, ni sitio QA ni ejecutar Playwright autenticado.",
+        "QA_SECRET_ACCESS_GATE=BLOCKED hasta protección efectiva comprobada; QA_MUTATIONS=DISABLED. No declarar cerrada Issue #25; dejar el resultado IMPLEMENTED_PENDING_REVIEW."
+      ],
+      "verification": [
+        "Comprobar que SOLO se crean/modifican los archivos exactos en allowed_paths; no tocar AGENTS, bitácora, ESTADO_COLABORACION ni otros artefactos.",
+        "Validar cola y git diff --check; ejecutar escaneo de secretos del delta. No usar servicios externos ni autenticar usuarios.",
+        "Publicar con stage/commit selectivo en origin/desarrollo, registrar estados CLAIMED/RUNNING/IMPLEMENTED_PENDING_REVIEW sin autoaprobar.",
+        "Entregar enlaces de GitHub y los límites de verificación, indicando qué está NOT_VERIFIED/PENDING; no declarar pruebas funcionales realizadas."
+      ],
+      "verification_commands": [
+        "queue-schema",
+        "git diff --check",
+        "secret-scan"
+      ],
+      "authorization": {
+        "approved": true,
+        "approved_by": "jmejia31",
+        "context": "Autorizado explícitamente por el propietario jmejia31 en la conversación del 2026-11-04: 'PILAS CON ELLO PUES, DEJALES ESAS TAREAS A CODEX YAAAAA PARA QUE LAS RESUELVA RAPIDOOOO'. Este consentimiento cubre SOLO redacción documental estática LOW en las rutas exactas. No autoriza credenciales, uso de la base QA, cambios de workflows, pruebas conectadas, DDL, producción, certificación P0, main ni Bloque 10. Exige revisión humana posterior."
+      }
+    },
+    {
+      "id": "ISSUE25-MATRICES-PLAN-002",
+      "title": "Issue #25: diseño de escenarios QA y límites de datos de Matrices sin ejecutar",
+      "status": "READY",
+      "priority": "P1",
+      "dependencies": [],
+      "owner": "COD",
+      "risk": "LOW",
+      "branch": "desarrollo",
+      "allowed_paths": [
+        "docs/qa/PLAN_ESCENARIOS_MATRICES.md",
+        "docs/qa/MATRIZ_ALCANCES_QA.md"
+      ],
+      "acceptance": [
+        "Crear EXCLUSIVAMENTE los dos archivos .md permitidos; basarse en la Issue #25, en el módulo existente y en las limitaciones del repositorio; identificar hechos con referencia, no inventar resultados.",
+        "PLAN_ESCENARIOS_MATRICES.md: matriz propuesta de navegación solo lectura por módulos accesibles y pruebas de Matrices de Riesgos, con precondiciones, criterios de aceptación y registro de evidencia SANITIZADA; PLANIFICACIÓN ÚNICAMENTE.",
+        "MATRIZ_ALCANCES_QA.md: tabla de operaciones permitidas/prohibidas; toda modificación de datos en otros módulos prohibida; incluso en Matrices requiere controles de identidad, fixtures etiquetados, IDs exactos, dependencias y limpieza selectiva antes de ejecución.",
+        "No ejecutar pruebas QA reales, no conectar Oracle/HTTPS institucional, no crear usuarios, migraciones, DDL, acciones de borrado ni modificar código, workflow o secretos. No declarar rol ADMINISTRADOR ni permisos no comprobados.",
+        "Conservar QA_WEB_LOGIN_VERIFIED=NO y QA_DB_TARGET_VERIFIED=NO salvo evidencia segura, nunca marcar PASS hipotético. Estado IMPLEMENTED_PENDING_REVIEW."
+      ],
+      "verification": [
+        "Comprobar que SOLO se crean/modifican los archivos exactos en allowed_paths; no tocar AGENTS, bitácora, ESTADO_COLABORACION ni otros artefactos.",
+        "Validar cola y git diff --check; ejecutar escaneo de secretos del delta. No usar servicios externos ni autenticar usuarios.",
+        "Publicar con stage/commit selectivo en origin/desarrollo, registrar estados CLAIMED/RUNNING/IMPLEMENTED_PENDING_REVIEW sin autoaprobar.",
+        "Entregar enlaces de GitHub y los límites de verificación, indicando qué está NOT_VERIFIED/PENDING; no declarar pruebas funcionales realizadas."
+      ],
+      "verification_commands": [
+        "queue-schema",
+        "git diff --check",
+        "secret-scan"
+      ],
+      "authorization": {
+        "approved": true,
+        "approved_by": "jmejia31",
+        "context": "Autorizado explícitamente por el propietario jmejia31 en la conversación del 2026-11-04: 'PILAS CON ELLO PUES, DEJALES ESAS TAREAS A CODEX YAAAAA PARA QUE LAS RESUELVA RAPIDOOOO'. Este consentimiento cubre SOLO redacción documental estática LOW en las rutas exactas. No autoriza credenciales, uso de la base QA, cambios de workflows, pruebas conectadas, DDL, producción, certificación P0, main ni Bloque 10. Exige revisión humana posterior."
+      }
+    },
+    {
+      "id": "P0-H08-TX12-PLAN-001",
+      "title": "Inventario de evidencias faltantes H08/TX12 y plan de reproducción no conectada",
+      "status": "READY",
+      "priority": "P2",
+      "dependencies": [],
+      "owner": "COD",
+      "risk": "LOW",
+      "branch": "desarrollo",
+      "allowed_paths": [
+        "docs/pendientes/INVENTARIO_H08_TX12_P0.md",
+        "docs/pendientes/PLAN_REPRODUCCION_H08.md"
+      ],
+      "acceptance": [
+        "Crear EXCLUSIVAMENTE los dos .md autorizados, mediante revisión estática del repositorio/expediente P0-2 Issue #23 y estado de colaboración; no alterar ni reconstruir pruebas o evidencias primarias.",
+        "INVENTARIO_H08_TX12_P0.md: separar backend documental signoff P0-2 de TX12_FRONTEND=NOT_VERIFIED, H08_M03=PENDING_USER_RETEST y H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION; trazar rutas y SHA fuente, pruebas pasadas y pendientes sin suplantar evidencias.",
+        "PLAN_REPRODUCCION_H08.md: secuencia detallada de preflight, oráculos, resultados esperados, criterios de STOP y evidencia necesaria para futura certificación; solo diseño estático sin conectar entornos ni ejecutar Playwright contra sistemas reales.",
+        "Distinguir Quality Gate fast de Quality Gate integral, y cinco CI históricos de P0-2 de un cierre funcional completo; NO declarar bloqueo 10 autorizado, ni certificar Oracle vivo.",
+        "Sin alterar backend/frontend, migración 54, archivos de certificación, GTIC, Oracle, QA ni producción. Dejar revisión externa pendiente."
+      ],
+      "verification": [
+        "Comprobar que SOLO se crean/modifican los archivos exactos en allowed_paths; no tocar AGENTS, bitácora, ESTADO_COLABORACION ni otros artefactos.",
+        "Validar cola y git diff --check; ejecutar escaneo de secretos del delta. No usar servicios externos ni autenticar usuarios.",
+        "Publicar con stage/commit selectivo en origin/desarrollo, registrar estados CLAIMED/RUNNING/IMPLEMENTED_PENDING_REVIEW sin autoaprobar.",
+        "Entregar enlaces de GitHub y los límites de verificación, indicando qué está NOT_VERIFIED/PENDING; no declarar pruebas funcionales realizadas."
+      ],
+      "verification_commands": [
+        "queue-schema",
+        "git diff --check",
+        "secret-scan"
+      ],
+      "authorization": {
+        "approved": true,
+        "approved_by": "jmejia31",
+        "context": "Autorizado explícitamente por el propietario jmejia31 en la conversación del 2026-11-04: 'PILAS CON ELLO PUES, DEJALES ESAS TAREAS A CODEX YAAAAA PARA QUE LAS RESUELVA RAPIDOOOO'. Este consentimiento cubre SOLO redacción documental estática LOW en las rutas exactas. No autoriza credenciales, uso de la base QA, cambios de workflows, pruebas conectadas, DDL, producción, certificación P0, main ni Bloque 10. Exige revisión humana posterior."
+      }
+    },
+    {
+      "id": "ISSUE22-CIERRE-PREP-001",
+      "title": "Issue #22: plantillas no ejecutivas de capacitación y preparación de cierre institucional",
+      "status": "READY",
+      "priority": "P3",
+      "dependencies": [],
+      "owner": "COD",
+      "risk": "LOW",
+      "branch": "desarrollo",
+      "allowed_paths": [
+        "docs/pendientes/PLANTILLA_CAPACITACION.md",
+        "docs/pendientes/CONTROL_CIERRE_INSTITUCIONAL.md"
+      ],
+      "acceptance": [
+        "Crear EXCLUSIVAMENTE dos archivos .md permitidos, con la Issue #22 y el material de capacitación ya existente como fuentes; no duplicar información ni presentar actas ficticias.",
+        "PLANTILLA_CAPACITACION.md: formato por llenar por responsable institucional, con fecha, asistentes, rol, evidencia de impartición, evaluación y firma; todos los hechos como PENDING hasta ejecución humana verificable.",
+        "CONTROL_CIERRE_INSTITUCIONAL.md: checklist documental para autorización posterior, backup, preflight, postflight, SHA y smoke; registrar RTO/RPO como decisiones existentes y capacitación/despliegue como PENDING según Issue #22.",
+        "No realizar capacitación, no autorizar ni iniciar despliegue, no tocar main/infraestructura/datos/credenciales, no crear valores ni firmas, no declarar PRODUCTION_DEPLOYED=TRUE.",
+        "El trabajo documental no cierra la Issue #22 ni autoriza Bloque 10; publicar y solicitar revisión humana."
+      ],
+      "verification": [
+        "Comprobar que SOLO se crean/modifican los archivos exactos en allowed_paths; no tocar AGENTS, bitácora, ESTADO_COLABORACION ni otros artefactos.",
+        "Validar cola y git diff --check; ejecutar escaneo de secretos del delta. No usar servicios externos ni autenticar usuarios.",
+        "Publicar con stage/commit selectivo en origin/desarrollo, registrar estados CLAIMED/RUNNING/IMPLEMENTED_PENDING_REVIEW sin autoaprobar.",
+        "Entregar enlaces de GitHub y los límites de verificación, indicando qué está NOT_VERIFIED/PENDING; no declarar pruebas funcionales realizadas."
+      ],
+      "verification_commands": [
+        "queue-schema",
+        "git diff --check",
+        "secret-scan"
+      ],
+      "authorization": {
+        "approved": true,
+        "approved_by": "jmejia31",
+        "context": "Autorizado explícitamente por el propietario jmejia31 en la conversación del 2026-11-04: 'PILAS CON ELLO PUES, DEJALES ESAS TAREAS A CODEX YAAAAA PARA QUE LAS RESUELVA RAPIDOOOO'. Este consentimiento cubre SOLO redacción documental estática LOW en las rutas exactas. No autoriza credenciales, uso de la base QA, cambios de workflows, pruebas conectadas, DDL, producción, certificación P0, main ni Bloque 10. Exige revisión humana posterior."
       }
     }
   ]
