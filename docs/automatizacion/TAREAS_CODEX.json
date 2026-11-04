@@ -5,5 +5,41 @@
   "branch": "desarrollo",
   "source_of_truth": "github",
   "queue_mode": "DRY_RUN",
-  "tasks": []
+  "tasks": [
+    {
+      "id": "ISSUE24-SYNTHETIC-001",
+      "title": "Aceptacion local #24: crear un comprobante sintetico inerte",
+      "status": "READY",
+      "priority": "P3",
+      "dependencies": [],
+      "owner": "COD",
+      "risk": "LOW",
+      "branch": "desarrollo",
+      "allowed_paths": [
+        "docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt"
+      ],
+      "acceptance": [
+        "Crear exclusivamente el archivo nuevo docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt.",
+        "El archivo contendrá exactamente dos lineas sin datos institucionales: ISSUE24_SYNTHETIC_ACCEPTANCE=PASS y PRODUCTION_ORACLE_TOUCHED=NO, cada una en su propia linea.",
+        "No modificar codigo, otros documentos, configuraciones, secretos, permisos, infraestructura, Oracle, QA, CI o archivos ajenos.",
+        "Dejar el resultado en IMPLEMENTED_PENDING_REVIEW para revision externa, sin autoaprobar."
+      ],
+      "verification": [
+        "Validar esquema de la cola y git diff --check.",
+        "Comprobar que el unico archivo de trabajo cambiado es docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt y que no contiene secretos.",
+        "Comprobar stage y commit selectivos, SHA remoto y estados CLAIMED/RUNNING/IMPLEMENTED_PENDING_REVIEW.",
+        "Comprobar que la misma tarea no inicia Codex una segunda vez y preservar el modo DRY_RUN del watcher programado."
+      ],
+      "verification_commands": [
+        "queue-schema",
+        "git diff --check",
+        "secret-scan"
+      ],
+      "authorization": {
+        "approved": true,
+        "approved_by": "jmejia31",
+        "context": "Autorizacion expresa en chat del propietario, 2026-11-04: exactamente una prueba sintetica LOW, manual y controlada; watcher Windows deshabilitado. Publicacion READY solo preparada en DRY_RUN hasta preflight; no permite tareas de negocio, Oracle, QA ni despliegues."
+      }
+    }
+  ]
 }
