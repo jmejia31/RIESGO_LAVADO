@@ -3623,3 +3623,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `DRY_RUN_TESTS=PASS`; `SIMULATED_SCENARIOS=10`; `CODEX_REAL_INVOKED=NO`; `IDLE_CODEX_PROCESS=NO`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`.
 - No Oracle institucional, QA, credenciales, produccion, `main`, migracion 54 ni Issue #25. `BLOCK10_AUTHORIZED=NO`.
 - Issue #24 permanece abierta: falta la activacion/aceptacion local del watcher y cualquier tarea inofensiva real sigue prohibida hasta una compuerta humana posterior.
+## Estado vigente - Issue #24 compuertas subsanadas, aceptacion local pendiente (COD) - 2026-11-04
+
+- `FINAL_COMMIT_SHA=c1ff82d8fb2cc8c2ce0946d9521682830cc7a829`; `REMOTE_SYNC=YES`; `QUEUE_MODE=DRY_RUN`; `READY_TASKS=0`.
+- `REAL_FIXTURE_GUARD=PASS`; `CODEX_ARGUMENT_GUARD=PASS`; `TASK_CONTRACT_GUARD=PASS`; `WATCHER_TRANSITION_GUARD=PASS`; `STATE_RECONCILIATION=PASS`.
+- `DRY_RUN_TESTS=PASS`; `SIMULATED_SCENARIOS=14`; `CODEX_REAL_INVOKED=NO`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`; `ORACLE_TOUCHED=NO`.
+- Procedimiento exacto de aceptación local: `docs/automatizacion/ACEPTACION_LOCAL.md`. No se modifica la cola a `CONTROLLED` ni se instala el watcher sin autorización expresa del propietario.
+- `ISSUE_24_STATUS=OPEN_PENDING_LOCAL_ACCEPTANCE`; `ISSUE_25_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.

@@ -10179,3 +10179,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Escenarios simulados verificados: cola vacia, READY DRY_RUN, aprobacion falsa, alto riesgo, dependencia faltante, ruta protegida, PAUSE, STOP, mutex y guard de fuente GitHub (`SIMULATED_SCENARIOS=10`).
 - No ejecutados: Codex real, modo CONTROLLED, commits de tareas, Task Scheduler real, QA, Oracle y credenciales. `BLOCK10_AUTHORIZED=NO`.
 - Siguiente punto: mantener `DRY_RUN`, revisar independientemente la implementacion y no cerrar Issue #24 mientras permanezca pendiente la activacion/aceptacion del watcher.
+## 2026-11-04 - Issue #24 compuertas previas a aceptacion local (COD)
+
+- Revision independiente `6637213374` atendida. No se activaron watcher, modo `CONTROLLED`, Codex real, QA ni Oracle.
+- Correcciones publicadas en `c1ff82d8fb2cc8c2ce0946d9521682830cc7a829`: ejecucion real rechaza `SkipRemoteSync` y `QueuePath` alternativo; los argumentos efectivos se validan contra una lista segura; el prompt recibe el contrato JSON canonico completo; status lee estados desde `ESTADO_TAREAS.json`; watcher ofrece transicion CONTROLLED solo con preview y autorizacion explicita.
+- Pruebas: `SIMULATED_SCENARIOS=14`, incluyendo fixture real bloqueado, guard de argumentos, contrato de tarea, transicion watcher y reconciliacion de estados. `DRY_RUN_TESTS=PASS`; escaneo secreto y `git diff --check` PASS.
+- Ejecucion canonica limpia: `REMOTE_HEAD=c1ff82d8`, `QUEUE_SHA256=21ba05f5...`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`, `CODEX_INVOKED=NO`.
+- Procedimiento de aceptación futura publicado en `docs/automatizacion/ACEPTACION_LOCAL.md`. La compuerta humana y la tarea sintetica real siguen pendientes; Issue #24 permanece abierta.
