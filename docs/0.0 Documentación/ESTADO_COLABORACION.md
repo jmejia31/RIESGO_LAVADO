@@ -3575,6 +3575,6 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El expediente P0 n.º 2 está preparado en `docs/certificaciones/` con dictamen independiente archivado fielmente, matriz TX, manifiesto, hashes, índice y diez evidencias textuales sanitizadas.
 - Fuentes localmente verificadas: TX01, TX02/TX12, TX05/TX07/TX13, TX08/TX09/TX10, cierre TX10 y expediente consolidado. Paquetes independientes TX10/firma: `MISSING_LOCAL_SOURCE`.
 - `PYTHON3_VALIDATOR=PASS`; Python 3.12 fue instalado en alcance de usuario para cumplir el hook, sin bypass. `UNTRACKED_AJENO_PRESERVED=YES`.
-- `ISSUE_23_REMOTE_PUBLICATION=PENDING_COMMIT_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING`; `EVIDENCE_COMMIT_SHA=PENDING`.
+- `ISSUE_23_REMOTE_PUBLICATION=COMMIT_CREATED`; `DOCUMENTATION_COMMIT_SHA=87a48cb0`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`.
 - Se mantienen `TX12_FRONTEND=NOT_VERIFIED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
 - Siguiente paso exacto: commit documental selectivo, push normal a `origin/desarrollo`, verificación GitHub de archivos y enlaces, y cierre de Issue #23. No iniciar Issue #24.

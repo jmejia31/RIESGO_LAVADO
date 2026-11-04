@@ -9,7 +9,7 @@
       "path": "P0_2_Integridad_Transaccional/README.md",
       "status": "READY_FOR_INDEPENDENT_REVIEW",
       "source_code_sha": "168ffa783942d11097a2ebaad5bba74f4454de9b",
-      "evidence_commit_sha": "RECORDED_AFTER_DOCUMENTATION_COMMIT",
+      "evidence_commit_sha": "87a48cb0",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23"
     }
   ]

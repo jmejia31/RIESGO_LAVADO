@@ -10135,5 +10135,5 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Cambio:** se consolidó el expediente `docs/certificaciones/`, se corrigieron estados de procedencia, se añadieron `SOURCE_PACKAGE_VERIFICATION.json`, `PRIMARY_EVIDENCE_INDEX.json` y diez archivos textuales de evidencia primaria sanitizada.
 - **Seguridad:** Python 3.12 se instaló en alcance de usuario para ejecutar el hook institucional; `tools/validate_agent_skills.py` terminó `PASS (14 skills)`. Se ejecutó `git diff --cached --check` y escaneo textual sin secretos/PII/tokens/cookies/cadenas de conexión/dumps en el material publicado.
 - **No ejecutado:** Oracle, API, frontend, E2E, nuevos Quality Gates, Issue #24 y limpieza destructiva de temporales. Los paquetes independientes no disponibles permanecen `MISSING_LOCAL_SOURCE`.
-- **Publicación:** pendiente de commit/push al momento de este registro; los enlaces permanentes y `EVIDENCE_COMMIT_SHA` se completarán con el SHA real después del commit.
+- **Publicación:** commit documental `87a48cb0` creado con hooks activos; push y verificación remota quedan pendientes en este punto de continuidad.
 - **Punto de continuación:** ejecutar hook sin bypass, crear commits documentales selectivos, push a `origin/desarrollo`, leer remotamente índice/dictamen/evidencias mediante GitHub y registrar SHA final.

@@ -5,7 +5,7 @@ Expediente documental de la [Issue #23](https://github.com/jmejia31/RIESGO_LAVAD
 ## Identidad
 
 - `SOURCE_CODE_SHA`: `168ffa783942d11097a2ebaad5bba74f4454de9b`.
-- `EVIDENCE_COMMIT_SHA`: se completará con el commit documental que publica este expediente.
+- `EVIDENCE_COMMIT_SHA`: `87a48cb0` contiene el expediente y la evidencia textual; el commit final de metadatos se publicará inmediatamente después.
 - Rama: `desarrollo`.
 - Alcance: integridad transaccional backend de actualización, publicación y eliminación.
 - Estado: `READY_FOR_INDEPENDENT_REVIEW`.
