@@ -3647,7 +3647,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 ## Estado vigente - Issue #24 escaneo delta y ejecutor endurecidos (COD) - 2026-11-04
 
-- `BASE_SHA=d2bc258d02673007bc2808879d8bbef7a4897dea`; corrección publicada en `2ba4a9ab` y actualización documental final pendiente de publicación inmediata en `desarrollo`.
+- `BASE_SHA=d2bc258d02673007bc2808879d8bbef7a4897dea`; `FINAL_SHA=1fccd500`; corrección y documentación publicadas en `origin/desarrollo`.
 - `SECRET_SCAN_REMEDIATED=PASS`; `SECRET_SCAN_EXISTING_MATCHES_REVIEWED=YES`; `SECRET_SCAN_FAIL_CLOSED=PASS`; `ALLOWED_PATHS_EXACT_MATCH=PASS`; `CODEX_ARGUMENT_INTEGRITY=PASS`.
 - `SCENARIO_TESTS=PASS`; `SIMULATED_SCENARIOS=27`; cubiertos scanner ausente/error/coincidencia, archivos nuevos, rutas exactas y adversariales, estados persistidos, no repetición y flags PAUSE/STOP.
 - `QUEUE_MODE=DRY_RUN`; `ISSUE24-SYNTHETIC-001=READY`; `WATCHER_STATE=DISABLED`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`.
