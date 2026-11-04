@@ -11,8 +11,8 @@
                        "review_required":  true,
                        "reason":  "",
                        "executor":  "COD",
-                       "status":  "CLAIMED",
-                       "updated_at":  "2026-11-04T19:42:08.1114792Z"
+                       "status":  "RUNNING",
+                       "updated_at":  "2026-11-04T19:42:11.3089972Z"
                    }
                ],
     "controls":  {
