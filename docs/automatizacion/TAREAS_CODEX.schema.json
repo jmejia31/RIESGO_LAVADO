@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "repository", "branch", "source_of_truth", "queue_mode", "tasks"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "repository": {"const": "jmejia31/RIESGO_LAVADO"},
+    "branch": {"const": "desarrollo"},
+    "source_of_truth": {"const": "github"},
+    "queue_mode": {"enum": ["DRY_RUN", "CONTROLLED"]},
+    "tasks": {"type": "array", "items": {"$ref": "#/$defs/task"}}
+  },
+  "$defs": {
+    "task": {
+      "type": "object",
+      "required": ["id", "title", "status", "priority", "dependencies", "owner", "risk", "branch", "allowed_paths", "acceptance", "verification", "authorization"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{2,63}$"},
+        "title": {"type": "string", "minLength": 1},
+        "status": {"enum": ["PENDING_AUTHORIZATION", "READY", "CLAIMED", "RUNNING", "IMPLEMENTED_PENDING_REVIEW", "CHANGES_REQUESTED", "APPROVED", "BLOCKED", "FAILED", "CANCELLED"]},
+        "priority": {"enum": ["P0", "P1", "P2", "P3"]},
+        "dependencies": {"type": "array", "items": {"type": "string"}},
+        "owner": {"type": "string", "minLength": 1},
+        "risk": {"enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]},
+        "branch": {"const": "desarrollo"},
+        "allowed_paths": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "acceptance": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "verification": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "authorization": {"type": "object", "required": ["approved", "approved_by", "context"], "properties": {"approved": {"type": "boolean"}, "approved_by": {"type": "string"}, "context": {"type": "string", "minLength": 1}}}
+      }
+    }
+  }
+}

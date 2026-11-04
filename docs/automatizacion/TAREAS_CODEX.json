@@ -1,0 +1,9 @@
+{
+  "$schema": "./TAREAS_CODEX.schema.json",
+  "schema_version": 1,
+  "repository": "jmejia31/RIESGO_LAVADO",
+  "branch": "desarrollo",
+  "source_of_truth": "github",
+  "queue_mode": "DRY_RUN",
+  "tasks": []
+}

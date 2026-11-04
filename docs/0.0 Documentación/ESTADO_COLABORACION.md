@@ -3598,3 +3598,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; `FUNCTIONAL_CODE_CHANGED=NO`; `ISSUE_24_STATUS=NOT_STARTED`.
 - `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - Siguiente accion autorizada: cerrar Issue #23; despues iniciar la preparacion de Issue #24 conforme a DRY_RUN, sandbox seguro y cola vacia.
+## Estado vigente - Issue #24 bootstrap autonomo controlado (COD) - 2026-11-04
+
+- `ISSUE_23_STATUS=CLOSED_COMPLETED`; `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b` permanece historico. `INITIAL_HEAD=3cfa6dc8604122eecf311d8d7b8ebd1a3462a219`.
+- `QUEUE_FILE=docs/automatizacion/TAREAS_CODEX.json`; cola inicial vacia; `QUEUE_SCHEMA_VALIDATED=PASS`; estados separados en `ESTADO_TAREAS.json`.
+- `DRY_RUN_TESTS=PASS`; escenarios de cola vacia, tarea READY, PAUSE y STOP no invocaron Codex ni crearon commits. `CODEX_CLI_EXEC_AVAILABLE=YES`; `SANDBOX_POLICY=workspace-write_REQUIRED`.
+- `WATCHER_INSTALLED=NO`; se valido el preview del instalador sin crear una tarea Windows. `WATCHER_ENABLED=NO`; `IDLE_CODEX_PROCESS=NO`.
+- No se accedio a Oracle institucional, QA, credenciales, produccion, `main`, migracion 54 ni Issue #25. Untracked ajenos preservados.
+- Punto de continuacion: validar diff, publicar la infraestructura en `origin/desarrollo`, leer los archivos remotamente y mantener DRY_RUN hasta una decision de activacion local.

@@ -10156,3 +10156,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Lectura remota GitHub confirmada para `INDEX.json`, manifiesto, README, validacion reproducible, dictamen, evidencias primarias, ambos AGENTS, bitacora y estado colaborativo.
 - `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b` preservado; `FUNCTIONAL_CODE_CHANGED=NO`; no se inicio Issue #24.
 - JSON, escaneo de secretos/PII y diff check: PASS. Issue #23 queda conciliada documentalmente; no se declaran certificaciones Oracle, frontend ni nuevos Quality Gates.
+## 2026-11-04 - Issue #24 bootstrap autonomo controlado (COD)
+
+- Baseline: rama `desarrollo`, `INITIAL_HEAD=3cfa6dc8604122eecf311d8d7b8ebd1a3462a219`, remoto sincronizado; se preservaron todos los untracked ajenos.
+- Se creo `docs/automatizacion/` con cola vacia, schemas, politica y guia; y `tools/automatizacion/` con validador, ejecutor serializado, mutex, status, PAUSE/STOP, scripts de watcher y escenarios DRY_RUN.
+- `codex exec --help` verificado: CLI disponible y soporta `--sandbox workspace-write`. No se uso YOLO, bypass, `danger-full-access`, Oracle, QA, Scheduler real ni credenciales.
+- Verificado: sintaxis PowerShell de todos los scripts; cola vacia; tarea READY simulada; pausa; parada; preview de instalacion/remocion del watcher. `CODEX_REAL_INVOKED=NO`, `COMMIT_CREATED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`.
+- Estado: `QUEUE_MODE=DRY_RUN`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`, `WATCHER_INSTALLED=NO`, `WATCHER_ENABLED=NO`, `ISSUE_25_STATUS=NOT_STARTED`.
+- Pendiente: revisar y publicar la unidad; la activacion real del Task Scheduler y cualquier ejecucion controlada requieren decision local posterior y no se consideran verificadas por DRY_RUN.

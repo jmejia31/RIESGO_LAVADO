@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "repository", "branch", "executor", "states", "controls"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "repository": {"const": "jmejia31/RIESGO_LAVADO"},
+    "branch": {"const": "desarrollo"},
+    "executor": {"const": "COD"},
+    "states": {"type": "array"},
+    "controls": {"type": "object", "required": ["pause", "stop", "dry_run_default", "max_parallel", "max_attempts", "auto_approve"], "properties": {"pause": {"type": "boolean"}, "stop": {"type": "boolean"}, "dry_run_default": {"const": true}, "max_parallel": {"const": 1}, "max_attempts": {"const": 2}, "auto_approve": {"const": false}}}
+  }
+}

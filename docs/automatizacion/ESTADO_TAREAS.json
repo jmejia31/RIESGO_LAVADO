@@ -1,0 +1,16 @@
+{
+  "$schema": "./ESTADO_TAREAS.schema.json",
+  "schema_version": 1,
+  "repository": "jmejia31/RIESGO_LAVADO",
+  "branch": "desarrollo",
+  "executor": "COD",
+  "states": [],
+  "controls": {
+    "pause": false,
+    "stop": false,
+    "dry_run_default": true,
+    "max_parallel": 1,
+    "max_attempts": 2,
+    "auto_approve": false
+  }
+}
