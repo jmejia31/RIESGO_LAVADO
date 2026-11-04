@@ -5,7 +5,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
-function Fail([string]$Message) { throw "QUEUE_VALIDATION=FAIL: $Message" }
+function Fail([string]$Message) { Write-Output "QUEUE_VALIDATION=FAIL: $Message"; exit 2 }
 if (-not (Test-Path -LiteralPath $QueuePath -PathType Leaf)) { Fail "queue not found: $QueuePath" }
 try { $queue = Get-Content -Raw -LiteralPath $QueuePath | ConvertFrom-Json } catch { Fail "invalid JSON: $($_.Exception.Message)" }
 if ($queue.schema_version -ne 1) { Fail 'schema_version must be 1' }
@@ -24,7 +24,8 @@ foreach ($task in $tasks) {
     if ($allowed -notcontains [string]$task.status) { Fail "invalid status for $($task.id)" }
     if ($task.branch -ne 'desarrollo') { Fail "task branch must be desarrollo: $($task.id)" }
     if (-not $task.allowed_paths -or -not $task.acceptance -or -not $task.verification) { Fail "task contract incomplete: $($task.id)" }
-    if ($task.authorization.approved -eq $true -and [string]::IsNullOrWhiteSpace($task.authorization.approved_by)) { Fail "approved task has no approver: $($task.id)" }
+    if ($task.authorization.approved -eq $true -and $task.authorization.approved_by -ne 'jmejia31') { Fail "approved task lacks owner approval identity: $($task.id)" }
+    if ($task.status -eq 'READY' -and -not $task.verification_commands) { Fail "READY task has no allowlisted verification commands: $($task.id)" }
     foreach ($path in @($task.allowed_paths)) {
         if ([IO.Path]::IsPathRooted([string]$path) -or ([string]$path -match '(^|[\\/])\.\.([\\/]|$)')) { Fail "unsafe allowed path: $path" }
         foreach ($word in $protected) { if ([string]$path -match [regex]::Escape($word)) { Fail "protected path: $path" } }
