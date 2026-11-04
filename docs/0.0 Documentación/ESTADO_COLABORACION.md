@@ -3622,4 +3622,4 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `STATE_PERSISTENCE_IMPLEMENTED=YES`; `VERIFICATION_GATES_IMPLEMENTED=YES`; `SELECTIVE_PUBLISH_GUARD=YES`; `HIGH_RISK_GUARD=PASS`; `LOCAL_LOCK_GUARD=PASS`.
 - `DRY_RUN_TESTS=PASS`; `SIMULATED_SCENARIOS=10`; `CODEX_REAL_INVOKED=NO`; `IDLE_CODEX_PROCESS=NO`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`.
 - No Oracle institucional, QA, credenciales, produccion, `main`, migracion 54 ni Issue #25. `BLOCK10_AUTHORIZED=NO`.
-- Issue #24 permanece abierta: falta la activacion/aceptacion local del watcher y cualquier tarea inofensiva real sigue prohibida hasta una compuerta humana posterior. 
+- Issue #24 permanece abierta: falta la activacion/aceptacion local del watcher y cualquier tarea inofensiva real sigue prohibida hasta una compuerta humana posterior.
