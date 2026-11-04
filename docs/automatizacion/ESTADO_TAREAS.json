@@ -31,6 +31,15 @@
                        "executor":  "COD",
                        "status":  "BLOCKED",
                        "updated_at":  "2026-11-04T21:48:15.8242763Z"
+                   },
+                   {
+                       "attempt":  1,
+                       "task_id":  "ISSUE25-QA-PLAN-001",
+                       "review_required":  true,
+                       "reason":  "",
+                       "executor":  "COD",
+                       "status":  "CLAIMED",
+                       "updated_at":  "2026-11-04T21:53:05.5773605Z"
                    }
                ],
     "controls":  {
