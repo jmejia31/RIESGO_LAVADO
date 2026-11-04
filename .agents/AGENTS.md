@@ -187,6 +187,18 @@ No se considera válido un handoff si:
 
 Cuando un colaborador recibe el turno debe ejecutar `git pull --ff-only origin desarrollo` como primer paso para obtener el estado exacto del anterior.
 
+## 5.1 Publicación de resultados y evidencias de certificación para revisión remota
+
+Toda intervención que produzca una certificación, dictamen o evidencia debe dejar en GitHub un expediente legible antes de cerrarse. El expediente debe incluir objetivo, autor, `SOURCE_CODE_SHA`, `EVIDENCE_COMMIT_SHA`, pruebas ejecutadas y no ejecutadas, hashes, resultados, límites, observaciones, remanentes y enlaces permanentes.
+
+- Las evidencias técnicas sintéticas sanitizadas deben publicarse como texto (JSON, Markdown o log sanitizado) bajo `docs/certificaciones/` o mediante un enlace GitHub verificable. Nunca deben quedar solo en un ZIP local ni reducirse a un resumen `PASS`. Cada archivo debe declarar hash y procedencia, distinguiendo evidencia primaria de interpretación.
+- Si faltan trazas imprescindibles, el estado máximo es `READY_FOR_INDEPENDENT_REVIEW`; ningún colaborador puede emitir la firma o evaluación independiente de otro colaborador.
+- El cierre debe verificar mediante la API o lectura remota de GitHub que `origin/desarrollo` contiene el índice, dictamen y evidencias. Deben registrarse `GITHUB_EVIDENCE_INDEX_URL`, `GITHUB_SIGNOFF_URL`, `SOURCE_CODE_SHA`, `EVIDENCE_COMMIT_SHA`, `GITHUB_REMOTE_VERIFIED`, `SECURITY_SCAN` y `REVIEW_READY`.
+- El material restringido debe conservarse en custodia autorizada con `ACCESS_RESTRICTED`; no se publica ni se oculta que puede requerir acceso seguro. No se suben secretos, dumps, logs operativos, datos de clientes, credenciales ni información institucional identificable.
+- El stage debe ser selectivo. El archivado documental no produce commits de código ni modifica `main`, producción, Oracle institucional, `PRUEBA_FORMULARIO` o migraciones protegidas. La regla aplica a futuras certificaciones sin reiteración del propietario.
+
+La excepción documental es acotada: solo se permiten evidencias técnicas sintéticas y sanitizadas autorizadas bajo `docs/certificaciones/`; la prohibición general de secretos, dumps y logs operativos permanece vigente.
+
 ---
 
 ## 6. Repositorio oficial

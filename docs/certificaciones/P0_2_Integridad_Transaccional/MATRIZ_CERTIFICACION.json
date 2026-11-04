@@ -1,0 +1,20 @@
+{
+  "schema":"rl-p0-2-certification-matrix/v2",
+  "source_code_sha":"168ffa783942d11097a2ebaad5bba74f4454de9b",
+  "source_package_verification":"SOURCE_PACKAGE_VERIFICATION.json",
+  "controls":[
+    {"id":"TX-01","operation":"PUT update","result":"PASS_DOCUMENTAL","evidence":"evidencia-primaria/TX-01.md","observation":"JSON/hash changed; UPDATE audit"},
+    {"id":"TX-02","operation":"PUT audit rollback","result":"PASS_DOCUMENTAL","evidence":"evidencia-primaria/TX-02.md","observation":"ORA-20991 trace restricted"},
+    {"id":"TX-12-backend","operation":"PUT additional rollback","result":"PASS_DOCUMENTAL","evidence":"evidencia-primaria/TX-12-backend.md","observation":"Frontend not verified"},
+    {"id":"TX-05","operation":"Publication rollback","result":"PASS_DOCUMENTAL","evidence":"evidencia-primaria/TX-05.md","observation":"Draft preserved"},
+    {"id":"TX-07","operation":"Previous published version preserved","result":"PASS_WITH_OBSERVATIONS","evidence":"evidencia-primaria/TX-07.md","observation":"No global family count"},
+    {"id":"TX-13","operation":"Committed PUT survives failed POST","result":"PASS_DOCUMENTAL","evidence":"evidencia-primaria/TX-13.md","observation":"PUT audit separated from POST rollback"},
+    {"id":"TX-08","operation":"DELETE success","result":"PASS_DOCUMENTAL","evidence":"evidencia-primaria/TX-08.md","observation":"DELETE 200, GET 404, DELETE audit"},
+    {"id":"TX-09","operation":"DELETE audit rollback","result":"PASS_DOCUMENTAL","evidence":"evidencia-primaria/TX-09.md","observation":"ORA-20991"},
+    {"id":"TX-10A","operation":"Formula dependency conflict","result":"PASS_WITH_OBSERVATIONS","evidence":"evidencia-primaria/TX-10A.md","observation":"409 body absent"},
+    {"id":"TX-10B","operation":"Evaluation dependency conflict","result":"PASS_WITH_OBSERVATIONS","evidence":"evidencia-primaria/TX-10B.md","observation":"409 body absent"}
+  ],
+  "historical_quality_gates":[41469328699,41472933613,41477196537,41480850420,41483797292],
+  "status":"DOCUMENTAL_WITH_OBSERVATIONS",
+  "block10_authorized":false
+}

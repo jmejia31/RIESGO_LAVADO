@@ -85,6 +85,8 @@ La solución incluye pruebas unitarias del motor de matrices en `backend/RL.API.
 
 ## Despliegue y seguridad
 
+Las certificaciones deben publicarse en `origin/desarrollo` con índice, dictamen, matriz, evidencias textuales sanitizadas, `SOURCE_CODE_SHA`, `EVIDENCE_COMMIT_SHA`, límites y enlaces permanentes. La única excepción documental a la prohibición de logs/evidencias es `docs/certificaciones/`, exclusivamente para material técnico sintético sanitizado y autorizado, con procedencia y hashes; nunca secretos, dumps, PII, datos de clientes ni logs operativos. El cierre requiere comprobar por lectura remota/API que GitHub contiene el expediente; un ZIP local no es evidencia suficiente.
+
 Consulte [despliegue](docs/0.0%20Documentación/DEPLOYMENT.md) antes de publicar y [seguridad](docs/0.0%20Documentación/SECURITY.md) para el manejo de secretos, archivos cargados, JWT y reporte de vulnerabilidades. No versionar compilaciones, logs, datos de ejecución, evidencias cargadas ni configuración local.
 
 ## Documentación

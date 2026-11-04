@@ -1,0 +1,17 @@
+{
+  "schema": "rl-p0-2-primary-evidence-index/v1",
+  "source_code_sha": "168ffa783942d11097a2ebaad5bba74f4454de9b",
+  "access": "PRIVATE_REPOSITORY",
+  "entries": [
+    {"test_id":"TX-01","path":"evidencia-primaria/TX-01.md","source_package":"TX01"},
+    {"test_id":"TX-02","path":"evidencia-primaria/TX-02.md","source_package":"TX02_TX12"},
+    {"test_id":"TX-12-backend","path":"evidencia-primaria/TX-12-backend.md","source_package":"TX02_TX12"},
+    {"test_id":"TX-05","path":"evidencia-primaria/TX-05.md","source_package":"TX05_TX07_TX13"},
+    {"test_id":"TX-07","path":"evidencia-primaria/TX-07.md","source_package":"TX05_TX07_TX13"},
+    {"test_id":"TX-13","path":"evidencia-primaria/TX-13.md","source_package":"TX05_TX07_TX13"},
+    {"test_id":"TX-08","path":"evidencia-primaria/TX-08.md","source_package":"TX08_TX09_TX10"},
+    {"test_id":"TX-09","path":"evidencia-primaria/TX-09.md","source_package":"TX08_TX09_TX10"},
+    {"test_id":"TX-10A","path":"evidencia-primaria/TX-10A.md","source_package":"TX10_CLOSURE"},
+    {"test_id":"TX-10B","path":"evidencia-primaria/TX-10B.md","source_package":"TX10_CLOSURE"}
+  ]
+}

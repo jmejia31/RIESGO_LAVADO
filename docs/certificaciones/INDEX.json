@@ -1,0 +1,16 @@
+{
+  "schema": "rl-certification-index/v1",
+  "repository": "jmejia31/RIESGO_LAVADO",
+  "branch": "desarrollo",
+  "issue": 23,
+  "entries": [
+    {
+      "id": "P0-2",
+      "path": "P0_2_Integridad_Transaccional/README.md",
+      "status": "READY_FOR_INDEPENDENT_REVIEW",
+      "source_code_sha": "168ffa783942d11097a2ebaad5bba74f4454de9b",
+      "evidence_commit_sha": "RECORDED_AFTER_DOCUMENTATION_COMMIT",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23"
+    }
+  ]
+}

@@ -34,6 +34,17 @@
 
 ---
 
+## Estado vigente — Issue #23: publicación documental P0 n.º 2 (COD) — 2026-11-04
+
+- `CERTIFIED_SOURCE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; este SHA de código no cambia por el expediente documental.
+- Se creó `docs/certificaciones/INDEX.json` y `docs/certificaciones/P0_2_Integridad_Transaccional/` con README, dictamen independiente archivado, matriz MD/JSON, manifiesto, hashes, observaciones, validación reproducible y transcripción textual sanitizada para TX-01/TX-10B.
+- Se publicó la regla permanente de expediente remoto verificable en `AGENTS.md`, `.agents/AGENTS.md`, `README.md` y la skill documental. La condición de cierre es `GITHUB_REMOTE_VERIFIED=YES`.
+- `FUNCTIONAL_CODE_CHANGED=NO`; no se modificaron backend, frontend, Oracle, producción, `main`, `PRUEBA_FORMULARIO` ni migración 54.
+- Los ocho paquetes originales se registran `MISSING_LOCAL_SOURCE` con hashes conocidos; no fueron reconstruidos, verificados localmente ni subidos. Las evidencias textuales publicadas son transcripciones sanitizadas del dictamen y no sustituyen capturas crudas.
+- `P0_2_BACKEND_SIGNOFF=DOCUMENTAL_WITH_OBSERVATIONS`; `TX12_FRONTEND=NOT_VERIFIED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- `NEW_QUALITY_GATES_EXECUTED=NO`; los cinco gates históricos se conservan como reportados sobre el SHA certificado y no se cuentan como ejecución de esta intervención.
+- Punto exacto: finalizar validación de seguridad/documentación, commit selectivo, push a `origin/desarrollo`, comprobar enlaces por GitHub y completar en este estado los SHA/URLs reales de publicación.
+
 # Estado vigente — Paquete de capacitación institucional preparado (COD) — 2026-10-23 14:36 -06:00
 
 ## Fase A — materiales preparados; sesión institucional pendiente
@@ -3558,3 +3569,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Se elimino exclusivamente esa expectativa HTTP 200 del E2E. Permanecen las comprobaciones directas del preview incompleto, el 409 de concurrencia, la deteccion de errores inesperados y los 400 negativos.
 - Verificado: ESLint E2E PASS, Playwright list 3, validadores estructura/DB/documentacion PASS y diff check PASS. Oracle E2E y rollback quedan pendientes.
 - Estado obligatorio: `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+## Estado vigente - Issue #23 publicación documental y evidencia remota (COD) - 2026-11-04
+
+- `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; no se modifica código funcional, Oracle institucional, producción, `main`, `PRUEBA_FORMULARIO` ni migración 54.
+- El expediente P0 n.º 2 está preparado en `docs/certificaciones/` con dictamen independiente archivado fielmente, matriz TX, manifiesto, hashes, índice y diez evidencias textuales sanitizadas.
+- Fuentes localmente verificadas: TX01, TX02/TX12, TX05/TX07/TX13, TX08/TX09/TX10, cierre TX10 y expediente consolidado. Paquetes independientes TX10/firma: `MISSING_LOCAL_SOURCE`.
+- `PYTHON3_VALIDATOR=PASS`; Python 3.12 fue instalado en alcance de usuario para cumplir el hook, sin bypass. `UNTRACKED_AJENO_PRESERVED=YES`.
+- `ISSUE_23_REMOTE_PUBLICATION=PENDING_COMMIT_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING`; `EVIDENCE_COMMIT_SHA=PENDING`.
+- Se mantienen `TX12_FRONTEND=NOT_VERIFIED`, `H08_M03=PENDING_USER_RETEST`, `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+- Siguiente paso exacto: commit documental selectivo, push normal a `origin/desarrollo`, verificación GitHub de archivos y enlaces, y cierre de Issue #23. No iniciar Issue #24.

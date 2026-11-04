@@ -1,5 +1,17 @@
 ## 2026-10-27 09:10 -06:00 - Ciclo de vida seguro de familias de formularios (COD)
 
+## 2026-11-04 - Publicación documental P0 n.º 2 y regla permanente de evidencias (COD)
+
+- **Baseline:** rama `desarrollo`, `INITIAL_HEAD=168ffa783942d11097a2ebaad5bba74f4454de9b`, igual a `origin/desarrollo`; se preservaron los untracked ajenos y se excluyeron del stage.
+- **Objetivo:** ejecutar issue #23 con cambios exclusivamente documentales; publicar el dictamen independiente y evidencias textuales sanitizadas en GitHub; hacer permanente la regla de revisión remota.
+- **Alcance:** se modificaron ambos `AGENTS.md`, `README.md`, `riesgo-lavado-documentacion/SKILL.md`, bitácora/estado y se creó `docs/certificaciones/INDEX.json` junto al expediente `P0_2_Integridad_Transaccional`. No se modificó código funcional, Oracle, producción, `main`, `PRUEBA_FORMULARIO` ni migración 54.
+- **Fuente y preservación:** `CERTIFIED_SOURCE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; los cinco Quality Gates históricos (`41469328699`, `41472933613`, `41477196537`, `41480850420`, `41483797292`) se conservaron como reportados, sin reejecución. Los ocho ZIP originales permanecen `MISSING_LOCAL_SOURCE` con sus SHA conocidos; no fueron reconstruidos ni publicados.
+- **Dictamen:** se archivó fielmente el dictamen independiente de ChatGPT desde la issue #23. Resultado: `P0_2_BACKEND_SIGNOFF=DOCUMENTAL_WITH_OBSERVATIONS`; `TX12_FRONTEND=NOT_VERIFIED`; `BLOCK10_AUTHORIZED=NO`.
+- **Evidencia:** la matriz cubre TX-01, TX-02, TX-12 backend, TX-05, TX-07, TX-13, TX-08, TX-09, TX-10A y TX-10B. El archivo `evidencia-primaria/TX-01-TX-10.md` contiene transcripciones sanitizadas derivadas del dictamen, etiquetadas como no crudas; no se inventaron capturas, IDs, timestamps ni filas.
+- **Seguridad y pruebas:** se revisó el material publicado en busca de secretos, credenciales, tokens, cookies, connection strings, PII, hosts internos y dumps; no se encontraron en los archivos creados. Se ejecutaron validaciones JSON y `git diff --check`; validadores adicionales quedan consignados con resultado real al cierre. No se ejecutaron Oracle, API, frontend, E2E, nuevos Quality Gates ni lectura de ZIP originales por instrucción expresa.
+- **Publicación:** pendiente al momento de esta entrada; el cierre debe registrar commits, URLs permanentes, `GITHUB_REMOTE_VERIFIED`, `SECRET_AND_PII_SCAN`, estado limpio y publicación en `origin/desarrollo`.
+- **Punto de continuación:** stage selectivo de los archivos propios, validación final, commit(s) documentales, push normal y lectura remota de índice, dictamen, matriz y evidencia primaria.
+
 ## 2026-10-28 - H08 ampliado: automatizacion Angular, vigencia, evaluacion, integridad y auditoria (COD)
 
 - **Baseline:** rama `desarrollo`, `INITIAL_HEAD=d97ffbbe8f325cd199d3b33efaabe3b47763215e`, igual a `origin/desarrollo`; se preservaron cambios ajenos sin stage. Se leyeron AGENTS, bitacora, estado, README, skills y documentacion del modulo.
@@ -10116,3 +10128,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Pendiente externo: reproduccion Block12 contra Oracle XE disposable, E2E Oracle actual, rollback real ante fallo de auditoria y Quality Gates remotos. No se uso Oracle institucional ni el proceso local con perfil de produccion.
 - Estado: `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto de continuacion: commit/push de este cambio minimo, revisar el nuevo Quality Gate y exigir `BLOCK12_PRE_FIX_FULL_MATRIX_DEFECT_REPRODUCED=YES` junto con todos los E2E Oracle obligatorios antes de contar gates.
+## 2026-11-04 - Publicación documental Issue #23: cierre y publicación remota (COD)
+
+- **Continuación:** se recuperó staging documental existente; no se descartaron cambios ni archivos untracked ajenos.
+- **Baseline:** rama `desarrollo`; `INITIAL_HEAD=168ffa783942d11097a2ebaad5bba74f4454de9b`; `origin/desarrollo` coincidía. `CERTIFIED_SOURCE_SHA` permanece intacto.
+- **Cambio:** se consolidó el expediente `docs/certificaciones/`, se corrigieron estados de procedencia, se añadieron `SOURCE_PACKAGE_VERIFICATION.json`, `PRIMARY_EVIDENCE_INDEX.json` y diez archivos textuales de evidencia primaria sanitizada.
+- **Seguridad:** Python 3.12 se instaló en alcance de usuario para ejecutar el hook institucional; `tools/validate_agent_skills.py` terminó `PASS (14 skills)`. Se ejecutó `git diff --cached --check` y escaneo textual sin secretos/PII/tokens/cookies/cadenas de conexión/dumps en el material publicado.
+- **No ejecutado:** Oracle, API, frontend, E2E, nuevos Quality Gates, Issue #24 y limpieza destructiva de temporales. Los paquetes independientes no disponibles permanecen `MISSING_LOCAL_SOURCE`.
+- **Publicación:** pendiente de commit/push al momento de este registro; los enlaces permanentes y `EVIDENCE_COMMIT_SHA` se completarán con el SHA real después del commit.
+- **Punto de continuación:** ejecutar hook sin bypass, crear commits documentales selectivos, push a `origin/desarrollo`, leer remotamente índice/dictamen/evidencias mediante GitHub y registrar SHA final.

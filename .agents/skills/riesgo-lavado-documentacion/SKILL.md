@@ -26,6 +26,8 @@ Evitar pérdida de contexto y asegurar que cualquier colaborador pueda continuar
 6. Mantener pendientes, bloqueos externos y punto exacto de continuación.
 7. Si cambia el protocolo de agentes, mantener sincronizados `AGENTS.md` y `.agents/AGENTS.md`.
 8. No incrustar rutas `file:///C:/...`; usar rutas relativas del repositorio.
+9a. Las certificaciones deben publicar en `origin/desarrollo` un expediente textual con `SOURCE_CODE_SHA`, `EVIDENCE_COMMIT_SHA`, matriz, dictamen, evidencias sanitizadas, limites y enlaces permanentes. Verificar por lectura remota/API que el indice y las evidencias existen; registrar `GITHUB_REMOTE_VERIFIED`.
+9b. Si faltan fuentes primarias o el material es restringido, declarar `MISSING_LOCAL_SOURCE` o `ACCESS_RESTRICTED` y `READY_FOR_INDEPENDENT_REVIEW`; no reconstruir capturas, no inventar resultados y no subir secretos, PII, dumps ni logs operativos.
 9. Documentación de cierre debe coincidir con el código y CI del mismo SHA.
 
 ## Handoff mínimo
