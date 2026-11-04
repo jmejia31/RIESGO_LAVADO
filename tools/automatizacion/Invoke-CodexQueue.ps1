@@ -175,11 +175,19 @@ if ($isRepoQueue -and -not $SkipRemoteSync) {
         $remote = (& git -C $RepoRoot rev-parse origin/desarrollo).Trim()
     }
     if ($head -ne $remote) { Stop-Safely 'REMOTE_HEAD_NOT_CONFIRMED' }
-    $remoteQueue = Join-Path $runtime 'remote-queue.json'
-    $remoteText = (& git -C $RepoRoot show "origin/desarrollo:$queueRelative" | Out-String)
-    [IO.File]::WriteAllText($remoteQueue, $remoteText, (New-Object Text.UTF8Encoding($false)))
-    if ($LASTEXITCODE -ne 0) { Stop-Safely 'REMOTE_QUEUE_NOT_FOUND' }
-    if ((Get-NormalizedSha256 $QueuePath) -ne (Get-NormalizedSha256 $remoteQueue)) { Stop-Safely 'LOCAL_QUEUE_DIFFERS_FROM_GITHUB' }
+    & git -C $RepoRoot diff --no-ext-diff --quiet 'origin/desarrollo' -- $queueRelative 2>$null
+    $queueDiffExit=[int]$LASTEXITCODE
+    Write-Output "QUEUE_GIT_DIFF_EXIT=$queueDiffExit"
+    if ($queueDiffExit -eq 1) { Stop-Safely 'LOCAL_QUEUE_DIFFERS_FROM_GITHUB' }
+    if ($queueDiffExit -gt 1) { Stop-Safely 'QUEUE_GIT_COMPARISON_ERROR' }
+    $localQueueObject=(& git -C $RepoRoot hash-object -- $queueRelative 2>$null).Trim()
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($localQueueObject)) { Stop-Safely 'LOCAL_QUEUE_BLOB_UNAVAILABLE' }
+    $remoteQueueObject=(& git -C $RepoRoot rev-parse "origin/desarrollo:$queueRelative" 2>$null).Trim()
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($remoteQueueObject)) { Stop-Safely 'REMOTE_QUEUE_BLOB_UNAVAILABLE' }
+    Write-Output "LOCAL_QUEUE_OBJECT=$localQueueObject"
+    Write-Output "REMOTE_QUEUE_OBJECT=$remoteQueueObject"
+    if ($localQueueObject -ne $remoteQueueObject) { Stop-Safely 'LOCAL_QUEUE_DIFFERS_FROM_GITHUB' }
+    Write-Output 'LOCAL_QUEUE_MATCHES_GITHUB=YES'
     Write-Output "REMOTE_HEAD=$remote"
     Write-Output "QUEUE_SHA256=$(Get-NormalizedSha256 $QueuePath)"
 } else { Write-Output 'QUEUE_SOURCE=FIXTURE_OR_SYNC_SKIPPED' }

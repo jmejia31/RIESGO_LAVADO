@@ -3648,6 +3648,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 ## Estado vigente - Issue #24 escaneo delta y ejecutor endurecidos (COD) - 2026-11-04
 
 - `BASE_SHA=d2bc258d02673007bc2808879d8bbef7a4897dea`; `FINAL_SHA=95a11f75652943d51860da28c5e98832f9234fa0`; corrección y documentación publicadas en `origin/desarrollo`.
+- **Continuación:** se detectó y corrigió el falso `LOCAL_QUEUE_DIFFERS_FROM_GITHUB`; pendiente publicar el commit de esta corrección y repetir DRY_RUN canónico.
 - `SECRET_SCAN_REMEDIATED=PASS`; `SECRET_SCAN_EXISTING_MATCHES_REVIEWED=YES`; `SECRET_SCAN_FAIL_CLOSED=PASS`; `ALLOWED_PATHS_EXACT_MATCH=PASS`; `CODEX_ARGUMENT_INTEGRITY=PASS`.
 - `SCENARIO_TESTS=PASS`; `SIMULATED_SCENARIOS=27`; cubiertos scanner ausente/error/coincidencia, archivos nuevos, rutas exactas y adversariales, estados persistidos, no repetición y flags PAUSE/STOP.
 - `QUEUE_MODE=DRY_RUN`; `ISSUE24-SYNTHETIC-001=READY`; `WATCHER_STATE=DISABLED`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`.
