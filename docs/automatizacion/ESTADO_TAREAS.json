@@ -13,6 +13,15 @@
                        "executor":  "COD",
                        "status":  "IMPLEMENTED_PENDING_REVIEW",
                        "updated_at":  "2026-11-04T19:43:54.0136198Z"
+                   },
+                   {
+                       "attempt":  1,
+                       "task_id":  "ISSUE24-AUTO-ACCEPTANCE-002",
+                       "review_required":  true,
+                       "reason":  "",
+                       "executor":  "COD",
+                       "status":  "CLAIMED",
+                       "updated_at":  "2026-11-04T20:53:13.8267709Z"
                    }
                ],
     "controls":  {
