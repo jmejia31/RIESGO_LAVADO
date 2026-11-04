@@ -3591,3 +3591,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Cambio exclusivamente documental; no se modificaron codigo funcional, Oracle, migraciones, `main` ni untracked ajenos. Issue #24 no iniciada.
 - Pendiente inmediato: validar, publicar y leer remotamente este ajuste; luego cerrar Issue #23 si los criterios siguen satisfechos.
 - `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+## Estado vigente - Issue #23 publicada y conciliada (COD) - 2026-11-04
+
+- `DOCUMENTATION_HEAD_SHA=b96f1e6c`; publicado y verificado en `origin/desarrollo`.
+- `ISSUE_23_STATUS=READY_FOR_CLOSURE`; `GITHUB_REMOTE_VERIFIED=YES`; indice, manifiesto, dictamen, README, validacion y evidencias primarias son legibles remotamente.
+- `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; `FUNCTIONAL_CODE_CHANGED=NO`; `ISSUE_24_STATUS=NOT_STARTED`.
+- `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+- Siguiente accion autorizada: cerrar Issue #23; despues iniciar la preparacion de Issue #24 conforme a DRY_RUN, sandbox seguro y cola vacia.
