@@ -24,3 +24,12 @@ Estados permitidos: `PENDING_AUTHORIZATION`, `READY`, `CLAIMED`, `RUNNING`, `IMP
 ## DRY_RUN
 
 El valor predeterminado es DRY_RUN. En ese modo se valida la cola, se comprueba que una tarea READY seria elegible y se simula el lock, pero no se invoca Codex, no se modifica el repositorio y no se crea un commit.
+
+## Quality Gates proporcionales (Issue #24)
+
+- La fuente de verdad permanece en GitHub, rama `desarrollo`. El enrutador `tools/automatizacion/ci_gate_scope.py` permite una comprobacion rapida **solo** si un push no forzado a `desarrollo` cambia exclusivamente los archivos exactos `TAREAS_CODEX.json`, `ESTADO_TAREAS.json` y/o `ISSUE24_ACCEPTANCE_PROOF.txt` bajo `docs/automatizacion/`. No admite prefijos similares, archivos de codigo, schemas, cambios de workflows o documentacion de certificacion.
+- El fast gate ejecuta 25 regresiones del enrutador, verifica JSON y controles de no autoaprobacion, y pasa por el validador canonico `Test-CodexQueue.ps1`. Fallas de lectura, Git, SHA, historia de ancestros, diff, ramas, Unicode o modificaciones mezcladas son **fail-closed hacia Quality Gates completos**. Errores de validacion no se declaran PASS.
+- Los pushes a `main`, PR a `main`, `workflow_dispatch` y cualquier push funcional o ambiguo a `desarrollo` mantienen el Quality Gate completo: .NET, Angular, Oracle XE disposable, E2E y contenedores. No se reduce ninguna asercion ni piso de calidad.
+- La concurrencia `cancel-in-progress` vive solamente en el job integral, no en el workflow. Un commit administrativo fast-only **no cancela** un Quality Gate funcional en curso. Un cambio funcional posterior si puede sustituir una ejecucion integral obsoleta, conservando trazabilidad por SHA.
+- **Una ejecucion de workflow con job integral `skipped` NO cuenta como certificacion institucional ni como una de las cinco corridas P0**. Para un cierre formal, comprobar el job integral `success`, su SHA exacto, cobertura Oracle requerida y la aprobacion externa. `workflow_dispatch` fuerza siempre la via integral.
+- La automatizacion puede continuar con tareas independientes autorizadas sin esperar cada commit de estado, pero no debe autoaprobar, habilitar produccion, ejecutar tareas de alto riesgo ni certificar un lote sin sus gates obligatorios. El watcher Windows continua en `-DryRun` hasta nueva autorizacion.

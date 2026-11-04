@@ -3654,3 +3654,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUEUE_MODE=DRY_RUN`; `ISSUE24-SYNTHETIC-001=READY`; `WATCHER_STATE=DISABLED`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`.
 - `CONTROLLED_EXECUTED=NO`; `CODEX_REAL_INVOKED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Issue #24 permanece abierta y pendiente de aceptación local expresa; Issue #25 no iniciada.
+
+## Estado vigente - Optimización de CI por alcance para Issue #24 (CHAT) - 2026-11-04
+
+- Base de intervención: `111a92dd364ad4cae438f20382207231cbd3179d` en `desarrollo`. Objetivo: eliminar la espera y los Quality Gates completos redundantes por cada commit de estado/cola de Codex.
+- Cambio acotado: `.github/workflows/quality-gates.yml` conserva el job integral completo y lo precede con clasificación de alcance; la concurrencia con cancelación se mueve del workflow al job integral. El job rápido valida JSON/contrato para cambios exclusivamente administrativos permitidos.
+- Se agregan `tools/automatizacion/ci_gate_scope.py` y `test_ci_gate_scope.py` (25 tests locales PASS de clasificación, fail-closed y estados); se actualiza `docs/automatizacion/POLITICA_EJECUCION.md`.
+- Regla: pushes a `main`, PR a `main`, `workflow_dispatch`, commits mixtos/funcionales, diffs ambiguos y cambios fuera de tres archivos exactos siempre ejecutan gates completos. Un job integral `skipped` no cuenta como certificación P0 ni sustituye cinco gates independientes cuando correspondan.
+- Limites: Oracle XE, Angular, .NET, E2E, cobertura, contenedores, producción, `main`, `PRUEBA_FORMULARIO` y migración 54 sin cambios de lógica. `QUEUE_MODE=DRY_RUN`, watcher solo `-DryRun`, tarea sintética `IMPLEMENTED_PENDING_REVIEW`; `ISSUE_25=NOT_STARTED`, `BLOCK10_AUTHORIZED=NO`.
+- Validaciones locales durante intervención: unittest del clasificador `25/25 PASS`; pruebas de integración con Git temporal para cambios administrativos vs mixtos `PASS`; parsing de encabezado YAML `PASS`. Quality Gate remoto SHA final y comportamiento real del job nuevo: `PENDING_CI`; no declarar verde heredado. SHA remoto de publicación y resultados CI quedarán registrados en Issue #24.
+- Punto de continuación: comparar árbol y SHA publicados en `origin/desarrollo`, inspeccionar el run del commit integral y confirmar después con un push exclusivamente de control que el job rápido pasa sin lanzar ni cancelar el integral. No autorizar automatización CONTROLLED por este cambio.

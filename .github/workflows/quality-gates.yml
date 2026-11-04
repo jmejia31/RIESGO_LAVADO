@@ -10,13 +10,54 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: quality-gates-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  scope:
+    name: Detect CI scope and validate control files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_full: ${{ steps.classify.outputs.run_full }}
+    steps:
+      - name: Checkout development history for scope classification
+        if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify fail-closed CI scope regressions
+        if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
+        run: python3 -m unittest discover -s tools/automatizacion -p 'test_ci_gate_scope.py'
+
+      - name: Classify this push
+        id: classify
+        shell: bash
+        env:
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          PUSH_FORCED: ${{ github.event.forced }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == 'push' && "$GITHUB_REF" == 'refs/heads/desarrollo' ]]; then
+            python3 tools/automatizacion/ci_gate_scope.py
+          else
+            echo 'run_full=true' >> "$GITHUB_OUTPUT"
+            echo 'CI_SCOPE=FULL'
+          fi
+
+      - name: Validate JSON for control-only push
+        if: steps.classify.outputs.run_full == 'false'
+        run: python3 tools/automatizacion/ci_gate_scope.py --validate-control
+
+      - name: Validate canonical Codex queue for control-only push
+        if: steps.classify.outputs.run_full == 'false'
+        shell: pwsh
+        run: ./tools/automatizacion/Test-CodexQueue.ps1
+
   quality:
     name: Validator, analyzers, build, tests, coverage, E2E and containers
+    needs: scope
+    if: needs.scope.outputs.run_full == 'true'
+    concurrency:
+      group: quality-gates-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 55
     services:
