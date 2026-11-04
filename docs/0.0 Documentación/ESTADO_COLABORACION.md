@@ -3674,3 +3674,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Verificaciones nuevas:** revisión estática de control por GitHub y escenarios adicionados; `WINDOWS_SAFETY_CI=PENDING` y `FULL_QUALITY_GATE=PENDING` para el SHA de implementación. No atribuir PASS hasta leer los nuevos runs; la instalación real del watcher CONTROLLED solo puede efectuarse con una acción local del propietario, no desde GitHub.
 - **Plan de aceptación:** publicar código en un commit atómico; después configurar la cola `CONTROLLED` y crear un segundo comprobante sintético de riesgo LOW `ISSUE24-AUTO-ACCEPTANCE-002`, validado por fast CI; el watcher Windows seguirá ejecutando `-DryRun` hasta la única intervención local de instalación segura. Comprobar el resultado automático en GitHub, Issue de revisión y protección no repetición antes de cerrar Issue #24.
 - **Controles pendientes:** activación local del watcher CONTROLLED y prueba real de la segunda tarea, CI de Windows, revisión externa; `ISSUE_25=NOT_STARTED`, `BLOCK10_AUTHORIZED=NO`.
+## Estado vigente - Issue #24 watcher silencioso (COD) - 2026-11-04
+
+- `WATCHER_TASK=RiesgoLavado-CodexQueue`; estado `Ready`; intervalo conservado en 5 minutos; accion verificada con `-WindowStyle Hidden`.
+- `WATCHER_WINDOW_HIDDEN=PASS`; `WATCHER_INSTALLED=NO` en preview; `QUEUE_MODE=DRY_RUN`; `TAREAS_CODEX.json` sin modificaciones.
+- `SIMULATED_SCENARIOS=39`; tarea sintetica no ejecutada; `CODEX_REAL_INVOKED=NO`; `ORACLE_TOUCHED=NO`; `BLOCK10_AUTHORIZED=NO`.

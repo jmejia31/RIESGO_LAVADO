@@ -21,7 +21,7 @@ if($Controlled) {
 }
 if($Minutes -lt 1 -or $Minutes -gt 60) { throw 'Minutes must be 1..60' }
 $quote=[char]34
-$action="powershell.exe -NoProfile -File $quote$script$quote -RepoRoot $quote$repo$quote $executorSwitch"
+$action="powershell.exe -WindowStyle Hidden -NoProfile -File $quote$script$quote -RepoRoot $quote$repo$quote $executorSwitch"
 if(-not $Apply) {
     Write-Output 'WATCHER_INSTALLED=NO'
     Write-Output 'DRY_RUN=PASS'
@@ -91,6 +91,7 @@ try {
     $installed=Get-ScheduledTask -TaskName $taskName -ErrorAction Stop
     $argsText=($installed.Actions | ForEach-Object { $_.Arguments }) -join ' '
     if($installed.State -ne 'Ready' -or
+       $argsText -notmatch '-WindowStyle\s+Hidden' -or
        $argsText -notmatch [regex]::Escape($executorSwitch) -or
        $argsText -notmatch 'RIESGO_LAVADO_CODEX_WORKER') {
         throw 'WATCHER_INSTALL_POSTCONDITION_FAILED'

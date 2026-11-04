@@ -10239,3 +10239,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Regresión:** se añaden 7 probes de rutas/riesgo, total esperado **39** simulaciones Windows; `REAL_CODEX_INVOKED_BY_TESTS=NO`. Verificación pública de CI nueva pendiente hasta publicación; no se simulan PASS.
 - **Ejecución:** El cambio de scripts en GitHub **no instala** ni activa Windows Task Scheduler desde ChatGPT. El watcher actualmente del propietario sigue `-DryRun`; al publicar cola CONTROLLED, conservar ese modo seguro hasta que el propietario ejecute **una vez** el instalador endurecido con autorización literal. Una tarea sintética nueva LOW deberá probar la ejecución sin prompt manual, dejando `IMPLEMENTED_PENDING_REVIEW` y una Issue.
 - **Límites:** no tocar `main`, producción, Oracle, QA, credenciales, `PRUEBA_FORMULARIO`, migración 54 ni autorizar Bloque 10. CI funcional, P0 5/5 y aceptación humana permanecen independientes. `ISSUE24=OPEN_PENDING_REAL_AUTOMATIC_WATCHER`.
+## 2026-11-04 - Issue #24 watcher silencioso de Windows (COD)
+
+- Diagnostico: `RiesgoLavado-CodexQueue` estaba `Ready`, repetia cada 5 minutos y ejecutaba `powershell.exe` sin `-WindowStyle Hidden`; esa accion causaba la ventana visible.
+- Correccion: la accion instalada ahora incluye `-WindowStyle Hidden`, preservando repositorio, script, intervalo y argumentos. El instalador tambien queda corregido para futuras instalaciones.
+- Verificacion: tarea `Ready`, accion oculta, preview `-Controlled` PASS, `SIMULATED_SCENARIOS=39` PASS, sin proceso activo del ejecutor durante la revision.
+- Proteccion: no se modifico `TAREAS_CODEX.json`, no se activo CONTROLLED, no se ejecuto la tarea sintetica, Codex real, Oracle, QA ni produccion.
