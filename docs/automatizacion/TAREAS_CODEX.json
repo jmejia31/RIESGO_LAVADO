@@ -4,7 +4,7 @@
   "repository": "jmejia31/RIESGO_LAVADO",
   "branch": "desarrollo",
   "source_of_truth": "github",
-  "queue_mode": "DRY_RUN",
+  "queue_mode": "CONTROLLED",
   "tasks": [
     {
       "id": "ISSUE24-SYNTHETIC-001",
