@@ -10211,7 +10211,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Correccion quirurgica:** `Invoke-CodexQueue.ps1` compara directamente `git diff --no-ext-diff --quiet origin/desarrollo -- docs/automatizacion/TAREAS_CODEX.json`; codigo 0 continua, codigo 1 bloquea divergencia y codigo mayor que 1 bloquea error. Se verifican tambien los objetos blob local/remoto sin reconstruir el contenido remoto.
 - **Pruebas:** las 27 regresiones previas y nuevas verificaciones PASS, `SIMULATED_SCENARIOS=32`: UTF-8/accentos, finales de linea, divergencia real, error Git, no repeticion y controles existentes. Validator, status, preview del watcher, parser PowerShell y `git diff --check` PASS.
 - **Estado protegido:** no se modifico `TAREAS_CODEX.json`; no se ejecuto tarea sintetica, CONTROLLED, Codex real, watcher, Oracle, QA ni produccion. `BLOCK10_AUTHORIZED=NO`.
-- **Punto de continuacion:** commit/push selectivo; luego DRY_RUN canonico debe emitir `REMOTE_HEAD`, `QUEUE_GIT_DIFF_EXIT=0`, `LOCAL_QUEUE_MATCHES_GITHUB=YES`, tarea seleccionada, `DRY_RUN=PASS`, `CODEX_INVOKED=NO` y exit 0.
+- **Publicacion:** correccion publicada en `3357b627a917a6c9e5846d6e9953b9c3d0004ae5`; DRY_RUN canonico PASS con `QUEUE_GIT_DIFF_EXIT=0`, `LOCAL_QUEUE_MATCHES_GITHUB=YES`, tarea seleccionada, `DRY_RUN=PASS`, `CODEX_INVOKED=NO`, exit 0 y `HEAD=origin/desarrollo`.
 
 ## 2026-11-04 12:42 -06:00 - Issue #24 seguridad del ejecutor y escaneo delta (COD)
 
