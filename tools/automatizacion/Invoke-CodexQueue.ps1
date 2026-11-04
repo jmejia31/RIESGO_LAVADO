@@ -16,6 +16,7 @@ New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 
 function Stop-Safely([string]$Reason) { Write-Output "EXECUTION_BLOCKED=$Reason"; Write-Output 'CODEX_INVOKED=NO'; exit 3 }
 function Get-Sha256([string]$Path) { (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant() }
+function Get-NormalizedSha256([string]$Path) { $text=[IO.File]::ReadAllText($Path); $text=$text.Replace("`r`n","`n").Replace("`r","`n"); $bytes=[Text.Encoding]::UTF8.GetBytes($text); $sha=[Security.Cryptography.SHA256]::Create(); try { ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-','').ToLowerInvariant() } finally {$sha.Dispose()} }
 function Save-State([string]$TaskId,[string]$Status,[int]$Attempt=1) {
     if (-not $isRepoQueue) { return }
     $statePath=Join-Path $RepoRoot 'docs\automatizacion\ESTADO_TAREAS.json'
@@ -65,9 +66,9 @@ if ($isRepoQueue -and -not $SkipRemoteSync) {
     $remoteText = (& git -C $RepoRoot show "origin/desarrollo:$queueRelative" | Out-String)
     [IO.File]::WriteAllText($remoteQueue, $remoteText, (New-Object Text.UTF8Encoding($false)))
     if ($LASTEXITCODE -ne 0) { Stop-Safely 'REMOTE_QUEUE_NOT_FOUND' }
-    if ((Get-Sha256 $QueuePath) -ne (Get-Sha256 $remoteQueue)) { Stop-Safely 'LOCAL_QUEUE_DIFFERS_FROM_GITHUB' }
+    if ((Get-NormalizedSha256 $QueuePath) -ne (Get-NormalizedSha256 $remoteQueue)) { Stop-Safely 'LOCAL_QUEUE_DIFFERS_FROM_GITHUB' }
     Write-Output "REMOTE_HEAD=$remote"
-    Write-Output "QUEUE_SHA256=$(Get-Sha256 $QueuePath)"
+    Write-Output "QUEUE_SHA256=$(Get-NormalizedSha256 $QueuePath)"
 } else { Write-Output 'QUEUE_SOURCE=FIXTURE_OR_SYNC_SKIPPED' }
 
 & $validator -QueuePath $QueuePath -Quiet
