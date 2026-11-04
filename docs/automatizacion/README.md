@@ -17,6 +17,8 @@ La cola se entrega vacia. No hay tareas `READY`, por lo que el ejecutor termina 
 
 El runtime temporal vive fuera del repositorio en `%LOCALAPPDATA%\RiesgoLavado\CodexQueue`; no se publican logs, secretos ni cookies. El watcher sale de inmediato si la cola esta vacia, pausada o detenida. No se conectan Oracle, QA ni produccion.
 
+El procedimiento de aceptación futura está en [ACEPTACION_LOCAL.md](ACEPTACION_LOCAL.md). No se ejecuta ni activa el watcher como parte de este bootstrap.
+
 ## Transicion posterior
 
 Antes de usar `-AllowExecution`, el propietario debe revisar el alcance de la tarea, sus rutas permitidas, pruebas y autorizacion. Codex nunca autoaprueba: el resultado queda `IMPLEMENTED_PENDING_REVIEW` y requiere revision externa para pasar a `APPROVED`.
