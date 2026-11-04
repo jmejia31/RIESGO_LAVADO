@@ -3679,3 +3679,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `WATCHER_TASK=RiesgoLavado-CodexQueue`; estado `Ready`; intervalo conservado en 5 minutos; accion verificada con `-WindowStyle Hidden`.
 - `WATCHER_WINDOW_HIDDEN=PASS`; `WATCHER_INSTALLED=NO` en preview; `QUEUE_MODE=DRY_RUN`; `TAREAS_CODEX.json` sin modificaciones.
 - `SIMULATED_SCENARIOS=39`; tarea sintetica no ejecutada; `CODEX_REAL_INVOKED=NO`; `ORACLE_TOUCHED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente - Issue #24 lanzador WScript sin consola (COD) - 2026-11-04
+
+- `WATCHER_ACTION=wscript.exe Run-CodexQueueHidden.vbs`; `WATCHER_HIDDEN_WINDOW=PASS`; la salida queda en `%LOCALAPPDATA%\RiesgoLavado\CodexQueue\watcher-output.log`.
+- `WATCHER_NO_CONSOLE_LAUNCHER=PASS`; `SIMULATED_SCENARIOS=39`; `QUEUE_MODE=DRY_RUN`; `TAREAS_CODEX.json` no fue modificado.
+- `CODEX_REAL_INVOKED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `BLOCK10_AUTHORIZED=NO`.

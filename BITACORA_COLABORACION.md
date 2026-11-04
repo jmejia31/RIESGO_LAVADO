@@ -10245,3 +10245,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Correccion: la accion instalada ahora incluye `-WindowStyle Hidden`, preservando repositorio, script, intervalo y argumentos. El instalador tambien queda corregido para futuras instalaciones.
 - Verificacion: tarea `Ready`, accion oculta, preview `-Controlled` PASS, `SIMULATED_SCENARIOS=39` PASS, sin proceso activo del ejecutor durante la revision.
 - Proteccion: no se modifico `TAREAS_CODEX.json`, no se activo CONTROLLED, no se ejecuto la tarea sintetica, Codex real, Oracle, QA ni produccion.
+
+## 2026-11-04 - Issue #24 lanzador sin consola (COD)
+
+- `-WindowStyle Hidden` no impidio la consola visible en el Programador de tareas. Se agrego `tools/automatizacion/Run-CodexQueueHidden.vbs`, invocado por `wscript.exe` con ventana 0; PowerShell queda oculto y stdout/stderr se redirigen al log local en `%LOCALAPPDATA%`.
+- La tarea instalada `RiesgoLavado-CodexQueue` fue actualizada exclusivamente en su accion: `wscript.exe ... Run-CodexQueueHidden.vbs -AllowExecution`; conserva intervalo, repositorio y argumentos. No se modifico la cola.
+- `WATCHER_NO_CONSOLE_LAUNCHER=PASS`; `SIMULATED_SCENARIOS=39`; preview PASS; prueba `cscript`/launcher exit 0, sin consola y con bloqueo esperado por worktree modificado. No hubo Codex real durante esta correccion.
