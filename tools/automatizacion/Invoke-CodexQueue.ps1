@@ -62,7 +62,8 @@ if ($isRepoQueue -and -not $SkipRemoteSync) {
     }
     if ($head -ne $remote) { Stop-Safely 'REMOTE_HEAD_NOT_CONFIRMED' }
     $remoteQueue = Join-Path $runtime 'remote-queue.json'
-    & git -C $RepoRoot show "origin/desarrollo:$queueRelative" | Set-Content -LiteralPath $remoteQueue -Encoding utf8
+    $remoteText = (& git -C $RepoRoot show "origin/desarrollo:$queueRelative" | Out-String)
+    [IO.File]::WriteAllText($remoteQueue, $remoteText, (New-Object Text.UTF8Encoding($false)))
     if ($LASTEXITCODE -ne 0) { Stop-Safely 'REMOTE_QUEUE_NOT_FOUND' }
     if ((Get-Sha256 $QueuePath) -ne (Get-Sha256 $remoteQueue)) { Stop-Safely 'LOCAL_QUEUE_DIFFERS_FROM_GITHUB' }
     Write-Output "REMOTE_HEAD=$remote"
