@@ -27,10 +27,10 @@
                        "attempt":  2,
                        "task_id":  "ISSUE25-MATRICES-PLAN-002",
                        "review_required":  true,
-                       "reason":  "",
+                       "reason":  "CODEX_FAILED",
                        "executor":  "COD",
-                       "status":  "RUNNING",
-                       "updated_at":  "2026-11-04T21:48:11.6861348Z"
+                       "status":  "BLOCKED",
+                       "updated_at":  "2026-11-04T21:48:15.8242763Z"
                    }
                ],
     "controls":  {
