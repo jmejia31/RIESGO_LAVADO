@@ -1,0 +1,60 @@
+name: Codex Worker Safety
+
+on:
+  push:
+    branches: [desarrollo]
+    paths:
+      - 'tools/automatizacion/*.ps1'
+      - '.github/workflows/codex-worker-safety.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/automatizacion/*.ps1'
+      - '.github/workflows/codex-worker-safety.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-worker:
+    name: PowerShell worker safety regressions (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse changed PowerShell automation scripts
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-ChildItem tools/automatizacion -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName, [ref]$tokens, [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | ForEach-Object { Write-Error $_ }
+              throw "POWERSHELL_PARSE_FAILED: $($_.Name)"
+            }
+          }
+          Write-Output 'AUTOMATION_POWERSHELL_PARSE=PASS'
+
+      - name: Validate canonical queue and run all simulated safety scenarios
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & powershell.exe -NoProfile -File tools/automatizacion/Test-CodexQueue.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'QUEUE_VALIDATION_FAILED' }
+          $out = @(& powershell.exe -NoProfile -File tools/automatizacion/Test-CodexQueue-Scenarios.ps1)
+          $exitCode = $LASTEXITCODE
+          $out | Write-Output
+          if ($exitCode -ne 0 -or ($out -join ' ') -notmatch 'SIMULATED_SCENARIOS=39' -or
+              ($out -join ' ') -notmatch 'AUTONOMOUS_MEDIUM_RISK_REJECTED=PASS' -or
+              ($out -join ' ') -notmatch 'AUTONOMOUS_WORKFLOW_REJECTED=PASS' -or
+              ($out -join ' ') -notmatch 'CODEX_REAL_INVOKED=NO') {
+            throw 'AUTONOMOUS_SAFETY_REGRESSION_FAILED'
+          }
+          Write-Output 'AUTONOMOUS_WINDOWS_SAFETY=PASS'

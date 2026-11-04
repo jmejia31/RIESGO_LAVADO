@@ -32,3 +32,11 @@ Las rutas de `allowed_paths` se interpretan como archivos exactos cuando apuntan
 ## Evidencia y rollback
 
 Registrar `REMOTE_HEAD`, hash de cola, tarea reclamada, estados `CLAIMED`/`RUNNING`/`IMPLEMENTED_PENDING_REVIEW`, gates, rutas publicadas, commit y URL remota. Si falla cualquier gate, detener, dejar `FAILED` y reintentar como maximo una vez; el segundo fallo deja `BLOCKED` con motivo persistido. Una tarea `IMPLEMENTED_PENDING_REVIEW` no vuelve a ejecutarse aunque siga `READY` en la cola. Los tests no deben limpiar flags PAUSE/STOP preexistentes. Codex nunca escribe `APPROVED`; la revision externa es obligatoria.
+
+## Aceptación de ejecución autónoma de tareas LOW, posterior a la prueba manual
+
+La primera ejecución real sintética (ISSUE24-SYNTHETIC-001) se completó y quedó en `IMPLEMENTED_PENDING_REVIEW` con intento 1; el watcher DRY_RUN se reactivó y completó correctamente un turno programado. La puesta en marcha continua exige una **única acción local** con el instalador endurecido (véase `README.md`). No usar `Invoke-CodexQueue.ps1 -AllowExecution` manualmente después de activar el watcher.
+
+El nuevo comprobante `ISSUE24-AUTO-ACCEPTANCE-002` puede demostrar que el watcher CONTROLLED reclama una tarea LOW autorizada, crea exclusivamente `docs/automatizacion/ISSUE24_AUTO_ACCEPTANCE_PROOF.txt`, publica el estado y genera una Issue de revisión automáticamente. El propietario debe confirmar el nuevo commit y la Issue; no se da aprobación automática ni se autoriza Block 10.
+
+La activación se niega si el worker tiene cambios, no coincide con `origin/desarrollo`, tiene un watcher CONTROLLED previo o inválido, la cola no está en `CONTROLLED`, hay un STOP/PAUSE activo o faltan herramientas. Las configuraciones previas seguras se preservan hasta que la activación se valida; cualquier error durante el reemplazo deshabilita el watcher. Después de activar, no es necesario esperar Quality Gates administrativos para que se seleccionen tareas LOW independientes. El control de resultados y la revisión humana siguen siendo obligatorios.

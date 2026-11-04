@@ -1,0 +1,103 @@
+name: Codex Review Notification
+
+on:
+  push:
+    branches: [desarrollo]
+    paths:
+      - 'docs/automatizacion/ESTADO_TAREAS.json'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review-notice:
+    name: Create review or blocked issue on terminal state
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout state history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Inspect state transition (without task text or secrets)
+        id: inspect
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          file = "docs/automatizacion/ESTADO_TAREAS.json"
+          before = os.environ.get("BEFORE_SHA", "")
+          head = os.environ["GITHUB_SHA"]
+          allowed = {"IMPLEMENTED_PENDING_REVIEW", "FAILED", "BLOCKED"}
+          output = Path(os.environ["GITHUB_OUTPUT"])
+
+          def disabled():
+              with output.open("a", encoding="utf-8") as f:
+                  f.write("notify=false\n")
+
+          if not re.fullmatch(r"[0-9a-f]{40}", before) or before == "0" * 40:
+              disabled()
+              raise SystemExit(0)
+          if subprocess.run(["git", "merge-base", "--is-ancestor", before, head],
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
+              disabled()
+              raise SystemExit(0)
+          old = subprocess.run(["git", "show", f"{before}:{file}"],
+                               capture_output=True, check=False)
+          if old.returncode:
+              disabled()
+              raise SystemExit(0)
+          try:
+              prior = json.loads(old.stdout.decode("utf-8-sig"))
+              current = json.loads(Path(file).read_text(encoding="utf-8-sig"))
+              previous = {e["task_id"]: e for e in prior.get("states", [])}
+              terminal = []
+              for entry in current.get("states", []):
+                  key = entry["task_id"]
+                  if not re.fullmatch(r"[A-Z0-9][A-Z0-9._-]{2,63}", key):
+                      continue
+                  old_entry = previous.get(key, {})
+                  status = entry.get("status")
+                  attempt = entry.get("attempt")
+                  if status in allowed and (old_entry.get("status"), old_entry.get("attempt")) != (status, attempt):
+                      terminal.append((key, status, attempt))
+              if len(terminal) != 1:
+                  disabled()
+                  raise SystemExit(0)
+              task_id, status, attempt = terminal[0]
+              prefix = "REVIEW" if status == "IMPLEMENTED_PENDING_REVIEW" else "BLOCKED"
+              title = f"[CODEX {prefix}] {task_id} - {status}"
+              body = (f"Tarea: {task_id}\nEstado: {status}\nIntento: {attempt}\n"
+                      f"SHA de estado: {head}\n\n"
+                      "Revisar el commit y las pruebas correspondientes en GitHub. "
+                      "No autoaprobar ni fusionar a main; Oracle, producción y "
+                      "certificación institucional continúan protegidos.\n\n"
+                      "Origen: cola Codex RIESGO_LAVADO / desarrollo.")
+              Path(os.environ["RUNNER_TEMP"], "codex_review_title.txt").write_text(title, encoding="utf-8")
+              Path(os.environ["RUNNER_TEMP"], "codex_review_body.txt").write_text(body, encoding="utf-8")
+              with output.open("a", encoding="utf-8") as f:
+                  f.write("notify=true\n")
+          except (ValueError, KeyError, TypeError, UnicodeDecodeError):
+              disabled()
+          PY
+
+      - name: Notify owner with GitHub issue
+        if: steps.inspect.outputs.notify == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$(cat "$RUNNER_TEMP/codex_review_title.txt")" \
+            --body-file "$RUNNER_TEMP/codex_review_body.txt" \
+            --assignee jmejia31

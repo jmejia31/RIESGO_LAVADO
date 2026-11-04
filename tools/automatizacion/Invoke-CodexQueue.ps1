@@ -10,7 +10,10 @@ param(
     [switch]$SimulateFailure,
     [string]$SecretScannerPath = '',
     [switch]$SecurityProbe,
-    [string[]]$ChangedPath = @()
+    [string[]]$ChangedPath = @(),
+    [switch]$AutonomousContractProbe,
+    [string[]]$AutonomousPath = @(),
+    [string]$AutonomousRisk = 'LOW'
 )
 $ErrorActionPreference = 'Stop'
 if([string]::IsNullOrWhiteSpace($RepoRoot)){if([string]::IsNullOrWhiteSpace($PSScriptRoot)){throw 'Cannot resolve canonical repository path'};$RepoRoot=(Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path}
@@ -26,6 +29,11 @@ $canonicalStatePath=[IO.Path]::GetFullPath((Join-Path $RepoRoot 'docs\automatiza
 $canonicalRuntimePath=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'RiesgoLavado\CodexQueue'))
 $runtime = if ([string]::IsNullOrWhiteSpace($RuntimePath)) { $canonicalRuntimePath } else { [IO.Path]::GetFullPath($RuntimePath) }
 if (-not $DryRun -and ([IO.Path]::GetFullPath($StatePath) -ne $canonicalStatePath -or $runtime -ne $canonicalRuntimePath)) { Write-Output 'EXECUTION_BLOCKED=REAL_EXECUTION_REQUIRES_CANONICAL_CONTROL_PATHS'; Write-Output 'CODEX_INVOKED=NO'; exit 3 }
+if ($AllowExecution -and [IO.Path]::GetFileName(([IO.Path]::GetFullPath($RepoRoot)).TrimEnd([char[]]@('\','/'))) -ne 'RIESGO_LAVADO_CODEX_WORKER') {
+    Write-Output 'EXECUTION_BLOCKED=ISOLATED_WORKER_REQUIRED'
+    Write-Output 'CODEX_INVOKED=NO'
+    exit 3
+}
 New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 
 function Stop-Safely([string]$Reason) {
@@ -123,6 +131,40 @@ function Test-AllowedChangedPath([string]$Path,$Task) {
     }
     return $false
 }
+function Test-AutonomousTaskContract($Task) {
+    if ($Task.risk -ne 'LOW' -or $Task.branch -ne 'desarrollo' -or
+        $Task.authorization.approved -ne $true -or
+        $Task.authorization.approved_by -ne 'jmejia31' -or
+        @($Task.allowed_paths).Count -eq 0) { return $false }
+    foreach($raw in @($Task.allowed_paths)) {
+        $p=([string]$raw).Replace('\','/').Trim()
+        if (-not $p -or $p -match '[*?]' -or $p.EndsWith('/') -or
+            $p -match '(^|/)\.\.(/|$)' -or [IO.Path]::IsPathRooted($p) -or
+            $p -match '^[A-Za-z]:' -or $p -match '//') { return $false }
+        $isSource=($p -match '^(frontend/rl-app/(src|e2e)/|backend/(RL\.API|RL\.API\.Tests)/)' -and
+            $p -match '\.(ts|tsx|js|jsx|cs|html|scss|css|json|md|txt)$')
+        $isDoc=($p -match '^docs/(?!certificaciones/|automatizacion/).+\.(md|txt)$')
+        $isProof=($p -match '^docs/automatizacion/ISSUE24_[A-Za-z0-9_]+PROOF\.txt$')
+        if (-not ($isSource -or $isDoc -or $isProof)) { return $false }
+        if ($p -match '(?i)(^|/)(\.git|\.github|\.agents|node_modules|bin|obj|dist|coverage|migrations?|database|secrets?)(/|$)' -or
+            $p -match '(?i)(appsettings|connectionstrings?|credentials?|password|private[_-]?key|auth(orization|entication|enticate|orize)?|jwt|token|security|permission|oracle|audit)' -or
+            $p -match '(?i)(^|/)(Program\.cs|Startup\.cs|package(-lock)?\.json|angular\.json|tsconfig[^/]*|.*\.csproj|.*\.sln)$') { return $false }
+        $full=[IO.Path]::GetFullPath((Join-Path $RepoRoot ($p.Replace('/','\'))))
+        $root=[IO.Path]::GetFullPath($RepoRoot).TrimEnd('\')+'\'
+        if (-not $full.StartsWith($root,[StringComparison]::OrdinalIgnoreCase)) { return $false }
+        $relative=$full.Substring($root.Length)
+        $cursor=$root.TrimEnd('\')
+        foreach($part in ($relative -split '[\\/]')) {
+            $cursor=Join-Path $cursor $part
+            $item=Get-Item -LiteralPath $cursor -ErrorAction SilentlyContinue
+            if ($item -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $false }
+        }
+        $target=Get-Item -LiteralPath $full -ErrorAction SilentlyContinue
+        if ($target -and $target.PSIsContainer) { return $false }
+    }
+    return $true
+}
+
 function Get-ChangedPaths($Baseline) {
     $current=@(& git -C $RepoRoot status --porcelain=v1 --untracked-files=all)
     $paths=@()
@@ -152,6 +194,20 @@ function Invoke-AllowedVerifications($Task,[string[]]$ChangedPaths,$Baseline=@{}
     Write-Output 'VERIFICATION_GATES=PASS'
 }
 
+if ($AutonomousContractProbe) {
+    if (-not $DryRun -or $AllowExecution) {
+        Write-Output 'AUTONOMOUS_CONTRACT_PROBE=REQUIRES_DRY_RUN'
+        Write-Output 'CODEX_INVOKED=NO'
+        exit 3
+    }
+    $probeTask=@{risk=$AutonomousRisk;branch='desarrollo';allowed_paths=@($AutonomousPath);authorization=@{approved=$true;approved_by='jmejia31'}}
+    $safe=Test-AutonomousTaskContract $probeTask
+    Write-Output "AUTONOMOUS_CONTRACT_PROBE=$(if($safe){'ACCEPTED'}else{'REJECTED'})"
+    Write-Output 'CODEX_INVOKED=NO'
+    if ($safe) { exit 0 }
+    exit 3
+}
+
 if ($SecurityProbe) {
     if (-not $DryRun) { Stop-Safely 'SECURITY_PROBE_REQUIRES_DRYRUN' }
     New-Item -ItemType Directory -Force -Path $runtime | Out-Null
@@ -166,6 +222,10 @@ if ($isRepoQueue -and -not $SkipRemoteSync) {
     if ($LASTEXITCODE -ne 0) { Stop-Safely 'GITHUB_FETCH_FAILED' }
     $dirty = (& git -C $RepoRoot status --porcelain --untracked-files=no | Out-String).Trim()
     if ($dirty) { Stop-Safely 'TRACKED_WORKTREE_DIRTY' }
+    if ($AllowExecution) {
+        $allDirty=(& git -C $RepoRoot status --porcelain --untracked-files=all | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $allDirty) { Stop-Safely 'AUTONOMOUS_WORKTREE_NOT_CLEAN' }
+    }
     $head = (& git -C $RepoRoot rev-parse HEAD).Trim()
     $remote = (& git -C $RepoRoot rev-parse origin/desarrollo).Trim()
     if ($head -ne $remote) {
@@ -211,7 +271,7 @@ try {
     $eligible = @($ready | Where-Object {
         $depsOk = $true
         foreach($dep in @($_.dependencies)) { $d=$tasks | Where-Object {$_.id -eq $dep}; if($d.status -ne 'APPROVED') {$depsOk=$false} }
-        $depsOk -and $_.risk -notin @('HIGH','CRITICAL')
+        $depsOk -and $_.risk -eq 'LOW'
     })
     $highRisk = @($ready | Where-Object {$_.risk -in @('HIGH','CRITICAL')})
     if ($highRisk.Count -gt 0) { Write-Output "HIGH_RISK_BLOCKED=$($highRisk.Count)" }
@@ -223,6 +283,13 @@ try {
     }
     if ($DryRun -or -not $AllowExecution) { Write-Output 'DRY_RUN=PASS'; Write-Output 'CODEX_INVOKED=NO'; Write-Output 'COMMIT_CREATED=NO'; exit 0 }
     if ($queue.queue_mode -ne 'CONTROLLED') { Stop-Safely 'CONTROLLED_MODE_REQUIRED' }
+    if (-not (Test-AutonomousTaskContract $task)) { Stop-Safely 'AUTONOMOUS_TASK_CONTRACT_REJECTED' }
+    $control=Get-Content -Raw -LiteralPath $StatePath | ConvertFrom-Json
+    if ($control.controls.pause -ne $false -or $control.controls.stop -ne $false -or
+        $control.controls.auto_approve -ne $false -or $control.controls.dry_run_default -ne $true -or
+        [int]$control.controls.max_parallel -ne 1 -or [int]$control.controls.max_attempts -gt 2) {
+        Stop-Safely 'PERSISTED_CONTROL_FLAGS_UNSAFE'
+    }
     $help = & codex exec --help 2>&1 | Out-String
     if ($help -notmatch '--sandbox') { Stop-Safely 'CODEX_SANDBOX_UNAVAILABLE' }
     $contract = $task | Select-Object id,title,status,priority,dependencies,owner,risk,branch,allowed_paths,acceptance,verification,verification_commands,authorization | ConvertTo-Json -Depth 12 -Compress
@@ -242,7 +309,11 @@ try {
     $startInfo.Arguments=($codexArgs | ForEach-Object {& $quote $_}) -join ' '
     $proc=New-Object Diagnostics.Process; $proc.StartInfo=$startInfo
     if(-not $proc.Start()){Stop-Safely 'CODEX_START_FAILED'}
-    $proc.StandardInput.Write($prompt); $proc.StandardInput.Close(); $proc.WaitForExit()
+    $proc.StandardInput.Write($prompt); $proc.StandardInput.Close()
+    if (-not $proc.WaitForExit(1800000)) {
+        try { $proc.Kill(); $proc.WaitForExit(3000) | Out-Null } catch {}
+        Stop-Safely 'CODEX_TIMEOUT_30_MINUTES'
+    }
     Write-Output "CODEX_EXIT_CODE=$($proc.ExitCode)"
     if ($proc.ExitCode -ne 0) { Stop-Safely 'CODEX_FAILED' }
     Invoke-AllowedVerifications $task @() $baseline

@@ -14,7 +14,7 @@ function Assert-ValidationFails($path) { $o=[IO.Path]::GetTempFileName(); $e=[IO
 function Task($id='SIM-001',$risk='LOW',$approved=$true,$paths=@('docs/automatizacion'),$deps=@()) { @{id=$id;title='inert simulation';status='READY';priority='P2';dependencies=$deps;owner='CHAT';risk=$risk;branch='desarrollo';allowed_paths=$paths;acceptance=@('dry run only');verification=@('queue validation');verification_commands=@('queue-schema','git diff --check','secret-scan');authorization=@{approved=$approved;approved_by=($(if($approved){'jmejia31'}else{''}));context='Issue 24 independent simulation'}} }
 try {
   $smokeValidator=& powershell.exe -NoProfile -File (Join-Path $PSScriptRoot 'Test-CodexQueue.ps1') 2>&1; if($LASTEXITCODE -ne 0 -or ($smokeValidator -join "`n") -notmatch 'QUEUE_SCHEMA_VALIDATED=PASS'){throw 'validator no-args smoke failed'}; Write-Output 'QUEUE_VALIDATOR_NO_ARGS=PASS'
-  $smokeStatus=& powershell.exe -NoProfile -File (Join-Path $PSScriptRoot 'Get-CodexQueueStatus.ps1') 2>&1; if($LASTEXITCODE -ne 0 -or ($smokeStatus -join "`n") -notmatch 'QUEUE_MODE=DRY_RUN'){throw 'status no-args smoke failed'}; Write-Output 'QUEUE_STATUS_NO_ARGS=PASS'
+  $smokeStatus=& powershell.exe -NoProfile -File (Join-Path $PSScriptRoot 'Get-CodexQueueStatus.ps1') 2>&1; if($LASTEXITCODE -ne 0 -or ($smokeStatus -join "`n") -notmatch 'QUEUE_MODE=(DRY_RUN|CONTROLLED)'){throw 'status no-args smoke failed'}; Write-Output 'QUEUE_STATUS_NO_ARGS=PASS'
   $empty=Write-Queue @(); & $validator -QueuePath $empty -Quiet; if($LASTEXITCODE){throw 'empty queue validation failed'}; $out=& $invoke -RepoRoot $root -QueuePath $empty -StatePath $testState -RuntimePath $testRuntime -DryRun -SkipRemoteSync; if(($out -join "`n") -notmatch 'READY_TASKS=0'){throw "empty queue did not exit idle: $($out -join ' | ')"}; Write-Output 'EMPTY_QUEUE=PASS'
   $ready=Write-Queue @(Task); & $validator -QueuePath $ready -Quiet; if($LASTEXITCODE){throw 'ready queue validation failed'}; $out=& $invoke -RepoRoot $root -QueuePath $ready -StatePath $testState -RuntimePath $testRuntime -DryRun -SkipRemoteSync; if(($out -join "`n") -notmatch 'DRY_RUN=PASS'){throw 'ready dry run failed'}; Write-Output 'READY_TASK_DRY_RUN=PASS'
   $stateObj=Get-Content -Raw $testState|ConvertFrom-Json; $stateObj.states=@(@{task_id='SIM-001';status='IMPLEMENTED_PENDING_REVIEW';attempt=1;updated_at=(Get-Date).ToUniversalTime().ToString('o');executor='COD';review_required=$true}); $stateObj|ConvertTo-Json -Depth 10|Set-Content $testState -Encoding utf8; $out=& $invoke -RepoRoot $root -QueuePath $ready -StatePath $testState -RuntimePath $testRuntime -DryRun -SkipRemoteSync; if(($out -join "`n") -notmatch 'READY_TASKS=0'){throw 'completed task was selected again'}; Write-Output 'COMPLETED_TASK_NONREPEAT=PASS'
@@ -44,5 +44,25 @@ try {
   $scannerClean=Join-Path $tmp 'rg-clean.ps1'; Set-Content $scannerClean "if(`$args[0] -eq '--version'){exit 0}; exit 1"; $probe=& powershell.exe -NoProfile -File $invoke -RepoRoot $root -RuntimePath $testRuntime -DryRun -SecretScannerPath $scannerClean -SecurityProbe -ChangedPath 'docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt' 2>&1; if(($probe -join "`n") -notmatch 'ALLOWED_PATH=ACCEPTED' -or ($probe -join "`n") -notmatch 'SECURITY_PROBE=PASS'){throw "authorized exact path did not pass: $($probe -join ' | ')"}; Write-Output 'AUTHORIZED_EXACT_PATH=PASS'
   foreach($badPath in @('docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt.bak','docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txtx','docs/automatizacion/../README.md')) { $probe=& powershell.exe -NoProfile -File $invoke -RepoRoot $root -RuntimePath $testRuntime -DryRun -SecretScannerPath $scannerClean -SecurityProbe -ChangedPath $badPath 2>&1; if(($probe -join "`n") -notmatch 'ALLOWED_PATH=REJECTED'){throw "unsafe path accepted: $badPath"} }; Write-Output 'ADVERSARIAL_ALLOWED_PATHS=PASS'
   $source=Get-Content -Raw $invoke; if($source -notmatch 'RedirectStandardInput' -or $source -notmatch 'StandardInput.Write\(\$prompt\)' -or $source -match 'Start-Process -FilePath .codex. -ArgumentList \(\$codexArgs \+ \$prompt\)'){throw 'codex stdin contract transfer guard missing'}; Write-Output 'CODEX_CONTRACT_INTEGRITY=PASS'
-  Write-Output 'CODEX_REAL_INVOKED=NO';Write-Output 'COMMIT_CREATED=NO';Write-Output 'PRODUCTION_ORACLE_TOUCHED=NO';Write-Output 'SIMULATED_SCENARIOS=32';exit 0
+  $autonomousCases=@(
+    @{id='OWNER_APPROVED_PROOF';risk='LOW';path='docs/automatizacion/ISSUE24_AUTO_ACCEPTANCE_PROOF.txt';allowed=$true},
+    @{id='OWNER_APPROVED_FRONTEND';risk='LOW';path='frontend/rl-app/src/app/demo/demo.component.ts';allowed=$true},
+    @{id='MEDIUM_RISK_REJECTED';risk='MEDIUM';path='docs/automatizacion/ISSUE24_AUTO_ACCEPTANCE_PROOF.txt';allowed=$false},
+    @{id='WORKFLOW_REJECTED';risk='LOW';path='.github/workflows/quality-gates.yml';allowed=$false},
+    @{id='TRAVERSAL_REJECTED';risk='LOW';path='docs/../README.md';allowed=$false},
+    @{id='CREDENTIALS_REJECTED';risk='LOW';path='backend/RL.API/appsettings.json';allowed=$false},
+    @{id='BROAD_DIRECTORY_REJECTED';risk='LOW';path='frontend/rl-app/src/app/';allowed=$false}
+  )
+  foreach($c in $autonomousCases) {
+    $probe=@(& powershell.exe -NoProfile -File $invoke -DryRun -AutonomousContractProbe -AutonomousRisk $c.risk -AutonomousPath $c.path 2>&1)
+    $probeExit=$LASTEXITCODE
+    $expected=if($c.allowed){'ACCEPTED'}else{'REJECTED'}
+    $expectedExit=if($c.allowed){0}else{3}
+    if($probeExit -ne $expectedExit -or ($probe -join ' ') -notmatch "AUTONOMOUS_CONTRACT_PROBE=$expected" -or
+       ($probe -join ' ') -notmatch 'CODEX_INVOKED=NO') {
+        throw "autonomous guard failure $($c.id): exit $probeExit; output $($probe -join ' | ')"
+    }
+    Write-Output "AUTONOMOUS_$($c.id)=PASS"
+  }
+  Write-Output 'CODEX_REAL_INVOKED=NO';Write-Output 'COMMIT_CREATED=NO';Write-Output 'PRODUCTION_ORACLE_TOUCHED=NO';Write-Output 'SIMULATED_SCENARIOS=39';exit 0
 } finally {& $pauseScript -RuntimePath $testRuntime -Clear 2>$null; & $stopScript -RuntimePath $testRuntime -Clear 2>$null; Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue}
