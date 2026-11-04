@@ -11,10 +11,10 @@
       "source_code_sha": "168ffa783942d11097a2ebaad5bba74f4454de9b",
       "evidence_commit_sha": "87a48cb0",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23",
-      "github_evidence_index_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/87a48cb0/docs/certificaciones/INDEX.json",
+      "GITHUB_EVIDENCE_INDEX_URL": "https://github.com/jmejia31/RIESGO_LAVADO/blob/87a48cb0/docs/certificaciones/INDEX.json",
       "github_evidence_directory_url": "https://github.com/jmejia31/RIESGO_LAVADO/tree/87a48cb0/docs/certificaciones/P0_2_Integridad_Transaccional",
       "github_primary_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/tree/87a48cb0/docs/certificaciones/P0_2_Integridad_Transaccional/evidencia-primaria",
-      "github_independent_dictamen_url": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23#issuecomment-6633540601",
+      "GITHUB_SIGNOFF_URL": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23#issuecomment-6633540601",
       "remote_verification_commit_sha": "01dc9716fb3e00800a74752b68893673dae474cd",
       "github_remote_verified": "YES"
     }

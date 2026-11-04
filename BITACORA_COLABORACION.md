@@ -10144,3 +10144,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - GitHub evidence links are anchored to `87a48cb0`. `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b` remains intact; no functional code changed and unrelated untracked files were preserved.
 - Verified: JSON parsing, diff checks, and document scan without secrets, PII, tokens, cookies, or connection strings. Oracle, API, frontend, E2E, new Quality Gates, and Issue #24 were not executed.
 - `ISSUE_23_REMOTE_PUBLICATION=YES`; `GITHUB_REMOTE_VERIFIED=YES`; `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+## 2026-11-04 - Issue #23 conciliacion final documental (COD)
+
+- Reconciliacion final: se corrigieron referencias stale de publicacion en README/VALIDACION_REPRODUCIBLE y se hicieron explicitos `GITHUB_EVIDENCE_INDEX_URL` y `GITHUB_SIGNOFF_URL` en indice y manifiesto.
+- No se modifico codigo funcional, Oracle, migraciones, `main` ni archivos untracked ajenos. No se inicio Issue #24.
+- Verificacion remota previa confirmo indice, manifiesto, dictamen, evidencias primarias, ambos AGENTS, README y estado colaborativo en `origin/desarrollo`.
+- Pendiente de cierre de esta unidad: validacion del nuevo commit documental, push, lectura remota y cierre de Issue #23. `QUALITY_GATES=0/5`, `P0_TECHNICAL_CERTIFICATION=BLOCKED`, `BLOCK10_AUTHORIZED=NO`.

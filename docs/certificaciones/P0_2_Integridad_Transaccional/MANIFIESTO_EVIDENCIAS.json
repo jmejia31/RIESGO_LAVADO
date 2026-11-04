@@ -10,10 +10,10 @@
   "review_ready": "READY_FOR_INDEPENDENT_REVIEW",
   "github_remote_verified": "YES",
   "remote_verification_commit_sha": "01dc9716fb3e00800a74752b68893673dae474cd",
-  "github_evidence_index_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/87a48cb0/docs/certificaciones/INDEX.json",
+  "GITHUB_EVIDENCE_INDEX_URL": "https://github.com/jmejia31/RIESGO_LAVADO/blob/87a48cb0/docs/certificaciones/INDEX.json",
   "github_evidence_directory_url": "https://github.com/jmejia31/RIESGO_LAVADO/tree/87a48cb0/docs/certificaciones/P0_2_Integridad_Transaccional",
   "github_primary_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/tree/87a48cb0/docs/certificaciones/P0_2_Integridad_Transaccional/evidencia-primaria",
-  "github_independent_dictamen_url": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23#issuecomment-6633540601",
+  "GITHUB_SIGNOFF_URL": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23#issuecomment-6633540601",
   "source_packages": [
     {"name":"RIESGO_LAVADO_P0_2_TX01_PILOT_20261103_181500.zip","sha256":"8a8bca994a9a8595d9b010aea22c981d59bd84480179b31eaed2b10ac3196ecc","status":"VERIFIED_LOCAL_SOURCE"},
     {"name":"RIESGO_LAVADO_P0_2_TX02_TX12_FINAL_20261103_150500.zip","sha256":"8f18d1e3f637aeb3d0c626f56357a458a7202f28876de10c4a069b9157c7bb93","status":"VERIFIED_LOCAL_SOURCE"},

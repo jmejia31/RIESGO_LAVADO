@@ -3585,3 +3585,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ISSUE_23_REMOTE_PUBLICATION=YES`; `GITHUB_REMOTE_VERIFIED=YES`; `PYTHON3_VALIDATOR=PASS (14 skills)`; `JSON_VALIDATION=PASS`; `DIFF_CHECK=PASS`; `SECRET_AND_PII_SCAN=PASS`; `FUNCTIONAL_CODE_CHANGED=NO`; `UNTRACKED_AJENO_PRESERVED=YES`.
 - Oracle, API, frontend, E2E, new Quality Gates, and Issue #24 were not executed. Missing independent packages remain `MISSING_LOCAL_SOURCE`.
 - `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
+## Estado vigente - Issue #23 conciliacion final documental (COD) - 2026-11-04
+
+- Se corrigieron referencias stale de publicacion en README/VALIDACION_REPRODUCIBLE y se agregaron los campos explicitos `GITHUB_EVIDENCE_INDEX_URL` y `GITHUB_SIGNOFF_URL`.
+- Cambio exclusivamente documental; no se modificaron codigo funcional, Oracle, migraciones, `main` ni untracked ajenos. Issue #24 no iniciada.
+- Pendiente inmediato: validar, publicar y leer remotamente este ajuste; luego cerrar Issue #23 si los criterios siguen satisfechos.
+- `SOURCE_CODE_SHA=168ffa783942d11097a2ebaad5bba74f4454de9b`; `QUALITY_GATES=0/5`; `P0_TECHNICAL_CERTIFICATION=BLOCKED`; `H08_M03=PENDING_USER_RETEST`; `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`; `BLOCK10_AUTHORIZED=NO`.
