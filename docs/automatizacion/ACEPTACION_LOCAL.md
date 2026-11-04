@@ -28,4 +28,4 @@ El watcher controlado no acepta `QueuePath` alternativo ni `SkipRemoteSync`; exi
 
 ## Evidencia y rollback
 
-Registrar `REMOTE_HEAD`, hash de cola, tarea reclamada, estados `CLAIMED`/`RUNNING`/`IMPLEMENTED_PENDING_REVIEW`, gates, rutas publicadas, commit y URL remota. Si falla cualquier gate, detener, dejar `BLOCKED`/`FAILED` y retirar el watcher con `Remove-CodexQueueWatcher.ps1 -Apply`. Codex nunca escribe `APPROVED`; la revision externa es obligatoria.
+Registrar `REMOTE_HEAD`, hash de cola, tarea reclamada, estados `CLAIMED`/`RUNNING`/`IMPLEMENTED_PENDING_REVIEW`, gates, rutas publicadas, commit y URL remota. Si falla cualquier gate, detener, dejar `FAILED` y reintentar como maximo una vez; el segundo fallo deja `BLOCKED` con motivo persistido. Una tarea `IMPLEMENTED_PENDING_REVIEW` no vuelve a ejecutarse aunque siga `READY` en la cola. Los tests no deben limpiar flags PAUSE/STOP preexistentes. Codex nunca escribe `APPROVED`; la revision externa es obligatoria.

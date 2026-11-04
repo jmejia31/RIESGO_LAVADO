@@ -18,6 +18,8 @@ Estados permitidos: `PENDING_AUTHORIZATION`, `READY`, `CLAIMED`, `RUNNING`, `IMP
 - El ejecutor verifica `origin/desarrollo`, compara el contenido de la cola y persiste `CLAIMED`, `RUNNING` e `IMPLEMENTED_PENDING_REVIEW` en `ESTADO_TAREAS.json` mediante commits serializados cuando se habilite una ejecucion controlada.
 - Antes de publicar se validan comandos allowlisted, `git diff --check`, rutas modificadas y escaneo de secretos; el stage y el push son selectivos.
 - Las verificaciones ejecutables estan allowlisted (`git diff --check`, `queue-schema`, `secret-scan`); no se interpreta texto de la cola como PowerShell arbitrario.
+- Una tarea con `IMPLEMENTED_PENDING_REVIEW`, `APPROVED`, `BLOCKED` o `RUNNING` persistido no vuelve a ser elegible aunque permanezca `READY` en la cola. Solo un `FAILED` con intento menor que 2 puede reintentarse; el segundo fallo transita a `BLOCKED`.
+- Los escenarios de prueba usan un runtime temporal propio y restauran/no alteran flags PAUSE/STOP preexistentes del usuario.
 
 ## DRY_RUN
 

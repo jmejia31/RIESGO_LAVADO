@@ -1,9 +1,10 @@
 [CmdletBinding()]
-param([string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path)
+param([string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,[string]$StatePath='',[string]$RuntimePath='')
 $ErrorActionPreference='Stop'
 $queue=Get-Content -Raw (Join-Path $RepoRoot 'docs\automatizacion\TAREAS_CODEX.json')|ConvertFrom-Json
-$state=Get-Content -Raw (Join-Path $RepoRoot 'docs\automatizacion\ESTADO_TAREAS.json')|ConvertFrom-Json
-$runtime=Join-Path $env:LOCALAPPDATA 'RiesgoLavado\CodexQueue'
+$stateFile=if([string]::IsNullOrWhiteSpace($StatePath)){Join-Path $RepoRoot 'docs\automatizacion\ESTADO_TAREAS.json'}else{$StatePath}
+$state=Get-Content -Raw $stateFile|ConvertFrom-Json
+$runtime=if([string]::IsNullOrWhiteSpace($RuntimePath)){Join-Path $env:LOCALAPPDATA 'RiesgoLavado\CodexQueue'}else{$RuntimePath}
 $tasks=@($queue.tasks)
 $ready=@($tasks|Where-Object{$_.status -eq 'READY' -and $_.authorization.approved -eq $true})
 Write-Output "QUEUE_FILE=docs/automatizacion/TAREAS_CODEX.json"
