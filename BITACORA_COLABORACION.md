@@ -10164,3 +10164,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificado: sintaxis PowerShell de todos los scripts; cola vacia; tarea READY simulada; pausa; parada; preview de instalacion/remocion del watcher. `CODEX_REAL_INVOKED=NO`, `COMMIT_CREATED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`.
 - Estado: `QUEUE_MODE=DRY_RUN`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`, `WATCHER_INSTALLED=NO`, `WATCHER_ENABLED=NO`, `ISSUE_25_STATUS=NOT_STARTED`.
 - Pendiente: revisar y publicar la unidad; la activacion real del Task Scheduler y cualquier ejecucion controlada requieren decision local posterior y no se consideran verificadas por DRY_RUN.
+## 2026-11-04 - Issue #24 publicacion verificada (COD)
+
+- Commit `72331902` publicado en `origin/desarrollo`; lectura remota GitHub confirmada para cola, estado, politica, ejecutor, escenarios y watcher.
+- `REMOTE_SYNC=YES`; `HEAD=origin/desarrollo=72331902`. El expediente de #24 queda disponible para auditoria remota.
+- `QUEUE_SCHEMA_VALIDATED=PASS`; `DRY_RUN_TESTS=PASS`; `CODEX_CLI_EXEC_AVAILABLE=YES`; `SANDBOX_POLICY=workspace-write_REQUIRED`; `IDLE_CODEX_PROCESS=NO`.
+- `WATCHER_INSTALLED=NO` y `WATCHER_ENABLED=NO`: solo se ejecuto el preview, sin crear una tarea del Task Scheduler. No se uso bypass, YOLO, Oracle, QA ni credenciales.
+- `SOURCE_SHA=3cfa6dc8604122eecf311d8d7b8ebd1a3462a219`; no se modifico codigo funcional. Siguiente punto: mantener cola vacia hasta una tarea expresamente autorizada y una decision local de activacion.

@@ -3606,3 +3606,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `WATCHER_INSTALLED=NO`; se valido el preview del instalador sin crear una tarea Windows. `WATCHER_ENABLED=NO`; `IDLE_CODEX_PROCESS=NO`.
 - No se accedio a Oracle institucional, QA, credenciales, produccion, `main`, migracion 54 ni Issue #25. Untracked ajenos preservados.
 - Punto de continuacion: validar diff, publicar la infraestructura en `origin/desarrollo`, leer los archivos remotamente y mantener DRY_RUN hasta una decision de activacion local.
+## Estado vigente - Issue #24 bootstrap publicado y verificado (COD) - 2026-11-04
+
+- `FINAL_COMMIT_SHA=72331902`; `REMOTE_SYNC=YES`; archivos de cola, schemas, politica y herramientas disponibles en `origin/desarrollo`.
+- `QUEUE_FILE=docs/automatizacion/TAREAS_CODEX.json`; `QUEUE_SCHEMA_VALIDATED=PASS`; `READY_TASKS=0`; `RUNNING_TASKS=0`; `PENDING_REVIEW_TASKS=0`; `BLOCKED_TASKS=0`.
+- `DRY_RUN_TESTS=PASS`; `CODEX_CLI_EXEC_AVAILABLE=YES`; `SANDBOX_POLICY=workspace-write_REQUIRED`; `IDLE_CODEX_PROCESS=NO`.
+- `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`; instalacion real no ejecutada, solo preview sin mutacion de Task Scheduler.
+- `SOURCE_SHA=3cfa6dc8604122eecf311d8d7b8ebd1a3462a219`; no Oracle institucional, QA, credenciales, produccion, `main`, migracion 54 ni Issue #25.
+- `BLOCK10_AUTHORIZED=NO`; siguiente punto: esperar tareas remotas `READY` con autorizacion verificable; no ejecutar nada mientras la cola este vacia.
