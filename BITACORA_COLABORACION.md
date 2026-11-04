@@ -10203,3 +10203,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Entry points independientes PowerShell: validator PASS/exit 0; status PASS/exit 0; escenarios PASS/exit 0; watcher CONTROLLED preview PASS/exit 0; invocador DRY_RUN PASS/exit 0.
 - `SIMULATED_SCENARIOS=19`; `QUEUE_VALIDATOR_NO_ARGS=PASS`; `QUEUE_STATUS_NO_ARGS=PASS`; `REAL_CONTROL_PATH_GUARD=PASS`; `WATCHER_INSTALLED=NO`; `CODEX_REAL_INVOKED=NO`.
 - Estado: cola vacia, `QUEUE_MODE=DRY_RUN`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`, `ORACLE_TOUCHED=NO`, `QA_CREDENTIALS_USED=NO`, `BLOCK10_AUTHORIZED=NO`.
+
+## 2026-11-04 12:42 -06:00 - Issue #24 seguridad del ejecutor y escaneo delta (COD)
+
+- **Baseline:** rama `desarrollo`, `BASE_SHA=d2bc258d02673007bc2808879d8bbef7a4897dea`; se trabajó exclusivamente en `C:\RIESGO_LAVADO_CODEX_WORKER` y se preservaron los untracked ajenos.
+- **Causa corregida:** el escaneo anterior recorría todo el repositorio y bloqueaba por coincidencias preexistentes; además, `allowed_paths` aceptaba prefijos como `.bak`. El lanzamiento concatenaba el contrato JSON en `Start-Process`.
+- **Corrección:** `Invoke-CodexQueue.ps1` valida dependencia y códigos de `rg`, revisa coincidencias preexistentes sin exponer valores, escanea únicamente el delta efectivo (incluidos nuevos/untracked), falla cerrado ante 0/1/otros según contrato, aplica coincidencia exacta de archivos y límites de directorio, rechaza traversal/reparse points y entrega el contrato por stdin sin shell. Los overrides del scanner quedan bloqueados en ejecución real.
+- **Pruebas:** entrypoints independientes validator/status PASS (exit 0), watcher `-Controlled` solo preview PASS (exit 0), `git diff --check` PASS, `SIMULATED_SCENARIOS=27` PASS. Pasaron ausencia/error/coincidencia de scanner, archivo nuevo sensible, archivo autorizado exacto, `.bak`/prefijo/traversal, persistencia/no repetición, PAUSE/STOP y transferencia de contrato.
+- **Estado protegido:** `QUEUE_MODE=DRY_RUN`; `ISSUE24-SYNTHETIC-001=READY`; `WATCHER_INSTALLED=NO`; `WATCHER_ENABLED=NO`; `CODEX_REAL_INVOKED=NO`; `CONTROLLED_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- **Pendiente:** commit/push de esta intervención; no ejecutar la tarea sintética ni cerrar Issue #24.
