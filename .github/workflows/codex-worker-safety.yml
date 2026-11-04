@@ -42,6 +42,22 @@ jobs:
           }
           Write-Output 'AUTOMATION_POWERSHELL_PARSE=PASS'
 
+      - name: Install ripgrep for secret-scan regression tests
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not (Get-Command rg -ErrorAction SilentlyContinue)) {
+            choco install ripgrep -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'RIPGREP_INSTALL_FAILED' }
+            $env:Path += ';C:\ProgramData\chocolatey\bin'
+          }
+          if (-not (Get-Command rg -ErrorAction SilentlyContinue)) {
+            throw 'RIPGREP_UNAVAILABLE'
+          }
+          & rg --version
+          if ($LASTEXITCODE -ne 0) { throw 'RIPGREP_VERSION_FAILED' }
+          Write-Output 'WIN_RUNNER_RIPGREP=PASS'
+
       - name: Validate canonical queue and run all simulated safety scenarios
         shell: powershell
         run: |
