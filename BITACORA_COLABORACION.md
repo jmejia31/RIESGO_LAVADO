@@ -10186,3 +10186,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Pruebas: `SIMULATED_SCENARIOS=14`, incluyendo fixture real bloqueado, guard de argumentos, contrato de tarea, transicion watcher y reconciliacion de estados. `DRY_RUN_TESTS=PASS`; escaneo secreto y `git diff --check` PASS.
 - Ejecucion canonica limpia: `REMOTE_HEAD=c1ff82d8`, `QUEUE_SHA256=21ba05f5...`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`, `CODEX_INVOKED=NO`.
 - Procedimiento de aceptación futura publicado en `docs/automatizacion/ACEPTACION_LOCAL.md`. La compuerta humana y la tarea sintetica real siguen pendientes; Issue #24 permanece abierta.
+## 2026-11-04 - Issue #24 correccion de repeticion, flags y reintentos (COD)
+
+- Revision independiente `6637364406` atendida. Commit publicado: `7beffeca55253b6c178d9961a69bd5e4f6bb9f3d`; `HEAD=origin/desarrollo`.
+- El ejecutor reconcilia la cola con `ESTADO_TAREAS.json`: `IMPLEMENTED_PENDING_REVIEW`, `APPROVED`, `BLOCKED`, `CLAIMED` y `RUNNING` no vuelven a ser elegibles; solo `FAILED` con intento menor que 2 puede reintentarse.
+- Los errores persistidos registran motivo, intento y estado; el segundo fallo queda `BLOCKED`. Se agrego fixture de fallo simulado sin ejecutar Codex real.
+- Los escenarios usan runtime temporal propio; flags PAUSE/STOP preexistentes quedaron intactos tras PASS. `COMPLETED_TASK_NONREPEAT=PASS`, `PREEXISTING_FLAGS_PRESERVED=PASS`, `RETRY_LIMIT_PERSISTENCE=PASS`.
+- Resultado: `SIMULATED_SCENARIOS=17`, `DRY_RUN_TESTS=PASS`, `CODEX_REAL_INVOKED=NO`, `ORACLE_TOUCHED=NO`, `WATCHER_INSTALLED=NO`, `WATCHER_ENABLED=NO`.
+- Ejecucion canonica limpia: `REMOTE_HEAD=7beffeca`, `QUEUE_SHA256=21ba05f5...`, `READY_TASKS=0`, `IDLE_CODEX_PROCESS=NO`.
+- Issue #24 permanece abierta y `BLOCK10_AUTHORIZED=NO`; falta la prueba real inofensiva y la aceptación local expresa.
