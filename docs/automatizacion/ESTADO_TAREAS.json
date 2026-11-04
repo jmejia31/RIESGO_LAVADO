@@ -22,6 +22,15 @@
                        "executor":  "COD",
                        "status":  "IMPLEMENTED_PENDING_REVIEW",
                        "updated_at":  "2026-11-04T20:54:47.7729367Z"
+                   },
+                   {
+                       "attempt":  1,
+                       "task_id":  "ISSUE25-MATRICES-PLAN-002",
+                       "review_required":  true,
+                       "reason":  "",
+                       "executor":  "COD",
+                       "status":  "CLAIMED",
+                       "updated_at":  "2026-11-04T21:38:09.9921498Z"
                    }
                ],
     "controls":  {
