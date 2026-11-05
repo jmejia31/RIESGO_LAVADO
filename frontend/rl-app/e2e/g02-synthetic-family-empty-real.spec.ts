@@ -10,8 +10,8 @@ type PagedResponse = {
 // A successful family-only empty state is not full Matrices-module certification.
 test.describe.configure({ retries: 0 });
 test.skip(
-  process.env['RL_MATRICES_SYNTHETIC_PURGE_REQUIRED'] !== 'true',
-  'GATE02 requires the disposable Oracle XE synthetic purge runner.'
+  process.env['RL_G02_POST_PURGE_E2E_REQUIRED'] !== 'true',
+  'GATE02 requires the disposable Oracle XE post-purge runner.',
 );
 
 function unsignedTestToken(): string {
@@ -21,7 +21,7 @@ function unsignedTestToken(): string {
     uid: 'g02-disposable-purge',
     role: 'ADMINISTRADOR',
     modulos: '10',
-    exp: Math.floor(Date.now() / 1000) + 3600
+    exp: Math.floor(Date.now() / 1000) + 3600,
   }) + '.';
 }
 

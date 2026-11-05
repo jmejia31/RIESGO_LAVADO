@@ -101,7 +101,7 @@ if [[ "${RL_MATRICES_SYNTHETIC_PURGE_REQUIRED:-}" == "true" ]]; then
   export RL_G02_PURGED_FAMILY_CODE="$purged_code"
   export RL_G02_PURGED_FAMILY_ID="$purged_id"
   pushd "$repo_root/frontend/rl-app" >/dev/null
-  if ! empty_output="$(npm run e2e -- e2e/g02-synthetic-family-empty-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+  if ! empty_output="$(RL_G02_POST_PURGE_E2E_REQUIRED=true npm run e2e -- e2e/g02-synthetic-family-empty-real.spec.ts 2>&1 | tee /dev/stderr)"; then
     popd >/dev/null
     echo 'GATE02: real empty-family API/Angular E2E failed.' >&2
     exit 1
