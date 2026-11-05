@@ -644,11 +644,25 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const updateResponsePromise = page.waitForResponse(response =>
     response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
+  // Tras guardar, Angular recupera la proyección de forma asíncrona.
+  // El trace de CI demostró que navegar en este punto puede abortar su GET.
+  const projectionAfterSavePromise = page.waitForResponse(response =>
+    response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   await page.getByRole('button', { name: 'Guardar borrador' }).click();
   expect((await updateResponsePromise).status()).toBe(200);
+  const projectionAfterSave = await projectionAfterSavePromise;
+  expect(projectionAfterSave.status()).toBe(200);
+  const savedProjection = await projectionAfterSave.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } };
+  expect(savedProjection.datos.evaluationId).toBe(evaluation.id);
+  expect(savedProjection.datos.fields).toHaveLength(82);
+  await expect(page.getByText(`Borrador #${evaluation.id} guardado.`)).toBeVisible();
+  const savedEditModal = page.locator('dialog[aria-labelledby="titulo-modal-editar"]');
+  await expect(savedEditModal).toBeVisible();
+  await savedEditModal.locator('button[aria-label="Cerrar edición"]').click();
+  await expect(savedEditModal).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
 
-  await page.waitForLoadState('networkidle');
-  await page.goto('/matrices-riesgos', { waitUntil: 'domcontentloaded' });
   const pageA = await page.context().newPage();
   await installNonCriticalFixtures(pageA, fixture, evaluation);
   pageA.on('response', response => {
