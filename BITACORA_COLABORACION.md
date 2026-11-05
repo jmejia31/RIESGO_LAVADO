@@ -10274,3 +10274,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El preflight integra validadores estructural/DB/documentación/cola, `git diff --check`, pruebas .NET focalizadas de rollback, auditoría, concurrencia y ciclo de vida, además de lint/build frontend en CI.
 - Verificado en esta intervención: validador QA PASS; 95 pruebas .NET focalizadas PASS; estructura, scripts DB, enlaces documentales y `git diff --check` PASS. Lint/build frontend local quedaron pendientes porque `node_modules` está incompleto tras un `npm ci` bloqueado por `EBUSY`; no se reportan como PASS.
 - No se ejecutó Oracle XE local, QA institucional, watcher, Codex real ni tarea autónoma. El gate remoto sobre el nuevo SHA queda pendiente de publicación. `BLOCK10_AUTHORIZED=NO`.
+
+## 2026-11-05 - Prueba real de purga sintética de Matrices (COD)
+
+- Se implementó `MatricesSyntheticPurgeOracleIntegrationTests.SyntheticPurge_PreservaAislamientoRollbackIntegridadYRecreacion`.
+- La prueba valida identidad `RIESGO_LAVADO`/servicio XE, crea una familia sintética con dos versiones DRAFT, elimina mediante repositorios reales, comprueba dependencias, aislamiento de `RL_USUARIOS` y auditoría protegida, rollback transaccional, estado vacío y recreación posterior.
+- Integración CI agregada en `.github/workflows/quality-gates.yml` con `RL_MATRICES_SYNTHETIC_PURGE_REQUIRED=true`, `Database__Profile=LOCAL_XE` y credencial efímera del servicio Oracle XE. No se usa Oracle institucional.
+- Compilación de la prueba: PASS. Ejecución local: FALLA CERRADO por ausencia de `Database:Profile=LOCAL_XE`/Oracle XE; no se reporta como ejecución Oracle. La ejecución obligatoria queda en el Quality Gate CI desechable.
+- No se modificaron `main`, producción, migración 54, PRUEBA_FORMULARIO, watcher ni tareas autónomas.
