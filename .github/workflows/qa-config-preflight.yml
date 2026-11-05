@@ -1,0 +1,61 @@
+name: QA Configuration Preflight
+
+"on":
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-config-preflight
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Isolated QA preflight (no institutional execution)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      QA_INSTITUTIONAL_EXECUTION: NOT_EXECUTED
+      QA_AUTONOMOUS_MUTATIONS: DISABLED
+      CI: true
+    steps:
+      - name: Checkout the requested revision
+        uses: actions/checkout@v4
+
+      - name: Validate this workflow is manual-only and fail-closed
+        shell: pwsh
+        run: ./tools/validate_qa_config_preflight.ps1
+
+      - name: Validate repository and database contracts without connecting to Oracle
+        shell: pwsh
+        run: |
+          ./tools/validate_repository_structure.ps1
+          ./tools/validate_database_scripts.ps1
+          ./tools/validate_documentation_links.ps1
+          ./tools/automatizacion/Test-CodexQueue.ps1
+
+      - name: Validate the working tree without publishing changes
+        shell: bash
+        run: git diff --check
+
+      - name: Restore backend dependencies
+        run: dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config
+
+      - name: Execute non-Oracle rollback, audit and concurrency regressions
+        run: >-
+          dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
+          --configuration Release --no-restore
+          --filter
+          "FullyQualifiedName~GovernedControlMutationExecutorTests|FullyQualifiedName~MatricesRiesgosApplicationCoverageTests|FullyQualifiedName~MatricesRiesgosCicloVidaVersionTests|FullyQualifiedName~AuditoriaTransaccionalContractTests"
+          --logger "console;verbosity=minimal"
+
+      - name: Install frontend dependencies reproducibly
+        working-directory: frontend/rl-app
+        run: npm ci --ignore-scripts
+
+      - name: Validate frontend error recovery and build contracts
+        working-directory: frontend/rl-app
+        run: |
+          npm run lint
+          npm run build

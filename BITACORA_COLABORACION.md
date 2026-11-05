@@ -10266,3 +10266,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - La primera ejecución real controlada procesó únicamente `P0-H08-TX12-PLAN-001` en intento 2, mediante sandbox `workspace-write`, rutas exactas y secret scan. Publicó `a3e7d3a9ab233d711297a5aae01be89cd05686d0` y el estado `IMPLEMENTED_PENDING_REVIEW` en `0b2956073a8d3ccf107f435ed72b42d896de4a1e`; no autoaprobó.
 - Gate integral del HEAD `0b2956073a8d3ccf107f435ed72b42d896de4a1e`: `42058814060=SUCCESS`, ambos jobs SUCCESS, attempt 1, artefacto de navegador publicado. Las tareas ISSUE25 permanecen BLOCKED en intento 2; no se reactivaron.
 - PAUSE real quedó activa, STOP inactivo; no se modificaron `main`, producción, Oracle institucional, QA, migración 54, `PRUEBA_FORMULARIO` ni datos de otros módulos. H08 manual, TX12 frontend y aceptación institucional siguen pendientes cuando la evidencia o la ejecución humana sean obligatorias.
+
+## 2026-11-05 - Preflight QA manual y regresiones TX12 (COD)
+
+- Base verificada: `ed688f96b9522892127d0c9752ef428d7a5cd6f4`, rama `desarrollo`; se conservaron los untracked ajenos y la modificación previa no relacionada de `ESTADO_COLABORACION.md`.
+- Implementación: `.github/workflows/qa-config-preflight.yml` y `tools/validate_qa_config_preflight.ps1`. El workflow es manual-only, tiene permisos `contents: read`, timeout, concurrencia dedicada, configuración `QA_INSTITUTIONAL_EXECUTION=NOT_EXECUTED`/`QA_AUTONOMOUS_MUTATIONS=DISABLED`, no conecta Oracle ni usa credenciales institucionales y falla cerrado ante configuración insegura.
+- El preflight integra validadores estructural/DB/documentación/cola, `git diff --check`, pruebas .NET focalizadas de rollback, auditoría, concurrencia y ciclo de vida, además de lint/build frontend en CI.
+- Verificado en esta intervención: validador QA PASS; 95 pruebas .NET focalizadas PASS; estructura, scripts DB, enlaces documentales y `git diff --check` PASS. Lint/build frontend local quedaron pendientes porque `node_modules` está incompleto tras un `npm ci` bloqueado por `EBUSY`; no se reportan como PASS.
+- No se ejecutó Oracle XE local, QA institucional, watcher, Codex real ni tarea autónoma. El gate remoto sobre el nuevo SHA queda pendiente de publicación. `BLOCK10_AUTHORIZED=NO`.
