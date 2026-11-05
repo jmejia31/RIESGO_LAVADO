@@ -218,32 +218,10 @@ jobs:
           TZ: UTC
           Database__Profile: LOCAL_XE
           RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED: 'true'
+          RL_MATRICES_SYNTHETIC_PURGE_REQUIRED: 'true'
           BLOCK7_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
           ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;Pooling=true;Min Pool Size=0;Max Pool Size=5;
         run: ./tools/run_quality_gates.ps1
-
-      - name: Certify synthetic Matrices purge isolation on disposable Oracle XE
-        shell: bash
-        env:
-          RL_MATRICES_SYNTHETIC_PURGE_REQUIRED: 'true'
-          Database__Profile: LOCAL_XE
-          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;Pooling=true;Min Pool Size=0;Max Pool Size=5;
-        run: |
-          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter 'FullyQualifiedName~MatricesSyntheticPurgeOracleIntegrationTests' --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
-          grep -Eq 'Passed: *1' <<<"$output"
-          ! grep -Eq 'Skipped: *[1-9]' <<<"$output"
-          for marker in \
-            SYNTHETIC_MATRICES_RECORDS_REMOVED=PASS \
-            CROSS_MODULE_ISOLATION=PASS \
-            OTHER_MODULES_SYNTHETIC_DATA_CHANGED=0 \
-            REFERENTIAL_INTEGRITY=PASS \
-            PROTECTED_AUDIT_PRESERVED=PASS \
-            ROLLBACK_TEST=PASS \
-            MATRICES_EMPTY_STATE=PASS \
-            NEW_SYNTHETIC_FAMILY_AFTER_CLEANUP=PASS; do
-            grep -Fq "$marker" <<<"$output"
-          done
-          echo 'MATRICES_SYNTHETIC_PURGE_ORACLE_XE=PASS'
 
       - name: Reproduce pre-fix Full Matrix failure on disposable Oracle XE
         shell: bash

@@ -722,7 +722,8 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
         "SEQ_RL_MR_EVALUACIONES", "SEQ_RL_MR_PROYECCIONES", "SEQ_RL_MR_FLUJOS", "SEQ_RL_AUDITORIA",
         "SEQ_RL_MR_CONTROLES", "SEQ_RL_MR_PLANES", "SEQ_RL_MR_ACTIVIDADES", "SEQ_RL_MR_SENALES",
         "SEQ_RL_MR_AUTOMONITOREO", "SEQ_RL_MR_EVIDENCIAS", "SEQ_RL_MR_EVI_VINCULOS",
-        "SEQ_RL_MR_FORMULA_USOS"
+        "SEQ_RL_MR_FORMULA_USOS",
+        "SEQ_RL_MR_FAMILIAS", "SEQ_RL_MR_VERSIONES"
     })
         try { await ExecuteAsync(connection, $"CREATE SEQUENCE {sequence} START WITH 200000000 INCREMENT BY 1 NOCACHE"); } catch (OracleException exception) when (exception.Number == 955) { }
 }

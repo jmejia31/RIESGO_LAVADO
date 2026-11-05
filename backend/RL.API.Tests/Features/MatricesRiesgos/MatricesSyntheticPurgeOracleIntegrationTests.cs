@@ -40,8 +40,10 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
     {
         RequireDisposableXe();
 
-        await using OracleConnection identity = CreateConnection();
-        await identity.OpenAsync();
+        // The established Oracle integration suites use synchronous Open() for
+        // disposable XE bootstrap; asynchronous acquisition timed out in CI.
+        OracleConnection.ClearAllPools();
+        await using OracleConnection identity = await OpenDisposableConnectionAsync();
         await ValidateDisposableIdentityAsync(identity);
         Snapshot protectedBefore = await ReadProtectedSnapshotAsync(identity);
 
@@ -55,8 +57,9 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
         {
             (familyId, versionA, versionB) = await SeedSyntheticDraftFamilyAsync(codePrefix);
             Assert.Equal(2, await CountAsync("RL_MR_VERSIONES_FORMULARIO", "VER_FAMILIA_ID", familyId));
+            await AssertRollbackOfVersionDeletionAsync(versionA);
 
-            var db = new OracleDbContext(_connectionString!);
+            var db = new OracleDbContext(CreateUnpooledConnectionString());
             var audit = new AuditoriaRepository(db, new HttpContextAccessor());
             var matrices = new MatricesRiesgosRepository(db, audit);
             var families = new FamiliasFormularioLifecycleRepository(db, audit, new HttpContextAccessor());
@@ -107,24 +110,60 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
             $"{RequiredOptIn}=true is required; the synthetic purge contract must not run implicitly.");
         Assert.False(string.IsNullOrWhiteSpace(_connectionString),
             $"{ConnectionVariable} must resolve a disposable LOCAL_XE connection.");
+        if (!string.IsNullOrWhiteSpace(_connectionString))
+        {
+            string source = new OracleConnectionStringBuilder(_connectionString).DataSource;
+            Assert.True(
+                (source.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+                    || source.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+                && (source.Contains("SERVICE_NAME=XE", StringComparison.OrdinalIgnoreCase)
+                    || source.Contains("/XE", StringComparison.OrdinalIgnoreCase)),
+                "Synthetic purge requires the disposable loopback Oracle XE service.");
+        }
     }
 
-    private OracleConnection CreateConnection()
+    private string CreateUnpooledConnectionString()
     {
-        // The disposable XE image is also exercised by the broader Oracle suite.
-        // Keep this isolated contract out of ODP.NET's shared pool: pooled SYSTEM
-        // acquisition can surface transient recursive-SQL startup errors before
-        // the test has executed any SQL. The connection still targets only the
-        // explicitly supplied LOCAL_XE profile.
         var builder = new OracleConnectionStringBuilder(_connectionString!)
         {
             Pooling = false,
             ConnectionTimeout = 30
         };
-        return new OracleConnection(builder.ConnectionString)
+        return builder.ConnectionString;
+    }
+
+    private OracleConnection CreateConnection() => new(CreateUnpooledConnectionString())
+    {
+        UseHourOffsetForUnsupportedTimezone = true
+    };
+
+    private async Task<OracleConnection> OpenDisposableConnectionAsync()
+    {
+        for (int attempt = 1; attempt <= 3; attempt++)
         {
-            UseHourOffsetForUnsupportedTimezone = true
-        };
+            OracleConnection connection = CreateConnection();
+            try
+            {
+                // ODP.NET async acquisition timed out before any SQL in CI;
+                // existing Oracle integration bootstraps use synchronous Open().
+                connection.Open();
+                return connection;
+            }
+            catch (OracleException ex) when (
+                attempt < 3 && (ex.Number is 50000 or 604 or 1033 or 1034 or 1089 or 1090 or 12514 or 12528 or 12541))
+            {
+                connection.Dispose();
+                OracleConnection.ClearAllPools();
+                await Task.Delay(TimeSpan.FromSeconds(3));
+            }
+            catch
+            {
+                connection.Dispose();
+                throw;
+            }
+        }
+
+        throw new InvalidOperationException("Disposable Oracle XE could not be opened after bounded attempts.");
     }
 
     private async Task ValidateDisposableIdentityAsync(OracleConnection connection)
@@ -145,8 +184,7 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
 
     private async Task<(long FamilyId, long VersionA, long VersionB)> SeedSyntheticDraftFamilyAsync(string codePrefix)
     {
-        await using OracleConnection connection = CreateConnection();
-        await connection.OpenAsync();
+        await using OracleConnection connection = await OpenDisposableConnectionAsync();
         await using OracleTransaction transaction = (OracleTransaction)await connection.BeginTransactionAsync();
         try
         {
@@ -154,7 +192,7 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
             long versionA = await NextSequenceAsync(connection, transaction, "SEQ_RL_MR_VERSIONES");
             long versionB = await NextSequenceAsync(connection, transaction, "SEQ_RL_MR_VERSIONES");
             await ExecuteAsync(connection, transaction,
-                "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (:id,:code,:name,:description,1,0,SYSDATE)",
+                "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,:name,:description,1,0,0,SYSDATE)",
                 ("id", familyId), ("code", codePrefix), ("name", "Synthetic purge family"), ("description", "Disposable CI fixture"));
             foreach (long versionId in new[] { versionA, versionB })
             {
@@ -172,21 +210,34 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
         }
     }
 
+    private async Task AssertRollbackOfVersionDeletionAsync(long versionId)
+    {
+        await using OracleConnection connection = await OpenDisposableConnectionAsync();
+        await using OracleTransaction transaction = (OracleTransaction)await connection.BeginTransactionAsync();
+        await using (var command = new OracleCommand(
+            "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", connection)
+            { BindByName = true, Transaction = transaction })
+        {
+            command.Parameters.Add(new OracleParameter("id", versionId));
+            Assert.Equal(1, await command.ExecuteNonQueryAsync());
+        }
+        await transaction.RollbackAsync();
+        Assert.Equal(1, await CountAsync("RL_MR_VERSIONES_FORMULARIO", "VER_ID", versionId));
+    }
+
     private async Task AssertRollbackDoesNotLeaveFamilyAsync(string code)
     {
-        await using OracleConnection connection = CreateConnection();
-        await connection.OpenAsync();
+        await using OracleConnection connection = await OpenDisposableConnectionAsync();
         await using OracleTransaction transaction = (OracleTransaction)await connection.BeginTransactionAsync();
         await ExecuteAsync(connection, transaction,
-            "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (SEQ_RL_MR_FAMILIAS.NEXTVAL,:code,'Rollback fixture',1,0,SYSDATE)",
+            "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (SEQ_RL_MR_FAMILIAS.NEXTVAL,:code,'Rollback fixture',1,0,0,SYSDATE)",
             ("code", code));
         await transaction.RollbackAsync();
     }
 
     private async Task CleanupOwnFixtureAsync(long familyId, long versionA, long versionB, long recreatedFamilyId, string codePrefix)
     {
-        await using OracleConnection connection = CreateConnection();
-        await connection.OpenAsync();
+        await using OracleConnection connection = await OpenDisposableConnectionAsync();
         await ExecuteAsync(connection, "DELETE FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID IN (:a,:b)", ("a", versionA), ("b", versionB));
         await ExecuteAsync(connection, "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID IN (:a,:b)", ("a", versionA), ("b", versionB));
         await ExecuteAsync(connection, "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID IN (:family,:recreated) OR FAM_CODIGO LIKE :prefix", ("family", familyId), ("recreated", recreatedFamilyId), ("prefix", codePrefix + "%"));
@@ -203,8 +254,17 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
             await ScalarLongAsync(connection, "SELECT NVL(MAX(AUD_ID),0) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_USUARIOS'"));
     }
 
-    private async Task<long> CountAsync(string table, string column, long value) => await ScalarLongAsync(CreateConnection(), $"SELECT COUNT(*) FROM {table} WHERE {column}=:value", ("value", value));
-    private async Task<long> CountByCodeAsync(string table, string column, string value) => await ScalarLongAsync(CreateConnection(), $"SELECT COUNT(*) FROM {table} WHERE {column}=:value", ("value", value));
+    private async Task<long> CountAsync(string table, string column, long value)
+    {
+        await using OracleConnection connection = await OpenDisposableConnectionAsync();
+        return await ScalarLongAsync(connection, $"SELECT COUNT(*) FROM {table} WHERE {column}=:value", ("value", value));
+    }
+
+    private async Task<long> CountByCodeAsync(string table, string column, string value)
+    {
+        await using OracleConnection connection = await OpenDisposableConnectionAsync();
+        return await ScalarLongAsync(connection, $"SELECT COUNT(*) FROM {table} WHERE {column}=:value", ("value", value));
+    }
 
     private async Task<long> NextSequenceAsync(OracleConnection connection, OracleTransaction transaction, string sequence) =>
         Convert.ToInt64(await ExecuteScalarAsync(connection, transaction, $"SELECT {sequence}.NEXTVAL FROM DUAL"), CultureInfo.InvariantCulture);
@@ -239,13 +299,10 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
         return await command.ExecuteScalarAsync();
     }
 
-    private async Task<long> ScalarLongAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
+    private static async Task<long> ScalarLongAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
     {
-        await using (connection)
-        {
-            if (connection.State != System.Data.ConnectionState.Open) await connection.OpenAsync();
-            return Convert.ToInt64(await ScalarAsync(connection, sql, parameters), CultureInfo.InvariantCulture);
-        }
+        Assert.Equal(System.Data.ConnectionState.Open, connection.State);
+        return Convert.ToInt64(await ScalarAsync(connection, sql, parameters), CultureInfo.InvariantCulture);
     }
 
     private sealed record Snapshot(long UserCount, long UserMin, long UserMax, long UserAuditCount, long UserAuditMax);

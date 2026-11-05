@@ -68,6 +68,30 @@ if [[ "$ready" != "true" ]]; then
 fi
 echo 'BLOCK7_REAL_API_ORACLE_READY=PASS'
 
+# Exercise the synthetic deletion contract while the disposable XE fixture is
+# initialized and before resource-intensive browser suites reuse this service.
+if [[ "${RL_MATRICES_SYNTHETIC_PURGE_REQUIRED:-}" == "true" ]]; then
+  purge_output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj \\
+    --configuration Release --no-build --no-restore \\
+    --filter 'FullyQualifiedName~MatricesSyntheticPurgeOracleIntegrationTests' \\
+    --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+  grep -Eq 'Total tests: *1' <<<"$purge_output"
+  grep -Eq 'Passed: *1' <<<"$purge_output"
+  ! grep -Eq 'Skipped: *[1-9]' <<<"$purge_output"
+  for proof in \\
+    SYNTHETIC_MATRICES_RECORDS_REMOVED=PASS \\
+    CROSS_MODULE_ISOLATION=PASS \\
+    OTHER_MODULES_SYNTHETIC_DATA_CHANGED=0 \\
+    REFERENTIAL_INTEGRITY=PASS \\
+    PROTECTED_AUDIT_PRESERVED=PASS \\
+    ROLLBACK_TEST=PASS \\
+    MATRICES_EMPTY_STATE=PASS \\
+    NEW_SYNTHETIC_FAMILY_AFTER_CLEANUP=PASS; do
+    grep -Fq "$proof" <<<"$purge_output"
+  done
+  echo 'MATRICES_SYNTHETIC_PURGE_ORACLE_XE=PASS'
+fi
+
 export RL_H02_ORACLE_HISTORY_CERTIFICATION_REQUIRED=true
 h02_output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj \
   --configuration Release --no-build --no-restore \
