@@ -40,6 +40,15 @@
                        "executor":  "COD",
                        "status":  "BLOCKED",
                        "updated_at":  "2026-11-05T00:18:12.2106201Z"
+                   },
+                   {
+                       "attempt":  1,
+                       "task_id":  "P0-H08-TX12-PLAN-001",
+                       "review_required":  true,
+                       "reason":  "",
+                       "executor":  "COD",
+                       "status":  "CLAIMED",
+                       "updated_at":  "2026-11-05T00:23:05.4115631Z"
                    }
                ],
     "controls":  {
