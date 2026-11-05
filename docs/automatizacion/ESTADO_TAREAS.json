@@ -47,8 +47,8 @@
                        "review_required":  true,
                        "reason":  "",
                        "executor":  "COD",
-                       "status":  "RUNNING",
-                       "updated_at":  "2026-11-05T15:01:10.0399969Z"
+                       "status":  "IMPLEMENTED_PENDING_REVIEW",
+                       "updated_at":  "2026-11-05T15:05:24.3335332Z"
                    }
                ],
     "controls":  {
