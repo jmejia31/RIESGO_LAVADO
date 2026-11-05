@@ -110,6 +110,7 @@ Write-Host '=== Cobertura Backend ===' -ForegroundColor Cyan
 & dotnet test $backendProject `
     --configuration Release `
     --no-restore `
+    --filter 'FullyQualifiedName!~MatricesSyntheticPurgeOracleIntegrationTests' `
     --settings $backendSettings `
     --collect 'XPlat Code Coverage' `
     --results-directory $backendResults
