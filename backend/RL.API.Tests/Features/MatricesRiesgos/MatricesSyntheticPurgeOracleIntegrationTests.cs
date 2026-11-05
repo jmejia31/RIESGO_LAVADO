@@ -109,7 +109,23 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
             $"{ConnectionVariable} must resolve a disposable LOCAL_XE connection.");
     }
 
-    private OracleConnection CreateConnection() => new(_connectionString!);
+    private OracleConnection CreateConnection()
+    {
+        // The disposable XE image is also exercised by the broader Oracle suite.
+        // Keep this isolated contract out of ODP.NET's shared pool: pooled SYSTEM
+        // acquisition can surface transient recursive-SQL startup errors before
+        // the test has executed any SQL. The connection still targets only the
+        // explicitly supplied LOCAL_XE profile.
+        var builder = new OracleConnectionStringBuilder(_connectionString!)
+        {
+            Pooling = false,
+            ConnectionTimeout = 30
+        };
+        return new OracleConnection(builder.ConnectionString)
+        {
+            UseHourOffsetForUnsupportedTimezone = true
+        };
+    }
 
     private async Task ValidateDisposableIdentityAsync(OracleConnection connection)
     {
