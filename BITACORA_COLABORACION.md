@@ -10251,3 +10251,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `-WindowStyle Hidden` no impidio la consola visible en el Programador de tareas. Se agrego `tools/automatizacion/Run-CodexQueueHidden.vbs`, invocado por `wscript.exe` con ventana 0; PowerShell queda oculto y stdout/stderr se redirigen al log local en `%LOCALAPPDATA%`.
 - La tarea instalada `RiesgoLavado-CodexQueue` fue actualizada exclusivamente en su accion: `wscript.exe ... Run-CodexQueueHidden.vbs -AllowExecution`; conserva intervalo, repositorio y argumentos. No se modifico la cola.
 - `WATCHER_NO_CONSOLE_LAUNCHER=PASS`; `SIMULATED_SCENARIOS=39`; preview PASS; prueba `cscript`/launcher exit 0, sin consola y con bloqueo esperado por worktree modificado. No hubo Codex real durante esta correccion.
+
+## 2026-11-05 - Cierre técnico integral y primera ejecución autónoma real (COD)
+
+- Se verificó la certificación histórica `193f0f993192aee4d64f658ca185d22132f40370` con cinco Quality Gates independientes SUCCESS, attempt 1, mismo SHA. El worker corrigió el aislamiento de `SIM-UNAUTH`/`SIM-HIGH` en `f5fef18856a37fbb94adec4193b58f3bf80bef8e` y obtuvo gate integral `42042947716=SUCCESS`.
+- La primera ejecución real controlada procesó únicamente `P0-H08-TX12-PLAN-001` en intento 2, mediante sandbox `workspace-write`, rutas exactas y secret scan. Publicó `a3e7d3a9ab233d711297a5aae01be89cd05686d0` y el estado `IMPLEMENTED_PENDING_REVIEW` en `0b2956073a8d3ccf107f435ed72b42d896de4a1e`; no autoaprobó.
+- Gate integral del HEAD `0b2956073a8d3ccf107f435ed72b42d896de4a1e`: `42058814060=SUCCESS`, ambos jobs SUCCESS, attempt 1, artefacto de navegador publicado. Las tareas ISSUE25 permanecen BLOCKED en intento 2; no se reactivaron.
+- PAUSE real quedó activa, STOP inactivo; no se modificaron `main`, producción, Oracle institucional, QA, migración 54, `PRUEBA_FORMULARIO` ni datos de otros módulos. H08 manual, TX12 frontend y aceptación institucional siguen pendientes cuando la evidencia o la ejecución humana sean obligatorias.

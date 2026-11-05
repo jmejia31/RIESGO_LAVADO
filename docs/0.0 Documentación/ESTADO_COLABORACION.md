@@ -3685,3 +3685,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `WATCHER_ACTION=wscript.exe Run-CodexQueueHidden.vbs`; `WATCHER_HIDDEN_WINDOW=PASS`; la salida queda en `%LOCALAPPDATA%\RiesgoLavado\CodexQueue\watcher-output.log`.
 - `WATCHER_NO_CONSOLE_LAUNCHER=PASS`; `SIMULATED_SCENARIOS=39`; `QUEUE_MODE=DRY_RUN`; `TAREAS_CODEX.json` no fue modificado.
 - `CODEX_REAL_INVOKED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente - Cierre técnico integral y ejecución autónoma controlada (COD) - 2026-11-05
+
+- **SHA worker publicado:** `0b2956073a8d3ccf107f435ed72b42d896de4a1e`, sincronizado con `origin/desarrollo` antes de esta actualización. La certificación integral del SHA fue `42058814060=SUCCESS`, attempt 1, con job de control e integral SUCCESS y artefacto de navegador.
+- **Automatización:** `Test-CodexQueue-Scenarios.ps1` corregido en `f5fef18856a37fbb94adec4193b58f3bf80bef8e`; 39 escenarios PASS. La prueba autónoma real de `P0-H08-TX12-PLAN-001` terminó en intento 2 como `IMPLEMENTED_PENDING_REVIEW`, sin autoaprobación y con rutas exactas.
+- **Estado de cola:** `ISSUE24-SYNTHETIC-001` y `ISSUE24-AUTO-ACCEPTANCE-002` permanecen `IMPLEMENTED_PENDING_REVIEW`; `ISSUE25-MATRICES-PLAN-002` y `ISSUE25-QA-PLAN-001` permanecen `BLOCKED` en intento 2; `P0-H08-TX12-PLAN-001` queda pendiente de revisión humana. `PAUSE=ACTIVE`, `STOP=INACTIVE`.
+- **Protecciones:** no se ejecutó limpieza institucional, no se alteraron datos de otros módulos, no se tocó Oracle institucional, QA, producción, `main`, migración 54 ni `PRUEBA_FORMULARIO`. `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
