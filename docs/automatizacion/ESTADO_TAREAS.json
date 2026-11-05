@@ -38,8 +38,8 @@
                        "review_required":  true,
                        "reason":  "",
                        "executor":  "COD",
-                       "status":  "CLAIMED",
-                       "updated_at":  "2026-11-05T00:18:04.9409940Z"
+                       "status":  "RUNNING",
+                       "updated_at":  "2026-11-05T00:18:08.5374229Z"
                    }
                ],
     "controls":  {
