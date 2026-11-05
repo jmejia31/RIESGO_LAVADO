@@ -117,11 +117,14 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
             "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL"), CultureInfo.InvariantCulture) ?? "";
         string service = Convert.ToString(await ScalarAsync(connection,
             "SELECT SYS_CONTEXT('USERENV','SERVICE_NAME') FROM DUAL"), CultureInfo.InvariantCulture) ?? "";
-        Assert.Equal("RIESGO_LAVADO", schema, ignoreCase: true);
+        // CI bootstraps its disposable image through SYSTEM; local XE uses the
+        // dedicated RIESGO_LAVADO user. Accept only those known disposable
+        // profiles and verify the required objects in the active schema.
+        Assert.Contains(schema, new[] { "RIESGO_LAVADO", "SYSTEM" }, StringComparer.OrdinalIgnoreCase);
         Assert.Contains("XE", service, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(1, await CountByNameAsync(connection, "USER_TABLES", "TABLE_NAME", "RL_MR_FAMILIAS_FORMULARIO"));
-        Assert.Equal(1, await CountByNameAsync(connection, "USER_TABLES", "TABLE_NAME", "RL_MR_VERSIONES_FORMULARIO"));
-        Assert.Equal(1, await CountByNameAsync(connection, "USER_TABLES", "TABLE_NAME", "RL_AUDITORIA"));
+        Assert.Equal(1, await CountByNameAsync(connection, "ALL_TABLES", "TABLE_NAME", "RL_MR_FAMILIAS_FORMULARIO", schema));
+        Assert.Equal(1, await CountByNameAsync(connection, "ALL_TABLES", "TABLE_NAME", "RL_MR_VERSIONES_FORMULARIO", schema));
+        Assert.Equal(1, await CountByNameAsync(connection, "ALL_TABLES", "TABLE_NAME", "RL_AUDITORIA", schema));
     }
 
     private async Task<(long FamilyId, long VersionA, long VersionB)> SeedSyntheticDraftFamilyAsync(string codePrefix)
@@ -190,8 +193,17 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
     private async Task<long> NextSequenceAsync(OracleConnection connection, OracleTransaction transaction, string sequence) =>
         Convert.ToInt64(await ExecuteScalarAsync(connection, transaction, $"SELECT {sequence}.NEXTVAL FROM DUAL"), CultureInfo.InvariantCulture);
 
-    private async Task<long> CountByNameAsync(OracleConnection connection, string view, string column, string value) =>
-        Convert.ToInt64(await ScalarAsync(connection, $"SELECT COUNT(*) FROM {view} WHERE {column}=:value", ("value", value)), CultureInfo.InvariantCulture);
+    private async Task<long> CountByNameAsync(OracleConnection connection, string view, string column, string value, string? owner = null)
+    {
+        string ownerPredicate = owner is null ? "" : " AND OWNER=:owner";
+        return Convert.ToInt64(await ScalarAsync(
+            connection,
+            $"SELECT COUNT(*) FROM {view} WHERE {column}=:value{ownerPredicate}",
+            owner is null
+                ? new[] { ("value", (object)value) }
+                : new[] { ("value", (object)value), ("owner", owner.ToUpperInvariant()) }),
+            CultureInfo.InvariantCulture);
+    }
 
     private static async Task ExecuteAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
     {
