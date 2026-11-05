@@ -90,6 +90,27 @@ if [[ "${RL_MATRICES_SYNTHETIC_PURGE_REQUIRED:-}" == "true" ]]; then
     grep -Fq "$proof" <<<"$purge_output"
   done
   echo 'MATRICES_SYNTHETIC_PURGE_ORACLE_XE=PASS'
+  # A unique family is exported only after its Oracle fixture was removed.
+  # The browser test must exercise the real API + Angular (no route mocks).
+  purged_code="$(printf '%s\n' "$purge_output" | sed -nE 's/^[[:space:]]*GATE02_PURGED_FAMILY_CODE=(SYNTH_PURGE_[A-F0-9]{12})[[:space:]]*$/\1/p')"
+  purged_id="$(printf '%s\n' "$purge_output" | sed -nE 's/^[[:space:]]*GATE02_PURGED_FAMILY_ID=([0-9]+)[[:space:]]*$/\1/p')"
+  if ! [[ "$purged_code" =~ ^SYNTH_PURGE_[A-F0-9]{12}$ && "$purged_id" =~ ^[0-9]+$ ]]; then
+    echo 'GATE02: purge test did not provide an authenticated post-cleanup family identifier.' >&2
+    exit 1
+  fi
+  export RL_G02_PURGED_FAMILY_CODE="$purged_code"
+  export RL_G02_PURGED_FAMILY_ID="$purged_id"
+  pushd "$repo_root/frontend/rl-app" >/dev/null
+  if ! empty_output="$(npm run e2e -- e2e/g02-synthetic-family-empty-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+    popd >/dev/null
+    echo 'GATE02: real empty-family API/Angular E2E failed.' >&2
+    exit 1
+  fi
+  popd >/dev/null
+  grep -Eq '1 passed' <<<"$empty_output"
+  grep -Fq 'GATE02_POST_PURGE_FAMILY_API=PASS' <<<"$empty_output"
+  grep -Fq 'GATE02_POST_PURGE_FAMILY_ANGULAR=PASS' <<<"$empty_output"
+  echo 'GATE02_POST_PURGE_FAMILY_API_ANGULAR=PASS'
 fi
 
 export RL_H02_ORACLE_HISTORY_CERTIFICATION_REQUIRED=true

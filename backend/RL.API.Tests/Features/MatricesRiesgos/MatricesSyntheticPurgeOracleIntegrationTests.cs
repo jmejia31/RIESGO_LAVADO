@@ -117,6 +117,14 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
                 await DeleteOwnSyntheticGraphAsync(graph, requireRows: false);
             await CleanupOwnFixtureAsync(familyId, versionA, versionB, recreatedFamilyId, codePrefix);
         }
+
+        // Emit the real primary key/code only after fixture cleanup succeeded.
+        // The Playwright suite checks the actual post-purge API and Angular state.
+        Assert.True(familyId > 0);
+        Assert.Equal(0, await CountAsync("RL_MR_FAMILIAS_FORMULARIO", "FAM_ID", familyId));
+        Assert.Equal(0, await CountByCodeAsync("RL_MR_FAMILIAS_FORMULARIO", "FAM_CODIGO", codePrefix));
+        Console.WriteLine("GATE02_PURGED_FAMILY_CODE=" + codePrefix);
+        Console.WriteLine("GATE02_PURGED_FAMILY_ID=" + familyId.ToString(CultureInfo.InvariantCulture));
     }
 
     // The 11 tables below are present in the existing disposable browser fixture.
