@@ -1,5 +1,13 @@
 ## 2026-10-27 09:10 -06:00 - Ciclo de vida seguro de familias de formularios (COD)
 
+## 2026-11-05 11:19:15 -06:00 - Technical corrective execution (COD)
+
+- Branch/SHA: `desarrollo`, `97b126c43db4a95eeb5d8935d3924e486813ab3b`; local checkout fast-forwarded and remote matches.
+- Fresh checks: frontend lint PASS; frontend build PASS with existing SCSS/CommonJS warnings; repository structure, database scripts, documentation links and native-dialog validator PASS; backend non-Oracle filter 1078/1078 PASS.
+- Real E2E selection: four H08/TX12 tests listed and executed without opt-ins; 4 SKIP because disposable Angular/API + LOCAL_XE host is unavailable. Full backend run: 1089 passed, 2 skipped, 8 integration errors requiring `Database:Profile=LOCAL_XE`.
+- Tool block: `python` and `py -3` are unavailable, so `validate_agent_skills.py` could not run. No institutional Oracle, QA, production, main, migration 54, worker, queue or untracked files were modified.
+- Continuation: obtain an authorized disposable LOCAL_XE runner before claiming H08/TX12 or integration completion. Do not close the technical phase.
+
 ## 2026-11-04 - Publicación documental P0 n.º 2 y regla permanente de evidencias (COD)
 
 - **Baseline:** rama `desarrollo`, `INITIAL_HEAD=168ffa783942d11097a2ebaad5bba74f4454de9b`, igual a `origin/desarrollo`; se preservaron los untracked ajenos y se excluyeron del stage.
