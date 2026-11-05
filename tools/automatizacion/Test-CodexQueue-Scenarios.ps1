@@ -43,7 +43,48 @@ try {
   $scannerMatch=Join-Path $tmp 'rg-match.ps1'; Set-Content $scannerMatch "if(`$args[0] -eq '--version'){exit 0}; exit 0"; $probe=& powershell.exe -NoProfile -File $invoke -RepoRoot $root -RuntimePath $testRuntime -DryRun -SecurityProbe -SecretScannerPath $scannerMatch -ChangedPath 'docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt' 2>&1; if(($probe -join "`n") -notmatch 'SECRET_SCAN_MATCH'){throw 'secret match was not blocked'}; Write-Output 'SECRET_SCANNER_MATCH=PASS'
   $scannerClean=Join-Path $tmp 'rg-clean.ps1'; Set-Content $scannerClean "if(`$args[0] -eq '--version'){exit 0}; exit 1"; $probe=& powershell.exe -NoProfile -File $invoke -RepoRoot $root -RuntimePath $testRuntime -DryRun -SecretScannerPath $scannerClean -SecurityProbe -ChangedPath 'docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt' 2>&1; if(($probe -join "`n") -notmatch 'ALLOWED_PATH=ACCEPTED' -or ($probe -join "`n") -notmatch 'SECURITY_PROBE=PASS'){throw "authorized exact path did not pass: $($probe -join ' | ')"}; Write-Output 'AUTHORIZED_EXACT_PATH=PASS'
   foreach($badPath in @('docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txt.bak','docs/automatizacion/ISSUE24_ACCEPTANCE_PROOF.txtx','docs/automatizacion/../README.md')) { $probe=& powershell.exe -NoProfile -File $invoke -RepoRoot $root -RuntimePath $testRuntime -DryRun -SecretScannerPath $scannerClean -SecurityProbe -ChangedPath $badPath 2>&1; if(($probe -join "`n") -notmatch 'ALLOWED_PATH=REJECTED'){throw "unsafe path accepted: $badPath"} }; Write-Output 'ADVERSARIAL_ALLOWED_PATHS=PASS'
-  $source=Get-Content -Raw $invoke; if($source -notmatch 'RedirectStandardInput' -or $source -notmatch 'StandardInput.Write\(\$prompt\)' -or $source -match 'Start-Process -FilePath .codex. -ArgumentList \(\$codexArgs \+ \$prompt\)'){throw 'codex stdin contract transfer guard missing'}; $stdinExpected = '$codexArgs = @(''exec'',''--sandbox'',''workspace-write'',''-C'',$RepoRoot,''-'')'; if(-not $source.Contains($stdinExpected)){throw 'codex stdin prompt sentinel missing'}; Write-Output 'CODEX_STDIN_PROMPT_SENTINEL=PASS'; Write-Output 'CODEX_CONTRACT_INTEGRITY=PASS'
+  $source=Get-Content -Raw $invoke; if($source -notmatch 'RedirectStandardInput' -or $source -notmatch 'Write-CodexUtf8Stdin -Process \$proc -Prompt \$prompt' -or $source -match '\$proc\.StandardInput\.Write\(' -or $source -match 'Start-Process -FilePath .codex. -ArgumentList \(\$codexArgs \+ \$prompt\)'){throw 'codex stdin contract transfer guard missing'}; $stdinExpected = '$codexArgs = @(''exec'',''--sandbox'',''workspace-write'',''-C'',$RepoRoot,''-'')'; if(-not $source.Contains($stdinExpected)){throw 'codex stdin prompt sentinel missing'}; $utf8Helper=Get-Content -Raw (Join-Path $PSScriptRoot 'Write-CodexUtf8Stdin.ps1'); if($utf8Helper -notmatch 'UTF8Encoding' -or $utf8Helper -notmatch 'StandardInput.BaseStream' -or $utf8Helper -notmatch 'GetBytes\(\$Prompt\)'){throw 'strict utf8 stdin writer missing'}; Write-Output 'CODEX_STDIN_PROMPT_SENTINEL=PASS'; Write-Output 'CODEX_CONTRACT_INTEGRITY=PASS'
+  # Executable regression, not just a source scan: non-ASCII prompts must reach a
+  # child process byte-for-byte through the same process-stdin helper as Codex.
+  # This probe runs only powershell.exe in a temporary isolated child, never Codex.
+  . (Join-Path $PSScriptRoot 'Write-CodexUtf8Stdin.ps1')
+  $unicodePrompt = "Solicitud con revisi$([char]0x00F3)n, dise$([char]0x00F1)o y $([char]0x20AC)"
+  $receiverScript = @'
+$expected = "Solicitud con revisi$([char]0x00F3)n, dise$([char]0x00F1)o y $([char]0x20AC)"
+$memory = New-Object System.IO.MemoryStream
+[Console]::OpenStandardInput().CopyTo($memory)
+try { $received = ([System.Text.UTF8Encoding]::new($false, $true)).GetString($memory.ToArray()) } catch { exit 21 }
+if ($received -cne $expected) { exit 22 }
+Write-Output 'UTF8_PROMPT_RECEIVED=PASS'
+'@
+  $receiverEncoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($receiverScript))
+  $inputStartInfo = New-Object System.Diagnostics.ProcessStartInfo
+  $inputStartInfo.FileName = 'powershell.exe'
+  $inputStartInfo.Arguments = "-NoProfile -NonInteractive -EncodedCommand $receiverEncoded"
+  $inputStartInfo.UseShellExecute = $false
+  $inputStartInfo.CreateNoWindow = $true
+  $inputStartInfo.RedirectStandardInput = $true
+  $inputStartInfo.RedirectStandardOutput = $true
+  $inputStartInfo.RedirectStandardError = $true
+  $inputProcess = New-Object System.Diagnostics.Process
+  $inputProcess.StartInfo = $inputStartInfo
+  $inputStarted = $false
+  try {
+      $inputStarted = $inputProcess.Start()
+      if (-not $inputStarted) { throw 'utf8 probe process did not start' }
+      $stdoutAsync = $inputProcess.StandardOutput.ReadToEndAsync()
+      $stderrAsync = $inputProcess.StandardError.ReadToEndAsync()
+      Write-CodexUtf8Stdin -Process $inputProcess -Prompt $unicodePrompt
+      if (-not $inputProcess.WaitForExit(30000)) { throw 'utf8 probe child timeout' }
+      if ($inputProcess.ExitCode -ne 0 -or $stdoutAsync.Result -notmatch 'UTF8_PROMPT_RECEIVED=PASS') {
+          throw "utf8 probe child rejected bytes: exit=$($inputProcess.ExitCode)"
+      }
+      Write-Output 'CODEX_UTF8_PROCESS_STDIN=PASS'
+  } finally {
+      if ($inputStarted -and -not $inputProcess.HasExited) { try { $inputProcess.Kill() } catch {} }
+      $inputProcess.Dispose()
+  }
+
   $autonomousCases=@(
     @{id='OWNER_APPROVED_PROOF';risk='LOW';path='docs/automatizacion/ISSUE24_AUTO_ACCEPTANCE_PROOF.txt';allowed=$true},
     @{id='OWNER_APPROVED_FRONTEND';risk='LOW';path='frontend/rl-app/src/app/demo/demo.component.ts';allowed=$true},

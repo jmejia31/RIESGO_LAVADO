@@ -25,6 +25,7 @@ $isRepoQueue = [IO.Path]::GetFullPath($QueuePath) -eq [IO.Path]::GetFullPath((Jo
 if (-not $DryRun -and (-not $isRepoQueue -or $SkipRemoteSync -or $SecretScannerPath)) { Write-Output 'EXECUTION_BLOCKED=REAL_EXECUTION_REQUIRES_CANONICAL_GITHUB_QUEUE_AND_SCANNER'; Write-Output 'CODEX_INVOKED=NO'; exit 3 }
 if ($SimulateFailure -and (-not $DryRun -or $isRepoQueue)) { Write-Output 'EXECUTION_BLOCKED=SIMULATED_FAILURE_REQUIRES_DRYRUN_FIXTURE'; Write-Output 'CODEX_INVOKED=NO'; exit 3 }
 $validator = Join-Path $PSScriptRoot 'Test-CodexQueue.ps1'
+. (Join-Path $PSScriptRoot 'Write-CodexUtf8Stdin.ps1')
 $canonicalStatePath=[IO.Path]::GetFullPath((Join-Path $RepoRoot 'docs\automatizacion\ESTADO_TAREAS.json'))
 $canonicalRuntimePath=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'RiesgoLavado\CodexQueue'))
 $runtime = if ([string]::IsNullOrWhiteSpace($RuntimePath)) { $canonicalRuntimePath } else { [IO.Path]::GetFullPath($RuntimePath) }
@@ -309,7 +310,7 @@ try {
     $startInfo.Arguments=($codexArgs | ForEach-Object {& $quote $_}) -join ' '
     $proc=New-Object Diagnostics.Process; $proc.StartInfo=$startInfo
     if(-not $proc.Start()){Stop-Safely 'CODEX_START_FAILED'}
-    $proc.StandardInput.Write($prompt); $proc.StandardInput.Close()
+    Write-CodexUtf8Stdin -Process $proc -Prompt $prompt
     if (-not $proc.WaitForExit(1800000)) {
         try { $proc.Kill(); $proc.WaitForExit(3000) | Out-Null } catch {}
         Stop-Safely 'CODEX_TIMEOUT_30_MINUTES'
