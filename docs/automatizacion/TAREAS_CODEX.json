@@ -111,7 +111,11 @@
         "approved": true,
         "approved_by": "jmejia31",
         "context": "Autorizado explícitamente por el propietario jmejia31 en la conversación del 2026-11-04: 'PILAS CON ELLO PUES, DEJALES ESAS TAREAS A CODEX YAAAAA PARA QUE LAS RESUELVA RAPIDOOOO'. Este consentimiento cubre SOLO redacción documental estática LOW en las rutas exactas. No autoriza credenciales, uso de la base QA, cambios de workflows, pruebas conectadas, DDL, producción, certificación P0, main ni Bloque 10. Exige revisión humana posterior."
-      }
+      },
+      "observations": [
+        "2026-11-06, verificacion remota CHAT: el commit edd8328b389f63ba7c9cbac586590eb0c5cc792b incorpora los dos documentos dentro de allowed_paths (docs/qa/PLAN_PREPARACION_QA.md y docs/qa/CATALOGO_VARIABLES_QA.md), ambos declarados IMPLEMENTED_PENDING_REVIEW documental. Evidencia: https://github.com/jmejia31/RIESGO_LAVADO/commit/edd8328b389f63ba7c9cbac586590eb0c5cc792b",
+        "Quality Gates https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42266632011: completed/success para ese SHA. ESTADO_TAREAS.json permanece BLOCKED, intento 2, CODEX_FAILED; no se acredita reejecucion de Codex ni certificacion QA institucional. Mantener revision humana y compuertas QA_SECRET_ACCESS_GATE=BLOCKED, QA_MUTATIONS=DISABLED."
+      ]
     },
     {
       "id": "ISSUE25-MATRICES-PLAN-002",
@@ -148,7 +152,11 @@
         "approved": true,
         "approved_by": "jmejia31",
         "context": "Autorizado explícitamente por el propietario jmejia31 en la conversación del 2026-11-04: 'PILAS CON ELLO PUES, DEJALES ESAS TAREAS A CODEX YAAAAA PARA QUE LAS RESUELVA RAPIDOOOO'. Este consentimiento cubre SOLO redacción documental estática LOW en las rutas exactas. No autoriza credenciales, uso de la base QA, cambios de workflows, pruebas conectadas, DDL, producción, certificación P0, main ni Bloque 10. Exige revisión humana posterior."
-      }
+      },
+      "observations": [
+        "2026-11-06, verificacion remota CHAT: el commit edd8328b389f63ba7c9cbac586590eb0c5cc792b incorpora los dos documentos dentro de allowed_paths (docs/qa/PLAN_ESCENARIOS_MATRICES.md y docs/qa/MATRIZ_ALCANCES_QA.md), ambos declarados IMPLEMENTED_PENDING_REVIEW documental. Evidencia: https://github.com/jmejia31/RIESGO_LAVADO/commit/edd8328b389f63ba7c9cbac586590eb0c5cc792b",
+        "Quality Gates https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42266632011: completed/success para ese SHA. ESTADO_TAREAS.json permanece BLOCKED, intento 2, CODEX_FAILED; no se acredita reejecucion de Codex, conexion Oracle ni pruebas QA reales. Mantener revision humana, datos institucionales intocados y QA_MUTATIONS=DISABLED."
+      ]
     },
     {
       "id": "P0-H08-TX12-PLAN-001",
