@@ -80,6 +80,13 @@ long publishFamilyId = stamp + 940_000_000;
 long publishVersionId = stamp + 940_000_001;
 long dirtyPublishFamilyId = stamp + 950_000_000;
 long dirtyPublishVersionId = stamp + 950_000_001;
+long tx12AuditFamilyId = stamp + 960_000_000;
+long tx12AuditVersionId = stamp + 960_000_001;
+string tx12AuditFamilyCode = $"TX12_AUDIT_{stamp}";
+string tx12AuditDefinition = CreateDefinition($"TX12-AUDIT-{stamp}");
+string tx12AuditHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(tx12AuditDefinition))).ToLowerInvariant();
+string tx12AuditTriggerName = $"TRG_TX12_FAIL_{stamp}";
+bool tx12AuditFailureRequired = string.Equals(Environment.GetEnvironmentVariable("RL_P03_TX12_AUDIT_FAILURE_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase);
 string lifecycleFamilyCode = $"H08-FAMILIA-{stamp}";
 string deleteFamilyCode = $"P0_DELETE_{stamp}";
 string formulaFamilyCode = $"P0_FORMULA_{stamp}";
@@ -142,6 +149,12 @@ string dirtyPublishDefinition = CreateDefinition($"P0-DIRTY-PUBLISH-{stamp}");
 string dirtyPublishHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(dirtyPublishDefinition))).ToLowerInvariant();
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'P0 Dirty Publish', 'Fixture disposable P0',1,0,0,SYSDATE)", ("id", dirtyPublishFamilyId), ("code", dirtyPublishFamilyCode));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,'P0_DIRTY_PUBLISH_V1',1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", dirtyPublishVersionId), ("family", dirtyPublishFamilyId), ("json", dirtyPublishDefinition), ("hash", dirtyPublishHash), ("usr", userId));
+if (tx12AuditFailureRequired)
+{
+    await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'TX12 Audit Rollback', 'Fixture disposable TX12',1,0,0,SYSDATE)", ("id", tx12AuditFamilyId), ("code", tx12AuditFamilyCode));
+    await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,'TX12_AUDIT_V1',1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", tx12AuditVersionId), ("family", tx12AuditFamilyId), ("json", tx12AuditDefinition), ("hash", tx12AuditHash), ("usr", userId));
+    await ExecuteAsync(oracle, $"CREATE OR REPLACE TRIGGER {tx12AuditTriggerName} BEFORE INSERT ON RL_AUDITORIA FOR EACH ROW WHEN (NEW.AUD_TABLA = 'RL_MR_VERSIONES_FORMULARIO' AND NEW.AUD_REGISTRO_ID = '{tx12AuditVersionId}' AND NEW.AUD_ACCION = 'UPDATE') BEGIN RAISE_APPLICATION_ERROR(-20991, 'TX12 disposable audit failure'); END;");
+}
 await oracle.CloseAsync();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -222,6 +235,49 @@ app.MapGet("/__e2e/version-delete-fixture", () => Results.Ok(new
 }));
 app.MapGet("/__e2e/version-publish-fixture", () => Results.Ok(new { familyId = publishFamilyId, familyCode = publishFamilyCode, versionId = publishVersionId }));
 app.MapGet("/__e2e/version-publish-dirty-fixture", () => Results.Ok(new { familyId = dirtyPublishFamilyId, familyCode = dirtyPublishFamilyCode, versionId = dirtyPublishVersionId }));
+app.MapGet("/__e2e/tx12-audit-fixture", () =>
+{
+    if (!tx12AuditFailureRequired) return Results.NotFound();
+    return Results.Ok(new { familyId = tx12AuditFamilyId, familyCode = tx12AuditFamilyCode, versionId = tx12AuditVersionId, triggerName = tx12AuditTriggerName });
+});
+app.MapGet("/__e2e/tx12-audit-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    if (!tx12AuditFailureRequired) return Results.NotFound();
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+    await using var command = new OracleCommand(@"
+        SELECT VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_ESTADO,VER_VIGENTE,VER_JSON,VER_HASH,
+               (SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id)
+          FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", connection) { BindByName = true };
+    command.Parameters.Add(new OracleParameter("id", tx12AuditVersionId));
+    await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+    if (!await reader.ReadAsync(cancellationToken)) return Results.NotFound();
+    long snapshotVersionId = reader.GetInt64(0);
+    long snapshotFamilyId = reader.GetInt64(1);
+    string snapshotCode = reader.GetString(2);
+    string snapshotState = reader.GetString(3);
+    int snapshotVigency = reader.GetInt32(4);
+    string snapshotJson = reader.GetOracleClob(5).Value;
+    string snapshotHash = reader.GetString(6);
+    int snapshotAuditCount = reader.GetInt32(7);
+    await reader.DisposeAsync();
+    await using var triggerCommand = new OracleCommand("SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME=:name AND STATUS='ENABLED'", connection) { BindByName = true };
+    triggerCommand.Parameters.Add(new OracleParameter("name", tx12AuditTriggerName.ToUpperInvariant()));
+    return Results.Ok(new
+    {
+        versionId = snapshotVersionId, familyId = snapshotFamilyId, code = snapshotCode,
+        state = snapshotState, vigency = snapshotVigency, json = snapshotJson,
+        hash = snapshotHash, auditCount = snapshotAuditCount, triggerEnabled = Convert.ToInt32(await triggerCommand.ExecuteScalarAsync(cancellationToken)) == 1
+    });
+});
+app.MapPost("/__e2e/tx12-audit-disable", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    if (!tx12AuditFailureRequired) return Results.NotFound();
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+    await ExecuteAsync(connection, $"DROP TRIGGER {tx12AuditTriggerName}");
+    return Results.Ok(new { removed = true, triggerName = tx12AuditTriggerName });
+});
 app.MapGet("/__e2e/version-publish-snapshot", async (OracleDbContext db, CancellationToken cancellationToken) =>
 {
     await using var connection = db.CreateConnection();

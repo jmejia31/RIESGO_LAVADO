@@ -10282,3 +10282,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Integración CI agregada en `.github/workflows/quality-gates.yml` con `RL_MATRICES_SYNTHETIC_PURGE_REQUIRED=true`, `Database__Profile=LOCAL_XE` y credencial efímera del servicio Oracle XE. No se usa Oracle institucional.
 - Compilación de la prueba: PASS. Ejecución local: FALLA CERRADO por ausencia de `Database:Profile=LOCAL_XE`/Oracle XE; no se reporta como ejecución Oracle. La ejecución obligatoria queda en el Quality Gate CI desechable.
 - No se modificaron `main`, producción, migración 54, PRUEBA_FORMULARIO, watcher ni tareas autónomas.
+
+## 2026-11-05 20:50 -06:00 - P03 TX12 frontend: prueba negativa aislada (COD)
+
+- Base: `desarrollo@3240b6574f39ef200b91bc373f61d13b43a45472`; se preservaron la modificación ajena de `ESTADO_COLABORACION.md` y todos los untracked.
+- Cambios propios preparados: fixture TX12 y trigger temporal exclusivamente en `tools/Block7OracleE2EHost/Program.cs`, ejecución aislada en `tools/run_block7_oracle_e2e.sh` y `frontend/rl-app/e2e/tx12-audit-rollback-real.spec.ts`.
+- El trigger se activa únicamente con `RL_P03_TX12_AUDIT_FAILURE_REQUIRED=true`, filtra la versión sintética y genera `ORA-20991` desde Oracle XE descartable; el runner lo elimina antes de continuar y falla cerrado si no puede limpiarlo.
+- Verificado localmente: host .NET compila sin errores; ESLint del E2E PASS; Playwright descubre exactamente 1 prueba; sintaxis del runner validada tras normalizar CRLF; `git diff --check` PASS. Oracle XE disposable y el E2E negativo completo quedan pendientes del Quality Gate remoto.
+- No se modificaron backend productivo, migraciones, Oracle institucional, producción, `main`, watcher ni cola. P03 permanece `BLOCKED` hasta obtener el resultado real del E2E TX12 y el Quality Gate del nuevo SHA.

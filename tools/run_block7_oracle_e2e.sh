@@ -42,9 +42,14 @@ export RL_BLOCK7_REAL_E2E_REQUIRED=true
 export RL_BLOCK9_REAL_E2E_REQUIRED=true
 export RL_BLOCK12_RISKS_UI_ORACLE_REQUIRED=true
 export RL_BLOCK12_FULL_CHAIN_UI_REQUIRED=true
+export RL_P03_TX12_AUDIT_FAILURE_REQUIRED=true
 dotnet "$api_dll" >"$api_log" 2>&1 &
 api_pid=$!
+tx12_disabled=false
 cleanup() {
+  if [[ "${RL_P03_TX12_AUDIT_FAILURE_REQUIRED:-}" == "true" && "$tx12_disabled" != "true" ]]; then
+    curl --silent --show-error --fail --request POST http://127.0.0.1:5043/__e2e/tx12-audit-disable >/dev/null 2>&1 || true
+  fi
   kill "$api_pid" 2>/dev/null || true
   wait "$api_pid" 2>/dev/null || true
 }
@@ -67,6 +72,36 @@ if [[ "$ready" != "true" ]]; then
   exit 1
 fi
 echo 'BLOCK7_REAL_API_ORACLE_READY=PASS'
+
+pushd "$repo_root/frontend/rl-app" >/dev/null
+if ! tx12_output="$(RL_P03_TX12_AUDIT_FAILURE_REQUIRED=true npm run e2e -- e2e/tx12-audit-rollback-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+  popd >/dev/null
+  echo 'TX12 Oracle API host diagnostics (secrets omitted):' >&2
+  sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 160 >&2
+  exit 1
+fi
+popd >/dev/null
+grep -Eq '1 passed' <<<"$tx12_output"
+for marker in \
+  TX12_REAL_ANGULAR_INTERACTION=PASS \
+  TX12_REAL_HTTP_ERROR=PASS \
+  TX12_REAL_ORACLE_AUDIT_FAILURE=PASS \
+  TX12_JSON_ROLLBACK=PASS \
+  TX12_HASH_ROLLBACK=PASS \
+  TX12_STATE_ROLLBACK=PASS \
+  TX12_VIGENCY_ROLLBACK=PASS \
+  TX12_AUDIT_DELTA=0 \
+  TX12_PARTIAL_COMMIT=0 \
+  TX12_ANGULAR_ERROR_VISIBLE=PASS \
+  TX12_FALSE_SUCCESS_MESSAGE=NO \
+  TX12_FRONTEND_NEGATIVE_E2E=PASS; do
+  grep -Fq "$marker" <<<"$tx12_output"
+done
+tx12_disable_output="$(curl --silent --show-error --fail --request POST http://127.0.0.1:5043/__e2e/tx12-audit-disable)"
+grep -Fq '"removed":true' <<<"$tx12_disable_output"
+tx12_disabled=true
+echo 'P03_TX12_FRONTEND_NEGATIVE_E2E=PASS'
+echo 'P03_TX12_TEMPORARY_FAULT_REMOVED=YES'
 
 # Exercise the synthetic deletion contract while the disposable XE fixture is
 # initialized and before resource-intensive browser suites reuse this service.
