@@ -24,6 +24,9 @@ public class AuthController : ControllerBase
 
     private const string RefreshCookieName = "RL-RefreshToken";
     private const string RefreshCookiePath = "/api/auth";
+    private const string AntiforgeryRequestCookieName = "XSRF-TOKEN";
+    private const string AntiforgeryRequestCookiePath = "/";
+    private const string AntiforgeryCookieName = "RL-Antiforgery";
 
     public AuthController(
         IAuthService authService,
@@ -319,7 +322,14 @@ public class AuthController : ControllerBase
 
     private void EmitSessionCookies(LoginResponseDto response)
     {
-        _antiforgery?.GetAndStoreTokens(HttpContext);
+        var tokens = _antiforgery?.GetAndStoreTokens(HttpContext);
+        if (!string.IsNullOrWhiteSpace(tokens?.RequestToken))
+        {
+            Response.Cookies.Append(
+                AntiforgeryRequestCookieName,
+                tokens.RequestToken,
+                AntiforgeryRequestCookieOptions());
+        }
         EmitRefreshCookie(response);
         Response.Headers.CacheControl = "no-store";
         Response.Headers.Pragma = "no-cache";
@@ -327,19 +337,26 @@ public class AuthController : ControllerBase
 
     private void EmitRefreshCookie(LoginResponseDto response)
     {
-        var lifetime = response.ExpiresAt - DateTime.UtcNow;
+        var lifetime = response.RefreshTokenExpiresAt - DateTime.UtcNow;
         Response.Cookies.Append(RefreshCookieName, response.RefreshToken, RefreshCookieOptions(
-            lifetime > TimeSpan.Zero ? lifetime : TimeSpan.FromDays(1)));
+            lifetime > TimeSpan.Zero ? lifetime : TimeSpan.Zero));
     }
 
     private void ClearSessionCookies()
     {
         Response.Cookies.Delete(RefreshCookieName, RefreshCookieOptions(TimeSpan.Zero));
-        Response.Cookies.Delete("XSRF-TOKEN", new CookieOptions
+        Response.Cookies.Delete(AntiforgeryRequestCookieName, new CookieOptions
+        {
+            Path = AntiforgeryRequestCookiePath,
+            Secure = RefreshCookieSecure,
+            SameSite = SameSiteMode.Strict
+        });
+        Response.Cookies.Delete(AntiforgeryCookieName, new CookieOptions
         {
             Path = RefreshCookiePath,
             Secure = RefreshCookieSecure,
-            SameSite = SameSiteMode.Strict
+            SameSite = SameSiteMode.Strict,
+            HttpOnly = true
         });
         Response.Headers.CacheControl = "no-store";
         Response.Headers.Pragma = "no-cache";
@@ -353,6 +370,16 @@ public class AuthController : ControllerBase
         Path = RefreshCookiePath,
         IsEssential = true,
         Expires = lifetime == TimeSpan.Zero ? DateTimeOffset.UnixEpoch : DateTimeOffset.UtcNow.Add(lifetime)
+    };
+
+    private CookieOptions AntiforgeryRequestCookieOptions() => new()
+    {
+        HttpOnly = false,
+        Secure = RefreshCookieSecure,
+        SameSite = SameSiteMode.Strict,
+        Path = AntiforgeryRequestCookiePath,
+        IsEssential = true,
+        Expires = DateTimeOffset.UtcNow.AddHours(1)
     };
 
     private bool RefreshCookieSecure => _environment is null || !_environment.IsDevelopment()

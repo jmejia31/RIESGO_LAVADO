@@ -10332,6 +10332,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 ## 2026-11-06 10:10 -06:00 - P05 H11-B Quality Gate certificado (COD)
 
+## 2026-11-06 10:53 -06:00 - P05 H11-B hotfix CSRF y vigencia refresh (COD)
+
+- Base verificada: `desarrollo@dd624456de69a4b878b7e02aad3a74c192a7e4f0`; `origin/desarrollo` coincidía al iniciar. La corrección se preparó en el worktree aislado `C:\RIESGO_LAVADO_H11B2` para preservar el checkout compartido y los untracked ajenos.
+- Causa confirmada: `XSRF-TOKEN` era la cookie interna de ASP.NET antiforgery, `HttpOnly=false` y `Path=/api/auth`; Angular leía ese valor desde `document.cookie`, no el request token, y no podía verlo desde rutas como `/login`. La cookie de refresh calculaba su expiración con `LoginResponseDto.ExpiresAt`, que corresponde al access token.
+- Corrección propia: `RL-Antiforgery` interno `HttpOnly=true` y `Path=/api/auth`; emisión separada del request token `XSRF-TOKEN`, `HttpOnly=false`, `SameSite=Strict`, `Path=/`; `LoginResponseDto.RefreshTokenExpiresAt` usa `Jwt:RefreshTokenExpirationDays`, la misma política usada al persistir/rotar el refresh. No se modificaron H11-A, autorización, rotación, replay rejection, logout, Oracle, migraciones ni producción.
+- Pruebas ejecutadas: backend Identidad `13/13 PASS`; Angular Auth `12/12 PASS`; Angular suite `957/957 PASS`; `npm run lint=PASS`; `npm run build=PASS` con warnings preexistentes de presupuesto SCSS/CommonJS; `git diff --check=PASS`.
+- Pendiente: Playwright de autenticación contra Angular/API real con usuario sintético y entorno permitido; no se ejecutó Oracle XE ni Oracle institucional. No presentar esa prueba como integración real hasta disponer del entorno.
+- Estado: cambios preparados para commit/push selectivo; `P05_H11B_STATUS=IMPLEMENTED_PENDING_QUALITY_GATE`; `P06_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`. Continuación: publicar, verificar SHA remoto y leer el nuevo Quality Gate; no reutilizar `42249885548` para certificar este código.
+
 - El commit publicado `107c28b1b64b16214cf8a68b3d99d0e06e30f5ca` mantuvo `origin/desarrollo` sincronizado y obtuvo `42246540026=SUCCESS`, `attempt=1`, con SHA exacto; ambos jobs finalizaron SUCCESS.
 - El job integral confirmó validadores, build, ESLint, Oracle XE descartable, quality gates de repositorio, reconciliación de 59 identidades, transiciones/auditoría, recuperación durable, cálculos, contenedores y artefactos de navegador.
 - `P05_H11B_CERTIFIED=YES` para el SHA `107c28b1b64b16214cf8a68b3d99d0e06e30f5ca`. No se modificaron producción, `main`, Oracle institucional, QA, migración 54, watcher, cola ni `PRUEBA_FORMULARIO`.

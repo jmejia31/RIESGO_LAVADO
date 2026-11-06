@@ -297,10 +297,11 @@ public class AuthService : IAuthService
     {
         var (accessToken, expires) = CrearAccessToken(usuario);
         string refreshToken = GenerarRefreshToken();
+        var refreshExpires = DateTime.UtcNow.AddDays(ObtenerDiasExpiracionRefresh());
 
         await _usuarioRepo.GuardarRefreshTokenAsync(usuario.UsrId, refreshToken, ObtenerDiasExpiracionRefresh(), ip);
 
-        return CrearLoginResponse(usuario, accessToken, refreshToken, expires);
+        return CrearLoginResponse(usuario, accessToken, refreshToken, expires, refreshExpires);
     }
 
     private (string AccessToken, DateTime ExpiresAt) CrearAccessToken(Usuario usuario)
@@ -346,12 +347,18 @@ public class AuthService : IAuthService
         NumberStyles.Float,
         CultureInfo.InvariantCulture);
 
-    private static LoginResponseDto CrearLoginResponse(Usuario usuario, string accessToken, string refreshToken, DateTime expires) =>
+    private static LoginResponseDto CrearLoginResponse(
+        Usuario usuario,
+        string accessToken,
+        string refreshToken,
+        DateTime expires,
+        DateTime refreshTokenExpiresAt) =>
         new()
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiresAt = expires,
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
             Usuario = MapToDto(usuario)
         };
 
@@ -373,6 +380,7 @@ public class AuthService : IAuthService
 
         var (accessToken, expires) = CrearAccessToken(usuario);
         var refreshTokenNuevo = GenerarRefreshToken();
+        var refreshExpires = DateTime.UtcNow.AddDays(ObtenerDiasExpiracionRefresh());
         var rotado = await _usuarioRepo.RotarRefreshTokenAsync(
             usrId.Value,
             refreshToken,
@@ -381,7 +389,7 @@ public class AuthService : IAuthService
             ip);
 
         return rotado
-            ? CrearLoginResponse(usuario, accessToken, refreshTokenNuevo, expires)
+            ? CrearLoginResponse(usuario, accessToken, refreshTokenNuevo, expires, refreshExpires)
             : null;
     }
 

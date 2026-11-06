@@ -54,8 +54,10 @@ builder.Services.AddControllers()
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-XSRF-TOKEN";
-    options.Cookie.Name = "XSRF-TOKEN";
-    options.Cookie.HttpOnly = false;
+    // ASP.NET Core conserva el cookie criptográfico separado del request token
+    // que Angular lee para enviarlo en el encabezado X-XSRF-TOKEN.
+    options.Cookie.Name = "RL-Antiforgery";
+    options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Strict;
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
         ? CookieSecurePolicy.SameAsRequest

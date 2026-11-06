@@ -3752,6 +3752,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia local: backend Identidad `16 PASS, 1 SKIP`; Angular `957/957 PASS`; lint PASS; build PASS con warnings de presupuesto preexistentes; `git diff --check=PASS`. No Playwright de autenticación real ni Oracle XE local.
 - `QUALITY_GATE_PREVIOUS=42240716603`; `QUALITY_GATE_PREVIOUS_STATUS=SUCCESS`; `QUALITY_GATE_FINAL=PENDING_PUBLICATION`; `P05_H11B_STATUS=IMPLEMENTED_PENDING_QUALITY_GATE`.
 - `P05_H11A_STATUS=DOCUMENTED_DECISION_PENDING`; `P06_STATUS=NOT_STARTED`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`; `MAIN_MODIFIED=NO`; `MIGRATION_54_MODIFIED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente - P05 H11-B hotfix CSRF y vigencia refresh (COD) - 2026-11-06
+
+- `SOURCE_SHA=dd624456de69a4b878b7e02aad3a74c192a7e4f0`; corrección preparada en worktree aislado, sin alterar el checkout compartido ni archivos ajenos.
+- `CSRF_ROOT_CAUSE=INTERNAL_COOKIE_USED_AS_REQUEST_TOKEN_AND_PATH_SCOPED`; `CSRF_CORRECTED=SEPARATE_HTTPONLY_INTERNAL_COOKIE_AND_JS_REQUEST_TOKEN_PATH_ROOT`.
+- `REFRESH_COOKIE_EXPIRATION_ROOT_CAUSE=ACCESS_TOKEN_EXPIRY_REUSED`; `REFRESH_COOKIE_EXPIRATION_CORRECTED=REFRESH_POLICY_TIMESTAMP_FROM_AUTH_SERVICE`.
+- `REFRESH_TOKEN_COOKIE_HTTPONLY=PASS`; `REFRESH_TOKEN_NOT_IN_JSON=PASS`; `CSRF_REQUEST_TOKEN_DELIVERED=PASS`; `CSRF_INTERNAL_COOKIE_PROTECTED=PASS`; `REFRESH_COOKIE_LIFETIME_MATCHES_REFRESH_POLICY=PASS`; `REFRESH_COOKIE_NOT_LIMITED_BY_ACCESS_TOKEN=PASS`.
+- Evidencia fresca: backend Identidad `13/13 PASS`; Angular Auth `12/12 PASS`; suite Angular `957/957 PASS`; lint/build PASS con warnings preexistentes; `git diff --check=PASS`.
+- `PLAYWRIGHT_REAL_AUTH_E2E=PENDING_ALLOWED_ENVIRONMENT`; no se ejecutó Oracle XE ni Oracle institucional. No se declara integración real hasta obtener un API/Angular permitido con usuario sintético.
+- Estado: `P05_H11B_STATUS=IMPLEMENTED_PENDING_QUALITY_GATE`; `QUALITY_GATE_PREVIOUS=42249885548` no certifica este nuevo código; `P06_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto de continuación: commit/push selectivo de los archivos de código/prueba y este handoff, verificar `origin/desarrollo`, ejecutar el Quality Gate del SHA nuevo y registrar su resultado.
 - Punto de continuación: publicar selectivamente el commit de código y este estado, confirmar `origin/desarrollo`, esperar el nuevo gate y no declarar certificación antes de su SUCCESS.
 
 ## Estado vigente - P05 H11-B certificado técnicamente (COD) - 2026-11-06

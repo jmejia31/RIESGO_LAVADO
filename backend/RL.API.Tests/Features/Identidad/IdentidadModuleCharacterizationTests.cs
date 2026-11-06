@@ -4,8 +4,10 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using RL.API.Features.Auditoria.Contracts;
@@ -82,8 +84,10 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.Equal("2,5,9", token.Claims.Single(c => c.Type == "modulos").Value);
         Assert.Equal("1", token.Claims.Single(c => c.Type == "debe_cambiar_pass").Value);
         Assert.InRange(response.ExpiresAt, inicio.AddMinutes(29), inicio.AddMinutes(31));
+        Assert.InRange(response.RefreshTokenExpiresAt, inicio.AddDays(4.9), inicio.AddDays(5.1));
         Assert.Equal(response.RefreshToken, repository.RefreshTokenGuardado);
         Assert.Equal(5d, repository.RefreshTokenExpirationDays);
+        Assert.InRange(response.RefreshTokenExpiresAt, DateTime.UtcNow.AddDays(4.9), DateTime.UtcNow.AddDays(5.1));
         Assert.Contains(auditoria.Registros, item => item.Accion == "LOGIN" && item.DatosNuevos!.Contains("EXITOSO", StringComparison.Ordinal));
     }
 
@@ -143,6 +147,46 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("samesite=strict", setCookie, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("domain=", setCookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task AuthController_Login_EmiteRequestTokenAngularSeparadoYConPathRaiz()
+    {
+        var controller = CrearController(
+            new AuthServiceFake { LoginResponse = CrearLoginResponse("access", "refresh") },
+            new ActivoDirectorioServiceFake(),
+            new AntiforgeryFake());
+
+        await controller.Login(new LoginRequestDto { Email = "ana@ihss.hn", Password = "ClaveSegura123!" });
+
+        var cookies = controller.Response.Headers.SetCookie.ToArray();
+        var xsrf = cookies.Single(value => value!.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal));
+        var internalCookie = cookies.Single(value => value!.StartsWith("RL-Antiforgery=", StringComparison.Ordinal));
+        Assert.Contains("XSRF-TOKEN=request-token", xsrf, StringComparison.Ordinal);
+        Assert.Contains("path=/", xsrf, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("httponly", xsrf, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("httponly", internalCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("path=/api/auth", internalCookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task AuthController_Login_RefreshCookieUsaVigenciaRefreshYNoAccessToken()
+    {
+        var response = CrearLoginResponse("access", "refresh");
+        response.ExpiresAt = DateTime.UtcNow.AddMinutes(30);
+        response.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(5);
+        var controller = CrearController(
+            new AuthServiceFake { LoginResponse = response },
+            new ActivoDirectorioServiceFake());
+
+        await controller.Login(new LoginRequestDto { Email = "ana@ihss.hn", Password = "ClaveSegura123!" });
+
+        var refreshCookie = controller.Response.Headers.SetCookie
+            .Single(value => value!.StartsWith("RL-RefreshToken=", StringComparison.Ordinal));
+        var parsed = SetCookieHeaderValue.Parse(refreshCookie!);
+        Assert.True(parsed.Expires.HasValue);
+        Assert.InRange(parsed.Expires!.Value, DateTimeOffset.UtcNow.AddDays(4.9), DateTimeOffset.UtcNow.AddDays(5.1));
+        Assert.True(parsed.Expires > DateTimeOffset.UtcNow.AddHours(1));
     }
 
     [Fact]
@@ -254,9 +298,12 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.Null(repository.RefreshTokenGuardado);
     }
 
-    private static AuthController CrearController(IAuthService auth, IActivoDirectorioService ad)
+    private static AuthController CrearController(
+        IAuthService auth,
+        IActivoDirectorioService ad,
+        IAntiforgery? antiforgery = null)
     {
-        var controller = new AuthController(auth, ad, NullLogger<AuthController>.Instance)
+        var controller = new AuthController(auth, ad, NullLogger<AuthController>.Instance, antiforgery)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -268,8 +315,31 @@ public sealed class IdentidadModuleCharacterizationTests
         AccessToken = accessToken,
         RefreshToken = refreshToken,
         ExpiresAt = DateTime.UtcNow.AddDays(1),
+        RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(5),
         Usuario = new UsuarioInfoDto { Id = 27, Nombre = "Ana", Apellido = "Perez", Email = "ana@ihss.hn" }
     };
+
+    private sealed class AntiforgeryFake : IAntiforgery
+    {
+        public AntiforgeryTokenSet GetAndStoreTokens(HttpContext httpContext)
+        {
+            httpContext.Response.Cookies.Append("RL-Antiforgery", "cookie-token", new CookieOptions
+            {
+                HttpOnly = true,
+                Path = "/api/auth",
+                SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict,
+                Secure = true
+            });
+            return new("request-token", "cookie-token", "__RequestVerificationToken", "X-XSRF-TOKEN");
+        }
+
+        public AntiforgeryTokenSet GetTokens(HttpContext httpContext) =>
+            new("request-token", "cookie-token", "__RequestVerificationToken", "X-XSRF-TOKEN");
+
+        public Task<bool> IsRequestValidAsync(HttpContext httpContext) => Task.FromResult(true);
+        public Task ValidateRequestAsync(HttpContext httpContext) => Task.CompletedTask;
+        public void SetCookieTokenAndHeader(HttpContext httpContext) { }
+    }
 
     private static AuthService CrearServicio(
         IUsuarioRepository usuarios,

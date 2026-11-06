@@ -18,6 +18,8 @@ public class LoginResponseDto
     public string AccessToken { get; set; } = string.Empty;
     public string RefreshToken { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
+    // Vigencia persistida del refresh token; no se expone en la respuesta pública.
+    public DateTime RefreshTokenExpiresAt { get; set; }
     public UsuarioInfoDto Usuario { get; set; } = null!;
 }
 
