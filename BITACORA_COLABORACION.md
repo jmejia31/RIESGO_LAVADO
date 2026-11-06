@@ -1,3 +1,10 @@
+## 2026-11-06 — P06: decisión técnica para secreto QA y revisión de estados (CHAT)
+
+- Fuente remota verificada `501a56e2d1128b9e10f3a753f399c55a8d351a48`; documentación P06 `edd8328b` con Quality Gate integral `42266632011=SUCCESS`, intento 1, SHA exacto; control posterior `42269995632=SUCCESS` con job integral `SKIPPED`.
+- Rama `desarrollo` sin protección efectiva; rulesets no disponibles para esta cuenta/plan. Se diseñó, sin ejecutar, un modelo de QA con ejecutor manual aislado y credenciales fuera de GitHub/Codex; requiere aprobación y provisión institucional antes de usarlo.
+- Revisión de cuatro documentos P06 `PASS_WITH_LIMITATIONS`; estado de tareas `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002` sigue `BLOCKED` intento 2, aunque entregables llegaron fuera del ejecutor. No se cambian estados de la cola ni se oculta historial.
+- Nuevos documentos: `docs/qa/DECISION_SEGURIDAD_EJECUCION_QA.md`, `docs/qa/CONTROL_ACEPTACION_SEGURIDAD_QA.md`, `docs/qa/RECONCILIACION_DOCUMENTAL_P06.md`. Ninguna conexión QA/Oracle, secreto, código funcional, main, producción, watcher, DDL ni mutación. `QA_SECRET_ACCESS_GATE=BLOCKED`, `BLOCK10_AUTHORIZED=NO`.
+
 ## 2026-11-06 11:43 -06:00 — Firma independiente CI P05 H11-B y handoff P06 (CHAT)
 
 - Se verificó en GitHub el source `499974072170f5790635c878db60e1f2964cc866` en `origin/desarrollo`; Quality Gate `42261424014` `SUCCESS`, intento 1 y SHA exacto; jobs `128042048471` y `128042121794` `SUCCESS`.
