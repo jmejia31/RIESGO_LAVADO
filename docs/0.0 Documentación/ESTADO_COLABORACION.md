@@ -2,6 +2,30 @@
 
 ## Archivado reversible y purga fail-closed
 
+## Current state - Technical corrective execution (COD) - 2026-11-05
+
+- SHA `97b126c43db4a95eeb5d8935d3924e486813ab3b`; local and remote synchronized after fast-forward.
+- Fresh PASS: frontend lint, frontend build (existing warnings), repository structure, database scripts, documentation links, native-dialog validator 6/6, backend non-Oracle tests 1078/1078.
+- H08/TX12 real E2E: 4 tests listed, 4 SKIP without the required disposable LOCAL_XE host and opt-ins. Full backend: 1089 passed, 2 skipped, 8 LOCAL_XE integration errors.
+- `validate_agent_skills.py` BLOCKED_EXTERNAL because neither `python` nor `py -3` is installed. Worker and PAUSE/STOP real controls were preserved; no additional autonomous task ran.
+- Next step: authorized disposable LOCAL_XE runner, then execute H08/TX12 and remaining integration contracts. Human acceptance remains pending; BLOCK10 remains unauthorized.
+
+## Current state - QA preflight implementation (COD) - 2026-11-05
+
+- Added `.github/workflows/qa-config-preflight.yml` and `tools/validate_qa_config_preflight.ps1` on `desarrollo`, based on `ed688f96b9522892127d0c9752ef428d7a5cd6f4`.
+- Workflow is manual-only, least-privilege, time-bounded, concurrency-protected and fail-closed. It does not connect to Oracle, use institutional credentials, enable autonomous mutations or change the watcher PAUSE state.
+- Fresh local evidence: QA workflow contract PASS; 95 focused backend tests PASS; repository structure, database scripts, documentation links and `git diff --check` PASS.
+- Frontend lint/build are pending locally because `node_modules` is incomplete after an `EBUSY` during `npm ci`; CI execution is required for final confirmation. Oracle XE disposable execution is also pending in CI.
+- The pre-existing worktree modification in this state file and unrelated untracked files remain preserved and are not included in the selective commit.
+- Next point: stage only the new workflow, validator and bitácora, publish to `origin/desarrollo`, then verify the new Quality Gate. Human acceptance and BLOCK10 remain unauthorized.
+
+## Current state - Synthetic Matrices purge test (COD) - 2026-11-05
+
+- Implemented real Oracle integration test `MatricesSyntheticPurgeOracleIntegrationTests.SyntheticPurge_PreservaAislamientoRollbackIntegridadYRecreacion`.
+- It is fail-closed, requires explicit `RL_MATRICES_SYNTHETIC_PURGE_REQUIRED=true`, validates disposable XE identity, uses synthetic Matrices IDs, preserves protected snapshots, tests rollback and recreates a synthetic family.
+- Added mandatory execution to `.github/workflows/quality-gates.yml` with disposable Oracle XE only.
+- Local execution correctly failed closed because Windows has no `Database:Profile=LOCAL_XE`; CI execution remains required for the acceptance indicators.
+
 ## Cierre CI de correccion quirurgica - 2026-10-27 12:40 -06:00
 
 - `POINT_4_TESTS_CI_STATUS=PASS`: Quality Gates `40540713472` termino `completed/success` sobre `c052f044377dd6f3e6d3961d2f1fa92016b7c8c1`; incluyo validadores, build, pruebas backend, cobertura frontend, E2E Oracle XE y contenedores.
@@ -3692,3 +3716,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Automatización:** `Test-CodexQueue-Scenarios.ps1` corregido en `f5fef18856a37fbb94adec4193b58f3bf80bef8e`; 39 escenarios PASS. La prueba autónoma real de `P0-H08-TX12-PLAN-001` terminó en intento 2 como `IMPLEMENTED_PENDING_REVIEW`, sin autoaprobación y con rutas exactas.
 - **Estado de cola:** `ISSUE24-SYNTHETIC-001` y `ISSUE24-AUTO-ACCEPTANCE-002` permanecen `IMPLEMENTED_PENDING_REVIEW`; `ISSUE25-MATRICES-PLAN-002` y `ISSUE25-QA-PLAN-001` permanecen `BLOCKED` en intento 2; `P0-H08-TX12-PLAN-001` queda pendiente de revisión humana. `PAUSE=ACTIVE`, `STOP=INACTIVE`.
 - **Protecciones:** no se ejecutó limpieza institucional, no se alteraron datos de otros módulos, no se tocó Oracle institucional, QA, producción, `main`, migración 54 ni `PRUEBA_FORMULARIO`. `H08_MANUAL_ACCEPTANCE=PENDING_USER_EXECUTION`, `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente - P04 auditoría funcional de nueve módulos (COD) - 2026-11-06
+
+- `SOURCE_SHA=07293984d3655e6cf6ab685d1821fe1f795a8729`; rama `desarrollo`; la auditoría no modificó código funcional.
+- `P04_CANONICAL_MODULES=9`; `P04_MODULES_REVIEWED=9/9`; matriz única publicada en `docs/0.0 Documentación/P04_AUDITORIA_FUNCIONAL_NUEVE_MODULOS.md`.
+- Evidencia fresca: backend focalizado `71/71 PASS`; Angular `46/46 PASS`; E2E focalizado `18/18 PASS`; contratos de límites `2/2 PASS`; validadores de estructura, DB, documentación y `git diff --check` PASS.
+- `P04_CONFIRMED_FUNCTIONAL_BLOCKERS_UNRESOLVED=0`; `P04_COVERAGE_LIMITATIONS=DOCUMENTED`. No se ejecutó Oracle institucional, no se usaron datos protegidos y no se repitieron campañas P01–P03.
+- Estado previo a publicación: `P04_FUNCTIONAL_AUDIT=PASS`; `P05=NOT_STARTED`; `REMOTE_SYNC=YES` para la base auditada. El commit documental de esta intervención debe quedar publicado en `origin/desarrollo` antes del cierre.

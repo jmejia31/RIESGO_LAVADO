@@ -10298,3 +10298,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificado localmente: ESLint PASS, Playwright list descubre 1 prueba y `git diff --check` PASS. No se ejecutó Oracle local; no se tocaron backend productivo, Oracle institucional, migraciones, watcher, cola, `main` ni archivos ajenos.
 - El nuevo commit/gate queda pendiente de publicación y ejecución. P03 continúa `BLOCKED`; P04 no iniciado.
 - En `42153593621`, TX12 terminó `1 passed` con todos sus marcadores PASS, pero el escaneo final contó las excepciones ORA-20991 inducidas por el trigger temporal como errores inesperados. Se ajusta únicamente el runner para excluir del escaneo global el intervalo de líneas correspondiente a esa prueba esperada, manteniendo el escaneo fail-closed del resto del log.
+
+## 2026-11-06 - Auditoría funcional P04 de nueve módulos (COD)
+
+- Base: `desarrollo@07293984d3655e6cf6ab685d1821fe1f795a8729`; `origin/desarrollo` coincidía al iniciar y se preservaron la modificación ajena de `ESTADO_COLABORACION.md` y todos los untracked.
+- Se revisaron individualmente los nueve módulos canónicos (IDs 2–10), rutas Angular, guards, controladores/servicios y pruebas existentes. Se creó una sola matriz en `docs/0.0 Documentación/P04_AUDITORIA_FUNCIONAL_NUEVE_MODULOS.md`.
+- Verificado en esta intervención: backend focalizado 71/71 PASS; Angular con el builder correcto 46/46 PASS; E2E focalizado 18/18 PASS; contratos de límites de módulos 2/2 PASS; validadores de estructura, base de datos, documentación y `git diff --check` PASS.
+- La invocación directa de Vitest fue descartada como runner incorrecto (`describe is not defined`) y no como defecto; la misma cobertura se ejecutó correctamente mediante `ng test`. No se ejecutó Oracle institucional ni persistencia real de módulos no-Matrices; la limitación queda documentada.
+- No se detectaron defectos funcionales reproducibles. No se modificó código funcional ni se reabrieron P01–P03. P04 queda listo para publicación documental selectiva; P05 continúa `NOT_STARTED`.
