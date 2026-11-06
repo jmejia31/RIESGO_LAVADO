@@ -3797,3 +3797,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QA_SECURITY_DESIGN=ISOLATED_MANUAL_EXECUTOR_PROPOSED`, no aprobado ni aprovisionado: `docs/qa/DECISION_SEGURIDAD_EJECUCION_QA.md`. Checklist: `docs/qa/CONTROL_ACEPTACION_SEGURIDAD_QA.md`. Reconciliación: `docs/qa/RECONCILIACION_DOCUMENTAL_P06.md`.
 - `QA_SECRET_ACCESS_GATE=BLOCKED_PENDING_EXTERNAL_CONTROLS`, `QA_SECRETS_INSTALLED=NOT_VERIFIED`, `QA_DB_TARGET_VERIFIED=NO`, `QA_WEB_LOGIN_VERIFIED=NO`, `QA_READONLY_ACCESS=NOT_VERIFIED`, `AUTH_REAL_E2E=NOT_EXECUTED`, `QA_MUTATIONS=DISABLED`, `QA_AUTONOMOUS_MUTATIONS=DISABLED`.
 - `P06_REAL_QA_CERTIFICATION=NOT_EXECUTED`, `P07_STATUS=NOT_STARTED`, `P08_STATUS=NOT_STARTED`, `BLOCK10_AUTHORIZED=NO`. Siguiente control: aprobación institucional del modelo, cuenta OS aislada, programa revisado, TLS, DB fingerprint y permisos mínimos; credenciales solo fuera del repositorio. Ningún cambio en producción, main, Oracle, migración 54 o cola.
+-
+## Estado vigente - P06 cierre operativo de compuertas - 2026-11-06
+
+- `SOURCE_SHA=67537481ee1745c89bf50dc0ca365ff576a45af3`; `REMOTE_SYNC=YES` al cierre. Validacion estatica de estructura, enlaces, preflight QA, JSON y diff PASS.
+- `QUALITY_GATE_DOCUMENTARY=42266632011_SUCCESS` sobre `edd8328b389f63ba7c9cbac586590eb0c5cc792b`; `42269995632` fue control-only con integral SKIPPED. No certifican acceso QA institucional real.
+- `RiesgoLavado-CodexQueue` quedo deshabilitada como contencion reversible (`WATCHER_ENABLED=NO`); no hubo ejecucion QA, Codex real, Oracle ni uso de credenciales.
+- `QA_EXECUTOR_PACKAGE_PREPARED=DESIGN_ONLY`; `QA_EXECUTOR_SECURITY_REVIEW=DESIGN_ONLY`; `QA_EXECUTOR_ISOLATION_VERIFIED=NO`; `QA_EXECUTOR_READY=NO`; `QA_SECRET_ACCESS_GATE=BLOCKED`; `QA_DB_TARGET_VERIFIED=NO`; `QA_WEB_LOGIN_VERIFIED=NO`; `QA_AUTH_REAL_E2E=NOT_EXECUTED`; `QA_MUTATIONS=DISABLED`; `QA_AUTONOMOUS_MUTATIONS=DISABLED`.
+- `P06_STATUS=PASS_WITH_LIMITATIONS`; cierre real condicionado a propietario/infraestructura/DBA: ejecutor aislado auditado, paquete SHA-256 fijado, TLS/release, identidad DB, cuenta lectura y login sanitizado.
+- Cola: `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002` permanecen `BLOCKED/CODEX_FAILED` intento 2; no se alteraron ni autoaprobaron. `P07_STATUS=NOT_STARTED`; `P08_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.

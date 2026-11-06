@@ -10376,3 +10376,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Evidencia ejecutada: backend Identidad `15 PASS, 1 SKIP` por Oracle XE no disponible; Angular Auth/guards/Usuarios `13/13 PASS`; no se ejecutó Oracle institucional, DDL, migración ni pruebas contra cuentas reales.
 - No se modificó código funcional. Se actualizó únicamente la matriz P05, esta bitácora y el estado colaborativo. El Quality Gate del commit documental anterior `42238671759` seguía `IN_PROGRESS` al cierre de esta revisión.
 - Decisión: `P05=PASS_WITH_DOCUMENTED_LIMITATIONS`; `P06=NOT_STARTED`. Las decisiones de migración a cookies y lookup/indexación requieren una fase arquitectónica/autorización separada y no bloquean una vulnerabilidad confirmada dentro de este alcance.
+-
+## 2026-11-06 - P06 cierre operativo de compuertas (COD)
+
+- Base verificada: `67537481ee1745c89bf50dc0ca365ff576a45af3`, rama `desarrollo`; `HEAD` y `origin/desarrollo` coincidieron al cierre. Se conservaron todos los untracked ajenos.
+- Validaciones: JSON de cola y estados PASS; estructura del repositorio PASS; enlaces documentales PASS; preflight QA PASS; `git diff --check` PASS; inspeccion heuristica sin valores sensibles.
+- Quality Gate `42266632011` verificado SUCCESS, intento 1, sobre `edd8328b389f63ba7c9cbac586590eb0c5cc792b`; no se transfirio al SHA actual. `42269995632` fue control-only con integral SKIPPED.
+- La tarea programada `RiesgoLavado-CodexQueue` estaba habilitada con `Run-CodexQueueHidden.vbs -AllowExecution`; se deshabilito como contencion reversible. No se modificaron estados de cola ni se ejecutaron tareas QA.
+- Resultado: `QA_EXECUTOR_PACKAGE_PREPARED=DESIGN_ONLY`, `QA_EXECUTOR_SECURITY_REVIEW=DESIGN_ONLY`, `QA_EXECUTOR_ISOLATION_VERIFIED=NO`, `QA_EXECUTOR_READY=NO`, `QA_SECRET_ACCESS_GATE=BLOCKED`, `QA_DB_TARGET_VERIFIED=NO`, `QA_WEB_LOGIN_VERIFIED=NO`, `QA_MUTATIONS=DISABLED`, `QA_AUTONOMOUS_MUTATIONS=DISABLED`.
+- Las tareas `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002` conservan `BLOCKED/CODEX_FAILED`, intento 2; no fueron reejecutadas ni autoaprobadas. Continuacion: aprobacion externa del ejecutor aislado y sus verificaciones sanitizadas. No iniciar P07/P08 ni Block10.
