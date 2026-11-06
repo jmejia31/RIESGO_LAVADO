@@ -10393,3 +10393,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - La tarea programada `RiesgoLavado-CodexQueue` estaba habilitada con `Run-CodexQueueHidden.vbs -AllowExecution`; se deshabilito como contencion reversible. No se modificaron estados de cola ni se ejecutaron tareas QA.
 - Resultado: `QA_EXECUTOR_PACKAGE_PREPARED=DESIGN_ONLY`, `QA_EXECUTOR_SECURITY_REVIEW=DESIGN_ONLY`, `QA_EXECUTOR_ISOLATION_VERIFIED=NO`, `QA_EXECUTOR_READY=NO`, `QA_SECRET_ACCESS_GATE=BLOCKED`, `QA_DB_TARGET_VERIFIED=NO`, `QA_WEB_LOGIN_VERIFIED=NO`, `QA_MUTATIONS=DISABLED`, `QA_AUTONOMOUS_MUTATIONS=DISABLED`.
 - Las tareas `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002` conservan `BLOCKED/CODEX_FAILED`, intento 2; no fueron reejecutadas ni autoaprobadas. Continuacion: aprobacion externa del ejecutor aislado y sus verificaciones sanitizadas. No iniciar P07/P08 ni Block10.
+-
+## 2026-11-06 - P06 desbloqueo Playwright sin credenciales (COD)
+
+- Base `02bfdba7b7927dee95dac632c6674147347adccd`, rama `desarrollo`, worktree aislado `C:\RIESGO_LAVADO_P06_QA_WORK`; no se modifico el checkout compartido ni sus untracked.
+- `npm ci --ignore-scripts` termino correctamente con `@playwright/test` `1.61.1`, sin cambios al lockfile; auditoria npm: 0 vulnerabilidades reportadas.
+- Chromium Playwright inicio en modo headless y cargo Angular local con HTTP 200. Descubrimiento QA: `0 tests`, porque no existe aun `p06-qa-real-auth.spec.ts`; no se ejecutaron mocks ni autenticacion.
+- Se preparo `frontend/rl-app/playwright.qa.config.ts` con `workers=1`, `retries=0`, base `http://localhost:4200`, `screenshot/trace/video=off`, reporter lineal, sin storage state y sin HAR/HTML.
+- SHA-256 de la configuracion: `CD27238F11A944B593E726C57C52D46063A3F011347F7D065F6AA1E43F6D6FB6`.
+- Bloqueo vigente: no existe ejecutor aislado ni frontera de credenciales verificada; Oracle, login real, CSRF, refresh, logout y Matrices reales permanecen NOT_EXECUTED. Watcher deshabilitado.
