@@ -1,3 +1,11 @@
+## 2026-11-06 — P06 aceptación documental y aclaración de alcance QA del propietario (CHAT)
+
+- `SOURCE_SHA=27a35ce40bce23ced3e309313668974449ae531c`; Quality Gate `42275655488` `SUCCESS`, intento 1, SHA exacto; jobs control e integral `SUCCESS`.
+- El propietario aprobó expresamente la aceptación documental de `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002`, entregables de `edd8328b` y CI `42266632011=SUCCESS`. Se concilian los estados declarativos de esas dos tareas a `APPROVED` exclusivamente por revisión externa, sin reejecución. `ESTADO_TAREAS.json` se preserva íntegro: `BLOCKED/CODEX_FAILED`, intento 2, ambos. La aprobación no es certificación QA real.
+- El propietario aclaró el destino RIESGO_LAVADO como base de desarrollo/QA sobre infraestructura productiva sin clientes y autorizó pruebas completas y eventual eliminación total de datos exclusivos de Matrices, sin modificar Usuarios, monitoreo, listas DNP, demás módulos ni auditoría protegida. Se documentó preflight técnico automático para confirmar destino y dependencias antes de borrado, sin crear una nueva solicitud burocrática de aprobación.
+- El propietario autorizó la configuración de secrets QA GitHub. Sigue advertencia de rama `desarrollo` sin protección y de exposición en workflows mutables: secretos limitados a QA, no claves operativas/DBA; no se crean secrets ni se usan credenciales en esta intervención.
+- Se actualizan únicamente cola declarativa y documentos, bitácora/estado, sin ejecutar watcher, tests conectados, SQL, datos, migraciones, main ni producción operativa. `QA_MUTATIONS_EXECUTED=NO`, `BLOCK10_AUTHORIZED=NO`.
+
 ## 2026-11-06 — P06: decisión técnica para secreto QA y revisión de estados (CHAT)
 
 - Fuente remota verificada `501a56e2d1128b9e10f3a753f399c55a8d351a48`; documentación P06 `edd8328b` con Quality Gate integral `42266632011=SUCCESS`, intento 1, SHA exacto; control posterior `42269995632=SUCCESS` con job integral `SKIPPED`.

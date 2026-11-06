@@ -28,3 +28,24 @@ BLOCK10_AUTHORIZED=NO
 ```
 
 Ver [decisión de seguridad](DECISION_SEGURIDAD_EJECUCION_QA.md) y [controles de aceptación](CONTROL_ACEPTACION_SEGURIDAD_QA.md).
+
+## Decisión del propietario y reconciliación final — 2026-11-06
+
+El propietario `jmejia31` **APROBÓ EXPLÍCITAMENTE la aceptación documental** de los entregables de ambas tareas (commit `edd8328b389f63ba7c9cbac586590eb0c5cc792b`, Quality Gate integral `42266632011=SUCCESS`) y autorizó registrar la reconciliación por revisión externa, conservando íntegro el historial de intentos fallidos.
+
+En `TAREAS_CODEX.json` se cambia **solo** el estado declarativo de `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002` de `READY` a `APPROVED`, con observaciones inequívocas de **entrega fuera del ejecutor**. Este estado representa aprobación de **documentos**, no éxito de Codex.
+
+En `ESTADO_TAREAS.json` se preserva **sin modificación** el registro histórico: `BLOCKED`, `attempt=2`, `reason=CODEX_FAILED` para ambas tareas. No se reejecutan, no se alteran los intentos y no se activa el watcher. La aprobación documental se acredita exclusivamente por la autorización expresa del propietario y el acta de revisión, no por un falso `RUNNING` o `IMPLEMENTED_PENDING_REVIEW`.
+
+La restricción de acceso QA real permanece independiente; la nueva autorización sobre la **base QA/de desarrollo alojada en infraestructura productiva** se documenta en [ALCANCE_QA_DESARROLLO_AUTORIZADO.md](ALCANCE_QA_DESARROLLO_AUTORIZADO.md), con libertad de pruebas funcionales de Matrices y eventual borrado completo del **perímetro propio de Matrices** después de comprobar identidad de la base y dependencias ajenas.
+
+```ini
+P06_DOCUMENTARY_ACCEPTANCE=OWNER_APPROVED
+ISSUE25_QA_PLAN_001=APPROVED_DOCUMENTS_OUT_OF_BAND
+ISSUE25_MATRICES_PLAN_002=APPROVED_DOCUMENTS_OUT_OF_BAND
+EXECUTOR_HISTORICAL_STATES=BLOCKED_ATTEMPT_2_PRESERVED
+WATCHER_ACTIVATION=NOT_AUTHORIZED
+P06_REAL_QA_CERTIFICATION=NOT_EXECUTED
+QA_MUTATIONS_EXECUTED=NO
+BLOCK10_AUTHORIZED=NO
+```

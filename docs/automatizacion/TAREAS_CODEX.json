@@ -79,7 +79,7 @@
     {
       "id": "ISSUE25-QA-PLAN-001",
       "title": "Issue #25: plan y catálogo estático de preparación QA sin secretos ni conexiones",
-      "status": "READY",
+      "status": "APPROVED",
       "priority": "P1",
       "dependencies": [],
       "owner": "COD",
@@ -114,13 +114,14 @@
       },
       "observations": [
         "2026-11-06, verificacion remota CHAT: el commit edd8328b389f63ba7c9cbac586590eb0c5cc792b incorpora los dos documentos dentro de allowed_paths (docs/qa/PLAN_PREPARACION_QA.md y docs/qa/CATALOGO_VARIABLES_QA.md), ambos declarados IMPLEMENTED_PENDING_REVIEW documental. Evidencia: https://github.com/jmejia31/RIESGO_LAVADO/commit/edd8328b389f63ba7c9cbac586590eb0c5cc792b",
-        "Quality Gates https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42266632011: completed/success para ese SHA. ESTADO_TAREAS.json permanece BLOCKED, intento 2, CODEX_FAILED; no se acredita reejecucion de Codex ni certificacion QA institucional. Mantener revision humana y compuertas QA_SECRET_ACCESS_GATE=BLOCKED, QA_MUTATIONS=DISABLED."
+        "Quality Gates https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42266632011: completed/success para ese SHA. ESTADO_TAREAS.json permanece BLOCKED, intento 2, CODEX_FAILED; no se acredita reejecucion de Codex ni certificacion QA institucional. Mantener revision humana y compuertas QA_SECRET_ACCESS_GATE=BLOCKED, QA_MUTATIONS=DISABLED.",
+        "2026-11-06 OWNER EXPLICIT APPROVAL: acceptance of DOCUMENTARY DELIVERABLES only, published out of band in edd8328b389f63ba7c9cbac586590eb0c5cc792b, Quality Gate 42266632011 SUCCESS, after external CHAT review. This is NOT a successful Codex executor run, NOT institutional QA certification, and NOT approval for watcher execution. The persisted historical executor state remains BLOCKED/CODEX_FAILED/attempt=2 intact in ESTADO_TAREAS.json. This transition changes the instruction queue to APPROVED solely to reconcile reviewed documents and prevent retry. No other tasks authorized."
       ]
     },
     {
       "id": "ISSUE25-MATRICES-PLAN-002",
       "title": "Issue #25: diseño de escenarios QA y límites de datos de Matrices sin ejecutar",
-      "status": "READY",
+      "status": "APPROVED",
       "priority": "P1",
       "dependencies": [],
       "owner": "COD",
@@ -155,7 +156,8 @@
       },
       "observations": [
         "2026-11-06, verificacion remota CHAT: el commit edd8328b389f63ba7c9cbac586590eb0c5cc792b incorpora los dos documentos dentro de allowed_paths (docs/qa/PLAN_ESCENARIOS_MATRICES.md y docs/qa/MATRIZ_ALCANCES_QA.md), ambos declarados IMPLEMENTED_PENDING_REVIEW documental. Evidencia: https://github.com/jmejia31/RIESGO_LAVADO/commit/edd8328b389f63ba7c9cbac586590eb0c5cc792b",
-        "Quality Gates https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42266632011: completed/success para ese SHA. ESTADO_TAREAS.json permanece BLOCKED, intento 2, CODEX_FAILED; no se acredita reejecucion de Codex, conexion Oracle ni pruebas QA reales. Mantener revision humana, datos institucionales intocados y QA_MUTATIONS=DISABLED."
+        "Quality Gates https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42266632011: completed/success para ese SHA. ESTADO_TAREAS.json permanece BLOCKED, intento 2, CODEX_FAILED; no se acredita reejecucion de Codex, conexion Oracle ni pruebas QA reales. Mantener revision humana, datos institucionales intocados y QA_MUTATIONS=DISABLED.",
+        "2026-11-06 OWNER EXPLICIT APPROVAL: acceptance of DOCUMENTARY DELIVERABLES only, published out of band in edd8328b389f63ba7c9cbac586590eb0c5cc792b, Quality Gate 42266632011 SUCCESS, after external CHAT review. This is NOT a successful Codex executor run, NOT institutional QA certification, and NOT approval for watcher execution. The persisted historical executor state remains BLOCKED/CODEX_FAILED/attempt=2 intact in ESTADO_TAREAS.json. This transition changes the instruction queue to APPROVED solely to reconcile reviewed documents and prevent retry. No other tasks authorized."
       ]
     },
     {
