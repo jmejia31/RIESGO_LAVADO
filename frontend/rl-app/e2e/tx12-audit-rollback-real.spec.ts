@@ -81,15 +81,16 @@ test('TX12 certifica fallo real de auditoría y rollback desde Angular', async (
     headers: { Authorization: `Bearer ${token}` }
   });
   expect(readback.status()).toBe(200);
-  const readbackBody = await readback.json() as { verJson?: string; verHash?: string; verEstado?: string; verVigente?: boolean };
-  expect(readbackBody.verJson).toBe(original.json);
-  expect(readbackBody.verHash).toBe(original.hash);
-  expect(readbackBody.verEstado).toBe(original.state);
-  expect(readbackBody.verVigente).toBe(false);
+  const readbackEnvelope = await readback.json() as { datos?: { verJson?: string; verHash?: string; verEstado?: string; verVigente?: boolean } };
+  const readbackBody = readbackEnvelope.datos;
+  expect(readbackBody?.verJson).toBe(original.json);
+  expect(readbackBody?.verHash).toBe(original.hash);
+  expect(readbackBody?.verEstado).toBe(original.state);
+  expect(readbackBody?.verVigente).toBe(false);
 
   const after = await snapshot();
   expect(after).toMatchObject({
-    versionId: original ? fixture.versionId : undefined,
+    versionId: fixture.versionId,
     json: original.json,
     hash: original.hash,
     state: original.state,

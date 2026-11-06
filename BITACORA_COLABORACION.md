@@ -10290,3 +10290,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El trigger se activa únicamente con `RL_P03_TX12_AUDIT_FAILURE_REQUIRED=true`, filtra la versión sintética y genera `ORA-20991` desde Oracle XE descartable; el runner lo elimina antes de continuar y falla cerrado si no puede limpiarlo.
 - Verificado localmente: host .NET compila sin errores; ESLint del E2E PASS; Playwright descubre exactamente 1 prueba; sintaxis del runner validada tras normalizar CRLF; `git diff --check` PASS. Oracle XE disposable y el E2E negativo completo quedan pendientes del Quality Gate remoto.
 - No se modificaron backend productivo, migraciones, Oracle institucional, producción, `main`, watcher ni cola. P03 permanece `BLOCKED` hasta obtener el resultado real del E2E TX12 y el Quality Gate del nuevo SHA.
+
+## 2026-11-05 - Corrección del readback TX12 tras Quality Gate 42152949017 (COD)
+
+- El gate `42152949017` terminó FAILURE sobre `1021d3d84083d0ab4cdbf42ced27dbfc3bbba3ec`. El primer fallo relevante fue exclusivamente del E2E TX12: el PUT real recibió HTTP 500 por el trigger Oracle XE `ORA-20991`, pero la prueba leyó el contrato de respuesta en la raíz en vez de `datos`.
+- Corrección mínima preparada en `frontend/rl-app/e2e/tx12-audit-rollback-real.spec.ts`: leer el sobre `datos` del GET real y mantener las aserciones de JSON, hash, estado, vigencia, auditoría y trigger.
+- Verificado localmente: ESLint PASS, Playwright list descubre 1 prueba y `git diff --check` PASS. No se ejecutó Oracle local; no se tocaron backend productivo, Oracle institucional, migraciones, watcher, cola, `main` ni archivos ajenos.
+- El nuevo commit/gate queda pendiente de publicación y ejecución. P03 continúa `BLOCKED`; P04 no iniciado.
