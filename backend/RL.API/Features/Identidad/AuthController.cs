@@ -94,6 +94,7 @@ public class AuthController : ControllerBase
             ClearSessionCookies();
             return Unauthorized(new { success = false, mensaje = "Refresh rejected" });
         }
+        EmitAntiforgeryRequestCookie(response.RefreshTokenExpiresAt);
         EmitRefreshCookie(response);
         return NoStore(Ok(new { success = true, datos = PublicSession(response) }));
     }
@@ -322,17 +323,22 @@ public class AuthController : ControllerBase
 
     private void EmitSessionCookies(LoginResponseDto response)
     {
+        EmitAntiforgeryRequestCookie(response.RefreshTokenExpiresAt);
+        EmitRefreshCookie(response);
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
+    }
+
+    private void EmitAntiforgeryRequestCookie(DateTime refreshTokenExpiresAt)
+    {
         var tokens = _antiforgery?.GetAndStoreTokens(HttpContext);
         if (!string.IsNullOrWhiteSpace(tokens?.RequestToken))
         {
             Response.Cookies.Append(
                 AntiforgeryRequestCookieName,
                 tokens.RequestToken,
-                AntiforgeryRequestCookieOptions());
+                AntiforgeryRequestCookieOptions(refreshTokenExpiresAt));
         }
-        EmitRefreshCookie(response);
-        Response.Headers.CacheControl = "no-store";
-        Response.Headers.Pragma = "no-cache";
     }
 
     private void EmitRefreshCookie(LoginResponseDto response)
@@ -372,14 +378,14 @@ public class AuthController : ControllerBase
         Expires = lifetime == TimeSpan.Zero ? DateTimeOffset.UnixEpoch : DateTimeOffset.UtcNow.Add(lifetime)
     };
 
-    private CookieOptions AntiforgeryRequestCookieOptions() => new()
+    private CookieOptions AntiforgeryRequestCookieOptions(DateTime refreshTokenExpiresAt) => new()
     {
         HttpOnly = false,
         Secure = RefreshCookieSecure,
         SameSite = SameSiteMode.Strict,
         Path = AntiforgeryRequestCookiePath,
         IsEssential = true,
-        Expires = DateTimeOffset.UtcNow.AddHours(1)
+        Expires = new DateTimeOffset(refreshTokenExpiresAt.ToUniversalTime())
     };
 
     private bool RefreshCookieSecure => _environment is null || !_environment.IsDevelopment()

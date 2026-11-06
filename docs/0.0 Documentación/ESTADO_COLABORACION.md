@@ -3753,6 +3753,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUALITY_GATE_PREVIOUS=42240716603`; `QUALITY_GATE_PREVIOUS_STATUS=SUCCESS`; `QUALITY_GATE_FINAL=PENDING_PUBLICATION`; `P05_H11B_STATUS=IMPLEMENTED_PENDING_QUALITY_GATE`.
 - `P05_H11A_STATUS=DOCUMENTED_DECISION_PENDING`; `P06_STATUS=NOT_STARTED`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`; `MAIN_MODIFIED=NO`; `MIGRATION_54_MODIFIED=NO`; `BLOCK10_AUTHORIZED=NO`.
 
+## Estado vigente - P05 H11-B verificacion final y renovacion CSRF (COD) - 2026-11-06
+
+- `SOURCE_SHA=c8193f5d74b41e8eee3ffe14cb387e645b7e553f`; `PREVIOUS_QUALITY_GATE=42257057607`; `PREVIOUS_QUALITY_GATE_STATUS=SUCCESS`; `RUN_ATTEMPT=1`; SHA exacto confirmado.
+- Defecto reproducido: `XSRF-TOKEN` expiraba en una hora y `Refresh()` no lo renovaba; una sesion legitima podia perder el header antiforgery antes del refresh token. Correccion: renovar el request token en cada refresh exitoso y alinear su expiracion con `RefreshTokenExpiresAt`.
+- `CSRF_SECOND_REFRESH=PASS` en regresion de accion; `CSRF_REFRESH_COOKIE_RENEWAL=PASS`; `REFRESH_TOKEN_HTTPONLY=PASS`; `REFRESH_TOKEN_NOT_EXPOSED=PASS`; `[ValidateAntiForgeryToken]` permanece.
+- Backend Identidad: `14/14 PASS`. Angular Auth: `12/12 PASS`; lint PASS; build PASS con warnings preexistentes. La suite completa backend previa queda clasificada: 9 fallos `ENVIRONMENT_BLOCKED` por ausencia de `Database:Profile=LOCAL_XE`; 1 fallo `PREEXISTING/UNRELATED_CONTRACT_DEFECT` reproducido tambien en `dd624456` (`Fase6...`, hash esperado `769b...`, actual `cd6f...`). `BACKEND_REGRESSIONS_CONFIRMED=0`.
+- `PLAYWRIGHT_AUTH=PENDING_ALLOWED_ENVIRONMENT`; no se ejecuto una prueba HTTP real de autenticacion con TestServer/WebApplicationFactory local ni Oracle institucional. No se declara PASS de esa evidencia.
+- Estado: `P05_H11B_STATUS=IMPLEMENTED_PENDING_QUALITY_GATE`; `P06_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`. Punto de continuacion: publicar el hotfix minimo, verificar el nuevo Quality Gate y registrar su conclusion.
+
 ## Estado vigente - P05 H11-B hotfix CSRF y vigencia refresh (COD) - 2026-11-06
 
 - `SOURCE_SHA=dd624456de69a4b878b7e02aad3a74c192a7e4f0`; corrección preparada en worktree aislado, sin alterar el checkout compartido ni archivos ajenos.

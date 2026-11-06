@@ -190,6 +190,28 @@ public sealed class IdentidadModuleCharacterizationTests
     }
 
     [Fact]
+    public async Task AuthController_Refresh_RenuevaRequestTokenHastaVigenciaDelRefresh()
+    {
+        var response = CrearLoginResponse("access-renovado", "refresh-renovado");
+        response.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(5);
+        var antiforgery = new AntiforgeryFake();
+        var controller = CrearController(
+            new AuthServiceFake { RefreshResponse = response },
+            new ActivoDirectorioServiceFake(),
+            antiforgery);
+        controller.HttpContext.Request.Headers.Cookie = "RL-RefreshToken=refresh-anterior";
+
+        var result = await controller.Refresh();
+
+        Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(1, antiforgery.GetAndStoreTokensCalls);
+        var xsrf = controller.Response.Headers.SetCookie
+            .Single(value => value!.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal));
+        var parsed = SetCookieHeaderValue.Parse(xsrf!);
+        Assert.True(parsed.Expires > DateTimeOffset.UtcNow.AddDays(4.9));
+    }
+
+    [Fact]
     public async Task AuthService_RefreshValido_RevocaYRotaToken()
     {
         const string tokenAnterior = "refresh-token-anterior";
@@ -321,8 +343,11 @@ public sealed class IdentidadModuleCharacterizationTests
 
     private sealed class AntiforgeryFake : IAntiforgery
     {
+        public int GetAndStoreTokensCalls { get; private set; }
+
         public AntiforgeryTokenSet GetAndStoreTokens(HttpContext httpContext)
         {
+            GetAndStoreTokensCalls++;
             httpContext.Response.Cookies.Append("RL-Antiforgery", "cookie-token", new CookieOptions
             {
                 HttpOnly = true,
@@ -405,12 +430,13 @@ public sealed class IdentidadModuleCharacterizationTests
     {
         public Exception? ExcepcionLogin { get; init; }
         public LoginResponseDto? LoginResponse { get; init; }
+        public LoginResponseDto? RefreshResponse { get; init; }
         public Task<LoginResponseDto?> LoginAsync(LoginRequestDto dto, string ip)
         {
             if (ExcepcionLogin is not null) return Task.FromException<LoginResponseDto?>(ExcepcionLogin);
             return Task.FromResult(LoginResponse);
         }
-        public Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip) => Task.FromResult<LoginResponseDto?>(null);
+        public Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip) => Task.FromResult(RefreshResponse);
         public Task<bool> LogoutAsync(string refreshToken) => Task.FromResult(false);
         public Task<bool> CambiarPasswordAsync(long usrId, CambiarPasswordDto dto) => Task.FromResult(false);
         public Task<UsuarioInfoDto?> CrearUsuarioAsync(CrearUsuarioDto dto, long creadoPor) => Task.FromResult<UsuarioInfoDto?>(null);

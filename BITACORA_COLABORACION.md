@@ -1,3 +1,11 @@
+## 2026-11-06 11:24 -06:00 - P05 H11-B verificacion final y renovacion CSRF (COD)
+
+- Base: `c8193f5d74b41e8eee3ffe14cb387e645b7e553f`; Quality Gate previo `42257057607=SUCCESS`, attempt 1, SHA exacto.
+- Defecto reproducido: `XSRF-TOKEN` tenia expiracion de una hora y `Refresh()` no renovaba el request token. Correccion minima: renovar el token CSRF en cada refresh exitoso y alinear su expiracion con `RefreshTokenExpiresAt`; no se elimino `ValidateAntiForgeryToken`, ni se cambio el refresh cookie HttpOnly.
+- Verificado: backend Identidad `14/14 PASS`; Angular Auth `12/12 PASS`; lint/build PASS con warnings preexistentes; `git diff --check=PASS`. La prueba sobre la base `dd624456` reprodujo el mismo hash incorrecto del test Fase6; se clasifica `PREEXISTING/UNRELATED_CONTRACT_DEFECT`. Los otros nueve fallos de la suite completa fueron `ENVIRONMENT_BLOCKED` por falta de `Database:Profile=LOCAL_XE`.
+- Limitacion: no se ejecuto Playwright/TestServer/WebApplicationFactory de autenticacion real ni Oracle institucional; no se presenta esa evidencia como PASS. P06 sigue `NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: commit/push selectivo del hotfix, ejecutar y verificar el nuevo Quality Gate; no reutilizar `42257057607` para certificar el nuevo SHA.
+
 ## 2026-10-27 09:10 -06:00 - Ciclo de vida seguro de familias de formularios (COD)
 
 ## 2026-11-05 11:19:15 -06:00 - Technical corrective execution (COD)
