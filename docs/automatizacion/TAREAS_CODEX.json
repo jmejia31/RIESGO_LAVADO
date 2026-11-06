@@ -195,7 +195,10 @@
         "approved": true,
         "approved_by": "jmejia31",
         "context": "Autorizado explícitamente por el propietario jmejia31 en la conversación del 2026-11-04: 'PILAS CON ELLO PUES, DEJALES ESAS TAREAS A CODEX YAAAAA PARA QUE LAS RESUELVA RAPIDOOOO'. Este consentimiento cubre SOLO redacción documental estática LOW en las rutas exactas. No autoriza credenciales, uso de la base QA, cambios de workflows, pruebas conectadas, DDL, producción, certificación P0, main ni Bloque 10. Exige revisión humana posterior."
-      }
+      },
+      "observations": [
+        "2026-11-06 verificacion remota independiente CHAT en HEAD a351e1c470dde15ab9b75ed58b3ebabada87bd2f: esta instruccion figura READY pero el historial inmutable de ESTADO_TAREAS.json marca IMPLEMENTED_PENDING_REVIEW, intento 2 (actualizado 2026-11-05T15:05:24Z), y la revision externa https://github.com/jmejia31/RIESGO_LAVADO/issues/33 sigue OPEN. La discrepancia de estado NO acredita una nueva autorizacion, reejecucion de Codex ni certificacion independiente: conciliar antes de habilitar watcher o reclamar de nuevo esta tarea; no cambiar aprobaciones ni estados historicos. Evidencia: https://github.com/jmejia31/RIESGO_LAVADO/blob/a351e1c470dde15ab9b75ed58b3ebabada87bd2f/docs/automatizacion/ESTADO_TAREAS.json y https://github.com/jmejia31/RIESGO_LAVADO/issues/33"
+      ]
     },
     {
       "id": "ISSUE22-CIERRE-PREP-001",
