@@ -3734,3 +3734,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Estado: `P05=BLOCKED_MISSING_ORIGINAL_FINDINGS`; `P06=NOT_STARTED`. Continuación exacta: recibir las tres descripciones originales con fuente, componente y criterio de reproducción; luego reanudar verificación focalizada sin reabrir P01-P04.
 
 <!-- Fin del estado P05 -->
+## Estado vigente - P05 fuente histórica recuperada (COD) - 2026-11-06
+
+- Fuente: `AUDIT_SOURCE_SHA=76e057dd6f040778fb3f0e1043aca019d270fbb6`; gate histórico `38759493745=SUCCESS`; modo `READ_ONLY`.
+- Mapeo técnico: H7 atomicidad usuario/módulos; H11-A refresh backend; H11-B refresh frontend. La correspondencia es suficiente a nivel técnico, pero conserva la limitación de que la auditoría no usaba IDs P05.
+- `P05_ATOMICITY_STATUS=ALREADY_FIXED`; `P05_REFRESH_BACKEND_STATUS=NOT_REPRODUCIBLE_SECURITY_DEBT_DOCUMENTED`; `P05_REFRESH_FRONTEND_STATUS=NOT_REPRODUCIBLE_ARCHITECTURAL_DECISION_PENDING`.
+- Evidencia nueva: backend Identidad `15 PASS, 1 SKIP` por Oracle XE no disponible; Angular Auth/guards/Usuarios `13/13 PASS`. Nuevos refresh tokens se hashean con SHA-256; rotación y replay están cubiertos por pruebas existentes. `localStorage` sigue documentado como decisión de arquitectura, sin migración unilateral.
+- No se modificó código funcional, Oracle institucional, producción, `main`, migración 54 ni `PRUEBA_FORMULARIO`; untracked ajenos preservados. Se actualiza la matriz P05 para conservar evidencia sanitizada.
+- Estado: `P05=PASS_WITH_DOCUMENTED_LIMITATIONS`; `P06=NOT_STARTED`; `P05_ARCHITECTURAL_DECISIONS_PENDING=REFRESH_COOKIE_MIGRATION;DIRECT_HASH_LOOKUP_INDEX`.

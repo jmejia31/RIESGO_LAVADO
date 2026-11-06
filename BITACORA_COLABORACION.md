@@ -10317,3 +10317,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: `P05=BLOCKED_MISSING_ORIGINAL_FINDINGS`; `P06=NOT_STARTED`; `MAIN_MODIFIED=NO`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`. Punto de continuación: aportar la fuente original de cada hallazgo; después ejecutar únicamente sus reproducciones y regresiones correspondientes.
 
 <!-- Fin del registro P05 -->
+## 2026-11-06 - P05 continuación: fuente histórica y revisión técnica (COD)
+
+- Se recuperó la fuente histórica `AUDIT_SOURCE_SHA=76e057dd6f040778fb3f0e1043aca019d270fbb6`, modo `READ_ONLY`, gate `38759493745=SUCCESS`. Se preservó el expediente previo `8262aad0` y no se repitió la investigación documental anterior.
+- Trazabilidad técnica: H7 atomicidad usuario/módulos; H11-A refresh backend; H11-B refresh frontend. La numeración no es un identificador P05 original independiente, por lo que la limitación queda explícita.
+- Estado: H7 `ALREADY_FIXED`; H11-A `NOT_REPRODUCIBLE` como vulnerabilidad de seguridad, con deuda de rendimiento/indexación documentada; H11-B `NOT_REPRODUCIBLE` como XSS explotable, con decisión arquitectónica de cookies pendiente. No se confirmaron vulnerabilidades nuevas.
+- Evidencia ejecutada: backend Identidad `15 PASS, 1 SKIP` por Oracle XE no disponible; Angular Auth/guards/Usuarios `13/13 PASS`; no se ejecutó Oracle institucional, DDL, migración ni pruebas contra cuentas reales.
+- No se modificó código funcional. Se actualizó únicamente la matriz P05, esta bitácora y el estado colaborativo. El Quality Gate del commit documental anterior `42238671759` seguía `IN_PROGRESS` al cierre de esta revisión.
+- Decisión: `P05=PASS_WITH_DOCUMENTED_LIMITATIONS`; `P06=NOT_STARTED`. Las decisiones de migración a cookies y lookup/indexación requieren una fase arquitectónica/autorización separada y no bloquean una vulnerabilidad confirmada dentro de este alcance.

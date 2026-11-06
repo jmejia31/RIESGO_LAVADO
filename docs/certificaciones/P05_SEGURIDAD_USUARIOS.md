@@ -54,3 +54,36 @@ PRODUCTION_MODIFIED=NO
 INSTITUTIONAL_ORACLE_MODIFIED=NO
 MAIN_MODIFIED=NO
 ```
+## Continuación: fuente histórica recuperada
+
+Fuente histórica recibida en esta continuación:
+
+```ini
+P05_HISTORICAL_SOURCE=RECOVERED
+P05_HISTORICAL_BASE_SHA=76e057dd6f040778fb3f0e1043aca019d270fbb6
+AUDIT_QUALITY_GATE=38759493745
+AUDIT_MODE=READ_ONLY
+```
+
+La correspondencia técnica de los tres candidatos queda suficientemente demostrada, aunque la auditoría histórica no usaba identificadores P05: H7 corresponde a atomicidad usuario/módulos; H11-A a refresh tokens backend; H11-B a almacenamiento frontend. La limitación de numeración original queda conservada.
+
+| Candidato histórico | Evidencia vigente | Clasificación | Decisión pendiente |
+|---|---|---|---|
+| H7 — atomicidad usuario/módulos | `UsuarioRepository.CrearAsync` y `ActualizarAsync` abren transacción, asignan `cmd.Transaction`, hacen `CommitAsync` y revierten en `catch`. `UsuarioRepositoryAtomicityOracleIntegrationTests` verifica rollback de alta/actualización; la prueba local se omitió por no disponer de Oracle XE. | `ALREADY_FIXED` | Ninguna dentro de P05; Oracle XE actual queda pendiente de infraestructura disposable.
+| H11-A — refresh tokens backend | Nuevos valores pasan por `RefreshTokenSecurity.Hash`; rotación revoca e inserta dentro de transacción; tests cubren hash, legacy, rotación, replay y tokens inactivos. La búsqueda actual recorre filas activas y compara en memoria; esto es deuda de rendimiento/índice, no una explotación de seguridad reproducida. | `NOT_REPRODUCIBLE` | Decidir en una fase autorizada si se incorpora lookup directo/indexado y cómo completar la migración legacy; no hacer DDL aquí.
+| H11-B — refresh token en `localStorage` | `auth.service.ts` conserva `access_token`, `refresh_token` y `token_expira` en `localStorage`; las pruebas verifican persistencia, rotación y limpieza. No se reprodujo XSS ni acceso no autorizado en un navegador real. | `NOT_REPRODUCIBLE` | Decisión arquitectónica institucional: cookies HttpOnly/Secure/SameSite, CSRF, CORS, HTTPS y compatibilidad. No migrar unilateralmente.
+
+```ini
+P05_ORIGINAL_THREE_MAPPING=H7_ATOMICITY;H11-A_REFRESH_BACKEND;H11-B_REFRESH_FRONTEND
+P05_ATOMICITY_STATUS=ALREADY_FIXED
+P05_REFRESH_BACKEND_STATUS=NOT_REPRODUCIBLE_SECURITY_DEBT_DOCUMENTED
+P05_REFRESH_FRONTEND_STATUS=NOT_REPRODUCIBLE_ARCHITECTURAL_DECISION_PENDING
+P05_CONFIRMED_VULNERABILITIES=0
+P05_VULNERABILITIES_FIXED=0
+P05_ARCHITECTURAL_DECISIONS_PENDING=REFRESH_COOKIE_MIGRATION;DIRECT_HASH_LOOKUP_INDEX
+P05_UNRESOLVED_SECURITY_DEFECTS=0_CONFIRMED;2_ARCHITECTURAL_DECISIONS_PENDING
+P05_BACKEND_TESTS=15_PASS_1_SKIP_ORACLE_XE
+P05_ANGULAR_TESTS=13/13_PASS
+P05_ORACLE_XE_TESTS=NOT_EXECUTED_LOCAL;HISTORICAL_GATE_38759493745_SUCCESS
+P05_STATUS=PASS_WITH_DOCUMENTED_LIMITATIONS
+```
