@@ -10317,6 +10317,18 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: `P05=BLOCKED_MISSING_ORIGINAL_FINDINGS`; `P06=NOT_STARTED`; `MAIN_MODIFIED=NO`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`. Punto de continuación: aportar la fuente original de cada hallazgo; después ejecutar únicamente sus reproducciones y regresiones correspondientes.
 
 <!-- Fin del registro P05 -->
+
+## 2026-11-06 09:46 -06:00 - P05 H11-B migración de refresh token a cookie HttpOnly (COD)
+
+- Base: `d18580c62cd79df3958053999d9a15fb21f653af`, rama `desarrollo`; la implementación se realizó en el worktree aislado `C:\RIESGO_LAVADO_H11B` y se preservó el checkout compartido mientras el Quality Gate `42240716603` estaba en curso.
+- Resultado del gate previo: `42240716603=SUCCESS`, `attempt=1`, SHA exacto `d18580c62cd79df3958053999d9a15fb21f653af`; jobs de control e integral SUCCESS, incluyendo Oracle XE descartable, build, validadores, E2E y contenedores.
+- Corrección H11-B: refresh token en cookie host-only `RL-RefreshToken`, `HttpOnly=true`, `Secure=true` fuera de Development, `SameSite=Strict`, `Path=/api/auth`, expiración alineada al token; login/refresh no exponen refresh token en JSON y refresh/logout usan anti-forgery.
+- Angular deja de persistir/leer refresh token de `localStorage`; conserva access-token Bearer, credenciales de cookie, single-flight de refresh, limpieza legacy y protección contra respuestas tardías. Logout revoca exclusivamente la sesión identificada por cookie.
+- Archivos propios modificados: `backend/RL.API/Features/Identidad/AuthController.cs`, `Application/AuthService.cs`, `Application/IAuthService.cs`, `Contracts/AuthDTOs.cs`, `Program.cs`, prueba de caracterización de Identidad y servicios/modelos/prueba de autenticación Angular.
+- Verificado: backend Identidad `16 PASS, 1 SKIP` (skip de Oracle XE local); Angular `957/957 PASS`; `npm run lint=PASS`; `npm run build=PASS` con warnings de presupuesto preexistentes; `git diff --check=PASS`; escaneo de patrones sensibles revisado sin secretos nuevos.
+- Commit de código: `aebb2a274697919095fdd512672aaf2a349c5cbb`, pendiente de publicación hasta registrar este handoff documental en el mismo worktree. No se tocó Oracle institucional, QA, producción, `main`, migración 54, watcher, cola ni `PRUEBA_FORMULARIO`.
+- Limitaciones: no se ejecutó Playwright de autenticación contra un entorno real ni Oracle XE local; la certificación final H11-B queda pendiente del Quality Gate del SHA publicado y de verificar el flujo real de navegador. El access token continúa en `localStorage` como riesgo residual documentado.
+- Continuación exacta: publicar el commit de código y este handoff en `origin/desarrollo`, verificar sincronización y leer el nuevo Quality Gate antes de declarar `P05_H11B_CERTIFIED`.
 ## 2026-11-06 - P05 continuación: fuente histórica y revisión técnica (COD)
 
 - Se recuperó la fuente histórica `AUDIT_SOURCE_SHA=76e057dd6f040778fb3f0e1043aca019d270fbb6`, modo `READ_ONLY`, gate `38759493745=SUCCESS`. Se preservó el expediente previo `8262aad0` y no se repitió la investigación documental anterior.

@@ -3742,3 +3742,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia nueva: backend Identidad `15 PASS, 1 SKIP` por Oracle XE no disponible; Angular Auth/guards/Usuarios `13/13 PASS`. Nuevos refresh tokens se hashean con SHA-256; rotación y replay están cubiertos por pruebas existentes. `localStorage` sigue documentado como decisión de arquitectura, sin migración unilateral.
 - No se modificó código funcional, Oracle institucional, producción, `main`, migración 54 ni `PRUEBA_FORMULARIO`; untracked ajenos preservados. Se actualiza la matriz P05 para conservar evidencia sanitizada.
 - Estado: `P05=PASS_WITH_DOCUMENTED_LIMITATIONS`; `P06=NOT_STARTED`; `P05_ARCHITECTURAL_DECISIONS_PENDING=REFRESH_COOKIE_MIGRATION;DIRECT_HASH_LOOKUP_INDEX`.
+
+## Estado vigente - P05 H11-B refresh token HttpOnly preparado para certificación (COD) - 2026-11-06
+
+- `SOURCE_SHA=d18580c62cd79df3958053999d9a15fb21f653af`; `CODE_COMMIT=aebb2a274697919095fdd512672aaf2a349c5cbb`; rama `desarrollo`; implementación aislada, aún pendiente de push documental.
+- `REFRESH_TOKEN_COOKIE_HTTPONLY=PASS`; `REFRESH_TOKEN_COOKIE_SECURE=PASS` fuera de Development; `REFRESH_TOKEN_COOKIE_SAMESITE=PASS`; `REFRESH_TOKEN_COOKIE_HOST_ONLY=PASS`; `REFRESH_TOKEN_COOKIE_PATH_SCOPED=PASS`.
+- `REFRESH_TOKEN_IN_JSON=ABSENT`; `REFRESH_TOKEN_IN_LOCALSTORAGE=ABSENT`; `REFRESH_TOKEN_IN_SESSIONSTORAGE=ABSENT`; `ACCESS_TOKEN_LOCALSTORAGE=RETAINED_RESIDUAL_RISK`.
+- `CSRF_PROTECTION=IMPLEMENTED`; `CORS_POLICY=EXISTING_ALLOWLIST_WITH_CREDENTIALS_RETAINED`; refresh y logout requieren anti-forgery; no se usa `AllowAnyOrigin` con credenciales.
+- Evidencia local: backend Identidad `16 PASS, 1 SKIP`; Angular `957/957 PASS`; lint PASS; build PASS con warnings de presupuesto preexistentes; `git diff --check=PASS`. No Playwright de autenticación real ni Oracle XE local.
+- `QUALITY_GATE_PREVIOUS=42240716603`; `QUALITY_GATE_PREVIOUS_STATUS=SUCCESS`; `QUALITY_GATE_FINAL=PENDING_PUBLICATION`; `P05_H11B_STATUS=IMPLEMENTED_PENDING_QUALITY_GATE`.
+- `P05_H11A_STATUS=DOCUMENTED_DECISION_PENDING`; `P06_STATUS=NOT_STARTED`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`; `MAIN_MODIFIED=NO`; `MIGRATION_54_MODIFIED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuación: publicar selectivamente el commit de código y este estado, confirmar `origin/desarrollo`, esperar el nuevo gate y no declarar certificación antes de su SUCCESS.
