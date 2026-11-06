@@ -26,6 +26,7 @@ export class AuthService {
   private lastActivityAt = 0;
   private nextRefreshAttemptAt = 0;
   private refreshRequest$: Observable<RefreshResponse> | null = null;
+  private sessionEpoch = 0;
 
   // Proceso de sesión local: conserva token y usuario decodificado para guards, menú y pantallas.
   private _usuario   = signal<UsuarioInfo | null>(this.obtenerUsuarioDeToken(localStorage.getItem('access_token')));
@@ -40,6 +41,7 @@ export class AuthService {
     private router: Router,
     private configService: ConfiguracionService
   ) {
+    localStorage.removeItem('refresh_token');
     // El cambio del JWT por refresh no reinicia el reloj de inactividad.
     effect(() => {
       if (this.estaLogueado()) {
@@ -53,8 +55,8 @@ export class AuthService {
   login(dto: LoginRequest) {
     // Autenticación frontend: envía credenciales y guarda tokens solo cuando backend confirma éxito.
     return this.http.post<{ success: boolean; datos: LoginResponse }>(
-      `${this.API}/login`, dto
-    , { context: createHttpErrorScopeContext('local') }).pipe(
+      `${this.API}/login`, dto,
+      { withCredentials: true, context: createHttpErrorScopeContext('local') }).pipe(
       tap(res => {
         if (res.success) {
           this.guardarSesion(res.datos);
@@ -76,8 +78,7 @@ export class AuthService {
   }
 
   logout() {
-    const refreshToken = localStorage.getItem('refresh_token') ?? '';
-    this.http.post(`${this.API}/logout`, { refreshToken }).pipe(
+    this.http.post(`${this.API}/logout`, null, { withCredentials: true, headers: this.xsrfHeaders() }).pipe(
       catchError(() => EMPTY)
     ).subscribe();
     this.limpiarSesion();
@@ -90,19 +91,14 @@ export class AuthService {
       return this.refreshRequest$;
     }
 
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) {
-      this.cerrarSesionLocal();
-      this.router.navigate(['/login'], { queryParams: { razon: 'expirada' } });
-      return throwError(() => new Error('Refresh token no disponible.'));
-    }
+    const epoch = this.sessionEpoch;
 
     const request$ = this.http.post<RefreshResponse>(
-      `${this.API}/refresh`, { refreshToken }
+      `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
     ).pipe(
       tap(res => {
         // Evita que una respuesta tardía restaure una sesión que el usuario ya cerró o reemplazó.
-        if (res.success && localStorage.getItem('refresh_token') === refreshToken) {
+        if (res.success && epoch === this.sessionEpoch) {
           this.nextRefreshAttemptAt = 0;
           this.guardarSesion(res.datos);
         }
@@ -110,7 +106,7 @@ export class AuthService {
       catchError((error: unknown) => {
         // Solo un rechazo explícito del refresh invalida la sesión. Un corte de red o un 5xx
         // no debe expulsar a un usuario que continúa activo; se conserva la sesión y se reintenta.
-        if (this.esFalloDefinitivoRefresh(error) && localStorage.getItem('refresh_token') === refreshToken) {
+        if (this.esFalloDefinitivoRefresh(error) && epoch === this.sessionEpoch) {
           this.limpiarSesion();
           this.router.navigate(['/login'], { queryParams: { razon: 'expirada' } });
         }
@@ -144,8 +140,8 @@ export class AuthService {
   }
 
   private guardarSesion(datos: LoginResponse) {
+    this.sessionEpoch++;
     localStorage.setItem('access_token',  datos.accessToken);
-    localStorage.setItem('refresh_token', datos.refreshToken);
     localStorage.setItem('token_expira',  datos.expiresAt);
     this._token.set(datos.accessToken);
     this._usuario.set(this.obtenerUsuarioDeToken(datos.accessToken));
@@ -159,12 +155,20 @@ export class AuthService {
   }
 
   private limpiarSesion() {
+    this.sessionEpoch++;
     this.detenerMonitoreoInactividad();
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('token_expira');
     this._token.set(null);
     this._usuario.set(null);
+  }
+
+  private xsrfHeaders(): { [name: string]: string } {
+    const token = document.cookie.split('; ')
+      .find(item => item.startsWith('XSRF-TOKEN='))
+      ?.split('=').slice(1).join('=');
+    return token ? { 'X-XSRF-TOKEN': decodeURIComponent(token) } : {};
   }
 
   private obtenerUsuarioDeToken(token: string | null): UsuarioInfo | null {
@@ -368,8 +372,7 @@ export class AuthService {
   private logoutPorInactividad() {
     this.detenerMonitoreoInactividad();
 
-    const refreshToken = localStorage.getItem('refresh_token') ?? '';
-    this.http.post(`${this.API}/logout`, { refreshToken }).pipe(
+    this.http.post(`${this.API}/logout`, null, { withCredentials: true, headers: this.xsrfHeaders() }).pipe(
       catchError(() => EMPTY)
     ).subscribe();
 

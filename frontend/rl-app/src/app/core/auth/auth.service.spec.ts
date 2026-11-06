@@ -48,7 +48,7 @@ describe('AuthService', () => {
     request.flush({ success: true, datos: response });
 
     expect(localStorage.getItem('access_token')).toBe(response.accessToken);
-    expect(localStorage.getItem('refresh_token')).toBe('refresh-token-1');
+    expect(localStorage.getItem('refresh_token')).toBeNull();
     expect(service.usuario()?.id).toBe(27);
     expect(service.usuario()?.modulosIds).toEqual([2, 5, 9]);
     expect(service.requiereCambioPassword()).toBe(true);
@@ -86,7 +86,7 @@ describe('AuthService', () => {
     vi.advanceTimersByTime(30 * 60 * 1000);
 
     const logout = http.expectOne('http://localhost:5043/api/auth/logout');
-    expect(logout.request.body).toEqual({ refreshToken: 'refresh-token-activo' });
+    expect(logout.request.body).toBeNull();
     logout.flush({ success: true });
     expect(service.getAccessToken()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
@@ -99,12 +99,12 @@ describe('AuthService', () => {
     vi.advanceTimersByTime(5 * 60 * 1000);
 
     const refresh = http.expectOne('http://localhost:5043/api/auth/refresh');
-    expect(refresh.request.body).toEqual({ refreshToken: 'refresh-token-activo' });
+    expect(refresh.request.body).toBeNull();
     const renovada = crearLoginResponse('access-renovado', 'refresh-renovado');
     refresh.flush({ success: true, datos: renovada });
 
     expect(service.getAccessToken()).toBe(renovada.accessToken);
-    expect(localStorage.getItem('refresh_token')).toBe('refresh-renovado');
+    expect(localStorage.getItem('refresh_token')).toBeNull();
   });
 
   it('una renovación automática no reinicia el reloj de inactividad del usuario', () => {
@@ -117,14 +117,13 @@ describe('AuthService', () => {
 
     vi.advanceTimersByTime(25 * 60 * 1000);
     const logout = http.expectOne('http://localhost:5043/api/auth/logout');
-    expect(logout.request.body).toEqual({ refreshToken: 'refresh-renovado' });
+    expect(logout.request.body).toBeNull();
     logout.flush({ success: true });
 
     expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
   });
 
   it('comparte una sola petición cuando varias operaciones solicitan refresh simultáneamente', () => {
-    localStorage.setItem('refresh_token', 'refresh-anterior');
     const response = crearLoginResponse('access-token-2', 'refresh-token-2');
     const resultado1 = vi.fn();
     const resultado2 = vi.fn();
@@ -134,12 +133,12 @@ describe('AuthService', () => {
 
     const requests = http.match('http://localhost:5043/api/auth/refresh');
     expect(requests).toHaveLength(1);
-    expect(requests[0].request.body).toEqual({ refreshToken: 'refresh-anterior' });
+    expect(requests[0].request.body).toBeNull();
     requests[0].flush({ success: true, datos: response });
 
     expect(resultado1).toHaveBeenCalledOnce();
     expect(resultado2).toHaveBeenCalledOnce();
-    expect(localStorage.getItem('refresh_token')).toBe('refresh-token-2');
+    expect(localStorage.getItem('refresh_token')).toBeNull();
   });
 
   it('conserva la sesión activa cuando el refresh falla por red o servidor', () => {
@@ -156,7 +155,7 @@ describe('AuthService', () => {
     expect(error).toHaveBeenCalledOnce();
     expect(service.estaLogueado()).toBe(true);
     expect(service.getAccessToken()).not.toBeNull();
-    expect(localStorage.getItem('refresh_token')).toBe('refresh-token-activo');
+    expect(localStorage.getItem('refresh_token')).toBeNull();
     expect(router.navigate).not.toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
   });
 
@@ -182,22 +181,25 @@ describe('AuthService', () => {
     const error = vi.fn();
     service.refreshToken().subscribe({ error });
 
+    const request = http.expectOne('http://localhost:5043/api/auth/refresh');
+    expect(request.request.body).toBeNull();
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ success: false, mensaje: 'Refresh rechazado' }, { status: 401, statusText: 'Unauthorized' });
+
     expect(error).toHaveBeenCalledOnce();
     expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
-    http.expectNone('http://localhost:5043/api/auth/refresh');
   });
 
   it('renueva y reemplaza la sesión local', () => {
-    localStorage.setItem('refresh_token', 'refresh-anterior');
     const response = crearLoginResponse('access-token-2', 'refresh-token-2');
 
     service.refreshToken().subscribe();
     const request = http.expectOne('http://localhost:5043/api/auth/refresh');
-    expect(request.request.body).toEqual({ refreshToken: 'refresh-anterior' });
+    expect(request.request.body).toBeNull();
     request.flush({ success: true, datos: response });
 
     expect(service.getAccessToken()).toBe(response.accessToken);
-    expect(localStorage.getItem('refresh_token')).toBe('refresh-token-2');
+    expect(localStorage.getItem('refresh_token')).toBeNull();
   });
 
   it('envía los contratos de recuperación y cambio de contraseña', () => {
@@ -223,7 +225,7 @@ describe('AuthService', () => {
 
   function crearLoginResponse(
     accessLabel: string,
-    refreshToken: string,
+    _refreshToken: string,
     expiresAt = '2099-12-31T23:59:59Z',
     role = 'ADMINISTRADOR'
   ): LoginResponse {
@@ -246,7 +248,6 @@ describe('AuthService', () => {
     const accessToken = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode(payload)}.firma`;
     return {
       accessToken,
-      refreshToken,
       expiresAt,
       usuario: {} as LoginResponse['usuario']
     };

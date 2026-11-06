@@ -51,6 +51,18 @@ builder.Services.AddControllers()
         opts.SerializerSettings.NullValueHandling     = Newtonsoft.Json.NullValueHandling.Ignore;
     });
 
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-XSRF-TOKEN";
+    options.Cookie.Name = "XSRF-TOKEN";
+    options.Cookie.HttpOnly = false;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+    options.Cookie.Path = "/api/auth";
+});
+
 // Reconciles any evidence file journal entries left by a terminated request or ambiguous Oracle commit.
 builder.Services.AddHostedService<DurableFileOperationRecoveryHostedService>();
 

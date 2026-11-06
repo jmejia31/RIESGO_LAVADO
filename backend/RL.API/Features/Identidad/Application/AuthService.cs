@@ -139,11 +139,16 @@ public class AuthService : IAuthService
     }
 
 
-
-    public async Task LogoutAsync(long usrId, string refreshToken)
+    public async Task<bool> LogoutAsync(string refreshToken)
     {
+        if (string.IsNullOrWhiteSpace(refreshToken)) return false;
+
+        var usrId = await _usuarioRepo.BuscarUsuarioIdPorRefreshTokenAsync(refreshToken);
+        if (!usrId.HasValue || usrId.Value <= 0) return false;
+
         await _usuarioRepo.RevocarRefreshTokenAsync(refreshToken);
-        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usrId.ToString(), "LOGOUT", null, null, usrId, null, null, "Auth");
+        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usrId.Value.ToString(), "LOGOUT", null, null, usrId.Value, null, null, "Auth");
+        return true;
     }
 
     private Task AuditarLoginAsync(string identificador, Usuario? usuario, string ip, string resultado, string? motivo)

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using RL.API.Features.Identidad.Application;
@@ -17,12 +18,27 @@ public class AuthController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IActivoDirectorioService _adService;
     private readonly ILogger<AuthController> _logger;
+    private readonly IAntiforgery? _antiforgery;
+    private readonly IWebHostEnvironment? _environment;
+    private readonly IConfiguration? _configuration;
 
-    public AuthController(IAuthService authService, IActivoDirectorioService adService, ILogger<AuthController> logger)
+    private const string RefreshCookieName = "RL-RefreshToken";
+    private const string RefreshCookiePath = "/api/auth";
+
+    public AuthController(
+        IAuthService authService,
+        IActivoDirectorioService adService,
+        ILogger<AuthController> logger,
+        IAntiforgery? antiforgery = null,
+        IWebHostEnvironment? environment = null,
+        IConfiguration? configuration = null)
     {
         _authService = authService;
         _adService   = adService;
         _logger      = logger;
+        _antiforgery = antiforgery;
+        _environment = environment;
+        _configuration = configuration;
     }
 
     /// <summary>Iniciar sesión</summary>
@@ -44,7 +60,8 @@ public class AuthController : ControllerBase
             if (response == null)
                 return Unauthorized(new { success = false, mensaje = "Credenciales inválidas" });
 
-            return Ok(new { success = true, datos = response });
+            EmitSessionCookies(response);
+            return NoStore(Ok(new { success = true, datos = PublicSession(response) }));
         }
         catch (System.InvalidOperationException ex)
         {
@@ -63,29 +80,31 @@ public class AuthController : ControllerBase
     /// <summary>Renovar Access Token con Refresh Token</summary>
     [HttpPost("refresh")]
     [AllowAnonymous]
-    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Refresh()
     {
         var ip       = HttpContext.GetClientIp();
-        var response = await _authService.RefreshTokenAsync(dto.RefreshToken, ip ?? "unknown");
+        var response = await _authService.RefreshTokenAsync(Request.Cookies[RefreshCookieName] ?? string.Empty, ip ?? "unknown");
 
         if (response == null)
-            return Unauthorized(new { success = false, mensaje = "Refresh token inválido o expirado" });
-
-        return Ok(new { success = true, datos = response });
+        {
+            ClearSessionCookies();
+            return Unauthorized(new { success = false, mensaje = "Refresh rejected" });
+        }
+        EmitRefreshCookie(response);
+        return NoStore(Ok(new { success = true, datos = PublicSession(response) }));
     }
 
     /// <summary>Cerrar sesión</summary>
     [HttpPost("logout")]
-    [Authorize]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
     [AuditRequired("Logout de usuario")]
-    public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto dto)
+    public async Task<IActionResult> Logout()
     {
-        var claimUsr = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (claimUsr != null)
-        {
-            var usrId = Convert.ToInt64(claimUsr.Value);
-            await _authService.LogoutAsync(usrId, dto.RefreshToken);
-        }
+        var cookie = Request.Cookies[RefreshCookieName] ?? string.Empty;
+        await _authService.LogoutAsync(cookie);
+        ClearSessionCookies();
         return Ok(new { success = true, mensaje = "Sesión cerrada correctamente" });
     }
 
@@ -291,6 +310,61 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { success = false, mensaje = "Ocurrió un error interno al procesar la solicitud." });
         }
     }
+    private AuthSessionResponseDto PublicSession(LoginResponseDto response) => new()
+    {
+        AccessToken = response.AccessToken,
+        ExpiresAt = response.ExpiresAt,
+        Usuario = response.Usuario
+    };
+
+    private void EmitSessionCookies(LoginResponseDto response)
+    {
+        _antiforgery?.GetAndStoreTokens(HttpContext);
+        EmitRefreshCookie(response);
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
+    }
+
+    private void EmitRefreshCookie(LoginResponseDto response)
+    {
+        var lifetime = response.ExpiresAt - DateTime.UtcNow;
+        Response.Cookies.Append(RefreshCookieName, response.RefreshToken, RefreshCookieOptions(
+            lifetime > TimeSpan.Zero ? lifetime : TimeSpan.FromDays(1)));
+    }
+
+    private void ClearSessionCookies()
+    {
+        Response.Cookies.Delete(RefreshCookieName, RefreshCookieOptions(TimeSpan.Zero));
+        Response.Cookies.Delete("XSRF-TOKEN", new CookieOptions
+        {
+            Path = RefreshCookiePath,
+            Secure = RefreshCookieSecure,
+            SameSite = SameSiteMode.Strict
+        });
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
+    }
+
+    private CookieOptions RefreshCookieOptions(TimeSpan lifetime) => new()
+    {
+        HttpOnly = true,
+        Secure = RefreshCookieSecure,
+        SameSite = SameSiteMode.Strict,
+        Path = RefreshCookiePath,
+        IsEssential = true,
+        Expires = lifetime == TimeSpan.Zero ? DateTimeOffset.UnixEpoch : DateTimeOffset.UtcNow.Add(lifetime)
+    };
+
+    private bool RefreshCookieSecure => _environment is null || !_environment.IsDevelopment()
+        || _configuration?.GetValue("Auth:RefreshCookie:Secure", false) == true;
+
+    private IActionResult NoStore(IActionResult result)
+    {
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
+        return result;
+    }
+
     private long ObtenerUsuarioId()
     {
         return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

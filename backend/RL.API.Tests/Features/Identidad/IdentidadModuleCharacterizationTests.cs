@@ -40,6 +40,9 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.Equal("api/[controller]", route.Template);
         Assert.NotNull(login.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).SingleOrDefault());
         Assert.NotNull(refresh.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).SingleOrDefault());
+        Assert.Empty(refresh.GetParameters());
+        Assert.NotNull(refresh.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
+        Assert.NotNull(type.GetMethod(nameof(AuthController.Logout))!.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
         Assert.NotNull(recuperar.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).SingleOrDefault());
         Assert.NotNull(perfil.GetCustomAttributes(typeof(AuthorizeAttribute), true).SingleOrDefault());
         Assert.Equal("ADMINISTRADOR", Assert.Single(crear.GetCustomAttributes(typeof(AuthorizeAttribute), true).Cast<AuthorizeAttribute>()).Roles);
@@ -118,6 +121,28 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.DoesNotContain("ORA-28000", json, StringComparison.Ordinal);
         Assert.DoesNotContain("oracle.example", json, StringComparison.Ordinal);
         Assert.Contains("No fue posible iniciar sesión", documento.RootElement.GetProperty("mensaje").GetString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AuthController_Login_EntregaRefreshSoloEnCookieHttpOnly()
+    {
+        var controller = CrearController(new AuthServiceFake
+        {
+            LoginResponse = CrearLoginResponse("access", "refresh")
+        }, new ActivoDirectorioServiceFake());
+
+        var result = await controller.Login(new LoginRequestDto { Email = "ana@ihss.hn", Password = "ClaveSegura123!" });
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var json = JsonSerializer.Serialize(ok.Value);
+        Assert.DoesNotContain("refresh", json, StringComparison.OrdinalIgnoreCase);
+        var setCookie = Assert.Single(controller.Response.Headers.SetCookie.ToArray());
+        Assert.Contains("RL-RefreshToken=refresh", setCookie, StringComparison.Ordinal);
+        Assert.Contains("path=/api/auth", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("secure", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("httponly", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=strict", setCookie, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("domain=", setCookie, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -238,6 +263,14 @@ public sealed class IdentidadModuleCharacterizationTests
         return controller;
     }
 
+    private static LoginResponseDto CrearLoginResponse(string accessToken, string refreshToken) => new()
+    {
+        AccessToken = accessToken,
+        RefreshToken = refreshToken,
+        ExpiresAt = DateTime.UtcNow.AddDays(1),
+        Usuario = new UsuarioInfoDto { Id = 27, Nombre = "Ana", Apellido = "Perez", Email = "ana@ihss.hn" }
+    };
+
     private static AuthService CrearServicio(
         IUsuarioRepository usuarios,
         IAuditoriaRepository auditoria,
@@ -301,13 +334,14 @@ public sealed class IdentidadModuleCharacterizationTests
     private sealed class AuthServiceFake : IAuthService
     {
         public Exception? ExcepcionLogin { get; init; }
+        public LoginResponseDto? LoginResponse { get; init; }
         public Task<LoginResponseDto?> LoginAsync(LoginRequestDto dto, string ip)
         {
             if (ExcepcionLogin is not null) return Task.FromException<LoginResponseDto?>(ExcepcionLogin);
-            return Task.FromResult<LoginResponseDto?>(null);
+            return Task.FromResult(LoginResponse);
         }
         public Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip) => Task.FromResult<LoginResponseDto?>(null);
-        public Task LogoutAsync(long usrId, string refreshToken) => Task.CompletedTask;
+        public Task<bool> LogoutAsync(string refreshToken) => Task.FromResult(false);
         public Task<bool> CambiarPasswordAsync(long usrId, CambiarPasswordDto dto) => Task.FromResult(false);
         public Task<UsuarioInfoDto?> CrearUsuarioAsync(CrearUsuarioDto dto, long creadoPor) => Task.FromResult<UsuarioInfoDto?>(null);
         public Task<bool> ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto, long actualizadoPor) => Task.FromResult(false);

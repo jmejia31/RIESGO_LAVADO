@@ -49,7 +49,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Limpiar cualquier sesión previa para evitar tokens obsoletos
     localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     localStorage.removeItem('token_expira');
 
     this.cargarSlides();

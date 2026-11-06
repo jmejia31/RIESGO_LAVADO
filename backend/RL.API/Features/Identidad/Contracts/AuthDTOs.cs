@@ -21,6 +21,13 @@ public class LoginResponseDto
     public UsuarioInfoDto Usuario { get; set; } = null!;
 }
 
+public class AuthSessionResponseDto
+{
+    public string AccessToken { get; set; } = string.Empty;
+    public DateTime ExpiresAt { get; set; }
+    public UsuarioInfoDto Usuario { get; set; } = null!;
+}
+
 public class RefreshTokenRequestDto
 {
     [Required(ErrorMessage = "El refresh token es requerido")]
