@@ -10329,6 +10329,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Commit de código: `aebb2a274697919095fdd512672aaf2a349c5cbb`, pendiente de publicación hasta registrar este handoff documental en el mismo worktree. No se tocó Oracle institucional, QA, producción, `main`, migración 54, watcher, cola ni `PRUEBA_FORMULARIO`.
 - Limitaciones: no se ejecutó Playwright de autenticación contra un entorno real ni Oracle XE local; la certificación final H11-B queda pendiente del Quality Gate del SHA publicado y de verificar el flujo real de navegador. El access token continúa en `localStorage` como riesgo residual documentado.
 - Continuación exacta: publicar el commit de código y este handoff en `origin/desarrollo`, verificar sincronización y leer el nuevo Quality Gate antes de declarar `P05_H11B_CERTIFIED`.
+
+## 2026-11-06 10:10 -06:00 - P05 H11-B Quality Gate certificado (COD)
+
+- El commit publicado `107c28b1b64b16214cf8a68b3d99d0e06e30f5ca` mantuvo `origin/desarrollo` sincronizado y obtuvo `42246540026=SUCCESS`, `attempt=1`, con SHA exacto; ambos jobs finalizaron SUCCESS.
+- El job integral confirmó validadores, build, ESLint, Oracle XE descartable, quality gates de repositorio, reconciliación de 59 identidades, transiciones/auditoría, recuperación durable, cálculos, contenedores y artefactos de navegador.
+- `P05_H11B_CERTIFIED=YES` para el SHA `107c28b1b64b16214cf8a68b3d99d0e06e30f5ca`. No se modificaron producción, `main`, Oracle institucional, QA, migración 54, watcher, cola ni `PRUEBA_FORMULARIO`.
+- La evidencia Playwright específica de cookie HttpOnly en un entorno real no forma parte de este gate; queda como verificación de despliegue/aceptación, no como afirmación ejecutada localmente. El access token conserva el riesgo residual documentado en `localStorage`.
 ## 2026-11-06 - P05 continuación: fuente histórica y revisión técnica (COD)
 
 - Se recuperó la fuente histórica `AUDIT_SOURCE_SHA=76e057dd6f040778fb3f0e1043aca019d270fbb6`, modo `READ_ONLY`, gate `38759493745=SUCCESS`. Se preservó el expediente previo `8262aad0` y no se repitió la investigación documental anterior.

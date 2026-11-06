@@ -3753,3 +3753,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUALITY_GATE_PREVIOUS=42240716603`; `QUALITY_GATE_PREVIOUS_STATUS=SUCCESS`; `QUALITY_GATE_FINAL=PENDING_PUBLICATION`; `P05_H11B_STATUS=IMPLEMENTED_PENDING_QUALITY_GATE`.
 - `P05_H11A_STATUS=DOCUMENTED_DECISION_PENDING`; `P06_STATUS=NOT_STARTED`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`; `MAIN_MODIFIED=NO`; `MIGRATION_54_MODIFIED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Punto de continuación: publicar selectivamente el commit de código y este estado, confirmar `origin/desarrollo`, esperar el nuevo gate y no declarar certificación antes de su SUCCESS.
+
+## Estado vigente - P05 H11-B certificado técnicamente (COD) - 2026-11-06
+
+- `CERTIFIED_SHA=107c28b1b64b16214cf8a68b3d99d0e06e30f5ca`; `QUALITY_GATE=42246540026`; `QUALITY_GATE_STATUS=SUCCESS`; `RUN_ATTEMPT=1`; SHA exacto confirmado en `origin/desarrollo`.
+- `P05_H11B_STATUS=CERTIFIED_TECHNICALLY`; cookie HttpOnly/secure/strict/host-only/scoped PASS; refresh token ausente de JSON y almacenamiento accesible de Angular; anti-forgery aplicado a refresh/logout.
+- Evidencia local y CI: backend Identidad `16 PASS, 1 SKIP`; Angular `957/957 PASS`; lint/build PASS; CI integral con Oracle XE descartable, validadores, E2E, contenedores y artefactos PASS.
+- Limitación vigente: no se ejecutó Playwright específico de login/refresh/logout contra un entorno real desde esta intervención; no declarar protección de producción ni eliminar el riesgo residual del access token en `localStorage`.
+- `P05_H11A_STATUS=DOCUMENTED_DECISION_PENDING`; `P06_STATUS=NOT_STARTED`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`; `MAIN_MODIFIED=NO`; `MIGRATION_54_MODIFIED=NO`; `BLOCK10_AUTHORIZED=NO`.
