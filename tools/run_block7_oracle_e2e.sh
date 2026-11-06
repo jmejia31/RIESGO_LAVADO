@@ -74,6 +74,7 @@ fi
 echo 'BLOCK7_REAL_API_ORACLE_READY=PASS'
 
 pushd "$repo_root/frontend/rl-app" >/dev/null
+tx12_log_start_line="$(wc -l < "$api_log" | tr -d '[:space:]')"
 if ! tx12_output="$(RL_P03_TX12_AUDIT_FAILURE_REQUIRED=true npm run e2e -- e2e/tx12-audit-rollback-real.spec.ts 2>&1 | tee /dev/stderr)"; then
   popd >/dev/null
   echo 'TX12 Oracle API host diagnostics (secrets omitted):' >&2
@@ -100,6 +101,7 @@ done
 tx12_disable_output="$(curl --silent --show-error --fail --request POST http://127.0.0.1:5043/__e2e/tx12-audit-disable)"
 grep -Fq '"removed":true' <<<"$tx12_disable_output"
 tx12_disabled=true
+tx12_log_end_line="$(wc -l < "$api_log" | tr -d '[:space:]')"
 echo 'P03_TX12_FRONTEND_NEGATIVE_E2E=PASS'
 echo 'P03_TX12_TEMPORARY_FAULT_REMOVED=YES'
 
@@ -299,7 +301,10 @@ done
 echo 'P0_DELETE_REAL_BROWSER_E2E=PASS'
 grep -Fq 'BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006' <<<"$browser_output"
 # Inspect only the API host log and report counts, never exception text or connection data.
-oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_log" || true)"
+api_log_without_expected_tx12="$(mktemp)"
+awk -v start="$tx12_log_start_line" -v end="$tx12_log_end_line" 'NR <= start || NR > end' "$api_log" > "$api_log_without_expected_tx12"
+oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_log_without_expected_tx12" || true)"
+rm -f "$api_log_without_expected_tx12"
 if [[ -n "$oracle_error_matches" ]]; then
   oracle_error_count="$(printf '%s\n' "$oracle_error_matches" | wc -l | tr -d '[:space:]')"
   echo "BLOCK7_UNEXPECTED_ORACLE_ERRORS=$oracle_error_count" >&2
