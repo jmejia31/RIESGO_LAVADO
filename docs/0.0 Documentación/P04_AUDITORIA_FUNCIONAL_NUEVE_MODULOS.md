@@ -2,8 +2,8 @@
 
 ## Auditoría funcional de los nueve módulos
 
-Fuente de código auditada: `07293984d3655e6cf6ab685d1821fe1f795a8729`  
-Rama: `desarrollo`  
+Fuente de código auditada: `07293984d3655e6cf6ab685d1821fe1f795a8729`
+Rama: `desarrollo`
 Quality Gate funcional vigente: [42154789302](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42154789302), SUCCESS, attempt 1.
 
 ### Evidencia ejecutada en esta intervención
