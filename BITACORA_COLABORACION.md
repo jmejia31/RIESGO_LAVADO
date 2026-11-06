@@ -1,3 +1,11 @@
+## 2026-11-06 11:43 -06:00 — Firma independiente CI P05 H11-B y handoff P06 (CHAT)
+
+- Se verificó en GitHub el source `499974072170f5790635c878db60e1f2964cc866` en `origin/desarrollo`; Quality Gate `42261424014` `SUCCESS`, intento 1 y SHA exacto; jobs `128042048471` y `128042121794` `SUCCESS`.
+- Se revisaron `AuthController.cs` (rotación y renovación de request token CSRF, caducidad del refresh) y log CI: `957/957` tests Angular PASS y atomicidad Oracle XE focalizada PASS. No se volvieron a ejecutar pruebas locales ni se usaron credenciales institucionales.
+- Dictamen `P05_H11B_TECHNICAL_CI=CERTIFIED_WITH_DOCUMENTED_LIMITATIONS`, expediente `docs/certificaciones/P05_H11B_CIERRE_TECNICO_49997407.md`; limitación `AUTH_REAL_E2E=PENDING_ALLOWED_ENVIRONMENT` y riesgo residual access token localStorage, H11-A hash/indexación pendiente.
+- Se dejó preparado handoff documental P06 Issue #25: tareas de la cola `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002` en READY, sin activar watcher, sin conexión QA ni mutaciones, `QA_SECRET_ACCESS_GATE=BLOCKED`, `BLOCK10_AUTHORIZED=NO`.
+- Se cambió únicamente documentación (`docs/certificaciones/P05_H11B_CIERRE_TECNICO_49997407.md`, `docs/certificaciones/P05_SEGURIDAD_USUARIOS.md`, `docs/certificaciones/INDEX.json`, bitácora y estado), sin código, scripts, main, producción ni Oracle institucional. Código certificado conserva SHA `499974072170f5790635c878db60e1f2964cc866`; el commit documental de cierre es posterior.
+
 ## 2026-11-06 11:24 -06:00 - P05 H11-B verificacion final y renovacion CSRF (COD)
 
 - Base: `c8193f5d74b41e8eee3ffe14cb387e645b7e553f`; Quality Gate previo `42257057607=SUCCESS`, attempt 1, SHA exacto.

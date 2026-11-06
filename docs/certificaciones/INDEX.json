@@ -17,6 +17,21 @@
       "GITHUB_SIGNOFF_URL": "https://github.com/jmejia31/RIESGO_LAVADO/issues/23#issuecomment-6633540601",
       "remote_verification_commit_sha": "01dc9716fb3e00800a74752b68893673dae474cd",
       "github_remote_verified": "YES"
+    },
+    {
+      "id": "P05-H11B",
+      "path": "P05_H11B_CIERRE_TECNICO_49997407.md",
+      "status": "CERTIFIED_TECHNICALLY_WITH_DOCUMENTED_LIMITATIONS",
+      "source_code_sha": "499974072170f5790635c878db60e1f2964cc866",
+      "evidence_commit_sha": "499974072170f5790635c878db60e1f2964cc866",
+      "quality_gate_run": 42261424014,
+      "quality_gate_attempt": 1,
+      "quality_gate_status": "SUCCESS",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/42261424014",
+      "github_signoff_path": "docs/certificaciones/P05_H11B_CIERRE_TECNICO_49997407.md",
+      "auth_real_e2e": "PENDING_ALLOWED_ENVIRONMENT",
+      "p06_status": "READY_FOR_DOCUMENTARY_PREPARATION",
+      "github_remote_verified": "YES"
     }
   ]
 }

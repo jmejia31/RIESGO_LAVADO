@@ -3781,3 +3781,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia local y CI: backend Identidad `16 PASS, 1 SKIP`; Angular `957/957 PASS`; lint/build PASS; CI integral con Oracle XE descartable, validadores, E2E, contenedores y artefactos PASS.
 - Limitación vigente: no se ejecutó Playwright específico de login/refresh/logout contra un entorno real desde esta intervención; no declarar protección de producción ni eliminar el riesgo residual del access token en `localStorage`.
 - `P05_H11A_STATUS=DOCUMENTED_DECISION_PENDING`; `P06_STATUS=NOT_STARTED`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`; `MAIN_MODIFIED=NO`; `MIGRATION_54_MODIFIED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente — firma remota CHAT P05 H11-B y apertura documental P06 — 2026-11-06
+
+- `CERTIFIED_SOURCE_CODE_SHA=499974072170f5790635c878db60e1f2964cc866`, `QUALITY_GATE=42261424014`, `SUCCESS`, `RUN_ATTEMPT=1`, ambos jobs `SUCCESS`, `SHA_MATCH=YES`. Regresión Oracle XE de atomicidad y Angular `957/957 PASS` comprobadas en log CI.
+- `P05_H11B_STATUS=CERTIFIED_TECHNICALLY_WITH_DOCUMENTED_LIMITATIONS`: refresh HttpOnly, antiforgery interno protegido, request token XSRF con path raíz y renovación/expiración alineada al refresh; evidencia detallada `docs/certificaciones/P05_H11B_CIERRE_TECNICO_49997407.md`.
+- Límites: `AUTH_REAL_E2E=PENDING_ALLOWED_ENVIRONMENT`; `ACCESS_TOKEN_LOCALSTORAGE=RESIDUAL_RISK`; `H11A_INDEX_LOOKUP=DOCUMENTED_DEBT`; fallos locales previos de Fase6/LOCAL_XE no se presentan como corregidos. `P04=PASS_WITH_DOCUMENTED_LIMITATIONS`.
+- `P06_STATUS=READY_FOR_DOCUMENTARY_PREPARATION`: Issue #25 `OPEN`, Issue #23 `CLOSED`, cola `ISSUE25-QA-PLAN-001` y `ISSUE25-MATRICES-PLAN-002` `READY`. La carpeta `docs/qa/` aún debe generarla Codex únicamente conforme a `allowed_paths`. `QA_SECRET_ACCESS_GATE=BLOCKED`, `QA_DB_TARGET_VERIFIED=NO`, `QA_WEB_LOGIN_VERIFIED=NO`, `QA_MUTATIONS=DISABLED`.
+- No se han activado watcher, conexiones QA/Oracle institucional, cambios en producción, main, migración 54 ni Block 10. `BLOCK10_AUTHORIZED=NO`. Siguiente: ejecutar preparación QA estática por Codex de modo seguro y revisión humana.

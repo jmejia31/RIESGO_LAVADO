@@ -1,5 +1,7 @@
 # P05 — Seguridad del módulo Usuarios
 
+> **Estado vigente certificado por revisión remota CHAT (2026-11-06):** P05 `PASS_WITH_DOCUMENTED_LIMITATIONS`; H11-B `CERTIFIED_TECHNICALLY_WITH_LIMITATIONS` sobre código `499974072170f5790635c878db60e1f2964cc866`, Quality Gate `42261424014` `SUCCESS`, intento 1. La narrativa histórica `BLOCKED` más abajo se conserva como registro de la búsqueda previa. [Dictamen final H11-B](P05_H11B_CIERRE_TECNICO_49997407.md).
+
 Estado de esta intervención: `BLOCKED` por falta de la fuente original de los tres hallazgos.
 
 ## Alcance y procedencia
@@ -87,3 +89,10 @@ P05_ANGULAR_TESTS=13/13_PASS
 P05_ORACLE_XE_TESTS=NOT_EXECUTED_LOCAL;HISTORICAL_GATE_38759493745_SUCCESS
 P05_STATUS=PASS_WITH_DOCUMENTED_LIMITATIONS
 ```
+
+## Dictamen independiente final H11-B — 2026-11-06 (CHAT)
+
+- `SOURCE_CODE_SHA=499974072170f5790635c878db60e1f2964cc866`, `QUALITY_GATE_RUN=42261424014`, `SUCCESS`, `attempt=1`, ambos jobs `SUCCESS`.
+- H7 `ALREADY_FIXED`; H11-A conserva deuda técnica de búsqueda/indexación; H11-B `CERTIFIED_TECHNICALLY_WITH_LIMITATIONS` por migración HttpOnly, separación CSRF y renovación del request token con vigencia correcta.
+- `AUTH_REAL_E2E=PENDING_ALLOWED_ENVIRONMENT`; `ACCESS_TOKEN_LOCALSTORAGE=RESIDUAL_RISK`; QA, Oracle institucional y producción `NOT_EXECUTED`. No se afirma certificación integral ni aceptación institucional.
+- Dictamen remoto: [P05_H11B_CIERRE_TECNICO_49997407.md](P05_H11B_CIERRE_TECNICO_49997407.md). Siguiente: P06 documental Issue #25; no iniciar Bloque 10.
