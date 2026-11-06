@@ -3724,3 +3724,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia fresca: backend focalizado `71/71 PASS`; Angular `46/46 PASS`; E2E focalizado `18/18 PASS`; contratos de límites `2/2 PASS`; validadores de estructura, DB, documentación y `git diff --check` PASS.
 - `P04_CONFIRMED_FUNCTIONAL_BLOCKERS_UNRESOLVED=0`; `P04_COVERAGE_LIMITATIONS=DOCUMENTED`. No se ejecutó Oracle institucional, no se usaron datos protegidos y no se repitieron campañas P01–P03.
 - Publicación documental: `d9c66b77` en `origin/desarrollo`; `REMOTE_SYNC=YES` verificado después del push. `P04_FUNCTIONAL_AUDIT=PASS`; `P05=NOT_STARTED`.
+## Estado vigente - P05 seguridad del módulo Usuarios (COD) - 2026-11-06
+
+- `SOURCE_SHA=594204723c294ecac50c7380480d3d6b4bcdeec1`; `QUALITY_GATE=42235275235`; `QUALITY_GATE_STATUS=SUCCESS`; `RUN_ATTEMPT=1`; SHA exacto confirmado.
+- La fuente original de los tres hallazgos P05 no fue localizada en AGENTS, bitácora, estado, P04, SECURITY, historial Git, issues ni comentarios remotos. No se inventaron hallazgos sustitutos.
+- Matriz publicada en `docs/certificaciones/P05_SEGURIDAD_USUARIOS.md`: `P05-01=BLOCKED`, `P05-02=BLOCKED`, `P05-03=BLOCKED`; `FINDINGS_IDENTIFIED=0/3`; `FINDINGS_REVIEWED=0/3` en sentido de trazabilidad original.
+- Evidencia ejecutada: backend Identidad `15 PASS, 1 SKIP` por dependencia Oracle XE; Angular Auth/guards/Usuarios `13/13 PASS`; documentación `206/218 PASS`; `git diff --check=PASS`.
+- No hubo cambios de código, Oracle, producción, `main`, migración 54 ni `PRUEBA_FORMULARIO`; untracked ajenos preservados. No se ejecutaron pruebas Oracle ni de explotación.
+- Estado: `P05=BLOCKED_MISSING_ORIGINAL_FINDINGS`; `P06=NOT_STARTED`. Continuación exacta: recibir las tres descripciones originales con fuente, componente y criterio de reproducción; luego reanudar verificación focalizada sin reabrir P01-P04.
+
+<!-- Fin del estado P05 -->

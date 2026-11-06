@@ -10307,3 +10307,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - La invocación directa de Vitest fue descartada como runner incorrecto (`describe is not defined`) y no como defecto; la misma cobertura se ejecutó correctamente mediante `ng test`. No se ejecutó Oracle institucional ni persistencia real de módulos no-Matrices; la limitación queda documentada.
 - No se detectaron defectos funcionales reproducibles. No se modificó código funcional ni se reabrieron P01–P03. P04 queda listo para publicación documental selectiva; P05 continúa `NOT_STARTED`.
 - Publicación completada en dos commits documentales: `d9c66b77` (matriz y trazabilidad) y `49aab533` (normalización y estado). La lectura remota de GitHub confirmó el expediente; el SHA final de esta intervención queda pendiente únicamente de este asiento cronológico.
+## 2026-11-06 08:55 -06:00 - P05 seguridad Usuarios: trazabilidad bloqueada (COD)
+
+- Baseline: rama `desarrollo`, `INITIAL_HEAD=594204723c294ecac50c7380480d3d6b4bcdeec1`; worktree con únicamente untracked ajenos preservados. El gate `42235275235` terminó `SUCCESS`, `run_attempt=1`, sobre el SHA exacto.
+- Alcance: revisión exclusiva de los tres posibles hallazgos originales del módulo Usuarios. Se consultaron AGENTS, bitácora, estado, P04, SECURITY, historial Git, issues/comentarios remotos y las superficies de Identidad/Usuarios.
+- Resultado causal: ninguna fuente consultada contiene una descripción individual verificable de los tres hallazgos. Las observaciones genéricas históricas no se promovieron a hallazgos P05 y no se modificó código por especulación. Se creó la matriz `docs/certificaciones/P05_SEGURIDAD_USUARIOS.md` con `P05-01..03=BLOCKED`.
+- Verificado en esta intervención: backend Identidad `15 PASS, 1 SKIP` (skip Oracle XE disposable); Angular Auth/guards/Usuarios `13/13 PASS`; enlaces documentales PASS (`206` documentos, `218` enlaces); `git diff --check=PASS`.
+- No ejecutado: Oracle XE, pruebas de explotación o cambios funcionales, porque falta el contrato original que determine qué comportamiento debe reproducirse. No se accedió Oracle institucional, producción, QA ni credenciales.
+- Estado: `P05=BLOCKED_MISSING_ORIGINAL_FINDINGS`; `P06=NOT_STARTED`; `MAIN_MODIFIED=NO`; `PRODUCTION_MODIFIED=NO`; `INSTITUTIONAL_ORACLE_MODIFIED=NO`. Punto de continuación: aportar la fuente original de cada hallazgo; después ejecutar únicamente sus reproducciones y regresiones correspondientes.
+
+<!-- Fin del registro P05 -->
