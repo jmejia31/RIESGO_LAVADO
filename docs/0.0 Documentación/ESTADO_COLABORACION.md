@@ -3823,3 +3823,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `PLAYWRIGHT_CONFIG_SHA256=CD27238F11A944B593E726C57C52D46063A3F011347F7D065F6AA1E43F6D6FB6`.
 - `QA_CREDENTIAL_BOUNDARY_VERIFIED=NO`, `BACKEND_EFFECTIVE_PROFILE_VERIFIED=NO`, `QA_DB_TARGET_VERIFIED=NO`, `QA_REAL_AUTH_EXECUTED=NO`, `MATRICES_REAL_TESTS_EXECUTED=NO`, `QA_MUTATIONS=DISABLED`, `QA_AUTONOMOUS_MUTATIONS=DISABLED`.
 - `P06_TECHNICAL_STATUS=BLOCKED_CREDENTIAL_BOUNDARY_AND_DB_PROFILE`; siguiente paso autorizado: ejecutar desde una identidad confiable separada, con secretos introducidos por el propietario y evidencia sanitizada. No activar watcher ni P07/P08.
+-
+## Estado vigente - P06 suite real de autenticacion preparada - 2026-11-07
+
+- `SOURCE_SHA=0c4acdbcf776f35c8f0ac60bcbee03d491698602`; suite `frontend/rl-app/e2e/p06-qa-real-auth.spec.ts` preparada para AUTH-01..AUTH-06, sin mocks ni tokens sinteticos.
+- `PLAYWRIGHT_REAL_SUITE_IMPLEMENTED=YES`; `PLAYWRIGHT_REAL_TESTS_DISCOVERED=6`; `PLAYWRIGHT_NO_CREDENTIAL_RUN=6_SKIPPED`; `PLAYWRIGHT_TYPESCRIPT=PASS`; `PLAYWRIGHT_ARTIFACT_SECURITY=PASS`.
+- `P06_TEST_PACKAGE_MANIFEST_SHA256=c2f580b04b8e09166f7811faa5fd9565a3d3bb89c291fc7c7e70eff53c4de9ec`; el hash identifica package.json, package-lock.json, config QA y suite.
+- `QA_CREDENTIAL_BOUNDARY_VERIFIED=NO`; `TRUSTED_RUNNER_ISOLATION_VERIFIED=NO`; `BACKEND_EFFECTIVE_PROFILE_VERIFIED=NO`; `QA_DB_TARGET_VERIFIED=NO`; `REAL_AUTH_EXECUTED=NO`; `MATRICES_REAL_TESTS_EXECUTED=NO`.
+- `P06_TECHNICAL_STATUS=BLOCKED_TRUSTED_CONTEXT_AND_ORACLE_PROFILE`; la ejecucion con credenciales solo puede realizarla el propietario desde una identidad Windows confiable, con resultados sanitizados. No activar watcher ni P07/P08.

@@ -10402,3 +10402,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Se preparo `frontend/rl-app/playwright.qa.config.ts` con `workers=1`, `retries=0`, base `http://localhost:4200`, `screenshot/trace/video=off`, reporter lineal, sin storage state y sin HAR/HTML.
 - SHA-256 de la configuracion: `CD27238F11A944B593E726C57C52D46063A3F011347F7D065F6AA1E43F6D6FB6`.
 - Bloqueo vigente: no existe ejecutor aislado ni frontera de credenciales verificada; Oracle, login real, CSRF, refresh, logout y Matrices reales permanecen NOT_EXECUTED. Watcher deshabilitado.
+-
+## 2026-11-07 - P06 suite real de autenticacion preparada (COD)
+
+- Base `0c4acdbcf776f35c8f0ac60bcbee03d491698602`, worktree aislado `C:\RIESGO_LAVADO_P06_QA_WORK`; no se modifico el checkout compartido ni se tocaron datos.
+- Se creo `frontend/rl-app/e2e/p06-qa-real-auth.spec.ts` con seis escenarios reales AUTH-01..AUTH-06. Usa solo `RL_QA_WEB_USERNAME` y `RL_QA_WEB_PASSWORD` del contexto confiable, no mocks, JWT sinteticos, `page.route`, storage state ni logs de valores sensibles.
+- Descubrimiento Playwright: `6 tests in 1 file`; ejecucion sin credenciales: `6 skipped`, exit code 0. TypeScript dirigido: PASS con `--ignoreConfig`, `module=Node16`, `moduleResolution=Node16`. No se ejecutaron login, Oracle ni mutaciones.
+- SHA-256 del manifiesto de paquete frontend (package.json, package-lock.json, config QA y suite): `c2f580b04b8e09166f7811faa5fd9565a3d3bb89c291fc7c7e70eff53c4de9ec`.
+- Bloqueo restante: no existe aislamiento Windows verificado ni perfil Oracle efectivo demostrado; la suite queda lista para ejecucion externa y fail-closed sin credenciales.
