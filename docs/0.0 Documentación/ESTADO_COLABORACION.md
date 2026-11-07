@@ -3831,3 +3831,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `P06_TEST_PACKAGE_MANIFEST_SHA256=c2f580b04b8e09166f7811faa5fd9565a3d3bb89c291fc7c7e70eff53c4de9ec`; el hash identifica package.json, package-lock.json, config QA y suite.
 - `QA_CREDENTIAL_BOUNDARY_VERIFIED=NO`; `TRUSTED_RUNNER_ISOLATION_VERIFIED=NO`; `BACKEND_EFFECTIVE_PROFILE_VERIFIED=NO`; `QA_DB_TARGET_VERIFIED=NO`; `REAL_AUTH_EXECUTED=NO`; `MATRICES_REAL_TESTS_EXECUTED=NO`.
 - `P06_TECHNICAL_STATUS=BLOCKED_TRUSTED_CONTEXT_AND_ORACLE_PROFILE`; la ejecucion con credenciales solo puede realizarla el propietario desde una identidad Windows confiable, con resultados sanitizados. No activar watcher ni P07/P08.
+-
+## Estado vigente - P06 paquete fail-closed preparado - 2026-11-07
+
+- `BASE_SHA=f08062198db1a25148791a568dbae39f065b6f59`; `PACKAGE_SHA256=9349b87c805d7f0837d2ab2fb25a7f72a7b5a137ab3f9a316b739b11ed6a24ea`; sin ejecucion autenticada.
+- `PLAYWRIGHT_REAL_SUITE_HARDENED=YES`; `CERTIFICATION_SKIP_FAIL_CLOSED=YES`; `PREFLIGHT=PASS`; descubrimiento `6`; `CERTIFICATION=BLOCKED` con exit code 3 por contexto confiable ausente.
+- Runner exige attestaciones externas fuera del checkout para aislamiento Windows, Oracle efectivo y origen web/TLS; no acepta solo variables booleanas ni archivos dentro del repositorio.
+- `TRUSTED_RUNNER_PACKAGE_PREPARED=YES`; `TRUSTED_RUNNER_STATIC_REVIEW=PASS_WITH_LIMITATIONS`; `TRUSTED_RUNNER_ISOLATION_VERIFIED=NO`; `QA_DB_TARGET_VERIFIED=NO`; `REAL_AUTH_EXECUTED=NO`; `QA_MUTATIONS=DISABLED`; `QA_AUTONOMOUS_MUTATIONS=DISABLED`.
+- `P06_STATUS=READY_FOR_TRUSTED_EXTERNAL_EXECUTION`; requiere revision independiente y ejecucion por propietario/infraestructura. `P07_STATUS=NOT_STARTED`; `P08_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.

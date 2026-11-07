@@ -10410,3 +10410,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Descubrimiento Playwright: `6 tests in 1 file`; ejecucion sin credenciales: `6 skipped`, exit code 0. TypeScript dirigido: PASS con `--ignoreConfig`, `module=Node16`, `moduleResolution=Node16`. No se ejecutaron login, Oracle ni mutaciones.
 - SHA-256 del manifiesto de paquete frontend (package.json, package-lock.json, config QA y suite): `c2f580b04b8e09166f7811faa5fd9565a3d3bb89c291fc7c7e70eff53c4de9ec`.
 - Bloqueo restante: no existe aislamiento Windows verificado ni perfil Oracle efectivo demostrado; la suite queda lista para ejecucion externa y fail-closed sin credenciales.
+-
+## 2026-11-07 - P06 endurecimiento fail-closed y paquete confiable (COD)
+
+- Base `f08062198db1a25148791a568dbae39f065b6f59`; trabajo en `C:\RIESGO_LAVADO_P06_QA_WORK`; no se ejecutaron credenciales, Oracle, watcher ni mutaciones.
+- Se endurecio `p06-qa-real-auth.spec.ts`: AUTH-01 exige contrato externo de rol/modulos; AUTH-03 exige HTTP 400 para CSRF ausente/invalido y 200 valido; AUTH-04 verifica perfil posterior, rotacion y rechazo del refresh anterior; AUTH-05 separa fallo CSRF, logout y revocacion; AUTH-06A rechaza errores internos y queda clasificado como concurrencia backend.
+- Se implemento `tools/p06-qa-runner.ps1` con modos `PREFLIGHT` y `CERTIFICATION`, hash del paquete, descubrimiento obligatorio de 6 escenarios, bloqueo por skips, watcher habilitado, credenciales ausentes, attestaciones faltantes o paquete divergente. Se corrigio la resolucion directa de `$PSScriptRoot` despues de `param()`.
+- Se agregaron `tools/qa/P06_QA_PACKAGE_MANIFEST.json`, `tools/qa/P06_OracleIdentity.sql` y `docs/qa/P06_EJECUTOR_CONFIABLE.md`. Digest vigente: `9349b87c805d7f0837d2ab2fb25a7f72a7b5a137ab3f9a316b739b11ed6a24ea`.
+- Evidencia fresca: `PREFLIGHT=PASS`, `P06_PLAYWRIGHT_DISCOVERY=6`; `CERTIFICATION=BLOCKED` antes de autenticacion por `MISSING_P06_QA_TRUSTED_CONTEXT`, exit code 3. TypeScript dirigido PASS y no se generaron artefactos sensibles.
+- Pendiente externo: identidad Windows confiable, attestacion de aislamiento, origen web/TLS aprobado, evidencia Oracle efectiva y contrato de permisos QA. No declarar P06 certificado.

@@ -1,0 +1,9 @@
+-- P06: execute only from the approved read-only QA/DBA context.
+-- This script contains no credentials and performs no DDL or DML.
+SELECT
+    SYS_CONTEXT('USERENV', 'SESSION_USER') AS SESSION_USER,
+    SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') AS CURRENT_SCHEMA,
+    SYS_CONTEXT('USERENV', 'SERVICE_NAME') AS SERVICE_NAME,
+    SYS_CONTEXT('USERENV', 'DB_NAME') AS DB_NAME,
+    SYS_CONTEXT('USERENV', 'DB_UNIQUE_NAME') AS DB_UNIQUE_NAME
+FROM DUAL;
