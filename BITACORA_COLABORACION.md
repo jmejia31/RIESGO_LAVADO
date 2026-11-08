@@ -10464,3 +10464,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `LOCAL_OWNER_MANUAL` comprueba HTTP 200 sin redireccion en Angular/API y establece `P06_QA_WEB_ORIGIN_VERIFIED` solo despues de esa comprobacion real. La suite ejecuta logout en `afterEach` tambien en modo manual.
 - `tools/p06-owner-manual.ps1` valida precondiciones antes de pedir credenciales, obtiene la configuracion del backend, ejecuta consulta Oracle read-only en memoria con `sqlplus`, valida `RIESGO_LAVADO/hpprod1/hpprod1` y privilegios, y genera evidencia sanitizada externa.
 - Regresiones sin secretos: preflight PASS; manual preflight PASS; logout cleanup PASS; 6 escenarios descubiertos; autenticacion real no ejecutada.
+
+## 2026-11-07 - P06 correspondencia efectiva y privilegios Oracle fail-closed (COD)
+
+- Base `40a7563a5cd92a7653607ef719e14c2fb323c541`; corrección quirúrgica preparada en worktree aislado, sin autenticación, SQL*Plus ni watcher desde Codex.
+- `tools/p06-owner-manual.ps1` ya no infiere solo lectura desde `session_privs`: distingue `QUERY_OPERATION=SELECT_ONLY` y exige ausencia conservadora de roles, privilegios de sistema y privilegios recibidos distintos de SELECT/READ. La ambigüedad bloquea.
+- Antes de solicitar contraseña web, verifica que un único proceso del checkout esperado escucha `localhost:5043` y que `/api/configuracion/sistema` responde HTTP 200. Si no se puede demostrar la correspondencia del backend activo, bloquea.
+- Regresiones sin secretos: `PREFLIGHT=PASS`; contrato completo PASS, incluyendo privilegio efectivo y correspondencia del runtime; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`; autenticación real y Oracle no ejecutados por Codex.
+- Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=f8205cb8a2e9b91ed7f3381da2e7aac745889a784825fe92d2e5ab4434ce6882`. Punto de continuación: revisión final, commit/push selectivo y verificación del Quality Gate.

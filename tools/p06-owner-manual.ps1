@@ -11,6 +11,22 @@ function Stop-Owner([string]$Reason) { Write-Output "P06_OWNER_STATUS=BLOCKED"; 
 function Assert-LocalHttp([string]$Uri) {
     try { $response = Invoke-WebRequest -UseBasicParsing -Uri $Uri -MaximumRedirection 0 -TimeoutSec 5; if ($response.StatusCode -ne 200) { Stop-Owner "LOCAL_HTTP_STATUS_$Uri" } } catch { Stop-Owner "LOCAL_HTTP_UNAVAILABLE_$Uri" }
 }
+function Assert-BackendRuntimeCorrespondence([string]$RepoRoot) {
+    $repoPath = [IO.Path]::GetFullPath($RepoRoot).TrimEnd('\')
+    $processes = @(Get-CimInstance Win32_Process | Where-Object {
+        $_.CommandLine -and $_.CommandLine -match '(?i)RL.API.dll|dotnet.*run' -and $_.CommandLine -match [Regex]::Escape($repoPath)
+    })
+    $listeners = @(Get-NetTCPConnection -LocalPort 5043 -State Listen -ErrorAction SilentlyContinue)
+    $matched = @($listeners | Where-Object { $processes.ProcessId -contains $_.OwningProcess })
+    if ($matched.Count -ne 1 -or $processes.Count -ne 1) { Stop-Owner 'BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN' }
+    $api = $null
+    try { $api = Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:5043/api/configuracion/sistema' -MaximumRedirection 0 -TimeoutSec 5 } catch { Stop-Owner 'BACKEND_READONLY_ENDPOINT_UNAVAILABLE' }
+    if ($api.StatusCode -ne 200) { Stop-Owner 'BACKEND_READONLY_ENDPOINT_STATUS' }
+    try { $ready = Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:5043/readyz' -MaximumRedirection 0 -TimeoutSec 5 } catch { Stop-Owner 'BACKEND_DATABASE_READINESS_UNAVAILABLE' }
+    if ($ready.StatusCode -ne 200) { Stop-Owner 'BACKEND_DATABASE_READINESS_STATUS' }
+    Write-Output 'P06_OWNER_BACKEND_RUNTIME=PASS'
+    return @{ ProcessId = $matched[0].OwningProcess; Endpoint = 'PASS' }
+}
 function Get-SecretMap {
     $lines = @(& dotnet user-secrets list --project (Join-Path $RepoRoot 'backend\RL.API\RL.API.csproj') 2>$null)
     if ($LASTEXITCODE -ne 0) { Stop-Owner 'BACKEND_USER_SECRETS_UNAVAILABLE' }
@@ -30,14 +46,14 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
     $process.StandardInput.WriteLine("connect $UserName/$Password@$DataSource")
     $process.StandardInput.WriteLine('set heading off feedback off pagesize 0 verify off echo off trimspool on')
     $process.StandardInput.WriteLine('whenever sqlerror exit 1')
-    $process.StandardInput.WriteLine("select trim(sys_context('USERENV','CURRENT_SCHEMA')) || '|' || trim(sys_context('USERENV','SERVICE_NAME')) || '|' || trim(sys_context('USERENV','DB_UNIQUE_NAME')) || '|' || case when exists (select 1 from session_privs where privilege like '%ANY%' or privilege in ('INSERT','UPDATE','DELETE','DROP ANY TABLE','ALTER ANY TABLE','CREATE ANY TABLE')) then 'NO' else 'YES' end from dual;")
+    $process.StandardInput.WriteLine("select trim(sys_context('USERENV','CURRENT_SCHEMA')) || '|' || trim(sys_context('USERENV','SERVICE_NAME')) || '|' || trim(sys_context('USERENV','DB_UNIQUE_NAME')) || '|SELECT_ONLY|' || 'EFFECTIVE_NO_DML_DDL_EXECUTE' || '|' || case when (select count(*) from session_roles) = 0 and (select count(*) from session_privs where privilege <> 'CREATE SESSION') = 0 and (select count(*) from user_sys_privs where privilege <> 'CREATE SESSION') = 0 and (select count(*) from user_tab_privs_recd where privilege not in ('SELECT','READ')) = 0 and (select count(*) from user_col_privs_recd where privilege not in ('SELECT','READ')) = 0 then 'YES' else 'NO' end from dual;")
     $process.StandardInput.WriteLine('exit'); $process.StandardInput.Close()
     $stdout = $process.StandardOutput.ReadToEnd(); $stderr = $process.StandardError.ReadToEnd(); $process.WaitForExit()
     if ($process.ExitCode -ne 0 -or $stderr -match '(?i)ORA-|SP2-') { Stop-Owner 'ORACLE_READONLY_IDENTITY_QUERY_FAILED' }
     $line = ($stdout -split "`r?`n" | Where-Object { $_ -match '^\s*[^|]+\|[^|]+\|[^|]+\|[^|]+\s*$' } | Select-Object -Last 1).Trim()
-    if ($line -notmatch '^(?<schema>[^|]+)\|(?<service>[^|]+)\|(?<db>[^|]+)\|(?<readonly>[^|]+)$') { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_UNPARSEABLE' }
-    $identity = @{ Schema=$Matches.schema.Trim(); Service=$Matches.service.Trim(); DbUniqueName=$Matches.db.Trim(); ReadOnly=$Matches.readonly.Trim() }
-    if ($identity.Schema -ine 'RIESGO_LAVADO' -or $identity.Service -ine 'hpprod1' -or $identity.DbUniqueName -ine 'hpprod1' -or $identity.ReadOnly -ne 'YES') { Stop-Owner 'ORACLE_IDENTITY_TARGET_OR_PRIVILEGE_MISMATCH' }
+    if ($line -notmatch '^(?<schema>[^|]+)\|(?<service>[^|]+)\|(?<db>[^|]+)\|(?<operation>[^|]+)\|(?<privilege>[^|]+)\|(?<readonly>[^|]+)$') { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_UNPARSEABLE' }
+    $identity = @{ Schema=$Matches.schema.Trim(); Service=$Matches.service.Trim(); DbUniqueName=$Matches.db.Trim(); QueryOperation=$Matches.operation.Trim(); PrivilegeCheck=$Matches.privilege.Trim(); ReadOnly=$Matches.readonly.Trim() }
+    if ($identity.Schema -ine 'RIESGO_LAVADO' -or $identity.Service -ine 'hpprod1' -or $identity.DbUniqueName -ine 'hpprod1' -or $identity.QueryOperation -ne 'SELECT_ONLY' -or $identity.PrivilegeCheck -ne 'EFFECTIVE_NO_DML_DDL_EXECUTE' -or $identity.ReadOnly -ne 'YES') { Stop-Owner 'ORACLE_IDENTITY_TARGET_OR_PRIVILEGE_MISMATCH' }
     return $identity
 }
 
@@ -48,8 +64,7 @@ $watcher = Get-ScheduledTask -TaskName 'RiesgoLavado-CodexQueue' -ErrorAction Si
 if ($watcher -and $watcher.Settings.Enabled) { Stop-Owner 'WATCHER_ENABLED' }
 Assert-LocalHttp 'http://localhost:4200/'
 Assert-LocalHttp 'http://localhost:5043/healthz'
-$backendProcess = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '(?i)RL.API.dll|dotnet.*run' })
-if ($backendProcess.Count -eq 0) { Stop-Owner 'BACKEND_PROCESS_NOT_FOUND' }
+$backendRuntime = Assert-BackendRuntimeCorrespondence $RepoRoot
 $sqlplus = Get-Command sqlplus -ErrorAction SilentlyContinue
 if (-not $sqlplus) { Stop-Owner 'SQLPLUS_NOT_AVAILABLE' }
 $settings = Get-SecretMap
@@ -59,7 +74,7 @@ if ([string]::IsNullOrWhiteSpace($connection)) { Stop-Owner 'BACKEND_EFFECTIVE_C
 $oracleUser = Get-ConnectionPart $connection 'User Id'; $oraclePassword = Get-ConnectionPart $connection 'Password'; $dataSource = Get-ConnectionPart $connection 'Data Source'
 $identity = Invoke-OracleIdentity $sqlplus.Source $oracleUser $oraclePassword $dataSource
 $identityPath = Join-Path ([IO.Path]::GetTempPath()) ('P06-OracleIdentity-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '.txt')
-[IO.File]::WriteAllLines($identityPath, @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','QUERY_EXECUTED=YES','SCHEMA=' + $identity.Schema,'SERVICE=' + $identity.Service,'DB_UNIQUE_NAME=' + $identity.DbUniqueName,'READ_ONLY=' + $identity.ReadOnly,'PACKAGE_SHA256=' + $packageDigest), [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllLines($identityPath, @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','QUERY_EXECUTED=YES','QUERY_OPERATION=' + $identity.QueryOperation,'PRIVILEGE_CHECK=' + $identity.PrivilegeCheck,'BACKEND_RUNTIME_CORRESPONDENCE=YES','API_READONLY_ENDPOINT=' + $backendRuntime.Endpoint,'CONFIG_SOURCE=BACKEND_PROCESS_CONFIGURATION','SCHEMA=' + $identity.Schema,'SERVICE=' + $identity.Service,'DB_UNIQUE_NAME=' + $identity.DbUniqueName,'READ_ONLY=' + $identity.ReadOnly,'PACKAGE_SHA256=' + $packageDigest), [Text.UTF8Encoding]::new($false))
 Write-Output 'P06_OWNER_ORACLE_IDENTITY=PASS'
 Write-Output 'P06_OWNER_ORACLE_EVIDENCE=GENERATED_EXTERNAL_SANITIZED'
 

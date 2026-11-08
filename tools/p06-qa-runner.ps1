@@ -47,7 +47,7 @@ function Assert-ManualOwnerDbIdentity([string]$PackageDigest) {
         if ($values.ContainsKey($key) -or $value -match '(?i)password|token|secret|connectionstring') { Stop-P06 'MANUAL_DB_IDENTITY_UNSAFE' }
         $values[$key] = $value
     }
-    $expected = @{ SOURCE = 'BACKEND_EFFECTIVE_CONNECTION'; QUERY_EXECUTED = 'YES'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; READ_ONLY = 'YES'; PACKAGE_SHA256 = $PackageDigest }
+    $expected = @{ SOURCE = 'BACKEND_EFFECTIVE_CONNECTION'; QUERY_EXECUTED = 'YES'; QUERY_OPERATION = 'SELECT_ONLY'; PRIVILEGE_CHECK = 'EFFECTIVE_NO_DML_DDL_EXECUTE'; BACKEND_RUNTIME_CORRESPONDENCE = 'YES'; API_READONLY_ENDPOINT = 'PASS'; CONFIG_SOURCE = 'BACKEND_PROCESS_CONFIGURATION'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; READ_ONLY = 'YES'; PACKAGE_SHA256 = $PackageDigest }
     foreach ($key in $expected.Keys) { if ($values[$key] -ne $expected[$key]) { Stop-P06 "MANUAL_DB_IDENTITY_INVALID_$key" } }
     Write-Output 'P06_MANUAL_DB_IDENTITY=PASS'
 }
