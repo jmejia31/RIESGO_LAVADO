@@ -46,14 +46,23 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
     $process.StandardInput.WriteLine("connect $UserName/$Password@$DataSource")
     $process.StandardInput.WriteLine('set heading off feedback off pagesize 0 verify off echo off trimspool on')
     $process.StandardInput.WriteLine('whenever sqlerror exit 1')
-    $process.StandardInput.WriteLine("select trim(sys_context('USERENV','CURRENT_SCHEMA')) || '|' || trim(sys_context('USERENV','SERVICE_NAME')) || '|' || trim(sys_context('USERENV','DB_UNIQUE_NAME')) || '|SELECT_ONLY|' || 'EFFECTIVE_NO_DML_DDL_EXECUTE' || '|' || case when (select count(*) from session_roles) = 0 and (select count(*) from session_privs where privilege <> 'CREATE SESSION') = 0 and (select count(*) from user_sys_privs where privilege <> 'CREATE SESSION') = 0 and (select count(*) from user_tab_privs_recd where privilege not in ('SELECT','READ')) = 0 and (select count(*) from user_col_privs_recd where privilege not in ('SELECT','READ')) = 0 then 'YES' else 'NO' end from dual;")
+    # La identidad y el contrato de persistencia son comprobaciones distintas.
+    # No se exige una cuenta sin DML: login/refresh/logout necesitan persistir
+    # sesiones, rotaciones, revocaciones y auditoría mediante el API.
+    $process.StandardInput.WriteLine("select 'IDENTITY|' || trim(sys_context('USERENV','CURRENT_SCHEMA')) || '|' || trim(sys_context('USERENV','SERVICE_NAME')) || '|' || trim(sys_context('USERENV','DB_UNIQUE_NAME')) || '|SELECT_ONLY' from dual;")
+    $process.StandardInput.WriteLine("select 'PRIVILEGES|AUTH_PERSISTENCE_OWNER|' || case when (select count(*) from user_tables where table_name in ('RL_USUARIOS','RL_REFRESH_TOKENS','RL_AUDITORIA')) = 3 then 'YES' else 'NO' end || '|AUTH_OBJECTS_VALID|' || case when (select count(*) from user_objects where object_name in ('RL_USUARIOS','RL_REFRESH_TOKENS','RL_AUDITORIA') and status <> 'VALID') = 0 then 'YES' else 'NO' end || '|AUTH_TRIGGERS_VALID|' || case when (select count(*) from user_triggers where table_name in ('RL_USUARIOS','RL_REFRESH_TOKENS','RL_AUDITORIA') and status <> 'ENABLED') = 0 then 'YES' else 'NO' end from dual;")
     $process.StandardInput.WriteLine('exit'); $process.StandardInput.Close()
     $stdout = $process.StandardOutput.ReadToEnd(); $stderr = $process.StandardError.ReadToEnd(); $process.WaitForExit()
     if ($process.ExitCode -ne 0 -or $stderr -match '(?i)ORA-|SP2-') { Stop-Owner 'ORACLE_READONLY_IDENTITY_QUERY_FAILED' }
-    $line = ($stdout -split "`r?`n" | Where-Object { $_ -match '^\s*[^|]+\|[^|]+\|[^|]+\|[^|]+\|[^|]+\|[^|]+\s*$' } | Select-Object -Last 1).Trim()
-    if ($line -notmatch '^(?<schema>[^|]+)\|(?<service>[^|]+)\|(?<db>[^|]+)\|(?<operation>[^|]+)\|(?<privilege>[^|]+)\|(?<readonly>[^|]+)$') { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_UNPARSEABLE' }
-    $identity = @{ Schema=$Matches.schema.Trim(); Service=$Matches.service.Trim(); DbUniqueName=$Matches.db.Trim(); QueryOperation=$Matches.operation.Trim(); PrivilegeCheck=$Matches.privilege.Trim(); PrivilegeResult=$Matches.readonly.Trim() }
-    if ($identity.Schema -ine 'RIESGO_LAVADO' -or $identity.Service -ine 'hpprod1' -or $identity.DbUniqueName -ine 'hpprod1' -or $identity.QueryOperation -ne 'SELECT_ONLY' -or $identity.PrivilegeCheck -ne 'EFFECTIVE_NO_DML_DDL_EXECUTE' -or $identity.PrivilegeResult -ne 'YES') { Stop-Owner 'ORACLE_IDENTITY_TARGET_OR_PRIVILEGE_MISMATCH' }
+    $lines = @($stdout -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^(IDENTITY|PRIVILEGES)\|' })
+    $identityLine = $lines | Where-Object { $_ -like 'IDENTITY|*' } | Select-Object -Last 1
+    $privilegeLine = $lines | Where-Object { $_ -like 'PRIVILEGES|*' } | Select-Object -Last 1
+    $identityMatch = [Regex]::Match($identityLine, '^IDENTITY\|(?<schema>[^|]+)\|(?<service>[^|]+)\|(?<db>[^|]+)\|(?<operation>[^|]+)$')
+    $privilegeMatch = [Regex]::Match($privilegeLine, '^PRIVILEGES\|AUTH_PERSISTENCE_OWNER\|(?<owner>YES|NO)\|AUTH_OBJECTS_VALID\|(?<objects>YES|NO)\|AUTH_TRIGGERS_VALID\|(?<triggers>YES|NO)$')
+    if (-not $identityMatch.Success -or -not $privilegeMatch.Success) { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_UNPARSEABLE' }
+    $identity = @{ Schema=$identityMatch.Groups['schema'].Value.Trim(); Service=$identityMatch.Groups['service'].Value.Trim(); DbUniqueName=$identityMatch.Groups['db'].Value.Trim(); QueryOperation=$identityMatch.Groups['operation'].Value.Trim(); PrivilegeCheck='AUTH_PERSISTENCE_OWNER'; PrivilegeResult=$privilegeMatch.Groups['owner'].Value.Trim(); ObjectsValid=$privilegeMatch.Groups['objects'].Value.Trim(); TriggersValid=$privilegeMatch.Groups['triggers'].Value.Trim() }
+    if ($identity.Schema -ine 'RIESGO_LAVADO' -or $identity.Service -ine 'hpprod1' -or $identity.DbUniqueName -ine 'hpprod1' -or $identity.QueryOperation -ne 'SELECT_ONLY') { Stop-Owner 'ORACLE_IDENTITY_TARGET_MISMATCH' }
+    if ($identity.PrivilegeResult -ne 'YES' -or $identity.ObjectsValid -ne 'YES' -or $identity.TriggersValid -ne 'YES') { Stop-Owner 'ORACLE_AUTH_PERSISTENCE_PRIVILEGE_MISMATCH' }
     return $identity
 }
 
@@ -74,9 +83,15 @@ if ([string]::IsNullOrWhiteSpace($connection)) { Stop-Owner 'BACKEND_EFFECTIVE_C
 $oracleUser = Get-ConnectionPart $connection 'User Id'; $oraclePassword = Get-ConnectionPart $connection 'Password'; $dataSource = Get-ConnectionPart $connection 'Data Source'
 $identity = Invoke-OracleIdentity $sqlplus.Source $oracleUser $oraclePassword $dataSource
 $identityPath = Join-Path ([IO.Path]::GetTempPath()) ('P06-OracleIdentity-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '.txt')
-[IO.File]::WriteAllLines($identityPath, @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','QUERY_EXECUTED=YES','QUERY_OPERATION=' + $identity.QueryOperation,'PRIVILEGE_CHECK=' + $identity.PrivilegeCheck,'PRIVILEGE_RESULT=PASS','BACKEND_RUNTIME_CORRESPONDENCE=YES','API_READONLY_ENDPOINT=' + $backendRuntime.Endpoint,'CONFIG_SOURCE=BACKEND_PROCESS_CONFIGURATION','SCHEMA=' + $identity.Schema,'SERVICE=' + $identity.Service,'DB_UNIQUE_NAME=' + $identity.DbUniqueName,'PACKAGE_SHA256=' + $packageDigest), [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllLines($identityPath, @('SOURCE=OWNER_MANUAL_SQLPLUS_CONNECTION','QUERY_EXECUTED=YES','QUERY_OPERATION=' + $identity.QueryOperation,'PRIVILEGE_CHECK=' + $identity.PrivilegeCheck,'PRIVILEGE_RESULT=PASS','AUTH_OBJECTS_VALID=' + $identity.ObjectsValid,'AUTH_TRIGGERS_VALID=' + $identity.TriggersValid,'BACKEND_RUNTIME_CORRESPONDENCE=' + $backendRuntime.Endpoint,'CONFIG_SOURCE=CANDIDATE_CONFIG_NOT_RUNTIME_PROOF','SCHEMA=' + $identity.Schema,'SERVICE=' + $identity.Service,'DB_UNIQUE_NAME=' + $identity.DbUniqueName,'PACKAGE_SHA256=' + $packageDigest), [Text.UTF8Encoding]::new($false))
 Write-Output 'P06_OWNER_ORACLE_IDENTITY=PASS'
 Write-Output 'P06_OWNER_ORACLE_EVIDENCE=GENERATED_EXTERNAL_SANITIZED'
+
+# /readyz demuestra que la instancia API tiene una conexión operativa, pero no
+# demuestra que esa conexión sea exactamente la identidad obtenida por SQL*Plus.
+# No se solicita aprobación ni credenciales web mientras esa correspondencia no
+# esté expuesta por un diagnóstico seguro del runtime efectivo.
+Stop-Owner 'BACKEND_EFFECTIVE_CONNECTION_UNPROVEN'
 
 $approval = Read-Host 'Escriba P06-OWNER-APPROVED para continuar'
 if ($approval -ne 'P06-OWNER-APPROVED') { Stop-Owner 'MANUAL_OWNER_APPROVAL_REQUIRED' }

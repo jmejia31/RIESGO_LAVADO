@@ -10494,3 +10494,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Correccion exclusiva: `frontend/rl-app/e2e/block7-oracle-real.spec.ts` usa ahora un valor API previo distinto (`Actividad E2E A1 preparada`) y conserva la transicion UI a `Actividad E2E A1 actualizada`. No se modifico backend, Oracle, P06 ni el detector de procesos.
 - Verificaciones ejecutadas: ESLint focalizado PASS; Playwright list PASS (3 tests descubiertos); regresion Angular focalizada PASS (1 archivo, 20 tests); `git diff --check` PASS. E2E Oracle real no se ejecuto localmente por requerir el entorno disposable CI.
 - Estado de publicacion: correccion pendiente de commit/push y de Quality Gate del SHA final. Watcher deshabilitado; autenticacion y Oracle no ejecutados por COD.
+
+## 2026-11-08 - P06 separacion de identidad Oracle y persistencia de autenticacion (COD)
+
+- Base `ff216911baa2065ca5f2043a650f35a957a44e3b`; correccion preparada en worktree limpio, sin credenciales ni conexion Oracle.
+- `tools/p06-owner-manual.ps1` separa `IDENTITY` de `PRIVILEGES`; elimina la exigencia incompatible de cero DML y verifica propiedad/validez de `RL_USUARIOS`, `RL_REFRESH_TOKENS`, `RL_AUDITORIA` y sus triggers.
+- `tools/qa/P06_OracleIdentity.sql` refleja ambas comprobaciones sin DDL/DML. El runner valida el nuevo contrato y el manifiesto SHA-256 fue recalculado.
+- El flujo manual se bloquea antes de solicitar credenciales porque `/readyz` no demuestra que el proceso API use exactamente la identidad SQL*Plus; no se presenta `user-secrets` como prueba de runtime efectivo.
+- Regresiones: parseo PowerShell y manifiesto PASS; contrato completo pendiente por dependencias Playwright no instaladas en el worktree aislado. Oracle, autenticacion y watcher no ejecutados por COD.
+- Punto de continuacion: instalar dependencias de CI o verificar el Gate remoto, publicar selectivamente y conservar `P06_REAL_CERTIFICATION=BLOCKED` hasta evidencia de correspondencia efectiva.

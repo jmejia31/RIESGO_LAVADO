@@ -37,10 +37,10 @@ function Invoke-Runner([string]$Label, [string]$ExpectedReason = '', [string]$Mo
     $exitCode = $LASTEXITCODE
     $text = $output -join "`n"
     if ($ExpectedReason) {
-        if ($exitCode -ne 3 -or $text -notmatch [Regex]::Escape($ExpectedReason)) { throw "$Label failed: expected $ExpectedReason, exit $exitCode" }
+        if ($exitCode -ne 3 -or $text -notmatch [Regex]::Escape($ExpectedReason)) { throw "$Label failed: expected $ExpectedReason, exit $exitCode, output=$text" }
     } else {
         $successMarker = if ($Mode -eq 'LOCAL_OWNER_MANUAL') { 'P06_LOCAL_OWNER_MANUAL_PREFLIGHT=PASS' } else { 'P06_CERTIFICATION_PRECONDITIONS=PASS' }
-        if ($exitCode -ne 0 -or $text -notmatch [Regex]::Escape($successMarker)) { throw "$Label failed: exit $exitCode" }
+        if ($exitCode -ne 0 -or $text -notmatch [Regex]::Escape($successMarker)) { throw "$Label failed: exit $exitCode, output=$text" }
     }
     Write-Output "P06_CONTRACT_$Label=PASS"
 }
@@ -96,7 +96,7 @@ try {
     Invoke-Runner 'HASH_MISMATCH' 'ATTESTATION_HASH_MISMATCH_P06_QA_ISOLATION_ATTESTATION'
 
     Clear-P06Env
-    $manualIdentity = Write-Contract 'manual-db-identity.txt' @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','QUERY_EXECUTED=YES','QUERY_OPERATION=SELECT_ONLY','PRIVILEGE_CHECK=EFFECTIVE_NO_DML_DDL_EXECUTE','PRIVILEGE_RESULT=PASS','BACKEND_RUNTIME_CORRESPONDENCE=YES','API_READONLY_ENDPOINT=PASS','CONFIG_SOURCE=BACKEND_PROCESS_CONFIGURATION','SCHEMA=RIESGO_LAVADO','SERVICE=hpprod1','DB_UNIQUE_NAME=hpprod1',"PACKAGE_SHA256=$digest")
+    $manualIdentity = Write-Contract 'manual-db-identity.txt' @('SOURCE=OWNER_MANUAL_SQLPLUS_CONNECTION','QUERY_EXECUTED=YES','QUERY_OPERATION=SELECT_ONLY','PRIVILEGE_CHECK=AUTH_PERSISTENCE_OWNER','PRIVILEGE_RESULT=PASS','AUTH_OBJECTS_VALID=YES','AUTH_TRIGGERS_VALID=YES','BACKEND_RUNTIME_CORRESPONDENCE=PASS','CONFIG_SOURCE=CANDIDATE_CONFIG_NOT_RUNTIME_PROOF','SCHEMA=RIESGO_LAVADO','SERVICE=hpprod1','DB_UNIQUE_NAME=hpprod1',"PACKAGE_SHA256=$digest")
     Set-EnvValue 'P06_QA_MODE' 'LOCAL_OWNER_MANUAL'; Set-EnvValue 'P06_QA_MANUAL_OWNER_APPROVAL' 'YES'; Set-EnvValue 'P06_QA_EXPECTED_ROLE' 'TEST'; Set-EnvValue 'P06_QA_EXPECTED_MODULE_IDS_JSON' '[1]'; Set-EnvValue 'P06_QA_WEB_ORIGIN' 'http://localhost:4200'; Set-EnvValue 'P06_QA_API_ORIGIN' 'http://localhost:5043'; Set-EnvValue 'P06_QA_MANUAL_DB_IDENTITY_PATH' $manualIdentity; Set-EnvValue 'RL_QA_WEB_USERNAME' 'P06_TEST_SENTINEL'; Set-EnvValue 'RL_QA_WEB_PASSWORD' 'P06_TEST_SENTINEL'
     Invoke-Runner 'LOCAL_OWNER_MANUAL_PREFLIGHT' '' 'LOCAL_OWNER_MANUAL'
 
@@ -113,7 +113,7 @@ try {
     if ($runnerText -notmatch 'CheckSignature\(\$false\)' -or $runnerText -match 'CheckSignature\(\$true\)') { throw 'CMS_CHAIN_VALIDATION_CONTRACT_NOT_PRESENT' }
     Write-Output 'CMS_CHAIN_VALIDATION_CONTRACT=PASS'
     $ownerText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'tools\p06-owner-manual.ps1')
-    if ($ownerText -notmatch "session_privs where privilege <> 'CREATE SESSION'" -or $ownerText -notmatch 'session_roles' -or $ownerText -notmatch 'user_sys_privs' -or $ownerText -notmatch 'user_tab_privs_recd' -or $ownerText -notmatch 'user_col_privs_recd' -or $ownerText -match 'READ_ONLY=') { throw 'ORACLE_EFFECTIVE_PRIVILEGE_CONTRACT_NOT_PRESENT' }
+    if ($ownerText -notmatch 'AUTH_PERSISTENCE_OWNER' -or $ownerText -notmatch 'AUTH_OBJECTS_VALID' -or $ownerText -notmatch 'AUTH_TRIGGERS_VALID' -or $ownerText -match 'EFFECTIVE_NO_DML_DDL_EXECUTE' -or $ownerText -match 'READ_ONLY=') { throw 'ORACLE_EFFECTIVE_PRIVILEGE_CONTRACT_NOT_PRESENT' }
     if ($ownerText -notmatch 'Get-NetTCPConnection' -or $ownerText -notmatch 'api/configuracion/sistema' -or $ownerText -notmatch '/readyz' -or $ownerText -notmatch 'BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN') { throw 'BACKEND_EFFECTIVE_CONFIG_CONTRACT_NOT_PRESENT' }
     Write-Output 'ORACLE_EFFECTIVE_PRIVILEGE_CONTRACT=PASS'
     Write-Output 'BACKEND_EFFECTIVE_CONFIG_CONTRACT=PASS'

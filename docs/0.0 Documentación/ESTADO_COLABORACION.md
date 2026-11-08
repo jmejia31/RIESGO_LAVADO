@@ -3899,6 +3899,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 ## Correccion vigente - Block 7/9 E2E - 2026-11-08
 
+## Correccion vigente P06 - identidad y persistencia Oracle - 2026-11-08
+
+- `BASE_SHA=ff216911baa2065ca5f2043a650f35a957a44e3b`; se separan identidad `RIESGO_LAVADO/hpprod1/hpprod1` y persistencia minima de autenticacion.
+- Se elimino unicamente la exigencia de ausencia absoluta de DML. El contrato exige tablas de sesiones/auditoria y objetos dependientes validos, sin ejecutar escrituras desde el preflight.
+- `BACKEND_EFFECTIVE_CONNECTION_VERIFIED=BLOCKED`: `/readyz` confirma salud, pero no la identidad Oracle exacta del proceso; `dotnet user-secrets` queda clasificado como configuracion candidata, no como prueba.
+- `P06_PREFLIGHT=PARTIAL`; parseo y manifiesto PASS. Contrato completo pendiente por Playwright no instalado en worktree aislado. `P06_REAL_CERTIFICATION=BLOCKED`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
 - `BASE_SHA=5accbc723fa753eb857140740d27ccf55da31d1c`; `QUALITY_GATE_BASE=42443880621_FAILURE`; fallo real confirmado en el E2E Oracle, no aceptado como flaky.
 - `E2E_ROOT_CAUSE=FIXTURE_REPEATED_IDEMPOTENT_ACTIVITY_WRITE`: la preparacion API y la edicion UI enviaban el mismo texto; el escenario ahora prueba una transicion real `A1 preparada -> A1 actualizada`.
 - `CONCURRENCY_409_TELEMETRY=RETAINED`; la expectativa `PUT /borrador 409` no fue eliminada. El `observed=0` era consecuencia del abortar antes de llegar a la fase concurrente.

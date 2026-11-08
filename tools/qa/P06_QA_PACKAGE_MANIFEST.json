@@ -1,10 +1,10 @@
 {
   "version": "P06-QA-REAL-2026-11-07-01",
-  "packageSha256": "ae121a879eeb875bffcde63731714622d84fc619dd75e59c5215fa928c4cdba6",
+  "packageSha256": "f7320e33f00edaab74f53bdb295f8d9389b5477ff2138af65f72fb60311e8735",
   "files": [
     {
       "path": "frontend/rl-app/e2e/p06-qa-real-auth.spec.ts",
-      "sha256": "4408b724c255b899237eee9bbc98ebfb65efa9c384ae4a84bd22e01d36602fb5"
+      "sha256": "c80ab4610fb7b0972889909f32e3da053095adf808dc3471c6403fa096e0c83a"
     },
     {
       "path": "frontend/rl-app/package-lock.json",
@@ -16,23 +16,23 @@
     },
     {
       "path": "frontend/rl-app/playwright.qa.config.ts",
-      "sha256": "4f3bf917a836a37911e714f6b171a6d4bc5b2fa13049bfa4f24b0661f9480487"
+      "sha256": "2ba272a97671ce14ef0d601333a8d4835d93221a333ff3d23f3c5e0bf516eb34"
     },
     {
       "path": "tools/p06-owner-manual.ps1",
-      "sha256": "d3efc00e942be0711021743c20e9ab2a2323b2db915735b2f663d2b33a769bdf"
+      "sha256": "b223100b19917141633a5983b2289cf6cddda6dd560f5b3f36fe338905fd7cfb"
     },
     {
       "path": "tools/p06-qa-runner.ps1",
-      "sha256": "eaed3cbebf7cde712a41d708b6d845fb64cd097bf484a308b7cd7660e61add74"
+      "sha256": "6a3a1f9d123ac13878c76570aab5691222541ada1b25935fd29db120349dea51"
     },
     {
       "path": "tools/p06-qa-contract-tests.ps1",
-      "sha256": "04f40c905ae5b6cca99c95504c15ee0cc552aa5f2e2f0f03daaec7b902a6ae14"
+      "sha256": "cf541ed0b474df3178e5cce25c641b6ca53d469556522bd5dc776df82cd27483"
     },
     {
       "path": "tools/qa/P06_OracleIdentity.sql",
-      "sha256": "a998eefb84cef0bb0345474c43a8c4a1ffd25656ea56e359111f8ad4ace95415"
+      "sha256": "5cc198ea3460180472cc493cbd26939ea046a4bd99261c581a6bc620d30f579a"
     }
   ]
 }
