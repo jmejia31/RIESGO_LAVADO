@@ -17,7 +17,7 @@ export default defineConfig({
   preserveOutput: 'never',
   use: {
     ...devices['Desktop Chrome'],
-    baseURL: 'http://localhost:4200',
+    baseURL: process.env['P06_QA_WEB_ORIGIN'] ?? 'http://localhost:4200',
     screenshot: 'off',
     trace: 'off',
     video: 'off',

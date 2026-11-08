@@ -10419,3 +10419,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Se agregaron `tools/qa/P06_QA_PACKAGE_MANIFEST.json`, `tools/qa/P06_OracleIdentity.sql` y `docs/qa/P06_EJECUTOR_CONFIABLE.md`. Digest vigente: `9349b87c805d7f0837d2ab2fb25a7f72a7b5a137ab3f9a316b739b11ed6a24ea`.
 - Evidencia fresca: `PREFLIGHT=PASS`, `P06_PLAYWRIGHT_DISCOVERY=6`; `CERTIFICATION=BLOCKED` antes de autenticacion por `MISSING_P06_QA_TRUSTED_CONTEXT`, exit code 3. TypeScript dirigido PASS y no se generaron artefactos sensibles.
 - Pendiente externo: identidad Windows confiable, attestacion de aislamiento, origen web/TLS aprobado, evidencia Oracle efectiva y contrato de permisos QA. No declarar P06 certificado.
+
+## 2026-11-07 - P06 compuertas de seguridad y origen autorizado (COD)
+
+- Base `fdddfa3b025b6c418507dd78cfed7737d0a7b1cb`; Quality Gate `42420823281=SUCCESS`, intento 1, SHA exacto confirmado. Trabajo en `C:\RIESGO_LAVADO_P06_QA_WORK`; checkout compartido y untracked ajenos preservados.
+- Correccion quirurgica: `tools/p06-qa-runner.ps1` ahora valida atestaciones con campos cerrados, valores esperados (`CODEX_ACCESS=NO`, `WATCHER_ENABLED=NO`), hash SHA-256 externo, paquete, origen web/API, release y politica TLS; `PREFLIGHT/CERTIFICATION` se propaga explicitamente a Playwright. `-ValidateOnly` valida compuertas sin autenticacion.
+- Configuracion QA y suite usan `P06_QA_WEB_ORIGIN` y `P06_QA_API_ORIGIN`; no se ejecutaron autenticacion, Oracle, mutaciones ni watcher.
+- Se agrego `tools/p06-qa-contract-tests.ps1` con casos adversariales de atestacion, rutas, hashes, campos, secretos, modo y fail-closed. Resultado: todos los casos PASS; `PREFLIGHT_WITHOUT_CREDENTIALS=PASS`; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`; `CERTIFICATION_MODE_PROPAGATION=PASS`.
+- Evidencia: manifiesto `P06_QA_PACKAGE_SHA256=e69bacd72b8838f9bf87cd80f8802c895bcc5b35c9ec0f535856abd490c3908a`; descubrimiento Playwright `6 tests in 1 file`; TypeScript dirigido PASS con `--ignoreConfig --types node`; `git diff --check` PASS.
+- Pendiente externo: atestaciones autenticas, aislamiento Windows, origen/release/TLS aprobado, identidad Oracle efectiva y credenciales bajo custodia del propietario. `P06_REAL_QA_CERTIFICATION=NOT_EXECUTED`.

@@ -1,6 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 
-const apiBaseUrl = 'http://localhost:5043';
+const apiBaseUrl = process.env['P06_QA_API_ORIGIN'] ?? 'http://localhost:5043';
 const mode = process.env['P06_QA_MODE'] ?? 'PREFLIGHT';
 const username = process.env['RL_QA_WEB_USERNAME'] ?? '';
 const password = process.env['RL_QA_WEB_PASSWORD'] ?? '';

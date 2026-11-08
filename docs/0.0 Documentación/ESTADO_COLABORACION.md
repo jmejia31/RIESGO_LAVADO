@@ -3839,3 +3839,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Runner exige attestaciones externas fuera del checkout para aislamiento Windows, Oracle efectivo y origen web/TLS; no acepta solo variables booleanas ni archivos dentro del repositorio.
 - `TRUSTED_RUNNER_PACKAGE_PREPARED=YES`; `TRUSTED_RUNNER_STATIC_REVIEW=PASS_WITH_LIMITATIONS`; `TRUSTED_RUNNER_ISOLATION_VERIFIED=NO`; `QA_DB_TARGET_VERIFIED=NO`; `REAL_AUTH_EXECUTED=NO`; `QA_MUTATIONS=DISABLED`; `QA_AUTONOMOUS_MUTATIONS=DISABLED`.
 - `P06_STATUS=READY_FOR_TRUSTED_EXTERNAL_EXECUTION`; requiere revision independiente y ejecucion por propietario/infraestructura. `P07_STATUS=NOT_STARTED`; `P08_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente - P06 compuertas fail-closed corregidas - 2026-11-07
+
+- `BASE_SHA=fdddfa3b025b6c418507dd78cfed7737d0a7b1cb`; `QUALITY_GATE=42420823281_SUCCESS`; correccion preparada en worktree aislado, sin cambios funcionales del producto.
+- `PACKAGE_SHA256=e69bacd72b8838f9bf87cd80f8802c895bcc5b35c9ec0f535856abd490c3908a`; runner y manifiesto ligados por hashes. Atestaciones requieren contrato cerrado, procedencia/hash externo, `CODEX_ACCESS=NO`, `WATCHER_ENABLED=NO`, paquete, origen y release coincidentes.
+- `PREFLIGHT=PASS`; `PLAYWRIGHT_DISCOVERY=6`; `TYPESCRIPT=PASS`; `CONTRACT_REGRESSIONS=PASS`; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`; autenticacion real y Oracle `NOT_EXECUTED`.
+- `QA_WEB_ORIGIN_CONTRACT_IMPLEMENTED=YES`; `QA_API_ORIGIN_CONTRACT_IMPLEMENTED=YES`; `QA_RELEASE_BINDING_IMPLEMENTED=YES`; `QA_TLS_POLICY_ENFORCED=YES` para destinos no localhost y excepcion localhost explicitamente atestada; verificacion real externa `NOT_VERIFIED`.
+- `WATCHER_ENABLED=NO`; `CODEX_REAL_INVOKED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `P06_STATUS=READY_FOR_EXTERNAL_SECURITY_ATTESTATION`; `P07_STATUS=NOT_STARTED`; `P08_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: revisar diff, ejecutar validadores institucionales aplicables, commit/push selectivo en `origin/desarrollo` y esperar el Quality Gate del nuevo SHA. No ejecutar modo `CERTIFICATION` desde Codex.
