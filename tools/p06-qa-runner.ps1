@@ -88,7 +88,10 @@ function Assert-ExternalAttestation([string]$EnvironmentName, [hashtable]$Expect
         $cms = [System.Security.Cryptography.Pkcs.SignedCms]::new($contentInfo, $true)
         $cms.Decode([IO.File]::ReadAllBytes($signaturePath))
         $cms.CheckSignature($true)
-        if ($cms.SignerInfos.Count -ne 1 -or $cms.SignerInfos[0].Certificate.Thumbprint -ne $trustedThumbprint) { Stop-Contract "ATTESTATION_SIGNER_INVALID_$EnvironmentName" }
+        if ($cms.SignerInfos.Count -ne 1 -or $null -eq $cms.SignerInfos[0].Certificate) { Stop-Contract "ATTESTATION_SIGNER_INVALID_$EnvironmentName" }
+        $signerCertificate = $cms.SignerInfos[0].Certificate
+        $now = [DateTime]::UtcNow
+        if ($signerCertificate.Thumbprint -ne $trustedThumbprint -or $now -lt $signerCertificate.NotBefore.ToUniversalTime() -or $now -gt $signerCertificate.NotAfter.ToUniversalTime()) { Stop-Contract "ATTESTATION_SIGNER_INVALID_$EnvironmentName" }
         if ($values['SIGNATURE_ALGORITHM'] -ne 'CMS-SHA256') { Stop-Contract "ATTESTATION_SIGNATURE_ALGORITHM_INVALID_$EnvironmentName" }
     } catch {
         Stop-Contract "ATTESTATION_SIGNATURE_INVALID_$EnvironmentName"

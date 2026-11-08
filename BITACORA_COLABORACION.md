@@ -10436,3 +10436,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `tools/p06-qa-contract-tests.ps1` verifico firma ausente/invalida, aprobador Codex, expiracion, controles previos y fail-closed. Resultado completo PASS; `PREFLIGHT=PASS`; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`.
 - El proveedor CMS no esta disponible en el PowerShell local actual; esto fue clasificado como bloqueo del entorno confiable y no como PASS. No se usaron credenciales, Oracle ni watcher.
 - Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=d7c32c38de5b5441fa3c732382dd8effea9320e8e0cbbcfc16ecbce798eb0168`. Pendiente: publicar este cambio y ejecutar el nuevo Gate.
+
+## 2026-11-07 - P06 vigencia explicita del certificado CMS (COD)
+
+- Base `c4a1844c4761631f4c0a769a78c5d67be50b3b48`; Gate `42432226001` continua en ejecucion al momento de la verificacion.
+- Se agrego comprobacion explicita de `NotBefore`/`NotAfter` del certificado firmante, ademas de `CheckSignature($true)`, cadena confiable y thumbprint autorizado externo. No se deshabilito validacion de confianza.
+- Regresiones sin credenciales: preflight PASS; suite de contratos PASS; firma invalida, fecha vencida y aprobador Codex bloqueados. `System.Security.Cryptography.Pkcs` sigue no disponible en el PowerShell local; no se ejecuto autenticacion.
+- Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=59e6340f7aca672322f3482909beeb98453d6027f3f19f427402d6061ef48d70`.

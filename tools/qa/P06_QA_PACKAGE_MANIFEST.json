@@ -1,6 +1,6 @@
 {
   "version": "P06-QA-REAL-2026-11-07-01",
-  "packageSha256": "d7c32c38de5b5441fa3c732382dd8effea9320e8e0cbbcfc16ecbce798eb0168",
+  "packageSha256": "59e6340f7aca672322f3482909beeb98453d6027f3f19f427402d6061ef48d70",
   "files": [
     {
       "path": "frontend/rl-app/e2e/p06-qa-real-auth.spec.ts",
@@ -20,7 +20,7 @@
     },
     {
       "path": "tools/p06-qa-runner.ps1",
-      "sha256": "933e91a406646834aeec0178261d457771ed56df9856a84b65770b9e550d9e4b"
+      "sha256": "4ac8a4fdf49ede8fb06875da98b32f9372788ddcc974dc6712207d9103c2fe5b"
     },
     {
       "path": "tools/p06-qa-contract-tests.ps1",

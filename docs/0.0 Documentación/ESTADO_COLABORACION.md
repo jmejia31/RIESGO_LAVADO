@@ -3856,3 +3856,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `PREFLIGHT=PASS`; `PLAYWRIGHT_DISCOVERY=6`; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`; `CERTIFICATION_REAL_AUTH=NOT_EXECUTED`.
 - El proveedor `System.Security.Cryptography.Pkcs` no esta disponible en el PowerShell local; el runner bloquea firma no verificable. El ejecutor confiable externo debe aportar proveedor CMS, certificado confiable y firmas detached fuera del checkout.
 - `WATCHER_ENABLED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `BLOCK10_AUTHORIZED=NO`. Siguiente punto: publicar el commit selectivo y verificar el Gate del nuevo SHA.
+
+## Estado vigente - P06 vigencia explicita del certificado CMS - 2026-11-07
+
+- `BASE_SHA=c4a1844c4761631f4c0a769a78c5d67be50b3b48`; `CMS_CHAIN_VALIDATION=CHECKSIGNATURE_TRUE`; `CMS_CERT_VALIDITY=EXPLICIT`; `CMS_AUTHORIZED_THUMBPRINT=REQUIRED`; `PACKAGE_SHA256=59e6340f7aca672322f3482909beeb98453d6027f3f19f427402d6061ef48d70`.
+- Regresiones sin credenciales PASS; `CERTIFICATION_REAL_AUTH=NOT_EXECUTED`; proveedor CMS local ausente, por lo que la ejecución real permanece bloqueada y fail-closed.
+- `WINDOWS_ISOLATION=NOT_VERIFIED`; `ORACLE_IDENTITY=NOT_VERIFIED`; `WEB_ORIGIN_VERIFIED=NOT_VERIFIED`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
