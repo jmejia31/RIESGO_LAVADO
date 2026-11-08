@@ -3883,6 +3883,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - La consulta Oracle separa la operacion SELECT de la comprobacion de privilegios efectivos; la correspondencia del backend exige proceso unico en el puerto 5043, endpoint de configuracion HTTP 200 y readiness HTTP 200 antes de solicitar credenciales.
 - `PREFLIGHT=PASS`; regresiones contractuales sin secretos PASS; `AUTH_REAL=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 
+## Correccion vigente P06 - parser SQLPlus - 2026-11-07
+
+- `BASE_SHA=fe1d3a8c4557c5628120a3f68c6d63727f88f8c0`; `PACKAGE_SHA256=67a2b2994626d54467948841f05c105b3bab43c6deae0ab515aee7e8b02e48ba`.
+- El parser exige seis campos y separa la operación SELECT de la evaluación conservadora de privilegios efectivos. No se emite `READ_ONLY` para el propietario del esquema.
+- `AUTH_REAL=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
 ## Estado vigente - P06 correspondencia efectiva del backend y privilegios Oracle - 2026-11-07
 
 - `BASE_SHA=40a7563a5cd92a7653607ef719e14c2fb323c541`; corrección local pendiente de publicación; `PACKAGE_SHA256=08ca65374259fe5d165dae8f1c2f7ad47226185e12f486aaed212f1a95207a6a`.

@@ -50,10 +50,10 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
     $process.StandardInput.WriteLine('exit'); $process.StandardInput.Close()
     $stdout = $process.StandardOutput.ReadToEnd(); $stderr = $process.StandardError.ReadToEnd(); $process.WaitForExit()
     if ($process.ExitCode -ne 0 -or $stderr -match '(?i)ORA-|SP2-') { Stop-Owner 'ORACLE_READONLY_IDENTITY_QUERY_FAILED' }
-    $line = ($stdout -split "`r?`n" | Where-Object { $_ -match '^\s*[^|]+\|[^|]+\|[^|]+\|[^|]+\s*$' } | Select-Object -Last 1).Trim()
+    $line = ($stdout -split "`r?`n" | Where-Object { $_ -match '^\s*[^|]+\|[^|]+\|[^|]+\|[^|]+\|[^|]+\|[^|]+\s*$' } | Select-Object -Last 1).Trim()
     if ($line -notmatch '^(?<schema>[^|]+)\|(?<service>[^|]+)\|(?<db>[^|]+)\|(?<operation>[^|]+)\|(?<privilege>[^|]+)\|(?<readonly>[^|]+)$') { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_UNPARSEABLE' }
-    $identity = @{ Schema=$Matches.schema.Trim(); Service=$Matches.service.Trim(); DbUniqueName=$Matches.db.Trim(); QueryOperation=$Matches.operation.Trim(); PrivilegeCheck=$Matches.privilege.Trim(); ReadOnly=$Matches.readonly.Trim() }
-    if ($identity.Schema -ine 'RIESGO_LAVADO' -or $identity.Service -ine 'hpprod1' -or $identity.DbUniqueName -ine 'hpprod1' -or $identity.QueryOperation -ne 'SELECT_ONLY' -or $identity.PrivilegeCheck -ne 'EFFECTIVE_NO_DML_DDL_EXECUTE' -or $identity.ReadOnly -ne 'YES') { Stop-Owner 'ORACLE_IDENTITY_TARGET_OR_PRIVILEGE_MISMATCH' }
+    $identity = @{ Schema=$Matches.schema.Trim(); Service=$Matches.service.Trim(); DbUniqueName=$Matches.db.Trim(); QueryOperation=$Matches.operation.Trim(); PrivilegeCheck=$Matches.privilege.Trim(); PrivilegeResult=$Matches.readonly.Trim() }
+    if ($identity.Schema -ine 'RIESGO_LAVADO' -or $identity.Service -ine 'hpprod1' -or $identity.DbUniqueName -ine 'hpprod1' -or $identity.QueryOperation -ne 'SELECT_ONLY' -or $identity.PrivilegeCheck -ne 'EFFECTIVE_NO_DML_DDL_EXECUTE' -or $identity.PrivilegeResult -ne 'YES') { Stop-Owner 'ORACLE_IDENTITY_TARGET_OR_PRIVILEGE_MISMATCH' }
     return $identity
 }
 
@@ -74,7 +74,7 @@ if ([string]::IsNullOrWhiteSpace($connection)) { Stop-Owner 'BACKEND_EFFECTIVE_C
 $oracleUser = Get-ConnectionPart $connection 'User Id'; $oraclePassword = Get-ConnectionPart $connection 'Password'; $dataSource = Get-ConnectionPart $connection 'Data Source'
 $identity = Invoke-OracleIdentity $sqlplus.Source $oracleUser $oraclePassword $dataSource
 $identityPath = Join-Path ([IO.Path]::GetTempPath()) ('P06-OracleIdentity-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '.txt')
-[IO.File]::WriteAllLines($identityPath, @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','QUERY_EXECUTED=YES','QUERY_OPERATION=' + $identity.QueryOperation,'PRIVILEGE_CHECK=' + $identity.PrivilegeCheck,'BACKEND_RUNTIME_CORRESPONDENCE=YES','API_READONLY_ENDPOINT=' + $backendRuntime.Endpoint,'CONFIG_SOURCE=BACKEND_PROCESS_CONFIGURATION','SCHEMA=' + $identity.Schema,'SERVICE=' + $identity.Service,'DB_UNIQUE_NAME=' + $identity.DbUniqueName,'READ_ONLY=' + $identity.ReadOnly,'PACKAGE_SHA256=' + $packageDigest), [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllLines($identityPath, @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','QUERY_EXECUTED=YES','QUERY_OPERATION=' + $identity.QueryOperation,'PRIVILEGE_CHECK=' + $identity.PrivilegeCheck,'PRIVILEGE_RESULT=PASS','BACKEND_RUNTIME_CORRESPONDENCE=YES','API_READONLY_ENDPOINT=' + $backendRuntime.Endpoint,'CONFIG_SOURCE=BACKEND_PROCESS_CONFIGURATION','SCHEMA=' + $identity.Schema,'SERVICE=' + $identity.Service,'DB_UNIQUE_NAME=' + $identity.DbUniqueName,'PACKAGE_SHA256=' + $packageDigest), [Text.UTF8Encoding]::new($false))
 Write-Output 'P06_OWNER_ORACLE_IDENTITY=PASS'
 Write-Output 'P06_OWNER_ORACLE_EVIDENCE=GENERATED_EXTERNAL_SANITIZED'
 

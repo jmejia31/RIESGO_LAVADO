@@ -10472,3 +10472,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Antes de solicitar contraseña web, verifica que un único proceso del checkout esperado escucha `localhost:5043` y que `/api/configuracion/sistema` responde HTTP 200. Si no se puede demostrar la correspondencia del backend activo, bloquea.
 - Regresiones sin secretos: `PREFLIGHT=PASS`; contrato completo PASS, incluyendo privilegio efectivo y correspondencia del runtime; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`; autenticación real y Oracle no ejecutados por Codex.
 - Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=f8205cb8a2e9b91ed7f3381da2e7aac745889a784825fe92d2e5ab4434ce6882`. Punto de continuación: revisión final, commit/push selectivo y verificación del Quality Gate.
+
+## 2026-11-07 - P06 parser SQLPlus y separación de evidencia (COD)
+
+- Base `fe1d3a8c4557c5628120a3f68c6d63727f88f8c0`; corrección mínima preparada en worktree aislado.
+- El filtro de salida SQLPlus ahora exige seis campos. La evidencia separa `QUERY_OPERATION=SELECT_ONLY` de `PRIVILEGE_CHECK` y `PRIVILEGE_RESULT=PASS`; ya no declara `READ_ONLY` del propietario del esquema.
+- Regresiones sin credenciales y preflight pendientes de ejecutar antes del commit; Oracle, autenticación y watcher no ejecutados por Codex.
+- Manifiesto en preparación: `P06_QA_PACKAGE_SHA256=67a2b2994626d54467948841f05c105b3bab43c6deae0ab515aee7e8b02e48ba`.
