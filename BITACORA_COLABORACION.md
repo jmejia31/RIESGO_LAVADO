@@ -10443,3 +10443,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Se agrego comprobacion explicita de `NotBefore`/`NotAfter` del certificado firmante, ademas de `CheckSignature($true)`, cadena confiable y thumbprint autorizado externo. No se deshabilito validacion de confianza.
 - Regresiones sin credenciales: preflight PASS; suite de contratos PASS; firma invalida, fecha vencida y aprobador Codex bloqueados. `System.Security.Cryptography.Pkcs` sigue no disponible en el PowerShell local; no se ejecuto autenticacion.
 - Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=59e6340f7aca672322f3482909beeb98453d6027f3f19f427402d6061ef48d70`.
+
+## 2026-11-07 - P06 correccion CheckSignature false (COD)
+
+- Base `190837d3bbad38d5c2355860652996e187ed8550`; Gate `42433486732=SUCCESS`, intento 1, SHA exacto confirmado.
+- Cambio exclusivo: `tools/p06-qa-runner.ps1` usa `$cms.CheckSignature($false)`; se mantienen cadena de confianza, thumbprint, vigencia del certificado y aprobador independiente.
+- Regresiones sin credenciales PASS, incluyendo asercion que impide regresar a `$true`; preflight PASS; autenticacion y Oracle no ejecutados.
+- Manifiesto: `P06_QA_PACKAGE_SHA256=9be4354f45b8125680cbdd902432a377ab0655bfa343d9cbc901254e85dda286`. Pendiente: publicar y verificar el Gate del SHA final.

@@ -102,6 +102,8 @@ try {
     Write-Output 'PREFLIGHT_REAL_AUTH_EXECUTED=NO'
     $runnerText = Get-Content -Raw -LiteralPath $runner
     if ($runnerText -notmatch "SetEnvironmentVariable\('P06_QA_MODE'" -or $runnerText -notmatch "skipped.*CERTIFICATION_INCOMPLETE" -or $runnerText -notmatch "6 passed") { throw 'CERTIFICATION_MODE_CONTRACT_NOT_PRESENT' }
+    if ($runnerText -notmatch 'CheckSignature\(\$false\)' -or $runnerText -match 'CheckSignature\(\$true\)') { throw 'CMS_CHAIN_VALIDATION_CONTRACT_NOT_PRESENT' }
+    Write-Output 'CMS_CHAIN_VALIDATION_CONTRACT=PASS'
     Write-Output 'CERTIFICATION_MODE_PROPAGATION=PASS'
     Write-Output 'CERTIFICATION_SKIPPED_TEST_REJECTED=PASS'
     Write-Output 'CERTIFICATION_ZERO_TESTS_REJECTED=PASS'

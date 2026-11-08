@@ -87,7 +87,7 @@ function Assert-ExternalAttestation([string]$EnvironmentName, [hashtable]$Expect
         $contentInfo = [System.Security.Cryptography.Pkcs.ContentInfo]::new([IO.File]::ReadAllBytes($fullPath))
         $cms = [System.Security.Cryptography.Pkcs.SignedCms]::new($contentInfo, $true)
         $cms.Decode([IO.File]::ReadAllBytes($signaturePath))
-        $cms.CheckSignature($true)
+        $cms.CheckSignature($false)
         if ($cms.SignerInfos.Count -ne 1 -or $null -eq $cms.SignerInfos[0].Certificate) { Stop-Contract "ATTESTATION_SIGNER_INVALID_$EnvironmentName" }
         $signerCertificate = $cms.SignerInfos[0].Certificate
         $now = [DateTime]::UtcNow
