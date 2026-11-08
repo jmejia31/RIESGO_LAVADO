@@ -11,7 +11,7 @@ New-Item -ItemType Directory -Path $tempRoot | Out-Null
 
 function Set-EnvValue([string]$Name, [string]$Value) { [Environment]::SetEnvironmentVariable($Name, $Value, 'Process') }
 function Clear-P06Env {
-    @('P06_QA_MODE','P06_QA_TRUSTED_CONTEXT','P06_QA_PACKAGE_SHA256','P06_QA_DB_TARGET_VERIFIED','P06_QA_WEB_ORIGIN_VERIFIED','P06_QA_EXPECTED_ROLE','P06_QA_EXPECTED_MODULE_IDS_JSON','P06_QA_WEB_ORIGIN','P06_QA_API_ORIGIN','P06_QA_RELEASE','P06_QA_LOCALHOST_EXCEPTION','RL_QA_WEB_USERNAME','RL_QA_WEB_PASSWORD','P06_QA_ISOLATION_ATTESTATION_PATH','P06_QA_DB_ATTESTATION_PATH','P06_QA_WEB_ATTESTATION_PATH','P06_QA_ISOLATION_ATTESTATION_SHA256','P06_QA_DB_ATTESTATION_SHA256','P06_QA_WEB_ATTESTATION_SHA256') | ForEach-Object { Set-EnvValue $_ $null }
+    @('P06_QA_MODE','P06_QA_TRUSTED_CONTEXT','P06_QA_PACKAGE_SHA256','P06_QA_DB_TARGET_VERIFIED','P06_QA_WEB_ORIGIN_VERIFIED','P06_QA_EXPECTED_ROLE','P06_QA_EXPECTED_MODULE_IDS_JSON','P06_QA_WEB_ORIGIN','P06_QA_API_ORIGIN','P06_QA_RELEASE','P06_QA_LOCALHOST_EXCEPTION','RL_QA_WEB_USERNAME','RL_QA_WEB_PASSWORD','P06_QA_ISOLATION_ATTESTATION_PATH','P06_QA_DB_ATTESTATION_PATH','P06_QA_WEB_ATTESTATION_PATH','P06_QA_ISOLATION_ATTESTATION_SHA256','P06_QA_DB_ATTESTATION_SHA256','P06_QA_WEB_ATTESTATION_SHA256','P06_QA_ISOLATION_ATTESTATION_SIGNATURE_PATH','P06_QA_DB_ATTESTATION_SIGNATURE_PATH','P06_QA_WEB_ATTESTATION_SIGNATURE_PATH','P06_QA_ATTESTATION_SIGNER_THUMBPRINT') | ForEach-Object { Set-EnvValue $_ $null }
 }
 function Write-Contract([string]$Name, [string[]]$Lines) {
     $path = Join-Path $tempRoot $Name
@@ -25,6 +25,12 @@ function Set-AttestationEnv([string]$IsolationPath, [string]$DbPath, [string]$We
     Set-EnvValue 'P06_QA_ISOLATION_ATTESTATION_SHA256' ((Get-FileHash $IsolationPath -Algorithm SHA256).Hash)
     Set-EnvValue 'P06_QA_DB_ATTESTATION_SHA256' ((Get-FileHash $DbPath -Algorithm SHA256).Hash)
     Set-EnvValue 'P06_QA_WEB_ATTESTATION_SHA256' ((Get-FileHash $WebPath -Algorithm SHA256).Hash)
+    foreach ($pair in @(@('P06_QA_ISOLATION_ATTESTATION_SIGNATURE_PATH', 'isolation.p7s'), @('P06_QA_DB_ATTESTATION_SIGNATURE_PATH', 'db.p7s'), @('P06_QA_WEB_ATTESTATION_SIGNATURE_PATH', 'web.p7s'))) {
+        $signaturePath = Join-Path $tempRoot $pair[1]
+        [IO.File]::WriteAllBytes($signaturePath, [byte[]](0x00, 0x01, 0x02))
+        Set-EnvValue $pair[0] $signaturePath
+    }
+    Set-EnvValue 'P06_QA_ATTESTATION_SIGNER_THUMBPRINT' ('0' * 40)
 }
 function Invoke-Runner([string]$Label, [string]$ExpectedReason = '') {
     $output = @(& powershell -NoProfile -File $runner -Mode CERTIFICATION -RepoRoot $RepoRoot -ValidateOnly 2>&1)
@@ -38,13 +44,13 @@ function Invoke-Runner([string]$Label, [string]$ExpectedReason = '') {
 
 try {
     Clear-P06Env
-    $common = @('CONTROL=external-control','RESPONSIBLE=owner-security','EVALUATED_AT=2026-11-07','EVIDENCE_ID=P06-TEST-001',"PACKAGE_SHA256=$digest",'ENVIRONMENT=synthetic-test','RELEASE=test-release','RESULT=PASS','VALID_UNTIL=2027-11-07','INDEPENDENT_METHOD=owner-reviewed')
+    $common = @('CONTROL=external-control','RESPONSIBLE=owner-security','EVALUATED_AT=2026-11-07','EVIDENCE_ID=P06-TEST-001',"PACKAGE_SHA256=$digest",'ENVIRONMENT=synthetic-test','RELEASE=test-release','RESULT=PASS','VALID_UNTIL=2027-11-07','INDEPENDENT_METHOD=owner-reviewed','ISSUER=security-authority','APPROVER=owner-security','APPROVAL_ID=P06-TEST-APPROVAL','APPROVED_AT=2026-11-07','INDEPENDENT_REVIEW=YES','SIGNATURE_ALGORITHM=CMS-SHA256')
     $iso = Write-Contract 'isolation.txt' ($common + @('TRUSTED_RUNNER_ISOLATION=YES','CODEX_ACCESS=NO','WATCHER_ENABLED=NO'))
     $db = Write-Contract 'db.txt' ($common + @('BACKEND_ORACLE_CONNECTION=YES','ORACLE_SCHEMA_MATCH=YES','ORACLE_SERVICE_MATCH=YES','ORACLE_DB_UNIQUE_NAME_MATCH=YES'))
     $web = Write-Contract 'web.txt' ($common + @('QA_WEB_ORIGIN_VERIFIED=YES','QA_API_ORIGIN_VERIFIED=YES','QA_WEB_RELEASE_VERIFIED=YES','QA_TLS_CONTRACT_VERIFIED=YES','QA_WEB_ORIGIN=http://localhost:4200','QA_API_ORIGIN=http://localhost:5043','QA_LOCALHOST_EXCEPTION_APPROVED=YES'))
     Set-AttestationEnv $iso $db $web
     Set-EnvValue 'P06_QA_MODE' 'CERTIFICATION'; Set-EnvValue 'P06_QA_TRUSTED_CONTEXT' 'YES'; Set-EnvValue 'P06_QA_PACKAGE_SHA256' $digest; Set-EnvValue 'P06_QA_DB_TARGET_VERIFIED' 'YES'; Set-EnvValue 'P06_QA_WEB_ORIGIN_VERIFIED' 'YES'; Set-EnvValue 'P06_QA_EXPECTED_ROLE' 'TEST'; Set-EnvValue 'P06_QA_EXPECTED_MODULE_IDS_JSON' '[1]'; Set-EnvValue 'P06_QA_WEB_ORIGIN' 'http://localhost:4200'; Set-EnvValue 'P06_QA_API_ORIGIN' 'http://localhost:5043'; Set-EnvValue 'P06_QA_RELEASE' 'test-release'; Set-EnvValue 'P06_QA_LOCALHOST_EXCEPTION' 'YES'; Set-EnvValue 'RL_QA_WEB_USERNAME' 'P06_TEST_SENTINEL'; Set-EnvValue 'RL_QA_WEB_PASSWORD' 'P06_TEST_SENTINEL'
-    Invoke-Runner 'GOOD_ATTESTATIONS'
+    Invoke-Runner 'UNSIGNED_ATTESTATIONS' 'ATTESTATION_SIGNATURE_INVALID_P06_QA_ISOLATION_ATTESTATION'
 
     $cases = @(
         @{ Name='CODEX_ACCESS_YES'; File=$iso; Replace=@('CODEX_ACCESS=YES'); Reason='ATTESTATION_VALUE_INVALID_P06_QA_ISOLATION_ATTESTATION_PATH_CODEX_ACCESS' },
@@ -53,7 +59,9 @@ try {
         @{ Name='DUPLICATE'; File=$iso; Replace=@('TRUSTED_RUNNER_ISOLATION=YES','TRUSTED_RUNNER_ISOLATION=YES'); Reason='ATTESTATION_DUPLICATE_P06_QA_ISOLATION_ATTESTATION_PATH' },
         @{ Name='UNKNOWN'; File=$iso; Replace=@('UNKNOWN_FIELD=NO'); Reason='ATTESTATION_UNKNOWN_FIELD_P06_QA_ISOLATION_ATTESTATION_PATH' },
         @{ Name='SENSITIVE'; File=$iso; Replace=@('NOTE=secret'); Reason='ATTESTATION_SENSITIVE_P06_QA_ISOLATION_ATTESTATION_PATH' },
-        @{ Name='MALFORMED'; File=$iso; Replace=@('malformed line'); Reason='ATTESTATION_MALFORMED_P06_QA_ISOLATION_ATTESTATION_PATH' }
+        @{ Name='MALFORMED'; File=$iso; Replace=@('malformed line'); Reason='ATTESTATION_MALFORMED_P06_QA_ISOLATION_ATTESTATION_PATH' },
+        @{ Name='APPROVER_CODEX'; File=$iso; Replace=@('APPROVER=Codex'); Reason='ATTESTATION_APPROVAL_INVALID_P06_QA_ISOLATION_ATTESTATION' },
+        @{ Name='EXPIRED'; File=$iso; Replace=@('VALID_UNTIL=2020-01-01'); Reason='ATTESTATION_EXPIRED_P06_QA_ISOLATION_ATTESTATION' }
     )
     foreach ($case in $cases) {
         $original = Get-Content -LiteralPath $case.File

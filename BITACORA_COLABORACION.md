@@ -10428,3 +10428,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Se agrego `tools/p06-qa-contract-tests.ps1` con casos adversariales de atestacion, rutas, hashes, campos, secretos, modo y fail-closed. Resultado: todos los casos PASS; `PREFLIGHT_WITHOUT_CREDENTIALS=PASS`; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`; `CERTIFICATION_MODE_PROPAGATION=PASS`.
 - Evidencia: manifiesto `P06_QA_PACKAGE_SHA256=e69bacd72b8838f9bf87cd80f8802c895bcc5b35c9ec0f535856abd490c3908a`; descubrimiento Playwright `6 tests in 1 file`; TypeScript dirigido PASS con `--ignoreConfig --types node`; `git diff --check` PASS.
 - Pendiente externo: atestaciones autenticas, aislamiento Windows, origen/release/TLS aprobado, identidad Oracle efectiva y credenciales bajo custodia del propietario. `P06_REAL_QA_CERTIFICATION=NOT_EXECUTED`.
+
+## 2026-11-07 - P06 expiracion y procedencia criptografica (COD)
+
+- Base `31cf039582b1335a866858d12b48a6ef987dc6d5`; Quality Gate `42429260273=SUCCESS`, intento 1, SHA exacto confirmado.
+- `tools/p06-qa-runner.ps1` ahora rechaza atestaciones vencidas, futuras o con rango invalido; exige aprobador independiente, impide `Codex/agent` como aprobador y valida firma CMS detached, cadena de certificado y thumbprint externo confiable.
+- `tools/p06-qa-contract-tests.ps1` verifico firma ausente/invalida, aprobador Codex, expiracion, controles previos y fail-closed. Resultado completo PASS; `PREFLIGHT=PASS`; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`.
+- El proveedor CMS no esta disponible en el PowerShell local actual; esto fue clasificado como bloqueo del entorno confiable y no como PASS. No se usaron credenciales, Oracle ni watcher.
+- Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=d7c32c38de5b5441fa3c732382dd8effea9320e8e0cbbcfc16ecbce798eb0168`. Pendiente: publicar este cambio y ejecutar el nuevo Gate.

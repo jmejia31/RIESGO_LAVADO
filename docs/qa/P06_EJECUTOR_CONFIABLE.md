@@ -12,7 +12,7 @@ Este paquete prepara la ejecucion, pero no acredita aislamiento Windows, identid
 - `tools/qa/P06_OracleIdentity.sql`: consulta Oracle de solo lectura; no contiene credenciales ni ejecuta DDL/DML.
 - `tools/qa/P06_QA_PACKAGE_MANIFEST.json`: hashes individuales y digest del paquete.
 
-Digest vigente del paquete: `e69bacd72b8838f9bf87cd80f8802c895bcc5b35c9ec0f535856abd490c3908a`.
+Digest vigente del paquete: `d7c32c38de5b5441fa3c732382dd8effea9320e8e0cbbcfc16ecbce798eb0168`.
 
 ## Preflight sin credenciales
 
@@ -39,6 +39,8 @@ El contexto confiable debe aportar, sin imprimir valores:
 - `P06_QA_ISOLATION_ATTESTATION_PATH`, `P06_QA_DB_ATTESTATION_PATH` y `P06_QA_WEB_ATTESTATION_PATH` deben apuntar a attestaciones sanitizadas fuera del checkout. Cada archivo debe estar ligado por su `*_SHA256` externo, usar un contrato de campos cerrado, incluir `PACKAGE_SHA256` y no contener secretos.
 - La atestacion de aislamiento exige exactamente `TRUSTED_RUNNER_ISOLATION=YES`, `CODEX_ACCESS=NO` y `WATCHER_ENABLED=NO`; los valores `YES` para acceso de Codex o watcher son rechazo.
 - La atestacion web debe declarar `QA_WEB_ORIGIN` y `QA_API_ORIGIN`, coincidir con `P06_QA_WEB_ORIGIN`/`P06_QA_API_ORIGIN`, declarar `RELEASE` igual a `P06_QA_RELEASE` y demostrar TLS. HTTP solo se admite para localhost con `P06_QA_LOCALHOST_EXCEPTION=YES` y `QA_LOCALHOST_EXCEPTION_APPROVED=YES` en la atestacion externa.
+- Cada atestacion debe incluir `ISSUER`, `APPROVER`, `APPROVAL_ID`, `APPROVED_AT`, `INDEPENDENT_REVIEW=YES` y `SIGNATURE_ALGORITHM=CMS-SHA256`. El runner rechaza fechas vencidas o futuras, aprobacion de Codex/agente y firmas ausentes, invalidas o emitidas por un certificado distinto al thumbprint confiable externo.
+- La firma se entrega como CMS detached en `P06_QA_*_ATTESTATION_SIGNATURE_PATH`, fuera del checkout; el ejecutor confiable debe tener disponible `System.Security.Cryptography.Pkcs` y validar la cadena del certificado. Un hash editable junto con su variable no sustituye la firma.
 
 La contraseña nunca debe ir en argumentos, archivos del repositorio, logs, Issues, capturas, HAR, storage state o chat.
 
@@ -68,4 +70,4 @@ powershell -NoProfile -File tools/p06-qa-runner.ps1 -Mode CERTIFICATION -Validat
 powershell -NoProfile -File tools/p06-qa-contract-tests.ps1
 ```
 
-`p06-qa-contract-tests.ps1` verifica aceptacion correcta, `CODEX_ACCESS=YES`, `WATCHER_ENABLED=YES`, ausencia, duplicados, campos desconocidos, archivos inexistentes, ruta dentro del checkout, hash incorrecto, contenido sensible y formato invalido. Tambien prueba preflight sin credenciales y el bloqueo de certificacion sin contexto externo. Las pruebas usan solo sentinelas sinteticos y archivos temporales fuera del repositorio.
+`p06-qa-contract-tests.ps1` verifica firma ausente/invalida, aprobador Codex, expiracion, `CODEX_ACCESS=YES`, `WATCHER_ENABLED=YES`, ausencia, duplicados, campos desconocidos, archivos inexistentes, ruta dentro del checkout, hash incorrecto, contenido sensible y formato invalido. Tambien prueba preflight sin credenciales y el bloqueo de certificacion sin contexto externo. Las pruebas usan solo sentinelas sinteticos y archivos temporales fuera del repositorio.

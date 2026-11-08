@@ -56,7 +56,7 @@ function Assert-ExternalAttestation([string]$EnvironmentName, [hashtable]$Expect
         if ($key -match '(?i)password|token|cookie|authorization|connectionstring|secret' -or $value -match '(?i)password|token|cookie|authorization|connectionstring|secret') { Stop-P06 "ATTESTATION_SENSITIVE_$EnvironmentName" }
         $values[$key] = $value
     }
-    $requiredFields = @('CONTROL', 'RESPONSIBLE', 'EVALUATED_AT', 'EVIDENCE_ID', 'PACKAGE_SHA256', 'ENVIRONMENT', 'RELEASE', 'RESULT', 'VALID_UNTIL', 'INDEPENDENT_METHOD') + @($ExpectedMarkers.Keys)
+    $requiredFields = @('CONTROL', 'RESPONSIBLE', 'EVALUATED_AT', 'EVIDENCE_ID', 'PACKAGE_SHA256', 'ENVIRONMENT', 'RELEASE', 'RESULT', 'VALID_UNTIL', 'INDEPENDENT_METHOD', 'ISSUER', 'APPROVER', 'APPROVAL_ID', 'APPROVED_AT', 'INDEPENDENT_REVIEW', 'SIGNATURE_ALGORITHM') + @($ExpectedMarkers.Keys)
     foreach ($key in $requiredFields) {
         if (-not $values.ContainsKey($key)) { Stop-Contract "ATTESTATION_FIELD_MISSING_$EnvironmentName" }
     }
@@ -65,9 +65,33 @@ function Assert-ExternalAttestation([string]$EnvironmentName, [hashtable]$Expect
     }
     if ($values['PACKAGE_SHA256'].ToLowerInvariant() -ne $PackageDigest) { Stop-Contract "ATTESTATION_PACKAGE_MISMATCH_$EnvironmentName" }
     if ($values['RESULT'] -ne 'PASS') { Stop-Contract "ATTESTATION_RESULT_NOT_PASS_$EnvironmentName" }
-    if ($values['EVALUATED_AT'] -notmatch '^\d{4}-\d{2}-\d{2}$' -or $values['VALID_UNTIL'] -notmatch '^\d{4}-\d{2}-\d{2}$') { Stop-Contract "ATTESTATION_DATE_INVALID_$EnvironmentName" }
+    if ($values['INDEPENDENT_REVIEW'] -ne 'YES' -or $values['APPROVER'] -match '(?i)codex|agent') { Stop-Contract "ATTESTATION_APPROVAL_INVALID_$EnvironmentName" }
+    if ($values['EVALUATED_AT'] -notmatch '^\d{4}-\d{2}-\d{2}$' -or $values['VALID_UNTIL'] -notmatch '^\d{4}-\d{2}-\d{2}$' -or $values['APPROVED_AT'] -notmatch '^\d{4}-\d{2}-\d{2}$') { Stop-Contract "ATTESTATION_DATE_INVALID_$EnvironmentName" }
+    $today = [DateTime]::UtcNow.Date
+    $evaluatedAt = [DateTime]::ParseExact($values['EVALUATED_AT'], 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $validUntil = [DateTime]::ParseExact($values['VALID_UNTIL'], 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    if ($evaluatedAt.Date -gt $today -or $validUntil.Date -lt $today -or $validUntil.Date -lt $evaluatedAt.Date) { Stop-Contract "ATTESTATION_EXPIRED_$EnvironmentName" }
     foreach ($key in $ExpectedMarkers.Keys) {
         if ($values[$key] -ne $ExpectedMarkers[$key]) { Stop-Contract "ATTESTATION_VALUE_INVALID_${EnvironmentName}_$key" }
+    }
+    $signatureName = $EnvironmentName -replace '_PATH$', '_SIGNATURE_PATH'
+    $signatureValue = [Environment]::GetEnvironmentVariable($signatureName)
+    if ([string]::IsNullOrWhiteSpace($signatureValue) -or -not [IO.Path]::IsPathRooted($signatureValue)) { Stop-P06 "MISSING_$signatureName" }
+    $signaturePath = [IO.Path]::GetFullPath($signatureValue)
+    if ($signaturePath.StartsWith($repoFullPath, [StringComparison]::OrdinalIgnoreCase)) { Stop-P06 "ATTESTATION_SIGNATURE_INSIDE_REPO_$EnvironmentName" }
+    if (-not (Test-Path -LiteralPath $signaturePath -PathType Leaf)) { Stop-P06 "ATTESTATION_SIGNATURE_FILE_MISSING_$EnvironmentName" }
+    $trustedThumbprint = [Environment]::GetEnvironmentVariable('P06_QA_ATTESTATION_SIGNER_THUMBPRINT')
+    if ([string]::IsNullOrWhiteSpace($trustedThumbprint)) { Stop-P06 'MISSING_P06_QA_ATTESTATION_SIGNER_THUMBPRINT' }
+    try {
+        Add-Type -AssemblyName System.Security.Cryptography.Pkcs -ErrorAction Stop
+        $contentInfo = [System.Security.Cryptography.Pkcs.ContentInfo]::new([IO.File]::ReadAllBytes($fullPath))
+        $cms = [System.Security.Cryptography.Pkcs.SignedCms]::new($contentInfo, $true)
+        $cms.Decode([IO.File]::ReadAllBytes($signaturePath))
+        $cms.CheckSignature($true)
+        if ($cms.SignerInfos.Count -ne 1 -or $cms.SignerInfos[0].Certificate.Thumbprint -ne $trustedThumbprint) { Stop-Contract "ATTESTATION_SIGNER_INVALID_$EnvironmentName" }
+        if ($values['SIGNATURE_ALGORITHM'] -ne 'CMS-SHA256') { Stop-Contract "ATTESTATION_SIGNATURE_ALGORITHM_INVALID_$EnvironmentName" }
+    } catch {
+        Stop-Contract "ATTESTATION_SIGNATURE_INVALID_$EnvironmentName"
     }
     return $values
 }
@@ -98,7 +122,7 @@ try {
         exit 0
     }
 
-    $required = @('P06_QA_TRUSTED_CONTEXT', 'P06_QA_PACKAGE_SHA256', 'P06_QA_DB_TARGET_VERIFIED', 'P06_QA_WEB_ORIGIN_VERIFIED', 'P06_QA_EXPECTED_ROLE', 'P06_QA_EXPECTED_MODULE_IDS_JSON', 'P06_QA_WEB_ORIGIN', 'P06_QA_API_ORIGIN', 'P06_QA_RELEASE', 'RL_QA_WEB_USERNAME', 'RL_QA_WEB_PASSWORD', 'P06_QA_ISOLATION_ATTESTATION_PATH', 'P06_QA_DB_ATTESTATION_PATH', 'P06_QA_WEB_ATTESTATION_PATH', 'P06_QA_ISOLATION_ATTESTATION_SHA256', 'P06_QA_DB_ATTESTATION_SHA256', 'P06_QA_WEB_ATTESTATION_SHA256')
+    $required = @('P06_QA_TRUSTED_CONTEXT', 'P06_QA_PACKAGE_SHA256', 'P06_QA_DB_TARGET_VERIFIED', 'P06_QA_WEB_ORIGIN_VERIFIED', 'P06_QA_EXPECTED_ROLE', 'P06_QA_EXPECTED_MODULE_IDS_JSON', 'P06_QA_WEB_ORIGIN', 'P06_QA_API_ORIGIN', 'P06_QA_RELEASE', 'RL_QA_WEB_USERNAME', 'RL_QA_WEB_PASSWORD', 'P06_QA_ISOLATION_ATTESTATION_PATH', 'P06_QA_DB_ATTESTATION_PATH', 'P06_QA_WEB_ATTESTATION_PATH', 'P06_QA_ISOLATION_ATTESTATION_SHA256', 'P06_QA_DB_ATTESTATION_SHA256', 'P06_QA_WEB_ATTESTATION_SHA256', 'P06_QA_ISOLATION_ATTESTATION_SIGNATURE_PATH', 'P06_QA_DB_ATTESTATION_SIGNATURE_PATH', 'P06_QA_WEB_ATTESTATION_SIGNATURE_PATH', 'P06_QA_ATTESTATION_SIGNER_THUMBPRINT')
     foreach ($name in $required) {
         if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) { Stop-P06 "MISSING_$name" }
     }

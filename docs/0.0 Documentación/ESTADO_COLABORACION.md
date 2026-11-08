@@ -3848,3 +3848,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QA_WEB_ORIGIN_CONTRACT_IMPLEMENTED=YES`; `QA_API_ORIGIN_CONTRACT_IMPLEMENTED=YES`; `QA_RELEASE_BINDING_IMPLEMENTED=YES`; `QA_TLS_POLICY_ENFORCED=YES` para destinos no localhost y excepcion localhost explicitamente atestada; verificacion real externa `NOT_VERIFIED`.
 - `WATCHER_ENABLED=NO`; `CODEX_REAL_INVOKED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `P06_STATUS=READY_FOR_EXTERNAL_SECURITY_ATTESTATION`; `P07_STATUS=NOT_STARTED`; `P08_STATUS=NOT_STARTED`; `BLOCK10_AUTHORIZED=NO`.
 - Punto de continuacion: revisar diff, ejecutar validadores institucionales aplicables, commit/push selectivo en `origin/desarrollo` y esperar el Quality Gate del nuevo SHA. No ejecutar modo `CERTIFICATION` desde Codex.
+
+## Estado vigente - P06 expiracion y procedencia de atestaciones - 2026-11-07
+
+- `BASE_SHA=31cf039582b1335a866858d12b48a6ef987dc6d5`; `QUALITY_GATE=42429260273_SUCCESS`; correccion local pendiente de publicacion.
+- `ATTESTATION_EXPIRY_ENFORCED=YES`; `INDEPENDENT_APPROVAL_FIELDS_REQUIRED=YES`; `CMS_DETACHED_SIGNATURE_REQUIRED=YES`; `SIGNER_THUMBPRINT_BOUND=YES`; `FAIL_CLOSED_REGRESSIONS=PASS`.
+- `PREFLIGHT=PASS`; `PLAYWRIGHT_DISCOVERY=6`; `CERTIFICATION_WITHOUT_CREDENTIALS=BLOCKED`; `CERTIFICATION_REAL_AUTH=NOT_EXECUTED`.
+- El proveedor `System.Security.Cryptography.Pkcs` no esta disponible en el PowerShell local; el runner bloquea firma no verificable. El ejecutor confiable externo debe aportar proveedor CMS, certificado confiable y firmas detached fuera del checkout.
+- `WATCHER_ENABLED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `BLOCK10_AUTHORIZED=NO`. Siguiente punto: publicar el commit selectivo y verificar el Gate del nuevo SHA.
