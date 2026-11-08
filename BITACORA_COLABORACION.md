@@ -10450,3 +10450,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Cambio exclusivo: `tools/p06-qa-runner.ps1` usa `$cms.CheckSignature($false)`; se mantienen cadena de confianza, thumbprint, vigencia del certificado y aprobador independiente.
 - Regresiones sin credenciales PASS, incluyendo asercion que impide regresar a `$true`; preflight PASS; autenticacion y Oracle no ejecutados.
 - Manifiesto: `P06_QA_PACKAGE_SHA256=9be4354f45b8125680cbdd902432a377ab0655bfa343d9cbc901254e85dda286`. Pendiente: publicar y verificar el Gate del SHA final.
+
+## 2026-11-07 - P06 modo LOCAL_OWNER_MANUAL (COD)
+
+- Base `eb7e25295a25a05cd46052b72420f49d6c8b8ee4`; se preparo `LOCAL_OWNER_MANUAL` sin alterar la ruta institucional CMS.
+- Se agrego `tools/p06-owner-manual.ps1`: aprobacion interactiva, `Get-Credential`, origenes localhost fijos, comprobacion Angular/API, watcher y evidencia Oracle de solo lectura fuera del checkout. El modo no declara aislamiento confiable.
+- Regresiones sin credenciales: preflight PASS; `LOCAL_OWNER_MANUAL_PREFLIGHT=PASS`; 6 escenarios descubiertos; no autenticacion, Oracle ni datos de negocio.
+- Manifiesto: `P06_QA_PACKAGE_SHA256=f57fbf3ee831da10c537c2a8e44202eea1579aea1793f1f9dce472a6a806bf34`.

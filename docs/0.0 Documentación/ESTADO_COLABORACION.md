@@ -3868,3 +3868,9 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `BASE_SHA=190837d3bbad38d5c2355860652996e187ed8550`; `CMS_CHECKSIGNATURE_FALSE=YES`; `CMS_CHAIN_AND_CERT_VALIDITY=RETAINED`; `PACKAGE_SHA256=9be4354f45b8125680cbdd902432a377ab0655bfa343d9cbc901254e85dda286`.
 - `PREFLIGHT=PASS`; regresiones de contrato PASS; `AUTH_REAL=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Siguiente punto: verificar el nuevo Quality Gate y pasar exclusivamente a la comprobacion del entorno Windows QA autorizado.
+
+## Estado vigente - P06 modo manual del propietario preparado - 2026-11-07
+
+- `LOCAL_OWNER_MANUAL=IMPLEMENTED`; `PACKAGE_SHA256=f57fbf3ee831da10c537c2a8e44202eea1579aea1793f1f9dce472a6a806bf34`; `LOCAL_ORIGIN_CHECK=PASS`; `LOCAL_OWNER_MANUAL_PREFLIGHT=PASS`.
+- `ORACLE_IDENTITY=OWNER_EVIDENCE_REQUIRED`; el runner no acepta el modo manual sin archivo externo que vincule la conexion efectiva del backend a `RIESGO_LAVADO/hpprod1/hpprod1` y solo lectura.
+- `AUTH_REAL=NOT_EXECUTED`; `WINDOWS_ISOLATION=NOT_VERIFIED`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.

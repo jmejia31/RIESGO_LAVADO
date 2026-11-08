@@ -2,6 +2,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 
 const apiBaseUrl = process.env['P06_QA_API_ORIGIN'] ?? 'http://localhost:5043';
 const mode = process.env['P06_QA_MODE'] ?? 'PREFLIGHT';
+const isRealAuthMode = mode === 'CERTIFICATION' || mode === 'LOCAL_OWNER_MANUAL';
 const username = process.env['RL_QA_WEB_USERNAME'] ?? '';
 const password = process.env['RL_QA_WEB_PASSWORD'] ?? '';
 const expectedRole = process.env['P06_QA_EXPECTED_ROLE'] ?? '';
@@ -21,15 +22,17 @@ function parseExpectedModules(): number[] {
 }
 
 function requireCertification(): void {
-  if (mode !== 'CERTIFICATION') {
+  if (!isRealAuthMode) {
     test.skip(true, 'PREFLIGHT_ONLY: real certification is disabled.');
     return;
   }
   const missing = [
     username && password ? '' : 'credentials',
     expectedRole && expectedModules.length > 0 ? '' : 'permission-contract',
-    process.env['P06_QA_TRUSTED_CONTEXT'] === 'YES' ? '' : 'trusted-context',
-    process.env['P06_QA_DB_TARGET_VERIFIED'] === 'YES' ? '' : 'oracle-attestation',
+    mode === 'LOCAL_OWNER_MANUAL'
+      ? process.env['P06_QA_MANUAL_OWNER_APPROVAL'] === 'YES' ? '' : 'manual-owner-approval'
+      : process.env['P06_QA_TRUSTED_CONTEXT'] === 'YES' ? '' : 'trusted-context',
+    mode === 'LOCAL_OWNER_MANUAL' || process.env['P06_QA_DB_TARGET_VERIFIED'] === 'YES' ? '' : 'oracle-attestation',
     process.env['P06_QA_WEB_ORIGIN_VERIFIED'] === 'YES' ? '' : 'web-origin-attestation',
   ].filter(Boolean);
   if (missing.length > 0) throw new Error(`BLOCKED_PRECONDITION:${missing.join(',')}`);

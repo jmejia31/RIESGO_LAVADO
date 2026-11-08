@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('PREFLIGHT', 'CERTIFICATION')]
+    [ValidateSet('PREFLIGHT', 'CERTIFICATION', 'LOCAL_OWNER_MANUAL')]
     [string]$Mode = 'PREFLIGHT',
     [string]$RepoRoot = '',
     [switch]$ValidateOnly
@@ -31,6 +31,25 @@ function Get-ManifestDigest($ManifestObject) {
 
 function Stop-Contract([string]$Reason) {
     Stop-P06 $Reason
+}
+
+function Assert-ManualOwnerDbIdentity([string]$PackageDigest) {
+    $pathValue = [Environment]::GetEnvironmentVariable('P06_QA_MANUAL_DB_IDENTITY_PATH')
+    if ([string]::IsNullOrWhiteSpace($pathValue) -or -not [IO.Path]::IsPathRooted($pathValue)) { Stop-P06 'MISSING_P06_QA_MANUAL_DB_IDENTITY_PATH' }
+    $fullPath = [IO.Path]::GetFullPath($pathValue)
+    $repoFullPath = [IO.Path]::GetFullPath($RepoRoot).TrimEnd('\') + '\'
+    if ($fullPath.StartsWith($repoFullPath, [StringComparison]::OrdinalIgnoreCase)) { Stop-P06 'MANUAL_DB_IDENTITY_INSIDE_REPO' }
+    if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) { Stop-P06 'MANUAL_DB_IDENTITY_FILE_MISSING' }
+    $values = @{}
+    foreach ($line in @(Get-Content -LiteralPath $fullPath)) {
+        if ([string]::IsNullOrWhiteSpace($line) -or $line -notmatch '^[A-Z][A-Z0-9_]*=[^=\r\n]+$') { Stop-P06 'MANUAL_DB_IDENTITY_MALFORMED' }
+        $key, $value = $line -split '=', 2
+        if ($values.ContainsKey($key) -or $value -match '(?i)password|token|secret|connectionstring') { Stop-P06 'MANUAL_DB_IDENTITY_UNSAFE' }
+        $values[$key] = $value
+    }
+    $expected = @{ SOURCE = 'BACKEND_EFFECTIVE_CONNECTION'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; READ_ONLY = 'YES'; OWNER_VERIFIED = 'YES'; PACKAGE_SHA256 = $PackageDigest }
+    foreach ($key in $expected.Keys) { if ($values[$key] -ne $expected[$key]) { Stop-P06 "MANUAL_DB_IDENTITY_INVALID_$key" } }
+    Write-Output 'P06_MANUAL_DB_IDENTITY=PASS'
 }
 
 function Assert-ExternalAttestation([string]$EnvironmentName, [hashtable]$ExpectedMarkers, [string]$PackageDigest) {
@@ -125,6 +144,20 @@ try {
         exit 0
     }
 
+    if ($Mode -eq 'LOCAL_OWNER_MANUAL') {
+        $manualRequired = @('P06_QA_MANUAL_OWNER_APPROVAL', 'P06_QA_EXPECTED_ROLE', 'P06_QA_EXPECTED_MODULE_IDS_JSON', 'RL_QA_WEB_USERNAME', 'RL_QA_WEB_PASSWORD', 'P06_QA_MANUAL_DB_IDENTITY_PATH')
+        foreach ($name in $manualRequired) { if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) { Stop-P06 "MISSING_$name" } }
+        if ([Environment]::GetEnvironmentVariable('P06_QA_MANUAL_OWNER_APPROVAL') -ne 'YES') { Stop-P06 'MANUAL_OWNER_APPROVAL_REQUIRED' }
+        if ([Environment]::GetEnvironmentVariable('P06_QA_WEB_ORIGIN') -ne 'http://localhost:4200' -or [Environment]::GetEnvironmentVariable('P06_QA_API_ORIGIN') -ne 'http://localhost:5043') { Stop-P06 'LOCAL_OWNER_ORIGIN_MISMATCH' }
+        foreach ($uri in @('http://localhost:4200/', 'http://localhost:5043/healthz')) {
+            try { $response = Invoke-WebRequest -UseBasicParsing -Uri $uri -TimeoutSec 5; if ($response.StatusCode -ne 200) { Stop-P06 'LOCAL_OWNER_ORIGIN_UNAVAILABLE' } } catch { Stop-P06 'LOCAL_OWNER_ORIGIN_UNAVAILABLE' }
+        }
+        Assert-ManualOwnerDbIdentity $digest
+        $watcher = Get-ScheduledTask -TaskName 'RiesgoLavado-CodexQueue' -ErrorAction SilentlyContinue
+        if ($watcher -and $watcher.Settings.Enabled) { Stop-P06 'WATCHER_ENABLED' }
+        if ($ValidateOnly) { Write-Output 'P06_LOCAL_OWNER_MANUAL_PREFLIGHT=PASS'; Write-Output 'P06_REAL_CERTIFICATION=NOT_EXECUTED'; exit 0 }
+    }
+    else {
     $required = @('P06_QA_TRUSTED_CONTEXT', 'P06_QA_PACKAGE_SHA256', 'P06_QA_DB_TARGET_VERIFIED', 'P06_QA_WEB_ORIGIN_VERIFIED', 'P06_QA_EXPECTED_ROLE', 'P06_QA_EXPECTED_MODULE_IDS_JSON', 'P06_QA_WEB_ORIGIN', 'P06_QA_API_ORIGIN', 'P06_QA_RELEASE', 'RL_QA_WEB_USERNAME', 'RL_QA_WEB_PASSWORD', 'P06_QA_ISOLATION_ATTESTATION_PATH', 'P06_QA_DB_ATTESTATION_PATH', 'P06_QA_WEB_ATTESTATION_PATH', 'P06_QA_ISOLATION_ATTESTATION_SHA256', 'P06_QA_DB_ATTESTATION_SHA256', 'P06_QA_WEB_ATTESTATION_SHA256', 'P06_QA_ISOLATION_ATTESTATION_SIGNATURE_PATH', 'P06_QA_DB_ATTESTATION_SIGNATURE_PATH', 'P06_QA_WEB_ATTESTATION_SIGNATURE_PATH', 'P06_QA_ATTESTATION_SIGNER_THUMBPRINT')
     foreach ($name in $required) {
         if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) { Stop-P06 "MISSING_$name" }
@@ -156,6 +189,7 @@ try {
         Write-Output 'P06_CERTIFICATION_PRECONDITIONS=PASS'
         Write-Output 'P06_REAL_CERTIFICATION=NOT_EXECUTED'
         exit 0
+    }
     }
 
     $previousMode = [Environment]::GetEnvironmentVariable('P06_QA_MODE', 'Process')

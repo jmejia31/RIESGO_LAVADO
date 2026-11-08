@@ -32,13 +32,16 @@ function Set-AttestationEnv([string]$IsolationPath, [string]$DbPath, [string]$We
     }
     Set-EnvValue 'P06_QA_ATTESTATION_SIGNER_THUMBPRINT' ('0' * 40)
 }
-function Invoke-Runner([string]$Label, [string]$ExpectedReason = '') {
-    $output = @(& powershell -NoProfile -File $runner -Mode CERTIFICATION -RepoRoot $RepoRoot -ValidateOnly 2>&1)
+function Invoke-Runner([string]$Label, [string]$ExpectedReason = '', [string]$Mode = 'CERTIFICATION') {
+    $output = @(& powershell -NoProfile -File $runner -Mode $Mode -RepoRoot $RepoRoot -ValidateOnly 2>&1)
     $exitCode = $LASTEXITCODE
     $text = $output -join "`n"
     if ($ExpectedReason) {
         if ($exitCode -ne 3 -or $text -notmatch [Regex]::Escape($ExpectedReason)) { throw "$Label failed: expected $ExpectedReason, exit $exitCode" }
-    } elseif ($exitCode -ne 0 -or $text -notmatch 'P06_CERTIFICATION_PRECONDITIONS=PASS') { throw "$Label failed: exit $exitCode" }
+    } else {
+        $successMarker = if ($Mode -eq 'LOCAL_OWNER_MANUAL') { 'P06_LOCAL_OWNER_MANUAL_PREFLIGHT=PASS' } else { 'P06_CERTIFICATION_PRECONDITIONS=PASS' }
+        if ($exitCode -ne 0 -or $text -notmatch [Regex]::Escape($successMarker)) { throw "$Label failed: exit $exitCode" }
+    }
     Write-Output "P06_CONTRACT_$Label=PASS"
 }
 
@@ -91,6 +94,11 @@ try {
     Set-EnvValue 'P06_QA_ISOLATION_ATTESTATION_PATH' $iso
     Set-EnvValue 'P06_QA_ISOLATION_ATTESTATION_SHA256' ('0' * 64)
     Invoke-Runner 'HASH_MISMATCH' 'ATTESTATION_HASH_MISMATCH_P06_QA_ISOLATION_ATTESTATION'
+
+    Clear-P06Env
+    $manualIdentity = Write-Contract 'manual-db-identity.txt' @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','SCHEMA=RIESGO_LAVADO','SERVICE=hpprod1','DB_UNIQUE_NAME=hpprod1','READ_ONLY=YES','OWNER_VERIFIED=YES',"PACKAGE_SHA256=$digest")
+    Set-EnvValue 'P06_QA_MODE' 'LOCAL_OWNER_MANUAL'; Set-EnvValue 'P06_QA_MANUAL_OWNER_APPROVAL' 'YES'; Set-EnvValue 'P06_QA_EXPECTED_ROLE' 'TEST'; Set-EnvValue 'P06_QA_EXPECTED_MODULE_IDS_JSON' '[1]'; Set-EnvValue 'P06_QA_WEB_ORIGIN' 'http://localhost:4200'; Set-EnvValue 'P06_QA_API_ORIGIN' 'http://localhost:5043'; Set-EnvValue 'P06_QA_MANUAL_DB_IDENTITY_PATH' $manualIdentity; Set-EnvValue 'RL_QA_WEB_USERNAME' 'P06_TEST_SENTINEL'; Set-EnvValue 'RL_QA_WEB_PASSWORD' 'P06_TEST_SENTINEL'
+    Invoke-Runner 'LOCAL_OWNER_MANUAL_PREFLIGHT' '' 'LOCAL_OWNER_MANUAL'
 
     Clear-P06Env
     $blocked = @(& powershell -NoProfile -File $runner -Mode CERTIFICATION -RepoRoot $RepoRoot -ValidateOnly 2>&1)

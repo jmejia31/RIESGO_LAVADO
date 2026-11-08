@@ -71,3 +71,13 @@ powershell -NoProfile -File tools/p06-qa-contract-tests.ps1
 ```
 
 `p06-qa-contract-tests.ps1` verifica firma ausente/invalida, aprobador Codex, expiracion, `CODEX_ACCESS=YES`, `WATCHER_ENABLED=YES`, ausencia, duplicados, campos desconocidos, archivos inexistentes, ruta dentro del checkout, hash incorrecto, contenido sensible y formato invalido. Tambien prueba preflight sin credenciales y el bloqueo de certificacion sin contexto externo. Las pruebas usan solo sentinelas sinteticos y archivos temporales fuera del repositorio.
+
+## Ejecucion manual del propietario en Windows
+
+La ruta alternativa no sustituye `CERTIFICATION` ni declara aislamiento confiable. Desde una consola iniciada por el propietario, despues de cerrar Codex/Antigravity y con el watcher deshabilitado, ejecutar:
+
+```powershell
+powershell -NoProfile -File tools/p06-owner-manual.ps1
+```
+
+El comando solicita la ruta de un archivo externo generado por una consulta de identidad de la conexion efectiva del backend. Debe contener unicamente, sin credenciales: `SOURCE=BACKEND_EFFECTIVE_CONNECTION`, `SCHEMA=RIESGO_LAVADO`, `SERVICE=hpprod1`, `DB_UNIQUE_NAME=hpprod1`, `READ_ONLY=YES`, `OWNER_VERIFIED=YES` y el `PACKAGE_SHA256` mostrado por el preflight. Luego solicita aprobacion manual, rol, modulos y credencial mediante `Get-Credential`; no usa argumentos, archivos persistentes ni logs para la contrasena.
