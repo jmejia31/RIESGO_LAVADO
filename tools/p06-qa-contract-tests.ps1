@@ -117,6 +117,10 @@ try {
     if ($ownerText -notmatch 'Get-NetTCPConnection' -or $ownerText -notmatch 'api/configuracion/sistema' -or $ownerText -notmatch '/readyz' -or $ownerText -notmatch 'BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN') { throw 'BACKEND_EFFECTIVE_CONFIG_CONTRACT_NOT_PRESENT' }
     Write-Output 'ORACLE_EFFECTIVE_PRIVILEGE_CONTRACT=PASS'
     Write-Output 'BACKEND_EFFECTIVE_CONFIG_CONTRACT=PASS'
+    if (@([pscustomobject]@{ OwningProcess = 15824 }, [pscustomobject]@{ OwningProcess = 15824 } | Sort-Object OwningProcess -Unique).Count -ne 1) { throw 'MULTIPLE_LISTENERS_SAME_PID_NOT_DEDUPLICATED' }
+    Write-Output 'MULTIPLE_LISTENERS_SAME_PID=PASS'
+    if (@([pscustomobject]@{ OwningProcess = 15824 }, [pscustomobject]@{ OwningProcess = 27183 } | Sort-Object OwningProcess -Unique).Count -eq 1) { throw 'DIFFERENT_PIDS_NOT_REJECTED' }
+    Write-Output 'DIFFERENT_PIDS_REJECTED=PASS'
     $specText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'frontend\rl-app\e2e\p06-qa-real-auth.spec.ts')
     if ($specText -notmatch 'if \(!isRealAuthMode\) return') { throw 'LOCAL_OWNER_LOGOUT_CLEANUP_NOT_PRESENT' }
     Write-Output 'LOCAL_OWNER_LOGOUT_CLEANUP=PASS'

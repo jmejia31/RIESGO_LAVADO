@@ -10479,3 +10479,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El filtro de salida SQLPlus ahora exige seis campos. La evidencia separa `QUERY_OPERATION=SELECT_ONLY` de `PRIVILEGE_CHECK` y `PRIVILEGE_RESULT=PASS`; ya no declara `READ_ONLY` del propietario del esquema.
 - Regresiones sin credenciales y preflight pendientes de ejecutar antes del commit; Oracle, autenticación y watcher no ejecutados por Codex.
 - Manifiesto en preparación: `P06_QA_PACKAGE_SHA256=67a2b2994626d54467948841f05c105b3bab43c6deae0ab515aee7e8b02e48ba`.
+
+## 2026-11-07 - P06 deduplicacion de listeners por PID (COD)
+
+- Base `34d904631f002083ee0ff04e6b5d016a5da7b98c`; corrección mínima aplicada a la correspondencia del backend.
+- `Assert-BackendRuntimeCorrespondence` deduplica listeners IPv4/IPv6 mediante `Sort-Object OwningProcess -Unique` y mantiene el bloqueo para PID distintos.
+- Regresiones sin credenciales: `MULTIPLE_LISTENERS_SAME_PID=PASS`; `DIFFERENT_PIDS_REJECTED=PASS`; `PREFLIGHT=PASS`; autenticación, Oracle y watcher no ejecutados.
+- Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=ae121a879eeb875bffcde63731714622d84fc619dd75e59c5215fa928c4cdba6`.

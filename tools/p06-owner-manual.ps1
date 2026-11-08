@@ -17,7 +17,7 @@ function Assert-BackendRuntimeCorrespondence([string]$RepoRoot) {
         $_.CommandLine -and $_.CommandLine -match '(?i)RL.API.dll|dotnet.*run' -and $_.CommandLine -match [Regex]::Escape($repoPath)
     })
     $listeners = @(Get-NetTCPConnection -LocalPort 5043 -State Listen -ErrorAction SilentlyContinue)
-    $matched = @($listeners | Where-Object { $processes.ProcessId -contains $_.OwningProcess })
+    $matched = @($listeners | Where-Object { $processes.ProcessId -contains $_.OwningProcess } | Sort-Object OwningProcess -Unique)
     if ($matched.Count -ne 1 -or $processes.Count -ne 1) { Stop-Owner 'BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN' }
     $api = $null
     try { $api = Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:5043/api/configuracion/sistema' -MaximumRedirection 0 -TimeoutSec 5 } catch { Stop-Owner 'BACKEND_READONLY_ENDPOINT_UNAVAILABLE' }

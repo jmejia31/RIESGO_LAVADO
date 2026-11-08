@@ -1,6 +1,6 @@
 {
   "version": "P06-QA-REAL-2026-11-07-01",
-  "packageSha256": "67a2b2994626d54467948841f05c105b3bab43c6deae0ab515aee7e8b02e48ba",
+  "packageSha256": "ae121a879eeb875bffcde63731714622d84fc619dd75e59c5215fa928c4cdba6",
   "files": [
     {
       "path": "frontend/rl-app/e2e/p06-qa-real-auth.spec.ts",
@@ -20,7 +20,7 @@
     },
     {
       "path": "tools/p06-owner-manual.ps1",
-      "sha256": "35918224a59e02f330f07c5171140fbb94c957954a350eb581769a85bab0dfed"
+      "sha256": "d3efc00e942be0711021743c20e9ab2a2323b2db915735b2f663d2b33a769bdf"
     },
     {
       "path": "tools/p06-qa-runner.ps1",
@@ -28,7 +28,7 @@
     },
     {
       "path": "tools/p06-qa-contract-tests.ps1",
-      "sha256": "33f9989a41ea0e955a4466bc9c9fd167d4ce1e08dc63944e627b18eaf432bc7b"
+      "sha256": "04f40c905ae5b6cca99c95504c15ee0cc552aa5f2e2f0f03daaec7b902a6ae14"
     },
     {
       "path": "tools/qa/P06_OracleIdentity.sql",

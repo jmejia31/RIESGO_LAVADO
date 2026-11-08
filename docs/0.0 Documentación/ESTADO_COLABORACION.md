@@ -3889,6 +3889,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El parser exige seis campos y separa la operación SELECT de la evaluación conservadora de privilegios efectivos. No se emite `READ_ONLY` para el propietario del esquema.
 - `AUTH_REAL=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 
+## Correccion vigente P06 - listeners del backend - 2026-11-07
+
+- `BASE_SHA=34d904631f002083ee0ff04e6b5d016a5da7b98c`; `PACKAGE_SHA256=ae121a879eeb875bffcde63731714622d84fc619dd75e59c5215fa928c4cdba6`.
+- Listeners del mismo `OwningProcess` se consideran un unico proceso; PID distintos siguen bloqueados. `MULTIPLE_LISTENERS_SAME_PID=PASS`; `DIFFERENT_PIDS_REJECTED=PASS`; `PREFLIGHT=PASS`.
+- `AUTH_REAL=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
 ## Estado vigente - P06 correspondencia efectiva del backend y privilegios Oracle - 2026-11-07
 
 - `BASE_SHA=40a7563a5cd92a7653607ef719e14c2fb323c541`; corrección local pendiente de publicación; `PACKAGE_SHA256=08ca65374259fe5d165dae8f1c2f7ad47226185e12f486aaed212f1a95207a6a`.
