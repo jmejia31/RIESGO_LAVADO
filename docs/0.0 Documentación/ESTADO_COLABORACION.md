@@ -3897,6 +3897,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 ## Estado vigente - P06 correspondencia efectiva del backend y privilegios Oracle - 2026-11-07
 
+## Correccion vigente - Block 7/9 E2E - 2026-11-08
+
+- `BASE_SHA=5accbc723fa753eb857140740d27ccf55da31d1c`; `QUALITY_GATE_BASE=42443880621_FAILURE`; fallo real confirmado en el E2E Oracle, no aceptado como flaky.
+- `E2E_ROOT_CAUSE=FIXTURE_REPEATED_IDEMPOTENT_ACTIVITY_WRITE`: la preparacion API y la edicion UI enviaban el mismo texto; el escenario ahora prueba una transicion real `A1 preparada -> A1 actualizada`.
+- `CONCURRENCY_409_TELEMETRY=RETAINED`; la expectativa `PUT /borrador 409` no fue eliminada. El `observed=0` era consecuencia del abortar antes de llegar a la fase concurrente.
+- `FILES_CHANGED=frontend/rl-app/e2e/block7-oracle-real.spec.ts`; `BACKEND_CHANGED=NO`; `P06_CHANGED=NO`; `PROCESS_DETECTOR_CHANGED=NO`.
+- `ESLINT=PASS`; `PLAYWRIGHT_LIST=PASS (3 tests)`; `ANGULAR_FOCAL_TEST=PASS (20 tests)`; `GIT_DIFF_CHECK=PASS`; E2E Oracle real local `NOT_EXECUTED` por dependencia del CI disposable.
+- `WATCHER_ENABLED=NO`; `ORACLE_TOUCHED=NO`; `QA_CREDENTIALS_USED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Punto de continuacion: revision selectiva, commit/push en `origin/desarrollo` y verificacion del nuevo Quality Gate. No reiniciar P06.
+
 - `BASE_SHA=40a7563a5cd92a7653607ef719e14c2fb323c541`; corrección local pendiente de publicación; `PACKAGE_SHA256=08ca65374259fe5d165dae8f1c2f7ad47226185e12f486aaed212f1a95207a6a`.
 - `ORACLE_QUERY_OPERATION=SELECT_ONLY`; `ORACLE_EFFECTIVE_PRIVILEGE_CHECK=REQUIRED`; `READ_ONLY=YES` solo puede emitirse cuando roles, privilegios de sistema y privilegios recibidos son compatibles con solo lectura; no se basa únicamente en `session_privs`.
 - `BACKEND_RUNTIME_CORRESPONDENCE=REQUIRED`; se exige proceso único del checkout escuchando el puerto API y respuesta HTTP 200 de `/api/configuracion/sistema` antes de pedir credenciales web; cualquier incertidumbre bloquea.

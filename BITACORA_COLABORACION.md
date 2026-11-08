@@ -10486,3 +10486,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `Assert-BackendRuntimeCorrespondence` deduplica listeners IPv4/IPv6 mediante `Sort-Object OwningProcess -Unique` y mantiene el bloqueo para PID distintos.
 - Regresiones sin credenciales: `MULTIPLE_LISTENERS_SAME_PID=PASS`; `DIFFERENT_PIDS_REJECTED=PASS`; `PREFLIGHT=PASS`; autenticación, Oracle y watcher no ejecutados.
 - Manifiesto actualizado: `P06_QA_PACKAGE_SHA256=ae121a879eeb875bffcde63731714622d84fc619dd75e59c5215fa928c4cdba6`.
+
+## 2026-11-08 - Correccion quirurgica Block 7/9 E2E (COD)
+
+- Base `5accbc723fa753eb857140740d27ccf55da31d1c`; Quality Gate `42443880621` FAILURE, intento 1, SHA exacto confirmado.
+- Causa verificada en el log: el escenario escribia por API `Actividad E2E A1 actualizada` y repetia exactamente el mismo valor desde la UI; la proyeccion fallaba con el valor duplicado. Al abortar en esa asercion, el flujo de concurrencia no alcanzaba el PUT 409, por lo que la telemetria reportaba `observed=0`; no se elimino la expectativa 409.
+- Correccion exclusiva: `frontend/rl-app/e2e/block7-oracle-real.spec.ts` usa ahora un valor API previo distinto (`Actividad E2E A1 preparada`) y conserva la transicion UI a `Actividad E2E A1 actualizada`. No se modifico backend, Oracle, P06 ni el detector de procesos.
+- Verificaciones ejecutadas: ESLint focalizado PASS; Playwright list PASS (3 tests descubiertos); regresion Angular focalizada PASS (1 archivo, 20 tests); `git diff --check` PASS. E2E Oracle real no se ejecuto localmente por requerir el entorno disposable CI.
+- Estado de publicacion: correccion pendiente de commit/push y de Quality Gate del SHA final. Watcher deshabilitado; autenticacion y Oracle no ejecutados por COD.

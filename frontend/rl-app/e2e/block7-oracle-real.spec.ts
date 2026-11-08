@@ -446,7 +446,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   } });
   expect(planUpdate.status(), await planUpdate.text()).toBe(200);
   const activityUpdate = await request.put(`${api}/actividades/${activityIds[0]}`, { data: {
-    actPlanId: planA, actDescripcion: 'Actividad E2E A1 actualizada', actResponsable: 'Responsable A', actAvance: 25,
+    // Mantener el valor preexistente distinto permite que la comprobación posterior
+    // certifique una transición real desde la UI y no una segunda escritura idempotente.
+    actPlanId: planA, actDescripcion: 'Actividad E2E A1 preparada', actResponsable: 'Responsable A', actAvance: 25,
     actFechaInicio: '2026-01-10', actFechaFin: '2026-01-20', actEstado: 'EN_PROCESO',
   } });
   expect(activityUpdate.status(), await activityUpdate.text()).toBe(200);
@@ -460,7 +462,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const activitiesB = await request.get(`${api}/planes/${planB}/actividades`);
   const readActivitiesA = (await activitiesA.json() as { datos: Array<{ actDescripcion: string }> }).datos;
   const readActivitiesB = (await activitiesB.json() as { datos: Array<{ actDescripcion: string }> }).datos;
-  expect(readActivitiesA.map(activity => activity.actDescripcion)).toEqual(['Actividad E2E A1 actualizada', 'Actividad E2E A2']);
+  expect(readActivitiesA.map(activity => activity.actDescripcion)).toEqual(['Actividad E2E A1 preparada', 'Actividad E2E A2']);
   expect(readActivitiesB.map(activity => activity.actDescripcion)).toEqual(['Actividad E2E B1', 'Actividad E2E B2', 'Actividad E2E B3']);
 
   const alertResponse = await request.post(`${monitoring}/alertas`, { data: {
@@ -686,7 +688,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(projection.fields.find(field => field.fieldNumber === 41)?.value).toBe(2);
   expect(projection.fields.find(field => field.fieldNumber === 43)?.value).toBe(5);
   expect(projection.fields.find(field => field.fieldNumber === 42)?.value).toBe(
-    '1.1 Actividad E2E A1 actualizada\n1.2 Actividad E2E A2\n2.1 Actividad E2E B1\n2.2 Actividad E2E B2\n2.3 Actividad E2E B3',
+    '1.1 Actividad E2E A1 preparada\n1.2 Actividad E2E A2\n2.1 Actividad E2E B1\n2.2 Actividad E2E B2\n2.3 Actividad E2E B3',
   );
   expect(projection.fields.find(field => field.fieldNumber === 40)?.value).toEqual([
     { planOrdinalIndex: 1, value: 'Plan E2E A actualizado', state: 'VALUE' },
