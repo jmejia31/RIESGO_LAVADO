@@ -10457,3 +10457,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Se agrego `tools/p06-owner-manual.ps1`: aprobacion interactiva, `Get-Credential`, origenes localhost fijos, comprobacion Angular/API, watcher y evidencia Oracle de solo lectura fuera del checkout. El modo no declara aislamiento confiable.
 - Regresiones sin credenciales: preflight PASS; `LOCAL_OWNER_MANUAL_PREFLIGHT=PASS`; 6 escenarios descubiertos; no autenticacion, Oracle ni datos de negocio.
 - Manifiesto: `P06_QA_PACKAGE_SHA256=f57fbf3ee831da10c537c2a8e44202eea1579aea1793f1f9dce472a6a806bf34`.
+
+## 2026-11-07 - P06 origen local, logout y Oracle efectivo (COD)
+
+- Base `20937ff2ef77fb8498324e520d5e4634c2a6b4e5`; correccion local pendiente de publicacion.
+- `LOCAL_OWNER_MANUAL` comprueba HTTP 200 sin redireccion en Angular/API y establece `P06_QA_WEB_ORIGIN_VERIFIED` solo despues de esa comprobacion real. La suite ejecuta logout en `afterEach` tambien en modo manual.
+- `tools/p06-owner-manual.ps1` valida precondiciones antes de pedir credenciales, obtiene la configuracion del backend, ejecuta consulta Oracle read-only en memoria con `sqlplus`, valida `RIESGO_LAVADO/hpprod1/hpprod1` y privilegios, y genera evidencia sanitizada externa.
+- Regresiones sin secretos: preflight PASS; manual preflight PASS; logout cleanup PASS; 6 escenarios descubiertos; autenticacion real no ejecutada.

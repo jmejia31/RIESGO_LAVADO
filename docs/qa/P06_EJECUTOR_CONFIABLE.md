@@ -80,4 +80,4 @@ La ruta alternativa no sustituye `CERTIFICATION` ni declara aislamiento confiabl
 powershell -NoProfile -File tools/p06-owner-manual.ps1
 ```
 
-El comando solicita la ruta de un archivo externo generado por una consulta de identidad de la conexion efectiva del backend. Debe contener unicamente, sin credenciales: `SOURCE=BACKEND_EFFECTIVE_CONNECTION`, `SCHEMA=RIESGO_LAVADO`, `SERVICE=hpprod1`, `DB_UNIQUE_NAME=hpprod1`, `READ_ONLY=YES`, `OWNER_VERIFIED=YES` y el `PACKAGE_SHA256` mostrado por el preflight. Luego solicita aprobacion manual, rol, modulos y credencial mediante `Get-Credential`; no usa argumentos, archivos persistentes ni logs para la contrasena.
+El comando obtiene la configuracion del backend, ejecuta automaticamente una consulta Oracle de identidad y privilegios de solo lectura mediante `sqlplus` sin mostrar la credencial, y genera la evidencia sanitizada externa. Exige `SCHEMA=RIESGO_LAVADO`, `SERVICE=hpprod1`, `DB_UNIQUE_NAME=hpprod1`, `READ_ONLY=YES` y el `PACKAGE_SHA256`. Luego solicita aprobacion manual, rol, modulos y credencial mediante `Get-Credential`; no usa argumentos, archivos persistentes ni logs para la contrasena.

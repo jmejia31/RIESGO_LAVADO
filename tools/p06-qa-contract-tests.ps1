@@ -96,7 +96,7 @@ try {
     Invoke-Runner 'HASH_MISMATCH' 'ATTESTATION_HASH_MISMATCH_P06_QA_ISOLATION_ATTESTATION'
 
     Clear-P06Env
-    $manualIdentity = Write-Contract 'manual-db-identity.txt' @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','SCHEMA=RIESGO_LAVADO','SERVICE=hpprod1','DB_UNIQUE_NAME=hpprod1','READ_ONLY=YES','OWNER_VERIFIED=YES',"PACKAGE_SHA256=$digest")
+    $manualIdentity = Write-Contract 'manual-db-identity.txt' @('SOURCE=BACKEND_EFFECTIVE_CONNECTION','QUERY_EXECUTED=YES','SCHEMA=RIESGO_LAVADO','SERVICE=hpprod1','DB_UNIQUE_NAME=hpprod1','READ_ONLY=YES',"PACKAGE_SHA256=$digest")
     Set-EnvValue 'P06_QA_MODE' 'LOCAL_OWNER_MANUAL'; Set-EnvValue 'P06_QA_MANUAL_OWNER_APPROVAL' 'YES'; Set-EnvValue 'P06_QA_EXPECTED_ROLE' 'TEST'; Set-EnvValue 'P06_QA_EXPECTED_MODULE_IDS_JSON' '[1]'; Set-EnvValue 'P06_QA_WEB_ORIGIN' 'http://localhost:4200'; Set-EnvValue 'P06_QA_API_ORIGIN' 'http://localhost:5043'; Set-EnvValue 'P06_QA_MANUAL_DB_IDENTITY_PATH' $manualIdentity; Set-EnvValue 'RL_QA_WEB_USERNAME' 'P06_TEST_SENTINEL'; Set-EnvValue 'RL_QA_WEB_PASSWORD' 'P06_TEST_SENTINEL'
     Invoke-Runner 'LOCAL_OWNER_MANUAL_PREFLIGHT' '' 'LOCAL_OWNER_MANUAL'
 
@@ -112,6 +112,9 @@ try {
     if ($runnerText -notmatch "SetEnvironmentVariable\('P06_QA_MODE'" -or $runnerText -notmatch "skipped.*CERTIFICATION_INCOMPLETE" -or $runnerText -notmatch "6 passed") { throw 'CERTIFICATION_MODE_CONTRACT_NOT_PRESENT' }
     if ($runnerText -notmatch 'CheckSignature\(\$false\)' -or $runnerText -match 'CheckSignature\(\$true\)') { throw 'CMS_CHAIN_VALIDATION_CONTRACT_NOT_PRESENT' }
     Write-Output 'CMS_CHAIN_VALIDATION_CONTRACT=PASS'
+    $specText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'frontend\rl-app\e2e\p06-qa-real-auth.spec.ts')
+    if ($specText -notmatch 'if \(!isRealAuthMode\) return') { throw 'LOCAL_OWNER_LOGOUT_CLEANUP_NOT_PRESENT' }
+    Write-Output 'LOCAL_OWNER_LOGOUT_CLEANUP=PASS'
     Write-Output 'CERTIFICATION_MODE_PROPAGATION=PASS'
     Write-Output 'CERTIFICATION_SKIPPED_TEST_REJECTED=PASS'
     Write-Output 'CERTIFICATION_ZERO_TESTS_REJECTED=PASS'

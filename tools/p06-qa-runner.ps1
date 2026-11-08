@@ -47,7 +47,7 @@ function Assert-ManualOwnerDbIdentity([string]$PackageDigest) {
         if ($values.ContainsKey($key) -or $value -match '(?i)password|token|secret|connectionstring') { Stop-P06 'MANUAL_DB_IDENTITY_UNSAFE' }
         $values[$key] = $value
     }
-    $expected = @{ SOURCE = 'BACKEND_EFFECTIVE_CONNECTION'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; READ_ONLY = 'YES'; OWNER_VERIFIED = 'YES'; PACKAGE_SHA256 = $PackageDigest }
+    $expected = @{ SOURCE = 'BACKEND_EFFECTIVE_CONNECTION'; QUERY_EXECUTED = 'YES'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; READ_ONLY = 'YES'; PACKAGE_SHA256 = $PackageDigest }
     foreach ($key in $expected.Keys) { if ($values[$key] -ne $expected[$key]) { Stop-P06 "MANUAL_DB_IDENTITY_INVALID_$key" } }
     Write-Output 'P06_MANUAL_DB_IDENTITY=PASS'
 }
@@ -150,8 +150,10 @@ try {
         if ([Environment]::GetEnvironmentVariable('P06_QA_MANUAL_OWNER_APPROVAL') -ne 'YES') { Stop-P06 'MANUAL_OWNER_APPROVAL_REQUIRED' }
         if ([Environment]::GetEnvironmentVariable('P06_QA_WEB_ORIGIN') -ne 'http://localhost:4200' -or [Environment]::GetEnvironmentVariable('P06_QA_API_ORIGIN') -ne 'http://localhost:5043') { Stop-P06 'LOCAL_OWNER_ORIGIN_MISMATCH' }
         foreach ($uri in @('http://localhost:4200/', 'http://localhost:5043/healthz')) {
-            try { $response = Invoke-WebRequest -UseBasicParsing -Uri $uri -TimeoutSec 5; if ($response.StatusCode -ne 200) { Stop-P06 'LOCAL_OWNER_ORIGIN_UNAVAILABLE' } } catch { Stop-P06 'LOCAL_OWNER_ORIGIN_UNAVAILABLE' }
+            try { $response = Invoke-WebRequest -UseBasicParsing -Uri $uri -MaximumRedirection 0 -TimeoutSec 5; if ($response.StatusCode -ne 200) { Stop-P06 'LOCAL_OWNER_ORIGIN_UNAVAILABLE' } } catch { Stop-P06 'LOCAL_OWNER_ORIGIN_UNAVAILABLE' }
         }
+        [Environment]::SetEnvironmentVariable('P06_QA_WEB_ORIGIN_VERIFIED', 'YES', 'Process')
+        Write-Output 'P06_LOCAL_WEB_ORIGIN_VERIFIED=PASS'
         Assert-ManualOwnerDbIdentity $digest
         $watcher = Get-ScheduledTask -TaskName 'RiesgoLavado-CodexQueue' -ErrorAction SilentlyContinue
         if ($watcher -and $watcher.Settings.Enabled) { Stop-P06 'WATCHER_ENABLED' }

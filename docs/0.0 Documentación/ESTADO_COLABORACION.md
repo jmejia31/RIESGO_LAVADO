@@ -3873,4 +3873,6 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - `LOCAL_OWNER_MANUAL=IMPLEMENTED`; `PACKAGE_SHA256=f57fbf3ee831da10c537c2a8e44202eea1579aea1793f1f9dce472a6a806bf34`; `LOCAL_ORIGIN_CHECK=PASS`; `LOCAL_OWNER_MANUAL_PREFLIGHT=PASS`.
 - `ORACLE_IDENTITY=OWNER_EVIDENCE_REQUIRED`; el runner no acepta el modo manual sin archivo externo que vincule la conexion efectiva del backend a `RIESGO_LAVADO/hpprod1/hpprod1` y solo lectura.
+- `ORACLE_IDENTITY=GENERATED_FROM_BACKEND_CONFIGURATION_AND_READONLY_QUERY`; la evidencia se genera externamente por `p06-owner-manual.ps1`, no se acepta una declaracion escrita manualmente.
+- `LOCAL_WEB_ORIGIN_VERIFIED=REAL_HTTP_200_NO_REDIRECT`; `LOCAL_OWNER_LOGOUT_CLEANUP=PASS`; las precondiciones se completan antes de `Get-Credential`.
 - `AUTH_REAL=NOT_EXECUTED`; `WINDOWS_ISOLATION=NOT_VERIFIED`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.

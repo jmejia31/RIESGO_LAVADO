@@ -81,7 +81,7 @@ async function profile(page: Page): Promise<{ status: number; success: boolean; 
 }
 
 async function logoutSilently(page: Page): Promise<void> {
-  if (mode !== 'CERTIFICATION') return;
+  if (!isRealAuthMode) return;
   const token = await csrfToken(page);
   if (token) await postFromBrowser(page, '/api/auth/logout', token).catch(() => undefined);
 }
