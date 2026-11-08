@@ -10497,6 +10497,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 ## 2026-11-08 - P06 separacion de identidad Oracle y persistencia de autenticacion (COD)
 
+## 2026-11-08 - P06 prueba de identidad Oracle desde el runtime API (COD)
+
+- Base `04ce70e711eb929fbc5a1f4056d5dbe8b723442b`; correccion preparada en worktree aislado, sin credenciales, SQL*Plus, Oracle ni autenticacion real.
+- `P06OracleIdentityController` consulta exclusivamente mediante el `OracleDbContext` real registrado por `Program.cs`, con perfil resuelto, identidad Oracle sanitizada, `Environment.ProcessId` y acceso solo loopback. Permanece deshabilitado por defecto mediante `P06:LocalIdentityProbeEnabled`.
+- `p06-owner-manual.ps1` exige que el proceso que atiende `localhost:5043`, el PID informado por la prueba y la identidad SQL*Plus coincidan; cualquier ausencia, divergencia o evidencia incompleta bloquea antes de solicitar credenciales.
+- `p06-qa-runner.ps1` acepta unicamente el contrato de evidencia `BACKEND_ORACLE_DB_CONTEXT_AND_SQLPLUS`; se conservaron las comprobaciones de objetos/triggers, integridad, watcher, aprobacion manual y los seis escenarios obligatorios.
+- Verificaciones ejecutadas: build backend PASS; contrato C# focalizado 2/2 PASS; contratos P06 sin secretos PASS; parseo PowerShell PASS; manifiesto SHA-256 actualizado. AUTH01-AUTH06, Oracle institucional y watcher no ejecutados.
+- Punto de continuacion: commit/push selectivo en `origin/desarrollo`, esperar el Quality Gate del nuevo SHA y conservar `P06_REAL_CERTIFICATION=BLOCKED` hasta la ejecucion manual autentica del propietario.
+
 - Base `ff216911baa2065ca5f2043a650f35a957a44e3b`; correccion preparada en worktree limpio, sin credenciales ni conexion Oracle.
 - `tools/p06-owner-manual.ps1` separa `IDENTITY` de `PRIVILEGES`; elimina la exigencia incompatible de cero DML y verifica propiedad/validez de `RL_USUARIOS`, `RL_REFRESH_TOKENS`, `RL_AUDITORIA` y sus triggers.
 - `tools/qa/P06_OracleIdentity.sql` refleja ambas comprobaciones sin DDL/DML. El runner valida el nuevo contrato y el manifiesto SHA-256 fue recalculado.

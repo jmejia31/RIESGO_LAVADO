@@ -3899,6 +3899,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 ## Correccion vigente - Block 7/9 E2E - 2026-11-08
 
+## Correccion vigente P06 - prueba de identidad Oracle desde API - 2026-11-08
+
+- `BASE_SHA=04ce70e711eb929fbc5a1f4056d5dbe8b723442b`; correccion preparada en worktree aislado. No se solicitaron credenciales ni se tocaron Oracle, datos de negocio o watcher.
+- `BACKEND_RUNTIME_ORACLE_PROOF=IMPLEMENTED`: el endpoint local temporal usa el `OracleDbContext` real y la conexion resuelta por `Program.cs`, devuelve solo identidad sanitizada y exige loopback y `P06:LocalIdentityProbeEnabled=true`; esta deshabilitado por defecto.
+- `BACKEND_PROCESS_IDENTITY=REQUIRED`: el proceso que escucha `localhost:5043`, el `Environment.ProcessId` del backend y la evidencia SQL*Plus deben coincidir. Perfil `PRODUCTION`, esquema `RIESGO_LAVADO`, servicio `hpprod1` y `DB_UNIQUE_NAME=hpprod1` se comparan fail-closed.
+- `P06_CONTRACT_REGRESSIONS=PASS`; `P06_ORACLE_IDENTITY_CONTROLLER_TESTS=2/2 PASS`; `BACKEND_BUILD=PASS`; `P06_PACKAGE_INTEGRITY=UPDATED`; `P06_REAL_CERTIFICATION=NOT_EXECUTED` hasta AUTH01-AUTH06 autenticos.
+- Requiere reinicio manual del API por el propietario con el mismo perfil aprobado y la variable local `P06__LocalIdentityProbeEnabled=true`; Codex no detiene procesos ni ve credenciales. Tras comprobar la respuesta local y la correspondencia Oracle, el propietario puede ejecutar `tools/p06-owner-manual.ps1`.
+- Punto de continuacion: publicar el commit selectivo, verificar el Quality Gate del nuevo SHA y conservar `WATCHER_ENABLED=NO`, `BLOCK10_AUTHORIZED=NO`.
+
 ## Correccion vigente P06 - identidad y persistencia Oracle - 2026-11-08
 
 - `BASE_SHA=ff216911baa2065ca5f2043a650f35a957a44e3b`; se separan identidad `RIESGO_LAVADO/hpprod1/hpprod1` y persistencia minima de autenticacion.

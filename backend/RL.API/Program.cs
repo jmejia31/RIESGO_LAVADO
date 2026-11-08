@@ -177,6 +177,7 @@ Log.Information("DatabaseProfile={DatabaseProfile}", databaseConnection.ProfileN
 
 builder.Services.AddSingleton<OracleDbContext>(sp =>
     new OracleDbContext(databaseConnection.ConnectionString));
+builder.Services.AddSingleton(databaseConnection);
 
 // BE-03: registra readiness con timeout acotado. /healthz no depende de Oracle;
 // /readyz usa una consulta mínima de solo lectura y devuelve únicamente estado agregado.

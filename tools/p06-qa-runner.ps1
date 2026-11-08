@@ -47,8 +47,12 @@ function Assert-ManualOwnerDbIdentity([string]$PackageDigest) {
         if ($values.ContainsKey($key) -or $value -match '(?i)password|token|secret|connectionstring') { Stop-P06 'MANUAL_DB_IDENTITY_UNSAFE' }
         $values[$key] = $value
     }
-    $expected = @{ SOURCE = 'OWNER_MANUAL_SQLPLUS_CONNECTION'; QUERY_EXECUTED = 'YES'; QUERY_OPERATION = 'SELECT_ONLY'; PRIVILEGE_CHECK = 'AUTH_PERSISTENCE_OWNER'; PRIVILEGE_RESULT = 'PASS'; AUTH_OBJECTS_VALID = 'YES'; AUTH_TRIGGERS_VALID = 'YES'; BACKEND_RUNTIME_CORRESPONDENCE = 'PASS'; CONFIG_SOURCE = 'CANDIDATE_CONFIG_NOT_RUNTIME_PROOF'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; PACKAGE_SHA256 = $PackageDigest }
+    $expected = @{ SOURCE = 'BACKEND_ORACLE_DB_CONTEXT_AND_SQLPLUS'; QUERY_EXECUTED = 'YES'; QUERY_OPERATION = 'SELECT_ONLY'; PRIVILEGE_CHECK = 'AUTH_PERSISTENCE_OWNER'; PRIVILEGE_RESULT = 'PASS'; AUTH_OBJECTS_VALID = 'YES'; AUTH_TRIGGERS_VALID = 'YES'; BACKEND_RUNTIME_ORACLE_PROOF = 'PASS'; BACKEND_PROFILE = 'PRODUCTION'; BACKEND_SESSION_USER = 'RIESGO_LAVADO'; BACKEND_CURRENT_SCHEMA = 'RIESGO_LAVADO'; BACKEND_SERVICE = 'hpprod1'; BACKEND_DB_UNIQUE_NAME = 'hpprod1'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; PACKAGE_SHA256 = $PackageDigest }
     foreach ($key in $expected.Keys) { if ($values[$key] -ne $expected[$key]) { Stop-P06 "MANUAL_DB_IDENTITY_INVALID_$key" } }
+    foreach ($key in @('BACKEND_PROCESS_ID', 'BACKEND_DB_NAME', 'BACKEND_INSTANCE_NAME', 'DB_NAME', 'INSTANCE_NAME')) {
+        if (-not $values.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($values[$key])) { Stop-P06 "MANUAL_DB_IDENTITY_INVALID_$key" }
+    }
+    if ($values['BACKEND_PROCESS_ID'] -notmatch '^\d+$') { Stop-P06 'MANUAL_DB_IDENTITY_INVALID_BACKEND_PROCESS_ID' }
     Write-Output 'P06_MANUAL_DB_IDENTITY=PASS'
 }
 
