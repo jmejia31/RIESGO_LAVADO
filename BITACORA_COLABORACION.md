@@ -10547,3 +10547,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificacion aislada: normalizacion del paquete PASS, `P06_PREFLIGHT=PASS`, descubrimiento de 6 escenarios PASS y contratos P06 PASS. `git diff --check` y parseo PowerShell PASS.
 - No se ejecutaron AUTH01-AUTH06, Oracle institucional, credenciales ni watcher. `P06_REAL_CERTIFICATION=NOT_EXECUTED`.
 - Punto de continuacion: verificar el Quality Gate del SHA final `32b62121` y conservar el estado no certificado hasta evidencia autentica del propietario.
+
+## 2026-11-09 - correccion del filtro antiforgery en logout (COD)
+
+- Base `6684a0af91785259d089675d67028f16f07c1381`; el log real del backend mostro `POST /api/auth/logout` con HTTP 500 por `No service for type ValidateAntiforgeryTokenAuthorizationFilter has been registered`.
+- Correccion quirurgica: `backend/RL.API/Program.cs` usa `AddControllersWithViews()` para registrar el filtro requerido por `[ValidateAntiForgeryToken]`; se conserva `AddAntiforgery` y no se elimina ninguna proteccion.
+- Regresion nueva: `AntiforgeryRegistrationContractTests` verifica que el filtro se resuelve en el contenedor MVC y que la aplicacion conserva el registro antiforgery.
+- Verificado: restore PASS; prueba focalizada 2/2 PASS; build de `RL.API` PASS. Oracle, credenciales, autenticacion P06 y watcher no fueron ejecutados. El Quality Gate del nuevo SHA queda pendiente de CI.
+- `P06_REAL_CERTIFICATION=NOT_EXECUTED`; el propietario debe reconstruir/reiniciar la API actual antes de repetir P06 y comprobar que logout ya no devuelve 500.

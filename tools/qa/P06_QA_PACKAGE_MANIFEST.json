@@ -1,6 +1,6 @@
 {
   "version": "P06-QA-REAL-2026-11-07-01",
-  "packageSha256": "db4b37261c54112b26bea684d215b2b52c4b4408499cc6914fa3db8ee3786d27",
+  "packageSha256": "cbab93a94734a87f1fb4877ec6db64e3bb41d8c65dc7a72958f28a7515192e4e",
   "files": [
     {
       "path": "backend/RL.API.Tests/Infrastructure/Health/P06OracleIdentityControllerContractTests.cs",
@@ -12,7 +12,7 @@
     },
     {
       "path": "backend/RL.API/Program.cs",
-      "sha256": "34c5e14a37bc9c9ede3ebd7f1600fc23bebfcd37f66ffa86b091e48d0dcef3b0"
+      "sha256": "f9256d22d9d1c40b72008b33f1b15a019031cc7baaff0fe4c50c06a478a679bd"
     },
     {
       "path": "frontend/rl-app/e2e/p06-qa-real-auth.spec.ts",

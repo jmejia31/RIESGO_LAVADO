@@ -3962,3 +3962,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `P06_FILE_NORMALIZATION=PASS`; `P06_PACKAGE_INTEGRITY=PASS`; `P06_PREFLIGHT=PASS`; discovery de 6 escenarios PASS; contratos P06 PASS; parseo PowerShell y `git diff --check` PASS.
 - `P06_REAL_CERTIFICATION=NOT_EXECUTED`; `AUTH_REAL=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Pendiente: Quality Gate del SHA `32b62121` y ejecucion autentica exclusivamente por el propietario.
+
+## Correccion backend logout - 2026-11-09
+
+- `SOURCE_BASE_SHA=6684a0af91785259d089675d67028f16f07c1381`.
+- Causa confirmada en log real: `POST /api/auth/logout` terminaba en 500 porque `[ValidateAntiForgeryToken]` no podia resolver `ValidateAntiforgeryTokenAuthorizationFilter` con `AddControllers()`.
+- Correccion minima: `Program.cs` registra `AddControllersWithViews()` y conserva la configuracion antiforgery existente; el endpoint y la proteccion CSRF no se debilitan.
+- Regresion `AntiforgeryRegistrationContractTests`: 2/2 PASS. Build backend PASS. Oracle, credenciales, AUTH01-AUTH06 y watcher no ejecutados.
+- `P06_REAL_CERTIFICATION=NOT_EXECUTED`; pendiente publicar el commit y verificar el Quality Gate. Luego el propietario debe reiniciar la API con el nuevo binario y repetir P06.

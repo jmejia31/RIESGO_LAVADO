@@ -44,7 +44,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Proceso HTTP: habilita controladores y serialización JSON para exponer contratos REST limpios.
-builder.Services.AddControllers()
+builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(opts =>
     {
         opts.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
