@@ -110,7 +110,7 @@ try {
     Write-Output 'PREFLIGHT_WITHOUT_CREDENTIALS=PASS'
     Write-Output 'PREFLIGHT_REAL_AUTH_EXECUTED=NO'
     $runnerText = Get-Content -Raw -LiteralPath $runner
-    if ($runnerText -notmatch "SetEnvironmentVariable\('P06_QA_MODE'" -or $runnerText -notmatch "skipped.*CERTIFICATION_INCOMPLETE" -or $runnerText -notmatch "6 passed") { throw 'CERTIFICATION_MODE_CONTRACT_NOT_PRESENT' }
+    if ($runnerText -notmatch "SetEnvironmentVariable\('P06_QA_MODE'" -or $runnerText -notmatch 'Get-P06SafeDiagnostic' -or $runnerText -notmatch 'diagnostic\.RealCertification' -or $runnerText -notmatch 'P06_DIAGNOSTIC_STATUS=UNAVAILABLE') { throw 'CERTIFICATION_MODE_CONTRACT_NOT_PRESENT' }
     if ($runnerText -notmatch 'CheckSignature\(\$false\)' -or $runnerText -match 'CheckSignature\(\$true\)') { throw 'CMS_CHAIN_VALIDATION_CONTRACT_NOT_PRESENT' }
     Write-Output 'CMS_CHAIN_VALIDATION_CONTRACT=PASS'
     $ownerText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'tools\p06-owner-manual.ps1')
