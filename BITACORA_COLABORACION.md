@@ -10527,6 +10527,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Base `f5fb0c3ef54658c8547e3a4247bb0b2276cb6883`; el preflight del paquete paso, pero el owner manual bloqueo con `ORACLE_IDENTITY_OUTPUT_INCOMPLETE`.
 - Causa probable acotada: prompt interactivo `SQL>` en la salida de SQLPlus impedía reconocer las dos lineas canonicas, sin relajar el parser.
 - Correccion minima: `SET SQLPROMPT ""`; se conserva `LINESIZE 32767`, el bloqueo por salida incompleta/formato invalido y la prevencion de `Regex.Match` sobre nulos. Regresion adversarial agregada para prompt contaminante.
+- Reproduccion del propietario mantuvo `ORACLE_IDENTITY_OUTPUT_INCOMPLETE`; se endurece el arranque SQLPlus con `-S -L /nolog` para eliminar banner/prompt antes de leer stdout, sin aceptar ni imprimir salida sensible.
 - No se solicitaron credenciales ni se ejecutaron SQLPlus, Oracle institucional, AUTH01-AUTH06 o watcher. Punto de continuacion: ejecutar regresiones sin secretos, publicar y verificar Quality Gate del nuevo SHA.
 
 - Base `ff216911baa2065ca5f2043a650f35a957a44e3b`; correccion preparada en worktree limpio, sin credenciales ni conexion Oracle.

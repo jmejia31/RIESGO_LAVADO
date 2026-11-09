@@ -47,7 +47,7 @@ function Get-ConnectionPart([string]$Connection, [string]$Key) {
     return $match.Groups[1].Value.Trim()
 }
 function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]$Password, [string]$DataSource) {
-    $psi = [Diagnostics.ProcessStartInfo]::new(); $psi.FileName = $SqlPlusPath; $psi.Arguments = '-L /nolog'; $psi.UseShellExecute = $false; $psi.CreateNoWindow = $true; $psi.RedirectStandardInput = $true; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true
+    $psi = [Diagnostics.ProcessStartInfo]::new(); $psi.FileName = $SqlPlusPath; $psi.Arguments = '-S -L /nolog'; $psi.UseShellExecute = $false; $psi.CreateNoWindow = $true; $psi.RedirectStandardInput = $true; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true
     $process = [Diagnostics.Process]::new(); $process.StartInfo = $psi
     if (-not $process.Start()) { Stop-Owner 'ORACLE_SQLPLUS_START_FAILED' }
     $process.StandardInput.WriteLine("connect $UserName/$Password@$DataSource")

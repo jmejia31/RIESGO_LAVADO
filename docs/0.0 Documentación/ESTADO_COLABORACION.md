@@ -3947,5 +3947,6 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - `BASE_SHA=f5fb0c3ef54658c8547e3a4247bb0b2276cb6883`; el bloqueo observado fue `ORACLE_IDENTITY_OUTPUT_INCOMPLETE` despues de un preflight exitoso.
 - Se suprime el prompt interactivo SQLPlus con `SET SQLPROMPT ""`; el parser sigue exigiendo exactamente `IDENTITY|...` y `PRIVILEGES|...`, con bloqueo fail-closed.
+- El propietario reprodujo `ORACLE_IDENTITY_OUTPUT_INCOMPLETE`; la invocacion ahora usa `-S -L /nolog` para suprimir tambien banner/prompt del cliente antes del parseo.
 - Regresion agregada para salida contaminada por `SQL>`; no se tocan Oracle, credenciales, datos de negocio ni watcher. `P06_REAL_CERTIFICATION=NOT_EXECUTED`.
 - Punto de continuación: publicar únicamente la corrección autorizada y verificar el Quality Gate del SHA final.
