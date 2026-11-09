@@ -10569,3 +10569,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Resultado autentico reportado: `P06_AUTH_01` a `P06_AUTH_06A` PASS; total 6, pasados 6, fallidos 0, omitidos 0, no ejecutados 0; `P06_REAL_CERTIFICATION=PASS`.
 - `P06_OWNER_ORACLE_IDENTITY=PASS`, `P06_OWNER_EVIDENCE=GENERATED_EXTERNAL_SANITIZED`, `P06_MANUAL_DB_IDENTITY=PASS`; no se publican credenciales, tokens ni valores sensibles. Esta evidencia fue aportada por el propietario y no se presenta como ejecucion autenticada de COD.
 - Quality Gate `42682601643` fue verificado en GitHub: `SUCCESS`, intento 1, SHA exacto `4872c537324c51982fb613808526a7f8743a6762`.
+
+## 2026-11-09 13:59:19 -06:00 — Registro diferido de pendientes de navegacion P06 (CHAT)
+
+- `BASE_SHA=758647d4c8fb9d3a7b871b198f1dfa8284014bf2`; rama `desarrollo`. Solicitud expresa del propietario: localizar un registro general de pendientes y registrar los dos hallazgos pendientes para el proximo plan de implementacion.
+- Se encontraron inventarios especializados en `docs/pendientes/` y la cola operativa `docs/automatizacion/TAREAS_CODEX.json`, pero no un registro central general. Se crea `docs/pendientes/REGISTRO_PENDIENTES.md`, sin agregar entradas a la cola ejecutable.
+- Pendientes registrados: `PEND-P06-NAV-001` (no aceptar `/home` transitoria como destino final) y `PEND-P06-NAV-002` (no aceptar `/sin-acceso` como exito para usuario con modulos autorizados). Estado `PENDIENTE_PLANIFICACION`; implementacion `NO_AUTORIZADA`.
+- Evidencia anterior, no reejecutada: `P06_REAL_CERTIFICATION=PASS`, `AUTH_01..AUTH_06A=6/6 PASS` sobre `SOURCE_CODE_SHA=4872c537324c51982fb613808526a7f8743a6762`, Quality Gate `42682601643 SUCCESS`; expediente documental base `758647d4c8fb9d3a7b871b198f1dfa8284014bf2`.
+- Archivos previstos: `docs/pendientes/REGISTRO_PENDIENTES.md`, `docs/0.0 Documentación/ESTADO_COLABORACION.md` y `BITACORA_COLABORACION.md`. Sin cambios de codigo, API, Angular, Oracle, secretos, `main` o la cola. No se ejecutaron builds, E2E, credenciales ni QA real por ser un registro exclusivamente documental.
+- Continuidad: consultar `docs/pendientes/REGISTRO_PENDIENTES.md` al preparar el proximo plan; exigir autorizacion y regresiones nuevas antes de ejecutar. `BLOCK10_AUTHORIZED=NO`. Publicacion remota como commit documental unico en `origin/desarrollo`; el SHA resultante se consulta en el historial de GitHub.

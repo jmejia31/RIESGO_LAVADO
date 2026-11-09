@@ -3985,3 +3985,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `P06_EXECUTION_PACKAGE=PASS`; `P06_LOCAL_SERVICES=PASS`; `P06_WATCHER_DISABLED=PASS`; `P06_OWNER_ORACLE_IDENTITY=PASS`; `P06_MANUAL_DB_IDENTITY=PASS`.
 - `AUTH01=PASS`; `AUTH02=PASS`; `AUTH03=PASS`; `AUTH04=PASS`; `AUTH05=PASS`; `AUTH06=PASS`; `P06_TESTS_TOTAL=6`; `P06_TESTS_PASSED=6`; `P06_TESTS_FAILED=0`; `P06_TESTS_SKIPPED=0`.
 - `P06_REAL_CERTIFICATION=PASS` con evidencia real del propietario. `ORACLE_TOUCHED_BY_COD=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
+## Registro central de pendientes diferidos — 2026-11-09 13:59:19 -06:00 (CHAT)
+
+- `BASE_SHA=758647d4c8fb9d3a7b871b198f1dfa8284014bf2`; documento central nuevo: [REGISTRO_PENDIENTES.md](../pendientes/REGISTRO_PENDIENTES.md).
+- `PEND-P06-NAV-001=PENDIENTE_PLANIFICACION`: `/home` es ruta tecnica transitoria y no debe ser aceptada como prueba de destino final autorizado tras login.
+- `PEND-P06-NAV-002=PENDIENTE_PLANIFICACION`: `/sin-acceso` es denegacion y no debe contar como exito de navegacion de un usuario con modulos autorizados.
+- El propietario difirio ambos hallazgos al proximo plan de implementacion. `IMPLEMENTACION_AUTORIZADA=NO`; `CODEX_QUEUE_MODIFIED=NO`; `WATCHER_ACTIVATION=NO`; `BLOCK10_AUTHORIZED=NO`.
+- La evidencia previa `P06_REAL_CERTIFICATION=PASS`, `AUTH_01..AUTH_06A=6/6 PASS`, `SOURCE_CODE_SHA=4872c537324c51982fb613808526a7f8743a6762`, Quality Gate `42682601643 SUCCESS` se conserva sin reabrirla; no se ejecutaron pruebas reales ni se altero Oracle en esta intervencion.
+- Continuacion exacta: al preparar el proximo plan, revisar ambos pendientes, exigir autorizacion explicita y regresiones con destino final autorizado y denegaciones negativas; no trasladar a la cola automatizada por simple registro.
