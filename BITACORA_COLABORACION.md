@@ -10539,3 +10539,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El flujo manual se bloquea antes de solicitar credenciales porque `/readyz` no demuestra que el proceso API use exactamente la identidad SQL*Plus; no se presenta `user-secrets` como prueba de runtime efectivo.
 - Regresiones: parseo PowerShell y manifiesto PASS; contrato completo pendiente por dependencias Playwright no instaladas en el worktree aislado. Oracle, autenticacion y watcher no ejecutados por COD.
 - Punto de continuacion: instalar dependencias de CI o verificar el Gate remoto, publicar selectivamente y conservar `P06_REAL_CERTIFICATION=BLOCKED` hasta evidencia de correspondencia efectiva.
+
+## 2026-11-09 - P06 contrato del diagnostico seguro (COD)
+
+- Base `472fdbe4666e894390eee2954dc309b480ce00ec`; correccion publicada en `32b62121`.
+- Se sustituyo en la regresion una asercion obsoleta sobre texto bruto de Playwright por verificaciones del parser estructurado, `diagnostic.RealCertification` y el bloqueo `P06_DIAGNOSTIC_STATUS=UNAVAILABLE`. No se relajaron los criterios de certificacion.
+- Verificacion aislada: normalizacion del paquete PASS, `P06_PREFLIGHT=PASS`, descubrimiento de 6 escenarios PASS y contratos P06 PASS. `git diff --check` y parseo PowerShell PASS.
+- No se ejecutaron AUTH01-AUTH06, Oracle institucional, credenciales ni watcher. `P06_REAL_CERTIFICATION=NOT_EXECUTED`.
+- Punto de continuacion: verificar el Quality Gate del SHA final `32b62121` y conservar el estado no certificado hasta evidencia autentica del propietario.

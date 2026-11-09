@@ -3954,3 +3954,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El propietario reprodujo `ORACLE_IDENTITY_OUTPUT_INCOMPLETE`; la invocacion ahora usa `-S -L /nolog` para suprimir tambien banner/prompt del cliente antes del parseo.
 - Regresion agregada para salida contaminada por `SQL>`; no se tocan Oracle, credenciales, datos de negocio ni watcher. `P06_REAL_CERTIFICATION=NOT_EXECUTED`.
 - Punto de continuación: publicar únicamente la corrección autorizada y verificar el Quality Gate del SHA final.
+
+## Correccion vigente P06 - contrato de diagnostico seguro - 2026-11-09
+
+- `BASE_SHA=472fdbe4666e894390eee2954dc309b480ce00ec`; `EVIDENCE_COMMIT_SHA=32b62121`.
+- La regresion contractual ya no depende de la salida textual cruda `6 passed`; verifica el parser seguro, la certificacion agregada y el bloqueo ante diagnostico no disponible.
+- `P06_FILE_NORMALIZATION=PASS`; `P06_PACKAGE_INTEGRITY=PASS`; `P06_PREFLIGHT=PASS`; discovery de 6 escenarios PASS; contratos P06 PASS; parseo PowerShell y `git diff --check` PASS.
+- `P06_REAL_CERTIFICATION=NOT_EXECUTED`; `AUTH_REAL=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Pendiente: Quality Gate del SHA `32b62121` y ejecucion autentica exclusivamente por el propietario.
