@@ -3942,4 +3942,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ORACLE_QUERY_OPERATION=SELECT_ONLY`; `ORACLE_EFFECTIVE_PRIVILEGE_CHECK=REQUIRED`; `READ_ONLY=YES` solo puede emitirse cuando roles, privilegios de sistema y privilegios recibidos son compatibles con solo lectura; no se basa únicamente en `session_privs`.
 - `BACKEND_RUNTIME_CORRESPONDENCE=REQUIRED`; se exige proceso único del checkout escuchando el puerto API y respuesta HTTP 200 de `/api/configuracion/sistema` antes de pedir credenciales web; cualquier incertidumbre bloquea.
 - `PREFLIGHT=PASS`; contrato sin secretos PASS; `CERTIFICATION_REAL_AUTH=NOT_EXECUTED`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
+## Correccion vigente P06 - salida SQLPlus sin prompt - 2026-11-09
+
+- `BASE_SHA=f5fb0c3ef54658c8547e3a4247bb0b2276cb6883`; el bloqueo observado fue `ORACLE_IDENTITY_OUTPUT_INCOMPLETE` despues de un preflight exitoso.
+- Se suprime el prompt interactivo SQLPlus con `SET SQLPROMPT ""`; el parser sigue exigiendo exactamente `IDENTITY|...` y `PRIVILEGES|...`, con bloqueo fail-closed.
+- Regresion agregada para salida contaminada por `SQL>`; no se tocan Oracle, credenciales, datos de negocio ni watcher. `P06_REAL_CERTIFICATION=NOT_EXECUTED`.
 - Punto de continuación: publicar únicamente la corrección autorizada y verificar el Quality Gate del SHA final.

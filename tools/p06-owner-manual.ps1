@@ -51,7 +51,7 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
     $process = [Diagnostics.Process]::new(); $process.StartInfo = $psi
     if (-not $process.Start()) { Stop-Owner 'ORACLE_SQLPLUS_START_FAILED' }
     $process.StandardInput.WriteLine("connect $UserName/$Password@$DataSource")
-    $process.StandardInput.WriteLine('set heading off feedback off pagesize 0 verify off echo off trimspool on linesize 32767')
+    $process.StandardInput.WriteLine('set heading off feedback off pagesize 0 verify off echo off trimspool on linesize 32767 sqlprompt ""')
     $process.StandardInput.WriteLine('whenever sqlerror exit 1')
     # La identidad y el contrato de persistencia son comprobaciones distintas.
     # No se exige una cuenta sin DML: login/refresh/logout necesitan persistir

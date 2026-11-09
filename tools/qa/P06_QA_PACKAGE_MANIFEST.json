@@ -1,6 +1,6 @@
 {
   "version": "P06-QA-REAL-2026-11-07-01",
-  "packageSha256": "609e95ee08a7cd361abbe84deb05eea3ce675519bae55c2d707232bd4d48acc2",
+  "packageSha256": "2eccf4167e15a71d4e8206d8d2975a9ef774de6a51030b2858c870d61465a781",
   "files": [
     {
       "path": "backend/RL.API.Tests/Infrastructure/Health/P06OracleIdentityControllerContractTests.cs",
@@ -32,7 +32,7 @@
     },
     {
       "path": "tools/p06-owner-manual.ps1",
-      "sha256": "b116d2210145eac2beb27460a7c2fa0dc92ff241dccafa2af006b0b713ab9ccf"
+      "sha256": "30cd82023a9e0059ccabae2b9969b07cd8ba3a6e5dc09f5ed65ad66d0c5dc9e7"
     },
     {
       "path": "tools/p06-qa-runner.ps1",
@@ -40,7 +40,7 @@
     },
     {
       "path": "tools/p06-qa-contract-tests.ps1",
-      "sha256": "8f3bba3a3fd4072f583ab94cd3075ba2cd923bfbdec5e8f9939831a77900dc8d"
+      "sha256": "760ec1724264478fdc5ccaecb5ade5cae113fdc1dddd0566cb9e07530b68f4a8"
     },
     {
       "path": "tools/qa/P06_OracleIdentity.sql",
