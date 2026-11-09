@@ -118,6 +118,24 @@ try {
     Write-Output 'ORACLE_EFFECTIVE_PRIVILEGE_CONTRACT=PASS'
     Write-Output 'BACKEND_EFFECTIVE_CONFIG_CONTRACT=PASS'
     foreach ($marker in @('BACKEND_ORACLE_IDENTITY_PROBE_UNAVAILABLE','BACKEND_ORACLE_IDENTITY_PROBE_STATUS','BACKEND_ORACLE_IDENTITY_PROBE_INVALID','BACKEND_ORACLE_IDENTITY_PROBE_INCOMPLETE','BACKEND_PROCESS_IDENTITY_MISMATCH','BACKEND_ORACLE_IDENTITY_MISMATCH')) { if ($ownerText -notmatch [Regex]::Escape($marker)) { throw "BACKEND_NEGATIVE_CONTRACT_MISSING_$marker" }; Write-Output "P06_CONTRACT_$marker=PASS" }
+    foreach ($marker in @('ORACLE_IDENTITY_OUTPUT_INCOMPLETE','ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID')) { if ($ownerText -notmatch [Regex]::Escape($marker)) { throw "SQLPLUS_PARSER_MARKER_MISSING_$marker" }; Write-Output "P06_CONTRACT_$marker=PASS" }
+    if ($ownerText -notmatch 'linesize 32767' -or $ownerText -notmatch 'IsNullOrWhiteSpace\(\$identityLine\)' -or $ownerText -notmatch 'IsNullOrWhiteSpace\(\$privilegeLine\)') { throw 'SQLPLUS_PARSER_GUARDS_MISSING' }
+    function Test-SqlPlusParserContract([string[]]$Lines) {
+        $identityLine = $Lines | Where-Object { $_ -like 'IDENTITY|*' } | Select-Object -Last 1
+        $privilegeLine = $Lines | Where-Object { $_ -like 'PRIVILEGES|*' } | Select-Object -Last 1
+        if ([string]::IsNullOrWhiteSpace($identityLine) -or [string]::IsNullOrWhiteSpace($privilegeLine)) { return 'ORACLE_IDENTITY_OUTPUT_INCOMPLETE' }
+        $identityMatch = [Regex]::Match($identityLine, '^IDENTITY\|(?<schema>[^|]+)\|(?<service>[^|]+)\|(?<db>[^|]+)\|(?<dbname>[^|]+)\|(?<instance>[^|]+)\|(?<operation>[^|]+)$')
+        $privilegeMatch = [Regex]::Match($privilegeLine, '^PRIVILEGES\|AUTH_PERSISTENCE_OWNER\|(?<owner>YES|NO)\|AUTH_OBJECTS_VALID\|(?<objects>YES|NO)\|AUTH_TRIGGERS_VALID\|(?<triggers>YES|NO)$')
+        if (-not $identityMatch.Success -or -not $privilegeMatch.Success) { return 'ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID' }
+        return 'PASS'
+    }
+    $validSqlPlus = @('IDENTITY|RIESGO_LAVADO|hpprod1|hpprod1|hpprod1|instance1|SELECT_ONLY','PRIVILEGES|AUTH_PERSISTENCE_OWNER|YES|AUTH_OBJECTS_VALID|YES|AUTH_TRIGGERS_VALID|YES')
+    if ((Test-SqlPlusParserContract $validSqlPlus) -ne 'PASS') { throw 'SQLPLUS_VALID_OUTPUT_REGRESSION_FAILED' }
+    if ((Test-SqlPlusParserContract @('IDENTITY|RIESGO_LAVADO|hpprod1|hpprod1|hpprod1|instance1|SELECT_ONLY')) -ne 'ORACLE_IDENTITY_OUTPUT_INCOMPLETE') { throw 'SQLPLUS_MISSING_OUTPUT_REGRESSION_FAILED' }
+    if ((Test-SqlPlusParserContract @('IDENTITY|RIESGO_LAVADO|hpprod1|hpprod1|hpprod1|instance1|SELECT_ONLY','PRIVILEGES|AUTH_PERSISTENCE_OWNER|YES|AUTH_OBJECTS_VALID')) -ne 'ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID') { throw 'SQLPLUS_SPLIT_OUTPUT_REGRESSION_FAILED' }
+    if ((Test-SqlPlusParserContract @('IDENTITY|RIESGO_LAVADO|hpprod1|bad','PRIVILEGES|AUTH_PERSISTENCE_OWNER|YES|AUTH_OBJECTS_VALID|YES|AUTH_TRIGGERS_VALID|YES')) -ne 'ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID') { throw 'SQLPLUS_INVALID_OUTPUT_REGRESSION_FAILED' }
+    Write-Output 'SQLPLUS_OUTPUT_PARSER=PASS'
+    Write-Output 'NULL_REGEX_PREVENTION=PASS'
     if ($ownerText -notmatch '\$runtimeProcess' -or $ownerText -notmatch 'runtimeProcess\.Count -ne 1') { throw 'PARENT_CHILD_RUNTIME_PID_CONTRACT_NOT_PRESENT' }
     $parentChild = @([pscustomobject]@{ ProcessId = 1001 }, [pscustomobject]@{ ProcessId = 1002 })
     $listenerPid = 1002

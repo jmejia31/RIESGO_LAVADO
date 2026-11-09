@@ -51,7 +51,7 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
     $process = [Diagnostics.Process]::new(); $process.StartInfo = $psi
     if (-not $process.Start()) { Stop-Owner 'ORACLE_SQLPLUS_START_FAILED' }
     $process.StandardInput.WriteLine("connect $UserName/$Password@$DataSource")
-    $process.StandardInput.WriteLine('set heading off feedback off pagesize 0 verify off echo off trimspool on')
+    $process.StandardInput.WriteLine('set heading off feedback off pagesize 0 verify off echo off trimspool on linesize 32767')
     $process.StandardInput.WriteLine('whenever sqlerror exit 1')
     # La identidad y el contrato de persistencia son comprobaciones distintas.
     # No se exige una cuenta sin DML: login/refresh/logout necesitan persistir
@@ -61,12 +61,14 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
     $process.StandardInput.WriteLine('exit'); $process.StandardInput.Close()
     $stdout = $process.StandardOutput.ReadToEnd(); $stderr = $process.StandardError.ReadToEnd(); $process.WaitForExit()
     if ($process.ExitCode -ne 0 -or $stderr -match '(?i)ORA-|SP2-') { Stop-Owner 'ORACLE_READONLY_IDENTITY_QUERY_FAILED' }
-    $lines = @($stdout -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^(IDENTITY|PRIVILEGES)\|' })
+    $lines = @($stdout -split "`r?`n" | ForEach-Object { if ($null -ne $_) { $_.Trim() } } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $identityLine = $lines | Where-Object { $_ -like 'IDENTITY|*' } | Select-Object -Last 1
     $privilegeLine = $lines | Where-Object { $_ -like 'PRIVILEGES|*' } | Select-Object -Last 1
+    if ([string]::IsNullOrWhiteSpace($identityLine) -or [string]::IsNullOrWhiteSpace($privilegeLine)) { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_INCOMPLETE' }
+    if ($identityLine -notmatch '^IDENTITY\|' -or $privilegeLine -notmatch '^PRIVILEGES\|') { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID' }
     $identityMatch = [Regex]::Match($identityLine, '^IDENTITY\|(?<schema>[^|]+)\|(?<service>[^|]+)\|(?<db>[^|]+)\|(?<dbname>[^|]+)\|(?<instance>[^|]+)\|(?<operation>[^|]+)$')
     $privilegeMatch = [Regex]::Match($privilegeLine, '^PRIVILEGES\|AUTH_PERSISTENCE_OWNER\|(?<owner>YES|NO)\|AUTH_OBJECTS_VALID\|(?<objects>YES|NO)\|AUTH_TRIGGERS_VALID\|(?<triggers>YES|NO)$')
-    if (-not $identityMatch.Success -or -not $privilegeMatch.Success) { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_UNPARSEABLE' }
+    if (-not $identityMatch.Success -or -not $privilegeMatch.Success) { Stop-Owner 'ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID' }
     $identity = @{ Schema=$identityMatch.Groups['schema'].Value.Trim(); Service=$identityMatch.Groups['service'].Value.Trim(); DbUniqueName=$identityMatch.Groups['db'].Value.Trim(); DbName=$identityMatch.Groups['dbname'].Value.Trim(); InstanceName=$identityMatch.Groups['instance'].Value.Trim(); QueryOperation=$identityMatch.Groups['operation'].Value.Trim(); PrivilegeCheck='AUTH_PERSISTENCE_OWNER'; PrivilegeResult=$privilegeMatch.Groups['owner'].Value.Trim(); ObjectsValid=$privilegeMatch.Groups['objects'].Value.Trim(); TriggersValid=$privilegeMatch.Groups['triggers'].Value.Trim() }
     if ($identity.Schema -ine 'RIESGO_LAVADO' -or $identity.Service -ine 'hpprod1' -or $identity.DbUniqueName -ine 'hpprod1' -or $identity.QueryOperation -ne 'SELECT_ONLY') { Stop-Owner 'ORACLE_IDENTITY_TARGET_MISMATCH' }
     if ($identity.PrivilegeResult -ne 'YES' -or $identity.ObjectsValid -ne 'YES' -or $identity.TriggersValid -ne 'YES') { Stop-Owner 'ORACLE_AUTH_PERSISTENCE_PRIVILEGE_MISMATCH' }

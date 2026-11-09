@@ -3903,6 +3903,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 ## Correccion vigente P06 - correspondencia de runtime padre/hijo - 2026-11-09
 
+## Correccion vigente P06 - parser SQLPlus fail-closed - 2026-11-09
+
+- `BASE_SHA=f99b2f79c9709096531aac5b68fb05a779beae53`; correccion limitada al parser SQLPlus y sus regresiones.
+- `SQLPLUS_LINESIZE=32767`; `NULL_REGEX_PREVENTION=IMPLEMENTED`; salida ausente bloquea con `ORACLE_IDENTITY_OUTPUT_INCOMPLETE` y salida inesperada con `ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID`.
+- Se mantienen identidad `RIESGO_LAVADO/hpprod1/hpprod1`, objetos, triggers, correspondencia del backend, aprobacion manual, integridad de paquete y watcher deshabilitado.
+- `P06_REAL_CERTIFICATION=NOT_EXECUTED`; no se ejecutaron SQLPlus, Oracle institucional, credenciales ni AUTH01-AUTH06 desde COD.
+
 - `BASE_SHA=9c992d1ca2b5caaad98cbbd74206f46d273a22e8`; cambio preparado en worktree aislado.
 - `BACKEND_PROBE=PASS` fue observado por el propietario: listener unico `40992`, `PROBE_PID=40992`, perfil `PRODUCTION`, esquema `RIESGO_LAVADO`, servicio `hpprod1` y `DB_UNIQUE_NAME=hpprod1`.
 - El bloqueo `BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN` provenia del conteo global de candidatos `dotnet run`/`RL.API.dll`, no de Oracle. Ahora se valida solo el candidato cuyo PID es propietario del listener.

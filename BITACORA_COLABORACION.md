@@ -10501,6 +10501,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 ## 2026-11-09 - P06 correspondencia de runtime padre/hijo (COD)
 
+## 2026-11-09 - P06 parser SQLPlus fail-closed (COD)
+
+- Base `f99b2f79c9709096531aac5b68fb05a779beae53`; correccion limitada a `tools/p06-owner-manual.ps1`, su regresion contractual y el manifiesto.
+- `Invoke-OracleIdentity` configura `LINESIZE 32767`, no aplica `Regex.Match` sobre valores nulos y diferencia salida incompleta de formato inesperado. No se imprime stdout completo ni informacion sensible.
+- Regresiones agregadas para salida valida, ausente, dividida/incompleta y formato invalido; SQLPlus/Oracle y autenticacion no fueron ejecutados por COD.
+- `P06_PREFLIGHT=PASS` y `P06_PACKAGE_INTEGRITY=PASS` quedan como verificaciones del contrato del paquete; la suite contractual que requiere origenes locales no se presenta como PASS si no estan disponibles.
+- Punto de continuacion: commit/push selectivo y Quality Gate del nuevo SHA. `P06_REAL_CERTIFICATION=NOT_EXECUTED`; watcher deshabilitado.
+
 - Base `9c992d1ca2b5caaad98cbbd74206f46d273a22e8`; correccion preparada en worktree aislado.
 - Causa verificada: `p06-owner-manual.ps1` exigia que todos los candidatos `dotnet run`/`RL.API.dll` fueran un unico proceso. En Windows, el proceso padre de `dotnet run` y el proceso hijo pueden coincidir con el repositorio, aunque solo el PID propietario del listener `5043` atienda la API.
 - Correccion quirurgica: se valida un unico listener y se selecciona exclusivamente el proceso candidato cuyo `ProcessId` coincide con `OwningProcess`; se mantiene el bloqueo para cero, multiples o ambiguos procesos propietarios del listener.
