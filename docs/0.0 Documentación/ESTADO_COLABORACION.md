@@ -4023,3 +4023,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `P07_PREORACLE_VALIDATOR=PASS`; `P07_PREORACLE_NEGATIVE_REGRESSIONS=PASS` (`8` casos); `P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED`; `P07_DBA_SIGNOFF=PENDING`; `P07_OWNER_ACCEPTANCE=PENDING`; `P07_CERTIFICATION=NOT_CERTIFIED`; `P07_STATUS=OPEN`.
 - Archivos de esta intervencion: validator pre-Oracle, regresion pre-Oracle, cinco documentos P07, BITACORA y este estado. Sin cambios funcionales, Oracle, migraciones, main, produccion, watcher, cola o P06.
 - Continuacion exacta: ejecutar la matriz final de validaciones, stage selectivo, commit/push y verificacion remota/API; despues esperar el Quality Gate del SHA final. No emitir certificacion DBA.
+
+## P07 - publicacion remota verificada - 2026-11-09
+
+- `EVIDENCE_COMMIT_SHA=7790567e7b9af20163ef99a756a3230fb21dac1d`; `GITHUB_REMOTE_VERIFIED=YES`; `origin/desarrollo` coincide con el commit publicado.
+- El indice remoto del expediente es `https://github.com/jmejia31/RIESGO_LAVADO/tree/7790567e7b9af20163ef99a756a3230fb21dac1d/docs/certificaciones/P07_EXPEDIENTE_DBA`.
+- P07 permanece `READY_FOR_DBA_REVIEW`, no certificado: Oracle fisico, inventario real, privilegios, backup/restore, signoff DBA y aceptacion del propietario siguen pendientes.
+- El Quality Gate del SHA publicado queda pendiente de verificacion en GitHub; no declarar SUCCESS por las validaciones locales.

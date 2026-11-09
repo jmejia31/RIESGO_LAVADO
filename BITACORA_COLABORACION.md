@@ -10606,3 +10606,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificaciones actuales: validador pre-Oracle PASS; regresion pre-Oracle `8` casos PASS, con `7` negativos FAIL_CLOSED; inventario 17/17 PASS; regresiones de inventario `9` casos PASS; alineacion DDL dinamica PASS; paquete Fase 10 PASS; scripts de base de datos PASS; enlaces documentales y diff check pendientes de ejecucion final tras este registro.
 - Restricciones observadas: no Oracle institucional, no DDL/DML/migraciones, no credenciales, no watcher, no cola, no P06, no produccion, no main. P07 no esta certificado; requiere evidencia fisica DBA y signoff independiente.
 - Punto de continuacion: ejecutar validaciones finales, revisar stage selectivo, commit/push a `origin/desarrollo`, leer los archivos publicados mediante GitHub y verificar el Quality Gate del SHA final.
+
+## 2026-11-09 - Publicacion documental P07 verificada (COD)
+
+- `EVIDENCE_COMMIT_SHA=7790567e7b9af20163ef99a756a3230fb21dac1d`; el commit fue publicado en `origin/desarrollo` sin modificar `main`.
+- Lectura remota GitHub verificada para los cinco documentos P07, los dos validadores/regresion y BITACORA/ESTADO. `GITHUB_REMOTE_VERIFIED=YES`.
+- Se mantiene `P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED`, `P07_PHYSICAL_INVENTORY=PENDING_DBA`, `P07_DBA_SIGNOFF=PENDING`, `P07_OWNER_ACCEPTANCE=PENDING` y `P07_CERTIFICATION=NOT_CERTIFIED`.
+- Punto de continuacion: el siguiente cambio debe conservar la evidencia publicada y esperar el Quality Gate del nuevo SHA; no ejecutar Oracle ni convertir la preparacion estatica en certificacion DBA.
