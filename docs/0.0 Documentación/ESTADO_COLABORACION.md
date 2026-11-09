@@ -3970,3 +3970,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Correccion minima: `Program.cs` registra `AddControllersWithViews()` y conserva la configuracion antiforgery existente; el endpoint y la proteccion CSRF no se debilitan.
 - Regresion `AntiforgeryRegistrationContractTests`: 2/2 PASS. Build backend PASS. Oracle, credenciales, AUTH01-AUTH06 y watcher no ejecutados.
 - `P06_REAL_CERTIFICATION=NOT_EXECUTED`; pendiente publicar el commit y verificar el Quality Gate. Luego el propietario debe reiniciar la API con el nuevo binario y repetir P06.
+
+## Correccion vigente P06 - timeout de navegacion posterior al login - 2026-11-09
+
+- `BASE_SHA=0792fcbbb43680b132b1f1baab14a1cf7e2fb709`; la correccion queda limitada al E2E autenticado y su manifiesto.
+- `ROOT_CAUSE=HOME_IS_TECHNICAL_REDIRECT`: el guard de `/home` redirige al primer modulo autorizado, por lo que exigir que la URL final conserve `/home` producia timeout aunque el `POST /api/auth/login` respondiera 200.
+- `LOGIN_RESPONSE_MATCH=POST_ONLY`; se evita confundir el preflight `OPTIONS` con la respuesta contractual del login.
+- `P06_PACKAGE_INTEGRITY=PASS`; `P06_PREFLIGHT=PASS`; `PLAYWRIGHT_DISCOVERY=6`; `ESLINT=PASS`; `AUTH01-AUTH06=NOT_EXECUTED_BY_COD`; `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- El propietario debe reconstruir/reiniciar la API y repetir P06 con credenciales introducidas fuera de Codex. Solo seis resultados autenticos PASS permiten cerrar la certificacion.

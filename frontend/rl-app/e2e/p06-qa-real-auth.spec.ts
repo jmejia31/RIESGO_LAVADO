@@ -42,10 +42,17 @@ async function login(page: Page): Promise<void> {
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await page.locator('#email').fill(username);
   await page.locator('#password').fill(password);
-  const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/auth/login'));
+  const responsePromise = page.waitForResponse(response =>
+    response.request().method() === 'POST' && response.url().endsWith('/api/auth/login'),
+  );
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   expect((await responsePromise).status()).toBe(200);
-  await expect(page).toHaveURL(/\/home(?:\?.*)?$/);
+  // `/home` is a technical route: its guard redirects to the first module
+  // authorized for the authenticated user. Assert the final authenticated
+  // destination instead of waiting for the transient `/home` URL.
+  await expect(page).toHaveURL(
+    /\/(?:home|usuarios|configuracion|monitoreo-listas|bitacora|tipo-listas|cargar-listas|coincidencias-patrono|coincidencias-empleado|matrices-riesgos|sin-acceso)(?:\?.*)?$/,
+  );
 }
 
 async function csrfToken(page: Page): Promise<string> {

@@ -10555,3 +10555,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Regresion nueva: `AntiforgeryRegistrationContractTests` verifica que el filtro se resuelve en el contenedor MVC y que la aplicacion conserva el registro antiforgery.
 - Verificado: restore PASS; prueba focalizada 2/2 PASS; build de `RL.API` PASS. Oracle, credenciales, autenticacion P06 y watcher no fueron ejecutados. El Quality Gate del nuevo SHA queda pendiente de CI.
 - `P06_REAL_CERTIFICATION=NOT_EXECUTED`; el propietario debe reconstruir/reiniciar la API actual antes de repetir P06 y comprobar que logout ya no devuelve 500.
+
+## 2026-11-09 13:20 -06:00 - Correccion del timeout de navegacion P06 (COD)
+
+- Base `0792fcbbb43680b132b1f1baab14a1cf7e2fb709`; se preservaron las modificaciones ajenas y untracked existentes en el checkout compartido.
+- Causa verificada en el flujo real reportado: el login devuelve HTTP 200, pero `/home` es una ruta tecnica cuyo guard redirige al primer modulo autorizado; `toHaveURL(/\\/home/)` esperaba una URL transitoria y agotaba el timeout en los seis escenarios. Adicionalmente, la espera HTTP ahora distingue el `POST` de login del preflight `OPTIONS`.
+- Correccion minima: `frontend/rl-app/e2e/p06-qa-real-auth.spec.ts` valida el `POST /api/auth/login` y acepta las rutas finales autorizadas (`usuarios`, `configuracion`, `matrices-riesgos`, entre otras, conservando `/home` como transitoria valida). `tools/qa/P06_QA_PACKAGE_MANIFEST.json` fue recalculado.
+- Verificaciones sin secretos: ESLint focalizado PASS; Playwright discovery `6 tests in 1 file` PASS; `P06_PACKAGE_INTEGRITY=PASS`; `P06_PREFLIGHT=PASS`; no se ejecutaron AUTH01-AUTH06 desde COD, no se accedio a Oracle ni se activo el watcher.
+- Evidencia de runtime del propietario, no reproducida como certificacion por COD: los logs sanitizados muestran `POST /api/auth/login` HTTP 200 y `POST /api/auth/logout` HTTP 200; la certificacion P06 permanece bloqueada hasta repetir los seis escenarios autenticos.
+- Publicacion: commit y Quality Gate quedan pendientes de cierre; punto de continuacion: revisar stage selectivo, commit/push en `origin/desarrollo` y verificar CI del SHA final.
