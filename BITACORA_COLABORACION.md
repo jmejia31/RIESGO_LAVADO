@@ -10578,3 +10578,20 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Evidencia anterior, no reejecutada: `P06_REAL_CERTIFICATION=PASS`, `AUTH_01..AUTH_06A=6/6 PASS` sobre `SOURCE_CODE_SHA=4872c537324c51982fb613808526a7f8743a6762`, Quality Gate `42682601643 SUCCESS`; expediente documental base `758647d4c8fb9d3a7b871b198f1dfa8284014bf2`.
 - Archivos previstos: `docs/pendientes/REGISTRO_PENDIENTES.md`, `docs/0.0 Documentación/ESTADO_COLABORACION.md` y `BITACORA_COLABORACION.md`. Sin cambios de codigo, API, Angular, Oracle, secretos, `main` o la cola. No se ejecutaron builds, E2E, credenciales ni QA real por ser un registro exclusivamente documental.
 - Continuidad: consultar `docs/pendientes/REGISTRO_PENDIENTES.md` al preparar el proximo plan; exigir autorizacion y regresiones nuevas antes de ejecutar. `BLOCK10_AUTHORIZED=NO`. Publicacion remota como commit documental unico en `origin/desarrollo`; el SHA resultante se consulta en el historial de GitHub.
+
+## 2026-11-09 14:39:23 -06:00 - Preparacion de expediente DBA P07 (COD)
+
+- Base remota verificada: db701c7456ca83568479933175a4283e73d955f8, rama desarrollo; el Quality Gate 42688650542 fue confirmado en GitHub como SUCCESS, intento 1, sobre ese SHA.
+- Se creo el expediente estatico docs/certificaciones/P07_EXPEDIENTE_DBA/ con cinco documentos: identidad e inventario, integridad referencial, respaldo/rollback, seguridad/privilegios y dictamen/checklist DBA.
+- La revision utilizo codigo, scripts SQL y documentacion versionada; no se accedio a Oracle institucional, credenciales, produccion ni datos de negocio. No se ejecutaron DDL, DML, migraciones, purgas ni rollback.
+- Hallazgo tecnico documentado: el paquete de transicion declara 17 tablas/17 secuencias, mientras que deployment/matrices-riesgos/oracle/01_preflight_release.sql espera 25 tablas/25 secuencias. La discrepancia queda bloqueada para decision del DBA y del responsable tecnico; no se resolvio por suposicion.
+- Se preserva separadamente la evidencia P06 aportada por el propietario: SOURCE_CODE_SHA=4872c537324c51982fb613808526a7f8743a6762, QUALITY_GATE=42682601643 SUCCESS, AUTH01-AUTH06=6/6 PASS, P06_REAL_CERTIFICATION=PASS.
+- Validaciones estaticas previstas para esta intervencion: validate_matrices_phase9_oracle_dossier.ps1, validate_matrices_preoracle_readiness.ps1, validate_matrices_17_object_inventory.ps1, test_matrices_17_object_inventory.ps1, validate_matrices_dynamic_ddl_alignment.ps1, validate_matrices_phase10_transition_package.ps1, validate_database_scripts.ps1, validate_documentation_links.ps1 y git diff --check. Las validaciones que dependan de la discrepancia historica se reportaran sin convertirlas en evidencia Oracle.
+- Estado de salida: P07_DOSSIER_PREPARATION=COMPLETE; P07_DOSSIER_STATUS=READY_FOR_DBA_REVIEW; P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED; P07_DBA_SIGNOFF=PENDING; P07_CERTIFICATION=NOT_CERTIFIED; P07_STATUS=OPEN.
+- Punto de continuacion: ejecutar validaciones estaticas, revisar stage selectivo, publicar solo la documentacion P07 y verificar la lectura remota en GitHub. No activar watcher ni modificar cola.
+
+### Resultado de validaciones P07
+
+- PASS: expediente Fase 9, inventario 17 objetos, pruebas de inventario (9 casos), alineacion DDL dinamica, paquete Fase 10, validador de scripts de base de datos, enlaces documentales y git diff --check.
+- BLOCKED: validate_matrices_preoracle_readiness.ps1, por un unico hallazgo de contrato preexistente: la suite Oracle no contiene configuration.GetConnectionString("OracleDB"). No se modifico codigo ni se relajo el validador.
+- No hubo conexion Oracle, autenticacion, DDL, DML, migracion, purga, rollback, watcher ni cambios en la cola.

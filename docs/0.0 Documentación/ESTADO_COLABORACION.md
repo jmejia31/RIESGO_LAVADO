@@ -3994,3 +3994,22 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El propietario difirio ambos hallazgos al proximo plan de implementacion. `IMPLEMENTACION_AUTORIZADA=NO`; `CODEX_QUEUE_MODIFIED=NO`; `WATCHER_ACTIVATION=NO`; `BLOCK10_AUTHORIZED=NO`.
 - La evidencia previa `P06_REAL_CERTIFICATION=PASS`, `AUTH_01..AUTH_06A=6/6 PASS`, `SOURCE_CODE_SHA=4872c537324c51982fb613808526a7f8743a6762`, Quality Gate `42682601643 SUCCESS` se conserva sin reabrirla; no se ejecutaron pruebas reales ni se altero Oracle en esta intervencion.
 - Continuacion exacta: al preparar el proximo plan, revisar ambos pendientes, exigir autorizacion explicita y regresiones con destino final autorizado y denegaciones negativas; no trasladar a la cola automatizada por simple registro.
+
+## P07 — expediente estatico DBA — 2026-11-09
+
+- Base de trabajo y fuente remota verificada: db701c7456ca83568479933175a4283e73d955f8, rama desarrollo.
+- Se preparo docs/certificaciones/P07_EXPEDIENTE_DBA/ con cinco documentos y checklist para revision DBA. No se modifico codigo funcional, Oracle, migraciones, main, produccion, cola ni watcher.
+- P07_DOSSIER_PREPARATION=COMPLETE.
+- P07_DOSSIER_STATUS=READY_FOR_DBA_REVIEW.
+- P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED.
+- P07_BACKUP_EVIDENCE=PENDING_DBA; P07_ROLLBACK_EVIDENCE=PENDING_DBA; P07_EFFECTIVE_PRIVILEGES=NOT_VERIFIED; P07_DBA_SIGNOFF=PENDING; P07_OWNER_ACCEPTANCE=PENDING.
+- Hallazgo abierto: transicion modelo 17/17 frente a preflight deployment 25/25; requiere decision tecnica antes de cualquier ejecucion.
+- Evidencia P06 historica preservada sin reabrir: SOURCE_CODE_SHA=4872c537324c51982fb613808526a7f8743a6762; QUALITY_GATE=42682601643 SUCCESS; P06_REAL_CERTIFICATION=PASS.
+- P07_CERTIFICATION=NOT_CERTIFIED; P07_STATUS=OPEN; BLOCK10_AUTHORIZED=NO.
+- Continuacion: finalizar validaciones estaticas, publicar expediente documental y verificar enlaces remotos. La certificacion fisica queda en manos del DBA autorizado.
+
+### Validacion P07 ejecutada
+
+- PASS: expediente Fase 9, inventario 17/17, pruebas de inventario 9 casos, alineacion DDL dinamica, paquete Fase 10, validacion de scripts de base de datos, enlaces documentales y git diff --check.
+- BLOCKED: validate_matrices_preoracle_readiness.ps1 por el hallazgo preexistente configuration.GetConnectionString("OracleDB") ausente en la suite Oracle. Se conserva el bloqueo y no se modifica el codigo para obtener un resultado artificial.
+- P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED; P07_DBA_SIGNOFF=PENDING; P07_CERTIFICATION=NOT_CERTIFIED.
