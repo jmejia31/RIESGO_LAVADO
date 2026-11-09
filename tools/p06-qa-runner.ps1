@@ -137,7 +137,7 @@ Write-Output "P06_PACKAGE_SHA256=$digest"
 Push-Location $frontend
 try {
     if (-not (Test-Path -LiteralPath 'node_modules\@playwright\test\package.json' -PathType Leaf)) { Stop-P06 'PLAYWRIGHT_NOT_INSTALLED' }
-    $discovery = @(& npm exec --no -- playwright test --list --pass-with-no-tests --config=playwright.qa.config.ts 2>&1)
+    $discovery = @(& npm exec --no -- playwright test --list --pass-with-no-tests --config=playwright.qa.config.ts --reporter=line 2>&1)
     if ($LASTEXITCODE -ne 0) { Stop-P06 'PLAYWRIGHT_DISCOVERY_FAILED' }
     $discoveryText = $discovery -join "`n"
     if ($discoveryText -notmatch 'Total:\s+6 tests in 1 file') { Stop-P06 'MANDATORY_SCENARIOS_NOT_DISCOVERED' }
