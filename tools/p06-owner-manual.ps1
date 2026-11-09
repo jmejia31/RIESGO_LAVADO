@@ -18,7 +18,9 @@ function Assert-BackendRuntimeCorrespondence([string]$RepoRoot) {
     })
     $listeners = @(Get-NetTCPConnection -LocalPort 5043 -State Listen -ErrorAction SilentlyContinue)
     $matched = @($listeners | Where-Object { $processes.ProcessId -contains $_.OwningProcess } | Sort-Object OwningProcess -Unique)
-    if ($matched.Count -ne 1 -or $processes.Count -ne 1) { Stop-Owner 'BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN' }
+    if ($matched.Count -ne 1) { Stop-Owner 'BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN' }
+    $runtimeProcess = @($processes | Where-Object { $_.ProcessId -eq [int]$matched[0].OwningProcess })
+    if ($runtimeProcess.Count -ne 1) { Stop-Owner 'BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN' }
     $api = $null
     try { $api = Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:5043/api/configuracion/sistema' -MaximumRedirection 0 -TimeoutSec 5 } catch { Stop-Owner 'BACKEND_READONLY_ENDPOINT_UNAVAILABLE' }
     if ($api.StatusCode -ne 200) { Stop-Owner 'BACKEND_READONLY_ENDPOINT_STATUS' }
@@ -30,7 +32,7 @@ function Assert-BackendRuntimeCorrespondence([string]$RepoRoot) {
     if ($probeBody.processId -ne [int]$matched[0].OwningProcess) { Stop-Owner 'BACKEND_PROCESS_IDENTITY_MISMATCH' }
     if ([string]::IsNullOrWhiteSpace($probeBody.profile) -or [string]::IsNullOrWhiteSpace($probeBody.sessionUser) -or [string]::IsNullOrWhiteSpace($probeBody.currentSchema) -or [string]::IsNullOrWhiteSpace($probeBody.serviceName) -or [string]::IsNullOrWhiteSpace($probeBody.dbUniqueName) -or [string]::IsNullOrWhiteSpace($probeBody.dbName) -or [string]::IsNullOrWhiteSpace($probeBody.instanceName)) { Stop-Owner 'BACKEND_ORACLE_IDENTITY_PROBE_INCOMPLETE' }
     Write-Output 'P06_OWNER_BACKEND_RUNTIME=PASS'
-    return @{ ProcessId = $matched[0].OwningProcess; Endpoint = 'PASS'; Oracle = $probeBody }
+    return @{ ProcessId = $runtimeProcess[0].ProcessId; Endpoint = 'PASS'; Oracle = $probeBody }
 }
 function Get-SecretMap {
     $lines = @(& dotnet user-secrets list --project (Join-Path $RepoRoot 'backend\RL.API\RL.API.csproj') 2>$null)

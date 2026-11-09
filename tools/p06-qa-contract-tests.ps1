@@ -118,6 +118,12 @@ try {
     Write-Output 'ORACLE_EFFECTIVE_PRIVILEGE_CONTRACT=PASS'
     Write-Output 'BACKEND_EFFECTIVE_CONFIG_CONTRACT=PASS'
     foreach ($marker in @('BACKEND_ORACLE_IDENTITY_PROBE_UNAVAILABLE','BACKEND_ORACLE_IDENTITY_PROBE_STATUS','BACKEND_ORACLE_IDENTITY_PROBE_INVALID','BACKEND_ORACLE_IDENTITY_PROBE_INCOMPLETE','BACKEND_PROCESS_IDENTITY_MISMATCH','BACKEND_ORACLE_IDENTITY_MISMATCH')) { if ($ownerText -notmatch [Regex]::Escape($marker)) { throw "BACKEND_NEGATIVE_CONTRACT_MISSING_$marker" }; Write-Output "P06_CONTRACT_$marker=PASS" }
+    if ($ownerText -notmatch '\$runtimeProcess' -or $ownerText -notmatch 'runtimeProcess\.Count -ne 1') { throw 'PARENT_CHILD_RUNTIME_PID_CONTRACT_NOT_PRESENT' }
+    $parentChild = @([pscustomobject]@{ ProcessId = 1001 }, [pscustomobject]@{ ProcessId = 1002 })
+    $listenerPid = 1002
+    $runtimeProcess = @($parentChild | Where-Object { $_.ProcessId -eq $listenerPid })
+    if ($runtimeProcess.Count -ne 1 -or $runtimeProcess[0].ProcessId -ne $listenerPid) { throw 'PARENT_CHILD_RUNTIME_PID_NOT_DEDUPLICATED' }
+    Write-Output 'PARENT_CHILD_RUNTIME_PID=PASS'
     if (@([pscustomobject]@{ OwningProcess = 15824 }, [pscustomobject]@{ OwningProcess = 15824 } | Sort-Object OwningProcess -Unique).Count -ne 1) { throw 'MULTIPLE_LISTENERS_SAME_PID_NOT_DEDUPLICATED' }
     Write-Output 'MULTIPLE_LISTENERS_SAME_PID=PASS'
     if (@([pscustomobject]@{ OwningProcess = 15824 }, [pscustomobject]@{ OwningProcess = 27183 } | Sort-Object OwningProcess -Unique).Count -eq 1) { throw 'DIFFERENT_PIDS_NOT_REJECTED' }

@@ -10499,6 +10499,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 ## 2026-11-08 - P06 prueba de identidad Oracle desde el runtime API (COD)
 
+## 2026-11-09 - P06 correspondencia de runtime padre/hijo (COD)
+
+- Base `9c992d1ca2b5caaad98cbbd74206f46d273a22e8`; correccion preparada en worktree aislado.
+- Causa verificada: `p06-owner-manual.ps1` exigia que todos los candidatos `dotnet run`/`RL.API.dll` fueran un unico proceso. En Windows, el proceso padre de `dotnet run` y el proceso hijo pueden coincidir con el repositorio, aunque solo el PID propietario del listener `5043` atienda la API.
+- Correccion quirurgica: se valida un unico listener y se selecciona exclusivamente el proceso candidato cuyo `ProcessId` coincide con `OwningProcess`; se mantiene el bloqueo para cero, multiples o ambiguos procesos propietarios del listener.
+- Regresion agregada para padre/hijo y conservadas las regresiones de listeners del mismo PID y PID distintos. `P06_PACKAGE_INTEGRITY=PASS`; `P06_PREFLIGHT=PASS`; contrato completo en worktree aislado queda pendiente por no disponer de los origenes locales `4200/5043` durante esa prueba.
+- No se accedio a Oracle, credenciales ni AUTH01-AUTH06. El watcher permanece deshabilitado. Punto de continuacion: commit/push selectivo, Quality Gate y repeticion del owner manual con la API real.
+
 - Base `04ce70e711eb929fbc5a1f4056d5dbe8b723442b`; correccion preparada en worktree aislado, sin credenciales, SQL*Plus, Oracle ni autenticacion real.
 - `P06OracleIdentityController` consulta exclusivamente mediante el `OracleDbContext` real registrado por `Program.cs`, con perfil resuelto, identidad Oracle sanitizada, `Environment.ProcessId` y acceso solo loopback. Permanece deshabilitado por defecto mediante `P06:LocalIdentityProbeEnabled`.
 - `p06-owner-manual.ps1` exige que el proceso que atiende `localhost:5043`, el PID informado por la prueba y la identidad SQL*Plus coincidan; cualquier ausencia, divergencia o evidencia incompleta bloquea antes de solicitar credenciales.

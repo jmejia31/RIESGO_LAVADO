@@ -3901,6 +3901,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 ## Correccion vigente P06 - prueba de identidad Oracle desde API - 2026-11-08
 
+## Correccion vigente P06 - correspondencia de runtime padre/hijo - 2026-11-09
+
+- `BASE_SHA=9c992d1ca2b5caaad98cbbd74206f46d273a22e8`; cambio preparado en worktree aislado.
+- `BACKEND_PROBE=PASS` fue observado por el propietario: listener unico `40992`, `PROBE_PID=40992`, perfil `PRODUCTION`, esquema `RIESGO_LAVADO`, servicio `hpprod1` y `DB_UNIQUE_NAME=hpprod1`.
+- El bloqueo `BACKEND_RUNTIME_CORRESPONDENCE_UNPROVEN` provenia del conteo global de candidatos `dotnet run`/`RL.API.dll`, no de Oracle. Ahora se valida solo el candidato cuyo PID es propietario del listener.
+- `P06_PACKAGE_INTEGRITY=PASS`; `P06_PREFLIGHT=PASS`; regresion padre/hijo incluida. La suite contractual completa no se certifica localmente en el worktree aislado porque no estaban disponibles los origenes `4200/5043`.
+- `P06_REAL_CERTIFICATION=NOT_EXECUTED`; no se solicitaron credenciales ni se ejecutaron AUTH01-AUTH06. `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+
 - `BASE_SHA=04ce70e711eb929fbc5a1f4056d5dbe8b723442b`; correccion preparada en worktree aislado. No se solicitaron credenciales ni se tocaron Oracle, datos de negocio o watcher.
 - `BACKEND_RUNTIME_ORACLE_PROOF=IMPLEMENTED`: el endpoint local temporal usa el `OracleDbContext` real y la conexion resuelta por `Program.cs`, devuelve solo identidad sanitizada y exige loopback y `P06:LocalIdentityProbeEnabled=true`; esta deshabilitado por defecto.
 - `BACKEND_PROCESS_IDENTITY=REQUIRED`: el proceso que escucha `localhost:5043`, el `Environment.ProcessId` del backend y la evidencia SQL*Plus deben coincidir. Perfil `PRODUCTION`, esquema `RIESGO_LAVADO`, servicio `hpprod1` y `DB_UNIQUE_NAME=hpprod1` se comparan fail-closed.
