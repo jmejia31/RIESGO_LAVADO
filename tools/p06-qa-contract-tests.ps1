@@ -120,6 +120,8 @@ try {
     foreach ($marker in @('BACKEND_ORACLE_IDENTITY_PROBE_UNAVAILABLE','BACKEND_ORACLE_IDENTITY_PROBE_STATUS','BACKEND_ORACLE_IDENTITY_PROBE_INVALID','BACKEND_ORACLE_IDENTITY_PROBE_INCOMPLETE','BACKEND_PROCESS_IDENTITY_MISMATCH','BACKEND_ORACLE_IDENTITY_MISMATCH')) { if ($ownerText -notmatch [Regex]::Escape($marker)) { throw "BACKEND_NEGATIVE_CONTRACT_MISSING_$marker" }; Write-Output "P06_CONTRACT_$marker=PASS" }
     foreach ($marker in @('ORACLE_IDENTITY_OUTPUT_INCOMPLETE','ORACLE_IDENTITY_OUTPUT_FORMAT_INVALID')) { if ($ownerText -notmatch [Regex]::Escape($marker)) { throw "SQLPLUS_PARSER_MARKER_MISSING_$marker" }; Write-Output "P06_CONTRACT_$marker=PASS" }
     if ($ownerText -notmatch "Arguments = '-S -L /nolog'" -or $ownerText -notmatch 'linesize 32767' -or $ownerText -notmatch 'sqlprompt ""' -or $ownerText -notmatch 'IsNullOrWhiteSpace\(\$identityLine\)' -or $ownerText -notmatch 'IsNullOrWhiteSpace\(\$privilegeLine\)') { throw 'SQLPLUS_PARSER_GUARDS_MISSING' }
+    if ($ownerText -notmatch '\$evidenceLines\s*=\s*@\(' -or $ownerText -notmatch '"QUERY_OPERATION=\$\(\$identity\.QueryOperation\)"' -or $ownerText -notmatch '"PACKAGE_SHA256=\$packageDigest"' -or $ownerText -match "'QUERY_OPERATION='\s*\+\s*\$identity\.QueryOperation,") { throw 'MANUAL_DB_IDENTITY_EVIDENCE_LINES_CONTRACT_MISSING' }
+    Write-Output 'MANUAL_DB_IDENTITY_EVIDENCE_LINES=PASS'
     function Test-SqlPlusParserContract([string[]]$Lines) {
         $identityLine = $Lines | Where-Object { $_ -like 'IDENTITY|*' } | Select-Object -Last 1
         $privilegeLine = $Lines | Where-Object { $_ -like 'PRIVILEGES|*' } | Select-Object -Last 1

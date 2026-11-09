@@ -93,7 +93,31 @@ $oracleUser = Get-ConnectionPart $connection 'User Id'; $oraclePassword = Get-Co
 $identity = Invoke-OracleIdentity $sqlplus.Source $oracleUser $oraclePassword $dataSource
 if ($backendRuntime.Oracle.profile -ne 'PRODUCTION' -or $backendRuntime.Oracle.sessionUser -ine $identity.Schema -or $backendRuntime.Oracle.currentSchema -ine $identity.Schema -or $backendRuntime.Oracle.serviceName -ine $identity.Service -or $backendRuntime.Oracle.dbUniqueName -ine $identity.DbUniqueName -or $backendRuntime.Oracle.dbName -ine $identity.DbName -or $backendRuntime.Oracle.instanceName -ine $identity.InstanceName) { Stop-Owner 'BACKEND_ORACLE_IDENTITY_MISMATCH' }
 $identityPath = Join-Path ([IO.Path]::GetTempPath()) ('P06-OracleIdentity-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '.txt')
-[IO.File]::WriteAllLines($identityPath, @('SOURCE=BACKEND_ORACLE_DB_CONTEXT_AND_SQLPLUS','QUERY_EXECUTED=YES','QUERY_OPERATION=' + $identity.QueryOperation,'PRIVILEGE_CHECK=' + $identity.PrivilegeCheck,'PRIVILEGE_RESULT=PASS','AUTH_OBJECTS_VALID=' + $identity.ObjectsValid,'AUTH_TRIGGERS_VALID=' + $identity.TriggersValid,'BACKEND_RUNTIME_ORACLE_PROOF=PASS','BACKEND_PROCESS_ID=' + $backendRuntime.ProcessId,'BACKEND_PROFILE=' + $backendRuntime.Oracle.profile,'BACKEND_SESSION_USER=' + $backendRuntime.Oracle.sessionUser,'BACKEND_CURRENT_SCHEMA=' + $backendRuntime.Oracle.currentSchema,'BACKEND_SERVICE=' + $backendRuntime.Oracle.serviceName,'BACKEND_DB_UNIQUE_NAME=' + $backendRuntime.Oracle.dbUniqueName,'BACKEND_DB_NAME=' + $backendRuntime.Oracle.dbName,'BACKEND_INSTANCE_NAME=' + $backendRuntime.Oracle.instanceName,'SCHEMA=' + $identity.Schema,'SERVICE=' + $identity.Service,'DB_UNIQUE_NAME=' + $identity.DbUniqueName,'DB_NAME=' + $identity.DbName,'INSTANCE_NAME=' + $identity.InstanceName,'PACKAGE_SHA256=' + $packageDigest), [Text.UTF8Encoding]::new($false))
+$evidenceLines = @(
+    'SOURCE=BACKEND_ORACLE_DB_CONTEXT_AND_SQLPLUS'
+    'QUERY_EXECUTED=YES'
+    "QUERY_OPERATION=$($identity.QueryOperation)"
+    "PRIVILEGE_CHECK=$($identity.PrivilegeCheck)"
+    'PRIVILEGE_RESULT=PASS'
+    "AUTH_OBJECTS_VALID=$($identity.ObjectsValid)"
+    "AUTH_TRIGGERS_VALID=$($identity.TriggersValid)"
+    'BACKEND_RUNTIME_ORACLE_PROOF=PASS'
+    "BACKEND_PROCESS_ID=$($backendRuntime.ProcessId)"
+    "BACKEND_PROFILE=$($backendRuntime.Oracle.profile)"
+    "BACKEND_SESSION_USER=$($backendRuntime.Oracle.sessionUser)"
+    "BACKEND_CURRENT_SCHEMA=$($backendRuntime.Oracle.currentSchema)"
+    "BACKEND_SERVICE=$($backendRuntime.Oracle.serviceName)"
+    "BACKEND_DB_UNIQUE_NAME=$($backendRuntime.Oracle.dbUniqueName)"
+    "BACKEND_DB_NAME=$($backendRuntime.Oracle.dbName)"
+    "BACKEND_INSTANCE_NAME=$($backendRuntime.Oracle.instanceName)"
+    "SCHEMA=$($identity.Schema)"
+    "SERVICE=$($identity.Service)"
+    "DB_UNIQUE_NAME=$($identity.DbUniqueName)"
+    "DB_NAME=$($identity.DbName)"
+    "INSTANCE_NAME=$($identity.InstanceName)"
+    "PACKAGE_SHA256=$packageDigest"
+)
+[IO.File]::WriteAllLines($identityPath, $evidenceLines, [Text.UTF8Encoding]::new($false))
 Write-Output 'P06_OWNER_ORACLE_IDENTITY=PASS'
 Write-Output 'P06_OWNER_ORACLE_EVIDENCE=GENERATED_EXTERNAL_SANITIZED'
 

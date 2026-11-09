@@ -10529,6 +10529,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Correccion minima: `SET SQLPROMPT ""`; se conserva `LINESIZE 32767`, el bloqueo por salida incompleta/formato invalido y la prevencion de `Regex.Match` sobre nulos. Regresion adversarial agregada para prompt contaminante.
 - Reproduccion del propietario mantuvo `ORACLE_IDENTITY_OUTPUT_INCOMPLETE`; se endurece el arranque SQLPlus con `-S -L /nolog` para eliminar banner/prompt antes de leer stdout, sin aceptar ni imprimir salida sensible.
 - No se solicitaron credenciales ni se ejecutaron SQLPlus, Oracle institucional, AUTH01-AUTH06 o watcher. Punto de continuacion: ejecutar regresiones sin secretos, publicar y verificar Quality Gate del nuevo SHA.
+- `2026-11-09 10:48 -06:00 | COD`: el propietario reprodujo `MANUAL_DB_IDENTITY_MALFORMED`; la evidencia temporal se escribia como elementos separados por la precedencia de comas en PowerShell. Se corrigio con `$evidenceLines` y cadenas interpoladas, se agrego regresion estatica, se recalculo el manifiesto y no se ejecutaron credenciales, Oracle, AUTH01-AUTH06 ni watcher.
 
 - Base `ff216911baa2065ca5f2043a650f35a957a44e3b`; correccion preparada en worktree limpio, sin credenciales ni conexion Oracle.
 - `tools/p06-owner-manual.ps1` separa `IDENTITY` de `PRIVILEGES`; elimina la exigencia incompatible de cero DML y verifica propiedad/validez de `RL_USUARIOS`, `RL_REFRESH_TOKENS`, `RL_AUDITORIA` y sus triggers.
