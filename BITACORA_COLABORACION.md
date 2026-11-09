@@ -10564,3 +10564,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificaciones sin secretos: ESLint focalizado PASS; Playwright discovery `6 tests in 1 file` PASS; `P06_PACKAGE_INTEGRITY=PASS`; `P06_PREFLIGHT=PASS`; no se ejecutaron AUTH01-AUTH06 desde COD, no se accedio a Oracle ni se activo el watcher.
 - Evidencia de runtime del propietario, no reproducida como certificacion por COD: los logs sanitizados muestran `POST /api/auth/login` HTTP 200 y `POST /api/auth/logout` HTTP 200; la certificacion P06 permanece bloqueada hasta repetir los seis escenarios autenticos.
 - Publicacion: commit y Quality Gate quedan pendientes de cierre; punto de continuacion: revisar stage selectivo, commit/push en `origin/desarrollo` y verificar CI del SHA final.
+
+- `2026-11-09 13:50 -06:00 | EVIDENCIA DEL PROPIETARIO`: sobre `SOURCE_CODE_SHA=4872c537324c51982fb613808526a7f8743a6762`, el propietario ejecuto la certificacion real P06 con `P06_EXECUTION_PACKAGE=PASS`, servicios locales disponibles y watcher deshabilitado.
+- Resultado autentico reportado: `P06_AUTH_01` a `P06_AUTH_06A` PASS; total 6, pasados 6, fallidos 0, omitidos 0, no ejecutados 0; `P06_REAL_CERTIFICATION=PASS`.
+- `P06_OWNER_ORACLE_IDENTITY=PASS`, `P06_OWNER_EVIDENCE=GENERATED_EXTERNAL_SANITIZED`, `P06_MANUAL_DB_IDENTITY=PASS`; no se publican credenciales, tokens ni valores sensibles. Esta evidencia fue aportada por el propietario y no se presenta como ejecucion autenticada de COD.
+- Quality Gate `42682601643` fue verificado en GitHub: `SUCCESS`, intento 1, SHA exacto `4872c537324c51982fb613808526a7f8743a6762`.
