@@ -3946,6 +3946,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 ## Correccion vigente P06 - salida SQLPlus sin prompt - 2026-11-09
 
 - `2026-11-09 | COD`: `MANUAL_DB_IDENTITY_MALFORMED` causado por la construccion de evidencia en elementos separados; corregido mediante `$evidenceLines` con una cadena por linea y regresion `MANUAL_DB_IDENTITY_EVIDENCE_LINES`. Pendiente publicar y validar Quality Gate; `P06_REAL_CERTIFICATION=NOT_EXECUTED`, Oracle/watcher/credenciales no ejecutados.
+- `2026-11-09 | COD`: diagnostico P06 preparado sin cambiar autenticacion: reporter seguro, parser estructurado y resumen por escenario/categoria. `P06_REAL_CERTIFICATION=NOT_EXECUTED`; ejecucion AUTH real, Oracle institucional y watcher permanecen sin ejecutar.
 
 - `BASE_SHA=f5fb0c3ef54658c8547e3a4247bb0b2276cb6883`; el bloqueo observado fue `ORACLE_IDENTITY_OUTPUT_INCOMPLETE` despues de un preflight exitoso.
 - Se suprime el prompt interactivo SQLPlus con `SET SQLPROMPT ""`; el parser sigue exigiendo exactamente `IDENTITY|...` y `PRIVILEGES|...`, con bloqueo fail-closed.

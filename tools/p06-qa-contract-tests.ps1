@@ -6,6 +6,7 @@ if ([string]::IsNullOrWhiteSpace($RepoRoot)) { $RepoRoot = Split-Path -Parent $P
 $runner = Join-Path $RepoRoot 'tools\p06-qa-runner.ps1'
 $manifestPath = Join-Path $RepoRoot 'tools\qa\P06_QA_PACKAGE_MANIFEST.json'
 $digest = (Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json).packageSha256
+. (Join-Path $RepoRoot 'tools\p06-diagnostic.ps1')
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ('p06-contract-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tempRoot | Out-Null
 
@@ -139,6 +140,46 @@ try {
     if ((Test-SqlPlusParserContract @('SQL> IDENTITY|RIESGO_LAVADO|hpprod1|hpprod1|hpprod1|instance1|SELECT_ONLY','PRIVILEGES|AUTH_PERSISTENCE_OWNER|YES|AUTH_OBJECTS_VALID|YES|AUTH_TRIGGERS_VALID|YES')) -ne 'ORACLE_IDENTITY_OUTPUT_INCOMPLETE') { throw 'SQLPLUS_PROMPT_OUTPUT_REGRESSION_FAILED' }
     Write-Output 'SQLPLUS_OUTPUT_PARSER=PASS'
     Write-Output 'NULL_REGEX_PREVENTION=PASS'
+    function New-SimulatedP06Diagnostic([hashtable]$Statuses, [hashtable]$Categories = @{}) {
+        $lines = @('P06_DIAGNOSTIC_REPORTER=PASS','P06_DIAGNOSTIC_STATUS=AVAILABLE')
+        $stages = @{ AUTH_01='login_profile_permissions'; AUTH_02='session_storage'; AUTH_03='csrf'; AUTH_04='refresh_rotation'; AUTH_05='logout_revocation'; AUTH_06A='refresh_concurrency' }
+        foreach ($id in @('AUTH_01','AUTH_02','AUTH_03','AUTH_04','AUTH_05','AUTH_06A')) {
+            $lines += "P06_$id=$($Statuses[$id])"
+            $lines += "P06_${id}_STAGE=$($stages[$id])"
+            if ($Categories.ContainsKey($id)) { $lines += "P06_${id}_FAILURE_CATEGORY=$($Categories[$id])" }
+        }
+        $passed = @($Statuses.Values | Where-Object { $_ -eq 'PASS' }).Count
+        $failed = @($Statuses.Values | Where-Object { $_ -eq 'FAIL' }).Count
+        $skipped = @($Statuses.Values | Where-Object { $_ -eq 'SKIPPED' }).Count
+        $notRun = @($Statuses.Values | Where-Object { $_ -eq 'NOT_RUN' }).Count
+        $failedIds = @('AUTH_01','AUTH_02','AUTH_03','AUTH_04','AUTH_05','AUTH_06A') | Where-Object { $Statuses[$_] -eq 'FAIL' }
+        $uniqueCategories = @($failedIds | ForEach-Object { $Categories[$_] } | Select-Object -Unique)
+        $aggregate = if ($uniqueCategories.Count -eq 0) { 'NONE' } elseif ($uniqueCategories.Count -eq 1) { $uniqueCategories[0] } else { 'UNKNOWN_FAILURE' }
+        $lines += "P06_TESTS_TOTAL=6"; $lines += "P06_TESTS_PASSED=$passed"; $lines += "P06_TESTS_FAILED=$failed"; $lines += "P06_TESTS_SKIPPED=$skipped"; $lines += "P06_TESTS_NOT_RUN=$notRun"
+        $lines += "P06_FAILED_SCENARIOS=$($(if($failedIds.Count -eq 0){'NONE'}else{$failedIds -join ','}))"
+        $lines += "P06_FAILURE_CATEGORY=$aggregate"; $lines += "P06_REAL_CERTIFICATION=$($(if($passed -eq 6){'PASS'}else{'FAIL'}))"
+        return $lines
+    }
+    $allPass = @{ AUTH_01='PASS'; AUTH_02='PASS'; AUTH_03='PASS'; AUTH_04='PASS'; AUTH_05='PASS'; AUTH_06A='PASS' }
+    if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $allPass))) { throw 'P06_DIAGNOSTIC_ALL_PASS_FAILED' }
+    Write-Output 'P06_DIAGNOSTIC_ALL_PASS=PASS'
+    $oneFail = $allPass.Clone(); $oneFail['AUTH_03'] = 'FAIL'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $oneFail @{ AUTH_03='HTTP_STATUS_MISMATCH' }))) { throw 'P06_DIAGNOSTIC_ONE_FAIL_FAILED' }
+    Write-Output 'P06_DIAGNOSTIC_ONE_FAIL=PASS'
+    $multipleFail = $allPass.Clone(); $multipleFail['AUTH_02'] = 'FAIL'; $multipleFail['AUTH_06A'] = 'FAIL'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $multipleFail @{ AUTH_02='BROWSER_FAILURE'; AUTH_06A='TIMEOUT' }))) { throw 'P06_DIAGNOSTIC_MULTIPLE_FAIL_FAILED' }
+    Write-Output 'P06_DIAGNOSTIC_MULTIPLE_FAIL=PASS'
+    $skipped = $allPass.Clone(); $skipped['AUTH_05'] = 'SKIPPED'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $skipped))) { throw 'P06_DIAGNOSTIC_SKIPPED_FAILED' }
+    Write-Output 'P06_DIAGNOSTIC_SKIPPED=PASS'
+    $notRun = $allPass.Clone(); $notRun['AUTH_06A'] = 'NOT_RUN'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $notRun))) { throw 'P06_DIAGNOSTIC_NOT_RUN_FAILED' }
+    Write-Output 'P06_DIAGNOSTIC_NOT_RUN=PASS'
+    foreach ($category in @('TIMEOUT','BROWSER_FAILURE','ENVIRONMENT_FAILURE','SETUP_FAILURE','ASSERTION_FAILURE','NAVIGATION_FAILURE')) {
+        $case = $allPass.Clone(); $case['AUTH_01'] = 'FAIL'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $case @{ AUTH_01=$category }))) { throw "P06_DIAGNOSTIC_CATEGORY_FAILED_$category" }
+    }
+    Write-Output 'P06_DIAGNOSTIC_CATEGORIES=PASS'
+    $malformed = New-SimulatedP06Diagnostic $allPass | Where-Object { $_ -notmatch '^P06_AUTH_04_STAGE=' }
+    if ($null -ne (Get-P06SafeDiagnostic $malformed)) { throw 'P06_DIAGNOSTIC_MALFORMED_NOT_BLOCKED' }
+    $sensitive = @(New-SimulatedP06Diagnostic $allPass) + 'P06_ERROR=password=must-not-appear'
+    if ($null -ne (Get-P06SafeDiagnostic $sensitive)) { throw 'P06_DIAGNOSTIC_SENSITIVE_NOT_BLOCKED' }
+    Write-Output 'P06_DIAGNOSTIC_SANITIZATION=PASS'
     if ($ownerText -notmatch '\$runtimeProcess' -or $ownerText -notmatch 'runtimeProcess\.Count -ne 1') { throw 'PARENT_CHILD_RUNTIME_PID_CONTRACT_NOT_PRESENT' }
     $parentChild = @([pscustomobject]@{ ProcessId = 1001 }, [pscustomobject]@{ ProcessId = 1002 })
     $listenerPid = 1002

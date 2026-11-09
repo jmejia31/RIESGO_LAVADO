@@ -12,7 +12,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   forbidOnly: true,
-  reporter: [['line']],
+  reporter: [['./e2e/p06-safe-reporter.ts']],
   outputDir: 'test-results-p06-qa',
   preserveOutput: 'never',
   use: {

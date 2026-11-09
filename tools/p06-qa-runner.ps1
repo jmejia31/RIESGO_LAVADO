@@ -10,6 +10,7 @@ $ErrorActionPreference = 'Stop'
 if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
     $RepoRoot = Split-Path -Parent $PSScriptRoot
 }
+. (Join-Path $PSScriptRoot 'p06-diagnostic.ps1')
 $frontend = Join-Path $RepoRoot 'frontend\rl-app'
 $manifestPath = Join-Path $RepoRoot 'tools\qa\P06_QA_PACKAGE_MANIFEST.json'
 $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
@@ -200,12 +201,27 @@ try {
 
     $previousMode = [Environment]::GetEnvironmentVariable('P06_QA_MODE', 'Process')
     [Environment]::SetEnvironmentVariable('P06_QA_MODE', $Mode, 'Process')
-    $runOutput = @(& npm exec --no -- playwright test --config=playwright.qa.config.ts --reporter=line 2>&1)
+    $runOutput = @(& npm exec --no -- playwright test --config=playwright.qa.config.ts 2>&1)
     [Environment]::SetEnvironmentVariable('P06_QA_MODE', $previousMode, 'Process')
     $runExit = $LASTEXITCODE
-    $runText = $runOutput -join "`n"
-    if ($runExit -ne 0) { Write-Output 'P06_REAL_CERTIFICATION=FAIL'; exit 1 }
-    if ($runText -match '\bskipped\b' -or $runText -notmatch '6 passed') { Stop-P06 'CERTIFICATION_INCOMPLETE' }
+    $diagnostic = Get-P06SafeDiagnostic $runOutput
+    if ($null -eq $diagnostic) {
+        Write-Output 'P06_DIAGNOSTIC_STATUS=UNAVAILABLE'
+        Write-Output 'P06_REAL_CERTIFICATION=FAIL'
+        exit 3
+    }
+
+    Write-P06SafeDiagnostic $diagnostic
+    Write-Output 'P06_DIAGNOSTIC_REPORTER=PASS'
+    Write-Output 'P06_DIAGNOSTIC_SANITIZATION=PASS'
+    Write-Output 'P06_SCENARIO_IDENTIFICATION=PASS'
+    Write-Output 'P06_FAILURE_CLASSIFICATION=PASS'
+
+    if ($runExit -ne 0 -or $diagnostic.RealCertification -ne 'PASS') {
+        Write-Output 'P06_REAL_CERTIFICATION=FAIL'
+        exit 1
+    }
+
     Write-Output 'P06_REAL_CERTIFICATION=PASS'
     exit 0
 }
