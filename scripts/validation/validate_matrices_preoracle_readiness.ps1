@@ -1,9 +1,19 @@
+param(
+    [string]$RepositoryRoot
+)
+
 $ErrorActionPreference = 'Stop'
 
-$repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../..')
+$repositoryRoot = if ([string]::IsNullOrWhiteSpace($RepositoryRoot)) {
+    Resolve-Path (Join-Path $PSScriptRoot '../..')
+}
+else {
+    Resolve-Path -LiteralPath $RepositoryRoot
+}
 $databaseRoot = Join-Path $repositoryRoot 'database'
 $matricesRoot = Join-Path $databaseRoot '19_matrices_riesgos'
 $script06 = Join-Path $matricesRoot 'transicion/06_reconstruir_modelo_17_tablas.sql'
+$calculationDdl = Join-Path $matricesRoot 'transicion/15_ddl_configuracion_calculo_312.sql'
 $moduleEntrypoint = Join-Path $matricesRoot '00_APLICAR_MODULO_MATRICES_RIESGOS.sql'
 $firstInstall = Join-Path $databaseRoot '00_EJECUCION_PRIMERA_VEZ.sql'
 $safeUpdate = Join-Path $databaseRoot '00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql'
@@ -12,7 +22,9 @@ $dynamicValidator = Join-Path $repositoryRoot 'scripts/validation/validate_matri
 $inventoryValidator = Join-Path $repositoryRoot 'scripts/validation/validate_matrices_17_object_inventory.ps1'
 $inventoryTests = Join-Path $repositoryRoot 'scripts/validation/test_matrices_17_object_inventory.ps1'
 $integrationTest = Join-Path $repositoryRoot 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs'
+$oracleProfileHelper = Join-Path $repositoryRoot 'backend/RL.API.Tests/Support/OracleTestDatabaseProfile.cs'
 $contractTest = Join-Path $repositoryRoot 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosOracleCertificationContractTests.cs'
+$deploymentPreflight = Join-Path $repositoryRoot 'deployment/matrices-riesgos/oracle/01_preflight_release.sql'
 $qualityWorkflow = Join-Path $repositoryRoot '.github/workflows/quality-gates.yml'
 $legacyStructure = Join-Path $matricesRoot 'instalacion/01_create_rl_mr_estructura_dinamica.sql'
 $legacyConstraints = Join-Path $matricesRoot 'instalacion/02_create_rl_mr_restricciones_indices.sql'
@@ -46,6 +58,7 @@ function Assert-ContainsTokens {
 
 foreach ($requiredFile in @(
     $script06,
+    $calculationDdl,
     $moduleEntrypoint,
     $firstInstall,
     $safeUpdate,
@@ -54,7 +67,9 @@ foreach ($requiredFile in @(
     $inventoryValidator,
     $inventoryTests,
     $integrationTest,
+    $oracleProfileHelper,
     $contractTest,
+    $deploymentPreflight,
     $qualityWorkflow)) {
     Assert-FileExists $requiredFile
 }
@@ -170,7 +185,7 @@ Assert-ContainsTokens $integrationTest @(
     'RL_ORACLE_INTEGRATION_REQUIRED',
     '.AddEnvironmentVariables()',
     '.AddUserSecrets<MatricesRiesgosRepositoryIntegrationTests>(optional: true)',
-    'configuration.GetConnectionString("OracleDB")',
+    'OracleTestDatabaseProfile.TryResolveConfiguredLocalXe(configuration, out string? localXe)',
     'if (!_integrationRequired)',
     'Este resultado no certifica físicamente el modelo de 17 tablas.',
     'string.Equals(esquema, "RIESGO_LAVADO"',
@@ -181,7 +196,19 @@ Assert-ContainsTokens $integrationTest @(
     'SecuenciasRetiradas') 'Suite Oracle'
 
 if (Test-Path -LiteralPath $integrationTest -PathType Leaf) {
+    Assert-ContainsTokens $oracleProfileHelper @(
+        'DatabaseProfileResolver.ProfileConfigurationKey',
+        'DatabaseProfileResolver.LocalXeProfileName',
+        'configuration.GetConnectionString("OracleDB_LocalXE")',
+        'DatabaseProfileResolver.Resolve(selectedLocalXe)',
+        'ConnectionStrings:OracleDB_LocalXE'
+    ) 'Resolver del perfil Oracle de pruebas'
+
     $integrationContent = Get-Content -LiteralPath $integrationTest -Raw
+    if ($integrationContent -match '(?i)GetConnectionString\(\s*"OracleDB"\s*\)' -or
+        $integrationContent -match '(?i)ConnectionStrings:OracleDB"') {
+        $errors.Add('La suite Oracle contiene un fallback generico OracleDB; debe usar un perfil LOCAL_XE explicito.')
+    }
     foreach ($forbiddenSql in @(
         'CREATE TABLE ',
         'CREATE SEQUENCE ',
@@ -197,6 +224,60 @@ if (Test-Path -LiteralPath $integrationTest -PathType Leaf) {
     $connectionLiteralPattern = '(?is)(Data\s+Source|Server)\s*=.+?(User\s+Id|UserId|Uid)\s*=.+?(Password|Pwd)\s*='
     if ($integrationContent -match $connectionLiteralPattern) {
         $errors.Add('La suite Oracle contiene una cadena de conexión codificada.')
+    }
+}
+
+if (Test-Path -LiteralPath $oracleProfileHelper -PathType Leaf) {
+    $oracleProfileContent = Get-Content -LiteralPath $oracleProfileHelper -Raw
+    if ($oracleProfileContent -match '(?i)GetConnectionString\(\s*"OracleDB"\s*\)' -or
+        $oracleProfileContent -match '(?i)ConnectionStrings:OracleDB"') {
+        $errors.Add('El helper Oracle contiene un fallback generico OracleDB.')
+    }
+}
+
+$calculationTables = @(
+    'RL_MR_FORMULAS',
+    'RL_MR_FORMULA_USOS',
+    'RL_MR_FORMULA_VERSIONES',
+    'RL_MR_FUNCION_ARGUMENTOS',
+    'RL_MR_FUNCIONES',
+    'RL_MR_FUNCION_VERSIONES',
+    'RL_MR_PARAMETROS_CALCULO',
+    'RL_MR_PARAMETRO_VERSIONES'
+)
+
+$calculationSequences = @(
+    'SEQ_RL_MR_FORMULAS',
+    'SEQ_RL_MR_FORMULA_USOS',
+    'SEQ_RL_MR_FORMULA_VERSIONES',
+    'SEQ_RL_MR_FUNCION_ARGUMENTOS',
+    'SEQ_RL_MR_FUNCIONES',
+    'SEQ_RL_MR_FUNCION_VERSIONES',
+    'SEQ_RL_MR_PARAMETROS',
+    'SEQ_RL_MR_PARAMETRO_VERSIONES'
+)
+
+if (Test-Path -LiteralPath $calculationDdl -PathType Leaf) {
+    $calculationContent = Get-Content -LiteralPath $calculationDdl -Raw
+    $deploymentContent = Get-Content -LiteralPath $deploymentPreflight -Raw
+
+    foreach ($table in $calculationTables) {
+        if ($calculationContent -notmatch "(?im)create_table_if_absent\('$([regex]::Escape($table))'") {
+            $errors.Add("El DDL de configuracion de calculo no declara la tabla: $table")
+        }
+        if ($deploymentContent -notmatch [regex]::Escape($table)) {
+            $errors.Add("El contrato de deployment no enumera la tabla de calculo: $table")
+        }
+    }
+
+    foreach ($sequence in $calculationSequences) {
+        if ($calculationContent -notmatch "(?im)create_sequence_if_absent\('$([regex]::Escape($sequence))'") {
+            $errors.Add("El DDL de configuracion de calculo no declara la secuencia: $sequence")
+        }
+    }
+
+    if ($calculationTables.Count -ne 8 -or $calculationSequences.Count -ne 8) {
+        $errors.Add('El inventario estatico de configuracion de calculo no contiene exactamente 8 tablas y 8 secuencias.')
     }
 }
 

@@ -4013,3 +4013,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - PASS: expediente Fase 9, inventario 17/17, pruebas de inventario 9 casos, alineacion DDL dinamica, paquete Fase 10, validacion de scripts de base de datos, enlaces documentales y git diff --check.
 - BLOCKED: validate_matrices_preoracle_readiness.ps1 por el hallazgo preexistente configuration.GetConnectionString("OracleDB") ausente en la suite Oracle. Se conserva el bloqueo y no se modifica el codigo para obtener un resultado artificial.
 - P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED; P07_DBA_SIGNOFF=PENDING; P07_CERTIFICATION=NOT_CERTIFIED.
+
+## P07 - correccion vigente y preparacion para revision DBA - 2026-11-09
+
+- `BASE_SHA=c0cb48be2a1812b98b56ec93cda1c1509f03c4c3`; rama `desarrollo`; `QUALITY_GATE_BASE=42695677107` fue verificado como SUCCESS sobre ese SHA.
+- `P07_OBSERVATION_001=RESOLVED_STATICALLY`: DDL 06 `17+17` mas DDL 15 `8+8`; total estatico `25` tablas y `25` secuencias. `P07_PHYSICAL_INVENTORY=PENDING_DBA`.
+- `P07_OBSERVATION_002=RESOLVED`: el validador usa el contrato `OracleTestDatabaseProfile`/`LOCAL_XE` y bloquea cualquier fallback generico `OracleDB`; el resultado ya no depende de una expectativa obsoleta.
+- `P07_OBSERVATION_003=RESOLVED_DOCUMENTARILY`: los cinco documentos contienen las matrices y la separacion formal entre revision estatica, verificacion fisica DBA, signoff DBA y aceptacion del propietario.
+- `P07_PREORACLE_VALIDATOR=PASS`; `P07_PREORACLE_NEGATIVE_REGRESSIONS=PASS` (`8` casos); `P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED`; `P07_DBA_SIGNOFF=PENDING`; `P07_OWNER_ACCEPTANCE=PENDING`; `P07_CERTIFICATION=NOT_CERTIFIED`; `P07_STATUS=OPEN`.
+- Archivos de esta intervencion: validator pre-Oracle, regresion pre-Oracle, cinco documentos P07, BITACORA y este estado. Sin cambios funcionales, Oracle, migraciones, main, produccion, watcher, cola o P06.
+- Continuacion exacta: ejecutar la matriz final de validaciones, stage selectivo, commit/push y verificacion remota/API; despues esperar el Quality Gate del SHA final. No emitir certificacion DBA.

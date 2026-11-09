@@ -10595,3 +10595,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - PASS: expediente Fase 9, inventario 17 objetos, pruebas de inventario (9 casos), alineacion DDL dinamica, paquete Fase 10, validador de scripts de base de datos, enlaces documentales y git diff --check.
 - BLOCKED: validate_matrices_preoracle_readiness.ps1, por un unico hallazgo de contrato preexistente: la suite Oracle no contiene configuration.GetConnectionString("OracleDB"). No se modifico codigo ni se relajo el validador.
 - No hubo conexion Oracle, autenticacion, DDL, DML, migracion, purga, rollback, watcher ni cambios en la cola.
+
+## 2026-11-09 - Correccion y cierre documental P07 (COD)
+
+- Base remota verificada: `c0cb48be2a1812b98b56ec93cda1c1509f03c4c3`, rama `desarrollo`; Quality Gate `42695677107` confirmado previamente como SUCCESS sobre ese SHA.
+- Observacion 001 resuelta estaticamente: `17` tablas y `17` secuencias operativas del DDL 06 mas `8` tablas y `8` secuencias de configuracion del DDL 15 producen `25/25`; la existencia fisica en Oracle sigue `PENDING_DBA`.
+- Observacion 002 resuelta: el validador ya exige el helper `OracleTestDatabaseProfile` y el perfil `LOCAL_XE` explicito; se rechazan los fallbacks genericos `OracleDB` en la suite y el helper. No se modifico codigo funcional ni se conecto Oracle.
+- Observacion 003 resuelta documentalmente: los cinco documentos P07 contienen matrices de inventario, dependencias, respaldo/rollback, riesgos/privilegios y aceptacion con responsables, evidencia, estado y limites.
+- Correcciones preparadas: `scripts/validation/validate_matrices_preoracle_readiness.ps1` y `scripts/validation/test_matrices_preoracle_readiness.ps1`; documentos P07 01-05; esta bitacora y el estado colaborativo.
+- Verificaciones actuales: validador pre-Oracle PASS; regresion pre-Oracle `8` casos PASS, con `7` negativos FAIL_CLOSED; inventario 17/17 PASS; regresiones de inventario `9` casos PASS; alineacion DDL dinamica PASS; paquete Fase 10 PASS; scripts de base de datos PASS; enlaces documentales y diff check pendientes de ejecucion final tras este registro.
+- Restricciones observadas: no Oracle institucional, no DDL/DML/migraciones, no credenciales, no watcher, no cola, no P06, no produccion, no main. P07 no esta certificado; requiere evidencia fisica DBA y signoff independiente.
+- Punto de continuacion: ejecutar validaciones finales, revisar stage selectivo, commit/push a `origin/desarrollo`, leer los archivos publicados mediante GitHub y verificar el Quality Gate del SHA final.
