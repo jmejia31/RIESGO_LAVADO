@@ -33,6 +33,18 @@ Los templates con header estándar no requieren cambios para cambiar de tema. Lo
 
 Los tonos azules usados como identidad, foco, acción o selección migran a `ihss-*` o tokens dinámicos. Los tonos azules de mensajes informativos permanecen como semántica informativa. Las opciones de confirmación SweetAlert consumen `--ihss-primary-color`; los defaults de Configuración se importan de `system-theme.util.ts`. El validador revisa templates externos e inline de TypeScript, estilos y colores de confirmación, y falla ante utilitarios de marca `blue-*` o HEX de marca fijo fuera de los defaults centrales.
 
+## Navegación institucional B01
+
+Las barras de navegación del módulo Matrices de Riesgos utilizan los tokens dinámicos existentes y no una paleta local por componente. Se mantienen tres niveles visuales coherentes:
+
+- navegación principal del ciclo integral: superficie activa `bg-ihss-700`;
+- navegación secundaria de Evaluaciones: superficie activa `bg-ihss-900`;
+- navegación terciaria de Configuración de cálculo: superficie activa `bg-ihss-700`.
+
+Las clases `text-white` sobre superficies `bg-ihss-*` reciben el foreground calculado por `--ihss-on-*-rgb`. Por ello el texto se adapta cuando cambia el tema, incluyendo primarios claros u oscuros. Las reglas responsive no deben establecer `background: transparent !important` sobre botones activos, porque eso anula la superficie dinámica y puede producir texto blanco sobre fondo claro.
+
+Los estados hover y focus utilizan tonos derivados `--ihss-50-rgb`, `--ihss-200-rgb` y `--ihss-900-rgb`; los neutros se reservan para superficies y texto auxiliar. La lógica de selección, roles, `aria-selected`, teclado y navegación no forma parte del contrato visual y permanece sin cambios.
+
 ## Validación obligatoria
 
 Quality Gates ejecuta:

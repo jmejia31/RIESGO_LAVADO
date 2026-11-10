@@ -301,7 +301,24 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(root.querySelector('[data-matrix-modal="complete"]')).toBeNull();
   });
 
-  it('15. renderiza campos 01–19 en orden, conserva los GTIC y no inventa valores históricos V1', () => {
+  it('15. conserva el estado activo institucional de las pestañas secundarias', () => {
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const tabs = Array.from(root.querySelectorAll('button[role="tab"]')) as HTMLButtonElement[];
+    expect(tabs).toHaveLength(3);
+    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[0].classList.contains('bg-ihss-900')).toBe(true);
+    expect(tabs[0].classList.contains('text-white')).toBe(true);
+    expect(tabs[1].classList.contains('bg-ihss-900')).toBe(false);
+
+    tabs[1].click();
+    fixture.detectChanges();
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[1].classList.contains('bg-ihss-900')).toBe(true);
+    expect(tabs[0].classList.contains('bg-ihss-900')).toBe(false);
+  });
+
+  it('16. renderiza campos 01–19 en orden, conserva los GTIC y no inventa valores históricos V1', () => {
     component.evaluacionResumenSeleccionada.set(mockPaginado.items[0]);
     component.evaluacionSeleccionada.set({
       evaId: 101,
@@ -357,7 +374,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(root.querySelector('[data-matrix-modal="complete"] .modal-size-workspace')).not.toBeNull();
   });
 
-  it('16. abre la Matriz completa desde un borrador con el ID exacto de evaluación', () => {
+  it('17. abre la Matriz completa desde un borrador con el ID exacto de evaluación', () => {
     const abrirMatriz = vi.spyOn(component, 'abrirMatrizCompleta').mockImplementation(() => undefined);
     component.consolidado.set([{
       riesgoId: 5,

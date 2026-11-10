@@ -4,9 +4,9 @@
 }
 
 .matrices-cycle-shell {
-  --cycle-ink: #0f1f3d;
-  --cycle-muted: #60708a;
-  --cycle-line: #dbe4f0;
+  --cycle-ink: rgb(var(--ihss-900-rgb, 23 44 104));
+  --cycle-muted: rgb(71 85 105);
+  --cycle-line: rgb(var(--ihss-200-rgb, 204 209 225));
 }
 
 .matrices-cycle-nav {
@@ -15,7 +15,7 @@
   z-index: 10;
   border-color: var(--cycle-line) !important;
   background: rgb(255 255 255 / 0.94) !important;
-  box-shadow: 0 10px 26px rgb(15 31 61 / 0.07) !important;
+  box-shadow: 0 10px 26px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.07) !important;
   backdrop-filter: blur(14px);
 }
 
@@ -49,16 +49,14 @@
 .matrices-cycle-nav__tabs button:hover,
 .matrices-cycle-nav__tabs button:focus-visible {
   border-color: var(--cycle-line);
-  background: #f4f7fb;
+  background: rgb(var(--ihss-50-rgb, 246 247 251) / 0.72);
   color: var(--cycle-ink);
   outline: none;
 }
 
-.matrices-cycle-nav__tabs button[class*='bg-slate-900'] {
-  border-color: var(--cycle-ink);
-  background: var(--cycle-ink) !important;
-  box-shadow: 0 5px 14px rgb(15 31 61 / 0.18);
-  color: #ffffff !important;
+.matrices-cycle-nav__tabs button[class*='bg-ihss-700'] {
+  border-color: rgb(var(--ihss-700-rgb, 30 58 138));
+  box-shadow: 0 5px 14px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.18);
 }
 
 @media (max-width: 640px) {

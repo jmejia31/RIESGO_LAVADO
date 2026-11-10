@@ -4,11 +4,11 @@
 }
 
 .matrices-page {
-  --matrices-ink: #0f1f3d;
-  --matrices-muted: #60708a;
-  --matrices-line: #dbe4f0;
+  --matrices-ink: rgb(var(--ihss-900-rgb, 23 44 104));
+  --matrices-muted: rgb(71 85 105);
+  --matrices-line: rgb(var(--ihss-200-rgb, 204 209 225));
   --matrices-surface: #ffffff;
-  --matrices-canvas: #f4f7fb;
+  --matrices-canvas: rgb(var(--ihss-50-rgb, 246 247 251));
   color: var(--matrices-ink);
 }
 
@@ -19,7 +19,7 @@
   border-color: var(--matrices-line) !important;
   background:
     radial-gradient(circle at 100% 0%, rgb(var(--ihss-accent-rgb) / 0.12), transparent 32%),
-    linear-gradient(135deg, #ffffff 0%, #f7faff 100%) !important;
+    linear-gradient(135deg, #ffffff 0%, rgb(var(--ihss-50-rgb, 246 247 251) / 0.72) 100%) !important;
   box-shadow: 0 14px 35px rgb(var(--ihss-primary-rgb) / 0.08) !important;
 }
 
@@ -62,7 +62,7 @@
   border-color: var(--matrices-line) !important;
   border-radius: 0.95rem !important;
   background: var(--matrices-surface) !important;
-  box-shadow: 0 5px 16px rgb(15 31 61 / 0.045) !important;
+  box-shadow: 0 5px 16px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.045) !important;
   padding: 0.95rem 1.05rem !important;
 }
 
@@ -107,9 +107,7 @@
 }
 
 .matrices-tabs-shell [role='tab'][aria-selected='true'] {
-  background: var(--matrices-ink) !important;
-  color: #ffffff !important;
-  box-shadow: 0 5px 14px rgb(15 31 61 / 0.18) !important;
+  box-shadow: 0 5px 14px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.18) !important;
 }
 
 .matrices-panel,
@@ -121,7 +119,7 @@
 
 .matrices-panel {
   border-radius: 1.1rem !important;
-  box-shadow: 0 11px 28px rgb(15 31 61 / 0.055) !important;
+  box-shadow: 0 11px 28px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.055) !important;
 }
 
 .matrices-panel > div:first-of-type h2,
@@ -178,13 +176,13 @@
 }
 
 .matrices-table-surface table tbody tr:hover {
-  background: #f8fbff !important;
+  background: rgb(var(--ihss-50-rgb, 246 247 251) / 0.72) !important;
 }
 
 .matrices-family-header {
   background:
-    linear-gradient(120deg, #ffffff 0%, #f8fbff 100%) !important;
-  box-shadow: 0 11px 28px rgb(15 31 61 / 0.055) !important;
+    linear-gradient(120deg, #ffffff 0%, rgb(var(--ihss-50-rgb, 246 247 251) / 0.72) 100%) !important;
+  box-shadow: 0 11px 28px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.055) !important;
 }
 
 @media (max-width: 640px) {
