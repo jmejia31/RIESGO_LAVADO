@@ -153,6 +153,36 @@ Este dictamen no constituye aprobación DBA, autorización de ejecución ni cert
 - tools/validate_documentation_links.ps1: PASS.
 - test_matrices_preoracle_readiness.ps1: PASS; 8 casos, incluido canonical PASS y 7 regresiones fail-closed.
 - git diff --check: PASS.
+
+## Cierre documental con salvedades
+
+Esta seccion consolida evidencia recibida del propietario y del DBA sin convertirla en una ejecucion de COD ni en una firma formal no aportada.
+
+```ini
+P07_DOCUMENTARY_CLOSURE=COMPLETE_WITH_LIMITATIONS
+P07_ORACLE_INVENTORY=PASS_REPORTED_BY_OWNER_DBA
+P07_BACKUP_METHOD=MANUAL_DATAPUMP
+P07_BACKUP_FILES_EVIDENCE=AVAILABLE_REPORTED_BY_DBA
+P07_RESTORE_TEST=NOT_EXECUTED
+P07_DBA_SIGNOFF=SEGUN_EVIDENCIA_REAL
+P07_FULL_CERTIFICATION=SEGUN_CRITERIOS_INSTITUCIONALES_VERIFICADOS
+P07_PHYSICAL_EVIDENCE_SOURCE=OWNER_AND_DBA_REPORTED
+P07_LIVE_ORACLE_VALIDATION_BY_COD=NOT_EXECUTED
+P07_FORMAL_DBA_SIGNATURE=NOT_PRESENT_IN_REPOSITORY
+P07_OWNER_ACCEPTANCE=REPORTED_NO_ADDITIONAL_BACKUP_REQUEST
+BLOCK10_AUTHORIZED=NO
+```
+
+| Control | Procedencia | Estado | Limite |
+|---|---|---|---|
+| Revision estatica del expediente | COD | PASS | No demuestra instalacion fisica |
+| Comprobaciones fisicas de inventario e integridad | Propietario/DBA reportado | PASS_REPORTED | No reejecutadas por COD |
+| Evidencia visual de archivos Data Pump | DBA reportado | AVAILABLE_REPORTED | No demuestra exportacion exitosa ni restaurabilidad |
+| Restauracion o rollback de respaldo | No ejecutado | NOT_EXECUTED | Requiere prueba autorizada |
+| Firma formal DBA | No aportada | NOT_ASSERTED | No se infiere de una conformidad tecnica |
+| Solicitud de respaldo adicional del propietario | Propietario reportado | NO | No equivale a aprobacion de recuperacion |
+
+El cierre documental es completo con salvedades. No se declara certificacion integral de respaldo/recuperacion ni aprobacion DBA formal; la certificacion final queda sujeta a los criterios institucionales verificables.
 - validate_matrices_preoracle_readiness.ps1: BLOCKED por un hallazgo preexistente del contrato: la suite Oracle no contiene el token configuration.GetConnectionString("OracleDB"). No se modificó código para silenciarlo y no se presenta como PASS.
 
 Estas validaciones son estáticas. Ninguna sustituye la ejecución DBA ni aporta evidencia de conexión, privilegios, respaldo, restauración o estado físico de Oracle.

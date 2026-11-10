@@ -109,6 +109,25 @@ La fuente 06 declara 17 secuencias operativas. La fuente 15 declara ocho secuenc
     TOTAL_SEQUENCES_UNIQUE=25
     P07_MODEL_RECONCILIATION=CONSISTENT_STATICALLY
 
+## Evidencia fisica reportada por propietario y DBA (no reejecutada por COD)
+
+La siguiente evidencia fue suministrada por el propietario y el DBA mediante consultas de solo lectura. Se incorpora con su procedencia y no se presenta como una consulta ejecutada por COD en esta intervencion.
+
+```ini
+EVIDENCE_SOURCE=OWNER_AND_DBA_REPORTED
+ORACLE_IDENTITY_MATCHES_P06=REPORTED_PASS
+OFFICIAL_TABLES=25
+OFFICIAL_SEQUENCES=25
+FOREIGN_KEYS_ENABLED_VALIDATED=33
+RL_AUDITORIA_STATUS=VALID
+SEQ_RL_AUDITORIA_STATUS=VALID
+AUDIT_COUNT_BEFORE=1727
+AUDIT_COUNT_AFTER=1728
+PHYSICAL_EXECUTION_BY_COD=NO
+```
+
+El inventario de 25 tablas, 25 secuencias y el estado VALID de los objetos de auditoria son resultados reportados de la comprobacion fisica indicada. No se amplian a objetos, grants o ambientes no incluidos en la evidencia recibida.
+
 SHARED_INSTITUTIONAL_OBJECTS: RL_USUARIOS, RL_AUDITORIA y SEQ_RL_AUDITORIA. Estos objetos no pertenecen al conjunto Matrices y requieren protección institucional; su existencia física no se verificó.
 
 RETIRED_OBJECTS: los objetos listados en modelo_17_objetos.json bajo retired_tables y retired_sequences. Su ausencia física requiere evidencia DBA; no se concluye desde el inventario de archivos.

@@ -10620,3 +10620,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Quality Gate `42703492008`: SUCCESS, intento 1, SHA exacto; jobs de clasificaciÃ³n e integral completados, incluyendo validadores, build, Oracle XE disposable, pruebas de matrices y contenedores.
 - Lectura remota de GitHub: PASS para los cinco documentos P07, validator/regresion y BITACORA/ESTADO. `GITHUB_REMOTE_VERIFIED=YES`.
 - El resultado no certifica Oracle institucional ni signoff DBA: `P07_LIVE_ORACLE_VALIDATION=NOT_EXECUTED`, `P07_DBA_SIGNOFF=PENDING`, `P07_OWNER_ACCEPTANCE=PENDING`, `P07_CERTIFICATION=NOT_CERTIFIED`.
+
+## 2026-11-10 - Consolidacion de evidencia fisica P07 reportada (COD)
+
+- Base de continuidad: `1c6304e6706881536f1b348466ae3ecf824c217b`, rama `desarrollo`. Esta intervencion es exclusivamente documental.
+- Evidencia reportada por propietario/DBA: identidad Oracle coincidente con P06; 25 tablas oficiales; 25 secuencias; 33 claves foraneas habilitadas y validadas; cero huerfanos en las relaciones explicitamente verificadas; cero indices problematicos en la consulta ejecutada; cero dependencias externas por claves foraneas; `RL_AUDITORIA=VALID`; `SEQ_RL_AUDITORIA=VALID`; auditoria `1727 -> 1728`.
+- Limpieza historica autorizada por el propietario: `RL_MR_RIES_DESC_BKP_20260924`, `RL_MR_RIES_NOM_BKP_20260924` y `RL_MR_UNI_BKP_20260924`. Resultado posterior reportado: `TOTAL_TABLAS_RL_MR=25`, `TABLAS_HISTORICAS_ACTIVAS=0`. COD no repitio la eliminacion ni afirma un respaldo previo especifico verificado.
+- Declaracion atribuida al DBA: "En calidad y desarrollo no ejecutamos RMAN; solo Data Pump manuales". Evidencia visual reportada de exportaciones Data Pump asociadas a hpprod1 con fecha `2026-10-21`. `BACKUP_EXPORT_SUCCESS=NOT_INDEPENDENTLY_VERIFIED`; `BACKUP_RESTORE_TEST=NOT_EXECUTED`; `OWNER_ADDITIONAL_BACKUP_REQUEST=NO`. No se publican DMP, rutas sensibles o credenciales.
+- Archivos modificados: los cinco documentos de `docs/certificaciones/P07_EXPEDIENTE_DBA/`, esta bitacora y `docs/0.0 Documentacion/ESTADO_COLABORACION.md`. No se modificaron codigo funcional, Oracle, DDL/DML, migraciones, main, produccion, cola, watcher ni P06.
+- Estado documental: `P07_DOCUMENTARY_CLOSURE=COMPLETE_WITH_LIMITATIONS`. La evidencia fisica es atribuida y no fue reejecutada por COD; restauracion, rollback de respaldo y firma DBA formal no se declaran.
+- Punto de continuacion: validar enlaces y diff, stage selectivo, publicar en `origin/desarrollo`, verificar lectura remota y comprobar el Quality Gate del SHA final.

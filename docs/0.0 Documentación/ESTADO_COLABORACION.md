@@ -4037,3 +4037,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUALITY_GATE_ID=42703492008`; `QUALITY_GATE_STATUS=SUCCESS`; `RUN_ATTEMPT=1`; SHA exacto confirmado mediante GitHub Actions.
 - El expediente y sus validadores fueron leidos remotamente desde `origin/desarrollo`. `GITHUB_REMOTE_VERIFIED=YES`.
 - P07 queda `READY_FOR_DBA_REVIEW`, no certificado: la validacion fisica Oracle, privilegios efectivos, backup/restore, signoff DBA y aceptacion del propietario siguen pendientes.
+
+## P07 - cierre documental con evidencia atribuida - 2026-11-10
+
+- `BASE_SHA=1c6304e6706881536f1b348466ae3ecf824c217b`; alcance exclusivamente documental; no se ejecutaron consultas Oracle ni operaciones sobre datos.
+- Evidencia reportada por propietario/DBA: identidad Oracle coincidente con P06; 25 tablas; 25 secuencias; 33 FKs habilitadas/validadas; cero huerfanos en relaciones explicitamente verificadas; cero indices problematicos en la consulta ejecutada; cero dependencias externas por FKs; `RL_AUDITORIA=VALID`; `SEQ_RL_AUDITORIA=VALID`; auditoria `1727 -> 1728`.
+- Limpieza historica reportada y autorizada por el propietario: tres tablas `RL_MR_RIES_DESC_BKP_20260924`, `RL_MR_RIES_NOM_BKP_20260924`, `RL_MR_UNI_BKP_20260924`; `TOTAL_TABLAS_RL_MR=25`; `TABLAS_HISTORICAS_ACTIVAS=0`. No se repitio la eliminacion y no se afirma respaldo previo especifico verificado.
+- Respaldo: `BACKUP_METHOD=ORACLE_DATAPUMP_MANUAL`; `BACKUP_FILES_EVIDENCE=PROVIDED_BY_DBA`; `BACKUP_REFERENCE_DATE=2026-10-21`; `BACKUP_EXPORT_SUCCESS=NOT_INDEPENDENTLY_VERIFIED`; `BACKUP_RESTORE_TEST=NOT_EXECUTED`; `OWNER_ADDITIONAL_BACKUP_REQUEST=NO`. La declaracion DBA no se convierte en firma formal.
+- `P07_DOCUMENTARY_CLOSURE=COMPLETE_WITH_LIMITATIONS`; `P07_ORACLE_INVENTORY=PASS_REPORTED_BY_OWNER_DBA`; `P07_DBA_SIGNOFF=SEGUN_EVIDENCIA_REAL`; `P07_FULL_CERTIFICATION=SEGUN_CRITERIOS_INSTITUCIONALES_VERIFICADOS`; `BLOCK10_AUTHORIZED=NO`.
+- No se modificaron codigo funcional, Oracle, migraciones, main, produccion, cola, watcher ni P06. Pendiente de cierre de esta intervencion: diff, validaciones documentales, commit/push, lectura remota y Quality Gate del nuevo SHA.

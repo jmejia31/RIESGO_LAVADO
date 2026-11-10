@@ -47,6 +47,22 @@ P07_EFFECTIVE_PRIVILEGES=NOT_VERIFIED
 
 P07_DBA_SIGNOFF=PENDING
 
+## Limpieza historica reportada por el propietario
+
+El propietario autorizo retirar las tres tablas historicas siguientes. La verificacion posterior reportada indico que no quedan tablas historicas activas dentro del conteo RL_MR. COD no repitio la eliminacion ni la consulta.
+
+```ini
+EVIDENCE_SOURCE=OWNER_REPORTED
+OWNER_AUTHORIZED_HISTORICAL_REMOVAL=YES
+REMOVED_HISTORICAL_TABLES=RL_MR_RIES_DESC_BKP_20260924,RL_MR_RIES_NOM_BKP_20260924,RL_MR_UNI_BKP_20260924
+TOTAL_TABLAS_RL_MR=25
+TABLAS_HISTORICAS_ACTIVAS=0
+DELETION_REPEATED_BY_COD=NO
+PRE_DELETION_BACKUP_SPECIFICALLY_VERIFIED=NO
+```
+
+La evidencia no permite afirmar que existio un respaldo previo verificado especificamente para esta eliminacion. La ausencia posterior de las tablas no sustituye esa comprobacion.
+
 ## Matriz de riesgos
 
 | RISK_ID | ASSET | DESCRIPTION | ROOT_CAUSE | TECHNICAL_IMPACT | SEVERITY | EXISTING_CONTROL | MISSING_CONTROL | EVIDENCE | OWNER_ROLE | RECOMMENDATION | STATUS |

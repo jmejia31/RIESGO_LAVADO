@@ -58,6 +58,21 @@ P07_REFERENTIAL_REVIEW=STATIC_PASS
 
 P07_PHYSICAL_REFERENTIAL_CERTIFICATION=PENDING_DBA_EVIDENCE
 
+## Evidencia fisica reportada por propietario y DBA (alcance limitado)
+
+La evidencia siguiente fue reportada como resultado de la consulta fisica ejecutada por el propietario/DBA. COD no repitio las consultas y no convierte estos valores en una inferencia global fuera del alcance indicado.
+
+```ini
+EVIDENCE_SOURCE=OWNER_AND_DBA_REPORTED
+FOREIGN_KEYS_ENABLED_VALIDATED=33
+ORPHAN_ROWS_IN_EXPLICITLY_VERIFIED_RELATIONS=0
+PROBLEMATIC_INDEXES_IN_EXECUTED_QUERY=0
+EXTERNAL_FOREIGN_KEY_DEPENDENCIES_DETECTED=0
+PHYSICAL_EXECUTION_BY_COD=NO
+```
+
+Los ceros anteriores se limitan a las relaciones y a la consulta de indices/dependencias que fueron explicitamente verificadas. No demuestran la ausencia de otros riesgos fuera de ese alcance.
+
 ## Matriz verificable de dependencias declaradas
 
 La siguiente matriz se extrajo de los dos DDL versionados. EXPECTED_STATUS=DECLARED significa que la relación aparece en la fuente; PHYSICAL_STATUS=REQUIRES_DBA_EVIDENCE significa que no se consultó Oracle.

@@ -84,3 +84,21 @@ P07_BACKUP_VERIFIED=PENDING_DBA
 P07_RESTORE_VERIFIED=PENDING_DBA
 
 P07_ROLLBACK_VERIFIED=PENDING_DBA
+
+## Evidencia de respaldo reportada por el DBA
+
+El DBA comunico: "En calidad y desarrollo no ejecutamos RMAN; solo Data Pump manuales". El propietario aporto evidencia visual de archivos de exportacion Data Pump asociados a hpprod1 y fechados el 21 de octubre de 2026. Esta declaracion y la existencia visual de archivos no equivalen a una prueba de exportacion exitosa ni de restaurabilidad.
+
+```ini
+BACKUP_METHOD=ORACLE_DATAPUMP_MANUAL
+BACKUP_FILES_EVIDENCE=PROVIDED_BY_DBA
+BACKUP_REFERENCE_DATE=2026-10-21
+BACKUP_EXPORT_SUCCESS=NOT_INDEPENDENTLY_VERIFIED
+BACKUP_RESTORE_TEST=NOT_EXECUTED
+OWNER_ADDITIONAL_BACKUP_REQUEST=NO
+DMP_FILES_PUBLISHED=NO
+RMAN_EXECUTED_BY_COD=NO
+EXPDP_IMPDP_EXECUTED_BY_COD=NO
+```
+
+No se verifico un respaldo especifico previo a la eliminacion de las tablas historicas. No se solicito RMAN, no se ejecutaron EXPDP/IMPDP y no se accedio a un servidor de respaldos en esta intervencion.
