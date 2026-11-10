@@ -307,15 +307,14 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     const tabs = Array.from(root.querySelectorAll('button[role="tab"]')) as HTMLButtonElement[];
     expect(tabs).toHaveLength(3);
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
-    expect(tabs[0].classList.contains('bg-ihss-900')).toBe(true);
-    expect(tabs[0].classList.contains('text-white')).toBe(true);
-    expect(tabs[1].classList.contains('bg-ihss-900')).toBe(false);
+    expect(tabs[0].classList.contains('institutional-selection__item')).toBe(true);
+    expect(tabs[1].classList.contains('institutional-selection__item')).toBe(true);
 
     tabs[1].click();
     fixture.detectChanges();
     expect(tabs[1].getAttribute('aria-selected')).toBe('true');
-    expect(tabs[1].classList.contains('bg-ihss-900')).toBe(true);
-    expect(tabs[0].classList.contains('bg-ihss-900')).toBe(false);
+    expect(tabs[1].classList.contains('institutional-selection__item')).toBe(true);
+    expect(tabs[0].classList.contains('institutional-selection__item')).toBe(true);
   });
 
   it('16. renderiza campos 01–19 en orden, conserva los GTIC y no inventa valores históricos V1', () => {

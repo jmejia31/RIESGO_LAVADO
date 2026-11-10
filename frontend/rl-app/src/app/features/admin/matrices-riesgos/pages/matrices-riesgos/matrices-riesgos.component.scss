@@ -87,7 +87,7 @@
   width: fit-content !important;
   max-width: 100%;
   border-color: var(--matrices-line) !important;
-  background: #edf3fb !important;
+  background: rgb(var(--ihss-50-rgb, 246 247 251)) !important;
   box-shadow: none !important;
 }
 
@@ -107,22 +107,22 @@
 }
 
 .matrices-tabs-shell [role='tab'][aria-selected='true'] {
-  background-color: rgb(var(--ihss-900-rgb, 23 44 104)) !important;
-  color: rgb(var(--ihss-on-900-rgb, 255 255 255)) !important;
+  background-color: rgb(var(--institutional-selection-active-rgb, var(--ihss-900-rgb, 23 44 104))) !important;
+  color: rgb(var(--institutional-selection-active-fg-rgb, var(--ihss-on-900-rgb, 255 255 255))) !important;
   opacity: 1 !important;
   box-shadow: 0 5px 14px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.18) !important;
 }
 
 .matrices-tabs-shell [role='tab'][aria-selected='true']:hover,
 .matrices-tabs-shell [role='tab'][aria-selected='true']:focus-visible {
-  background-color: rgb(var(--ihss-900-rgb, 23 44 104)) !important;
-  color: rgb(var(--ihss-on-900-rgb, 255 255 255)) !important;
+  background-color: rgb(var(--institutional-selection-active-rgb, var(--ihss-900-rgb, 23 44 104))) !important;
+  color: rgb(var(--institutional-selection-active-fg-rgb, var(--ihss-on-900-rgb, 255 255 255))) !important;
   opacity: 1 !important;
 }
 
 .matrices-tabs-shell [role='tab']:not([aria-selected='true']):hover,
 .matrices-tabs-shell [role='tab']:not([aria-selected='true']):focus-visible {
-  background-color: rgb(var(--ihss-100-rgb, 237 243 251) / 0.72) !important;
+  background-color: rgb(var(--institutional-selection-hover-rgb, var(--ihss-100-rgb, 237 243 251)) / 0.72) !important;
   color: var(--matrices-ink) !important;
 }
 

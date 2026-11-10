@@ -779,6 +779,150 @@ dialog.modal-backdrop-overlay {
   color: rgb(var(--ihss-700-rgb)) !important;
 }
 
+/*
+ * B01: contrato institucional único para navegación y selección.
+ * Las variantes cambian únicamente geometría; identidad, tipografía y estados
+ * consumen siempre los tokens dinámicos del tema.
+ */
+.institutional-selection {
+  --institutional-selection-active-rgb: var(--ihss-700-rgb, 30 58 138);
+  --institutional-selection-active-fg-rgb: var(--ihss-on-700-rgb, 255 255 255);
+  --institutional-selection-surface-rgb: 255 255 255;
+  --institutional-selection-surface-fg-rgb: var(--ihss-on-50-rgb, 15 23 42);
+  --institutional-selection-border-rgb: var(--ihss-200-rgb, 204 209 225);
+  --institutional-selection-hover-rgb: var(--ihss-100-rgb, 230 233 242);
+  --institutional-selection-radius: 0.75rem;
+  --institutional-selection-gap: 0.5rem;
+  gap: var(--institutional-selection-gap);
+  font-family: inherit;
+}
+
+.institutional-selection--compact {
+  --institutional-selection-active-rgb: var(--ihss-900-rgb, 23 44 104);
+  --institutional-selection-active-fg-rgb: var(--ihss-on-900-rgb, 255 255 255);
+  --institutional-selection-radius: 0.75rem;
+}
+
+.institutional-selection--sidebar {
+  --institutional-selection-active-rgb: var(--ihss-700-rgb, 30 58 138);
+  --institutional-selection-active-fg-rgb: var(--ihss-on-700-rgb, 255 255 255);
+  --institutional-selection-surface-rgb: 255 255 255;
+  --institutional-selection-surface-fg-rgb: 255 255 255;
+  --institutional-selection-border-rgb: 255 255 255 / 0.08;
+  --institutional-selection-hover-rgb: 255 255 255 / 0.1;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.institutional-selection--sidebar .institutional-selection__item {
+  width: 100%;
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+  color: rgb(255 255 255 / 0.68);
+  text-align: left;
+}
+
+.institutional-selection--sidebar .institutional-selection__item:is(:hover, :focus-visible):not([aria-current='page']):not([aria-selected='true']):not([aria-pressed='true']):not(.is-selected) {
+  border-color: rgb(255 255 255 / 0.1);
+  background: rgb(255 255 255 / 0.1);
+  color: rgb(255 255 255 / 0.98);
+}
+
+.institutional-selection--sidebar .institutional-selection__item:is([aria-current='page'], [aria-selected='true'], [aria-pressed='true'], .is-selected) {
+  border-color: rgb(255 255 255 / 0.1);
+  background: rgb(var(--institutional-selection-active-rgb) / 0.42);
+  color: rgb(var(--institutional-selection-active-fg-rgb));
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+
+.institutional-selection--sidebar .institutional-selection__item:is([aria-current='page'], [aria-selected='true'], [aria-pressed='true'], .is-selected):is(:hover, :focus-visible) {
+  border-color: rgb(255 255 255 / 0.18);
+  background: rgb(var(--institutional-selection-active-rgb) / 0.52);
+  color: rgb(var(--institutional-selection-active-fg-rgb));
+}
+
+.institutional-selection--regular {
+  --institutional-selection-radius: 0.75rem;
+}
+
+.institutional-selection--card {
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.institutional-selection__item {
+  min-width: 0;
+  border: 1px solid rgb(var(--institutional-selection-border-rgb));
+  border-radius: var(--institutional-selection-radius);
+  background: rgb(var(--institutional-selection-surface-rgb));
+  color: rgb(var(--institutional-selection-surface-fg-rgb));
+  font-family: inherit;
+  font-weight: 650;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+.institutional-selection__item:is(:hover, :focus-visible):not([aria-selected='true']):not([aria-pressed='true']):not(.is-selected) {
+  border-color: rgb(var(--ihss-300-rgb, 158 169 201));
+  background: rgb(var(--institutional-selection-hover-rgb));
+  color: rgb(var(--institutional-selection-surface-fg-rgb));
+}
+
+.institutional-selection__item:is([aria-selected='true'], [aria-pressed='true'], .is-selected) {
+  border-color: rgb(var(--institutional-selection-active-rgb));
+  background: rgb(var(--institutional-selection-active-rgb));
+  color: rgb(var(--institutional-selection-active-fg-rgb));
+  box-shadow: 0 5px 14px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.18);
+}
+
+.institutional-selection__item:is([aria-selected='true'], [aria-pressed='true'], .is-selected):is(:hover, :focus-visible) {
+  border-color: rgb(var(--institutional-selection-active-rgb));
+  background: rgb(var(--institutional-selection-active-rgb));
+  color: rgb(var(--institutional-selection-active-fg-rgb));
+}
+
+.institutional-selection__item:focus-visible {
+  outline: 3px solid rgb(var(--ihss-accent-rgb, 29 78 216) / 0.55);
+  outline-offset: 2px;
+}
+
+.institutional-selection--card .institutional-selection__item {
+  flex: 1 1 15rem;
+  min-height: 5.25rem;
+  text-align: left;
+}
+
+.institutional-selection__label {
+  display: block;
+  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+}
+
+.institutional-selection__description {
+  display: block;
+  margin-top: 0.25rem;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  opacity: 0.78;
+}
+
+.institutional-selection__counter {
+  color: inherit;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .institutional-selection__item {
+    transition: none;
+  }
+}
+
 .report-preview-context {
   max-height: 14rem;
   overflow-y: auto;

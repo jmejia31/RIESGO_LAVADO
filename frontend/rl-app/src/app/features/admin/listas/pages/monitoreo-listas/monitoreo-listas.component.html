@@ -15,35 +15,35 @@
     </div>
 
     <div class="p-4 bg-gray-50/70 border-b border-gray-100">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="institutional-selection institutional-selection--card grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button data-ui-control="selection" (click)="cambiarTipo('juridica')"
-          [class]="tipoActivo() === 'juridica' ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
-          class="flex items-center justify-between gap-3 p-4 rounded-xl font-semibold transition-all duration-200 text-left">
+          [attr.aria-pressed]="tipoActivo() === 'juridica'"
+          class="institutional-selection__item flex items-center justify-between gap-3 p-4 rounded-xl text-left">
           <span>
-            <span class="block text-sm">Personas jurídicas</span>
-            <span class="block text-xs font-medium opacity-75">Patronos, empresas y proveedores</span>
+            <span class="institutional-selection__label">Personas jurídicas</span>
+            <span class="institutional-selection__description">Patronos, empresas y proveedores</span>
           </span>
-          <span class="text-lg font-bold">{{ juridicasTotales().totalRegistros }}</span>
+          <span class="institutional-selection__counter">{{ juridicasTotales().totalRegistros }}</span>
         </button>
 
         <button data-ui-control="selection" (click)="cambiarTipo('natural')"
-          [class]="tipoActivo() === 'natural' ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
-          class="flex items-center justify-between gap-3 p-4 rounded-xl font-semibold transition-all duration-200 text-left">
+          [attr.aria-pressed]="tipoActivo() === 'natural'"
+          class="institutional-selection__item flex items-center justify-between gap-3 p-4 rounded-xl text-left">
           <span>
-            <span class="block text-sm">Personas naturales</span>
-            <span class="block text-xs font-medium opacity-75">Afiliados y terceros identificados</span>
+            <span class="institutional-selection__label">Personas naturales</span>
+            <span class="institutional-selection__description">Afiliados y terceros identificados</span>
           </span>
-          <span class="text-lg font-bold">{{ naturalesTotales().totalRegistros }}</span>
+          <span class="institutional-selection__counter">{{ naturalesTotales().totalRegistros }}</span>
         </button>
 
         <button data-ui-control="selection" (click)="cambiarTipo('empleado')"
-          [class]="tipoActivo() === 'empleado' ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
-          class="flex items-center justify-between gap-3 p-4 rounded-xl font-semibold transition-all duration-200 text-left">
+          [attr.aria-pressed]="tipoActivo() === 'empleado'"
+          class="institutional-selection__item flex items-center justify-between gap-3 p-4 rounded-xl text-left">
           <span>
-            <span class="block text-sm">Empleados</span>
-            <span class="block text-xs font-medium opacity-75">Control interno y seguimiento</span>
+            <span class="institutional-selection__label">Empleados</span>
+            <span class="institutional-selection__description">Control interno y seguimiento</span>
           </span>
-          <span class="text-lg font-bold">{{ empleadosTotales().totalRegistros }}</span>
+          <span class="institutional-selection__counter">{{ empleadosTotales().totalRegistros }}</span>
         </button>
       </div>
     </div>

@@ -91,6 +91,40 @@ Las vistas de Matriz completa, ver y editar evaluación usan el mismo patrón de
 
 `ACTION_ICON_PATHS` en `action-icon.component.ts` es el registro central de iconos. `close` identifica el cierre convencional del header; `exit` identifica cerrar/salir desde el footer; `cancel` usa una marca de cancelación distinta de la X; `back`/`previous`, `next`, `save` y `reject` conservan sus significados propios. Footer close/exit y cancel no deben reutilizar el glifo `close`. Los botones del footer permanecen icon-only, con `aria-label`, `title`/tooltip, foco visible y su handler original. El validador comprueba las acciones por botón y falla ante colisiones entre X, cancelar y salir.
 
+## Contrato B01 de navegacion y seleccion
+
+El contrato reutilizable de B01 vive en `frontend/rl-app/src/styles.css` y se consume mediante:
+
+- `institutional-selection` como contrato base.
+- `institutional-selection--compact` para grupos pequenos y hojas de Excel.
+- `institutional-selection--regular` para navegacion horizontal de vistas.
+- `institutional-selection--card` para tarjetas seleccionables y bloques de evaluacion.
+- `institutional-selection--sidebar` para la navegacion primaria vertical, conservando su geometria propia.
+- `institutional-selection__item` para cada opcion.
+- `institutional-selection__label`, `institutional-selection__description` e `institutional-selection__counter` para roles tipograficos de tarjetas.
+
+Los fondos, foregrounds, bordes, foco y sombras consumen tokens `--ihss-*` y sus variantes `--ihss-on-*`. Los estados se expresan con `aria-selected`, `aria-pressed`, `aria-current` o `is-selected` segun la semantica del control. El estado activo conserva su superficie durante hover y focus-visible. Las variantes modifican geometria, espaciado y distribucion; no crean paletas locales.
+
+### Inventario B01 ejecutado
+
+| Grupo | Componente | Variante | Estado |
+|---|---|---|---|
+| Navegacion primaria | `shared/layout/main-layout` | sidebar | Migrado |
+| Ciclo Matrices | `matrices-riesgos-ciclo-integral` | regular | Migrado |
+| Evaluaciones | `matrices-riesgos` | compact | Migrado |
+| Configuracion de calculo | `configuracion-calculo` | regular | Migrado |
+| Configuracion del sistema | `configuracion` | regular | Migrado |
+| Monitoreo de listas | `monitoreo-listas` | card | Migrado; conserva `tipoActivo()` y `cambiarTipo()` |
+| Hojas Excel | `shared/report-preview` | compact | Migrado |
+| Constructor: lienzo/catalogos | `form-builder-toolbar` | compact | Migrado |
+| Constructor: editor/preview | `form-builder-toolbar` | compact | Migrado |
+| Bloques de evaluacion | modal de edicion/nueva evaluacion | card | Migrado; conserva `irABloqueEvaluacion()` |
+| Paginacion, CRUD, exportacion y menus | varios | No aplicable | Excluidos por contrato |
+
+Los selectores de registros internos de configuracion y los controles de formulario que no representan navegacion entre vistas se mantienen como controles de dominio; no se convierten indiscriminadamente en barras. Los estados semanticos, botones CRUD, paginacion y acciones de modal permanecen fuera del contrato B01.
+
+El validador preventivo es `tools/validate_b01_global_selection.test.js`, integrado en `tools/run_quality_gates.ps1`, junto con `tools/validate_b01_navigation_styles.test.js`. Ambos rechazan decisiones cromaticas locales en los consumidores migrados y detectan la anulacion de una superficie activa por fondos transparentes.
+
 ## Selectores largos limitados al viewport
 
 El campo Riesgo Institucional a Evaluar de Nueva Evaluación usa el componente compartido `app-bounded-select`: un combobox con overlay DOM posicionado contra el campo y limitado al viewport y al cuerpo scrollable del modal. El panel abre arriba o abajo según el espacio, mantiene scroll vertical interno, envuelve nombres largos y se reposiciona en resize/scroll; cierra si el ancla ya no está visible o no queda espacio seguro. La opción conserva el ID numérico de riesgo: la salida del componente se normaliza a número antes de actualizar el estado existente. Se mantiene el select nativo enlazado en forma no visual como puente de compatibilidad del mismo valor para integraciones y pruebas existentes. No se intenta controlar el popup nativo del sistema operativo mediante CSS.

@@ -54,7 +54,7 @@
   outline: none;
 }
 
-.matrices-cycle-nav__tabs button[class*='bg-ihss-700'] {
+.matrices-cycle-nav__tabs button[aria-pressed='true'] {
   border-color: rgb(var(--ihss-700-rgb, 30 58 138));
   box-shadow: 0 5px 14px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.18);
 }

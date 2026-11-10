@@ -251,20 +251,18 @@ describe('ConfiguracionCalculoComponent', () => {
     const activeTab = tabs[0];
     expect(activeTab.getAttribute('aria-selected')).toBe('true');
     expect(activeTab.getAttribute('id')).toBe('tab-formulas');
-    expect(activeTab.classList.contains('bg-ihss-700')).toBe(true);
-    expect(activeTab.classList.contains('text-white')).toBe(true);
+    expect(activeTab.classList.contains('institutional-selection__item')).toBe(true);
 
     const inactiveTab = tabs[1];
     expect(inactiveTab.getAttribute('aria-selected')).toBe('false');
     expect(inactiveTab.getAttribute('id')).toBe('tab-funciones');
-    expect(inactiveTab.classList.contains('text-slate-700')).toBe(true);
-    expect(inactiveTab.classList.contains('bg-white')).toBe(true);
+    expect(inactiveTab.classList.contains('institutional-selection__item')).toBe(true);
 
     tabs[1].click();
     fixture.detectChanges();
     expect(tabs[1].getAttribute('aria-selected')).toBe('true');
-    expect(tabs[1].classList.contains('bg-ihss-700')).toBe(true);
+    expect(tabs[1].classList.contains('institutional-selection__item')).toBe(true);
     expect(tabs[0].getAttribute('aria-selected')).toBe('false');
-    expect(tabs[0].classList.contains('text-slate-700')).toBe(true);
+    expect(tabs[0].classList.contains('institutional-selection__item')).toBe(true);
   });
 });

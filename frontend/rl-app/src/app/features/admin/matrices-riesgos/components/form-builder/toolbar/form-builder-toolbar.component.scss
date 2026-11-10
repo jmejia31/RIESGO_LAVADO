@@ -158,55 +158,6 @@
   font-size: 0.7rem;
 }
 
-.form-builder-toolbar nav > button[aria-current='page'] {
-  position: relative;
-  border-bottom-color: rgb(var(--ihss-600-rgb));
-  color: rgb(var(--ihss-700-rgb));
-  font-weight: 800;
-}
-
-.form-builder-toolbar nav > button[aria-current='page']::after {
-  position: absolute;
-  right: 0.5rem;
-  bottom: -2px;
-  left: 0.5rem;
-  height: 2px;
-  border-radius: 999px;
-  background: rgb(var(--ihss-600-rgb));
-  content: '';
-}
-
-.form-builder-toolbar nav > button:not([aria-current='page']):hover {
-  color: rgb(var(--ihss-600-rgb));
-}
-
-.form-builder-toolbar__workspace-tabs > button {
-  position: relative;
-  border-bottom: 2px solid transparent;
-  color: #475569;
-}
-
-.form-builder-toolbar__workspace-tabs > button.bg-white {
-  border-bottom-color: rgb(var(--ihss-600-rgb));
-  color: rgb(var(--ihss-700-rgb));
-  font-weight: 800;
-}
-
-.form-builder-toolbar__workspace-tabs > button.bg-white::after {
-  position: absolute;
-  right: 0.5rem;
-  bottom: -2px;
-  left: 0.5rem;
-  height: 2px;
-  border-radius: 999px;
-  background: rgb(var(--ihss-600-rgb));
-  content: '';
-}
-
-.form-builder-toolbar__workspace-tabs > button:not(.bg-white):hover {
-  color: rgb(var(--ihss-600-rgb));
-}
-
 @media (max-width: 640px) {
   .form-builder-toolbar__workspace,
   .form-builder-toolbar__workspace-navigation {

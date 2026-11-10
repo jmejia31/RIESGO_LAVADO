@@ -62,6 +62,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'DYNAMIC_THEME_VALIDATOR=PASS'
 
+$globalSelectionTests = Join-Path $RepositoryRoot 'tools/validate_b01_global_selection.test.js'
+& node --test $globalSelectionTests
+if ($LASTEXITCODE -ne 0) {
+    throw "El estandar global B01 de navegacion y seleccion fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'B01_GLOBAL_SELECTION_VALIDATOR=PASS'
+
 $premiumModalValidator = Join-Path $RepositoryRoot 'tools/validate_premium_modal_design.js'
 & node $premiumModalValidator
 if ($LASTEXITCODE -ne 0) {

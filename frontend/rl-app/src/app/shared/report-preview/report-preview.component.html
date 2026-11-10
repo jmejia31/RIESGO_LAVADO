@@ -22,9 +22,9 @@
                 <p class="text-sm font-semibold text-slate-800">Vista previa del libro Excel</p>
                 <p class="text-xs text-slate-500">{{ currentSheet()?.totalRows ?? 0 }} filas de datos en la hoja seleccionada</p>
               </div>
-              <nav class="flex max-w-full flex-wrap gap-2" aria-label="Hojas del libro Excel">
+              <nav class="institutional-selection institutional-selection--compact flex max-w-full flex-wrap" aria-label="Hojas del libro Excel" role="tablist">
                 @for (sheet of sheets; track sheet.name; let i = $index) {
-                  <button type="button" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ihss-500" [class.bg-ihss-900]="selectedSheet() === i" [class.text-white]="selectedSheet() === i" [class.border-ihss-900]="selectedSheet() === i" [class.bg-white]="selectedSheet() !== i" [class.text-slate-700]="selectedSheet() !== i" (click)="selectSheet(i)">{{ sheet.name }}</button>
+                  <button type="button" class="institutional-selection__item px-3 py-1.5 text-xs" role="tab" [attr.aria-selected]="selectedSheet() === i" (click)="selectSheet(i)">{{ sheet.name }}</button>
                 }
               </nav>
             </div>

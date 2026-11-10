@@ -86,7 +86,7 @@
   }
 
   <!-- Navegación de Categorías Estilo Píldora Flotante Integrada -->
-  <div class="matrices-tabs-shell p-1.5 bg-white rounded-2xl border border-gray-200/80 shadow-sm inline-flex w-full sm:w-auto items-center">
+  <div class="institutional-selection institutional-selection--compact matrices-tabs-shell p-1.5 rounded-2xl inline-flex w-full sm:w-auto items-center">
     <nav class="flex w-full sm:w-auto items-center gap-1 sm:gap-1.5" aria-label="Secciones de Matrices de Riesgos" role="tablist">
       @for (opcion of [
         { id: 'evaluaciones', texto: 'Evaluaciones' },
@@ -99,13 +99,7 @@
                 [attr.aria-selected]="tab() === opcion.id"
                 [attr.aria-controls]="'panel-' + opcion.id"
                 [attr.tabindex]="tab() === opcion.id ? 0 : -1"
-                class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-center whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-ihss-600/30"
-                [class.bg-ihss-900]="tab() === opcion.id"
-                [class.text-white]="tab() === opcion.id"
-                [class.shadow-md]="tab() === opcion.id"
-                [class.text-gray-600]="tab() !== opcion.id"
-                [class.hover:text-gray-900]="tab() !== opcion.id"
-                [class.hover:bg-gray-100/70]="tab() !== opcion.id"
+                class="institutional-selection__item flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-sm text-center whitespace-nowrap"
                 (keydown)="onKeydownTab($event, $any(opcion.id))"
                 (click)="seleccionarTab($any(opcion.id))">
           {{ opcion.texto }}
@@ -1215,12 +1209,9 @@
           </button>
         </div>
 
-        <nav class="mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
+        <nav class="institutional-selection institutional-selection--card mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
           @for (bloque of bloquesEvaluacion; track bloque) {
-            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700"
-              [class.border-ihss-700]="bloqueEvaluacionActual() === bloque" [class.bg-ihss-50]="bloqueEvaluacionActual() === bloque"
-              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque"
-              [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
+            <button type="button" class="institutional-selection__item rounded-lg px-3 py-2 text-left text-xs" [attr.aria-pressed]="bloqueEvaluacionActual() === bloque" [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
               {{ tituloBloqueEvaluacion(bloque) }}
             </button>
           }
@@ -1472,12 +1463,9 @@
             <button type="button" class="rounded p-1 text-emerald-500 hover:bg-emerald-100" aria-label="Cerrar confirmación de nueva evaluación" title="Cerrar confirmación de nueva evaluación" (click)="mensajeNuevaEvaluacion.set(null)"><app-action-icon action="close"></app-action-icon></button>
           </output>
         }
-        <nav class="mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
+        <nav class="institutional-selection institutional-selection--card mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
           @for (bloque of bloquesEvaluacion; track bloque) {
-            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ihss-700"
-              [class.border-ihss-700]="bloqueEvaluacionActual() === bloque" [class.bg-ihss-50]="bloqueEvaluacionActual() === bloque"
-              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque"
-              [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
+            <button type="button" class="institutional-selection__item rounded-lg px-3 py-2 text-left text-xs" [attr.aria-pressed]="bloqueEvaluacionActual() === bloque" [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
               {{ tituloBloqueEvaluacion(bloque) }}
             </button>
           }
