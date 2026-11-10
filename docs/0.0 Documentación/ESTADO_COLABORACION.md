@@ -4057,3 +4057,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B01_VISUAL_EVIDENCE=NOT_EXECUTED`: no se obtuvieron capturas nuevas en un entorno autorizado; las imagenes B00 no se reutilizan como certificacion de la correccion. `B01_E2E=NOT_EXECUTED` por ausencia de flujo autenticado/servicio autorizado en el worktree aislado.
 - `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `DATABASE_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Estado: `B01_STATUS=PARTIAL`; `B01_CERTIFICATION=PENDING`; pendiente de stage selectivo, commit/push, verificacion remota del SHA y Quality Gate, ademas de evidencia visual nueva. Punto exacto: revisar el diff del worktree aislado antes de publicar.
+
+## B01 - hotfix de contraste institucional - 2026-11-10 14:42:14 -06:00
+
+- `BASE_SHA=f2412c28387f8ad8aa99821c9383034b6bbd8b2a`; rama `desarrollo`; trabajo aislado en `C:\RIESGO_LAVADO_B01_WORK3`. El checkout principal conserva sus cambios preexistentes.
+- `B01_ROOT_CAUSE=CONFIRMED`: texto inactivo ligado a `--matrices-muted` y tinta local con contraste insuficiente; estados activos sin foreground institucional explicito en la navegacion secundaria.
+- `B01_FIX=APPLIED`: tokens `--ihss-950-rgb`, `--ihss-900-rgb`, `--ihss-on-900-rgb` y `--ihss-100-rgb` gobiernan tinta, fondo activo y estados hover/focus de las tres pestañas.
+- `B01_BROWSER_REGRESSION=PASS`: 1 prueba Playwright nueva, cinco temas, tres pestañas, estados activo/inactivo/hover/focus y regresion negativa del color anterior.
+- `B01_FOCUSED_REGRESSIONS=PASS`: Matrices `4/4`; login/routing `1/1`. `FRONTEND_UNIT_TESTS=958/958`; `FRONTEND_LINT=PASS`; `FRONTEND_BUILD=PASS`; `TEXT_ENCODING=PASS`; `STRUCTURE_VALIDATOR=PASS`; `DIFF_CHECK=PASS`.
+- `B01_VISUAL_SCREENSHOTS=15` generadas fuera del repositorio en `C:\Temp\RIESGO_LAVADO_B01_HOTFIX_VISUAL`; evidencia visual inspeccionada en muestras institucional, claro y alternativo.
+- `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `DATABASE_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `B02_STARTED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- `B01_STATUS=READY_FOR_PUBLICATION`; `B01_CERTIFICATION=PENDING_QUALITY_GATE`; siguiente paso: commit selectivo, push fast-forward, lectura remota y verificacion del Quality Gate del SHA final.

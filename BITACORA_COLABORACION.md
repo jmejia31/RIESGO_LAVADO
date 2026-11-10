@@ -10641,3 +10641,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Evidencia no ejecutada: capturas visuales nuevas, E2E con navegador autenticado, backend, Oracle y Quality Gate remoto; no se presentan resultados heredados como frescos. Las capturas B00 permanecen como diagnóstico histórico, no como prueba de esta correccion.
 - Restricciones: B02-B07 no iniciados; P06/P07 preservados; watcher deshabilitado; `BLOCK10_AUTHORIZED=NO`; no se usaron credenciales ni se ejecutaron conexiones Oracle.
 - Punto de continuacion: revisar diff, stage selectivo y secreto, commit/push fast-forward en `origin/desarrollo`, verificar lectura remota y consultar el Quality Gate del SHA final. No declarar B01 certificado hasta completar la evidencia visual y el gate remoto.
+
+## 2026-11-10 14:42:14 -06:00 - B01 hotfix de contraste institucional (COD)
+
+- `BASE_SHA=f2412c28387f8ad8aa99821c9383034b6bbd8b2a`; rama `desarrollo`; worktree aislado `C:\RIESGO_LAVADO_B01_WORK3`. El checkout principal `C:\RIESGO_LAVADO` no fue modificado ni sincronizado destructivamente.
+- Causa confirmada: las pestañas secundarias de Matrices heredaban `--matrices-muted` en estados inactivos y colores locales con contraste insuficiente en superficies claras; los estados activos no usaban de forma explicita el foreground institucional dinamico.
+- Correccion quirurgica: `--matrices-ink` y `--cycle-ink` usan `--ihss-950-rgb`; las tres pestañas secundarias fijan foreground institucional oscuro en reposo, superficie/foreground dinamicos en activo, y estados hover/focus visibles. No se modificaron rutas, eventos, permisos, TypeScript funcional, backend, Oracle, P06, P07 ni otros modulos.
+- Regresion Playwright real agregada en `frontend/rl-app/e2e/matrices-uat-integral.spec.ts`: cinco temas (default, dark, light, alternative, fallback), tres pestañas, activo/inactivo, hover/focus, `getComputedStyle`, calculo WCAG AA y regresion negativa del color gris original.
+- Verificaciones frescas: B01 Playwright `1/1 PASS`; matriz focalizada Matrices `4/4 PASS`; login/routing focalizado `1/1 PASS`; Vitest `91` archivos y `958` tests PASS; ESLint PASS; build Angular PASS con warnings de presupuesto existentes; estructura PASS; UTF-8 PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS.
+- Evidencia visual nueva: `15` capturas sanitizadas en `C:\Temp\RIESGO_LAVADO_B01_HOTFIX_VISUAL` (3 pestañas x 5 temas), generadas en navegador real con fixture UAT sintetico; no se publican como archivos del repositorio.
+- No se ejecutaron backend, Oracle, credenciales ni watcher. `DATABASE_CHANGED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `B02_STARTED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Estado antes de publicar: cambios de codigo limitados a dos SCSS y una regresion E2E; bitacora/estado se actualizan en este cierre. Quality Gate remoto del nuevo SHA queda pendiente hasta el commit y push.

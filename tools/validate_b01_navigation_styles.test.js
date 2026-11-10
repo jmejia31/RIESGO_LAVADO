@@ -45,7 +45,7 @@ test('B01 cycle navigation uses dynamic institutional tokens for all five option
   assert.equal(template.includes('[class.bg-slate-900]'), false);
   assert.match(styles, /button\[class\*='bg-ihss-700'\]/);
   assert.doesNotMatch(styles, /button\[class\*='bg-ihss-700'\]\{[^}]*background\s*:/);
-  assert.match(styles, /--cycle-ink:\s*rgb\(var\(--ihss-900-rgb/);
+  assert.match(styles, /--cycle-ink:\s*rgb\(var\(--ihss-950-rgb/);
 });
 
 test('B01 secondary navigation retains the dynamic active surface and theme-derived shadows', () => {
@@ -55,8 +55,8 @@ test('B01 secondary navigation retains the dynamic active surface and theme-deri
 
   assert.ok(activeRule);
   assert.equal((template.match(/\[class\.bg-ihss-900\]=/g) ?? []).length, 1);
-  assert.doesNotMatch(activeRule.declarations, /background\s*:/i);
-  assert.doesNotMatch(activeRule.declarations, /color\s*:/i);
+  assert.match(activeRule.declarations, /background-color:\s*rgb\(var\(--ihss-900-rgb/);
+  assert.match(activeRule.declarations, /color:\s*rgb\(var\(--ihss-on-900-rgb/);
   assert.match(activeRule.declarations, /var\(--ihss-primary-rgb/);
   assert.doesNotMatch(styles, /--matrices-ink:\s*#0f1f3d/i);
 });

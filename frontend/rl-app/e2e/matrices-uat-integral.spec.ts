@@ -1,4 +1,5 @@
 import { expect, Page, test, expectHttpStatuses, expectRequestFailure } from './support/telemetry-test';
+import type { Locator } from '@playwright/test';
 import { Buffer } from 'node:buffer';
 import * as ExcelJS from 'exceljs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -180,6 +181,134 @@ async function preparar(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => preparar(page));
+
+test('B01 mantiene contraste AA real en pestañas secundarias y detecta la regresión original', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/matrices-riesgos');
+
+  const tabNames = ['Evaluaciones', 'Evaluaciones consolidadas', 'Plantillas'];
+  const themes = [
+    { name: 'default', primary: [30, 58, 138] },
+    { name: 'dark', primary: [15, 23, 42] },
+    { name: 'light', primary: [96, 165, 250] },
+    { name: 'alternative', primary: [124, 58, 237] },
+    { name: 'fallback', primary: null }
+  ];
+
+  const measure = async (locator: Locator, forcedColor?: string) => locator.evaluate((element, forcedColor) => {
+    const parse = (value: string): [number, number, number, number] => {
+      const rgb = value.match(/rgba?\(([^)]+)\)/);
+      if (rgb) {
+        const parts = rgb[1].split(/[,/ ]+/).filter(Boolean).map(Number);
+        return [parts[0], parts[1], parts[2], parts[3] ?? 1];
+      }
+      const oklab = value.match(/oklab\(([^)]+)\)/);
+      const oklch = value.match(/oklch\(([^)]+)\)/);
+      if (oklab || oklch) {
+        const parts = (oklab ?? oklch)![1].split(/[,/ ]+/).filter(Boolean).map(Number);
+        const [lValue, firstValue, secondValue, alpha = 1] = parts;
+        const hue = oklch ? secondValue * Math.PI / 180 : 0;
+        const aValue = oklch ? firstValue * Math.cos(hue) : firstValue;
+        const bValue = oklch ? firstValue * Math.sin(hue) : secondValue;
+        const l = (lValue + .3963377774 * aValue + .2158037573 * bValue) ** 3;
+        const m = (lValue - .1055613458 * aValue - .0638541728 * bValue) ** 3;
+        const s = (lValue - .0894841775 * aValue - 1.291485548 * bValue) ** 3;
+        const red = 4.0767416621 * l - 3.3077115913 * m + .2309699292 * s;
+        const green = -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s;
+        const blue = -.0041960863 * l - .7034186147 * m + 1.707614701 * s;
+        const gamma = (channel: number) => Math.round(255 * (channel <= .0031308 ? 12.92 * channel : 1.055 * Math.max(0, channel) ** (1 / 2.4) - .055));
+        return [gamma(red), gamma(green), gamma(blue), alpha];
+      }
+      return [255, 255, 255, 1];
+    };
+    const composite = (foreground: [number, number, number, number], background: [number, number, number, number]) => [
+      foreground[0] * foreground[3] + background[0] * (1 - foreground[3]),
+      foreground[1] * foreground[3] + background[1] * (1 - foreground[3]),
+      foreground[2] * foreground[3] + background[2] * (1 - foreground[3])
+    ];
+    const luminance = (color: number[]) => color.slice(0, 3).map(channel => channel / 255).map(channel => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4).reduce((sum, channel, index) => sum + channel * [.2126, .7152, .0722][index], 0);
+    const target = element.closest('button,[role="tab"],a') ?? element;
+    const style = getComputedStyle(target);
+    const layers: [number, number, number, number][] = [];
+    const rawLayers: string[] = [];
+    let current: Element | null = target;
+    while (current) {
+      const parsed = parse(getComputedStyle(current).backgroundColor);
+      rawLayers.push(getComputedStyle(current).backgroundColor);
+      if (parsed[3] > 0) layers.push(parsed);
+      current = current.parentElement;
+    }
+    let surface: [number, number, number] = [255, 255, 255];
+    for (let index = layers.length - 1; index >= 0; index -= 1) surface = composite(layers[index], [...surface, 1]);
+    const foreground = parse(forcedColor ?? style.color);
+    const foregroundLuminance = luminance(foreground);
+    const surfaceLuminance = luminance(surface);
+    const contrast = ((Math.max(foregroundLuminance, surfaceLuminance) + .05) / (Math.min(foregroundLuminance, surfaceLuminance) + .05));
+    if (!Number.isFinite(contrast)) throw new Error(`B01 contrast parser received non-finite CSS colors: ${style.color}`);
+    return {
+      contrast,
+      color: style.color,
+      surface: surface.map(channel => Math.round(channel)).join(','),
+      rawLayers,
+      classes: target.className,
+      focusRing: style.boxShadow !== 'none'
+    };
+  }, forcedColor);
+
+  for (const theme of themes) {
+    await page.evaluate(({ name, primary }) => {
+      const root = document.documentElement;
+      if (!primary) {
+        for (const token of ['--ihss-100-rgb', '--ihss-900-rgb', '--ihss-950-rgb', '--ihss-on-900-rgb']) root.style.removeProperty(token);
+        return;
+      }
+      const shade = (weight: number) => primary.map(channel => Math.round(channel * weight));
+      const on900 = name === 'light' ? [0, 0, 0] : [255, 255, 255];
+      root.style.setProperty('--ihss-100-rgb', primary.map(channel => Math.round(channel * .1 + 255 * .9)).join(' '));
+      root.style.setProperty('--ihss-900-rgb', shade(.75).join(' '));
+      root.style.setProperty('--ihss-950-rgb', shade(.6).join(' '));
+      root.style.setProperty('--ihss-on-900-rgb', on900.join(' '));
+      root.dataset.b01Theme = name;
+    }, theme);
+
+    await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
+    for (const selectedName of tabNames) {
+      const selected = page.getByRole('tab', { name: selectedName, exact: true });
+      await selected.click();
+      await page.waitForTimeout(250);
+      await page.mouse.move(1, 1);
+      await expect(selected).toHaveAttribute('aria-selected', 'true');
+      const active = await measure(selected);
+      if (active.contrast < 4.5) throw new Error(`B01 active contrast failed: theme=${theme.name} tab=${selectedName} value=${active.contrast} color=${active.color} surface=${active.surface} classes=${active.classes} layers=${active.rawLayers.join(' || ')}`);
+      expect(active.contrast).toBeGreaterThanOrEqual(4.5);
+      await selected.hover();
+      await page.waitForTimeout(250);
+      const activeHover = await measure(selected);
+      if (activeHover.contrast < 4.5) throw new Error(`B01 active hover contrast failed: theme=${theme.name} tab=${selectedName} value=${activeHover.contrast} color=${activeHover.color} surface=${activeHover.surface} layers=${activeHover.rawLayers.join(' || ')}`);
+      expect(activeHover.contrast).toBeGreaterThanOrEqual(4.5);
+      await selected.focus();
+      const focus = await measure(selected);
+      expect(focus.focusRing).toBe(true);
+      expect(focus.contrast).toBeGreaterThanOrEqual(4.5);
+
+      for (const inactiveName of tabNames.filter(name => name !== selectedName)) {
+        const inactive = page.getByRole('tab', { name: inactiveName, exact: true });
+        await page.mouse.move(1, 1);
+        await page.waitForTimeout(250);
+        expect((await measure(inactive)).contrast).toBeGreaterThanOrEqual(4.5);
+        await inactive.hover();
+        await page.waitForTimeout(250);
+        expect((await measure(inactive)).contrast).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+
+    const negativeTarget = page.getByRole('tab', { name: 'Plantillas', exact: true });
+    const brokenOriginal = await measure(negativeTarget, 'rgb(71 85 105)');
+    expect(brokenOriginal.contrast).toBeLessThan(4.5);
+  }
+});
 
 test('Nueva Evaluación presenta acciones de footer icon-only, accesibles y visibles', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });

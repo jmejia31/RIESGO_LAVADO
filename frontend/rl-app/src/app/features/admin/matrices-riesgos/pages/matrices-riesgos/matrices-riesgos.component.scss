@@ -4,7 +4,7 @@
 }
 
 .matrices-page {
-  --matrices-ink: rgb(var(--ihss-900-rgb, 23 44 104));
+  --matrices-ink: rgb(var(--ihss-950-rgb, 15 23 42));
   --matrices-muted: rgb(71 85 105);
   --matrices-line: rgb(var(--ihss-200-rgb, 204 209 225));
   --matrices-surface: #ffffff;
@@ -102,12 +102,28 @@
 
 .matrices-tabs-shell [role='tab'] {
   min-height: 2.65rem;
-  color: var(--matrices-muted) !important;
+  color: var(--matrices-ink) !important;
   font-size: 0.82rem;
 }
 
 .matrices-tabs-shell [role='tab'][aria-selected='true'] {
+  background-color: rgb(var(--ihss-900-rgb, 23 44 104)) !important;
+  color: rgb(var(--ihss-on-900-rgb, 255 255 255)) !important;
+  opacity: 1 !important;
   box-shadow: 0 5px 14px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.18) !important;
+}
+
+.matrices-tabs-shell [role='tab'][aria-selected='true']:hover,
+.matrices-tabs-shell [role='tab'][aria-selected='true']:focus-visible {
+  background-color: rgb(var(--ihss-900-rgb, 23 44 104)) !important;
+  color: rgb(var(--ihss-on-900-rgb, 255 255 255)) !important;
+  opacity: 1 !important;
+}
+
+.matrices-tabs-shell [role='tab']:not([aria-selected='true']):hover,
+.matrices-tabs-shell [role='tab']:not([aria-selected='true']):focus-visible {
+  background-color: rgb(var(--ihss-100-rgb, 237 243 251) / 0.72) !important;
+  color: var(--matrices-ink) !important;
 }
 
 .matrices-panel,
