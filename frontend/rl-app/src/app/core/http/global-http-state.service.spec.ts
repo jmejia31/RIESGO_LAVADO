@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { GlobalHttpStateService } from './global-http-state.service';
+import { GlobalHttpStateService } from '../services/global-http-state.service';
 
 describe('GlobalHttpStateService', () => {
   it('mantiene el contador tecnico sin mostrar feedback global para refrescos silenciosos', () => {

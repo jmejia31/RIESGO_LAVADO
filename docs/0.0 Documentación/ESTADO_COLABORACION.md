@@ -4151,3 +4151,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El commit contiene solo los 16 archivos B02/documentales. Las modificaciones ajenas y untracked permanecen preservados fuera del commit.
 - `B02_STATUS=PARTIAL`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `FRONTEND_E2E=72_PASS_3_FAIL_15_SKIP`; la E2E focalizada de Monitoreo no pudo iniciar porque no había Angular escuchando en `127.0.0.1:4200`.
 - Pendientes: aceptación visual del propietario y E2E local con el servidor disponible. No se tocaron backend, Oracle, autenticación, P06, P07, main, producción, watcher ni cola Codex.
+
+## B02 - cierre quirúrgico de E2E y estructura - 2026-11-11
+
+- `BASE_SHA=febd077cb9d156c486157b11e3234fc871b01815`; rama `desarrollo`; remoto coincidente al inicio; modificaciones ajenas preservadas.
+- `B02_E2E_FAILED_CASES_IDENTIFIED=3`; `B02_E2E_FAILURES_RESOLVED=3`; mediante el runner canónico `npm run e2e` con Angular en `127.0.0.1:4201`: `B02_E2E_FINAL=3/3_PASS`.
+- Causa del intento manual previo: `127.0.0.1:4200` no correspondía al listener `::1` de un `ng serve -o` existente. El `SecurityError` de `localStorage` fue consecuencia del documento sin origen válido; con el runner canónico no se reprodujo.
+- `B02_MONITORING_E2E=PASS`; `B02_LOCALSTORAGE_SECURITY_ERROR=NOT_REPRODUCED_WITH_CANONICAL_RUNNER`; `B02_CRITICAL_OPERATION_FEEDBACK=PASS` por regresiones HTTP y suite Angular completa.
+- `B02_STRUCTURE_VALIDATOR=PASS` después de mover únicamente la spec nueva a `frontend/rl-app/src/app/core/http/`; no se movió el servicio ni se alteró la regla estructural.
+- `B02_FRONTEND_TESTS=969/969_PASS`; `B02_FRONTEND_BUILD=PASS`; `B02_FRONTEND_LINT=PASS`; `B02_SCREENSHOTS=12`; documentación/base de datos/UTF-8/skills PASS; `GIT_DIFF_CHECK_OWN_FILES=PASS` pendiente de repetición final tras el movimiento.
+- `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `GITHUB_ACTIONS_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Continuación exacta: revisar diff selectivo, publicar fast-forward y comprobar SHA local/remoto. B03 permanece sin iniciar.
