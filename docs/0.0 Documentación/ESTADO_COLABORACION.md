@@ -4097,3 +4097,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `SECONDARY_NAVIGATION_REGRESSION=PASS`; `FORM_BUILDER_REGRESSION=PASS`; `E2E_MODAL_SHELL=13/13_PASS`; `FRONTEND_TESTS=962/962_PASS`; `FRONTEND_LINT=PASS`; `FRONTEND_BUILD=PASS`.
 - `TEXT_ENCODING_VALIDATOR=PENDING_ENVIRONMENT`: Windows PowerShell no expone `System.IO.Path.GetRelativePath` y `pwsh` no esta disponible; no se altero el validador.
 - Sin cambios de backend, base de datos, Oracle, main, produccion, P06, P07 o watcher. `B01_STATUS=BLOCKED_UNTIL_GATE`; `B01_VISUAL_CERTIFICATION=PENDING_QUALITY_GATE`; `B02_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`. Continuacion: stage selectivo, publicar y consultar el Gate del SHA final.
+
+## B01 - correccion de codificacion detectada por Quality Gate - 2026-11-11
+
+- `BASE_SHA=dec1c60eb23835b8d60748ef3785ef432363e6a2`; Gate `43041081911` fallo exclusivamente por `MOJIBAKE_FINDINGS=1` en una cadena de la regresion de tema.
+- Correccion minima aplicada en `frontend/rl-app/src/app/core/configuration/system-theme.util.spec.ts`: cadena mojibake -> `selección`.
+- `B01_VALIDATORS=11/11_PASS`; `FRONTEND_TESTS=962/962_PASS`; `TARGET_MOJIBAKE=0`; `DIFF_CHECK=PASS`. El validador UTF-8 integral se deja a CI porque Windows PowerShell local no soporta `Path.GetRelativePath`.
+- `BACKEND_CHANGED=NO`; `ORACLE_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `B02_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Estado: `B01_STATUS=BLOCKED_UNTIL_GATE`; `B01_VISUAL_CERTIFICATION=PENDING_QUALITY_GATE`. Continuacion: commit/push minimo y verificar el Gate del nuevo SHA.
