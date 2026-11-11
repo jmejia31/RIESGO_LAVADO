@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router }      from '@angular/router';
-import { Observable, tap, catchError, EMPTY, throwError, finalize, shareReplay } from 'rxjs';
+import { Observable, tap, catchError, EMPTY, throwError, finalize, shareReplay, switchMap, timer } from 'rxjs';
 import { LoginRequest, LoginResponse, UsuarioInfo } from './auth.models';
 import { environment } from '../../../environments/environment';
 import { jwtDecode }   from 'jwt-decode';
@@ -17,6 +17,7 @@ export class AuthService {
   private readonly REFRESH_MARGIN_MS = 5 * 60 * 1000;
   private readonly MAX_REFRESH_TIMER_MS = 60 * 60 * 1000;
   private readonly REFRESH_RETRY_MS = 30 * 1000;
+  private readonly REFRESH_RACE_RETRY_MS = 250;
 
   // Inactividad y renovación son relojes independientes: renovar un JWT nunca cuenta como actividad humana.
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
@@ -48,6 +49,15 @@ export class AuthService {
         this.iniciarMonitoreoInactividad();
       } else {
         this.detenerMonitoreoInactividad();
+      }
+    });
+
+    // The system timeout can change while the session is active. Recalculate
+    // the timer instead of silently retaining the previous value.
+    effect(() => {
+      this.configService.configSistema()?.timeoutSesion;
+      if (this.monitoringActive && this.estaLogueado()) {
+        this.programarCierrePorInactividad();
       }
     });
   }
@@ -93,9 +103,7 @@ export class AuthService {
 
     const epoch = this.sessionEpoch;
 
-    const request$ = this.http.post<RefreshResponse>(
-      `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
-    ).pipe(
+    const request$ = this.ejecutarRefreshConRecuperacion().pipe(
       tap(res => {
         // Evita que una respuesta tardía restaure una sesión que el usuario ya cerró o reemplazó.
         if (res.success && epoch === this.sessionEpoch) {
@@ -169,6 +177,40 @@ export class AuthService {
       .find(item => item.startsWith('XSRF-TOKEN='))
       ?.split('=').slice(1).join('=');
     return token ? { 'X-XSRF-TOKEN': decodeURIComponent(token) } : {};
+  }
+
+  private ejecutarRefreshConRecuperacion(): Observable<RefreshResponse> {
+    return this.http.post<RefreshResponse>(
+      `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
+    ).pipe(
+      catchError((error: unknown) => {
+        if (!(error instanceof HttpErrorResponse)) return throwError(() => error);
+
+        // A refresh 400 can mean an expired or desynchronized antiforgery
+        // request token. Obtain a new pair and retry once; backend antiforgery
+        // validation remains enabled.
+        if (error.status === 400) {
+          return this.http.get(`${this.API}/antiforgery`, { withCredentials: true }).pipe(
+            switchMap(() => this.http.post<RefreshResponse>(
+              `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
+            ))
+          );
+        }
+
+        // Two tabs can rotate the same refresh token concurrently. The second
+        // request retries with the shared rotated cookie; a second failure is
+        // still treated as a definitive rejection.
+        if (error.status === 401) {
+          return timer(this.REFRESH_RACE_RETRY_MS).pipe(
+            switchMap(() => this.http.post<RefreshResponse>(
+              `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
+            ))
+          );
+        }
+
+        return throwError(() => error);
+      })
+    );
   }
 
   private obtenerUsuarioDeToken(token: string | null): UsuarioInfo | null {

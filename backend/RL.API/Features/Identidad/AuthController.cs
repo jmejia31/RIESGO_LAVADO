@@ -91,12 +91,24 @@ public class AuthController : ControllerBase
 
         if (response == null)
         {
-            ClearSessionCookies();
+            // Do not delete cookies from a rejected refresh response: another
+            // tab may have completed a valid rotation concurrently. The client
+            // clears local state after a definitive rejection, while logout
+            // still explicitly revokes and deletes the session.
             return Unauthorized(new { success = false, mensaje = "Refresh rejected" });
         }
         EmitAntiforgeryRequestCookie(response.RefreshTokenExpiresAt);
         EmitRefreshCookie(response);
         return NoStore(Ok(new { success = true, datos = PublicSession(response) }));
+    }
+
+    /// <summary>Issue an antiforgery request token for an existing session.</summary>
+    [HttpGet("antiforgery")]
+    [AllowAnonymous]
+    public IActionResult Antiforgery()
+    {
+        EmitAntiforgeryRequestCookie(DateTime.UtcNow.AddMinutes(10));
+        return NoStore(Ok(new { success = true }));
     }
 
     /// <summary>Cerrar sesión</summary>

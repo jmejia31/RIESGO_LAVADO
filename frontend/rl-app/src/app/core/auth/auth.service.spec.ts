@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { signal, WritableSignal } from '@angular/core';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
@@ -10,6 +11,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let http: HttpTestingController;
   let router: { navigate: ReturnType<typeof vi.fn> };
+  let configSistema: WritableSignal<{ timeoutSesion: number }>;
   const now = new Date('2026-08-24T16:00:00.000Z');
 
   beforeEach(() => {
@@ -17,12 +19,13 @@ describe('AuthService', () => {
     vi.setSystemTime(now);
     localStorage.clear();
     router = { navigate: vi.fn() };
+    configSistema = signal({ timeoutSesion: 30 });
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: Router, useValue: router },
-        { provide: ConfiguracionService, useValue: { configSistema: vi.fn(() => ({ timeoutSesion: 30 })) } }
+        { provide: ConfiguracionService, useValue: { configSistema } }
       ]
     });
     service = TestBed.inject(AuthService);
@@ -170,6 +173,13 @@ describe('AuthService', () => {
       { status: 401, statusText: 'Unauthorized' }
     );
 
+    vi.advanceTimersByTime(250);
+    const retry = http.expectOne('http://localhost:5043/api/auth/refresh');
+    retry.flush(
+      { success: false, mensaje: 'Refresh rechazado' },
+      { status: 401, statusText: 'Unauthorized' }
+    );
+
     expect(error).toHaveBeenCalledOnce();
     expect(service.estaLogueado()).toBe(false);
     expect(service.getAccessToken()).toBeNull();
@@ -185,6 +195,10 @@ describe('AuthService', () => {
     expect(request.request.body).toBeNull();
     expect(request.request.withCredentials).toBe(true);
     request.flush({ success: false, mensaje: 'Refresh rechazado' }, { status: 401, statusText: 'Unauthorized' });
+
+    vi.advanceTimersByTime(250);
+    const retry = http.expectOne('http://localhost:5043/api/auth/refresh');
+    retry.flush({ success: false, mensaje: 'Refresh rechazado' }, { status: 401, statusText: 'Unauthorized' });
 
     expect(error).toHaveBeenCalledOnce();
     expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
@@ -214,6 +228,59 @@ describe('AuthService', () => {
     expect(cambiar.request.method).toBe('PUT');
     expect(cambiar.request.body).toEqual({ passwordActual: 'Actual123!', nuevoPassword: 'Nueva123!' });
     cambiar.flush({ success: true, mensaje: 'Actualizada' });
+  });
+
+  it('recovers an antiforgery request token without logging out an active session', () => {
+    iniciarSesionActiva();
+    const error = vi.fn();
+
+    service.refreshToken().subscribe({ error });
+    const initial = http.expectOne('http://localhost:5043/api/auth/refresh');
+    initial.flush({ success: false }, { status: 400, statusText: 'Bad Request' });
+
+    const antiforgery = http.expectOne('http://localhost:5043/api/auth/antiforgery');
+    expect(antiforgery.request.withCredentials).toBe(true);
+    antiforgery.flush({ success: true });
+
+    const retry = http.expectOne('http://localhost:5043/api/auth/refresh');
+    retry.flush({ success: true, datos: crearLoginResponse('access-recuperado', 'refresh-recuperado') });
+
+    expect(error).not.toHaveBeenCalled();
+    expect(service.estaLogueado()).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
+  });
+
+  it('retries one concurrent rotation before logging out the session', () => {
+    iniciarSesionActiva();
+    const error = vi.fn();
+
+    service.refreshToken().subscribe({ error });
+    const initial = http.expectOne('http://localhost:5043/api/auth/refresh');
+    initial.flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
+
+    vi.advanceTimersByTime(250);
+    const retry = http.expectOne('http://localhost:5043/api/auth/refresh');
+    retry.flush({ success: true, datos: crearLoginResponse('access-otra-pestana', 'refresh-otra-pestana') });
+
+    expect(error).not.toHaveBeenCalled();
+    expect(service.estaLogueado()).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
+  });
+
+  it('applies a changed inactivity timeout without requiring another user event', () => {
+    iniciarSesionActiva();
+
+    vi.advanceTimersByTime(29 * 60 * 1000);
+    configSistema.set({ timeoutSesion: 50 });
+    TestBed.flushEffects();
+
+    vi.advanceTimersByTime(20 * 60 * 1000);
+    expect(router.navigate).not.toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
+
+    vi.advanceTimersByTime(1 * 60 * 1000);
+    const logout = http.expectOne('http://localhost:5043/api/auth/logout');
+    logout.flush({ success: true });
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
   });
 
   function iniciarSesionActiva(expiresAt = '2099-12-31T23:59:59Z') {

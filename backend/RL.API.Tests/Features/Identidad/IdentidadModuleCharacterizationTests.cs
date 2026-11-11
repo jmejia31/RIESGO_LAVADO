@@ -212,6 +212,39 @@ public sealed class IdentidadModuleCharacterizationTests
     }
 
     [Fact]
+    public void AuthController_Antiforgery_EmiteRequestTokenSinExponerSesion()
+    {
+        var antiforgery = new AntiforgeryFake();
+        var controller = CrearController(
+            new AuthServiceFake(),
+            new ActivoDirectorioServiceFake(),
+            antiforgery);
+
+        var result = controller.Antiforgery();
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Contains("success", JsonSerializer.Serialize(ok.Value), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(1, antiforgery.GetAndStoreTokensCalls);
+        Assert.Contains(
+            controller.Response.Headers.SetCookie.ToArray(),
+            value => value!.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AuthController_RefreshRechazado_NoBorraCookiesDeOtraRotacion()
+    {
+        var controller = CrearController(
+            new AuthServiceFake(),
+            new ActivoDirectorioServiceFake());
+        controller.HttpContext.Request.Headers.Cookie = "RL-RefreshToken=refresh-concurrente";
+
+        var result = await controller.Refresh();
+
+        Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.Empty(controller.Response.Headers.SetCookie.ToString());
+    }
+
+    [Fact]
     public async Task AuthService_RefreshValido_RevocaYRotaToken()
     {
         const string tokenAnterior = "refresh-token-anterior";

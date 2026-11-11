@@ -4105,3 +4105,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B01_VALIDATORS=11/11_PASS`; `FRONTEND_TESTS=962/962_PASS`; `TARGET_MOJIBAKE=0`; `DIFF_CHECK=PASS`. El validador UTF-8 integral se deja a CI porque Windows PowerShell local no soporta `Path.GetRelativePath`.
 - `BACKEND_CHANGED=NO`; `ORACLE_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `B02_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Estado: `B01_STATUS=BLOCKED_UNTIL_GATE`; `B01_VISUAL_CERTIFICATION=PENDING_QUALITY_GATE`. Continuacion: commit/push minimo y verificar el Gate del nuevo SHA.
+
+## Sesiones activas - correccion local 2026-11-11
+
+- `BASE_SHA=ede984d5577f4888524f9e7a347b1303d70b3f14`; rama `desarrollo`; remoto coincidente al inicio.
+- `SESSION_FIX=APPLIED`: refresh concurrente ya no elimina cookies de otra pestaña; se recupera una vez el antiforgery ante HTTP 400 y se permite una recuperacion acotada ante HTTP 401 de rotacion concurrente.
+- `INACTIVITY_TIMEOUT=CONFIGURABLE`: el cierre usa `timeoutSesion` y reprograma el temporizador cuando Configuracion del Sistema cambia, por ejemplo de 30 a 50 minutos.
+- `CSRF_CONTROL=PRESERVED`: refresh y logout mantienen `ValidateAntiForgeryToken`; el endpoint agregado solo emite el token de solicitud, sin exponer sesion, credenciales ni secretos.
+- `BACKEND_AUTH_TESTS=PASS`; `FRONTEND_TESTS=965/965_PASS`; `FRONTEND_LINT=PASS`; `ANGULAR_BUILD=PASS`; `DIFF_CHECK=PASS` para archivos propios. Build mantiene warnings de presupuesto/CommonJS preexistentes.
+- `GITHUB_ACTIONS_USED=NO`; GitHub se conserva como repositorio remoto. No se despacharon ni se usaron ejecuciones de Actions para certificar este cambio.
+- `ORACLE_TOUCHED=NO`; `CREDENTIALS_USED=NO`; `WATCHER_ENABLED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`.
+- Continuacion: publicar commit selectivo, verificar sincronizacion remota y reiniciar manualmente la API/frontend locales antes de validar una sesion activa real.
