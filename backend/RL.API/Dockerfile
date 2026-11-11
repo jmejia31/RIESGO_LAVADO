@@ -15,11 +15,21 @@ RUN dotnet publish backend/RL.API/RL.API.csproj \
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /app/logs /app/App_Data/Evidencias \
-    && chown -R app:app /app
+RUN set -eux; \
+    for attempt in 1 2 3; do \
+      if apt-get update \
+        && apt-get install -y --no-install-recommends curl \
+        && rm -rf /var/lib/apt/lists/*; then \
+        break; \
+      fi; \
+      if [ "$attempt" -eq 3 ]; then \
+        echo "apt dependency installation failed after 3 attempts" >&2; \
+        exit 1; \
+      fi; \
+      sleep $((attempt * 5)); \
+    done; \
+    mkdir -p /app/logs /app/App_Data/Evidencias; \
+    chown -R app:app /app
 COPY --from=publish --chown=app:app /app/publish ./
 ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_EnableDiagnostics=0

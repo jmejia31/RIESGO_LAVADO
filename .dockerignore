@@ -14,3 +14,8 @@
 docs
 database
 *.log
+
+# Never copy local or environment-specific application configuration into images.
+**/appsettings.json
+**/appsettings.*.json
+**/appsettings.*.local.json

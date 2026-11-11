@@ -55,7 +55,9 @@ Assert-Contains $nginx 'try_files \$uri \$uri/ /index\.html;' 'SPA debe conserva
 $compose = 'compose.yml'
 Assert-Contains $compose 'RL_ORACLE_CONNECTION_STRING:\?Defina RL_ORACLE_CONNECTION_STRING' 'compose debe exigir Oracle por variable externa'
 Assert-Contains $compose 'RL_JWT_SECRET:\?Defina RL_JWT_SECRET' 'compose debe exigir JWT por variable externa'
-Assert-NotContains $compose '(?im)^\s*ConnectionStrings__OracleDB:(?![ \t]*\$\{)' 'Oracle debe provenir de interpolacion de entorno y no de un valor literal'
+Assert-Contains $compose '(?im)^\s*Database__Profile:\s*PRODUCTION\s*$' 'compose debe fijar el perfil Oracle explicito'
+Assert-Contains $compose '(?im)^\s*ConnectionStrings__OracleDB_Production:\s*\$\{RL_ORACLE_CONNECTION_STRING' 'compose debe usar la clave de conexion del perfil PRODUCTION'
+Assert-NotContains $compose '(?im)^\s*ConnectionStrings__OracleDB:\s*' 'compose no debe usar la clave Oracle generica'
 Assert-NotContains $compose '(?im)^\s*Jwt__SecretKey:(?![ \t]*\$\{)' 'JWT secret debe provenir de interpolacion de entorno y no de un valor literal'
 
 $sonar = '.github/workflows/sonar-analysis.yml'

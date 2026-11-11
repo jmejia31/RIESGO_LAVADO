@@ -4116,3 +4116,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `GITHUB_ACTIONS_USED=NO`; GitHub se conserva como repositorio remoto. No se despacharon ni se usaron ejecuciones de Actions para certificar este cambio.
 - `ORACLE_TOUCHED=NO`; `CREDENTIALS_USED=NO`; `WATCHER_ENABLED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`.
 - Continuacion: publicar commit selectivo, verificar sincronizacion remota y reiniciar manualmente la API/frontend locales antes de validar una sesion activa real.
+
+## INFRA-DOCKER-001 - certificacion local 2026-11-11
+
+- `REFERENCE_SHA=804f92f525edeb5b7059faa9ae031fd65360147f`; `HEAD_LOCAL=HEAD remoto`; rama `desarrollo`; divergencia inicial `0 0`.
+- `ROOT_CAUSE=DNS externo de GitHub Actions durante apt-get`, segun la evidencia aportada. El build local de Docker resolvio repositorios y termino correctamente.
+- `DOCKERFILE_MODIFIED=YES`: apt tiene tres reintentos maximos y falla cerrado; se conserva `USER app` y el `HEALTHCHECK` sobre `/healthz`.
+- `DOCKER_CONTEXT_SECRET_PROTECTION=PASS`: `.dockerignore` excluye `appsettings*.json`; la imagen construida no contiene esos archivos.
+- `COMPOSE_PROFILE=PASS`: Compose usa `Database__Profile=PRODUCTION` y `ConnectionStrings__OracleDB_Production` desde variable externa requerida; no usa la clave generica obsoleta.
+- `LOCAL_DOCKER_BUILD=PASS`; `DOCKER_RUNTIME=PASS`; `/healthz=200`; estado del contenedor `healthy`; usuario final `app`; `GOV_02_GOV_03=PASS`; `DOTNET_RESTORE=PASS`; `DOTNET_BUILD_RELEASE=PASS`; `DATABASE_PROFILE_CONTRACT_TESTS=14/14_PASS`; `COMPOSE_CONFIG=PASS`; `DIFF_CHECK=PASS`.
+- La ejecucion runtime uso solo valores sinteticos locales y no conecto a Oracle. No se publicaron secretos ni logs sensibles.
+- `GITHUB_ACTIONS_EXECUTED_BY_CODEX=NO`; `GITHUB_ACTIONS_AUTOMATIC_TRIGGER=ENABLED`; la publicacion queda bloqueada por `REMOTE_PUBLICATION=BLOCKED_ACTIONS_COST_CONTROL` hasta deshabilitar triggers o recibir autorizacion expresa para modificar el workflow.
+- `AUTHENTICATION_MODIFIED=NO`; `ORACLE_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `B02_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Continuacion exacta: decidir con el propietario el control de workflows; si se deshabilita formalmente el trigger sin afectar workflows protegidos, revisar diff, commit selectivo y push. Mientras tanto la certificacion es local y el expediente no esta publicado.

@@ -7,7 +7,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_HTTP_PORTS: 8080
-      ConnectionStrings__OracleDB: ${RL_ORACLE_CONNECTION_STRING:?Defina RL_ORACLE_CONNECTION_STRING fuera del repositorio}
+      Database__Profile: PRODUCTION
+      ConnectionStrings__OracleDB_Production: ${RL_ORACLE_CONNECTION_STRING:?Defina RL_ORACLE_CONNECTION_STRING fuera del repositorio}
       Jwt__SecretKey: ${RL_JWT_SECRET:?Defina RL_JWT_SECRET fuera del repositorio}
       Jwt__Issuer: ${RL_JWT_ISSUER:-RIESGO_LAVADO}
       Jwt__Audience: ${RL_JWT_AUDIENCE:-RIESGO_LAVADO_CLIENT}
