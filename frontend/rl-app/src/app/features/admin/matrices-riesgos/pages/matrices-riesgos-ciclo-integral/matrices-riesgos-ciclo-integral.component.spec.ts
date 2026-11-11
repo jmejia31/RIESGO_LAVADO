@@ -57,16 +57,23 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
     expect(service.listarEvaluaciones).not.toHaveBeenCalled();
   });
 
-  it('carga evaluaciones solo al entrar a mitigacion y monitoreo', () => {
+  it('carga evaluaciones una sola vez para mitigacion y monitoreo', () => {
     component.seleccionarVista('mitigacion');
     expect(component.vista()).toBe('mitigacion');
     expect(component.evaluaciones()).toHaveLength(1);
 
     component.seleccionarVista('monitoreo');
     expect(component.vista()).toBe('monitoreo');
-    expect(service.listarEvaluaciones).toHaveBeenCalledTimes(2);
+    expect(service.listarEvaluaciones).toHaveBeenCalledOnce();
     expect(service.listarEvaluaciones).toHaveBeenNthCalledWith(1, { pagina: 1, registrosPorPagina: 200 });
-    expect(service.listarEvaluaciones).toHaveBeenNthCalledWith(2, { pagina: 1, registrosPorPagina: 200 });
+  });
+
+  it('no repite la consulta al reabrir una vista operativa ya cargada', () => {
+    component.seleccionarVista('mitigacion');
+    component.seleccionarVista('matriz');
+    component.seleccionarVista('monitoreo');
+
+    expect(service.listarEvaluaciones).toHaveBeenCalledOnce();
   });
 
   it('normaliza items no-array a arreglo vacio', () => {
@@ -76,10 +83,7 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
     expect(component.error()).toBeNull();
   });
 
-  it('limpia datos operativos obsoletos y conserva error.mensaje al fallar', () => {
-    component.seleccionarVista('mitigacion');
-    expect(component.evaluaciones()).toHaveLength(1);
-
+  it('limpia datos operativos y conserva error.mensaje al fallar la primera carga', () => {
     service.listarEvaluaciones.mockReturnValue(throwError(() => ({ error: { mensaje: 'Consulta fallida' } })));
     component.seleccionarVista('monitoreo');
 

@@ -65,6 +65,31 @@ npm run e2e:install
 
 El ejecutor `scripts/run-e2e.mjs` inicia Angular en `127.0.0.1:4200`, espera que responda, ejecuta Playwright y termina exclusivamente el servidor creado por la prueba.
 
+## Politica vigente de certificacion - 2026-11-11
+
+A partir del 11 de noviembre de 2026, por decision expresa del propietario,
+GitHub Actions queda reincorporado al proceso de certificacion institucional.
+
+```ini
+QUALITY_POLICY=HYBRID_LOCAL_AND_CI
+GITHUB_ACTIONS_POLICY=ENABLED_BY_OWNER
+GITHUB_ACTIONS_REQUIRED=YES
+LOCAL_TESTS_REQUIRED=YES
+REMOTE_CI_TESTS_REQUIRED=YES
+OWNER_VISUAL_ACCEPTANCE_REQUIRED=YES
+```
+
+Los registros historicos que indiquen certificacion exclusivamente local se
+conservan como hechos de su fecha. Desde esta fecha, cada cambio funcional debe
+contar con validacion local y con el Quality Gate de GitHub correspondiente al
+mismo SHA publicado. Un resultado local no se presenta como CI PASS. Los fallos
+de CI se clasifican como funcionales, de infraestructura, dependencia externa,
+omitidos con razon o pendientes, sin ocultarlos ni debilitar validaciones.
+
+La reactivacion de Actions no autoriza acceso a Oracle institucional, secretos,
+credenciales ni operaciones destructivas. El watcher permanece deshabilitado y
+`BLOCK10_AUTHORIZED=NO`.
+
 ## Siguiente incremento recomendado
 
 - Ejecutar la puerta integral sobre `desarrollo` después de cada cambio funcional y antes de solicitar integración a `main`.

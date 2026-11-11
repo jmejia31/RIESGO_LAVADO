@@ -45,10 +45,23 @@ acompanados del error cuando la consulta nueva falla.
 No se modificaron autenticacion, refresh tokens, antiforgery, logout, timeout,
 autorizacion, backend, Oracle, migraciones, auditoria, P06, P07, main,
 produccion ni watcher. Los errores HTTP y los mensajes de confirmacion se
-conservan. GitHub Actions no se usa como verificador de esta fase.
+conservan. El cierre historico previo se certifico localmente sin GitHub
+Actions; la politica vigente se registra al final de este documento.
 
 ## Evidencia local
 
 La evidencia debe registrar conteos reales de la ejecucion final. Las pruebas
 heredadas de B01 se mantienen como referencia y no se presentan como una nueva
 ejecucion. La aceptacion del propietario de B01 queda registrada en Issue #34.
+
+## B02 - optimizacion de consultas y actualizaciones silenciosas - 2026-11-11
+
+- `BASE_SHA=d034b4e9bcc2e4085cd72a3cc8a83e8df5476c28`; el diagnostico se realizo sobre el codigo publicado y sin modificar backend, Oracle ni migraciones.
+- Causas confirmadas por inspeccion: el overlay `Cargando informacion...` estaba ligado a `cargando()` sobre la tabla; `seleccionarTab` recargaba consolidado y plantillas sin comparar contexto; `seleccionarVista` recargaba la misma lista operativa al alternar entre Mitigacion y Monitoreo.
+- Correccion frontend minima: se retiro exclusivamente el overlay invasivo; Monitoreo deduplica por tipo, pagina, tamano, busqueda, estado y fechas, conserva `switchMap` y permite `force` para refrescos posteriores a mutaciones; Consolidado y Familias reutilizan el resultado valido por clave de contexto sin reiniciar pagina; Mitigacion y Monitoreo operativo comparten una sola carga vigente.
+- El backend ya contiene `ObtenerMonitoreoPaginadoCacheadoAsync`, claves de pagina/contexto, metricas `MonitoringPage` y el fast-path de primera pagina. No se cambio ese codigo porque no existe evidencia local suficiente para justificar una nueva optimizacion SQL o de cache.
+- Evidencia de solicitudes: regresiones focalizadas demuestran una consulta por contexto vigente y una consulta adicional cuando se fuerza refresh; la suite focalizada reporto `66/66 PASS`. No se inventaron milisegundos: no hubo API/Oracle QA disponible para una comparacion de latencia cold/warm, por lo que `PERFORMANCE_BASELINE=PARTIAL` y `PERFORMANCE_AFTER=PARTIAL`.
+- Verificaciones frescas: suite Angular `92 archivos / 972 tests PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes de presupuesto/CommonJS; E2E canonico de Monitoreo `1/1 PASS` en `29.4s`, con cinco capturas locales no versionadas; `DATA_LOADING_OVERLAY_VISIBLE=NO` por inspeccion de plantilla y regresion E2E de layout.
+- No se modifico codigo backend ni se accedio a Oracle institucional. La puerta local intento la suite backend y quedo `BLOCKED_EXTERNAL_DEPENDENCY`: `1099 PASS`, `2 SKIP`, `8` errores de integracion porque el contexto local no tiene `Database:Profile=LOCAL_XE`; no se cambio la configuracion para ocultarlo. No se ejecutaron pruebas autenticadas.
+- No se modificaron autenticacion, sesiones, auditoria, formulas, P06, P07, main, produccion, watcher ni cola Codex. `GITHUB_ACTIONS_ENABLED=TRUE` fue confirmado tras la autorizacion del propietario.
+- Estado: `B02_TECHNICAL_STATUS=PASS`; `B02_GLOBAL_PERFORMANCE_REVIEW=PARTIAL` por ausencia de medicion real de latencia contra API/Oracle; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B02_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; B03 permanece sin iniciar.

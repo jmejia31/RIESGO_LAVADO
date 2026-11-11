@@ -4167,5 +4167,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - `FINAL_SHA=e8c1008fc3bf028f78fc6011d0e724db0ada70a7`; `HEAD_LOCAL=HEAD_REMOTE=REMOTE_HEAD`; `DIVERGENCE=0_0`; `REMOTE_SYNC=YES`.
 - `GIT_DIFF_CHECK=PASS`; hooks institucionales PASS; lectura remota de la spec y del estado colaborativo PASS.
+
+## B02 - optimizacion y politica de certificacion hibrida - 2026-11-11
+
+- `BASE_SHA=d034b4e9bcc2e4085cd72a3cc8a83e8df5476c28`; trabajo directo en `C:\RIESGO_LAVADO`, rama `desarrollo`, sin clon ni worktree alterno.
+- `B02_PERFORMANCE_FIX=APPLIED`: se retiro el overlay invasivo de Monitoreo; se agrego deduplicacion por contexto completo; se conservaron `switchMap`, paginacion, filtros, control de respuestas obsoletas y recarga explicita tras mutaciones; se reutilizaron datos validos en Consolidado, Plantillas, Mitigacion y Monitoreo operativo.
+- `BACKEND_CACHE_ANALYSIS=COMPLETE_NO_CHANGE`: el cache y fast-path existentes fueron inspeccionados y no requieren cambio demostrado dentro del alcance local.
+- `FOCUSED_REGRESSIONS=66/66_PASS`; `FRONTEND_TESTS=972/972_PASS`; `FRONTEND_LINT=PASS`; `ANGULAR_BUILD=PASS`; `MONITORING_LAYOUT_E2E=1/1_PASS`; `GITHUB_ACTIONS_ENABLED=TRUE`; `GITHUB_ACTIONS_EXECUTED=NO` hasta publicar este SHA.
+- `PERFORMANCE_BASELINE=PARTIAL` y `PERFORMANCE_AFTER=PARTIAL`: se midieron conteos reales de solicitudes en regresiones, pero no latencias comparables de API/Oracle. No se presenta mejora temporal inventada.
+- Nueva politica vigente: `QUALITY_POLICY=HYBRID_LOCAL_AND_CI`; `GITHUB_ACTIONS_POLICY=ENABLED_BY_OWNER`; `GITHUB_ACTIONS_REQUIRED=YES`; `LOCAL_TESTS_REQUIRED=YES`; `REMOTE_CI_TESTS_REQUIRED=YES`; `OWNER_VISUAL_ACCEPTANCE_REQUIRED=YES`.
+- `ORACLE_TOUCHED=NO`; `DATABASE_SCHEMA_CHANGED=NO`; `MIGRATIONS_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Estado: `B02_TECHNICAL_STATUS=PASS`; `B02_GLOBAL_PERFORMANCE_REVIEW=PARTIAL`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B02_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; B03 no iniciado.
+- `LOCAL_QUALITY_GATE=BLOCKED_EXTERNAL_DEPENDENCY`: suite backend `1099 PASS`, `2 SKIP`, `8` errores Oracle porque el contexto local no tiene `Database:Profile=LOCAL_XE`; no se modifico Oracle, configuracion institucional ni codigo backend. El Quality Gate remoto queda pendiente sobre el SHA publicado.
 - `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `GITHUB_ACTIONS_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`.
 - B03 no iniciado. El worktree conserva únicamente las modificaciones ajenas y archivos untracked preexistentes listados al inicio.

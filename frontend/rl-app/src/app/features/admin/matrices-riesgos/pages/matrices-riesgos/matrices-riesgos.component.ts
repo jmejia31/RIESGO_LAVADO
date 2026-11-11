@@ -102,6 +102,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private secuenciaCargaEvaluaciones = 0;
   private secuenciaCargaFamilias = 0;
   private secuenciaCargaConsolidado = 0;
+  private familiasContextoCargado: string | null = null;
+  private familiasContextoEnCarga: string | null = null;
+  private consolidadoContextoCargado: string | null = null;
+  private consolidadoContextoEnCarga: string | null = null;
 
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMINISTRADOR']));
 
@@ -485,14 +489,22 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   seleccionarTab(tab: TabMatrices): void {
+    const tabAnterior = this.tab();
     this.tab.set(tab);
     this.limpiarAlertas();
     this.globalState.limpiarError();
 
-    if (tab === 'consolidado') this.cargarConsolidado();
+    if (tab === 'consolidado') {
+      const contexto = this.contextoConsolidadoActual();
+      if (tabAnterior !== tab && this.consolidadoContextoCargado !== contexto && this.consolidadoContextoEnCarga !== contexto) {
+        this.cargarConsolidado();
+      }
+    }
     if (tab === 'plantillas') {
-      this.paginaFamilias.set(1);
-      this.cargarFamilias();
+      const contexto = this.contextoFamiliasActual();
+      if (tabAnterior !== tab && this.familiasContextoCargado !== contexto && this.familiasContextoEnCarga !== contexto) {
+        this.cargarFamilias();
+      }
     }
   }
 
@@ -534,7 +546,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarFamilias(): void {
+    const contexto = this.contextoFamiliasActual();
+    if (this.familiasContextoEnCarga === contexto) return;
     const solicitudId = ++this.secuenciaCargaFamilias;
+    this.familiasContextoEnCarga = contexto;
     this.cargandoFamilias.set(true);
     this.errorFamilias.set(null);
     this.service.listarFamiliasFormularioPaginadas({
@@ -567,6 +582,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           this.familiaSeleccionada.set('');
         }
         this.cargandoFamilias.set(false);
+        this.familiasContextoEnCarga = null;
+        this.familiasContextoCargado = contexto;
       },
       error: error => {
         if (solicitudId !== this.secuenciaCargaFamilias) return;
@@ -577,6 +594,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         }
         this.errorFamilias.set(this.obtenerMensajeError(error, 'No se pudieron cargar las familias de formularios.'));
         this.cargandoFamilias.set(false);
+        this.familiasContextoEnCarga = null;
       }
     });
   }
@@ -1377,7 +1395,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarConsolidado(): void {
+    const contexto = this.contextoConsolidadoActual();
+    if (this.consolidadoContextoEnCarga === contexto) return;
     const solicitudId = ++this.secuenciaCargaConsolidado;
+    this.consolidadoContextoEnCarga = contexto;
     this.cargandoConsolidado.set(true);
     this.errorConsolidado.set(null);
     const filtro = this.filtroReporteConsolidado();
@@ -1400,12 +1421,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           this.registrosPorPaginaConsolidado.set(tamanoPagina);
         }
         this.cargandoConsolidado.set(false);
+        this.consolidadoContextoEnCarga = null;
+        this.consolidadoContextoCargado = contexto;
       },
       error: error => {
         if (solicitudId !== this.secuenciaCargaConsolidado) return;
         const msg = this.obtenerMensajeError(error, 'No se pudo cargar la matriz consolidada.');
         this.errorConsolidado.set(msg);
         this.cargandoConsolidado.set(false);
+        this.consolidadoContextoEnCarga = null;
       }
     });
   }
@@ -1893,6 +1917,21 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       ordenarPor: this.ordenConsolidado(),
       orden: this.direccionConsolidado()
     };
+  }
+
+  private contextoConsolidadoActual(): string {
+    return JSON.stringify(this.filtroReporteConsolidado());
+  }
+
+  private contextoFamiliasActual(): string {
+    return JSON.stringify({
+      pagina: this.paginaFamilias(),
+      tamanoPagina: this.registrosPorPaginaFamilias(),
+      buscar: this.filtroBuscarFamilia(),
+      estado: this.filtroEstadoFamilia(),
+      archivado: this.filtroArchivadoFamilia(),
+      vigencia: this.filtroVigenciaFamilia()
+    });
   }
 
   cerrarModalNuevaEvaluacion(): void {

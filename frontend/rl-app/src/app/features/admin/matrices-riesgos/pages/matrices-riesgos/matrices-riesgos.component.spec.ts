@@ -479,6 +479,21 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(service.obtenerConsolidadoPaginado).toHaveBeenCalled();
   });
 
+  it('no repite consolidado ni familias al reabrir pestañas con el mismo contexto', () => {
+    service.obtenerConsolidadoPaginado.mockClear();
+    service.listarFamiliasFormularioPaginadas.mockClear();
+
+    component.seleccionarTab('consolidado');
+    component.seleccionarTab('evaluaciones');
+    component.seleccionarTab('consolidado');
+    component.seleccionarTab('plantillas');
+    component.seleccionarTab('evaluaciones');
+    component.seleccionarTab('plantillas');
+
+    expect(service.obtenerConsolidadoPaginado).toHaveBeenCalledOnce();
+    expect(service.listarFamiliasFormularioPaginadas).not.toHaveBeenCalled();
+  });
+
   it('edita una evaluacion existente en modal, transiciona su estado y recarga sus flujos', () => {
     const resumen: EvaluacionRiesgoResumenDto = {
       evaId: 20,

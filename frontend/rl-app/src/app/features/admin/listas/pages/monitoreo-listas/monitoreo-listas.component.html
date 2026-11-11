@@ -135,12 +135,6 @@
     <!-- Tabla -->
     <div class="relative overflow-x-auto rounded-xl border border-gray-200">
 
-      @if (cargando()) {
-        <div class="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center bg-white/70 py-3" role="status" aria-live="polite">
-          <p class="text-sm font-medium text-gray-500">Cargando información...</p>
-        </div>
-      }
-
         @if (datosFiltrados().length === 0) {
           <!-- Vacío -->
           <div class="py-20 flex flex-col items-center justify-center gap-2">

@@ -10743,4 +10743,17 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Commit de corrección publicado: `e8c1008fc3bf028f78fc6011d0e724db0ada70a7`; traslado de la spec B02 a `core/http`, documentación y estado colaborativo incluidos selectivamente.
 - Verificación final: `git diff --cached --check=PASS`; hooks institucionales `Agent Skills validation=PASS`; lectura remota de spec y estado `PASS`.
 - Paridad: `HEAD_LOCAL=e8c1008fc3bf028f78fc6011d0e724db0ada70a7`; `HEAD_REMOTE` y `git ls-remote` iguales; `DIVERGENCE=0_0`; `REMOTE_SYNC=YES`.
+
+## 2026-11-11 14:08:44 -06:00 - B02 optimizacion y politica hibrida (COD)
+
+- Inicio verificado en `C:\RIESGO_LAVADO`: rama `desarrollo`, `HEAD=d034b4e9bcc2e4085cd72a3cc8a83e8df5476c28`, `origin/desarrollo` coincidente y divergencia `0 0`. Se preservaron modificaciones tracked y untracked ajenas.
+- Defectos confirmados: overlay invasivo sobre la tabla de Monitoreo; solicitudes repetidas por contexto identico; recarga de Consolidado/Plantillas al volver a la pestana; recarga duplicada de la lista operativa entre Mitigacion y Monitoreo. El cache y fast-path existentes de ListasRepository fueron inspeccionados; no se modifico backend.
+- Archivos propios de esta intervencion: templates/implementacion/spec de Monitoreo de Listas; implementacion/spec de Matrices y ciclo integral; `docs/0.0 Documentacion/B02_ACTUALIZACIONES_SILENCIOSAS.md`; `docs/0.0 Documentacion/QUALITY.md`; este registro; y el estado colaborativo. No se incluyeron cambios ajenos.
+- Regresiones frescas: focalizadas `3 archivos / 66 tests PASS`; suite Angular `92 archivos / 972 tests PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes; E2E canonico `monitoreo-listas-motivo-layout.spec.ts` `1/1 PASS` en `29.4s`. El E2E produjo cinco capturas locales no versionadas.
+- Mediciones: conteos reales de solicitudes muestran `1` por contexto vigente y `2` con recarga explicita; no se reportan tiempos cold/warm de API/Oracle por falta de QA disponible. `PERFORMANCE_BASELINE=PARTIAL`; `PERFORMANCE_AFTER=PARTIAL`; no se inventaron milisegundos.
+- Politica actualizada por instruccion del propietario: `QUALITY_POLICY=HYBRID_LOCAL_AND_CI`, `GITHUB_ACTIONS_POLICY=ENABLED_BY_OWNER`, `GITHUB_ACTIONS_REQUIRED=YES`; Actions se verifico habilitado y no se modificaron workflows.
+- Limites: `ORACLE_TOUCHED=NO`; `DATABASE_SCHEMA_CHANGED=NO`; `BACKEND_CHANGED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`; `B03_STARTED=NO`.
+- Estado: `B02_TECHNICAL_STATUS=PASS`; `B02_GLOBAL_PERFORMANCE_REVIEW=PARTIAL`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B02_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`. Punto de continuacion: stage selectivo, hooks, commit/push y verificar el Quality Gate del SHA publicado.
+
+- Resultado adicional de la puerta local: `LOCAL_QUALITY_GATE=BLOCKED_EXTERNAL_DEPENDENCY`; backend `1099 PASS`, `2 SKIP`, `8` errores de integracion por ausencia de `Database:Profile=LOCAL_XE`. No se toco Oracle ni se altero el perfil institucional; el bloqueo se conserva para el CI autorizado.
 - `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; no se ejecutaron GitHub Actions ni se tocaron backend, Oracle, autenticación, P06, P07, main, producción, watcher o cola.

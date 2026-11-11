@@ -108,7 +108,7 @@ describe('MonitoreoListasComponent', () => {
     expect(component.naturalesRaw()).toEqual(naturales);
   });
 
-  it('recarga únicamente la página solicitada al volver a la misma categoría', () => {
+  it('no repite la misma consulta al volver a la categoría con el mismo contexto', () => {
     const naturales = [{ numeroIdentificacion: '0801', nombre: 'Ana' }];
     service['getNaturalesPaginadas'].mockReturnValue(of({ items: naturales, pagina: 1, tamanoPagina: 10, totalRegistros: naturales.length, totalPaginas: 1, totales: { totalRegistros: naturales.length, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } }));
 
@@ -116,9 +116,17 @@ describe('MonitoreoListasComponent', () => {
     component.busqueda.set('ana');
     component.cambiarTipo('natural');
 
-    expect(service['getNaturalesPaginadas']).toHaveBeenCalledTimes(2);
+    expect(service['getNaturalesPaginadas']).toHaveBeenCalledOnce();
     expect(component.naturalesRaw()).toEqual(naturales);
     expect(component.busqueda()).toBe('');
+    expect(component.cargando()).toBe(false);
+  });
+
+  it('permite una recarga explícita después de una mutación', () => {
+    component.cargarDatos();
+    component.cargarDatos({ force: true, mostrarLoader: false });
+
+    expect(service['getJuridicasPaginadas']).toHaveBeenCalledTimes(2);
     expect(component.cargando()).toBe(false);
   });
 

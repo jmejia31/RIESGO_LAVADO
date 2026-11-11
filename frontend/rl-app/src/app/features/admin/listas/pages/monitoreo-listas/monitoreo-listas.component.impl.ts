@@ -24,10 +24,12 @@ type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | Coincidenc
 type SolicitudMonitoreo = {
   tipo: FiltroTipo;
   consulta: ConsultaMonitoreoPaginada;
+  contexto: string;
 };
 
 type RespuestaMonitoreo = {
   tipo: FiltroTipo;
+  contexto: string;
   respuesta: { items: MonitoreoRegistro[]; pagina: number; totalPaginas: number; totalRegistros: number; totales: MonitoreoTotales };
 };
 
@@ -46,6 +48,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   private readonly solicitudesMonitoreo$ = new Subject<SolicitudMonitoreo>();
   private monitoreoSubscription: Subscription | null = null;
   private busquedaTimer: ReturnType<typeof setTimeout> | null = null;
+  private contextoMonitoreoCargado: string | null = null;
+  private contextoMonitoreoEnCarga: string | null = null;
   readonly maxTextoTextarea = 1000;
 
   tipoActivo = signal<FiltroTipo>('juridica');
@@ -281,22 +285,29 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   cargarDatos(options: { tipo?: FiltroTipo; force?: boolean; mostrarLoader?: boolean } = {}) {
     this.iniciarPipelineMonitoreo();
     const tipo = options.tipo ?? this.tipoActivo();
+    const forzar = options.force ?? false;
     const mostrarLoader = options.mostrarLoader ?? true;
+    const consulta = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null };
+    const contexto = JSON.stringify([tipo, consulta]);
+    if (!forzar && (contexto === this.contextoMonitoreoCargado || contexto === this.contextoMonitoreoEnCarga)) return;
 
     if (mostrarLoader && tipo === this.tipoActivo()) {
       this.cargando.set(true);
     }
-    const consulta = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null };
-    this.solicitudesMonitoreo$.next({ tipo, consulta });
+    this.contextoMonitoreoEnCarga = contexto;
+    this.solicitudesMonitoreo$.next({ tipo, consulta, contexto });
   }
 
   private iniciarPipelineMonitoreo(): void {
     if (this.monitoreoSubscription) return;
 
     this.monitoreoSubscription = this.solicitudesMonitoreo$.pipe(
-      switchMap(({ tipo, consulta }) => this.consultarMonitoreo(tipo, consulta).pipe(
-        map(respuesta => ({ tipo, respuesta } as RespuestaMonitoreo)),
+      switchMap(({ tipo, consulta, contexto }) => this.consultarMonitoreo(tipo, consulta).pipe(
+        map(respuesta => ({ tipo, contexto, respuesta } as RespuestaMonitoreo)),
         catchError(() => {
+          if (tipo === this.tipoActivo() && this.contextoMonitoreoEnCarga === JSON.stringify([tipo, consulta])) {
+            this.contextoMonitoreoEnCarga = null;
+          }
           if (tipo === this.tipoActivo()) {
             if (tipo === 'juridica') {
               this.juridicasRaw.set([]);
@@ -316,7 +327,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           return EMPTY;
         })
       ))
-    ).subscribe(({ tipo, respuesta }) => {
+    ).subscribe(({ tipo, contexto, respuesta }) => {
       if (tipo !== this.tipoActivo()) return;
       if (tipo === 'juridica') {
         this.juridicasRaw.set(respuesta.items as CoincidenciaJuridica[]);
@@ -331,6 +342,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         this.empleadosTotales.set(respuesta.totales);
         this.empleadosPaginas.set(respuesta.totalPaginas);
       }
+      this.contextoMonitoreoEnCarga = null;
+      this.contextoMonitoreoCargado = contexto;
       this.paginaActual.set(respuesta.pagina);
       this.cargando.set(false);
     });
@@ -2216,7 +2229,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                   icon: 'success',
                   confirmButtonColor: 'var(--ihss-primary-color)'
                 });
-                this.cargarDatos();
+                this.cargarDatos({ force: true, mostrarLoader: false });
               },
               error: (errSeg) => {
                 this.guardandoMotivo.set(false);
@@ -2228,7 +2241,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                   icon: 'warning',
                   confirmButtonColor: 'var(--ihss-primary-color)'
                 });
-                this.cargarDatos();
+                this.cargarDatos({ force: true, mostrarLoader: false });
               }
             });
           } else {
@@ -2241,7 +2254,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
               icon: 'success',
               confirmButtonColor: 'var(--ihss-primary-color)'
             });
-            this.cargarDatos();
+            this.cargarDatos({ force: true, mostrarLoader: false });
           }
         },
         error: (err) => {

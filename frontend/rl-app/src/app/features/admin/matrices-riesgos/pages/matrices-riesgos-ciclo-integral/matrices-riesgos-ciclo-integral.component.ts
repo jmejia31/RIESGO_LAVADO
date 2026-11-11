@@ -30,6 +30,8 @@ export class MatricesRiesgosCicloIntegralComponent {
   readonly vista = signal<VistaCiclo>('matriz');
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
   readonly error = signal<string | null>(null);
+  private evaluacionesOperativasCargadas = false;
+  private evaluacionesOperativasEnCarga = false;
 
   seleccionarVista(vista: VistaCiclo): void {
     this.vista.set(vista);
@@ -38,12 +40,13 @@ export class MatricesRiesgosCicloIntegralComponent {
     // F3: la vista Matriz ya realiza su propia consulta paginada. La carga masiva
     // de 200 registros queda reservada exclusivamente para las vistas operativas
     // que consumen este arreglo como input, evitando la doble petición inicial.
-    if (vista === 'mitigacion' || vista === 'monitoreo') {
+    if ((vista === 'mitigacion' || vista === 'monitoreo') && !this.evaluacionesOperativasCargadas && !this.evaluacionesOperativasEnCarga) {
       this.cargarEvaluacionesOperativas();
     }
   }
 
   private cargarEvaluacionesOperativas(): void {
+    this.evaluacionesOperativasEnCarga = true;
     this.service.listarEvaluaciones({ pagina: 1, registrosPorPagina: 200 }).subscribe({
       next: paginado => {
         const items = Array.isArray(paginado?.items) ? paginado.items : [];
@@ -53,11 +56,14 @@ export class MatricesRiesgosCicloIntegralComponent {
           estado: normalizarMojibakeVisibleUtf8(item.estado)
         })));
         this.error.set(null);
+        this.evaluacionesOperativasCargadas = true;
+        this.evaluacionesOperativasEnCarga = false;
       },
       error: error => {
         this.evaluaciones.set([]);
         const respuesta = error as { error?: { mensaje?: string }; message?: string };
         this.error.set(respuesta?.error?.mensaje || respuesta?.message || 'No se pudieron cargar las evaluaciones operativas.');
+        this.evaluacionesOperativasEnCarga = false;
       }
     });
   }
