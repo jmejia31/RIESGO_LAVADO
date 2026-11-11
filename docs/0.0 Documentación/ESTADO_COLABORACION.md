@@ -4162,3 +4162,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B02_FRONTEND_TESTS=969/969_PASS`; `B02_FRONTEND_BUILD=PASS`; `B02_FRONTEND_LINT=PASS`; `B02_SCREENSHOTS=12`; documentación/base de datos/UTF-8/skills PASS; `GIT_DIFF_CHECK_OWN_FILES=PASS` pendiente de repetición final tras el movimiento.
 - `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `GITHUB_ACTIONS_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Continuación exacta: revisar diff selectivo, publicar fast-forward y comprobar SHA local/remoto. B03 permanece sin iniciar.
+
+## B02 - verificación final de publicación - 2026-11-11
+
+- `FINAL_SHA=e8c1008fc3bf028f78fc6011d0e724db0ada70a7`; `HEAD_LOCAL=HEAD_REMOTE=REMOTE_HEAD`; `DIVERGENCE=0_0`; `REMOTE_SYNC=YES`.
+- `GIT_DIFF_CHECK=PASS`; hooks institucionales PASS; lectura remota de la spec y del estado colaborativo PASS.
+- `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `GITHUB_ACTIONS_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`.
+- B03 no iniciado. El worktree conserva únicamente las modificaciones ajenas y archivos untracked preexistentes listados al inicio.

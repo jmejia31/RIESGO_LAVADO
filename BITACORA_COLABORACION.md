@@ -10737,3 +10737,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificaciones frescas: suite Angular `92/92 archivos, 969/969 tests PASS`; lint PASS; build PASS con warnings preexistentes; documentación PASS; base de datos PASS; UTF-8 PASS (`MOJIBAKE_FINDINGS=0`); skills PASS; capturas reales `12` (7 Matrices/B01 y 5 Monitoreo); E2E B02 focal `3/3 PASS`; `git diff --check` propio pendiente de cierre antes del commit.
 - No se modificaron backend, Oracle, migraciones, autenticación, P06, P07, main, producción, watcher, cola ni workflows. `GITHUB_ACTIONS_ENABLED=FALSE`; `GITHUB_ACTIONS_EXECUTED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Estado técnico: `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`. Punto de continuación: revisar stage selectivo, commit/push y verificar paridad remota. No iniciar B03.
+
+## 2026-11-11 - B02 verificación final de publicación (COD)
+
+- Commit de corrección publicado: `e8c1008fc3bf028f78fc6011d0e724db0ada70a7`; traslado de la spec B02 a `core/http`, documentación y estado colaborativo incluidos selectivamente.
+- Verificación final: `git diff --cached --check=PASS`; hooks institucionales `Agent Skills validation=PASS`; lectura remota de spec y estado `PASS`.
+- Paridad: `HEAD_LOCAL=e8c1008fc3bf028f78fc6011d0e724db0ada70a7`; `HEAD_REMOTE` y `git ls-remote` iguales; `DIVERGENCE=0_0`; `REMOTE_SYNC=YES`.
+- `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; no se ejecutaron GitHub Actions ni se tocaron backend, Oracle, autenticación, P06, P07, main, producción, watcher o cola.
