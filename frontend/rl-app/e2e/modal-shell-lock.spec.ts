@@ -589,25 +589,63 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   const editorTab = dialogo.locator('#tab-editor-visual');
   const previewTab = dialogo.locator('#tab-vista-preview');
   await expect(editorTab).toHaveAttribute('aria-current', 'page');
-  await expect(editorTab).toHaveClass(/border-ihss-600/);
+  await expect(editorTab).toHaveClass(/institutional-selection__item/);
+  await expect(editorTab).toHaveAttribute('aria-selected', 'true');
+  await expect(previewTab).toHaveClass(/institutional-selection__item/);
+  await expect(previewTab).toHaveAttribute('aria-selected', 'false');
   await expect(previewTab).not.toHaveAttribute('aria-current', 'page');
   const canvasTab = dialogo.locator('#tab-vista-secciones');
   const catalogsTab = dialogo.locator('#tab-vista-catalogos');
-  await expect(canvasTab).toHaveClass(/bg-white/);
-  await expect(catalogsTab).not.toHaveClass(/bg-white/);
+  await expect(canvasTab).toHaveClass(/institutional-selection__item/);
+  await expect(catalogsTab).toHaveClass(/institutional-selection__item/);
+  await expect(canvasTab).toHaveAttribute('aria-selected', 'true');
+  await expect(catalogsTab).toHaveAttribute('aria-selected', 'false');
+  const canvasStyles = await canvasTab.evaluate(element => {
+    const styles = getComputedStyle(element);
+    return { background: styles.backgroundColor, color: styles.color };
+  });
+  const catalogsStyles = await catalogsTab.evaluate(element => {
+    const styles = getComputedStyle(element);
+    return { background: styles.backgroundColor, color: styles.color };
+  });
+  expect(canvasStyles.background).not.toBe(catalogsStyles.background);
+  expect(canvasStyles.color).not.toBe(catalogsStyles.color);
+  await canvasTab.focus();
+  await page.keyboard.press('Tab');
+  await expect(catalogsTab).toBeFocused();
+  const focusStyles = await catalogsTab.evaluate(element => {
+    const styles = getComputedStyle(element);
+    return {
+      visible: element.matches(':focus-visible'),
+      outlineStyle: styles.outlineStyle,
+      outlineWidth: styles.outlineWidth,
+    };
+  });
+  expect(focusStyles.visible).toBe(true);
+  expect(focusStyles.outlineStyle).not.toBe('none');
+  expect(focusStyles.outlineWidth).not.toBe('0px');
   await catalogsTab.click();
-  await expect(catalogsTab).toHaveClass(/bg-white/);
-  await expect(canvasTab).not.toHaveClass(/bg-white/);
+  await expect(catalogsTab).toHaveAttribute('aria-selected', 'true');
+  await expect(canvasTab).toHaveAttribute('aria-selected', 'false');
+  const catalogsActiveStyles = await catalogsTab.evaluate(element => {
+    const styles = getComputedStyle(element);
+    return { background: styles.backgroundColor, color: styles.color };
+  });
+  expect(catalogsActiveStyles.background).toBe(canvasStyles.background);
+  expect(catalogsActiveStyles.color).toBe(canvasStyles.color);
   await canvasTab.click();
-  await expect(canvasTab).toHaveClass(/bg-white/);
-  await expect(catalogsTab).not.toHaveClass(/bg-white/);
+  await expect(canvasTab).toHaveAttribute('aria-selected', 'true');
+  await expect(catalogsTab).toHaveAttribute('aria-selected', 'false');
   await previewTab.click();
   await expect(previewTab).toHaveAttribute('aria-current', 'page');
-  await expect(previewTab).toHaveClass(/border-ihss-600/);
+  await expect(previewTab).toHaveAttribute('aria-selected', 'true');
   await expect(editorTab).not.toHaveAttribute('aria-current', 'page');
+  await expect(editorTab).toHaveAttribute('aria-selected', 'false');
   await editorTab.click();
   await expect(editorTab).toHaveAttribute('aria-current', 'page');
+  await expect(editorTab).toHaveAttribute('aria-selected', 'true');
   await expect(previewTab).not.toHaveAttribute('aria-current', 'page');
+  await expect(previewTab).toHaveAttribute('aria-selected', 'false');
   await expect(dialogo.getByText('Acciones', { exact: false })).toBeVisible();
   await expect(dialogo.locator('[data-modal-shell-region="footer"] button[aria-label="Cancelar cambios"]')).toBeVisible();
   await expect(dialogo.locator('[data-modal-shell-region="footer"] button[aria-label="Guardar cambios"]')).toBeEnabled();
@@ -684,9 +722,11 @@ test('captura Vista Previa integrada sin herramientas de edición', async ({ pag
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   await expect(dialogo).toBeVisible();
-  await dialogo.getByRole('button', { name: 'Vista Previa' }).click();
+  await dialogo.getByRole('tab', { name: 'Vista Previa' }).click();
   await expect(dialogo.locator('#tab-vista-preview')).toHaveAttribute('aria-current', 'page');
+  await expect(dialogo.locator('#tab-vista-preview')).toHaveAttribute('aria-selected', 'true');
   await expect(dialogo.locator('#tab-editor-visual')).not.toHaveAttribute('aria-current', 'page');
+  await expect(dialogo.locator('#tab-editor-visual')).toHaveAttribute('aria-selected', 'false');
   const preview = dialogo.locator('[aria-label="Vista previa del formulario"]');
   await expect(preview).toBeVisible();
   await expect(preview.locator('app-dynamic-field-renderer')).toHaveCount(3);

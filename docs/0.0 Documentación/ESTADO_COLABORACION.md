@@ -4078,3 +4078,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia pendiente: capturas nuevas, Playwright visual autenticado, Quality Gate remoto del SHA publicado y cualquier verificacion que requiera backend/Oracle. No se ejecutaron Oracle, backend, credenciales, watcher, P06 ni P07.
 - Cambios ajenos preservados: siguen fuera del stage los archivos tracked preexistentes (`backend/RL.API/Program.cs`, paquetes frontend, `playwright.qa.config.ts`, P06 y SQL) y los untracked (`.vscode`, `scratch`, `artifacts`, resultados locales y otros). No se ejecutaron `git clean`, reset destructivo ni normalizacion de esos archivos.
 - Estado: `B01_STATUS=READY_FOR_PUBLICATION`; `B01_VISUAL_CERTIFICATION=PENDING`; `QUALITY_GATE_STATUS=NOT_STARTED`; `B02_AUTHORIZED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`. Continuacion: diff selectivo, stage solo de B01, commit/push y verificacion remota.
+
+## B01 - correccion de expectativas E2E - 2026-11-11
+
+- `BASE_SHA=8ae0c268ca0f5dc594282f106239424e464b2aa1`; rama `desarrollo`; `origin/desarrollo` coincide; cambios ajenos y untracked preservados.
+- `QUALITY_GATE_SOURCE=42913281424`; fallo confirmado por expectativas anteriores al contrato B01 en `frontend/rl-app/e2e/modal-shell-lock.spec.ts`: clases Tailwind obsoletas y selector `button` para una pestaña `role=tab`.
+- `B01_FIX=APPLIED`: la regresion valida `institutional-selection__item`, `aria-selected`, estilos calculados activo/inactivo, contraste y foco visible por teclado; Vista Previa se selecciona mediante `getByRole('tab')`.
+- `FOCUSED_E2E=2/2 PASS`; `MODAL_SHELL_SUITE=13/13 PASS` con un worker. La ejecucion concurrente previa tuvo timeouts de preparacion ajenos al caso corregido; no se relajaron aserciones.
+- No se modificaron componentes funcionales, backend, Oracle, P06, P07, B02, main ni produccion. `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Continuacion exacta: ejecutar regresiones B01/validadores y `git diff --check`, publicar selectivamente el test y estos registros, verificar el Quality Gate del nuevo SHA. `B01_STATUS=BLOCKED_UNTIL_GATE`; `B01_VISUAL_CERTIFICATION=PENDING`.
