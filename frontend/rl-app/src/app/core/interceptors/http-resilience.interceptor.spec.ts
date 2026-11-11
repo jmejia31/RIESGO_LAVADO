@@ -2,6 +2,7 @@ import { HttpClient, HttpContext, provideHttpClient, withInterceptors } from '@a
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
+import { HTTP_LOADING_INTENT } from '../http/http-loading-intent';
 import { GlobalHttpStateService } from '../services/global-http-state.service';
 import { httpResilienceInterceptor } from './http-resilience.interceptor';
 
@@ -207,6 +208,22 @@ describe('httpResilienceInterceptor', () => {
 
     reqB.flush({ ok: true });
     expect(globalState.cargando()).toBe(false);
+  });
+
+  it('no muestra indicador global para una consulta ordinaria y sí para una operación explícita', () => {
+    client.get('/api/silent-refresh').subscribe();
+    const silent = controller.expectOne('/api/silent-refresh');
+    expect(globalState.cargando()).toBe(true);
+    expect(globalState.indicadorVisible()).toBe(false);
+    silent.flush({ ok: true });
+
+    client.post('/api/critical-operation', {}, {
+      context: new HttpContext().set(HTTP_LOADING_INTENT, 'CRITICAL_OPERATION')
+    }).subscribe();
+    const critical = controller.expectOne('/api/critical-operation');
+    expect(globalState.indicadorVisible()).toBe(true);
+    critical.flush({ ok: true });
+    expect(globalState.indicadorVisible()).toBe(false);
   });
 
   it.each([401, 403, 499])('NO debe publicar banner global para status %s', (status) => {

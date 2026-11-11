@@ -225,6 +225,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     searchText: `${riesgo.rieCodigo} ${riesgo.rieNombre} ${riesgo.rieDescripcion ?? ''}`
   })));
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
+  readonly evaluacionesInicializadas = signal(false);
   readonly totalRegistros = signal(0);
   readonly totalPaginas = signal(0);
 
@@ -569,9 +570,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       },
       error: error => {
         if (solicitudId !== this.secuenciaCargaFamilias) return;
-        this.familias.set([]);
-        this.totalRegistrosFamilias.set(0);
-        this.totalPaginasFamiliasServidor.set(0);
+        if (this.familias().length === 0 && this.totalRegistrosFamilias() === 0) {
+          this.familias.set([]);
+          this.totalRegistrosFamilias.set(0);
+          this.totalPaginasFamiliasServidor.set(0);
+        }
         this.errorFamilias.set(this.obtenerMensajeError(error, 'No se pudieron cargar las familias de formularios.'));
         this.cargandoFamilias.set(false);
       }
@@ -1331,6 +1334,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             }))
           : [];
         this.evaluaciones.set(items);
+        this.evaluacionesInicializadas.set(Array.isArray(paginado?.items));
 
         const totalReg = Number.isFinite(paginado?.totalRegistros) && Math.floor(paginado.totalRegistros) >= 0
           ? Math.floor(paginado.totalRegistros)
@@ -1362,9 +1366,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
         const msg = this.obtenerMensajeError(error, 'No se pudieron consultar las evaluaciones.');
         this.errorEvaluaciones.set(msg);
-        this.evaluaciones.set([]);
-        this.totalRegistros.set(0);
-        this.totalPaginas.set(0);
+        if (!this.evaluacionesInicializadas()) {
+          this.evaluaciones.set([]);
+          this.totalRegistros.set(0);
+          this.totalPaginas.set(0);
+        }
         this.cargandoEvaluaciones.set(false);
       }
     });

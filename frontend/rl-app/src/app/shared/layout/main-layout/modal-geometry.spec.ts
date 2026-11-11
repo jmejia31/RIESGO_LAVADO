@@ -56,6 +56,7 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
     };
     globalStateMock = {
       cargando: signal(false),
+      indicadorVisible: signal(false),
       ultimoError: signal(null),
       limpiarError: () => {}
     };

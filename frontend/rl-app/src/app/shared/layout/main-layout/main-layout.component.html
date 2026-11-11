@@ -111,9 +111,6 @@
 
   <div class="flex flex-col flex-1 overflow-hidden">
     <header class="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between z-20 shadow-sm relative">
-      @if (globalState.cargando()) {
-        <div aria-hidden="true" class="absolute top-0 left-0 right-0 h-1 bg-ihss-600 animate-pulse z-50"></div>
-      }
       <div class="flex items-center gap-3">
         <button type="button"
           (click)="toggleSidebar()"
@@ -130,7 +127,7 @@
       </div>
 
       <div class="flex items-center gap-2">
-        @if (globalState.cargando()) {
+        @if (globalState.indicadorVisible()) {
           <span class="text-xs text-ihss-700 font-medium flex items-center gap-1.5 bg-ihss-50 px-2.5 py-1 rounded-lg" aria-live="polite" aria-atomic="true" data-global-loading-status>
             <svg aria-hidden="true" focusable="false" class="w-3.5 h-3.5 animate-spin text-ihss-600" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -146,7 +143,7 @@
       </div>
     </header>
 
-    <main id="contenido-principal" tabindex="-1" [attr.aria-busy]="globalState.cargando()"
+    <main id="contenido-principal" tabindex="-1"
       class="flex-1 overflow-y-auto bg-gray-100 focus:outline-none flex flex-col justify-between">
       <div class="p-4 sm:p-6 space-y-4">
         @if (globalState.ultimoError(); as err) {

@@ -4129,3 +4129,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `GITHUB_ACTIONS_EXECUTED_BY_CODEX=NO`; `GITHUB_ACTIONS_AUTOMATIC_TRIGGER=ENABLED`; la publicacion queda bloqueada por `REMOTE_PUBLICATION=BLOCKED_ACTIONS_COST_CONTROL` hasta deshabilitar triggers o recibir autorizacion expresa para modificar el workflow.
 - `AUTHENTICATION_MODIFIED=NO`; `ORACLE_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `B02_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Continuacion exacta: decidir con el propietario el control de workflows; si se deshabilita formalmente el trigger sin afectar workflows protegidos, revisar diff, commit selectivo y push. Mientras tanto la certificacion es local y el expediente no esta publicado.
+
+## B02 - actualizaciones silenciosas y estabilidad visual - 2026-11-11
+
+- `BASE_SHA=66643c294c0ec24da568f2eb7056aa6369c1c3dd`; rama `desarrollo`; remoto coincidente al inicio; divergencia `0 0`.
+- `B01_OWNER_VISUAL_ACCEPTANCE=PASS`; `B01_GITHUB_ISSUE=34`; se registro como evidencia heredada del propietario, no como nueva ejecucion.
+- `ROOT_CAUSE=CONFIRMED`: el estado tecnico global de HTTP se conectaba directamente al feedback visual global y varios consumidores desmontaban tablas durante refrescos.
+- `HTTP_LOADING_INTENT=IMPLEMENTED`: `SILENT_REFRESH` es el valor por defecto; `USER_ACTION` y `CRITICAL_OPERATION` reservan feedback global; el conteo tecnico se conserva.
+- `MAIN_LAYOUT=STABILIZED`: sin barra global por GET ordinario y sin `aria-busy` global; el banner de error y logout permanecen.
+- `MATRICES_EVALUATIONS=STABILIZED`; `MATRICES_CONSOLIDATED=STABILIZED`; `MATRICES_TEMPLATES=STABILIZED`; `MONITORING_LISTS=STABILIZED`; `USERS=STABILIZED`; `TIPO_LISTAS=STABILIZED`.
+- `NO_CHANGE_REQUIRED`: Coincidencias Empleado, Coincidencias Patrono, Cargar Listas, Configuracion del Sistema, Bitacora del Sistema y mecanismos de carga del Form Builder, sin cambio artificial fuera del defecto confirmado.
+- `FOCUSED_TESTS=44/44_PASS`; `FRONTEND_TESTS=969/969_PASS`; `FRONTEND_LINT=PASS`; `ANGULAR_BUILD=PASS` con warnings preexistentes. `FRONTEND_E2E=72_PASS_3_FAIL_15_SKIP`; no se certifica B02 PASS con ese resultado. El rerun focalizado de Monitoreo quedó bloqueado por `ERR_CONNECTION_REFUSED` antes de cargar Angular y el harness informó un `SecurityError` de `localStorage`.
+- `VALIDATE_DOCUMENTATION_LINKS=PASS`; `VALIDATE_DATABASE_SCRIPTS=PASS`; `VALIDATE_TEXT_ENCODING=PASS`; `VALIDATE_AGENT_SKILLS=PASS`; escaneo de contenido cambiado sin secretos=PASS; `GIT_DIFF_CHECK_OWN_FILES=PASS`; `VALIDATE_REPOSITORY_STRUCTURE=FAIL` por la carpeta heredada `frontend/rl-app/src/app/core/services`, fuera del cambio B02.
+- `GITHUB_ACTIONS_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `AUTHENTICATION_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- `B02_STATUS=PARTIAL`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`. Continuación: stage selectivo, commit/push controlado y paridad exacta local/remota; conservar como pendientes el validador estructural heredado y la E2E no certificada.

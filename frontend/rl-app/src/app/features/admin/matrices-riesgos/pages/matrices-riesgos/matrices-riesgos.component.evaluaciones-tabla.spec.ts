@@ -298,7 +298,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
     expect(component.cargandoEvaluaciones()).toBe(true);
     expect(component.errorEvaluaciones()).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Cargando evaluaciones...');
+    expect(fixture.nativeElement.textContent).toContain('Actualizando evaluaciones...');
 
     pendiente.next(paginado);
     pendiente.complete();
@@ -306,7 +306,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.cargandoEvaluaciones()).toBe(false);
   });
 
-  it('ante error limpia filas, conserva el mensaje real y ofrece reintento', () => {
+  it('ante error conserva filas validas, muestra el mensaje real y ofrece reintento', () => {
     serviceMock.listarEvaluaciones.mockReturnValue(throwError(() => ({
       error: { detail: 'Fallo controlado F3.2' }
     })));
@@ -314,7 +314,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.cargarEvaluaciones();
     fixture.detectChanges();
 
-    expect(component.evaluaciones()).toEqual([]);
+    expect(component.evaluaciones()).toEqual(paginado.items);
     expect(component.errorEvaluaciones()).toBe('Fallo controlado F3.2');
     expect(component.cargandoEvaluaciones()).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('Fallo controlado F3.2');

@@ -1,26 +1,35 @@
 import { Injectable, signal, computed, OnDestroy } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { HttpLoadingIntent } from '../http/http-loading-intent';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GlobalHttpStateService implements OnDestroy {
   private readonly peticionesActivas = signal(0);
+  private readonly operacionesVisibles = signal(0);
   readonly ultimoError = signal<string | null>(null);
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly cargando = computed(() => this.peticionesActivas() > 0);
+  readonly indicadorVisible = computed(() => this.operacionesVisibles() > 0);
 
   ngOnDestroy(): void {
     this.cancelarAutoDismiss();
   }
 
-  iniciarPeticion(): void {
+  iniciarPeticion(intent: HttpLoadingIntent = 'SILENT_REFRESH'): void {
     this.peticionesActivas.update(c => c + 1);
+    if (intent === 'USER_ACTION' || intent === 'CRITICAL_OPERATION') {
+      this.operacionesVisibles.update(c => c + 1);
+    }
   }
 
-  finalizarPeticion(): void {
+  finalizarPeticion(intent: HttpLoadingIntent = 'SILENT_REFRESH'): void {
     this.peticionesActivas.update(c => Math.max(0, c - 1));
+    if (intent === 'USER_ACTION' || intent === 'CRITICAL_OPERATION') {
+      this.operacionesVisibles.update(c => Math.max(0, c - 1));
+    }
   }
 
   notificarError(error: HttpErrorResponse): void {

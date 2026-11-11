@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { finalize, retry, tap, throwError, timer } from 'rxjs';
 import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
+import { HTTP_LOADING_INTENT } from '../http/http-loading-intent';
 import { GlobalHttpStateService } from '../services/global-http-state.service';
 
 const MAX_GET_RETRIES = 2;
@@ -16,9 +17,10 @@ const BASE_RETRY_DELAY_MS = 300;
  */
 export const httpResilienceInterceptor: HttpInterceptorFn = (req, next) => {
   const globalState = inject(GlobalHttpStateService);
+  const loadingIntent = req.context.get(HTTP_LOADING_INTENT);
   const esGet = req.method.toUpperCase() === 'GET';
 
-  globalState.iniciarPeticion();
+  globalState.iniciarPeticion(loadingIntent);
 
   return next(req).pipe(
     retry({
@@ -42,7 +44,7 @@ export const httpResilienceInterceptor: HttpInterceptorFn = (req, next) => {
       }
     }),
     finalize(() => {
-      globalState.finalizarPeticion();
+      globalState.finalizarPeticion(loadingIntent);
     })
   );
 };

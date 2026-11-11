@@ -23,12 +23,12 @@
     </div>
   }
 
+  <div class="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
   @if (cargando()) {
-    <div class="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 flex flex-col items-center justify-center space-y-4">
+    <div class="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center bg-white/70 py-3" role="status" aria-live="polite">
       <div class="w-12 h-12 rounded-full border-4 border-ihss-200 border-t-ihss-600 animate-spin"></div>
-      <p class="text-sm font-medium text-gray-500">Cargando registros...</p>
     </div>
-  } @else {
+  }
     <!-- Tabla de registros -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="overflow-x-auto">
@@ -75,7 +75,7 @@
         </table>
       </div>
     </div>
-  }
+  </div>
 
   <!-- Modal / Formulario Overlay -->
   @if (mostrarForm()) {
