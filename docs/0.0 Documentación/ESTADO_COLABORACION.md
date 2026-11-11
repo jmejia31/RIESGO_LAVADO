@@ -4185,3 +4185,22 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `BUSINESS_DATA_CHANGED=NO`; `AUDIT_CHANGED=NO`; `WATCHER_ENABLED=NO`; `B03_STARTED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Estado: `B02_TECHNICAL_STATUS=PENDING_REMOTE_CI`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; falta publicar selectivamente y verificar el Quality Gate de GitHub Actions sobre el SHA final.
 - B03 no iniciado. El worktree conserva únicamente las modificaciones ajenas y archivos untracked preexistentes listados al inicio.
+
+## B03 - estandar compartido de ordenamiento - 2026-11-11
+
+- `BASE_SHA=b9b914449cae5006d032b07e7e1061c465fef2f3`; rama `desarrollo`; inicio con `HEAD=origin/desarrollo` y divergencia `0 0`. Cambios ajenos y untracked preservados.
+- B02 queda documentalmente cerrado por el propietario en Issue #36: `B02_OWNER_VISUAL_ACCEPTANCE=PASS`, `B02_FINAL_STATUS=APPROVED_BY_OWNER`, `B02_CLOSED=YES`. `43098519970` continúa registrado como cola externa bloqueada, no como CI exitoso.
+- `B03_SHARED_SORT_STANDARD=IMPLEMENTED`: `app-sortable-table-header` centraliza flechas SVG, tokens de tema, teclado y `aria-sort`; no realiza HTTP.
+- `B03_CORE_SERVER_SORTING=IMPLEMENTED`: Evaluaciones, Consolidado, Familias y Riesgos usan whitelist de columnas, ASC/DESC validado, ID ASC por defecto y desempate estable antes de paginar.
+- `B03_FOCUSED_TESTS=274/274_PASS`; `B03_SORT_HEADER_TESTS=3/3_PASS`; `ANGULAR_BUILD=PASS`; `BACKEND_BUILD_ISOLATED=PASS` con 0 warnings y 0 errors. Advertencias de presupuesto/CommonJS de Angular son preexistentes.
+- `B03_GLOBAL_INVENTORY=PARTIAL`: Usuarios, Bitácora, Monitoreo y otros listados fueron identificados y requieren contratos específicos antes de declararse cubiertos. `PLAYWRIGHT_B03=PENDING`; `ORACLE_TOUCHED=NO`.
+- `B03_TECHNICAL_STATUS=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`. Continuación exacta: stage selectivo, commit/push y verificar `HEAD_LOCAL=origin/desarrollo`, manteniendo el inventario pendiente explícito.
+
+## B03 - correccion de encabezados y refresco silencioso - 2026-11-11
+
+- Continuacion en `C:\RIESGO_LAVADO`: `BASE_SHA=b9b914449cae5006d032b07e7e1061c465fef2f3`, rama `desarrollo`, paridad inicial `HEAD=origin/desarrollo`, divergencia `0 0`; cambios ajenos y untracked preservados.
+- `B03_CORE_VISIBLE_HEADERS=PASS`: Evaluaciones, Consolidado, Familias y Gestion de Riesgos ya no contienen barras `Ordenar por`, bloques muertos ni filas duplicadas; cada tabla presenta una sola fila visible con controles integrados en sus encabezados originales.
+- `B03_SILENT_REFRESH=PASS`: durante refresh ordinario con filas validas no se monta el estado inicial invasivo; el resumen de Cargar Listas tambien conserva la tabla mientras actualiza. Las cargas iniciales sin datos mantienen feedback discreto y accesible.
+- Verificacion local: `FRONTEND_TESTS=978/978_PASS` en `93` archivos; `FRONTEND_BUILD=PASS` con warnings preexistentes; `FRONTEND_LINT=PASS`; `BACKEND_BUILD_ISOLATED=PASS` (`0 warnings / 0 errors`).
+- Playwright visual B03 permanece `PENDING` por depender de servidor y datos autorizados. Oracle, main, produccion, migraciones, auditoria, permisos, autenticacion, P06, P07, watcher y cola Codex no fueron tocados.
+- `B03_GLOBAL_INVENTORY=PARTIAL`; faltan contratos server-side especificos para Usuarios, Bitacora, Monitoreo y otros listados. `B03_TECHNICAL_STATUS=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `BLOCK10_AUTHORIZED=NO`.

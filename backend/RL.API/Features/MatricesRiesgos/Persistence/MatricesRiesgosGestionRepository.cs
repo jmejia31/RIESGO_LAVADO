@@ -63,7 +63,7 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
                     SELECT q.*, ROWNUM AS NUMERO_FILA
                       FROM (
                         {sql}
-                        ORDER BY RIE_CODIGO ASC, RIE_ID ASC
+                        {ConstruirOrdenRiesgos(consulta)}
                       ) q
                      WHERE ROWNUM <= :filaFinal
                   )
@@ -92,6 +92,22 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
             command.Parameters.Add(new OracleParameter("activo", consulta.Activo.Value ? 1 : 0));
         if (!string.IsNullOrWhiteSpace(consulta.Buscar))
             command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
+    }
+
+    private static string ConstruirOrdenRiesgos(ConsultaRiesgosPaginadaDto consulta)
+    {
+        string campo = (consulta.OrdenarPor ?? "id").Trim().ToLowerInvariant();
+        string direccion = string.Equals(consulta.Orden, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+        string columna = campo switch
+        {
+            "id" or "rieid" => "RIE_ID",
+            "codigo" => "RIE_CODIGO",
+            "nombre" or "riesgo" => "RIE_NOMBRE",
+            "estado" => "RIE_ACTIVO",
+            _ => "RIE_ID"
+        };
+        string desempate = columna == "RIE_ID" ? string.Empty : ", RIE_ID ASC";
+        return $"ORDER BY {columna} {direccion}{desempate}";
     }
 
     public async Task<RiesgoDto?> ObtenerRiesgoAsync(long riesgoId)

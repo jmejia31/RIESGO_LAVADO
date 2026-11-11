@@ -9,4 +9,6 @@ public sealed class ConsultaEvaluacionPaginadaDto
     public string? Area { get; set; }
     public string? NivelResidual { get; set; }
     public string? Buscar { get; set; }
+    public string? OrdenarPor { get; set; } = "id";
+    public string? Orden { get; set; } = "asc";
 }

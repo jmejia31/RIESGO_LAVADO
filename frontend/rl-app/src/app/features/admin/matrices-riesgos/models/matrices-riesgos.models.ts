@@ -44,6 +44,8 @@ export interface ConsultaFamiliasFormularioPaginada {
   estado?: 'TODAS' | 'ACTIVAS' | 'INACTIVAS';
   archivado?: 'NO_ARCHIVADAS' | 'ARCHIVADAS' | 'TODAS';
   vigencia?: 'TODAS' | 'VIGENTES' | 'SIN_VIGENTE';
+  ordenarPor?: 'id' | 'codigo' | 'nombre' | 'estado' | 'fechaCreacion';
+  orden?: 'asc' | 'desc';
 }
 
 export interface FamiliasFormularioPaginadasDto {
@@ -209,6 +211,8 @@ export interface ConsultaEvaluacionPaginadaDto {
   nivelResidual?: string;
   pagina: number;
   registrosPorPagina: number;
+  ordenarPor?: 'id' | 'codigo' | 'version' | 'estado' | 'vri' | 'vrr' | 'nivelResidual' | 'fecha';
+  orden?: 'asc' | 'desc';
 }
 
 export interface FlujoEvaluacionDto {

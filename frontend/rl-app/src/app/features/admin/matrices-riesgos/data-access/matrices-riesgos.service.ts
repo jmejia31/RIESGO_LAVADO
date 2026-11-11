@@ -94,6 +94,8 @@ export class MatricesRiesgosService {
       .set('estado', filtro.estado ?? 'TODAS')
       .set('archivado', filtro.archivado ?? 'NO_ARCHIVADAS')
       .set('vigencia', filtro.vigencia ?? 'TODAS');
+    if (filtro.ordenarPor) params = params.set('ordenarPor', filtro.ordenarPor);
+    if (filtro.orden) params = params.set('orden', filtro.orden);
     if (filtro.buscar?.trim()) params = params.set('buscar', filtro.buscar.trim());
     return this.http
       .get<ApiResponse<FamiliasFormularioPaginadasDto>>(`${this.apiUrl}/familias/paginado`, { params , context: createHttpErrorScopeContext('local')})
@@ -277,12 +279,15 @@ export class MatricesRiesgosService {
     pagina = 1,
     tamanoPagina = 25,
     buscar = '',
-    activo?: boolean, errorScope: HttpErrorScope = 'global'
+    activo?: boolean, errorScope: HttpErrorScope = 'global',
+    ordenarPor: 'id' | 'codigo' | 'nombre' | 'estado' = 'id',
+    orden: 'asc' | 'desc' = 'asc'
   ): Observable<RiesgosPaginadosDto> {
     let params = new HttpParams()
       .set('incluirInactivos', String(incluirInactivos))
       .set('pagina', String(pagina))
       .set('tamanoPagina', String(tamanoPagina));
+    params = params.set('ordenarPor', ordenarPor).set('orden', orden);
     if (buscar.trim()) params = params.set('buscar', buscar.trim());
     if (activo !== undefined) params = params.set('activo', String(activo));
     return this.http

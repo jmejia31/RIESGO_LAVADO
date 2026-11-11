@@ -138,7 +138,7 @@
         <app-page-size-selector selectId="filtro-registros-por-pagina" [value]="registrosPorPagina()" [options]="opcionesRegistrosPorPagina" ariaLabel="Evaluaciones por página" (valueChange)="cambiarRegistrosPorPagina($event)" />
       </div>
       <div class="matrices-table-surface relative overflow-x-auto rounded-xl border border-gray-200">
-        @if (cargandoEvaluaciones()) {
+        @if (cargandoEvaluaciones() && evaluaciones().length === 0) {
           <div class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-white/70 pt-5" role="status" aria-live="polite">
             <span class="inline-flex items-center gap-2 rounded-lg border border-ihss-100 bg-white px-3 py-2 text-xs font-semibold text-ihss-800 shadow-sm">
               <svg class="h-4 w-4 animate-spin text-ihss-700" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
@@ -146,17 +146,17 @@
             </span>
           </div>
         }
-        <table class="min-w-[900px] w-full divide-y divide-gray-200 text-sm">
+        <table class="min-w-[900px] w-full divide-y divide-gray-200 text-sm b03-single-header">
           <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
             <tr>
-              <th class="px-6 py-3">EVALUACIÓN</th>
-              <th class="px-6 py-3">CÓDIGO DE RIESGO / RIESGO INHERENTE</th>
-              <th class="px-6 py-3">VERSIÓN</th>
-              <th class="px-6 py-3">ESTADO</th>
-              <th class="px-6 py-3">VRI</th>
-              <th class="px-6 py-3">VRR</th>
-              <th class="px-6 py-3">NIVEL RESIDUAL</th>
-              <th class="px-6 py-3">FECHA</th>
+              <th class="px-6 py-3"><app-sortable-table-header column="id" label="Evaluación" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por identificador" (sortChange)="ordenarEvaluaciones($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="codigo" label="Código de riesgo / riesgo inherente" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por código de riesgo" (sortChange)="ordenarEvaluaciones($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="version" label="Versión" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por versión" (sortChange)="ordenarEvaluaciones($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="estado" label="Estado" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por estado" (sortChange)="ordenarEvaluaciones($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="vri" label="VRI" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por VRI" (sortChange)="ordenarEvaluaciones($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="vrr" label="VRR" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por VRR" (sortChange)="ordenarEvaluaciones($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="nivelResidual" label="Nivel residual" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por nivel residual" (sortChange)="ordenarEvaluaciones($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="fecha" label="Fecha" [activeColumn]="ordenEvaluaciones()" [direction]="direccionEvaluaciones()" ariaLabel="Ordenar evaluaciones por fecha" (sortChange)="ordenarEvaluaciones($event)" /></th>
               <th class="px-6 py-3 text-center">ACCIONES</th>
             </tr>
           </thead>
@@ -281,9 +281,22 @@
             </span>
           </div>
         }
-        <table class="min-w-[1100px] w-full divide-y divide-gray-200 text-sm">
+        <table class="min-w-[1100px] w-full divide-y divide-gray-200 text-sm b03-single-header">
           <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-            <tr><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('codigo')">Código de Riesgo</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('area')">Área</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('dueno')">Dueño</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vri')">VRI</button></th><th class="px-6 py-3">Riesgo Inherente</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vrr')">VRR</button></th><th class="px-6 py-3">Residual</th><th class="px-6 py-3">Respuesta</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('estado')">Estado</button></th><th class="px-6 py-3">Versión</th><th class="px-6 py-3">Acciones</th></tr>
+            <tr>
+              <th class="px-6 py-3"><app-sortable-table-header column="evaluacionId" label="Evaluación" [activeColumn]="ordenConsolidado()" [direction]="direccionConsolidado()" ariaLabel="Ordenar consolidado por identificador" (sortChange)="ordenarConsolidado($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="codigo" label="Código de riesgo" [activeColumn]="ordenConsolidado()" [direction]="direccionConsolidado()" ariaLabel="Ordenar consolidado por código" (sortChange)="ordenarConsolidado($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="area" label="Área" [activeColumn]="ordenConsolidado()" [direction]="direccionConsolidado()" ariaLabel="Ordenar consolidado por área" (sortChange)="ordenarConsolidado($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="dueno" label="Dueño" [activeColumn]="ordenConsolidado()" [direction]="direccionConsolidado()" ariaLabel="Ordenar consolidado por dueño" (sortChange)="ordenarConsolidado($event)" /></th>
+              <th class="px-6 py-3"><app-sortable-table-header column="vri" label="VRI" [activeColumn]="ordenConsolidado()" [direction]="direccionConsolidado()" ariaLabel="Ordenar consolidado por VRI" (sortChange)="ordenarConsolidado($event)" /></th>
+              <th class="px-6 py-3">Riesgo inherente</th>
+              <th class="px-6 py-3"><app-sortable-table-header column="vrr" label="VRR" [activeColumn]="ordenConsolidado()" [direction]="direccionConsolidado()" ariaLabel="Ordenar consolidado por VRR" (sortChange)="ordenarConsolidado($event)" /></th>
+              <th class="px-6 py-3">Residual</th>
+              <th class="px-6 py-3">Respuesta</th>
+              <th class="px-6 py-3"><app-sortable-table-header column="estado" label="Estado" [activeColumn]="ordenConsolidado()" [direction]="direccionConsolidado()" ariaLabel="Ordenar consolidado por estado" (sortChange)="ordenarConsolidado($event)" /></th>
+              <th class="px-6 py-3">Versión</th>
+              <th class="px-6 py-3">Acciones</th>
+            </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
             @for (fila of consolidadoPaginado(); track fila.evaluacionId) {
@@ -713,7 +726,7 @@
         </div>
 
         <div class="matrices-table-surface relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          @if (cargandoFamilias()) {
+          @if (cargandoFamilias() && familias().length === 0) {
             <div class="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center bg-white/70 py-3" role="status" aria-live="polite">
               <span class="inline-flex items-center gap-2 rounded-lg border border-ihss-100 bg-white px-3 py-2 text-xs font-semibold text-ihss-800 shadow-sm">
                 <svg class="h-4 w-4 animate-spin text-ihss-700" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 0 12 12h4z"></path></svg>
@@ -730,9 +743,18 @@
             </div>
           }
             <div class="overflow-x-auto">
-              <table class="min-w-[1180px] w-full text-left text-sm" data-ui-fam-table="principal">
+              <table class="min-w-[1180px] w-full text-left text-sm b03-single-header" data-ui-fam-table="principal">
                 <thead class="border-b border-gray-200 bg-gray-50/90 text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  <tr><th class="px-5 py-3.5">Código</th><th class="px-5 py-3.5">Nombre</th><th class="px-5 py-3.5">Descripción</th><th class="px-5 py-3.5 text-center">Estado</th><th class="px-5 py-3.5 text-center">Versiones</th><th class="px-5 py-3.5 text-center">Vigencia</th><th class="px-5 py-3.5 text-center">Fecha de creación</th><th class="px-5 py-3.5 text-right">Acciones</th></tr>
+                  <tr>
+                    <th class="px-5 py-3.5"><app-sortable-table-header column="codigo" label="Código" [activeColumn]="ordenFamilias()" [direction]="direccionFamilias()" ariaLabel="Ordenar familias por código" (sortChange)="ordenarFamilias($event)" /></th>
+                    <th class="px-5 py-3.5"><app-sortable-table-header column="nombre" label="Nombre" [activeColumn]="ordenFamilias()" [direction]="direccionFamilias()" ariaLabel="Ordenar familias por nombre" (sortChange)="ordenarFamilias($event)" /></th>
+                    <th class="px-5 py-3.5">Descripción</th>
+                    <th class="px-5 py-3.5 text-center"><app-sortable-table-header column="estado" label="Estado" [activeColumn]="ordenFamilias()" [direction]="direccionFamilias()" ariaLabel="Ordenar familias por estado" (sortChange)="ordenarFamilias($event)" /></th>
+                    <th class="px-5 py-3.5 text-center">Versiones</th>
+                    <th class="px-5 py-3.5 text-center">Vigencia</th>
+                    <th class="px-5 py-3.5 text-center"><app-sortable-table-header column="fechaCreacion" label="Fecha de creación" [activeColumn]="ordenFamilias()" [direction]="direccionFamilias()" ariaLabel="Ordenar familias por fecha de creación" (sortChange)="ordenarFamilias($event)" /></th>
+                    <th class="px-5 py-3.5 text-right">Acciones</th>
+                  </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 bg-white">
                   @for (fam of familiasPaginadas(); track fam.famId) {

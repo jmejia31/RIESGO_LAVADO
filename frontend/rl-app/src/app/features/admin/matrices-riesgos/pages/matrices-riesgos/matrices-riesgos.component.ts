@@ -57,6 +57,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { MatricesRiesgosMitigacionComponent } from '../../components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component';
 import { MatricesRiesgosMonitoreoOperativoComponent } from '../../components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component';
@@ -67,7 +68,7 @@ type EstadoCargaWorkflow = 'LOADING' | 'SUCCESS_WITH_DATA' | 'SUCCESS_EMPTY' | '
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [ActionIconComponent, BoundedSelectComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent, MatricesRiesgosMitigacionComponent, MatricesRiesgosMonitoreoOperativoComponent],
+  imports: [ActionIconComponent, BoundedSelectComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent, MatricesRiesgosMitigacionComponent, MatricesRiesgosMonitoreoOperativoComponent],
   templateUrl: './matrices-riesgos.component.html',
   styleUrl: './matrices-riesgos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -161,6 +162,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly registrosPorPaginaConsolidado = signal(10);
   readonly paginaFamilias = signal(1);
   readonly registrosPorPaginaFamilias = signal(10);
+  readonly ordenFamilias = signal<'id' | 'codigo' | 'nombre' | 'estado' | 'fechaCreacion'>('id');
+  readonly direccionFamilias = signal<SortDirection>('asc');
   readonly totalRegistrosFamilias = signal(0);
   readonly totalPaginasFamiliasServidor = signal(0);
   readonly totalesFamiliasServidor = signal({ totalFamilias: 0, activas: 0, inactivas: 0, archivadas: 0, totalVersiones: 0 });
@@ -229,6 +232,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     searchText: `${riesgo.rieCodigo} ${riesgo.rieNombre} ${riesgo.rieDescripcion ?? ''}`
   })));
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
+  readonly ordenEvaluaciones = signal<'id' | 'codigo' | 'version' | 'estado' | 'vri' | 'vrr' | 'nivelResidual' | 'fecha'>('id');
+  readonly direccionEvaluaciones = signal<SortDirection>('asc');
   readonly evaluacionesInicializadas = signal(false);
   readonly totalRegistros = signal(0);
   readonly totalPaginas = signal(0);
@@ -264,8 +269,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     totalSinEvaluacionOficial: 0,
     totalAltoCritico: 0
   });
-  readonly ordenConsolidado = signal('fechaEvaluacion');
-  readonly direccionConsolidado = signal<'asc' | 'desc'>('desc');
+  readonly ordenConsolidado = signal('evaluacionId');
+  readonly direccionConsolidado = signal<SortDirection>('asc');
 
   private static readonly ESTADOS_EVALUACION_CANONICOS: EstadoEvaluacionCatalogoDto[] = [
     { codigo: 'APROBADA', etiqueta: 'Aprobada' },
@@ -559,7 +564,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       buscar: this.filtroBuscarFamilia(),
       estado: this.filtroEstadoFamilia() as 'TODAS' | 'ACTIVAS' | 'INACTIVAS',
       archivado: this.filtroArchivadoFamilia(),
-      vigencia: this.filtroVigenciaFamilia() as 'TODAS' | 'VIGENTES' | 'SIN_VIGENTE'
+      vigencia: this.filtroVigenciaFamilia() as 'TODAS' | 'VIGENTES' | 'SIN_VIGENTE',
+      ...(this.ordenFamilias() !== 'id' || this.direccionFamilias() !== 'asc'
+        ? { ordenarPor: this.ordenFamilias(), orden: this.direccionFamilias() }
+        : {})
     }).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCargaFamilias) return;
@@ -710,6 +718,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   cambiarVigenciaFamilia(valor: string): void {
     this.filtroVigenciaFamilia.set(valor);
+    this.paginaFamilias.set(1);
+    this.cargarFamilias();
+  }
+
+  ordenarFamilias(campo: string): void {
+    const camposPermitidos = ['id', 'codigo', 'nombre', 'estado', 'fechaCreacion'] as const;
+    if (!camposPermitidos.includes(campo as (typeof camposPermitidos)[number])) return;
+    const campoSeguro = campo as (typeof camposPermitidos)[number];
+    if (this.ordenFamilias() === campoSeguro) this.direccionFamilias.update(actual => actual === 'asc' ? 'desc' : 'asc');
+    else { this.ordenFamilias.set(campoSeguro); this.direccionFamilias.set('asc'); }
     this.paginaFamilias.set(1);
     this.cargarFamilias();
   }
@@ -1324,12 +1342,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.cargarEvaluaciones();
   }
 
+  ordenarEvaluaciones(campo: string): void {
+    const camposPermitidos = ['id', 'codigo', 'version', 'estado', 'vri', 'vrr', 'nivelResidual', 'fecha'] as const;
+    if (!camposPermitidos.includes(campo as (typeof camposPermitidos)[number])) return;
+    const campoSeguro = campo as (typeof camposPermitidos)[number];
+    if (this.ordenEvaluaciones() === campoSeguro) this.direccionEvaluaciones.update(actual => actual === 'asc' ? 'desc' : 'asc');
+    else { this.ordenEvaluaciones.set(campoSeguro); this.direccionEvaluaciones.set('asc'); }
+    this.pagina.set(1);
+    this.cargarEvaluaciones();
+  }
+
   cargarEvaluaciones(): void {
     const filtrosSnapshot = {
       buscar: this.filtroBuscar().trim() || undefined,
       estado: this.filtroEstado().trim() || undefined,
       pagina: this.pagina(),
-      registrosPorPagina: this.registrosPorPagina()
+      registrosPorPagina: this.registrosPorPagina(),
+      ...(this.ordenEvaluaciones() !== 'id' || this.direccionEvaluaciones() !== 'asc'
+        ? { ordenarPor: this.ordenEvaluaciones(), orden: this.direccionEvaluaciones() }
+        : {})
     };
 
     const solicitudId = ++this.secuenciaCargaEvaluaciones;

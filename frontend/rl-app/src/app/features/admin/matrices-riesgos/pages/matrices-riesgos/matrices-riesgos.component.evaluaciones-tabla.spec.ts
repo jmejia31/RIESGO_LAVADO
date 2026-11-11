@@ -163,20 +163,31 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
   it('renderiza las nueve columnas institucionales de Evaluaciones', () => {
     const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
-    const encabezados = Array.from(panel.querySelectorAll('thead th'))
+    const encabezados = Array.from(panel.querySelectorAll('table.b03-single-header thead:not(.hidden) th'))
       .map(th => (th.textContent || '').trim().replace(/\s+/g, ' '));
 
     expect(encabezados).toEqual([
-      'EVALUACIÓN',
-      'CÓDIGO DE RIESGO / RIESGO INHERENTE',
-      'VERSIÓN',
-      'ESTADO',
+      'Evaluación',
+      'Código de riesgo / riesgo inherente',
+      'Versión',
+      'Estado',
       'VRI',
       'VRR',
-      'NIVEL RESIDUAL',
-      'FECHA',
+      'Nivel residual',
+      'Fecha',
       'ACCIONES'
     ]);
+  });
+
+  it('integra el ordenamiento en una sola fila de encabezados y elimina la barra adicional', () => {
+    const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
+    const tabla = panel.querySelector('table.b03-single-header') as HTMLTableElement;
+    const encabezadosVisibles = tabla.querySelectorAll('thead:not(.hidden) tr');
+
+    expect(encabezadosVisibles).toHaveLength(1);
+    expect(tabla.textContent).not.toContain('Ordenar por:');
+    expect(tabla.querySelectorAll('thead:not(.hidden) app-sortable-table-header')).toHaveLength(8);
+    expect(tabla.querySelector('thead:not(.hidden) th:last-child')?.textContent).toContain('ACCIONES');
   });
 
   it('conserva codigo, nombre, version, fecha y acciones de la fila real', () => {
@@ -298,7 +309,10 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
     expect(component.cargandoEvaluaciones()).toBe(true);
     expect(component.errorEvaluaciones()).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Actualizando evaluaciones...');
+    const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
+    expect(panel.querySelector('table.b03-single-header')).toBeTruthy();
+    expect(panel.textContent).not.toContain('Actualizando evaluaciones...');
+    expect(panel.textContent).not.toContain('Ordenar por:');
 
     pendiente.next(paginado);
     pendiente.complete();

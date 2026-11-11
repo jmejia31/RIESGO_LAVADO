@@ -24,7 +24,7 @@
   }
 
   <div class="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-  @if (cargando()) {
+  @if (cargando() && listas().length === 0) {
     <div class="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center bg-white/70 py-3" role="status" aria-live="polite">
       <div class="w-12 h-12 rounded-full border-4 border-ihss-200 border-t-ihss-600 animate-spin"></div>
     </div>

@@ -8,13 +8,14 @@ import { RiesgoDto, RiesgoGuardarDto } from '../../models/matrices-riesgos-fase1
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 @Component({
   selector: 'app-matrices-riesgos-gestion',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-gestion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -36,6 +37,8 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
   readonly totalRegistros = signal(0);
   readonly filtroBuscar = signal('');
   readonly filtroEstado = signal<'TODOS' | 'ACTIVOS' | 'INACTIVOS'>('TODOS');
+  readonly orden = signal('id');
+  readonly direccion = signal<SortDirection>('asc');
   readonly modalRiesgoAbierto = signal(false);
   readonly opcionesTamanoPagina = [10, 25, 50] as const;
   get etiquetaGuardarRiesgo(): string {
@@ -68,14 +71,10 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
     const estado = this.filtroEstado();
     const activo = estado === 'ACTIVOS' ? true : estado === 'INACTIVOS' ? false : undefined;
     const incluirInactivos = estado !== 'ACTIVOS';
-    this.service.listarRiesgosPaginados(
-      incluirInactivos,
-      this.pagina(),
-      this.tamanoPagina(),
-      this.filtroBuscar(),
-      activo,
-      'local'
-    ).subscribe({
+    const request = this.orden() === 'id' && this.direccion() === 'asc'
+      ? this.service.listarRiesgosPaginados(incluirInactivos, this.pagina(), this.tamanoPagina(), this.filtroBuscar(), activo, 'local')
+      : this.service.listarRiesgosPaginados(incluirInactivos, this.pagina(), this.tamanoPagina(), this.filtroBuscar(), activo, 'local', this.orden() as 'id' | 'codigo' | 'nombre' | 'estado', this.direccion());
+    request.subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCarga) return;
         this.riesgos.set(resultado.items.map(item => ({
@@ -90,6 +89,13 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
       },
       error: (error: unknown) => { if (solicitudId === this.secuenciaCarga) this.finalizarError(error, 'No se pudieron cargar los riesgos.'); }
     });
+  }
+
+  ordenar(campo: string): void {
+    if (this.orden() === campo) this.direccion.update(actual => actual === 'asc' ? 'desc' : 'asc');
+    else { this.orden.set(campo); this.direccion.set('asc'); }
+    this.pagina.set(1);
+    this.cargar();
   }
 
   cambiarPagina(pagina: number): void {

@@ -1335,7 +1335,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     SELECT q.*, ROWNUM NUMERO_FILA
                       FROM (
                             {selectDataSql}
-                            ORDER BY e.EVA_FECHA_REGISTRO DESC, e.EVA_ID DESC
+                            {ConstruirOrdenEvaluaciones(filtro)}
                            ) q
                      WHERE ROWNUM <= :filaFinal
                    )
@@ -1989,7 +1989,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 SELECT q.*, ROWNUM AS NUMERO_FILA
                   FROM (
                     {baseSql}
-                    ORDER BY FAM_CODIGO ASC, FAM_ID ASC
+                    {ConstruirOrdenFamilias(filtro)}
                   ) q
                  WHERE ROWNUM <= :filaFinal
             )
@@ -2317,10 +2317,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
     private static string ConstruirOrdenConsolidado(FiltroReporteMatricesDto filtro)
     {
-        string campo = (filtro.OrdenarPor ?? "fechaEvaluacion").Trim().ToLowerInvariant();
-        string direccion = string.Equals(filtro.Orden, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+        string campo = (filtro.OrdenarPor ?? "evaluacionId").Trim().ToLowerInvariant();
+        string direccion = string.Equals(filtro.Orden, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
         string columna = campo switch
         {
+            "id" or "evaluacionid" or "evaluacion" => "p.PROY_EVALUACION_ID",
             "codigo" or "codigoriesgo" or "riesgo" => "p.PROY_CODIGO_RIESGO",
             "area" => "p.PROY_AREA_PRINCIPAL",
             "dueno" or "duenoriesgo" => "p.PROY_DUENO_RIESGO",
@@ -2330,9 +2331,48 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             "nivelresidual" => "p.PROY_NIVEL_RESIDUAL",
             "estado" or "estadoevaluacion" => "p.PROY_ESTADO_EVALUACION",
             "version" or "versionformulario" => "p.EVA_VERSION_ID",
-            _ => "p.PROY_FECHA_EVAL"
+            "fecha" or "fechaevaluacion" => "p.PROY_FECHA_EVAL",
+            _ => "p.PROY_EVALUACION_ID"
         };
-        return $"ORDER BY {columna} {direccion}, p.PROY_EVALUACION_ID DESC";
+        string desempate = columna == "p.PROY_EVALUACION_ID" ? string.Empty : ", p.PROY_EVALUACION_ID ASC";
+        return $"ORDER BY {columna} {direccion}{desempate}";
+    }
+
+    private static string ConstruirOrdenEvaluaciones(ConsultaEvaluacionPaginadaDto filtro)
+    {
+        string campo = (filtro.OrdenarPor ?? "id").Trim().ToLowerInvariant();
+        string direccion = string.Equals(filtro.Orden, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+        string columna = campo switch
+        {
+            "id" or "evaid" or "evaluacion" => "e.EVA_ID",
+            "codigo" or "riesgo" => "r.RIE_CODIGO",
+            "version" => "v.VER_VERSION",
+            "estado" => "NVL(f.FLU_ESTADO, 'BORRADOR')",
+            "vri" => "p.PROY_VRI",
+            "vrr" => "p.PROY_VRR",
+            "nivelresidual" => "p.PROY_NIVEL_RESIDUAL",
+            "fecha" or "fechaeval" => "e.EVA_FECHA_REGISTRO",
+            _ => "e.EVA_ID"
+        };
+        string desempate = columna == "e.EVA_ID" ? string.Empty : ", e.EVA_ID ASC";
+        return $"ORDER BY {columna} {direccion}{desempate}";
+    }
+
+    private static string ConstruirOrdenFamilias(ConsultaFamiliasFormularioPaginadaDto filtro)
+    {
+        string campo = (filtro.OrdenarPor ?? "id").Trim().ToLowerInvariant();
+        string direccion = string.Equals(filtro.Orden, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+        string columna = campo switch
+        {
+            "id" or "famid" => "FAM_ID",
+            "codigo" => "FAM_CODIGO",
+            "nombre" => "FAM_NOMBRE",
+            "estado" => "FAM_ACTIVO",
+            "fechacreacion" or "fecha" => "FAM_FECHA_CREACION",
+            _ => "FAM_ID"
+        };
+        string desempate = columna == "FAM_ID" ? string.Empty : ", FAM_ID ASC";
+        return $"ORDER BY {columna} {direccion}{desempate}";
     }
 
     private static void AgregarParametrosFiltro(OracleCommand cmd, FiltroReporteMatricesDto filtro)

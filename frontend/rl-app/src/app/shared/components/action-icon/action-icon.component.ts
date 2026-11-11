@@ -47,6 +47,7 @@ export type ActionIconName =
   | 'retry'
   | 'save'
   | 'search'
+  | 'sort'
   | 'show-password'
   | 'sync'
   | 'hide-password'
@@ -104,6 +105,7 @@ export const ACTION_ICON_PATHS: Readonly<Record<ActionIconName, readonly string[
   retry: ['M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7'],
   save: ['M5 4h12l2 2v14H5zM8 4v5h8V4M8 20v-6h8v6'],
   search: ['M21 21l-4.35-4.35m2.35-5.65a8 8 0 11-16 0 8 8 0 0116 0z'],
+  sort: ['m6 9 6-6 6 6', 'm6 15 6 6 6-6'],
   'show-password': ['M15 12a3 3 0 11-6 0 3 3 0 016 0z', 'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'],
   sync: ['M4 7h11m0 0-3-3m3 3-3 3M20 17H9m0 0 3 3m-3-3 3-3'],
   'hide-password': ['M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21'],
@@ -125,7 +127,9 @@ export const ACTION_ICON_PATHS: Readonly<Record<ActionIconName, readonly string[
       </svg>
     } @else {
       <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" class="h-full w-full" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-        @for (path of paths; track path) { <path [attr.d]="path" /> }
+        @for (path of paths; track path; let index = $index) {
+          <path [attr.d]="path" [class.text-ihss-700]="action === 'sort' && ((sortDirection === 'asc' && index === 0) || (sortDirection === 'desc' && index === 1))" [class.text-slate-300]="action === 'sort' && ((sortDirection === 'asc' && index === 1) || (sortDirection === 'desc' && index === 0))" />
+        }
       </svg>
     }
   `,
@@ -135,6 +139,7 @@ export const ACTION_ICON_PATHS: Readonly<Record<ActionIconName, readonly string[
 export class ActionIconComponent {
   @Input() action: ActionIconName = 'view';
   @Input() loading = false;
+  @Input() sortDirection: 'asc' | 'desc' = 'asc';
 
   get paths(): readonly string[] {
     return ACTION_ICON_PATHS[this.action] ?? ACTION_ICON_PATHS.view;

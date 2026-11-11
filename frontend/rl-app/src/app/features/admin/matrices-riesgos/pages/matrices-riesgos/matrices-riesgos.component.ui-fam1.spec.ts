@@ -202,7 +202,7 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     expect(compiled.querySelector('[data-ui-fam="gestor-principal"]')).not.toBeNull();
     expect(compiled.textContent).toContain('Familias de Formularios');
 
-    const headers = Array.from(compiled.querySelectorAll('[data-ui-fam-table="principal"] thead th'))
+    const headers = Array.from(compiled.querySelectorAll('[data-ui-fam-table="principal"] thead:not(.hidden) th'))
       .map(th => th.textContent?.trim());
     expect(headers).toEqual([
       'Código',

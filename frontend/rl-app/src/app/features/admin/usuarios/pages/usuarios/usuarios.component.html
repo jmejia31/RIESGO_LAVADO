@@ -21,7 +21,7 @@
   }
 
   <div class="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    @if (cargando()) {
+    @if (cargando() && usuarios().length === 0) {
       <div class="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center bg-white/70 py-3" role="status" aria-live="polite">
         <svg class="animate-spin w-7 h-7 text-ihss-600" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>

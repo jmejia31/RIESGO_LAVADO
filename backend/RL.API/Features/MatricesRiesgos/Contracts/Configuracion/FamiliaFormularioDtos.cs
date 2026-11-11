@@ -40,6 +40,8 @@ public sealed class ConsultaFamiliasFormularioPaginadaDto
     public string Estado { get; set; } = "TODAS";
     public string Archivado { get; set; } = "NO_ARCHIVADAS";
     public string Vigencia { get; set; } = "TODAS";
+    public string? OrdenarPor { get; set; } = "id";
+    public string? Orden { get; set; } = "asc";
 }
 
 public sealed class FamiliasFormularioTotalesDto

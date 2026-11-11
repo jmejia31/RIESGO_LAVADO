@@ -10760,3 +10760,23 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Archivos propios: `matrices-riesgos.component.ts`, `matrices-riesgos.component.html`, su spec Angular y `frontend/rl-app/e2e/matrices-authorization.spec.ts`. Pruebas frescas: Angular focal `34/34 PASS`, suite `92/92 archivos y 974/974 tests PASS`, lint PASS, build PASS con warnings preexistentes y Playwright focal `1/1 PASS` en `5.6s`.
 - Sin Oracle, backend, datos de negocio, auditoria, permisos, autenticacion, P06, P07, main, produccion, watcher o B03. Estado pendiente: publicar selectivamente y verificar Quality Gate remoto con Actions habilitadas; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`.
 - `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; no se ejecutaron GitHub Actions ni se tocaron backend, Oracle, autenticación, P06, P07, main, producción, watcher o cola.
+
+## 2026-11-11 - B03 estandar compartido de ordenamiento (COD)
+
+- Inicio verificado en `C:\RIESGO_LAVADO`: rama `desarrollo`, `BASE_SHA=b9b914449cae5006d032b07e7e1061c465fef2f3`, `origin/desarrollo` coincidente y divergencia `0 0`. Se preservaron las seis modificaciones tracked y los untracked ajenos.
+- Se asentó el cierre de B02 respaldado por GitHub Issue #36: `B02_OWNER_VISUAL_ACCEPTANCE=PASS`, `B02_FINAL_STATUS=APPROVED_BY_OWNER`, `B02_CLOSED=YES`; el run `43098519970` se conserva como `B02_REMOTE_CI=BLOCKED_EXTERNAL_QUEUE`, no como éxito.
+- Se agregó `app-sortable-table-header`, con flechas SVG siempre visibles, `aria-pressed`, `aria-sort`, estado ASC/DESC y emisión de eventos sin acoplamiento HTTP.
+- Se aplicó orden server-side con whitelist y desempate estable a Evaluaciones (`EVA_ID`), Consolidado (`PROY_EVALUACION_ID`), Familias (`FAM_ID`) y Gestión de Riesgos (`RIE_ID`). El orden inicial es ID ASC y la ordenación ocurre antes de ROWNUM/paginación.
+- Archivos propios B03: contratos y repositorios de Matrices, servicio/modelos/componentes/plantillas de Matrices, componente compartido y su regresión, y `docs/0.0 Documentación/B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`. No se incluyeron cambios ajenos.
+- Verificaciones frescas: componente compartido `3/3 PASS`; regresiones Matrices/Gestión y componente `17 archivos, 274/274 PASS`; build Angular `PASS` con warnings preexistentes; build aislado del API `PASS` con 0 warnings y 0 errores. La salida Debug no pudo reemplazarse porque la API existente la mantiene bloqueada; no se detuvo el proceso.
+- Pendientes honestos: inventario/extensión server-side de Usuarios, Bitácora, Monitoreo y otros listados; Playwright visual B03; validaciones completas dependientes de Oracle/infraestructura. `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_TECHNICAL_STATUS=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`.
+- No se tocaron Oracle institucional, migraciones, auditoría, permisos, autenticación, P06, P07, main, producción, watcher ni archivos ajenos. Punto de continuación: stage selectivo, validación final, commit/push fast-forward y paridad local/remota.
+
+## 2026-11-11 - B03 correccion de encabezados y refresco silencioso (COD)
+
+- Continuacion verificada en `C:\RIESGO_LAVADO`: rama `desarrollo`, `HEAD=origin/desarrollo=b9b914449cae5006d032b07e7e1061c465fef2f3`, divergencia inicial `0 0`. Se preservaron las seis modificaciones tracked y los untracked ajenos.
+- Se eliminaron del HTML los bloques muertos y las filas de encabezado duplicadas de Evaluaciones, Consolidado, Familias y Gestion de Riesgos. Cada tabla conserva una sola fila de encabezados y las flechas ASC/DESC viven dentro de los encabezados originales mediante `app-sortable-table-header`; no se dejo CSS de ocultamiento para compensar duplicados.
+- Refresco silencioso: las cargas de Evaluaciones, Consolidado, Familias, Coincidencias, Usuarios, Tipo de Listas, Bitacora y resumen de Cargar Listas conservan registros validos durante solicitudes ordinarias; el estado inicial sigue mostrando feedback discreto cuando no existen filas.
+- Verificaciones frescas: suite Angular `93 archivos / 978 tests PASS`; build Angular PASS con warnings preexistentes de presupuesto/CommonJS; ESLint PASS; build aislado `backend/RL.API` PASS con `0 warnings / 0 errors`.
+- `B03_CORE_VISIBLE_HEADERS=PASS`; `B03_SORT_HEADER_REGRESSION=PASS`; `B03_SILENT_REFRESH_REGRESSION=PASS` para los consumidores modificados. Playwright visual B03 no ejecutado por requerir servidor/datos autorizados; Oracle institucional no tocado.
+- El inventario global de ordenamiento server-side permanece `PARTIAL`: Usuarios, Bitacora, Monitoreo y otros listados requieren contratos propios antes de declararse cubiertos. `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `BLOCK10_AUTHORIZED=NO`.

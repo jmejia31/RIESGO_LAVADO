@@ -9,6 +9,8 @@ public sealed class ConsultaRiesgosPaginadaDto
     public string? Buscar { get; set; }
     public bool IncluirInactivos { get; set; }
     public bool? Activo { get; set; }
+    public string? OrdenarPor { get; set; } = "id";
+    public string? Orden { get; set; } = "asc";
 }
 
 public sealed class RiesgosPaginadosDto : PaginadoDto<RiesgoDto>

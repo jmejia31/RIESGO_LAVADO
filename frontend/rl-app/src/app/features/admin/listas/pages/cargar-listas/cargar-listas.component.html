@@ -54,7 +54,7 @@
       <p class="text-sm text-gray-500 mt-1">Resumen de cargas registradas por tipo de lista y usuario responsable.</p>
     </div>
 
-    @if (cargandoResumen()) {
+    @if (cargandoResumen() && resumenListas().length === 0) {
       <div class="p-12 flex flex-col items-center justify-center space-y-4">
         <div class="w-12 h-12 rounded-full border-4 border-ihss-200 border-t-ihss-600 animate-spin"></div>
         <p class="text-sm font-medium text-gray-500">Cargando resumen de listas...</p>

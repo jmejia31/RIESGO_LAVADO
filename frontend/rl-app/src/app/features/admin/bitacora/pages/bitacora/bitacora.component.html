@@ -117,7 +117,7 @@
     </div>
 
     <div class="overflow-x-auto">
-      @if (cargando()) {
+      @if (cargando() && datos().length === 0) {
         <div class="flex min-h-48 flex-col items-center justify-center gap-3 p-6" aria-live="polite">
           <app-action-icon action="refresh" [loading]="true" class="h-8 w-8 text-ihss-700"></app-action-icon>
           <p class="text-sm font-medium text-gray-500">Cargando eventos de auditoría...</p>
