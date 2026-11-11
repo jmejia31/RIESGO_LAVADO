@@ -4143,3 +4143,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `VALIDATE_DOCUMENTATION_LINKS=PASS`; `VALIDATE_DATABASE_SCRIPTS=PASS`; `VALIDATE_TEXT_ENCODING=PASS`; `VALIDATE_AGENT_SKILLS=PASS`; escaneo de contenido cambiado sin secretos=PASS; `GIT_DIFF_CHECK_OWN_FILES=PASS`; `VALIDATE_REPOSITORY_STRUCTURE=FAIL` por la carpeta heredada `frontend/rl-app/src/app/core/services`, fuera del cambio B02.
 - `GITHUB_ACTIONS_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `AUTHENTICATION_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - `B02_STATUS=PARTIAL`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`. Continuación: stage selectivo, commit/push controlado y paridad exacta local/remota; conservar como pendientes el validador estructural heredado y la E2E no certificada.
+
+## B02 - publicación y cierre técnico local - 2026-11-11
+
+- `B02_CODE_COMMIT=a6f0f829`; publicado en `origin/desarrollo` mediante push normal. `GITHUB_ACTIONS_ENABLED=FALSE` fue confirmado mediante la configuración del repositorio; no se ejecutaron Actions.
+- `HEAD_LOCAL=a6f0f829`; `HEAD_REMOTE=a6f0f829`; `DIVERGENCE=0_0`; `REMOTE_SYNC=YES` después de la publicación.
+- El commit contiene solo los 16 archivos B02/documentales. Las modificaciones ajenas y untracked permanecen preservados fuera del commit.
+- `B02_STATUS=PARTIAL`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `FRONTEND_E2E=72_PASS_3_FAIL_15_SKIP`; la E2E focalizada de Monitoreo no pudo iniciar porque no había Angular escuchando en `127.0.0.1:4200`.
+- Pendientes: aceptación visual del propietario y E2E local con el servidor disponible. No se tocaron backend, Oracle, autenticación, P06, P07, main, producción, watcher ni cola Codex.
