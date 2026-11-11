@@ -494,6 +494,63 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(service.listarFamiliasFormularioPaginadas).not.toHaveBeenCalled();
   });
 
+  it('actualiza el consolidado en segundo plano, conserva la tabla y evita solicitudes duplicadas', () => {
+    const respuestaInicial = {
+      items: [{ evaluacionId: 1, riesgoId: 10, versionFormularioId: 20, codigoRiesgo: 'R-001', areaPrincipal: 'Inicial', duenoRiesgo: 'Equipo A', vri: 1, nivelInherente: 'Bajo', vrr: 1, nivelResidual: 'Bajo', respuestaRiesgo: 'Aceptar', estadoEvaluacion: 'BORRADOR', fechaEvaluacion: null }],
+      pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1,
+      totales: { totalRiesgos: 1, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 1, totalAltoCritico: 0 }
+    };
+    const respuestaActualizada = {
+      ...respuestaInicial,
+      items: [{ ...respuestaInicial.items[0], codigoRiesgo: 'R-002', areaPrincipal: 'Actualizada' }]
+    };
+    const refresco = new Subject<typeof respuestaActualizada>();
+    service.obtenerConsolidadoPaginado
+      .mockReturnValueOnce(of(respuestaInicial))
+      .mockReturnValueOnce(refresco);
+
+    component.seleccionarTab('consolidado');
+    fixture.detectChanges();
+    expect(component.consolidadoInicializado()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('R-001');
+
+    component.cargarConsolidado();
+    component.cargarConsolidado();
+    fixture.detectChanges();
+
+    expect(service.obtenerConsolidadoPaginado).toHaveBeenCalledTimes(2);
+    expect(component.cargandoConsolidado()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('R-001');
+    expect(fixture.nativeElement.textContent).not.toContain('Actualizando consolidado...');
+
+    refresco.next(respuestaActualizada);
+    fixture.detectChanges();
+
+    expect(component.cargandoConsolidado()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('R-002');
+    expect(fixture.nativeElement.textContent).not.toContain('R-001');
+  });
+
+  it('conserva los registros y muestra un error discreto si falla el refresco', () => {
+    const respuestaInicial = {
+      items: [{ evaluacionId: 1, riesgoId: 10, versionFormularioId: 20, codigoRiesgo: 'R-001', areaPrincipal: 'Inicial', duenoRiesgo: 'Equipo A', vri: 1, nivelInherente: 'Bajo', vrr: 1, nivelResidual: 'Bajo', respuestaRiesgo: 'Aceptar', estadoEvaluacion: 'BORRADOR', fechaEvaluacion: null }],
+      pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1,
+      totales: { totalRiesgos: 1, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 1, totalAltoCritico: 0 }
+    };
+    service.obtenerConsolidadoPaginado
+      .mockReturnValueOnce(of(respuestaInicial))
+      .mockReturnValueOnce(throwError(() => ({ error: { detail: 'No se pudo actualizar' } })));
+
+    component.seleccionarTab('consolidado');
+    component.cargarConsolidado();
+    fixture.detectChanges();
+
+    expect(component.consolidado()).toHaveLength(1);
+    expect(component.errorConsolidado()).toBe('No se pudo actualizar');
+    expect(fixture.nativeElement.textContent).toContain('R-001');
+    expect(fixture.nativeElement.textContent).not.toContain('Actualizando consolidado...');
+  });
+
   it('edita una evaluacion existente en modal, transiciona su estado y recarga sus flujos', () => {
     const resumen: EvaluacionRiesgoResumenDto = {
       evaId: 20,

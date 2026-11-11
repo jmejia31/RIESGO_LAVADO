@@ -255,6 +255,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly riesgoMaestroMatriz = signal<RiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
+  readonly consolidadoInicializado = signal(false);
   readonly totalRegistrosConsolidado = signal(0);
   readonly totalPaginasServidorConsolidado = signal(0);
   readonly totalesConsolidado = signal<ReporteMatricesTotales>({
@@ -1420,6 +1421,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         if (tamanoPagina === 10 || tamanoPagina === 20 || tamanoPagina === 50) {
           this.registrosPorPaginaConsolidado.set(tamanoPagina);
         }
+        this.consolidadoInicializado.set(true);
         this.cargandoConsolidado.set(false);
         this.consolidadoContextoEnCarga = null;
         this.consolidadoContextoCargado = contexto;

@@ -65,3 +65,12 @@ ejecucion. La aceptacion del propietario de B01 queda registrada en Issue #34.
 - No se modifico codigo backend ni se accedio a Oracle institucional. La puerta local intento la suite backend y quedo `BLOCKED_EXTERNAL_DEPENDENCY`: `1099 PASS`, `2 SKIP`, `8` errores de integracion porque el contexto local no tiene `Database:Profile=LOCAL_XE`; no se cambio la configuracion para ocultarlo. No se ejecutaron pruebas autenticadas.
 - No se modificaron autenticacion, sesiones, auditoria, formulas, P06, P07, main, produccion, watcher ni cola Codex. `GITHUB_ACTIONS_ENABLED=TRUE` fue confirmado tras la autorizacion del propietario.
 - Estado: `B02_TECHNICAL_STATUS=PASS`; `B02_GLOBAL_PERFORMANCE_REVIEW=PARTIAL` por ausencia de medicion real de latencia contra API/Oracle; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B02_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; B03 permanece sin iniciar.
+
+## B02 - refresco silencioso del consolidado - 2026-11-11
+
+- `BASE_SHA=40e79f5ea545ce79effa60833440d4a1e3561923`; se corrigio unicamente el refresco de Evaluaciones consolidadas.
+- `ROOT_CAUSE=CONFIRMED`: el overlay `Actualizando consolidado...` estaba ligado a `cargandoConsolidado()` tanto para la carga inicial como para el boton Actualizar, aunque la tabla ya conservara registros validos.
+- Correccion: `consolidadoInicializado` distingue la carga inicial sin datos del refresco; durante `cargarConsolidado()` se mantiene la tabla montada, filtros, paginacion, ordenamiento y foco. La deduplicacion de contexto en curso se conserva y la respuesta valida reemplaza los registros al llegar.
+- Error: el refresco conserva los registros previos y mantiene `errorConsolidado` accesible; no se presenta confirmacion de exito cuando la consulta falla.
+- Regresiones frescas: componente focalizado `34/34 PASS`; suite Angular `92 archivos / 974 tests PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes; Playwright aislado `1/1 PASS` verificando GET, tabla estable, foco, ausencia de overlay y datos actualizados.
+- No se modificaron backend, Oracle, calculos, auditoria, permisos, autenticacion, P06, P07, main, produccion, watcher ni cola Codex. `B03_STARTED=NO`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`.

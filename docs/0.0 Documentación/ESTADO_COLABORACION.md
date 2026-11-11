@@ -4180,4 +4180,8 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Estado: `B02_TECHNICAL_STATUS=PASS`; `B02_GLOBAL_PERFORMANCE_REVIEW=PARTIAL`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B02_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; B03 no iniciado.
 - `LOCAL_QUALITY_GATE=BLOCKED_EXTERNAL_DEPENDENCY`: suite backend `1099 PASS`, `2 SKIP`, `8` errores Oracle porque el contexto local no tiene `Database:Profile=LOCAL_XE`; no se modifico Oracle, configuracion institucional ni codigo backend. El Quality Gate remoto queda pendiente sobre el SHA publicado.
 - `B02_TECHNICAL_CERTIFICATION=PASS`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; `GITHUB_ACTIONS_EXECUTED=NO`; `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`.
+- B02 correccion del boton Actualizar consolidado (COD, 2026-11-11): `BASE_SHA=40e79f5ea545ce79effa60833440d4a1e3561923`; se retiro el overlay en refrescos posteriores a la carga inicial, manteniendo consulta GET, tabla, filtros, paginacion, ordenamiento y foco.
+- `CONSOLIDATED_REFRESH_GUARDS=PASS`; `FOCUSED_ANGULAR=34/34_PASS`; `FRONTEND_TESTS=974/974_PASS`; `FRONTEND_LINT=PASS`; `ANGULAR_BUILD=PASS`; `PLAYWRIGHT_FOCUSED=1/1_PASS`.
+- `ORACLE_TOUCHED=NO`; `BACKEND_CHANGED=NO`; `BUSINESS_DATA_CHANGED=NO`; `AUDIT_CHANGED=NO`; `WATCHER_ENABLED=NO`; `B03_STARTED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Estado: `B02_TECHNICAL_STATUS=PENDING_REMOTE_CI`; `B02_OWNER_VISUAL_ACCEPTANCE=PENDING`; falta publicar selectivamente y verificar el Quality Gate de GitHub Actions sobre el SHA final.
 - B03 no iniciado. El worktree conserva únicamente las modificaciones ajenas y archivos untracked preexistentes listados al inicio.

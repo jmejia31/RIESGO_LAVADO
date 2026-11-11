@@ -133,6 +133,65 @@ test.beforeEach(async ({ page }, testInfo) => {
   await stubLecturasMatrices(page);
 });
 
+test('actualizar consolidado consulta el backend sin overlay y conserva el registro durante el refresco', async ({ page }) => {
+  let lecturas = 0;
+  let liberarRefresco: (() => void) | undefined;
+  await page.route('**/api/matrices-riesgos/consolidado/paginado*', async route => {
+    lecturas++;
+    if (lecturas === 1) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          datos: {
+            items: [{ evaluacionId: 91, riesgoId: 5, versionFormularioId: 10, codigoRiesgo: 'R-INITIAL', areaPrincipal: 'Inicial', duenoRiesgo: 'Equipo A', vri: 1, nivelInherente: 'Bajo', vrr: 1, nivelResidual: 'Bajo', respuestaRiesgo: 'Aceptar', estadoEvaluacion: 'BORRADOR', fechaEvaluacion: null }],
+            pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1,
+            totales: { totalRiesgos: 1, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 1, totalAltoCritico: 0 }
+          }
+        })
+      });
+    }
+
+    await new Promise<void>(resolve => { liberarRefresco = resolve; });
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        datos: {
+          items: [{ evaluacionId: 91, riesgoId: 5, versionFormularioId: 10, codigoRiesgo: 'R-UPDATED', areaPrincipal: 'Actualizada', duenoRiesgo: 'Equipo A', vri: 2, nivelInherente: 'Medio', vrr: 2, nivelResidual: 'Medio', respuestaRiesgo: 'Mitigar', estadoEvaluacion: 'BORRADOR', fechaEvaluacion: null }],
+          pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1,
+          totales: { totalRiesgos: 1, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 1, totalAltoCritico: 0 }
+        }
+      })
+    });
+  });
+
+  await page.goto('/matrices-riesgos');
+  const tab = page.getByRole('tab', { name: 'Evaluaciones consolidadas' });
+  const cargaInicial = page.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  await tab.click();
+  expect((await cargaInicial).status()).toBe(200);
+  await expect(page.getByText('R-INITIAL')).toBeVisible();
+
+  const actualizar = page.getByRole('button', { name: 'Actualizar matriz consolidada' });
+  await actualizar.focus();
+  const refresco = page.waitForRequest(request => request.method() === 'GET'
+    && new URL(request.url()).pathname.endsWith('/consolidado/paginado'));
+  await actualizar.click();
+  await refresco;
+  await expect.poll(() => lecturas).toBe(2);
+  await expect(page.getByText('R-INITIAL')).toBeVisible();
+  await expect(page.getByText('Actualizando consolidado...')).toHaveCount(0);
+  await expect(actualizar).toBeFocused();
+
+  liberarRefresco?.();
+  await expect(page.getByText('R-UPDATED')).toBeVisible();
+  await expect(page.getByText('R-INITIAL')).toHaveCount(0);
+});
+
 test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado', async ({ page }) => {
   let clonaciones = 0;
   await page.route('**/api/matrices-riesgos/formularios/10/clonar', route => {
