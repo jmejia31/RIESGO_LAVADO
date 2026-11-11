@@ -45,6 +45,19 @@ describe('system-theme.util', () => {
   });
 
   it.each([
+    '#1e3a8a',
+    '#166534',
+    '#fff8b5',
+    '#ffffff'
+  ])('deriva una superficie de selecciÃ³n con texto blanco legible para %s', primary => {
+    const theme = createSystemTheme(primary, '#1d4ed8');
+    const selection = colorFromToken(theme.properties['--ihss-selection-active-rgb']);
+    const white = colorFromToken(theme.properties['--ihss-selection-on-active-rgb']);
+    expect(white).toEqual({ r: 255, g: 255, b: 255 });
+    expect(contrastRatio(selection, white)).toBeGreaterThanOrEqual(4.55);
+  });
+
+  it.each([
     ['#1e3a8a', '#1d4ed8'],
     ['#991b1b', '#dc2626'],
     ['#14532d', '#22c55e'],

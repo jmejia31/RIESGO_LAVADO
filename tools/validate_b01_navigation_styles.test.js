@@ -46,9 +46,11 @@ test('B01 cycle navigation uses dynamic institutional tokens for all five option
   assert.equal((template.match(/institutional-selection__item/g) ?? []).length, 5);
   assert.equal((template.match(/\[attr\.aria-pressed\]/g) ?? []).length, 5);
   assert.equal(template.includes('[class.bg-slate-900]'), false);
-  assert.match(styles, /button\[aria-pressed='true'\]/);
-  assert.doesNotMatch(styles, /button\[aria-pressed='true'\]\{[^}]*background\s*:/);
+  assert.doesNotMatch(styles, /button\[aria-pressed='true'\]/);
   assert.match(styles, /--cycle-ink:\s*rgb\(var\(--ihss-950-rgb/);
+  assert.doesNotMatch(styles, /\.matrices-cycle-nav__tabs button:hover/);
+  assert.doesNotMatch(styles, /\.matrices-cycle-nav__tabs button:focus-visible/);
+  assert.doesNotMatch(styles, /\.matrices-cycle-nav__tabs button\s*\{[^}]*color\s*:/);
 });
 
 test('B01 secondary navigation retains the dynamic active surface and theme-derived shadows', () => {
@@ -64,6 +66,7 @@ test('B01 secondary navigation retains the dynamic active surface and theme-deri
   assert.match(activeRule.declarations, /color:\s*rgb\(var\(--institutional-selection-active-fg-rgb/);
   assert.match(activeRule.declarations, /var\(--ihss-primary-rgb/);
   assert.doesNotMatch(styles, /--matrices-ink:\s*#0f1f3d/i);
+  assert.doesNotMatch(styles, /\.matrices-tabs-shell \[role='tab'\][^}]*color:\s*var\(--matrices-ink/);
 });
 
 test('B01 dynamic foreground contract remains available for token surfaces', () => {

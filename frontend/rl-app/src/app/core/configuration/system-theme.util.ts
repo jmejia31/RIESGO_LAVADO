@@ -50,14 +50,14 @@ function mix(first: RgbColor, second: RgbColor, secondWeight: number): RgbColor 
   };
 }
 
-function darkSurfaceWithWhiteContrast(color: RgbColor): RgbColor {
+function darkSurfaceWithWhiteContrast(color: RgbColor, minimumContrast = 4.5): RgbColor {
   const white = { r: 255, g: 255, b: 255 };
-  if (contrastRatio(color, white) >= 4.5) return color;
+  if (contrastRatio(color, white) >= minimumContrast) return color;
   let low = 0;
   let high = 1;
   for (let iteration = 0; iteration < 24; iteration += 1) {
     const middle = (low + high) / 2;
-    if (contrastRatio(mix(color, { r: 0, g: 0, b: 0 }, middle), white) >= 4.5) high = middle;
+    if (contrastRatio(mix(color, { r: 0, g: 0, b: 0 }, middle), white) >= minimumContrast) high = middle;
     else low = middle;
   }
   return mix(color, { r: 0, g: 0, b: 0 }, high);
@@ -162,6 +162,7 @@ export function createSystemTheme(primaryValue?: string | null, accentValue?: st
   const [modalSecondaryStart, modalSecondary, modalSecondaryEnd] = modalToneStops(accent);
   const modalPrimary = darkSurfaceWithWhiteContrast(primary);
   const modalAccent = darkSurfaceWithWhiteContrast(accent);
+  const selectionActive = darkSurfaceWithWhiteContrast(primary, 4.55);
   const onPrimary = bestContrastForeground(primary);
   const onAccent = bestContrastForeground(accent);
   const modalForeground = { r: 255, g: 255, b: 255 };
@@ -182,6 +183,8 @@ export function createSystemTheme(primaryValue?: string | null, accentValue?: st
     '--ihss-modal-secondary-end-rgb': toRgbToken(modalSecondaryEnd),
     '--ihss-modal-highlight-rgb': toRgbToken(hueDistance(primary, accent) <= 35 ? modalSecondaryEnd : modalPrimaryEnd),
     '--ihss-on-modal-rgb': toRgbToken(modalForeground),
+    '--ihss-selection-active-rgb': toRgbToken(selectionActive),
+    '--ihss-selection-on-active-rgb': toRgbToken(modalForeground),
     '--modal-close-bg': 'rgb(255 255 255 / 0.16)',
     '--modal-close-bg-hover': 'rgb(255 255 255 / 0.28)',
     '--modal-close-border': 'rgb(255 255 255 / 0.46)',

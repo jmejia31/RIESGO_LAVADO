@@ -785,8 +785,8 @@ dialog.modal-backdrop-overlay {
  * consumen siempre los tokens dinámicos del tema.
  */
 .institutional-selection {
-  --institutional-selection-active-rgb: var(--ihss-700-rgb, 30 58 138);
-  --institutional-selection-active-fg-rgb: var(--ihss-on-700-rgb, 255 255 255);
+  --institutional-selection-active-rgb: var(--ihss-selection-active-rgb, 30 58 138);
+  --institutional-selection-active-fg-rgb: var(--ihss-selection-on-active-rgb, 255 255 255);
   --institutional-selection-surface-rgb: 255 255 255;
   --institutional-selection-surface-fg-rgb: var(--ihss-on-50-rgb, 15 23 42);
   --institutional-selection-border-rgb: var(--ihss-200-rgb, 204 209 225);
@@ -798,14 +798,10 @@ dialog.modal-backdrop-overlay {
 }
 
 .institutional-selection--compact {
-  --institutional-selection-active-rgb: var(--ihss-900-rgb, 23 44 104);
-  --institutional-selection-active-fg-rgb: var(--ihss-on-900-rgb, 255 255 255);
   --institutional-selection-radius: 0.75rem;
 }
 
 .institutional-selection--sidebar {
-  --institutional-selection-active-rgb: var(--ihss-700-rgb, 30 58 138);
-  --institutional-selection-active-fg-rgb: var(--ihss-on-700-rgb, 255 255 255);
   --institutional-selection-surface-rgb: 255 255 255;
   --institutional-selection-surface-fg-rgb: 255 255 255;
   --institutional-selection-border-rgb: 255 255 255 / 0.08;

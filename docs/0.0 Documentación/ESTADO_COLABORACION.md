@@ -4087,3 +4087,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `FOCUSED_E2E=2/2 PASS`; `MODAL_SHELL_SUITE=13/13 PASS` con un worker. La ejecucion concurrente previa tuvo timeouts de preparacion ajenos al caso corregido; no se relajaron aserciones.
 - No se modificaron componentes funcionales, backend, Oracle, P06, P07, B02, main ni produccion. `ORACLE_TOUCHED=NO`; `WATCHER_ENABLED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Continuacion exacta: ejecutar regresiones B01/validadores y `git diff --check`, publicar selectivamente el test y estos registros, verificar el Quality Gate del nuevo SHA. `B01_STATUS=BLOCKED_UNTIL_GATE`; `B01_VISUAL_CERTIFICATION=PENDING`.
+
+## B01 - hotfix de contraste de seleccion institucional - 2026-11-11
+
+- `BASE_SHA=ca156e0b29eb40da7e2c74c1b6dd06ff6774a97f`; `origin/desarrollo` coincide; worktree conserva cambios ajenos sin stage.
+- `ROOT_CAUSE_LOCAL_HOVER=CONFIRMED`: el SCSS del ciclo integral sobrescribia color/fondo en hover y focus activos. `ROOT_CAUSE_DYNAMIC_FOREGROUND=CONFIRMED`: `on-700/on-900` no garantizaba texto blanco en colores claros. Una cascada secundaria adicional imponia `--matrices-ink` en tabs inactivos.
+- `GLOBAL_SELECTION_TOKENS=PASS`: `createSystemTheme` ahora produce superficie activa derivada del primario con contraste minimo `4.55:1` frente a blanco y foreground blanco; todas las variantes consumen el mismo contrato.
+- `PRIMARY_NAVIGATION=PASS`; `ACTIVE_TEXT_WHITE=PASS`; `ACTIVE_HOVER_WHITE_TEXT=PASS`; `ACTIVE_FOCUS_WHITE_TEXT=PASS`; `WCAG_AA_CONTRAST=PASS` en E2E real con siete temas, incluyendo verde y blanco. `VISUAL_SCREENSHOTS=7` generadas localmente.
+- `SECONDARY_NAVIGATION_REGRESSION=PASS`; `FORM_BUILDER_REGRESSION=PASS`; `E2E_MODAL_SHELL=13/13_PASS`; `FRONTEND_TESTS=962/962_PASS`; `FRONTEND_LINT=PASS`; `FRONTEND_BUILD=PASS`.
+- `TEXT_ENCODING_VALIDATOR=PENDING_ENVIRONMENT`: Windows PowerShell no expone `System.IO.Path.GetRelativePath` y `pwsh` no esta disponible; no se altero el validador.
+- Sin cambios de backend, base de datos, Oracle, main, produccion, P06, P07 o watcher. `B01_STATUS=BLOCKED_UNTIL_GATE`; `B01_VISUAL_CERTIFICATION=PENDING_QUALITY_GATE`; `B02_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`. Continuacion: stage selectivo, publicar y consultar el Gate del SHA final.

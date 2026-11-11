@@ -41,22 +41,6 @@
 .matrices-cycle-nav__tabs button {
   min-height: 2.6rem;
   flex: 0 0 auto;
-  border: 1px solid transparent;
-  color: var(--cycle-muted);
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
-}
-
-.matrices-cycle-nav__tabs button:hover,
-.matrices-cycle-nav__tabs button:focus-visible {
-  border-color: var(--cycle-line);
-  background: rgb(var(--ihss-50-rgb, 246 247 251) / 0.72);
-  color: var(--cycle-ink);
-  outline: none;
-}
-
-.matrices-cycle-nav__tabs button[aria-pressed='true'] {
-  border-color: rgb(var(--ihss-700-rgb, 30 58 138));
-  box-shadow: 0 5px 14px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.18);
 }
 
 @media (max-width: 640px) {

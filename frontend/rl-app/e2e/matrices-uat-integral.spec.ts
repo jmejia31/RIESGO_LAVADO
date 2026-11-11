@@ -190,12 +190,17 @@ test('B01 mantiene contraste AA real en pestañas secundarias y detecta la regre
 
   const tabNames = ['Evaluaciones', 'Evaluaciones consolidadas', 'Plantillas'];
   const themes = [
-    { name: 'default', primary: [30, 58, 138] },
-    { name: 'dark', primary: [15, 23, 42] },
-    { name: 'light', primary: [96, 165, 250] },
-    { name: 'alternative', primary: [124, 58, 237] },
-    { name: 'fallback', primary: null }
+    { name: 'default', properties: createSystemTheme('#1e3a8a', '#1d4ed8').properties },
+    { name: 'dark', properties: createSystemTheme('#0f172a', '#0f172a').properties },
+    { name: 'green', properties: createSystemTheme('#166534', '#22c55e').properties },
+    { name: 'light', properties: createSystemTheme('#60a5fa', '#93c5fd').properties },
+    { name: 'alternative', properties: createSystemTheme('#7c3aed', '#c026d3').properties },
+    { name: 'white', properties: createSystemTheme('#ffffff', '#ffffff').properties },
+    { name: 'fallback', properties: null }
   ];
+  const themePropertyNames = [...new Set(themes.flatMap(theme => theme.properties ? Object.keys(theme.properties) : []))];
+  const primaryNavigation = page.locator('nav[aria-label="Ciclo funcional de Matrices de Riesgos"] button');
+  await expect(primaryNavigation).toHaveCount(5);
 
   const measure = async (locator: Locator, forcedColor?: string) => locator.evaluate((element, forcedColor) => {
     const parse = (value: string): [number, number, number, number] => {
@@ -253,26 +258,19 @@ test('B01 mantiene contraste AA real en pestañas secundarias y detecta la regre
       surface: surface.map(channel => Math.round(channel)).join(','),
       rawLayers,
       classes: target.className,
-      focusRing: style.boxShadow !== 'none'
+      focusRing: style.boxShadow !== 'none' || (style.outlineStyle !== 'none' && style.outlineWidth !== '0px')
     };
   }, forcedColor);
 
   for (const theme of themes) {
-    await page.evaluate(({ name, primary }) => {
+    await page.evaluate(({ name, properties, propertyNames }) => {
       const root = document.documentElement;
-      if (!primary) {
-        for (const token of ['--ihss-100-rgb', '--ihss-900-rgb', '--ihss-950-rgb', '--ihss-on-900-rgb']) root.style.removeProperty(token);
-        return;
-      }
-      const shade = (weight: number) => primary.map(channel => Math.round(channel * weight));
-      const on900 = name === 'light' ? [0, 0, 0] : [255, 255, 255];
-      root.style.setProperty('--ihss-100-rgb', primary.map(channel => Math.round(channel * .1 + 255 * .9)).join(' '));
-      root.style.setProperty('--ihss-900-rgb', shade(.75).join(' '));
-      root.style.setProperty('--ihss-950-rgb', shade(.6).join(' '));
-      root.style.setProperty('--ihss-on-900-rgb', on900.join(' '));
+      for (const property of propertyNames) root.style.removeProperty(property);
+      for (const [property, value] of Object.entries(properties ?? {})) root.style.setProperty(property, value);
       root.dataset.b01Theme = name;
-    }, theme);
+    }, { name: theme.name, properties: theme.properties, propertyNames: themePropertyNames });
 
+    await primaryNavigation.nth(0).click();
     await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
     for (const selectedName of tabNames) {
       const selected = page.getByRole('tab', { name: selectedName, exact: true });
@@ -307,6 +305,28 @@ test('B01 mantiene contraste AA real en pestañas secundarias y detecta la regre
     const negativeTarget = page.getByRole('tab', { name: 'Plantillas', exact: true });
     const brokenOriginal = await measure(negativeTarget, 'rgb(71 85 105)');
     expect(brokenOriginal.contrast).toBeLessThan(4.5);
+
+    for (const index of [0, 1, 2, 3, 4]) {
+      const selected = primaryNavigation.nth(index);
+      await selected.click();
+      await expect(selected).toHaveAttribute('aria-pressed', 'true');
+      const active = await measure(selected);
+      expect(active.color).toBe('rgb(255, 255, 255)');
+      expect(active.contrast).toBeGreaterThanOrEqual(4.5);
+
+      await selected.hover();
+      const activeHover = await measure(selected);
+      expect(activeHover.color).toBe('rgb(255, 255, 255)');
+      expect(activeHover.surface).toBe(active.surface);
+      expect(activeHover.contrast).toBeGreaterThanOrEqual(4.5);
+
+      await selected.focus();
+      const activeFocus = await measure(selected);
+      expect(activeFocus.color).toBe('rgb(255, 255, 255)');
+      expect(activeFocus.surface).toBe(active.surface);
+      expect(activeFocus.contrast).toBeGreaterThanOrEqual(4.5);
+    }
+    await page.screenshot({ path: `test-results/b01-main-nav-${theme.name}.png`, fullPage: false });
   }
 });
 

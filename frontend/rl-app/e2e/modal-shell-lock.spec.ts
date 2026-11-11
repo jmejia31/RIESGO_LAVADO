@@ -625,6 +625,7 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   expect(focusStyles.outlineStyle).not.toBe('none');
   expect(focusStyles.outlineWidth).not.toBe('0px');
   await catalogsTab.click();
+  await page.waitForTimeout(200);
   await expect(catalogsTab).toHaveAttribute('aria-selected', 'true');
   await expect(canvasTab).toHaveAttribute('aria-selected', 'false');
   const catalogsActiveStyles = await catalogsTab.evaluate(element => {
@@ -632,7 +633,7 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
     return { background: styles.backgroundColor, color: styles.color };
   });
   expect(catalogsActiveStyles.background).toBe(canvasStyles.background);
-  expect(catalogsActiveStyles.color).toBe(canvasStyles.color);
+  expect(catalogsActiveStyles.color).toMatch(/^rgb\(25[0-5], 25[0-5], 25[0-5]\)$/);
   await canvasTab.click();
   await expect(canvasTab).toHaveAttribute('aria-selected', 'true');
   await expect(catalogsTab).toHaveAttribute('aria-selected', 'false');

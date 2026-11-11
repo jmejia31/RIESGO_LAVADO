@@ -28,7 +28,8 @@ test('B01 defines one dynamic institutional selection contract with reusable var
   assert.match(globalStyles, /\.institutional-selection--card\s*\{/);
   assert.match(globalStyles, /\.institutional-selection--sidebar\s*\{/);
   assert.match(globalStyles, /\.institutional-selection__item\s*\{/);
-  assert.match(globalStyles, /--institutional-selection-active-rgb:\s*var\(--ihss-700-rgb/);
+  assert.match(globalStyles, /--institutional-selection-active-rgb:\s*var\(--ihss-selection-active-rgb/);
+  assert.match(globalStyles, /--institutional-selection-active-fg-rgb:\s*var\(--ihss-selection-on-active-rgb/);
   assert.match(globalStyles, /--institutional-selection-hover-rgb:\s*var\(--ihss-100-rgb/);
   assert.match(globalStyles, /institutional-selection__item:is\(\[aria-selected='true'/);
 });
