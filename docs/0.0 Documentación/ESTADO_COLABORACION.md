@@ -4394,3 +4394,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Quality Gate final [43279214059](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43279214059): `STATUS=completed`; `CONCLUSION=success`; ambos jobs `success`, sin pasos fallidos.
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `HEAD_LOCAL=HEAD_REMOTE`; `AHEAD=0`; `BEHIND=0`.
 - `AUDIT_1_STATIC=PASS`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `AUDIT_3_REGRESSION=PASS_LOCAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+-
+## Estado vigente — Quality Gate remoto verde de la corrección P0 B04 — 2026-11-12 15:05:00 -06:00
+
+- `SOURCE_CODE_SHA=6019a53032ec4a8775bffccc2afce476b42b28f`; `EVIDENCE_COMMIT_SHA=6019a53032ec4a8775bffccc2afce476b42b28f`; `HEAD_LOCAL=HEAD_REMOTE`; divergencia `0/0`.
+- Quality Gate [43303886918](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43303886918) terminó `STATUS=completed`, `CONCLUSION=success`; `77 passed`, `15 skipped`, `0 failed`; cobertura reportada y puertas correctas.
+- Evidencia: `H08_EXTENDED_A_TO_E=PASS`; `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`; `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0`; prueba Playwright B04 del selector `PASS`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/6019a53032ec4a8775bffccc2afce476b42b28f/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- B04 sigue abierto únicamente por aceptación visual del propietario en cuatro viewports: `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. Restricciones preservadas: `MAIN_TOUCHED=NO`, `PRODUCTION_TOUCHED=NO`, `ORACLE_INSTITUTIONAL_TOUCHED=NO`, `MIGRATION_54_TOUCHED=NO`, `P06_PRESERVED=YES`, `P07_PRESERVED=YES`.

@@ -10989,3 +10989,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - La primera tentativa Playwright fue `ENVIRONMENT_BLOCKED` por `ERR_CONNECTION_REFUSED` sin servidor local; se repitió con `ng serve` activo y quedó `PASS`. No se declara auditoría visual completa de todas las viewports ni aceptación del propietario.
 - Pendiente de ejecutar antes del cierre remoto: lint, build, suite Angular completa, Quality Gate del SHA final y verificación API. `B04_FORM_BUILDER_PLAYWRIGHT=PASS_FOCUSED`; `B04_GLOBAL_COVERAGE=PARTIAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 - Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`; `B05_STARTED=NO`.
+-
+## 2026-11-12 15:05:00 -06:00 — Cierre técnico remoto P0 selector de fórmulas B04 (COD)
+
+- `SOURCE_CODE_SHA=6019a53032ec4a8775bffccc2afce476b42b28f`; commit publicado en `origin/desarrollo`.
+- Quality Gate [43303886918](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43303886918): `STATUS=completed`; `CONCLUSION=success`; `77 passed`, `15 skipped`; cobertura y puertas correctas.
+- Marcadores remotos: `H08_EXTENDED_A_TO_E=PASS`; `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`; `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0`; el E2E B04 del selector también quedó `PASS`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/6019a53032ec4a8775bffccc2afce476b42b28f/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- La aceptación visual del propietario de las cuatro viewports permanece pendiente; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. No se modificaron `main`, producción, Oracle institucional, P06, P07, B05 ni Block 10.
