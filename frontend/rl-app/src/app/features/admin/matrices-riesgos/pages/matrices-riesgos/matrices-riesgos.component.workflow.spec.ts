@@ -237,6 +237,55 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.transicionesPermitidas()).not.toContain('EN_REVISION');
   });
 
+  it('invalida el consolidado tras una transición persistida y vuelve a consultar el servidor', () => {
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(1);
+
+    // Sin mutaciones, repetir la pestaña no duplica solicitudes (B02).
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(1);
+
+    component.seleccionarTab('evaluaciones');
+    component.abrirModalSeguimiento(evaluacionResumen);
+    component.nuevoEstado = 'APROBADA';
+    component.motivoTransicion = 'Certificación de invalidación contextual';
+    component.transicionarEvaluacionModal();
+    expect(service['transicionarEvaluacion']).toHaveBeenCalledWith(15, 'APROBADA', 'Certificación de invalidación contextual');
+
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(2);
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(2);
+  });
+
+  it('recarga un consolidado activo al re-seleccionarlo únicamente después de una transición válida', () => {
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(1);
+
+    component.abrirModalSeguimiento(evaluacionResumen);
+    component.nuevoEstado = 'APROBADA';
+    component.motivoTransicion = 'Refresco de contexto activo';
+    component.transicionarEvaluacionModal();
+
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(2);
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(2);
+  });
+
+  it('no invalida el consolidado cuando la transición falla', () => {
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(1);
+    service['transicionarEvaluacion'].mockReturnValue(throwError(() => ({ status: 409, error: { detail: 'Transición rechazada' } })));
+    component.abrirModalSeguimiento(evaluacionResumen);
+    component.nuevoEstado = 'APROBADA';
+    component.transicionarEvaluacionModal();
+
+    component.seleccionarTab('consolidado');
+    expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(1);
+    expect(component.errorSeguimiento()).toBe('Transición rechazada');
+  });
+
   it('muestra el mensaje funcional cuando la transición falla', () => {
     service['transicionarEvaluacion'].mockReturnValue(throwError(() => ({
       error: { detail: 'Transición inválida desde el estado actual.' }

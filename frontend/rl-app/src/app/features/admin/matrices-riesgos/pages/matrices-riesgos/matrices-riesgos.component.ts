@@ -502,7 +502,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     if (tab === 'consolidado') {
       const contexto = this.contextoConsolidadoActual();
-      if (tabAnterior !== tab && this.consolidadoContextoCargado !== contexto && this.consolidadoContextoEnCarga !== contexto) {
+      if (this.consolidadoContextoCargado !== contexto && this.consolidadoContextoEnCarga !== contexto) {
         this.cargarConsolidado();
       }
     }
@@ -2850,6 +2850,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.globalState.limpiarError();
         this.mostrarMensaje(`Estado de la evaluación #${resumen.evaId} actualizado a ${this.etiquetaEstadoEvaluacion(this.nuevoEstado)} correctamente.`);
         this.motivoTransicion = '';
+        // Una transición invalida el contexto consolidado ya cacheado.
+        // La siguiente selección debe consultar el estado persistido del servidor.
+        this.consolidadoContextoCargado = null;
         this.cargarEvaluaciones();
         this.cargarFlujos(resumen.evaId);
         this.cargarTransiciones(resumen.evaId);

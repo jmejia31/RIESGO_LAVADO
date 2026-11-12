@@ -4222,3 +4222,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ROOT_CAUSE=OBSOLETE_E2E_RESELECT_ACTIVE_TAB`; navegación de B02 evita solicitudes redundantes. E2E cambia a `Evaluaciones` y vuelve a `Plantillas` para disparar consulta real del filtro y sigue exigiendo resultado vacío HTTP + Angular. No se introducen mocks ni skip.
 - `NEW_SHA_CI=PENDING`; `MAIN_TOUCHED=NO`; `PRODUCTION_ORACLE_TOUCHED=NO`; `DISPOSABLE_ORACLE_XE_CI=EXECUTED`; `CODE_RUNTIME_CHANGED=NO`; `BLOCK10_AUTHORIZED=NO`.
 - Continuación: comprobar `origin/desarrollo`, nuevo Quality Gate exact-SHA y corregir únicamente nuevas causas reales; no cerrar certificación sin SUCCESS.
+
+## Estado vigente — Recuperación Bloques 7/12 Consolidado — 2026-11-11 23:42:08 -06:00
+
+- `EVENT_ID=RL-CI-B7-B12-CONSOLIDADO-20261111`, `BASE_SHA=3c9e21c76064ddf92e550ce7ae6c8b36d93f1720`, `BRANCH=desarrollo`, `ACCOUNT=jmejia31`.
+- `QUALITY_GATE_43160941945=FAIL` sobre BASE_SHA: FE03/G02 y pruebas Oracle XE previas pasaron, E2E Bloque 7/9 y Bloque 12 fallaron por `page.waitForResponse` GET /consolidado/paginado sin solicitud.
+- `ROOT_CAUSE=CONSOLIDATED_CACHE_NOT_INVALIDATED_AFTER_WORKFLOW_TRANSITION`: B02 evita recargas de una pestaña ya activa, pero el cambio persistido de estado debe invalidar la vista cacheada. Se corrige invalidación y re-selección solo cuando cache es inválida.
+- `REGRESSION_UNIT_TESTS=ADDED`: volver desde Evaluaciones, re-seleccionar Consolidado activo y rechazar invalidación ante transición fallida. E2E original intacto; no se reducen gates ni se introducen mocks de API en la CI real.
+- `FINAL_CI_EXACT_SHA=PENDING`, `MAIN_TOUCHED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`, `ORACLE_XE_DISPOSABLE_ONLY`, `BLOCK10_AUTHORIZED=NO`.
