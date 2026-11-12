@@ -10962,6 +10962,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - La cobertura B04 agrega legítimamente dos controles bounded visibles: Familia de formulario y Riesgo Institucional. Se actualizó solo la aserción UAT para localizar Familia por su rol accesible, sin tocar P06, backend, Oracle ni producción.
 - La corrección queda pendiente de commit/push y de un nuevo Quality Gate exact-SHA. `B04_FINAL_STATUS=OPEN`.
 
+## 2026-11-12 13:49:00 -06:00 — Cierre técnico B04 posterior a Quality Gate verde (COD)
+
+- `SOURCE_CODE_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`; `EVIDENCE_COMMIT_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`.
+- Quality Gate exacto [run 43291627396](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43291627396): `status=completed`, `conclusion=success`; ambos jobs pasaron.
+- El run certificó `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`, H08 A–E `PASS`, `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0`, suites de matrices y contenedores en verde. Las advertencias de analizadores son heredadas/no bloqueantes y no corresponden a archivos de esta intervención.
+- `GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENT_COMMIT`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica. La aceptación visual del propietario sigue pendiente: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`, `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`, `B04_FINAL_STATUS=OPEN`.
+- No se modificaron `main`, producción, Oracle institucional, P06, P07, B05 ni Block 10. Los cambios locales ajenos continúan preservados y fuera del stage.
+
 ## 2026-11-12 12:35:00 -06:00 — Quality Gate final del expediente B04 (COD)
 
 - `EVIDENCE_COMMIT_SHA=7585fd12cc637d76b7ad87c96ad626ea14594c3f`; `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.

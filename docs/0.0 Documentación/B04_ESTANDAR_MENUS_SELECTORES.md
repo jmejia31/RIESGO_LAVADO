@@ -255,6 +255,15 @@ certificación global cerrada.
 - `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
 - `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; la aceptación visual del propietario permanece pendiente y por eso `B04_FINAL_STATUS=OPEN`.
 
+### Quality Gate posterior a la corrección E2E
+
+- `SOURCE_CODE_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`.
+- `EVIDENCE_COMMIT_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`.
+- `QUALITY_GATE_RUN=43291627396` — [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43291627396), `STATUS=completed`, `CONCLUSION=success`.
+- El run verificó `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`, H08 A–E `PASS`, `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0` y el resto de jobs integrales en verde.
+- `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENT_COMMIT` hasta publicar esta actualización.
+- `AUDIT_2_BROWSER=BLOCKED_EXTERNAL` para la revisión visual global autorizada; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+
 ### SHA documental final
 
 - `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
