@@ -10956,6 +10956,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificación local posterior: regresión de Familias `1` archivo / `29` pruebas `PASS`; no se redujeron assertions ni se deshabilitaron tests.
 - Continuación: publicar la corrección como commit separado y repetir el Quality Gate exact-SHA. `B04_FINAL_STATUS=OPEN` hasta resultado verde.
 
+## 2026-11-12 13:35:00 -06:00 — Ajuste de regresión UAT por cobertura bounded B04 (COD)
+
+- El run [43289050057](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43289050057) confirmó `BLOCK7_BROWSER_API_ORACLE_E2E=PASS` y todos los marcadores H08 `PASS`; falló una aserción de `matrices-uat-integral.spec.ts` que asumía un único trigger bounded en el modal.
+- La cobertura B04 agrega legítimamente dos controles bounded visibles: Familia de formulario y Riesgo Institucional. Se actualizó solo la aserción UAT para localizar Familia por su rol accesible, sin tocar P06, backend, Oracle ni producción.
+- La corrección queda pendiente de commit/push y de un nuevo Quality Gate exact-SHA. `B04_FINAL_STATUS=OPEN`.
+
 ## 2026-11-12 12:35:00 -06:00 — Quality Gate final del expediente B04 (COD)
 
 - `EVIDENCE_COMMIT_SHA=7585fd12cc637d76b7ad87c96ad626ea14594c3f`; `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.

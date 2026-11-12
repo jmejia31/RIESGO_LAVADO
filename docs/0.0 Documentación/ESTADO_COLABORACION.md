@@ -4352,6 +4352,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificación local: `matrices-riesgos.component.familias.spec.ts` `29/29 PASS`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`.
 - `B04_FINAL_STATUS=OPEN`; continuar con commit/push selectivo y observar nuevo Quality Gate exact-SHA.
 
+## Estado vigente — Ajuste de regresión UAT B04 — 2026-11-12 13:35:00 -06:00
+
+- El run [43289050057](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43289050057) verificó `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`; el fallo restante fue una aserción obsoleta de un único trigger bounded en `matrices-uat-integral.spec.ts`.
+- Corrección aplicada localmente: la aserción identifica `Familia de formulario` por rol accesible; se conserva el segundo bounded de Riesgo y no se tocan P06/P07, backend ni Oracle.
+- Próximo punto: commit/push selectivo, Quality Gate exact-SHA y verificación remota. `B04_FINAL_STATUS=OPEN`.
+
 ## Estado vigente — Orden complementaria B04 de cobertura global — 2026-11-12 13:07:25 -06:00
 
 - `BASE_SHA=30fbf54fe426357af11a7727b955576ec6581e89`; `FINAL_SHA=PENDING_AUTHORING`; rama `desarrollo`; autor `COD`.

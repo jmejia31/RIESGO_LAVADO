@@ -1113,7 +1113,7 @@ test('selector de riesgo contiene opciones largas, usa scroll interno y conserva
   await page.getByRole('button', { name: 'Crear nueva evaluación' }).click();
   const modal = page.locator('[data-modal="nueva-evaluacion"]');
   await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
-  await expect(modal.locator('[data-ui-bounded-select-trigger]')).toBeVisible();
+  await expect(modal.getByRole('combobox', { name: 'Familia de formulario' })).toBeVisible();
   const combo = modal.getByRole('combobox', { name: 'Riesgo Institucional a Evaluar' });
   await combo.click();
 
