@@ -4237,3 +4237,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `RUN_43163176569=FAIL` solo por aserción unitaria nueva: HTTP 409 institucional muestra mensaje de conflicto concurrente, no el literal del mock. Los Bloques 7/9, 12, GATE_02 y rollback real sobre Oracle XE descartable pasaron antes del fallo.
 - `FIX=EXPECT_INSTITUTIONAL_CONCURRENCY_409_TEXT`; único cambio ejecutable es una línea en `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.workflow.spec.ts`, sin aflojar la prueba de no invalidación ante fallo de transición.
 - `NEW_QUALITY_GATE_EXACT_SHA=PENDING`; `MAIN_TOUCHED=NO`; `PRODUCTION_ORACLE_TOUCHED=NO`; `ORACLE_XE_CI=DISPOSABLE`; `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente — UAT de Matrices / cabecera B03 accesible — 2026-11-12 00:07:29 -06:00
+
+- `EVENT_ID=RL-CI-UAT-B03-SORTABLE-HEADER-20261112`, `BASE_SHA=5b2fc82d29a5f7edf0ccb19c99e5af0ff6b6b047`, `ACCOUNT=jmejia31`, `BRANCH=desarrollo`.
+- `QUALITY_GATE_43164252806=FAIL`: 75 E2E PASS, 15 SKIP, 1 UAT FAIL repetida en `matrices-uat-integral.spec.ts:563` por nombre obsoleto de columna `EVALUACIÓN`; FE03, G02, B7/B9, B12 y 2006/2006 cálculos habían pasado en ese run. No fue falla de runners.
+- `ROOT_CAUSE=UAT_STALE_COLUMNHEADER_ACCESSIBLE_NAME_AFTER_B03`. B03 usa botón con `aria-label=Ordenar evaluaciones por identificador` y etiqueta visible `Evaluación` dentro del `columnheader`.
+- `FIX=EXPECT_HEADER_ROLE_WITH_NAMED_SORT_BUTTON_AND_VISIBLE_LABEL` en ambas transiciones de UAT. Código Angular, lógica, Oracle institucional, seguridad y gates conservados.
+- `NEW_QUALITY_GATE_EXACT_SHA=PENDING`, `LOCAL_TESTS=NOT_EXECUTED_NO_CHECKOUT`, `MAIN_TOUCHED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`, `BLOCK10_AUTHORIZED=NO`.
+- Continuación: comprobar publicación exacta, resultado de GitHub Actions, otros checks requeridos y documentar dictamen basado en SHA. No declarar SUCCESS antes del run nuevo.

@@ -560,7 +560,10 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   await expect(page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Matriz completa', exact: true })).toHaveCount(0);
   await expect(page.getByRole('tab', { name: 'Plantillas', exact: true })).toBeVisible();
-  await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();
+  const evaluationHeader = page.locator('#panel-evaluaciones').getByRole('columnheader')
+    .filter({ has: page.getByRole('button', { name: 'Ordenar evaluaciones por identificador', exact: true }) });
+  await expect(evaluationHeader).toBeVisible();
+  await expect(evaluationHeader).toContainText('Evaluación');
   await expect(page.locator('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveCount(0);
 
   const consolidadoTab = page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i });
@@ -735,7 +738,8 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   await expect(page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i })).toHaveAttribute('aria-selected', 'true');
 
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
-  await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();
+  await expect(evaluationHeader).toBeVisible();
+  await expect(evaluationHeader).toContainText('Evaluación');
   await expect(page.locator('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveCount(0);
   await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   await expect(page.getByRole('button', { name: 'Ver Matriz completa' })).toHaveCount(1);
