@@ -11007,3 +11007,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Navegador Chromium real: selector de fórmula `1/1 PASS`; matriz de viewports `1/1 PASS`; `1366x768` y `1536x864` PASS con `title` ausente y sin overflow; `390x844` y `768x1024` `BLOCKED_INSPECTOR_NOT_VISIBLE` porque el Form Builder oculta el inspector en esos tamaños. No se declara PASS visual móvil.
 - Resultado: `B04_OPTION_FULL_TEXT=PASS`; `B04_NATIVE_TOOLTIP_INTERFERENCE=0`; `B04_OPTION_HORIZONTAL_OVERFLOW=0` en viewports donde el inspector es visible; `B04_SHARED_SELECTOR_REGRESSION=PASS`; `B04_FORMULA_VERSION_BINDING=PASS`; `B04_PLAYWRIGHT_VISUAL=BLOCKED` por cobertura móvil no visible.
 - `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. No se modificaron backend, Oracle institucional, auditoría, autorizaciones, main, producción, B05 ni Block 10.
+-
+## 2026-11-12 16:20:00 -06:00 — Quality Gate verde de la mejora B04 (COD)
+
+- `SOURCE_CODE_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`; `EVIDENCE_COMMIT_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`.
+- Quality Gate exacto [43316052382](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43316052382): `STATUS=completed`; `CONCLUSION=success`; jobs integral y scope `success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica. `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.

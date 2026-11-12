@@ -4405,9 +4405,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 -
 ## Estado vigente — Mejora global de texto extenso B04 — 2026-11-12 16:00:00 -06:00
 
-- `BASE_SHA=4693181e55715e33bde9fefc54835bb85fdad6d8`; `FINAL_SHA=PENDING_COMMIT`; rama `desarrollo`; autor `COD`.
+- `BASE_SHA=4693181e55715e33bde9fefc54835bb85fdad6d8`; `FINAL_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`; rama `desarrollo`; autor `COD`.
 - `B04_OPTION_FULL_TEXT=PASS`; `B04_NATIVE_TOOLTIP_INTERFERENCE=0`; `B04_OPTION_HORIZONTAL_OVERFLOW=0` en desktop; `B04_SHARED_SELECTOR_REGRESSION=PASS`; `B04_FORMULA_VERSION_BINDING=PASS`.
 - El componente compartido elimina el tooltip nativo de las opciones y conserva texto visible completo, `aria-label`, wrapping, límites de ancho, scroll interno, keyboard/mouse selection, Escape, clic externo y posicionamiento institucional.
 - Pruebas frescas: bounded-select/fórmula `16/16 PASS`; validador B04 `PASS`; lint `PASS`; build `PASS` con warnings no bloqueantes de presupuesto SCSS/CommonJS; suite Angular completa terminó con exit `0`; Playwright focalizado `1/1 PASS`; auditoría de viewports `1/1 PASS` con desktop PASS y 390/768 `BLOCKED_INSPECTOR_NOT_VISIBLE`.
 - `B04_PLAYWRIGHT_VISUAL=BLOCKED`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`.
 - Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage. Punto siguiente: commit/push selectivo, Quality Gate exact-SHA y verificación remota.
+- Quality Gate exacto [43316052382](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43316052382): `STATUS=completed`; `CONCLUSION=success`; `GITHUB_REMOTE_VERIFIED=YES`; `EVIDENCE_COMMIT_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`.

@@ -320,3 +320,5 @@ B04_FINAL_STATUS=OPEN
 - Pruebas focalizadas: bounded-select y fórmula central `16/16 PASS`; validador B04 `PASS`; lint `PASS`; build `PASS` con warnings no bloqueantes ya conocidos; suite Angular completa `exit 0`.
 - Chromium real: `1366x768` y `1536x864` PASS para texto visible, ausencia de `title`, wrapping, geometría y selección; `390x844` y `768x1024` se registran como `BLOCKED_INSPECTOR_NOT_VISIBLE` porque el Form Builder oculta el inspector, sin convertir esa ausencia en PASS visual.
 - Se conservaron los contratos funcionales y el posicionamiento institucional. La aceptación visual del propietario permanece pendiente; B04 no se cierra.
+- `SOURCE_CODE_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`; `EVIDENCE_COMMIT_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`.
+- Quality Gate exacto [43316052382](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43316052382): `STATUS=completed`; `CONCLUSION=success`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
