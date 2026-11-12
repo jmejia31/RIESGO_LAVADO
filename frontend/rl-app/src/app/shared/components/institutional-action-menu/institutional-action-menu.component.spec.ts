@@ -5,7 +5,7 @@ import { InstitutionalActionMenuComponent } from './institutional-action-menu.co
 @Component({
   standalone: true,
   imports: [InstitutionalActionMenuComponent],
-  template: `<app-institutional-action-menu ariaLabel="Acciones de prueba"><span action-menu-trigger>Acciones</span><button action-menu-content role="menuitem" type="button">Primera acción</button></app-institutional-action-menu>`
+  template: `<app-institutional-action-menu ariaLabel="Acciones de prueba"><span action-menu-trigger>Acciones</span><button action-menu-content data-ui-action-menu-item type="button">Primera acción</button></app-institutional-action-menu>`
 })
 class HostComponent {}
 
@@ -26,7 +26,7 @@ describe('InstitutionalActionMenuComponent', () => {
 
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(root.querySelector('[data-ui-action-menu-panel]')).not.toBeNull();
-    expect(root.querySelector('[role="menuitem"]')).not.toBeNull();
+    expect(root.querySelector('[data-ui-action-menu-item]')).not.toBeNull();
 
     trigger.click();
     fixture.detectChanges();
@@ -54,7 +54,7 @@ describe('InstitutionalActionMenuComponent', () => {
     const trigger = root.querySelector('[data-ui-action-menu-trigger]') as HTMLButtonElement;
     trigger.click();
     fixture.detectChanges();
-    const item = root.querySelector('[role="menuitem"]') as HTMLButtonElement;
+    const item = root.querySelector('[data-ui-action-menu-item]') as HTMLButtonElement;
     item.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true }));
     fixture.detectChanges();
     expect(document.activeElement).toBe(item);

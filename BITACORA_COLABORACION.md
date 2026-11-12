@@ -10886,3 +10886,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificado en esta intervención: `npm run build=PASS` con warnings preexistentes de presupuesto/CommonJS; `npm test -- --watch=false=PASS` (`94` archivos, `984` pruebas); `npm run lint=PASS`; validador B04, self-test y prueba propia `PASS`.
 - Playwright real y Oracle institucional `NOT_EXECUTED_LOCALLY`; requieren runner/datos autorizados. Quality Gate remoto B04 queda pendiente del SHA final publicado. `B04_GLOBAL_INVENTORY=COMPLETE`; `B04_TECHNICAL_STATUS=PASS`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
 - Punto de continuación: validar documentación/estructura, stage selectivo excluyendo P06 y artefactos, commit B04, push fast-forward, revisar Quality Gate exact-SHA y actualizar el dictamen sin declarar aceptación visual del propietario.
+
+## 2026-11-12 10:56:00 -06:00 — Corrección B04 del contrato accesible del menú de acciones (COD)
+
+- `EVENT_ID=RL-CI-B04-NATIVE-BUTTON-20261112`; `BASE_SHA=adeebdb457ac814a47561a3063c49b9bd8d43dc1`; rama `desarrollo`; autor `COD` / `CODEX`; cliente `CLI`.
+- Evidencia remota: Quality Gate `43260118512` terminó `FAILURE` en `frontend/rl-app/e2e/modal-shell-lock.spec.ts:681`, escenario de duplicación de secciones; resultado E2E `75 PASS / 1 FAIL / 15 SKIP`. El fallo fue causado por sobrescribir el rol nativo `button` con `role="menuitem"` en acciones proyectadas del menú compartido.
+- Corrección quirúrgica: se conserva `role="menu"` en el contenedor, pero las acciones vuelven a ser botones nativos sin `role="menuitem"`; `data-ui-action-menu-item` queda como marcador interno para foco, teclado, cierre y estilos. No se modifican acciones, permisos, datos, APIs, Oracle ni reglas de negocio.
+- Verificado en esta intervención: `npm test -- --watch=false=PASS` (`94` archivos, `984` pruebas); `npm run lint=PASS`; `npm run build=PASS` con warnings preexistentes de presupuesto/CommonJS; validador B04 y self-test `PASS`. `git diff --check` selectivo propio `PASS`; el whitespace global reportado pertenece a cambios P06/P07 ajenos y no staged.
+- Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
+- `QUALITY_GATE_43260118512=FAIL`; `QUALITY_GATE_NEW_SHA=PENDING_AFTER_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=NO` hasta observar `SUCCESS` sobre el SHA corregido.
+- Punto exacto de continuación: stage selectivo, commit, push fast-forward a `origin/desarrollo`, consulta del Quality Gate exact-SHA y cierre solo con ejecución terminal verde.

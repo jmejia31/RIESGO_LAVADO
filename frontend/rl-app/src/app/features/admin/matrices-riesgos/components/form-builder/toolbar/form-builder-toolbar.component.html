@@ -42,10 +42,10 @@
         panelClass="form-builder-toolbar__actions-popover">
         <span action-menu-trigger>⋮ Acciones⌄</span>
         <div action-menu-content>
-          @if (!soloLectura && vistaActiva === 'secciones' && !mostrarJsonAvanzado) { <button type="button" id="btn-agregar-seccion" title="Crear nueva sección" aria-label="Crear nueva sección" role="menuitem" (click)="agregarSeccion.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
+          @if (!soloLectura && vistaActiva === 'secciones' && !mostrarJsonAvanzado) { <button type="button" id="btn-agregar-seccion" title="Crear nueva sección" aria-label="Crear nueva sección" data-ui-action-menu-item (click)="agregarSeccion.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
             <app-action-icon action="create"></app-action-icon>
           </button> }
-          @if (!soloLectura && vistaActiva === 'catalogos' && !mostrarJsonAvanzado) { <button type="button" id="btn-nuevo-catalogo-header" title="Crear nuevo catálogo" aria-label="Crear nuevo catálogo" role="menuitem" (click)="agregarCatalogo.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
+          @if (!soloLectura && vistaActiva === 'catalogos' && !mostrarJsonAvanzado) { <button type="button" id="btn-nuevo-catalogo-header" title="Crear nuevo catálogo" aria-label="Crear nuevo catálogo" data-ui-action-menu-item (click)="agregarCatalogo.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
             <app-action-icon action="create"></app-action-icon>
           </button> }
           @if (soloLectura || (vistaActiva !== 'secciones' && vistaActiva !== 'catalogos') || mostrarJsonAvanzado) { <span class="form-builder-toolbar__menu-empty">No hay acciones disponibles</span> }

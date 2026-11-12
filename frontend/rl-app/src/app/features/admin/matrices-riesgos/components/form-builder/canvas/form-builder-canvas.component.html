@@ -74,16 +74,16 @@
                  panelClass="form-builder-section__actions-popover">
                  <span action-menu-trigger><app-action-icon action="menu"></app-action-icon></span>
                  <div action-menu-content>
-                     <button type="button" title="Duplicar sección" aria-label="Duplicar sección" role="menuitem" (click)="ejecutarAccionSeccion($event, 'duplicar', sec.id)" class="form-builder-section__menu-item">
+                     <button type="button" title="Duplicar sección" aria-label="Duplicar sección" data-ui-action-menu-item (click)="ejecutarAccionSeccion($event, 'duplicar', sec.id)" class="form-builder-section__menu-item">
             <app-action-icon action="duplicate"></app-action-icon>
           </button>
-                     <button type="button" title="Mover sección arriba" aria-label="Mover sección arriba" role="menuitem" [disabled]="$index === 0" (click)="ejecutarAccionSeccion($event, 'subir', sec.id)" class="form-builder-section__menu-item">
+                     <button type="button" title="Mover sección arriba" aria-label="Mover sección arriba" data-ui-action-menu-item [disabled]="$index === 0" (click)="ejecutarAccionSeccion($event, 'subir', sec.id)" class="form-builder-section__menu-item">
             <app-action-icon action="upload"></app-action-icon>
           </button>
-                     <button type="button" title="Mover sección abajo" aria-label="Mover sección abajo" role="menuitem" [disabled]="$index === secciones.length - 1" (click)="ejecutarAccionSeccion($event, 'bajar', sec.id)" class="form-builder-section__menu-item">
+                     <button type="button" title="Mover sección abajo" aria-label="Mover sección abajo" data-ui-action-menu-item [disabled]="$index === secciones.length - 1" (click)="ejecutarAccionSeccion($event, 'bajar', sec.id)" class="form-builder-section__menu-item">
             <app-action-icon action="move-down"></app-action-icon>
           </button>
-                     @if (secciones.length > 1) { <button type="button" title="Eliminar sección" aria-label="Eliminar sección" role="menuitem" (click)="ejecutarAccionSeccion($event, 'eliminar', sec.id)" class="form-builder-section__menu-item form-builder-section__menu-item--danger">
+                     @if (secciones.length > 1) { <button type="button" title="Eliminar sección" aria-label="Eliminar sección" data-ui-action-menu-item (click)="ejecutarAccionSeccion($event, 'eliminar', sec.id)" class="form-builder-section__menu-item form-builder-section__menu-item--danger">
             <app-action-icon action="delete"></app-action-icon>
           </button> }
                  </div>

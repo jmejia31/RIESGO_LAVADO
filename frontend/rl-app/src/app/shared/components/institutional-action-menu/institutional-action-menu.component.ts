@@ -72,13 +72,13 @@ import {
       padding: 0.35rem;
       box-shadow: 0 12px 28px rgb(15 23 42 / 0.14);
     }
-    [data-ui-action-menu-panel] ::ng-deep [role="menuitem"] {
+    [data-ui-action-menu-panel] ::ng-deep [data-ui-action-menu-item] {
       min-height: 2.5rem;
       border-radius: 0.5rem;
       padding: 0.55rem 0.7rem;
       text-align: left;
     }
-    [data-ui-action-menu-panel] ::ng-deep [role="menuitem"]:focus-visible {
+    [data-ui-action-menu-panel] ::ng-deep [data-ui-action-menu-item]:focus-visible {
       outline: 3px solid rgb(var(--ihss-accent-rgb) / 0.35);
       outline-offset: 2px;
     }
@@ -151,16 +151,16 @@ export class InstitutionalActionMenuComponent implements OnDestroy {
   }
 
   private enfocarPrimerElemento(): void {
-    this.host.nativeElement.querySelector<HTMLElement>('[data-ui-action-menu-panel] [role="menuitem"]:not(:disabled)')?.focus();
+    this.host.nativeElement.querySelector<HTMLElement>('[data-ui-action-menu-panel] [data-ui-action-menu-item]:not(:disabled)')?.focus();
   }
 
   manejarClickMenu(event: MouseEvent): void {
     event.stopPropagation();
-    if ((event.target as HTMLElement | null)?.closest('[role="menuitem"]')) this.cerrar(true);
+    if ((event.target as HTMLElement | null)?.closest('[data-ui-action-menu-item]')) this.cerrar(true);
   }
 
   manejarTeclasMenu(event: KeyboardEvent): void {
-    const items = Array.from(this.host.nativeElement.querySelectorAll<HTMLElement>('[data-ui-action-menu-panel] [role="menuitem"]:not(:disabled)'));
+    const items = Array.from(this.host.nativeElement.querySelectorAll<HTMLElement>('[data-ui-action-menu-panel] [data-ui-action-menu-item]:not(:disabled)'));
     if (event.key === 'Escape') {
       event.preventDefault();
       this.cerrar(true);

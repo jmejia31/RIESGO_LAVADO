@@ -4297,3 +4297,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Playwright/E2E local y Oracle `NOT_EXECUTED`; Quality Gate remoto exact-SHA pendiente de publicación. `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`.
 - `B04_GLOBAL_INVENTORY=COMPLETE`; `B04_TECHNICAL_STATUS=PASS`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
 - Punto exacto de continuación: validadores documentales, revisión diff/stage selectivo, commit/push B04 y revisión del Quality Gate del SHA final.
+
+## Estado vigente — Corrección B04 del contrato accesible del menú de acciones — 2026-11-12 10:56:00 -06:00
+
+- `EVENT_ID=RL-CI-B04-NATIVE-BUTTON-20261112`; `BASE_SHA=adeebdb457ac814a47561a3063c49b9bd8d43dc1`; autor `COD`; rama autorizada `desarrollo`.
+- El run `43260118512` terminó `FAILURE` exclusivamente en E2E `modal-shell-lock.spec.ts:681`: `getByRole('button', { name: 'Mover sección arriba' })` no encontraba el botón porque B04 sobrescribía el rol nativo con `role="menuitem"`.
+- Corrección aplicada: contenedor `role="menu"` intacto; acciones proyectadas como botones nativos; atributo `data-ui-action-menu-item` reservado para la lógica interna de foco, teclado, cierre y estilos. No se alteran contratos funcionales ni datos.
+- Verificación fresca: `94` archivos / `984` pruebas frontend `PASS`; ESLint `PASS`; Angular build `PASS` con warnings preexistentes no bloqueantes; validador B04 y self-test `PASS`.
+- `QUALITY_GATE_43260118512=FAIL_HISTORICAL`; `QUALITY_GATE_NEW_SHA=PENDING_AFTER_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=NO`.
+- `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
+- Continuación: publicar el commit correctivo selectivo en `origin/desarrollo`, verificar por GitHub el SHA y esperar el Quality Gate exacto hasta estado terminal `SUCCESS`.

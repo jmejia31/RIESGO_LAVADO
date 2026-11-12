@@ -61,7 +61,7 @@ Nuevo componente compartido para acciones secundarias y contextuales. Recibe el 
 - Una sola capa activa mediante `InstitutionalOverlayRegistry`.
 - Clic externo y Escape.
 - Retorno de foco al disparador.
-- `role="menu"`, `role="menuitem"`, `aria-expanded`, `aria-controls` y `aria-haspopup`.
+- `role="menu"` con botones nativos de acción, `aria-expanded`, `aria-controls` y `aria-haspopup`; se preserva el rol accesible `button` que requieren las acciones existentes.
 - Navegación Home/End/ArrowUp/ArrowDown.
 - Cierre después de seleccionar una acción.
 - Posicionamiento compartido, contención horizontal y altura máxima.
