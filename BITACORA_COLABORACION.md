@@ -10842,7 +10842,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 ## 2026-11-12 08:55:00 -06:00 — Trazabilidad remota B03
 
-- `EVIDENCE_COMMIT_SHA=4dc8bc9921cc5d55bd07f8c0bcfdeaabec4d0484`; `HEAD_LOCAL=HEAD_REMOTE=4dc8bc99`; divergencia `0/0` tras publicación.
+- `SOURCE_CODE_SHA=4dc8bc9921cc5d55bd07f8c0bcfdeaabec4d0484`; `EVIDENCE_COMMIT_SHA=1904e31cc4534250e809842ca5f89a2214a04f66`; `HEAD_LOCAL=HEAD_REMOTE=1904e31c`; divergencia `0/0` tras publicación.
 - `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; lectura remota de índice, estado y bitácora verificada mediante GitHub API.
 - Quality Gate exacto del commit: `https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43241682769`, estado `IN_PROGRESS` al cierre de esta actualización; no se presenta como PASS.
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`.
