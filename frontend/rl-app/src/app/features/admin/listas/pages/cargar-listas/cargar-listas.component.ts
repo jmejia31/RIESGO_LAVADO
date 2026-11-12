@@ -10,12 +10,13 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
 import { LIST_IMPORT_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
   selector: 'app-cargar-listas',
   standalone: true,
-  imports: [ActionIconComponent, InstitutionalFileUploadComponent, SortableTableHeaderComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, InstitutionalFileUploadComponent, SortableTableHeaderComponent, InstitutionalTooltipDirective, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './cargar-listas.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

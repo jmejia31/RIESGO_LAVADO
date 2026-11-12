@@ -16,6 +16,7 @@ import {
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { INSTITUTIONAL_EVIDENCE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
@@ -24,7 +25,7 @@ import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions 
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
   standalone: true,
-  imports: [ActionIconComponent, BoundedSelectComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, BoundedSelectComponent, InstitutionalFileUploadComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-monitoreo-operativo.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

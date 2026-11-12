@@ -6,11 +6,12 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfiguracionService } from '../../../../core/configuration/configuracion.service';
 import { LoginSlide } from '../../../../core/configuration/configuracion.models';
 import { ActionIconComponent, renderActionIconSvg } from '../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector:    'app-login',
   standalone:  true,
-  imports:     [ActionIconComponent, CommonModule, ReactiveFormsModule],
+  imports:     [ActionIconComponent, InstitutionalTooltipDirective, CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

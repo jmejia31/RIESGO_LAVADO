@@ -7,11 +7,12 @@ import { AuditoriaDto } from '../../models/auditoria.models';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-bitacora',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bitacora.component.html',
 })

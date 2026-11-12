@@ -7,11 +7,12 @@ import { InstitutionalConfirmationService } from '../../../../../shared/confirma
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-tipo-listas',
   standalone: true,
-  imports: [ActionIconComponent, SortableTableHeaderComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, SortableTableHeaderComponent, InstitutionalTooltipDirective, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './tipo-listas.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })

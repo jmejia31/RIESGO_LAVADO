@@ -15,6 +15,12 @@ function walkFiles(root) {
   return files;
 }
 
+function countVisibleNativeSelects(source) {
+  const tags = source.match(/<select\b[^>]*>/g) ?? [];
+  const hidden = tags.filter(tag => /\bsr-only\b/.test(tag) || /aria-hidden\s*=\s*["']true["']/.test(tag)).length;
+  return { total: tags.length, visible: tags.length - hidden, hidden };
+}
+
 function analyzeSource(files, root = SOURCE_ROOT) {
   const inventory = {
     totalSelectors: 0,
@@ -23,35 +29,45 @@ function analyzeSource(files, root = SOURCE_ROOT) {
     totalBoundedSelects: 0,
     totalPageSizeSelectors: 0,
     totalNativeSelects: 0,
+    totalVisibleNativeSelects: 0,
+    totalHiddenSyncSelects: 0,
     totalReviewed: 0,
     unreviewedComponents: 0,
     nativeSelectFiles: [],
     detailFiles: [],
     actionMenuFiles: [],
     familySurfaceFiles: [],
-    tooltipStandardFiles: []
+    tooltipStandardFiles: [],
+    tooltipButtonFiles: [],
+    totalTooltipButtons: 0
   };
 
   for (const file of files) {
     const source = fs.readFileSync(file, 'utf8');
     const relative = path.relative(root, file).replaceAll(path.sep, '/');
-    const nativeSelects = (source.match(/<select\b/g) ?? []).length;
+    const nativeSelectCounts = countVisibleNativeSelects(source);
+    const nativeSelects = nativeSelectCounts.total;
     const boundedSelects = (source.match(/<app-bounded-select\b/g) ?? []).length;
     const pageSizeSelectors = (source.match(/<app-page-size-selector\b/g) ?? []).length;
     const actionMenus = (source.match(/<app-institutional-action-menu\b/g) ?? []).length;
+    const titledButtons = (source.match(/<button\b[^>]*\btitle\s*=/g) ?? []).length;
     const details = (source.match(/<(?:details|summary)\b/g) ?? []).length;
     const contextMenus = (source.match(/context-menu|menuSeccionAbiertaId/g) ?? []).length;
 
     inventory.totalNativeSelects += nativeSelects;
+    inventory.totalVisibleNativeSelects += nativeSelectCounts.visible;
+    inventory.totalHiddenSyncSelects += nativeSelectCounts.hidden;
     inventory.totalBoundedSelects += boundedSelects;
     inventory.totalPageSizeSelectors += pageSizeSelectors;
     inventory.totalActionMenus += actionMenus;
     inventory.totalContextMenus += contextMenus;
-    inventory.totalSelectors += nativeSelects + boundedSelects + pageSizeSelectors;
-    inventory.totalReviewed += nativeSelects + boundedSelects + pageSizeSelectors + actionMenus;
+    inventory.totalSelectors += nativeSelectCounts.visible + boundedSelects + pageSizeSelectors;
+    inventory.totalReviewed += nativeSelectCounts.visible + boundedSelects + pageSizeSelectors + actionMenus;
+    inventory.totalTooltipButtons += titledButtons;
     if (nativeSelects > 0) inventory.nativeSelectFiles.push({ file: relative, count: nativeSelects });
     if (details > 0) inventory.detailFiles.push({ file: relative, count: details });
     if (actionMenus > 0) inventory.actionMenuFiles.push({ file: relative, count: actionMenus });
+    if (titledButtons > 0) inventory.tooltipButtonFiles.push({ file: relative, count: titledButtons });
     if (/matrices-riesgos\/(?:components\/(?:familia-(?:crear|detalle|editar)-modal|form-builder)|pages\/matrices-riesgos)/.test(relative)) {
       inventory.familySurfaceFiles.push(relative);
       if (source.includes('InstitutionalTooltipDirective')) inventory.tooltipStandardFiles.push(relative);
@@ -80,6 +96,27 @@ function validateSharedContracts(root = DEFAULT_ROOT) {
 function validate(root = DEFAULT_ROOT) {
   const inventory = analyzeSource(walkFiles(SOURCE_ROOT));
   const errors = validateSharedContracts(root);
+  const reviewManifestPath = path.join(root, 'tools', 'b04-control-review.json');
+  if (!fs.existsSync(reviewManifestPath)) {
+    errors.push('CONTROL_REVIEW_MANIFEST_MISSING:tools/b04-control-review.json');
+  }
+  const reviewManifest = fs.existsSync(reviewManifestPath)
+    ? JSON.parse(fs.readFileSync(reviewManifestPath, 'utf8'))
+    : { nativeSelectReviews: [] };
+  const reviewedNativeFiles = new Set((reviewManifest.nativeSelectReviews ?? []).map(item => item.file));
+  const nativeInventoryFiles = new Set(inventory.nativeSelectFiles.map(item => item.file));
+  for (const file of nativeInventoryFiles) {
+    if (!reviewedNativeFiles.has(file)) errors.push(`NATIVE_SELECT_UNREVIEWED:${file}`);
+  }
+  for (const file of reviewedNativeFiles) {
+    if (!nativeInventoryFiles.has(file)) errors.push(`NATIVE_SELECT_REVIEW_STALE:${file}`);
+  }
+  for (const item of inventory.tooltipButtonFiles) {
+    const componentTs = path.join(SOURCE_ROOT, item.file.replace(/\.html$/, '.ts'));
+    if (!fs.existsSync(componentTs) || !fs.readFileSync(componentTs, 'utf8').includes('InstitutionalTooltipDirective')) {
+      errors.push(`TOOLTIP_STANDARD_MISSING_GLOBAL:${item.file}`);
+    }
+  }
   const requiredFamilyComponents = [
     'features/admin/matrices-riesgos/components/familia-crear-modal/familia-crear-modal.component.ts',
     'features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.ts',
@@ -105,8 +142,13 @@ function printResult(result) {
   console.log(`TOTAL_BOUNDED_SELECTS=${inventory.totalBoundedSelects}`);
   console.log(`TOTAL_PAGE_SIZE_SELECTORS=${inventory.totalPageSizeSelectors}`);
   console.log(`TOTAL_NATIVE_SELECTS=${inventory.totalNativeSelects}`);
+  console.log(`VISIBLE_NATIVE_SELECTS=${inventory.totalVisibleNativeSelects}`);
+  console.log(`HIDDEN_SYNC_SELECTS=${inventory.totalHiddenSyncSelects}`);
   console.log(`TOTAL_REVIEWED=${inventory.totalReviewed}`);
   console.log(`UNREVIEWED_COMPONENTS=${inventory.unreviewedComponents}`);
+  console.log(`TOTAL_TOOLTIP_BUTTONS=${inventory.totalTooltipButtons}`);
+  console.log(`TOOLTIP_BUTTON_FILES=${inventory.tooltipButtonFiles.length}`);
+  console.log(`NATIVE_SELECT_REVIEWS=${inventory.nativeSelectFiles.length}`);
   console.log(`FAMILY_SURFACE_FILES=${inventory.familySurfaceFiles.length}`);
   console.log(`TOOLTIP_STANDARD_FILES=${inventory.tooltipStandardFiles.length}`);
   for (const error of result.errors) console.error(error);

@@ -10935,6 +10935,19 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `GITHUB_REMOTE_VERIFIED=YES`; el árbol remoto contiene Bitácora, Estado y el índice B04 en `origin/desarrollo`; `AHEAD=0`; `BEHIND=0`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 - La auditoría browser autorizada y aceptación visual siguen pendientes: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 
+## 2026-11-12 13:07:25 -06:00 — Orden complementaria B04 de cobertura global (COD)
+
+- `EVENT_ID=RL-B04-GLOBAL-COVERAGE-20261112`; `BASE_SHA=30fbf54fe426357af11a7727b955576ec6581e89`; rama `desarrollo`; autor `COD` / `CODEX`; cliente `CLI`.
+- Alcance global revisado: Matrices, Evaluaciones, Consolidadas, Plantillas, Familias, Form Builder, Configuración de cálculo, Gestión de Riesgos, Mitigación, Monitoreo operativo, Monitoreo de Listas, Coincidencias Empleado/Patrono, Cargar Listas, Tipo de Listas, Usuarios, Bitácora, Configuración del Sistema, Login, layout, report preview, modales y compartidos.
+- Implementación: `InstitutionalTooltipDirective` se incorporó a las 26 superficies con botones titulados; el selector potencialmente extenso de Familia de Nueva Evaluación migró a `app-bounded-select` con owner visual único y sincronizador nativo oculto para preservar el contrato Angular/QA.
+- Validador endurecido: exige importación global del tooltip institucional, exige revisión explícita de cada archivo con `<select>` mediante `tools/b04-control-review.json`, distingue sincronizadores ocultos y rechaza revisiones obsoletas.
+- Inventario fresco: `VISIBLE_SELECTORS=63`; `TOTAL_NATIVE_SELECTS=49`; `VISIBLE_NATIVE_SELECTS=47`; `HIDDEN_SYNC_SELECTS=2`; `BOUNDED_SELECTS=4`; `PAGE_SIZE_SELECTORS=12`; `ACTION_MENUS=2`; `TOOLTIP_BUTTONS=280`; `TOOLTIP_SURFACES=26`; `NATIVE_SELECT_REVIEWS=16`; `UNREVIEWED_COMPONENTS=0`.
+- Verificado en esta intervención: validador B04/self-test/prueba Node `PASS`; selector de Familias focalizado `29/29 PASS`; suite Angular `95` archivos y `986` pruebas `PASS`; `npm run lint=PASS`; `npm run build=PASS` con warnings preexistentes de presupuesto SCSS/CommonJS.
+- Un fallo transitorio de la regresión detectó que el test QA esperaba el owner nativo visible; se corrigió preservando el select oculto de sincronización y adaptando la aserción al owner bounded visible. No se redujeron assertions ni se deshabilitaron pruebas.
+- No ejecutado: `npm run e2e` browser global y capturas reales de todas las superficies, por depender de servidor, autenticación y datos autorizados. `AUDIT_2=BLOCKED`; `B04_GLOBAL_COVERAGE=PARTIAL`; `AUDIT_1=PASS`; `AUDIT_3=PASS` con esa limitación; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`; no se inició B05.
+- Continuación: revisar diff selectivo, publicar únicamente cambios B04 globales y observar Quality Gate exact-SHA. No declarar cierre global sin auditoría browser autorizada y aprobación expresa del propietario.
+
 ## 2026-11-12 12:35:00 -06:00 — Quality Gate final del expediente B04 (COD)
 
 - `EVIDENCE_COMMIT_SHA=7585fd12cc637d76b7ad87c96ad626ea14594c3f`; `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.

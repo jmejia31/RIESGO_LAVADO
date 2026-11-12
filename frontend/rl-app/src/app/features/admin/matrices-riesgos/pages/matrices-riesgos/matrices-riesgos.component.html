@@ -1537,12 +1537,21 @@
             <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
               <div>
                 <label for="modal-selector-familia" class="mb-1.5 block text-xs font-bold text-gray-700">Familia de formulario <span class="text-red-500">*</span></label>
-                <select id="modal-selector-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none" [ngModel]="familiaSeleccionada()" (ngModelChange)="seleccionarFamilia($event)">
+                <select id="modal-selector-familia" class="sr-only" aria-hidden="true" tabindex="-1"
+                        [ngModel]="familiaSeleccionada()">
                   <option value="">Seleccione una familia</option>
                   @for (familia of familias(); track familia.famId) {
                     <option [value]="familia.famCodigo" [disabled]="!familiaEsElegible(familia)">{{ etiquetaFamiliaNueva(familia) }}</option>
                   }
                 </select>
+                <app-bounded-select
+                  inputId="modal-selector-familia-combobox"
+                  ariaLabel="Familia de formulario"
+                  placeholder="Seleccione una familia"
+                  [value]="familiaSeleccionada()"
+                  [emptyValue]="''"
+                  [options]="opcionesFamiliaNuevaEvaluacion()"
+                  (valueChange)="seleccionarFamilia($event?.toString() ?? '')" />
               </div>
               <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-ihss-200 bg-white text-ihss-700 shadow-sm transition-colors hover:bg-ihss-50 focus:outline-none focus:ring-2 focus:ring-ihss-500/30 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Ver detalle de familia" title="Ver detalle de familia" [disabled]="!familiaNuevaSeleccionada()" (click)="familiaNuevaSeleccionada() && abrirModalVerFamilia(familiaNuevaSeleccionada()!, true)">
             <app-action-icon action="view"></app-action-icon>

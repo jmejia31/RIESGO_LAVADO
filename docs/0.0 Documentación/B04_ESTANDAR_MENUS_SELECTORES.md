@@ -197,6 +197,55 @@ Los filtros `Estado` y `Archivo` del gestor de familias son selectores nativos c
 - `QUALITY_GATE_RUN=43272797472` — [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43272797472), `STATUS=completed`, `CONCLUSION=success`.
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 
+## Orden complementaria — Cobertura global preventiva
+
+La revisión B04 se amplió a todas las superficies Angular aplicables: Matrices, Evaluaciones, Consolidadas, Plantillas,
+Familias, Form Builder, Configuración de cálculo, Gestión de Riesgos, Mitigación, Monitoreo operativo, Monitoreo de
+Listas, Coincidencias Empleado/Patrono, Cargar Listas, Tipo de Listas, Usuarios, Bitácora, Configuración del Sistema,
+Login, layout, report preview, modales y componentes compartidos.
+
+### Resultado estructural fresco
+
+La cifra histórica `TOTAL_SELECTORS=64` incluía un `<select>` nativo oculto de sincronización como si fuera un control
+visible. La auditoría global ahora distingue ambas categorías:
+
+```ini
+LEGACY_TOTAL_SELECTORS=64
+VISIBLE_SELECTORS=63
+TOTAL_NATIVE_SELECTS=49
+VISIBLE_NATIVE_SELECTS=47
+HIDDEN_SYNC_SELECTS=2
+BOUNDED_SELECTS=4
+PAGE_SIZE_SELECTORS=12
+ACTION_MENUS=2
+TOOLTIP_BUTTONS=280
+TOOLTIP_SURFACES=26
+NATIVE_SELECT_REVIEWS=16
+UNREVIEWED_COMPONENTS=0
+```
+
+El selector de Familia de Nueva Evaluación usa `app-bounded-select` como owner visual, con un `<select>` oculto de
+sincronización para preservar el contrato Angular/QA. Las excepciones nativas restantes están registradas con motivo en
+`tools/b04-control-review.json`; no se aceptan por el simple hecho de ser nativas.
+
+### Certificación global limitada
+
+```ini
+B04_GLOBAL_COVERAGE=PARTIAL
+B04_SHARED_COMPONENTS=PASS
+B04_ALL_MODULES_REVIEWED=YES
+AUDIT_1=PASS
+AUDIT_2=BLOCKED
+AUDIT_3=PASS
+B04_OWNER_VISUAL_ACCEPTANCE=PENDING
+B04_FINAL_STATUS=OPEN
+```
+
+`AUDIT_1` fue ejecutada con el inventario y el validador preventivo. `AUDIT_3` incluye lint, build, suite Angular completa
+y regresión focalizada de Familias; la ejecución Playwright real de todas las superficies y viewport queda pendiente por
+servidor, autenticación y datos autorizados. Por esa limitación `B04_GLOBAL_COVERAGE` permanece `PARTIAL` y no se declara
+certificación global cerrada.
+
 ### Quality Gate final del expediente
 
 - `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.

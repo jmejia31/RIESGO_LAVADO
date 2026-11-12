@@ -12,11 +12,12 @@ import { PageSizeSelectorComponent } from '../../../../../shared/components/page
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-coincidencias-patrono',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './coincidencias-patrono.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })

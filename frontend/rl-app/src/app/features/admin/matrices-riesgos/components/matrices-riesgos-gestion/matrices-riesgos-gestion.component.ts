@@ -6,6 +6,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { RiesgoDto, RiesgoGuardarDto } from '../../models/matrices-riesgos-fase11.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
@@ -15,7 +16,7 @@ import { InstitutionalConfirmationService } from '../../../../../shared/confirma
 @Component({
   selector: 'app-matrices-riesgos-gestion',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-gestion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy
 import { ActionIconComponent } from '../components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../components/page-size-selector/page-size-selector.component';
+import { InstitutionalTooltipDirective } from '../components/institutional-tooltip/institutional-tooltip.directive';
 import { ReportPreviewService } from './report-preview.service';
 
 @Component({
   selector: 'app-report-preview',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalTooltipDirective],
   templateUrl: './report-preview.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

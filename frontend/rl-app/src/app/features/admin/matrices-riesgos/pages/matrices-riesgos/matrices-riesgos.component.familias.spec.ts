@@ -221,13 +221,17 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     const header = dialog.querySelector('#titulo-modal-nueva-eval')?.parentElement;
     const selector = dialog.querySelector('#modal-selector-familia') as HTMLSelectElement;
     const selectedOption = Array.from(selector.options).find(option => option.value === 'PRUEBA_FORMULARIO');
-    const visibleDialogText = dialog.textContent ?? '';
+    const trigger = dialog.querySelector('[data-ui-bounded-select-trigger]') as HTMLButtonElement;
+    const visibleDialog = dialog.cloneNode(true) as HTMLElement;
+    visibleDialog.querySelectorAll('[aria-hidden="true"]').forEach(element => element.remove());
+    const visibleDialogText = visibleDialog.textContent ?? '';
 
     expect(header?.textContent).not.toContain('Prueba de Formulario');
     expect(visibleDialogText.match(/Prueba de Formulario/g)).toHaveLength(1);
     expect(visibleDialogText).not.toContain('(PRUEBA_FORMULARIO)');
     expect(selectedOption?.textContent?.trim()).toBe('Prueba de Formulario');
     expect(selector.value).toBe('PRUEBA_FORMULARIO');
+    expect(trigger.textContent?.trim()).toBe('Prueba de Formulario');
   });
 
   it('9. Confirmar activación y desactivación llaman al servicio Angular', () => {

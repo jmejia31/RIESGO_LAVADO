@@ -189,6 +189,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly familiasElegibles = computed(() =>
     this.familias().filter(familia => familia.famActivo && familia.tieneVersionVigente)
   );
+  readonly opcionesFamiliaNuevaEvaluacion = computed<BoundedSelectOption[]>(() => this.familiasElegibles().map(familia => ({
+    value: familia.famCodigo,
+    label: this.etiquetaFamiliaNueva(familia),
+    searchText: `${familia.famCodigo} ${familia.famNombre}`
+  })));
   readonly configuracionFamiliaPredeterminadaPendiente = computed(() =>
     !this.cargandoFamiliaPredeterminada()
       && !this.errorFamiliaPredeterminada()

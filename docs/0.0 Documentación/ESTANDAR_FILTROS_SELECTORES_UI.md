@@ -71,3 +71,37 @@ Para cualquier nueva interfaz que implemente estos patrones:
 - Contrato de servidor para búsqueda/estado cuando aplique.
 - E2E que confirme cantidad inicial mostrada y parámetros enviados.
 - Para selectores extensos: E2E con suficientes opciones para forzar scroll y comprobar que el panel nace debajo del disparador y queda acotado al viewport.
+
+## Cobertura global B04
+
+Este estándar aplica a todos los módulos Angular del sistema, no solamente a Matrices de Riesgos:
+
+- Matrices de Riesgos, Evaluaciones, Evaluaciones consolidadas y Plantillas.
+- Familias de Formularios y Form Builder.
+- Configuración de cálculo, Gestión de Riesgos y Mitigación.
+- Monitoreo operativo, Monitoreo de Listas, Coincidencias Empleado y Patrono.
+- Cargar Listas, Tipo de Listas, Usuarios, Bitácora y Configuración del Sistema.
+- Login, layout institucional, vista previa de reportes, modales y componentes compartidos.
+
+La directiva `InstitutionalTooltipDirective` es el contrato único para botones titulados en las superficies revisadas. El
+validador `tools/validate_b04_menus_selectors.js` exige que cada superficie con botones `title` importe la directiva y que
+cada archivo con `<select>` tenga una revisión explícita en `tools/b04-control-review.json`.
+
+La revisión fresca distingue controles visibles de sincronizadores ocultos:
+
+| Métrica | Resultado |
+|---|---:|
+| Selectores visibles auditados | 63 |
+| Selectores nativos totales, incluidos sincronizadores | 49 |
+| Selectores nativos visibles | 47 |
+| Sincronizadores nativos ocultos | 2 |
+| `app-bounded-select` | 4 |
+| `app-page-size-selector` | 12 |
+| Menús institucionales | 2 |
+| Botones con tooltip institucional | 280 |
+| Superficies con botones titulados | 26 |
+| Excepciones nativas revisadas | 16 archivos |
+
+La migración de un selector de Familia de Formulario a `app-bounded-select` conserva un `<select>` oculto de sincronización
+para el contrato QA/Angular; el owner visual es únicamente el selector bounded. Los sincronizadores no se consideran
+controles visibles duplicados.

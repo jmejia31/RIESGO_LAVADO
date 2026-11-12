@@ -8,11 +8,12 @@ import { Modulo } from '../../../core/configuration/catalogo.models';
 import { GlobalHttpStateService } from '../../../core/services/global-http-state.service';
 
 import { ActionIconComponent } from '../../components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective, CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './main-layout.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

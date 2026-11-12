@@ -18,12 +18,13 @@ import {
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 
 @Component({
   selector: 'app-matrices-riesgos-mitigacion',
   standalone: true,
-  imports: [ActionIconComponent, BoundedSelectComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, BoundedSelectComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-mitigacion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

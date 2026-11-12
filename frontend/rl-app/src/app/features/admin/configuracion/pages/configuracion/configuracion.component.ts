@@ -9,11 +9,12 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
 import { LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [ActionIconComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, InstitutionalFileUploadComponent, InstitutionalTooltipDirective, CommonModule, FormsModule, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './configuracion.component.html',
 })

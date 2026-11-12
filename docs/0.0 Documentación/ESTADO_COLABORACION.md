@@ -4345,6 +4345,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `HEAD_LOCAL=HEAD_REMOTE`; `AHEAD=0`; `BEHIND=0`.
 - `AUDIT_1_STATIC=PASS`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `AUDIT_3_REGRESSION=PASS_LOCAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 
+## Estado vigente — Orden complementaria B04 de cobertura global — 2026-11-12 13:07:25 -06:00
+
+- `BASE_SHA=30fbf54fe426357af11a7727b955576ec6581e89`; `FINAL_SHA=PENDING_AUTHORING`; rama `desarrollo`; autor `COD`.
+- Cobertura estática global aplicada a todos los módulos Angular y componentes compartidos. `B04_ALL_MODULES_REVIEWED=YES` para inventario estructural; no implica certificación visual global.
+- Inventario: `VISIBLE_SELECTORS=63`; `TOTAL_NATIVE_SELECTS=49`; `VISIBLE_NATIVE_SELECTS=47`; `HIDDEN_SYNC_SELECTS=2`; `BOUNDED_SELECTS=4`; `PAGE_SIZE_SELECTORS=12`; `ACTION_MENUS=2`; `TOOLTIP_BUTTONS=280`; `TOOLTIP_SURFACES=26`; `NATIVE_SELECT_REVIEWS=16`; `UNREVIEWED_COMPONENTS=0`.
+- `B04_SHARED_COMPONENTS=PASS`; `AUDIT_1=PASS`; `AUDIT_2=BLOCKED` por navegador/servidor/autenticación/datos autorizados; `AUDIT_3=PASS` local con lint, build, suite `95/986` y regresión focalizada; `B04_GLOBAL_COVERAGE=PARTIAL`.
+- Archivos nuevos/relevantes: `tools/b04-control-review.json`; validador B04 reforzado; imports globales de `InstitutionalTooltipDirective`; migración visual de Familia Nueva Evaluación a `app-bounded-select`; regresión QA actualizada para comprobar owner bounded y sincronizador oculto.
+- `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`; `B05_STARTED=NO`.
+- Punto exacto: commit/push selectivo, gate exact-SHA y luego revisión browser/aceptación expresa del propietario. `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+
 ## Estado vigente — Quality Gate final del expediente B04 — 2026-11-12 12:35:00 -06:00
 
 - `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`; `EVIDENCE_COMMIT_SHA=7585fd12cc637d76b7ad87c96ad626ea14594c3f`.

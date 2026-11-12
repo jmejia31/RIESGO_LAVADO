@@ -1,0 +1,22 @@
+{
+  "standard": "B04_GLOBAL_INSTITUTIONAL_UI",
+  "version": 1,
+  "nativeSelectReviews": [
+    { "file": "features/admin/bitacora/pages/bitacora/bitacora.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Filtros compactos de módulo y acción; opciones cortas y contrato ngModel existente." },
+    { "file": "features/admin/listas/pages/cargar-listas/cargar-listas.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Selector compacto de tipo de lista requerido por el formulario de carga." },
+    { "file": "features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Filtro compacto de estado con opciones fijas." },
+    { "file": "features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Filtro compacto de estado con opciones fijas." },
+    { "file": "features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Estado, tipo de persona, documento, lista y origen son catálogos cortos ligados a formularios existentes." },
+    { "file": "features/admin/listas/pages/tipo-listas/tipo-listas.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Tipo de archivo con opciones fijas y contrato Reactive Forms." },
+    { "file": "features/admin/matrices-riesgos/components/dynamic-field-renderer/dynamic-field-renderer.component.ts", "decision": "JUSTIFIED_NATIVE", "reason": "Select generado por el renderer dinámico; cambiarlo rompería serialización, valores y validaciones de campos de formulario." },
+    { "file": "features/admin/matrices-riesgos/components/form-builder/canvas/form-builder-canvas.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Propiedades compactas del diseñador; menú y selector extenso usan componentes compartidos cuando corresponde." },
+    { "file": "features/admin/matrices-riesgos/components/form-builder/inspector/form-builder-inspector.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Propiedades compactas del inspector; se preservan bindings y tipos del Form Builder." },
+    { "file": "features/admin/matrices-riesgos/components/matrices-riesgos-gestion/matrices-riesgos-gestion.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Filtros administrativos cortos de estado y clasificación." },
+    { "file": "features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Estados y catálogos compactos de mitigación con contratos ngModel existentes." },
+    { "file": "features/admin/matrices-riesgos/components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Estados y efectividad compactos del seguimiento operativo." },
+    { "file": "features/admin/matrices-riesgos/pages/configuracion-calculo/configuracion-calculo.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Parámetros de cálculo con opciones cortas y contratos de configuración preservados." },
+    { "file": "features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html", "decision": "REVIEWED_MIXED", "reason": "Filtros y estados cortos permanecen nativos; el selector potencialmente extenso de familia fue migrado a app-bounded-select; el select de riesgo oculto conserva sincronización del renderer." },
+    { "file": "features/admin/usuarios/pages/usuarios/usuarios.component.html", "decision": "JUSTIFIED_NATIVE", "reason": "Dominio y rol son catálogos compactos del formulario de usuario y preservan Reactive Forms." },
+    { "file": "shared/components/page-size-selector/page-size-selector.component.ts", "decision": "CANONICAL_COMPONENT", "reason": "Implementación única de app-page-size-selector; no es una superficie duplicada." }
+  ]
+}
