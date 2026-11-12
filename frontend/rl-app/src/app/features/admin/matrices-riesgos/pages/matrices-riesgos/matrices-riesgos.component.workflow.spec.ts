@@ -283,7 +283,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
     component.seleccionarTab('consolidado');
     expect(service['obtenerConsolidadoPaginado']).toHaveBeenCalledTimes(1);
-    expect(component.errorSeguimiento()).toBe('Transición rechazada');
+    expect(component.errorSeguimiento()).toMatch(/La evaluación fue modificada por otra/);
   });
 
   it('muestra el mensaje funcional cuando la transición falla', () => {

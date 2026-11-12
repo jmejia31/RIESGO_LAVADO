@@ -4230,3 +4230,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ROOT_CAUSE=CONSOLIDATED_CACHE_NOT_INVALIDATED_AFTER_WORKFLOW_TRANSITION`: B02 evita recargas de una pestaña ya activa, pero el cambio persistido de estado debe invalidar la vista cacheada. Se corrige invalidación y re-selección solo cuando cache es inválida.
 - `REGRESSION_UNIT_TESTS=ADDED`: volver desde Evaluaciones, re-seleccionar Consolidado activo y rechazar invalidación ante transición fallida. E2E original intacto; no se reducen gates ni se introducen mocks de API en la CI real.
 - `FINAL_CI_EXACT_SHA=PENDING`, `MAIN_TOUCHED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`, `ORACLE_XE_DISPOSABLE_ONLY`, `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente — Corregida aserción HTTP 409 tras E2E B7/B12 PASS — 2026-11-11 23:52:04 -06:00
+
+- `EVENT_ID=RL-CI-B7-B12-409-ASSERTION-20261111`, `BASE_SHA=def4610906364299df9e22dbac0d0e4343ed3519`, `ACCOUNT=jmejia31`, `BRANCH=desarrollo`.
+- `RUN_43163176569=FAIL` solo por aserción unitaria nueva: HTTP 409 institucional muestra mensaje de conflicto concurrente, no el literal del mock. Los Bloques 7/9, 12, GATE_02 y rollback real sobre Oracle XE descartable pasaron antes del fallo.
+- `FIX=EXPECT_INSTITUTIONAL_CONCURRENCY_409_TEXT`; único cambio ejecutable es una línea en `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.workflow.spec.ts`, sin aflojar la prueba de no invalidación ante fallo de transición.
+- `NEW_QUALITY_GATE_EXACT_SHA=PENDING`; `MAIN_TOUCHED=NO`; `PRODUCTION_ORACLE_TOUCHED=NO`; `ORACLE_XE_CI=DISPOSABLE`; `BLOCK10_AUTHORIZED=NO`.
