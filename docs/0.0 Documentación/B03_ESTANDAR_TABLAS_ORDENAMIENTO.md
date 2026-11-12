@@ -2,7 +2,13 @@
 
 ## Estado de esta intervencion
 
-`SOURCE_CODE_SHA=58c7270514f8c1ef601079a8c85ef26d87f736f2`
+`SOURCE_CODE_SHA=4dc8bc9921cc5d55bd07f8c0bcfdeaabec4d0484`
+`EVIDENCE_COMMIT_SHA=4dc8bc9921cc5d55bd07f8c0bcfdeaabec4d0484`
+`GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`
+`GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`
+`GITHUB_REMOTE_VERIFIED=YES`
+`SECURITY_SCAN=NOT_RUN`
+`REVIEW_READY=NO`
 
 Esta actualización extiende el contrato reutilizable de encabezados ordenables a Usuarios, Monitoreo de Listas y los resúmenes/detalles paginados de Coincidencias. El inventario exhaustivo local detectó `23` tablas/listados y `14` superficies de KPI candidatas; B03 permanece `PARTIAL` porque aún faltan las superficies no paginadas o de dominio que requieren revisión individual y la verificación visual con datos autorizados.
 
