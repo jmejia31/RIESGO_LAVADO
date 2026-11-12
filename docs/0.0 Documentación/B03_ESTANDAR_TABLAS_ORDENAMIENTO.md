@@ -2,12 +2,12 @@
 
 ## Estado de esta intervencion
 
-`SOURCE_CODE_SHA=4dc8bc9921cc5d55bd07f8c0bcfdeaabec4d0484`
-`EVIDENCE_COMMIT_SHA=1904e31cc4534250e809842ca5f89a2214a04f66`
+`SOURCE_CODE_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`
+`EVIDENCE_COMMIT_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`
 `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`
 `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`
 `GITHUB_REMOTE_VERIFIED=YES`
-`SECURITY_SCAN=NOT_RUN`
+`SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`
 `REVIEW_READY=NO`
 
 Esta actualización extiende el contrato reutilizable de encabezados ordenables a Usuarios, Monitoreo de Listas y los resúmenes/detalles paginados de Coincidencias. El inventario exhaustivo local detectó `23` tablas/listados y `14` superficies de KPI candidatas; B03 permanece `PARTIAL` porque aún faltan las superficies no paginadas o de dominio que requieren revisión individual y la verificación visual con datos autorizados.
@@ -98,6 +98,13 @@ La extensión a Bitácora, Tipo de Listas, Cargar Listas, Configuración y tabla
 - `ANGULAR_BUILD=PASS`; `DOTNET_BUILD=BLOCKED_EXISTING_API_PROCESS_LOCK`; no se ejecutaron Oracle, Playwright, E2E ni suite completa de regresión en esta intervención.
 - `GITHUB_ACTIONS_BASE_RUN=43165972065` sobre `58c72705`: `FAILURE`, `75 PASS / 1 FAIL / 15 SKIP`; la falla única heredada está en `modal-shell-lock.spec.ts` por diferencia de color del constructor. No se presenta como resultado B03 PASS.
 - `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `ORACLE_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+
+## Verificación remota posterior a publicación — 2026-11-12
+
+- `SOURCE_CODE_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`; `EVIDENCE_COMMIT_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`.
+- GitHub API verificó en `desarrollo` el índice B03, `BITACORA_COLABORACION.md` y `ESTADO_COLABORACION.md`; `GITHUB_REMOTE_VERIFIED=YES`.
+- Quality Gate exacto: `https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43248948956`; estado observado `IN_PROGRESS`, sin presentar aprobación anticipada.
+- `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`; `REVIEW_READY=NO` hasta que el gate terminalice y se revise su conclusión.
 
 ## Actualización B03 — 2026-11-12 — COD — filtros visuales y colores semánticos
 

@@ -10867,3 +10867,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Cambios P06 ajenos y archivos no rastreados quedaron fuera del stage. `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `FORCE_PUSH=NO`.
 - Estado antes de publicar: `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO`; `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`.
 - Punto de continuación: stage selectivo de los seis archivos funcionales y documentación B03/handoff, commit, push fast-forward a `origin/desarrollo`, verificación API de GitHub y consulta del Quality Gate exacto.
+
+## 2026-11-12 09:36:00 -06:00 — Publicación y verificación remota B03 (COD)
+
+- Commit funcional/documental publicado: `adfad2c66d19a577a8339861b74861b7735ded7c`; `HEAD_LOCAL=HEAD_REMOTE`; push fast-forward aceptado en `origin/desarrollo`.
+- La API de GitHub verificó la disponibilidad del índice B03, bitácora y estado colaborativo en la rama remota. `GITHUB_REMOTE_VERIFIED=YES`.
+- Quality Gate exacto del SHA: `https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43248948956`; estado observado al cierre de esta anotación: `IN_PROGRESS`. No se presenta como PASS ni como certificación final.
+- El commit hook ejecutó `python tools/validate_agent_skills.py`: `PASS (14 skills)`. La seguridad remota continúa en ejecución; `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`; `REVIEW_READY=NO`.
+- `SOURCE_CODE_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`; `EVIDENCE_COMMIT_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`; `B03_FINAL_STATUS=OPEN`; aceptación visual del propietario pendiente.
