@@ -75,7 +75,9 @@ export type BoundedSelectPlacement = InstitutionalOverlayPlacement;
                   [placeholder]="searchPlaceholder"
                   [attr.aria-label]="'Buscar en ' + ariaLabel"
                   data-ui-bounded-select-search
-                  (input)="actualizarConsulta($event)">
+                  (input)="actualizarConsulta($event)"
+                  (keydown.escape)="$event.preventDefault(); cerrar(true)"
+                  (keyup.escape)="$event.preventDefault(); cerrar(true)">
               </div>
             </div>
           }
@@ -106,16 +108,17 @@ export type BoundedSelectPlacement = InstitutionalOverlayPlacement;
                 role="option"
                 [id]="optionId(option)"
                 tabindex="-1"
-                class="flex w-full items-center rounded-lg px-3 py-2 text-left text-xs transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                class="bounded-select__option flex w-full min-w-0 items-start rounded-lg px-3 py-2 text-left text-xs transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 [class.bg-ihss-50]="esSeleccionada(option)"
                 [class.font-semibold]="esSeleccionada(option)"
                 [class.text-ihss-800]="esSeleccionada(option)"
                 [class.text-slate-700]="!esSeleccionada(option)"
                 [disabled]="option.disabled"
                 [attr.aria-selected]="esSeleccionada(option)"
-                [title]="option.label"
+                [attr.aria-label]="option.label"
+                data-ui-bounded-select-option
                 (click)="seleccionar(option)">
-                <span class="whitespace-normal break-words">{{ option.label }}</span>
+                <span class="bounded-select__option-label min-w-0 max-w-full whitespace-normal break-words">{{ option.label }}</span>
               </button>
             } @empty {
               <p class="px-3 py-5 text-center text-xs font-medium text-slate-500">No hay coincidencias.</p>
@@ -151,6 +154,18 @@ export type BoundedSelectPlacement = InstitutionalOverlayPlacement;
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-gutter: stable;
+    }
+
+    .bounded-select__option,
+    .bounded-select__option-label {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      white-space: normal;
+    }
+
+    .bounded-select__option-label {
+      display: block;
     }
   `]
 })
@@ -325,9 +340,11 @@ export class BoundedSelectComponent implements OnDestroy {
     if (this.abierto() && !this.host.nativeElement.contains(event.target as Node)) this.cerrar();
   }
 
-  @HostListener('document:keydown.escape')
-  cerrarConEscape(): void {
-    if (this.abierto()) this.cerrar(true);
+  @HostListener('window:keydown', ['$event'])
+  cerrarConEscape(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || !this.abierto()) return;
+    event.preventDefault();
+    this.cerrar(true);
   }
 
   private moverOpcion(delta: number): void {

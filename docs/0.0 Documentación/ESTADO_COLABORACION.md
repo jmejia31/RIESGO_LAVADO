@@ -4402,3 +4402,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia: `H08_EXTENDED_A_TO_E=PASS`; `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`; `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0`; prueba Playwright B04 del selector `PASS`.
 - `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/6019a53032ec4a8775bffccc2afce476b42b28f/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 - B04 sigue abierto únicamente por aceptación visual del propietario en cuatro viewports: `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. Restricciones preservadas: `MAIN_TOUCHED=NO`, `PRODUCTION_TOUCHED=NO`, `ORACLE_INSTITUTIONAL_TOUCHED=NO`, `MIGRATION_54_TOUCHED=NO`, `P06_PRESERVED=YES`, `P07_PRESERVED=YES`.
+-
+## Estado vigente — Mejora global de texto extenso B04 — 2026-11-12 16:00:00 -06:00
+
+- `BASE_SHA=4693181e55715e33bde9fefc54835bb85fdad6d8`; `FINAL_SHA=PENDING_COMMIT`; rama `desarrollo`; autor `COD`.
+- `B04_OPTION_FULL_TEXT=PASS`; `B04_NATIVE_TOOLTIP_INTERFERENCE=0`; `B04_OPTION_HORIZONTAL_OVERFLOW=0` en desktop; `B04_SHARED_SELECTOR_REGRESSION=PASS`; `B04_FORMULA_VERSION_BINDING=PASS`.
+- El componente compartido elimina el tooltip nativo de las opciones y conserva texto visible completo, `aria-label`, wrapping, límites de ancho, scroll interno, keyboard/mouse selection, Escape, clic externo y posicionamiento institucional.
+- Pruebas frescas: bounded-select/fórmula `16/16 PASS`; validador B04 `PASS`; lint `PASS`; build `PASS` con warnings no bloqueantes de presupuesto SCSS/CommonJS; suite Angular completa terminó con exit `0`; Playwright focalizado `1/1 PASS`; auditoría de viewports `1/1 PASS` con desktop PASS y 390/768 `BLOCKED_INSPECTOR_NOT_VISIBLE`.
+- `B04_PLAYWRIGHT_VISUAL=BLOCKED`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`.
+- Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage. Punto siguiente: commit/push selectivo, Quality Gate exact-SHA y verificación remota.

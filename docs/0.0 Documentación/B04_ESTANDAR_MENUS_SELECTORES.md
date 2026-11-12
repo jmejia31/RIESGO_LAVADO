@@ -298,3 +298,25 @@ certificación global cerrada.
 - `H08_EXTENDED_A_TO_E=PASS`; `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`; `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0`; el escenario Playwright B04 reportó `PASS` para búsqueda, selección exacta y contención de expresión.
 - `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 - `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`: la aceptación visual completa del propietario en cuatro viewports no se sustituye por el gate automatizado.
+-
+## Mejora global de presentación de opciones extensas — 2026-11-12
+
+La corrección se implementó una sola vez en `app-bounded-select`, sin variantes particulares por consumidor. Las opciones ya no tienen `title` nativo; muestran su etiqueta completa dentro del panel, conservan `aria-label`, distribuyen nombres extensos en varias líneas y permanecen dentro del ancho y alto controlados del overlay.
+
+```ini
+B04_OPTION_FULL_TEXT=PASS
+B04_NATIVE_TOOLTIP_INTERFERENCE=0
+B04_OPTION_HORIZONTAL_OVERFLOW=0
+B04_SHARED_SELECTOR_REGRESSION=PASS
+B04_FORMULA_VERSION_BINDING=PASS
+B04_PLAYWRIGHT_VISUAL=BLOCKED
+B01_PRESERVED=YES
+B02_PRESERVED=YES
+B03_PRESERVED=YES
+B04_OWNER_VISUAL_ACCEPTANCE=PENDING
+B04_FINAL_STATUS=OPEN
+```
+
+- Pruebas focalizadas: bounded-select y fórmula central `16/16 PASS`; validador B04 `PASS`; lint `PASS`; build `PASS` con warnings no bloqueantes ya conocidos; suite Angular completa `exit 0`.
+- Chromium real: `1366x768` y `1536x864` PASS para texto visible, ausencia de `title`, wrapping, geometría y selección; `390x844` y `768x1024` se registran como `BLOCKED_INSPECTOR_NOT_VISIBLE` porque el Form Builder oculta el inspector, sin convertir esa ausencia en PASS visual.
+- Se conservaron los contratos funcionales y el posicionamiento institucional. La aceptación visual del propietario permanece pendiente; B04 no se cierra.

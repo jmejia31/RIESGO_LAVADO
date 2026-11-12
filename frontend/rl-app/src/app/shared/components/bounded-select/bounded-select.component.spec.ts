@@ -30,6 +30,21 @@ describe('BoundedSelectComponent', () => {
     expect(root.querySelector('[data-ui-bounded-select-count]')?.textContent).toContain('30 de 30 opciones');
   });
 
+  it('renderiza texto extenso completo sin tooltip nativo y conserva el nombre accesible', () => {
+    const textoLargo = `F08_PORCENTAJE_CONTROL_CORRECTIVO · versión exacta con una expresión de más de cien caracteres ${'x'.repeat(80)}`;
+    component.options = [{ value: 808, label: textoLargo }];
+    component.abrir();
+    fixture.detectChanges();
+
+    const opcion = (fixture.nativeElement as HTMLElement).querySelector('[role="option"][data-ui-bounded-select-option]') as HTMLButtonElement | null;
+    expect(opcion).not.toBeNull();
+    expect(opcion?.textContent).toContain(textoLargo);
+    expect(opcion?.getAttribute('aria-label')).toBe(textoLargo);
+    expect(opcion?.hasAttribute('title')).toBe(false);
+    expect(opcion?.classList.contains('bounded-select__option')).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.bounded-select__option-label')?.textContent).toContain(textoLargo);
+  });
+
   it('elige arriba cuando el cuerpo del modal no tiene espacio debajo y mantiene el panel dentro de sus límites', () => {
     const placement = calculateBoundedSelectPlacement(
       { left: 220, right: 660, top: 600, bottom: 640, width: 440 },

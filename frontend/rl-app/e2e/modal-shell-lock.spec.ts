@@ -86,6 +86,17 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   const panel = page.locator('[data-ui-bounded-select-panel]');
   await expect(panel).toBeVisible();
   await expect(panel.locator('[role="option"]')).toHaveCount(25);
+  await expect(panel.locator('[data-ui-bounded-select-option][title]')).toHaveCount(0);
+  const opcionesExtensas = panel.locator('[data-ui-bounded-select-option]');
+  await expect(opcionesExtensas.first()).toHaveAttribute('aria-label', /F01_FORMULA_UAT/);
+  const overflow = await opcionesExtensas.evaluateAll(opciones => opciones.map(opcion => ({
+    text: opcion.textContent ?? '',
+    fits: (opcion as HTMLElement).scrollWidth <= (opcion as HTMLElement).clientWidth,
+    whiteSpace: getComputedStyle(opcion).whiteSpace,
+    overflowWrap: getComputedStyle(opcion).overflowWrap
+  })));
+  expect(overflow).toHaveLength(24);
+  expect(overflow.every(option => option.text.length >= 20 && option.fits && option.whiteSpace === 'normal' && option.overflowWrap === 'anywhere')).toBe(true);
   const box = await panel.boundingBox();
   expect(box).not.toBeNull();
   if (!box) throw new Error('El panel de versiones no tiene geometría visible.');
@@ -104,8 +115,72 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   await expect(inspector.locator('.inspector-central-preview span')).toContainText('CAT_EFECTIVIDAD_24');
 
   await selector.click();
+  await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).fill('CAT_EFECTIVIDAD_23');
+  await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).press('ArrowDown');
+  await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).press('Enter');
+  await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v23');
+
+  await selector.click();
+  const escapeSearch = panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' });
+  await escapeSearch.focus();
+  await expect(escapeSearch).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(panel).toBeHidden();
+
+  await selector.click();
   await page.locator('.form-builder-canvas__scroll').click({ position: { x: 8, y: 8 } });
   await expect(panel).toBeHidden();
+});
+
+test('audita el selector compartido en los cuatro viewports solicitados', async ({ page }) => {
+  const viewports = [
+    { width: 390, height: 844, expected: 'mobile' },
+    { width: 768, height: 1024, expected: 'tablet' },
+    { width: 1366, height: 768, expected: 'desktop' },
+    { width: 1536, height: 864, expected: 'desktop' }
+  ] as const;
+  const resultados: string[] = [];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto('/matrices-riesgos');
+    await page.getByRole('tab', { name: 'Plantillas' }).click();
+    await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+    const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+    await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+    const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+    const formulaCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').filter({ hasText: 'Resultado calculado' });
+    await formulaCard.click();
+    const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
+    const selector = inspector.getByRole('combobox', { name: 'Fórmula central y versión exacta' });
+
+    if (viewport.expected !== 'desktop') {
+      await expect(selector).toBeHidden();
+      resultados.push(`${viewport.width}x${viewport.height}=BLOCKED_INSPECTOR_NOT_VISIBLE`);
+      continue;
+    }
+
+    await expect(selector).toBeVisible();
+    await selector.click();
+    const panel = page.locator('[data-ui-bounded-select-panel]');
+    const box = await panel.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) throw new Error(`El panel no tiene geometría en ${viewport.width}x${viewport.height}.`);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+    await expect(panel.locator('[data-ui-bounded-select-option][title]')).toHaveCount(0);
+    resultados.push(`${viewport.width}x${viewport.height}=PASS`);
+    await page.keyboard.press('Escape');
+  }
+
+  expect(resultados).toEqual([
+    '390x844=BLOCKED_INSPECTOR_NOT_VISIBLE',
+    '768x1024=BLOCKED_INSPECTOR_NOT_VISIBLE',
+    '1366x768=PASS',
+    '1536x864=PASS'
+  ]);
 });
 
 test('bloquea el shell y conserva el foco dentro del Form Builder modal', async ({ page }) => {

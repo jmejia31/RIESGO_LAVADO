@@ -84,9 +84,10 @@ function validateSharedContracts(root = DEFAULT_ROOT) {
   const positioning = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'app', 'shared', 'components', 'institutional-overlay', 'institutional-overlay-position.util.ts'), 'utf8');
   const tooltip = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'app', 'shared', 'components', 'institutional-tooltip', 'institutional-tooltip.directive.ts'), 'utf8');
   const errors = [];
-  const requiredBounded = ['role="combobox"', 'aria-haspopup="listbox"', 'document:click', 'document:keydown.escape', 'data-ui-bounded-select-search', 'overflow-y: auto'];
+  const requiredBounded = ['role="combobox"', 'aria-haspopup="listbox"', 'document:click', 'window:keydown', 'data-ui-bounded-select-search', 'overflow-y: auto', '[attr.aria-label]="option.label"', 'data-ui-bounded-select-option'];
   const requiredAction = ['role="menu"', 'document:click', 'document:keydown.escape', 'InstitutionalOverlayRegistry', 'data-ui-action-menu-panel'];
   for (const token of requiredBounded) if (!bounded.includes(token)) errors.push(`BOUNDED_SELECT_CONTRACT_MISSING:${token}`);
+  if (bounded.includes('[title]="option.label"')) errors.push('BOUNDED_SELECT_NATIVE_OPTION_TOOLTIP_PRESENT');
   for (const token of requiredAction) if (!action.includes(token)) errors.push(`ACTION_MENU_CONTRACT_MISSING:${token}`);
   for (const token of ['calculateInstitutionalOverlayPlacement', 'maxHeight', 'direction']) if (!positioning.includes(token)) errors.push(`POSITIONING_CONTRACT_MISSING:${token}`);
   for (const token of ['selector: \'button[title]\'', 'role', 'aria-describedby', 'getBoundingClientRect', 'window:resize', 'window:scroll']) if (!tooltip.includes(token)) errors.push(`TOOLTIP_CONTRACT_MISSING:${token}`);
