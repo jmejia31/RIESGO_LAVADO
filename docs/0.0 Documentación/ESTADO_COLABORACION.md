@@ -4327,3 +4327,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Evidencia pendiente: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; faltan navegador autenticado, servidor/datos autorizados y capturas reales de Crear/Consultar/Editar en cuatro viewport. `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 - `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
 - Continuación exacta: stage selectivo del complemento y documentación, commit/push a `origin/desarrollo`, verificar SHA remoto y Quality Gate exacto; no declarar B04 cerrado sin auditoría visual/aceptación del propietario.
+
+## Estado vigente — Complemento B04 publicado y Quality Gate verde — 2026-11-12 12:02:50 -06:00
+
+- `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`; `EVIDENCE_COMMIT_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`; `HEAD_LOCAL=HEAD_REMOTE`; `AHEAD=0`; `BEHIND=0`; `GITHUB_REMOTE_VERIFIED=YES`.
+- Quality Gate exacto [43272797472](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43272797472): `STATUS=completed`; `CONCLUSION=success`; jobs de clasificación y validador integral `success`, sin pasos fallidos.
+- `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica. El hook de publicación validó las 14 skills institucionales.
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
+- `AUDIT_1_STATIC=PASS`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `AUDIT_3_REGRESSION=PASS_LOCAL`; `B04_TECHNICAL_STATUS=PASS`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
+- Punto de continuación: aceptación visual del propietario; el complemento B04 está publicado y certificado técnicamente por el Quality Gate verde.

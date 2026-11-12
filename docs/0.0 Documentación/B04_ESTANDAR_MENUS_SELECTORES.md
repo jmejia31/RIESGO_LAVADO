@@ -189,3 +189,12 @@ Los filtros `Estado` y `Archivo` del gestor de familias son selectores nativos c
 `B03_REGRESSION=PASS_INHERITED_CONTRACT_PRESERVED`
 `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`
 `B04_FINAL_STATUS=OPEN`
+
+### Publicación y verificación remota del complemento
+
+- `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
+- `EVIDENCE_COMMIT_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
+- `QUALITY_GATE_RUN=43272797472` — [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43272797472), `STATUS=completed`, `CONCLUSION=success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
+- `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; la aceptación visual del propietario permanece pendiente y por eso `B04_FINAL_STATUS=OPEN`.

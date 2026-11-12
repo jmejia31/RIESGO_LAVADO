@@ -10917,3 +10917,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `AUDIT_1_STATIC=PASS`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `AUDIT_3_REGRESSION=PASS_LOCAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 - Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
 - Continuación: revisar diff selectivo, ejecutar gates aplicables, publicar commit B04 complementario en `origin/desarrollo` y observar el Quality Gate exact-SHA. Mantener pendiente la auditoría visual del propietario.
+
+## 2026-11-12 12:02:50 -06:00 — Verificación remota del complemento B04 (COD)
+
+- Commit funcional/documental publicado: `35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`; `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`; `EVIDENCE_COMMIT_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
+- Quality Gate exacto: [run 43272797472](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43272797472), `status=completed`, `conclusion=success`; ambos jobs terminaron `success` sin pasos fallidos. Incluyó validadores, ESLint, build, Oracle XE descartable, E2E, cobertura y contenedores.
+- Publicación verificada: `HEAD=origin/desarrollo=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`; `AHEAD=0`; `BEHIND=0`; hook `validate_agent_skills.py=PASS (14 skills)`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- Índice y sign-off: `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
+- La auditoría browser local de las cuatro viewport y capturas reales continúa `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; no se presenta como PASS. `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- Restricciones confirmadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`. Los cambios ajenos permanecen fuera del stage.
+- Punto exacto de continuación: aceptación visual del propietario y eventual auditoría browser autorizada; no se requieren correcciones técnicas adicionales según el Quality Gate verde.
