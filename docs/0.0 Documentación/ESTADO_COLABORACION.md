@@ -4345,6 +4345,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `HEAD_LOCAL=HEAD_REMOTE`; `AHEAD=0`; `BEHIND=0`.
 - `AUDIT_1_STATIC=PASS`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `AUDIT_3_REGRESSION=PASS_LOCAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 
+## Estado vigente — Corrección de compatibilidad E2E B04 — 2026-11-12 13:20:00 -06:00
+
+- `SOURCE_CODE_SHA=daf0c9e578bc4f87830953fe27ec81f09b9632dd`; el run [43287320988](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43287320988) falló únicamente en Bloque 7 Oracle/browser por pérdida de propagación del selector oculto de compatibilidad.
+- Corrección pendiente de publicar: `(ngModelChange)="seleccionarFamilia($event)"` en `#modal-selector-familia`, manteniendo `app-bounded-select` como owner visible.
+- Verificación local: `matrices-riesgos.component.familias.spec.ts` `29/29 PASS`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`.
+- `B04_FINAL_STATUS=OPEN`; continuar con commit/push selectivo y observar nuevo Quality Gate exact-SHA.
+
 ## Estado vigente — Orden complementaria B04 de cobertura global — 2026-11-12 13:07:25 -06:00
 
 - `BASE_SHA=30fbf54fe426357af11a7727b955576ec6581e89`; `FINAL_SHA=PENDING_AUTHORING`; rama `desarrollo`; autor `COD`.

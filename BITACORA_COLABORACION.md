@@ -10948,6 +10948,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`; no se inició B05.
 - Continuación: revisar diff selectivo, publicar únicamente cambios B04 globales y observar Quality Gate exact-SHA. No declarar cierre global sin auditoría browser autorizada y aprobación expresa del propietario.
 
+## 2026-11-12 13:20:00 -06:00 — Corrección de compatibilidad E2E B04 (COD)
+
+- `SOURCE_CODE_SHA=daf0c9e578bc4f87830953fe27ec81f09b9632dd`; Quality Gate [run 43287320988](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43287320988) concluyó `failure` exclusivamente en la certificación Oracle/browser del Bloque 7.
+- Los controles estáticos B04, analyzers, ESLint, build y validaciones previas pasaron. El artefacto del run identificó que `h08-family-lifecycle-real.spec.ts` no encontraba `Versión activa:` después de `#modal-selector-familia.selectOption(...)`.
+- Causa: el sincronizador nativo oculto conservaba el valor visual pero no propagaba `ngModelChange` al estado de la evaluación tras la migración al owner bounded. Corrección quirúrgica: enlazar `(ngModelChange)="seleccionarFamilia($event)"` al sincronizador; no se modificó backend, Oracle ni funcionalidad de negocio.
+- Verificación local posterior: regresión de Familias `1` archivo / `29` pruebas `PASS`; no se redujeron assertions ni se deshabilitaron tests.
+- Continuación: publicar la corrección como commit separado y repetir el Quality Gate exact-SHA. `B04_FINAL_STATUS=OPEN` hasta resultado verde.
+
 ## 2026-11-12 12:35:00 -06:00 — Quality Gate final del expediente B04 (COD)
 
 - `EVIDENCE_COMMIT_SHA=7585fd12cc637d76b7ad87c96ad626ea14594c3f`; `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.

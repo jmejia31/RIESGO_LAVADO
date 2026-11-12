@@ -1538,7 +1538,8 @@
               <div>
                 <label for="modal-selector-familia" class="mb-1.5 block text-xs font-bold text-gray-700">Familia de formulario <span class="text-red-500">*</span></label>
                 <select id="modal-selector-familia" class="sr-only" aria-hidden="true" tabindex="-1"
-                        [ngModel]="familiaSeleccionada()">
+                        [ngModel]="familiaSeleccionada()"
+                        (ngModelChange)="seleccionarFamilia($event)">
                   <option value="">Seleccione una familia</option>
                   @for (familia of familias(); track familia.famId) {
                     <option [value]="familia.famCodigo" [disabled]="!familiaEsElegible(familia)">{{ etiquetaFamiliaNueva(familia) }}</option>
