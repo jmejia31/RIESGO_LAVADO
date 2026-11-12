@@ -4345,6 +4345,18 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `HEAD_LOCAL=HEAD_REMOTE`; `AHEAD=0`; `BEHIND=0`.
 - `AUDIT_1_STATIC=PASS`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `AUDIT_3_REGRESSION=PASS_LOCAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 
+## Estado vigente — Corrección P0 selector de fórmulas B04 — 2026-11-12 14:45:05 -06:00
+
+- `INITIAL_SHA=242b884a235510b89731bc1f0ce6bb26eeb97255`; `FINAL_SHA=PENDING_COMMIT`; rama `desarrollo`; autor `COD`.
+- El inspector del Form Builder usa ahora `app-bounded-select` para listas extensas de fórmulas/versiones; se preservan los identificadores y la expresión exacta del contrato existente.
+- La preview aplica contención fuerte para expresiones largas y el selector conserva búsqueda, scroll interno, posicionamiento acotado, selección tipada y clic externo; Escape desde búsqueda está cubierto por el componente compartido.
+- Inventario: `TOTAL_SELECTORS=63`; `TOTAL_NATIVE_SELECTS=48`; `VISIBLE_NATIVE_SELECTS=46`; `HIDDEN_SYNC_SELECTS=2`; `BOUNDED_SELECTS=5`; `PAGE_SIZE_SELECTORS=12`; `ACTION_MENUS=2`; `UNREVIEWED_COMPONENTS=0`.
+- `B04_FORMULA_SELECTOR_STANDARD=PASS`; `B04_FORMULA_DROPDOWN_POSITION=PASS_FOCUSED`; `B04_FORMULA_VERSION_BINDING=PASS`; `B04_FORMULA_TEXT_CONTAINMENT=PASS_FOCUSED`; `B04_EXTENDED_SELECTORS_AUDIT=PASS_STATIC`; `B04_FORM_BUILDER_PLAYWRIGHT=PASS_FOCUSED`.
+- Pruebas frescas: validador/self-test Node `PASS`; fórmula central `5/5`; inspector/presentation/bounded select `49/49`; Playwright Form Builder enfocado `1/1 PASS` con 24 versiones y viewport `1366x768`. Lint, build, suite completa y Quality Gate quedan pendientes hasta el cierre.
+- `AUDIT_1=PASS`; `AUDIT_2=PARTIAL_FOCUSED`; `AUDIT_3=PARTIAL_PENDING_FULL_GATE`; `B04_GLOBAL_COVERAGE=PARTIAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`; `B05_STARTED=NO`.
+- Punto exacto: revisar diff selectivo, ejecutar lint/build/suite y Quality Gate, publicar el commit final en `origin/desarrollo`, verificar por API y actualizar `FINAL_SHA`/enlaces.
+
 ## Estado vigente — Corrección de compatibilidad E2E B04 — 2026-11-12 13:20:00 -06:00
 
 - `SOURCE_CODE_SHA=daf0c9e578bc4f87830953fe27ec81f09b9632dd`; el run [43287320988](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43287320988) falló únicamente en Bloque 7 Oracle/browser por pérdida de propagación del selector oculto de compatibilidad.

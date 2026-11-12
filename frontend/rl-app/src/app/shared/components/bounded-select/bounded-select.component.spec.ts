@@ -90,6 +90,15 @@ describe('BoundedSelectComponent', () => {
     expect(component.abierto()).toBe(false);
   });
 
+  it('cierra con Escape cuando el foco está dentro del panel de búsqueda', () => {
+    component.abrir();
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    component.manejarTeclasPanel(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(component.abierto()).toBe(false);
+  });
+
   it('navega opciones con flechas y confirma el valor numérico con Enter', () => {
     const valores: Array<string | number | null> = [];
     component.valueChange.subscribe(value => valores.push(value));

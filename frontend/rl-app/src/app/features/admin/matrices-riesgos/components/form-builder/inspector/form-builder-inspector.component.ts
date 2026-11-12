@@ -11,12 +11,13 @@ export interface InspectorCatalogoOption {
 }
 
 import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../../shared/components/bounded-select/bounded-select.component';
 import { InstitutionalTooltipDirective } from '../../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-form-builder-inspector',
   standalone: true,
-  imports: [ActionIconComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
+  imports: [ActionIconComponent, BoundedSelectComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './form-builder-inspector.component.html',
   styleUrls: ['./form-builder-inspector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -82,9 +83,19 @@ export class FormBuilderInspectorComponent {
     return this.campoActivo?.tipo === 'formula';
   }
 
-  seleccionarFormulaCentral(versionId: number | null): void {
+  get formulaVersionSelectOptions(): readonly BoundedSelectOption[] {
+    return this.formulaVersionesDisponibles.map(option => ({
+      value: option.formulaVersionId,
+      label: `${option.codigo} · v${option.version} · ${option.estado}`,
+      searchText: `${option.codigo} ${option.nombre} ${option.version} ${option.estado} ${option.expresion}`
+    }));
+  }
+
+  seleccionarFormulaCentral(versionId: string | number | null): void {
     if (this.soloLectura || !this.campoActivo) return;
-    if (versionId === null) {
+    const normalizedVersionId = versionId === null || versionId === '' ? null : Number(versionId);
+    if (normalizedVersionId !== null && !Number.isInteger(normalizedVersionId)) return;
+    if (normalizedVersionId === null) {
       this.campoActivo.formulaId = undefined;
       this.campoActivo.formulaVersionId = undefined;
       this.campoActivo.formulaCodigo = undefined;
@@ -95,7 +106,7 @@ export class FormBuilderInspectorComponent {
       this.propiedadCambiada.emit();
       return;
     }
-    const option = this.formulaVersionesDisponibles.find(item => item.formulaVersionId === Number(versionId));
+    const option = this.formulaVersionesDisponibles.find(item => item.formulaVersionId === normalizedVersionId);
     if (!option) return;
     this.campoActivo.formulaId = option.formulaId;
     this.campoActivo.formulaVersionId = option.formulaVersionId;

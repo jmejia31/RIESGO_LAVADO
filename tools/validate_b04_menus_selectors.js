@@ -93,9 +93,35 @@ function validateSharedContracts(root = DEFAULT_ROOT) {
   return errors;
 }
 
+function validateFormulaInspectorContract(root = DEFAULT_ROOT) {
+  const inspectorRoot = path.join(root, 'frontend', 'rl-app', 'src', 'app', 'features', 'admin', 'matrices-riesgos', 'components', 'form-builder', 'inspector');
+  const htmlPath = path.join(inspectorRoot, 'form-builder-inspector.component.html');
+  const tsPath = path.join(inspectorRoot, 'form-builder-inspector.component.ts');
+  const scssPath = path.join(inspectorRoot, 'form-builder-inspector.component.scss');
+  const errors = [];
+  if (![htmlPath, tsPath, scssPath].every(fs.existsSync)) {
+    return ['FORMULA_INSPECTOR_FILES_MISSING'];
+  }
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  const ts = fs.readFileSync(tsPath, 'utf8');
+  const scss = fs.readFileSync(scssPath, 'utf8');
+  if (!html.includes('<app-bounded-select')) errors.push('FORMULA_SELECTOR_NOT_BOUNDED');
+  if (html.includes('<select [id]="\'prop-formula-\'')) errors.push('FORMULA_SELECTOR_NATIVE_LONG_LIST');
+  for (const token of ['formulaVersionSelectOptions', 'valueChange', 'seleccionarFormulaCentral($event)']) {
+    if (!html.includes(token)) errors.push(`FORMULA_SELECTOR_BINDING_MISSING:${token}`);
+  }
+  for (const token of ['formulaVersionSelectOptions', 'Number(versionId)', 'formulaVersionId']) {
+    if (!ts.includes(token)) errors.push(`FORMULA_SELECTOR_ADAPTER_MISSING:${token}`);
+  }
+  for (const token of ['inspector-central-preview', 'overflow-wrap:anywhere', 'word-break:break-word', 'overflow-x:hidden']) {
+    if (!scss.includes(token)) errors.push(`FORMULA_TEXT_CONTAINMENT_MISSING:${token}`);
+  }
+  return errors;
+}
+
 function validate(root = DEFAULT_ROOT) {
   const inventory = analyzeSource(walkFiles(SOURCE_ROOT));
-  const errors = validateSharedContracts(root);
+  const errors = [...validateSharedContracts(root), ...validateFormulaInspectorContract(root)];
   const reviewManifestPath = path.join(root, 'tools', 'b04-control-review.json');
   if (!fs.existsSync(reviewManifestPath)) {
     errors.push('CONTROL_REVIEW_MANIFEST_MISSING:tools/b04-control-review.json');
@@ -176,4 +202,4 @@ if (require.main === module) {
   process.exitCode = result.pass ? 0 : 1;
 }
 
-module.exports = { analyzeSource, validateSharedContracts, validate, selfTest };
+module.exports = { analyzeSource, validateSharedContracts, validateFormulaInspectorContract, validate, selfTest };

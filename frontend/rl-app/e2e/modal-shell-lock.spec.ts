@@ -19,6 +19,16 @@ const publicada = { verId: 10, verFamiliaId: 1, verCodigo: 'MATRIZ_RIESGOS_LAFT_
   verFechaCreacion: '2026-08-13T12:00:00Z', verUsrCreacion: 1 };
 const borrador = { ...publicada, verId: 11, verCodigo: 'MATRIZ_RIESGOS_LAFT_V2', verVersion: 2,
   verJson: definicion, verHash: 'borrador', verEstado: 'DRAFT', verVigente: false };
+const formulas = [{ id: 1, codigo: 'F01_FORMULA_UAT', nombre: 'Fórmula UAT', descripcion: 'Fórmula para pruebas de selector.' }];
+const formulaVersions = Array.from({ length: 24 }, (_, index) => ({
+  id: index + 1,
+  formulaId: 1,
+  version: index + 1,
+  expresion: `IFERROR(LOOKUP("CAT_EFECTIVIDAD_${String(index + 1).padStart(2, '0')}", escala_correctivo, NUMBER), "")`,
+  tipoResultado: 'DECIMAL',
+  estado: 'DRAFT',
+  hash: String(index + 1).padStart(64, '0')
+}));
 
 function token(): string {
   const codificar = (valor: object) => Buffer.from(JSON.stringify(valor)).toString('base64url');
@@ -44,6 +54,8 @@ async function preparar(page: Page): Promise<void> {
     else if (ruta.endsWith('/formulario/version-vigente')) datos = publicada;
     else if (ruta.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: publicada.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
     else if (ruta.endsWith('/formularios/historial')) datos = [publicada, borrador];
+    else if (ruta.endsWith('/configuracion-calculo/formulas')) datos = formulas;
+    else if (ruta.endsWith('/configuracion-calculo/formulas/1/versiones')) datos = formulaVersions;
     else if (/\/formularios\/\d+$/.test(ruta)) datos = borrador;
     else if (ruta.endsWith('/evaluaciones')) datos = { items: [], pagina: 1, registrosPorPagina: 10, totalRegistros: 0, totalPaginas: 0 };
     else if (ruta.endsWith('/riesgos')) datos = [];
@@ -54,6 +66,47 @@ async function preparar(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => preparar(page));
+
+test('el selector de fórmula usa bounded select, búsqueda y contención de expresión', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const formulaCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').filter({ hasText: 'Resultado calculado' });
+  await formulaCard.click();
+  const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
+  const selector = inspector.getByRole('combobox', { name: 'Fórmula central y versión exacta' });
+  await expect(selector).toBeVisible();
+  await selector.click();
+
+  const panel = page.locator('[data-ui-bounded-select-panel]');
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('[role="option"]')).toHaveCount(25);
+  const box = await panel.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) throw new Error('El panel de versiones no tiene geometría visible.');
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(1366);
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(768);
+
+  const search = panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' });
+  await search.fill('CAT_EFECTIVIDAD_24');
+  await expect(panel.locator('[role="option"]')).toHaveCount(2);
+  const filteredFormula = panel.locator('[role="option"]').filter({ hasText: 'F01_FORMULA_UAT' });
+  await expect(filteredFormula).toHaveCount(1);
+  await filteredFormula.click();
+  await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v24');
+  await expect(inspector.locator('.inspector-central-preview span')).toContainText('CAT_EFECTIVIDAD_24');
+
+  await selector.click();
+  await page.locator('.form-builder-canvas__scroll').click({ position: { x: 8, y: 8 } });
+  await expect(panel).toBeHidden();
+});
 
 test('bloquea el shell y conserva el foco dentro del Form Builder modal', async ({ page }) => {
   await page.goto('/matrices-riesgos');

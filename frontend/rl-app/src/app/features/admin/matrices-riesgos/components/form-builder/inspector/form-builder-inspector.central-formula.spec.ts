@@ -16,10 +16,26 @@ describe('FormBuilderInspectorComponent — fórmula central pinneada', () => {
   });
 
   it('guarda la versión exacta y no una referencia latest', () => {
-    component.seleccionarFormulaCentral(8);
+    component.seleccionarFormulaCentral('8');
     expect(component.campoActivo?.formulaId).toBe(7);
     expect(component.campoActivo?.formulaVersionId).toBe(8);
     expect(component.campoActivo?.formulaVersion).toBe(2);
+    expect(component.campoActivo?.formula).toBe('a + b');
+  });
+
+  it('expone opciones acotadas con búsqueda por código, versión, estado y expresión', () => {
+    const option = component.formulaVersionSelectOptions[0];
+    expect(option).toEqual(expect.objectContaining({
+      value: 8,
+      label: 'F_TOTAL · v2 · APPROVED',
+      searchText: expect.stringContaining('a + b')
+    }));
+  });
+
+  it('rechaza identificadores no enteros sin alterar la fórmula fijada', () => {
+    component.seleccionarFormulaCentral(8);
+    component.seleccionarFormulaCentral('8.5');
+    expect(component.campoActivo?.formulaVersionId).toBe(8);
     expect(component.campoActivo?.formula).toBe('a + b');
   });
   it('permite desvincular una fórmula central sin resolver otra versión', () => {

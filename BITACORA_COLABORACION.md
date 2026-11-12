@@ -10976,3 +10976,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Quality Gate final exacto: [run 43279214059](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43279214059), `status=completed`, `conclusion=success`; ambos jobs `success`, sin pasos fallidos.
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `HEAD=origin/desarrollo`; `AHEAD=0`; `BEHIND=0`.
 - `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+
+## 2026-11-12 14:45:05 -06:00 — Corrección P0 del selector de fórmulas B04 (COD)
+
+- `INITIAL_SHA=242b884a235510b89731bc1f0ce6bb26eeb97255`; rama `desarrollo`; el remoto estaba sincronizado y se preservaron cambios locales ajenos fuera del stage.
+- Se sustituyó únicamente el selector extenso `Fórmula central y versión exacta` del inspector por `app-bounded-select`, con opciones tipadas, búsqueda por código/versión/estado/expresión, scroll interno, contención de viewport y cierre externo. Se preservaron `formulaId`, `formulaVersionId`, `formulaCodigo`, `formulaVersion`, `formula`, `formulaFuente` y la selección exacta; no se tocó el motor matemático.
+- Se corrigió la contención visual del preview (`overflow-x:hidden`, `min-width:0`, `overflow-wrap:anywhere`, `word-break:break-word` y scroll vertical acotado), sin truncar ni modificar la expresión persistida.
+- Se agregó adaptación segura `string|number|null` para el evento del componente bounded y se rechazan identificadores no enteros. Se reforzó `app-bounded-select` para cerrar con Escape desde el panel de búsqueda.
+- Se actualizó `tools/b04-control-review.json` para reclasificar el inspector como `REVIEWED_MIXED` y se reforzó `tools/validate_b04_menus_selectors.js` con contrato preventivo específico del selector de fórmula y pruebas del validador.
+- Inventario fresco posterior: `TOTAL_SELECTORS=63`; `TOTAL_NATIVE_SELECTS=48`; `VISIBLE_NATIVE_SELECTS=46`; `HIDDEN_SYNC_SELECTS=2`; `TOTAL_BOUNDED_SELECTS=5`; `PAGE_SIZE_SELECTORS=12`; `ACTION_MENUS=2`; `UNREVIEWED_COMPONENTS=0`.
+- Verificado en esta intervención: validador B04/self-test y pruebas Node `PASS`; regresión central de fórmula `5/5 PASS`; inspector, Form Builder presentation y bounded select `49/49 PASS`; prueba Playwright enfocada del Form Builder `1/1 PASS` en viewport `1366x768`, con 24 versiones, búsqueda, selección exacta, contención y clic externo.
+- La primera tentativa Playwright fue `ENVIRONMENT_BLOCKED` por `ERR_CONNECTION_REFUSED` sin servidor local; se repitió con `ng serve` activo y quedó `PASS`. No se declara auditoría visual completa de todas las viewports ni aceptación del propietario.
+- Pendiente de ejecutar antes del cierre remoto: lint, build, suite Angular completa, Quality Gate del SHA final y verificación API. `B04_FORM_BUILDER_PLAYWRIGHT=PASS_FOCUSED`; `B04_GLOBAL_COVERAGE=PARTIAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `BLOCK10_AUTHORIZED=NO`; `B05_STARTED=NO`.

@@ -197,6 +197,26 @@ Los filtros `Estado` y `Archivo` del gestor de familias son selectores nativos c
 - `QUALITY_GATE_RUN=43272797472` — [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43272797472), `STATUS=completed`, `CONCLUSION=success`.
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 
+## Corrección P0 — Selector de fórmula/versiones del Form Builder
+
+La lista dinámica extensa de `Fórmula central y versión exacta` ya no se clasifica como excepción nativa. El inspector usa el componente institucional `app-bounded-select`, con búsqueda, scroll interno, posicionamiento arriba/abajo, límites de viewport, selección tipada y cierre externo. La fórmula vinculada permanece contenida mediante ajuste de palabras y scroll vertical, sin alterar el valor persistido.
+
+```ini
+B04_FORMULA_SELECTOR_STANDARD=PASS
+B04_FORMULA_DROPDOWN_POSITION=PASS_FOCUSED
+B04_FORMULA_VERSION_BINDING=PASS
+B04_FORMULA_TEXT_CONTAINMENT=PASS_FOCUSED
+B04_EXTENDED_SELECTORS_AUDIT=PASS_STATIC
+B04_FORM_BUILDER_PLAYWRIGHT=PASS_FOCUSED
+B04_OWNER_VISUAL_ACCEPTANCE=PENDING
+B04_FINAL_STATUS=OPEN
+```
+
+- `SOURCE_CODE_SHA=242b884a235510b89731bc1f0ce6bb26eeb97255`; `EVIDENCE_COMMIT_SHA=PENDING_COMMIT`.
+- Inventario posterior: `TOTAL_SELECTORS=63`, `TOTAL_NATIVE_SELECTS=48`, `VISIBLE_NATIVE_SELECTS=46`, `HIDDEN_SYNC_SELECTS=2`, `BOUNDED_SELECTS=5`, `PAGE_SIZE_SELECTORS=12`, `ACTION_MENUS=2`, `UNREVIEWED_COMPONENTS=0`.
+- Regresión fresca: validador B04/self-test y Node tests `PASS`; fórmula central `5/5`; inspector, presentation y bounded select `49/49`; Playwright enfocado `1/1 PASS` en `1366x768`, incluyendo 24 versiones, búsqueda, selección y contención.
+- La auditoría visual completa de las cuatro viewports y la aceptación del propietario siguen pendientes; este expediente no declara cierre global por esa limitación.
+
 ## Orden complementaria — Cobertura global preventiva
 
 La revisión B04 se amplió a todas las superficies Angular aplicables: Matrices, Evaluaciones, Consolidadas, Plantillas,

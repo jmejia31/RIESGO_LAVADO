@@ -297,7 +297,11 @@ export class BoundedSelectComponent implements OnDestroy {
   }
 
   manejarTeclasPanel(event: KeyboardEvent): void {
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cerrar(true);
+    }
+    else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       this.moverOpcion(event.key === 'ArrowDown' ? 1 : -1);
     }
