@@ -4307,3 +4307,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUALITY_GATE_43260118512=FAIL_HISTORICAL`; `QUALITY_GATE_NEW_SHA=PENDING_AFTER_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=NO`.
 - `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
 - Continuación: publicar el commit correctivo selectivo en `origin/desarrollo`, verificar por GitHub el SHA y esperar el Quality Gate exacto hasta estado terminal `SUCCESS`.
+
+## Estado vigente — B04 Quality Gate verde y corrección cerrada — 2026-11-12 11:18:00 -06:00
+
+- `SOURCE_CODE_SHA=ed9ea7a6646179e07f48de962ae02c64cb7ddec6`; `EVIDENCE_COMMIT_SHA=ed9ea7a6646179e07f48de962ae02c64cb7ddec6`; `HEAD_LOCAL=HEAD_REMOTE`; `GITHUB_REMOTE_VERIFIED=YES`.
+- Quality Gate exacto [43264166795](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43264166795) terminó `SUCCESS` sobre el SHA corregido. El E2E de menú ya no falla: los botones mantienen su semántica nativa y el marcador interno no altera `getByRole('button')`.
+- Verificación integral remota: control de alcance, seguridad npm, analizadores .NET, ESLint, contratos FE, build Release, Oracle XE descartable, `run_quality_gates`, proyecciones/cálculos, E2E y contenedores `PASS`.
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `B04_TECHNICAL_STATUS=PASS`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+- `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
+- Continuación: aceptación visual del propietario; el defecto técnico que originó el run rojo está corregido y certificado por el Quality Gate verde.

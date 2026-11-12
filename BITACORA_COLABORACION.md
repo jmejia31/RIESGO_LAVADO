@@ -10896,3 +10896,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
 - `QUALITY_GATE_43260118512=FAIL`; `QUALITY_GATE_NEW_SHA=PENDING_AFTER_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=NO` hasta observar `SUCCESS` sobre el SHA corregido.
 - Punto exacto de continuación: stage selectivo, commit, push fast-forward a `origin/desarrollo`, consulta del Quality Gate exact-SHA y cierre solo con ejecución terminal verde.
+
+## 2026-11-12 11:18:00 -06:00 — Cierre remoto B04 tras Quality Gate verde (COD)
+
+- `SOURCE_CODE_SHA=ed9ea7a6646179e07f48de962ae02c64cb7ddec6`; `EVIDENCE_COMMIT_SHA=ed9ea7a6646179e07f48de962ae02c64cb7ddec6`; `HEAD_LOCAL=HEAD_REMOTE`; `origin/desarrollo` actualizado mediante fast-forward.
+- Quality Gate exacto: [run 43264166795](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43264166795), `status=completed`, `conclusion=success`; detect CI, analizadores, ESLint, validadores, build Release, Oracle XE descartable, E2E, cobertura y contenedores sin fallos.
+- La corrección eliminó el único defecto del run anterior: los botones del menú conservan el rol nativo `button`; el contenedor conserva `role="menu"` y la lógica interna usa `data-ui-action-menu-item`.
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica B04.
+- No se tocaron `main`, producción, Oracle institucional, migración 54, backend funcional, P06 ni P07. Los cambios locales ajenos permanecen sin stage y sin alteración.
+- Punto de continuación: revisión/aceptación visual del propietario para completar `B04_FINAL_STATUS`; no se requieren más cambios técnicos para el defecto del Quality Gate.
