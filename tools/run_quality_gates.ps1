@@ -107,6 +107,18 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'INSTITUTIONAL_CONFIRMATION_BYPASS_VALIDATOR=PASS'
 
+$b04SelectorTests = Join-Path $RepositoryRoot 'tools/validate_b04_menus_selectors.test.js'
+$b04SelectorValidator = Join-Path $RepositoryRoot 'tools/validate_b04_menus_selectors.js'
+& node --test $b04SelectorTests
+if ($LASTEXITCODE -ne 0) {
+    throw "Las pruebas del estandar B04 de menus y selectores fallaron con codigo $LASTEXITCODE"
+}
+& node $b04SelectorValidator --self-test
+if ($LASTEXITCODE -ne 0) {
+    throw "El estandar B04 de menus y selectores fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'B04_MENUS_SELECTORS_VALIDATOR=PASS'
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'

@@ -10875,3 +10875,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Quality Gate exacto del SHA: `https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43248948956`; estado observado al cierre de esta anotación: `IN_PROGRESS`. No se presenta como PASS ni como certificación final.
 - El commit hook ejecutó `python tools/validate_agent_skills.py`: `PASS (14 skills)`. La seguridad remota continúa en ejecución; `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`; `REVIEW_READY=NO`.
 - `SOURCE_CODE_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`; `EVIDENCE_COMMIT_SHA=adfad2c66d19a577a8339861b74861b7735ded7c`; `B03_FINAL_STATUS=OPEN`; aceptación visual del propietario pendiente.
+
+## 2026-11-12 10:33:10 -06:00 — Implementación B04 de menús y selectores (COD)
+
+- `EVENT_ID=RL-B04-MENUS-SELECTORS-20261112`; `BASE_SHA=5574d4b2c215cf4cebf707f73d77218139f9c46c`; autor `COD` / `CODEX`; rama `desarrollo`; cliente `CLI`.
+- Auditoría estructural fresca sobre `frontend/rl-app/src/app`: `64` selectores (`49` nativos, `3` bounded, `12` page-size), `2` menús de acciones migrados y `0` patrones `<details>/<summary>` o menús contextuales independientes sin clasificar.
+- Implementación: `app-institutional-action-menu`, `InstitutionalOverlayRegistry` y `institutional-overlay-position.util.ts`; migración del toolbar y acciones de sección del Form Builder; integración del registro y posicionamiento común con `app-bounded-select`.
+- Contratos preservados: Reactive Forms, `ngModel`, valores numéricos, disabled, validaciones, permisos, acciones, paginación, consultas y estados del Form Builder. No se modificaron backend, Oracle, producción, `main`, migración 54, P06 ni P07.
+- Prevención: `tools/validate_b04_menus_selectors.js` y su prueba Node; `tools/run_quality_gates.ps1` ejecuta el validador B04 como gate obligatorio.
+- Verificado en esta intervención: `npm run build=PASS` con warnings preexistentes de presupuesto/CommonJS; `npm test -- --watch=false=PASS` (`94` archivos, `984` pruebas); `npm run lint=PASS`; validador B04, self-test y prueba propia `PASS`.
+- Playwright real y Oracle institucional `NOT_EXECUTED_LOCALLY`; requieren runner/datos autorizados. Quality Gate remoto B04 queda pendiente del SHA final publicado. `B04_GLOBAL_INVENTORY=COMPLETE`; `B04_TECHNICAL_STATUS=PASS`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+- Punto de continuación: validar documentación/estructura, stage selectivo excluyendo P06 y artefactos, commit B04, push fast-forward, revisar Quality Gate exact-SHA y actualizar el dictamen sin declarar aceptación visual del propietario.

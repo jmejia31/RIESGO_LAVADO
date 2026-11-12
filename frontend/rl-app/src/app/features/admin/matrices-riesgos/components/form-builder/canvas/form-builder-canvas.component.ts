@@ -1,14 +1,15 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CampoBuilderModel, SeccionBuilderModel } from '../../../models/form-builder.models';
 
 import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalActionMenuComponent } from '../../../../../../shared/components/institutional-action-menu/institutional-action-menu.component';
 
 @Component({
   selector: 'app-form-builder-canvas',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, InstitutionalActionMenuComponent, CommonModule, FormsModule],
   templateUrl: './form-builder-canvas.component.html',
   styleUrls: ['./form-builder-canvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -32,29 +33,12 @@ export class FormBuilderCanvasComponent {
   @Output() soltarControl = new EventEmitter<{ seccionId: string; tipo: string }>();
 
   readonly seccionArrastreSobreId = signal<string | null>(null);
-  readonly menuSeccionAbiertaId = signal<string | null>(null);
-
-  toggleMenuSeccion(event: Event, seccionId: string): void {
-    event.stopPropagation();
-    if (this.soloLectura) return;
-    this.menuSeccionAbiertaId.update(actual => actual === seccionId ? null : seccionId);
-  }
-
   ejecutarAccionSeccion(event: Event, accion: 'duplicar' | 'eliminar' | 'subir' | 'bajar', seccionId: string): void {
     event.stopPropagation();
-    this.menuSeccionAbiertaId.set(null);
     if (this.soloLectura) return;
     if (accion === 'duplicar') this.duplicarSeccion.emit(seccionId);
     if (accion === 'eliminar') this.eliminarSeccion.emit(seccionId);
     if (accion === 'subir' || accion === 'bajar') this.reordenarSeccion.emit({ seccionId, direccion: accion });
-  }
-
-  @HostListener('document:click') cerrarMenuPorClickExterno(): void {
-    this.menuSeccionAbiertaId.set(null);
-  }
-
-  @HostListener('document:keydown', ['$event']) cerrarMenuPorEscape(event: KeyboardEvent): void {
-    if (event.key === 'Escape') this.menuSeccionAbiertaId.set(null);
   }
 
   onDragOver(event: DragEvent, seccionId: string): void {

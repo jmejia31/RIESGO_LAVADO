@@ -67,27 +67,27 @@
                <button type="button" (click)="$event.stopPropagation(); duplicarSeccion.emit(sec.id)" class="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-ihss-50 hover:text-ihss-700" title="Duplicar sección" aria-label="Duplicar sección">
             <app-action-icon action="duplicate"></app-action-icon>
           </button>
-               <div class="relative" (click)="$event.stopPropagation()">
-                 <button type="button" (click)="toggleMenuSeccion($event, sec.id)" (keydown.escape)="menuSeccionAbiertaId.set(null)" class="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800" title="Acciones de sección" aria-label="Acciones de sección" [attr.aria-expanded]="menuSeccionAbiertaId() === sec.id" [attr.aria-controls]="'menu-seccion-' + sec.id">
-            <app-action-icon action="menu"></app-action-icon>
-          </button>
-                 @if (menuSeccionAbiertaId() === sec.id) {
-                   <div [id]="'menu-seccion-' + sec.id" class="absolute right-0 top-9 z-30 min-w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl" (click)="$event.stopPropagation()">
-                     <button type="button" title="Duplicar sección" aria-label="Duplicar sección" (click)="ejecutarAccionSeccion($event, 'duplicar', sec.id)" class="form-builder-section__menu-item">
+               <app-institutional-action-menu
+                 [triggerId]="'menu-seccion-trigger-' + sec.id"
+                 ariaLabel="Acciones de sección"
+                 triggerClass="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                 panelClass="form-builder-section__actions-popover">
+                 <span action-menu-trigger><app-action-icon action="menu"></app-action-icon></span>
+                 <div action-menu-content>
+                     <button type="button" title="Duplicar sección" aria-label="Duplicar sección" role="menuitem" (click)="ejecutarAccionSeccion($event, 'duplicar', sec.id)" class="form-builder-section__menu-item">
             <app-action-icon action="duplicate"></app-action-icon>
           </button>
-                     <button type="button" title="Mover sección arriba" aria-label="Mover sección arriba" [disabled]="$index === 0" (click)="ejecutarAccionSeccion($event, 'subir', sec.id)" class="form-builder-section__menu-item">
+                     <button type="button" title="Mover sección arriba" aria-label="Mover sección arriba" role="menuitem" [disabled]="$index === 0" (click)="ejecutarAccionSeccion($event, 'subir', sec.id)" class="form-builder-section__menu-item">
             <app-action-icon action="upload"></app-action-icon>
           </button>
-                     <button type="button" title="Mover sección abajo" aria-label="Mover sección abajo" [disabled]="$index === secciones.length - 1" (click)="ejecutarAccionSeccion($event, 'bajar', sec.id)" class="form-builder-section__menu-item">
+                     <button type="button" title="Mover sección abajo" aria-label="Mover sección abajo" role="menuitem" [disabled]="$index === secciones.length - 1" (click)="ejecutarAccionSeccion($event, 'bajar', sec.id)" class="form-builder-section__menu-item">
             <app-action-icon action="move-down"></app-action-icon>
           </button>
-                     @if (secciones.length > 1) { <button type="button" title="Eliminar sección" aria-label="Eliminar sección" (click)="ejecutarAccionSeccion($event, 'eliminar', sec.id)" class="form-builder-section__menu-item form-builder-section__menu-item--danger">
+                     @if (secciones.length > 1) { <button type="button" title="Eliminar sección" aria-label="Eliminar sección" role="menuitem" (click)="ejecutarAccionSeccion($event, 'eliminar', sec.id)" class="form-builder-section__menu-item form-builder-section__menu-item--danger">
             <app-action-icon action="delete"></app-action-icon>
           </button> }
-                   </div>
-                 }
-               </div>
+                 </div>
+               </app-institutional-action-menu>
              }
              @if (!soloLectura && secciones.length > 1) {
               <div class="hidden flex items-center pl-1 border-l border-slate-200">

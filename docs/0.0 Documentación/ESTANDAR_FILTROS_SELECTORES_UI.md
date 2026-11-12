@@ -37,12 +37,12 @@ Componente canónico: `app-bounded-select`.
 
 Contrato:
 
-- El panel se renderiza **debajo** del control y permanece en flujo normal; no depende de la decisión del navegador de abrir arriba/abajo.
+- El panel se renderiza como una capa institucional posicionada respecto del control y permanece dentro de los límites visibles; puede abrir arriba o abajo según el espacio disponible y no depende de la decisión nativa del navegador.
 - La lista de opciones tiene límite `max-height: min(14rem, 28dvh)` y scroll interno.
 - El panel conserva borde inferior, sombra, contador de opciones y cierre visual completo.
 - A partir de 8 opciones se habilita búsqueda interna.
 - Escape cierra; click externo cierra; al seleccionar se devuelve el foco al disparador.
-- El panel no usa posición `fixed` ni `absolute`, por lo que no cubre el pie institucional.
+- El panel utiliza una capa posicionada con coordenadas calculadas y `z-index` institucional; no queda recortado por tablas, tarjetas o modales y su altura se limita al espacio disponible.
 - Identificadores de prueba: `data-ui-bounded-select`, `data-ui-bounded-select-panel`, `data-ui-bounded-select-scroll`.
 
 Aplicación actual: **Mitigación → Evaluación** y **Monitoreo → Evaluación**.

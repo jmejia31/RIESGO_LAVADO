@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { EstadoFormulario } from '../../../models/matrices-riesgos.models';
 
 import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalActionMenuComponent } from '../../../../../../shared/components/institutional-action-menu/institutional-action-menu.component';
 
 @Component({
   selector: 'app-form-builder-toolbar',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule],
+  imports: [ActionIconComponent, InstitutionalActionMenuComponent, CommonModule],
   templateUrl: './form-builder-toolbar.component.html',
   styleUrls: ['./form-builder-toolbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

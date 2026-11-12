@@ -4285,3 +4285,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`; `REVIEW_READY=NO`; `B03_FINAL_STATUS=OPEN`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`.
 - El commit funcional/documental no incluyó P06 ni artefactos ajenos; no se modificaron Oracle institucional, `main`, producción ni migración 54.
 - Continuación: consultar la conclusión terminal del run `43248948956`; si es `SUCCESS`, actualizar el dictamen documental sin cambiar el código. Si falla, analizar únicamente la causa nueva sobre `adfad2c6`.
+
+## Estado vigente — Implementación B04 de menús y selectores — 2026-11-12 10:33:10 -06:00
+
+- `EVENT_ID=RL-B04-MENUS-SELECTORS-20261112`; `BASE_SHA=5574d4b2c215cf4cebf707f73d77218139f9c46c`; autor `COD`; rama `desarrollo`; cliente `CLI`.
+- Inventario estructural fresco: `B04_TOTAL_SELECTORS=64`; `B04_TOTAL_NATIVE_SELECTS=49`; `B04_TOTAL_BOUNDED_SELECTS=3`; `B04_TOTAL_PAGE_SIZE_SELECTORS=12`; `B04_TOTAL_ACTION_MENUS=2`; `B04_TOTAL_CONTEXT_MENUS=0`; `UNREVIEWED_COMPONENTS=0`.
+- B04 centraliza el comportamiento duplicado en `app-institutional-action-menu`, `InstitutionalOverlayRegistry` y `institutional-overlay-position.util.ts`. `app-bounded-select` reutiliza el mismo posicionamiento y registro de capa.
+- Se migraron los dos menús del Form Builder. Los 49 `<select>` nativos quedaron como excepciones justificadas por controles cortos o compatibilidad con formularios; los 12 page-size y 3 bounded permanecen en sus componentes canónicos.
+- Validador preventivo agregado a `tools/validate_b04_menus_selectors.js` y conectado a `tools/run_quality_gates.ps1`; prueba del validador incluida.
+- Verificación fresca: Angular build `PASS`; `94` archivos y `984` pruebas frontend `PASS`; ESLint `PASS`; validador B04 `PASS`. Warnings de presupuesto/CommonJS son preexistentes y no bloqueantes.
+- Playwright/E2E local y Oracle `NOT_EXECUTED`; Quality Gate remoto exact-SHA pendiente de publicación. `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`.
+- `B04_GLOBAL_INVENTORY=COMPLETE`; `B04_TECHNICAL_STATUS=PASS`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+- Punto exacto de continuación: validadores documentales, revisión diff/stage selectivo, commit/push B04 y revisión del Quality Gate del SHA final.

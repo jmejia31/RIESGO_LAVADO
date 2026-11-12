@@ -11,6 +11,10 @@ import {
   signal
 } from '@angular/core';
 import { ActionIconComponent } from '../action-icon/action-icon.component';
+import { InstitutionalOverlayRegistry } from '../institutional-overlay/institutional-overlay-registry.service';
+import { InstitutionalOverlayPlacement, calculateInstitutionalOverlayPlacement } from '../institutional-overlay/institutional-overlay-position.util';
+
+export { calculateInstitutionalOverlayPlacement as calculateBoundedSelectPlacement } from '../institutional-overlay/institutional-overlay-position.util';
 
 export interface BoundedSelectOption {
   value: string | number;
@@ -19,37 +23,7 @@ export interface BoundedSelectOption {
   disabled?: boolean;
 }
 
-export interface BoundedSelectPlacement {
-  direction: 'up' | 'down';
-  left: number;
-  top: number;
-  width: number;
-  maxHeight: number;
-}
-
-export function calculateBoundedSelectPlacement(
-  anchor: Pick<DOMRect, 'left' | 'right' | 'top' | 'bottom' | 'width'>,
-  viewport: { width: number; height: number },
-  constrainTo?: Pick<DOMRect, 'left' | 'right' | 'top' | 'bottom'>,
-  preferredHeight = 320,
-  gap = 4,
-  margin = 12
-): BoundedSelectPlacement {
-  const leftBound = Math.max(margin, constrainTo?.left ?? margin);
-  const rightBound = Math.min(viewport.width - margin, constrainTo?.right ?? viewport.width - margin);
-  const topBound = Math.max(margin, constrainTo?.top ?? margin);
-  const bottomBound = Math.min(viewport.height - margin, constrainTo?.bottom ?? viewport.height - margin);
-  const below = Math.max(0, bottomBound - anchor.bottom - gap);
-  const above = Math.max(0, anchor.top - topBound - gap);
-  const direction: BoundedSelectPlacement['direction'] = below >= Math.min(preferredHeight, 160) || below >= above ? 'down' : 'up';
-  const availableHeight = direction === 'down' ? below : above;
-  const maxHeight = Math.max(0, Math.min(preferredHeight, availableHeight));
-  const width = Math.min(Math.max(0, anchor.width), Math.max(0, rightBound - leftBound));
-  const left = Math.min(Math.max(anchor.left, leftBound), Math.max(leftBound, rightBound - width));
-  const top = direction === 'down' ? anchor.bottom + gap : anchor.top - gap - maxHeight;
-
-  return { direction, left, top, width, maxHeight };
-}
+export type BoundedSelectPlacement = InstitutionalOverlayPlacement;
 
 @Component({
   selector: 'app-bounded-select',
@@ -183,6 +157,8 @@ export function calculateBoundedSelectPlacement(
 export class BoundedSelectComponent implements OnDestroy {
   private static nextId = 0;
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly registry = inject(InstitutionalOverlayRegistry);
+  private readonly overlayHandle = { close: () => this.cerrar() };
 
   @Input() value: string | number | null = null;
   @Input() options: readonly BoundedSelectOption[] = [];
@@ -204,6 +180,10 @@ export class BoundedSelectComponent implements OnDestroy {
   private positionFrame: number | null = null;
   private listenersAttached = false;
   private readonly viewportListener = () => this.programarPosicionamiento();
+
+  constructor() {
+    this.registry.register(this.overlayHandle);
+  }
 
   get etiquetaSeleccionada(): string {
     const seleccionada = this.options.find(option => this.sonIguales(option.value, this.value));
@@ -228,6 +208,7 @@ export class BoundedSelectComponent implements OnDestroy {
     if (this.disabled || this.abierto()) return;
     this.consulta.set('');
     this.activeOptionIndex.set(-1);
+    this.registry.activate(this.overlayHandle);
     this.abierto.set(true);
     this.instalarListenersViewport();
     this.programarPosicionamiento();
@@ -330,6 +311,7 @@ export class BoundedSelectComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.registry.unregister(this.overlayHandle);
     this.removerListenersViewport();
     if (this.positionFrame !== null) cancelAnimationFrame(this.positionFrame);
   }
@@ -390,7 +372,7 @@ export class BoundedSelectComponent implements OnDestroy {
       if (!trigger || !panel) return;
       const anchor = trigger.getBoundingClientRect();
       const body = this.host.nativeElement.closest('.modal-body-scrollable')?.getBoundingClientRect();
-      const placement = calculateBoundedSelectPlacement(
+      const placement = calculateInstitutionalOverlayPlacement(
         anchor,
         { width: window.innerWidth, height: window.innerHeight },
         body,
