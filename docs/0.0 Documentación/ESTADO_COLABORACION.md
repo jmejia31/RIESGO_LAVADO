@@ -4316,3 +4316,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `B04_TECHNICAL_STATUS=PASS`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
 - `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
 - Continuación: aceptación visual del propietario; el defecto técnico que originó el run rojo está corregido y certificado por el Quality Gate verde.
+
+## Estado vigente — Complemento B04 Familias de Formularios — 2026-11-12 11:44:00 -06:00
+
+- `EVENT_ID=RL-B04-FAMILIAS-COMPLEMENT-20261112`; `BASE_SHA=6081168bd4681c6061da931f3b889db31bed9241`; autor `COD`; rama `desarrollo`; `FINAL_SHA=PENDING_AUTHORING`.
+- B04 amplía su cobertura a Crear, Consultar, Editar, Versiones y Form Builder. Los modales mantienen sus contratos CRUD/versionado/permisos; el gestor conserva filtros nativos cortos de Estado/Archivo como excepción justificada.
+- Nuevo estándar compartido: `InstitutionalTooltipDirective`, aplicado en familias, gestor y Form Builder. La capa usa `document.body`, límites de viewport, foco/hover, Escape, `aria-describedby`, scroll/resize y cleanup; no cambia lógica de negocio.
+- Inventario del validador: `64` selectores, `2` menús de acciones, `22` superficies de familias/Form Builder y `10` archivos con tooltip estándar; `AUDIT_1_STATIC=PASS`.
+- Verificación local: `npm run lint=PASS`; `npm run build=PASS` con warnings preexistentes; `95` archivos / `986` pruebas Angular `PASS`; validador B04/self-test/prueba Node `PASS`. `AUDIT_3_REGRESSION=PASS_LOCAL`.
+- Evidencia pendiente: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; faltan navegador autenticado, servidor/datos autorizados y capturas reales de Crear/Consultar/Editar en cuatro viewport. `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
+- Continuación exacta: stage selectivo del complemento y documentación, commit/push a `origin/desarrollo`, verificar SHA remoto y Quality Gate exacto; no declarar B04 cerrado sin auditoría visual/aceptación del propietario.

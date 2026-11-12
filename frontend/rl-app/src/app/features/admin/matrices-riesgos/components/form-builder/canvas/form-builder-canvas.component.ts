@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { CampoBuilderModel, SeccionBuilderModel } from '../../../models/form-builder.models';
 
 import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { InstitutionalActionMenuComponent } from '../../../../../../shared/components/institutional-action-menu/institutional-action-menu.component';
 
 @Component({
   selector: 'app-form-builder-canvas',
   standalone: true,
-  imports: [ActionIconComponent, InstitutionalActionMenuComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective, InstitutionalActionMenuComponent, CommonModule, FormsModule],
   templateUrl: './form-builder-canvas.component.html',
   styleUrls: ['./form-builder-canvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

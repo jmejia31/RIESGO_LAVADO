@@ -10905,3 +10905,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica B04.
 - No se tocaron `main`, producción, Oracle institucional, migración 54, backend funcional, P06 ni P07. Los cambios locales ajenos permanecen sin stage y sin alteración.
 - Punto de continuación: revisión/aceptación visual del propietario para completar `B04_FINAL_STATUS`; no se requieren más cambios técnicos para el defecto del Quality Gate.
+
+## 2026-11-12 11:44:00 -06:00 — Complemento B04 de Familias de Formularios (COD)
+
+- `EVENT_ID=RL-B04-FAMILIAS-COMPLEMENT-20261112`; `BASE_SHA=6081168bd4681c6061da931f3b889db31bed9241`; `FINAL_SHA=PENDING_AUTHORING`; rama `desarrollo`; autor `COD` / `CODEX`; cliente `CLI`.
+- Alcance auditado: `familia-crear-modal`, `familia-detalle-modal`, `familia-editar-modal`, gestor de familias en `matrices-riesgos` y controles del Form Builder. Se preservan CRUD, versionado, permisos, auditoría, fórmulas, datos y contratos existentes.
+- Corrección compartida: `InstitutionalTooltipDirective` crea una capa tooltip fija en `document.body`, con contención viewport, hover/foco, `aria-describedby`, Escape, reposicionamiento en scroll/resize y limpieza al destruir. Oculta la presentación inline heredada sin cambiar la funcionalidad de los botones.
+- Filtros cortos `Estado` y `Archivo` permanecen como `<select>` nativos justificados; no se alteran valores `ngModel`, opciones ni consultas. Menús/selector largos del Form Builder siguen usando componentes institucionales existentes.
+- Verificado en esta intervención: `npm run lint=PASS`; `npm run build=PASS` con warnings preexistentes de presupuesto/CommonJS; `npm test -- --watch=false=PASS` (`95` archivos, `986` pruebas); validador B04/self-test/prueba Node `PASS`; inventario `64` selectores, `22` superficies familiares/Form Builder y `10` archivos tooltip estándar.
+- Pruebas no ejecutadas: `npm run e2e` y capturas reales en `390x844`, `768x1024`, `1366x768`, `1536x864`, por depender del servidor, autenticación y datos autorizados del runner; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`. No se presentan como PASS.
+- `AUDIT_1_STATIC=PASS`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `AUDIT_3_REGRESSION=PASS_LOCAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
+- Continuación: revisar diff selectivo, ejecutar gates aplicables, publicar commit B04 complementario en `origin/desarrollo` y observar el Quality Gate exact-SHA. Mantener pendiente la auditoría visual del propietario.

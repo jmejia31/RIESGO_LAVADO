@@ -35,11 +35,12 @@ interface ActividadFamiliaViewModel {
 type FeedbackVersiones = { tipo: 'success' | 'error'; mensaje: string };
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-familia-detalle-modal',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective, CommonModule],
   templateUrl: './familia-detalle-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

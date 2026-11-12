@@ -9,11 +9,12 @@ export interface FamiliaCreadaEvent {
 }
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-familia-crear-modal',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './familia-crear-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

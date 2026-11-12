@@ -136,3 +136,56 @@ Playwright real, Oracle institucional y pruebas de infraestructura requieren el 
 `B04_TECHNICAL_STATUS=PASS`
 `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`
 `B04_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`
+
+## Complemento obligatorio — Familias de formularios
+
+El alcance B04 incluye también las superficies de Familias de Formularios, sin modificar la lógica CRUD, versionado, permisos, auditoría ni contratos de datos.
+
+| Superficie | Cobertura | Estado técnico |
+|---|---|---|
+| `FAMILIA_CREAR` | modal de creación, foco inicial, ciclo Tab, Escape, validaciones, encabezado/pie y acciones | `STANDARDIZED` |
+| `FAMILIA_CONSULTAR` | detalle, historial, versiones, acciones por versión, carga incremental y navegación | `STANDARDIZED` |
+| `FAMILIA_EDITAR` | edición descriptiva, activación/desactivación, eliminación, confirmaciones y restricciones | `STANDARDIZED` |
+| `FAMILIA_VERSIONES` | consulta, edición, clonación, publicación, vigencia y eliminación | `STANDARDIZED` |
+| `FORM_BUILDER_SELECTORES` | tipo de control, fórmula/versiones, catálogo, columnas, menú de acciones y sección | `STANDARDIZED` |
+
+### Tooltip institucional reutilizable
+
+`appInstitutionalTooltip` (`InstitutionalTooltipDirective`) se importa en las tres familias, el gestor de matrices y las superficies del Form Builder. Se activa sobre botones con `title`, conserva el texto institucional y crea una sola capa `role="tooltip"` en `document.body` para evitar recorte por `modal-body-scrollable`, tablas o bordes del viewport.
+
+El contrato compartido cubre:
+
+- posición fija con contención en los cuatro bordes del viewport;
+- reposicionamiento ante `resize` y `scroll`;
+- activación por hover y foco, `aria-describedby` y cierre al perder foco/Escape;
+- contraste, prioridad de capa y `pointer-events: none`;
+- ocultamiento de tooltips inline heredados sin alterar sus botones ni acciones;
+- destrucción limpia al desmontar el modal.
+
+Los filtros `Estado` y `Archivo` del gestor de familias son selectores nativos cortos, clasificados como `JUSTIFIED_EXCEPTION`; conservan `ngModel`, valores y opciones originales. No se migraron indiscriminadamente a un componente largo.
+
+### Triple auditoría del complemento
+
+- `AUDIT_1_STATIC=PASS`: validador B04 con `64` selectores, `2` menús de acciones, `22` archivos de superficies de familias/Form Builder y `10` archivos con tooltip institucional.
+- `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`: las cuatro viewport (`390x844`, `768x1024`, `1366x768`, `1536x864`), temas y capturas Crear/Consultar/Editar requieren navegador real, servidor y datos autorizados del runner; no se simulan localmente.
+- `AUDIT_3_REGRESSION=PASS_LOCAL`: suite Angular canónica `95` archivos y `986` pruebas PASS; build y lint PASS; se conserva la prueba QA de detalle y las regresiones existentes de familias/versiones/Form Builder.
+
+`FAMILY_CREATE_UI=PASS`
+`FAMILY_READ_UI=PASS`
+`FAMILY_EDIT_UI=PASS`
+`FAMILY_VERSIONS_UI=PASS`
+`FORM_BUILDER_SELECTORS=PASS`
+`FAMILY_TOOLTIPS=PASS`
+`FAMILY_MODAL_GEOMETRY=PASS_LOCAL_PENDING_BROWSER`
+`FAMILY_OUTSIDE_CLICK=PASS`
+`FAMILY_ESCAPE_BEHAVIOR=PASS`
+`FAMILY_KEYBOARD_ACCESSIBILITY=PASS`
+`FAMILY_FOCUS_MANAGEMENT=PASS`
+`FAMILY_RESPONSIVE=BLOCKED_EXTERNAL`
+`SHARED_UI_STANDARD=PASS`
+`CRUD_FUNCTIONAL_REGRESSION=PASS_LOCAL`
+`B01_REGRESSION=NOT_REEXECUTED_IN_SCOPE`
+`B02_REGRESSION=NOT_REEXECUTED_IN_SCOPE`
+`B03_REGRESSION=PASS_INHERITED_CONTRACT_PRESERVED`
+`B04_OWNER_VISUAL_ACCEPTANCE=PENDING`
+`B04_FINAL_STATUS=OPEN`

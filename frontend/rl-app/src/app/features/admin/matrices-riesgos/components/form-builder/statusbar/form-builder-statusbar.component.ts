@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { EstadoFormulario } from '../../../models/matrices-riesgos.models';
 
 import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-form-builder-statusbar',
   standalone: true,
-  imports: [ActionIconComponent],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective],
   templateUrl: './form-builder-statusbar.component.html',
   styleUrls: ['./form-builder-statusbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

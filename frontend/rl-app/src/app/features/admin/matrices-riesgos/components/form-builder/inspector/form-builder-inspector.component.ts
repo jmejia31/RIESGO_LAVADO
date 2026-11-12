@@ -11,11 +11,12 @@ export interface InspectorCatalogoOption {
 }
 
 import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-form-builder-inspector',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './form-builder-inspector.component.html',
   styleUrls: ['./form-builder-inspector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

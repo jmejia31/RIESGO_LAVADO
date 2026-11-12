@@ -27,7 +27,9 @@ function analyzeSource(files, root = SOURCE_ROOT) {
     unreviewedComponents: 0,
     nativeSelectFiles: [],
     detailFiles: [],
-    actionMenuFiles: []
+    actionMenuFiles: [],
+    familySurfaceFiles: [],
+    tooltipStandardFiles: []
   };
 
   for (const file of files) {
@@ -50,6 +52,10 @@ function analyzeSource(files, root = SOURCE_ROOT) {
     if (nativeSelects > 0) inventory.nativeSelectFiles.push({ file: relative, count: nativeSelects });
     if (details > 0) inventory.detailFiles.push({ file: relative, count: details });
     if (actionMenus > 0) inventory.actionMenuFiles.push({ file: relative, count: actionMenus });
+    if (/matrices-riesgos\/(?:components\/(?:familia-(?:crear|detalle|editar)-modal|form-builder)|pages\/matrices-riesgos)/.test(relative)) {
+      inventory.familySurfaceFiles.push(relative);
+      if (source.includes('InstitutionalTooltipDirective')) inventory.tooltipStandardFiles.push(relative);
+    }
   }
 
   inventory.unreviewedComponents = inventory.detailFiles.length;
@@ -60,18 +66,32 @@ function validateSharedContracts(root = DEFAULT_ROOT) {
   const bounded = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'app', 'shared', 'components', 'bounded-select', 'bounded-select.component.ts'), 'utf8');
   const action = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'app', 'shared', 'components', 'institutional-action-menu', 'institutional-action-menu.component.ts'), 'utf8');
   const positioning = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'app', 'shared', 'components', 'institutional-overlay', 'institutional-overlay-position.util.ts'), 'utf8');
+  const tooltip = fs.readFileSync(path.join(root, 'frontend', 'rl-app', 'src', 'app', 'shared', 'components', 'institutional-tooltip', 'institutional-tooltip.directive.ts'), 'utf8');
   const errors = [];
   const requiredBounded = ['role="combobox"', 'aria-haspopup="listbox"', 'document:click', 'document:keydown.escape', 'data-ui-bounded-select-search', 'overflow-y: auto'];
   const requiredAction = ['role="menu"', 'document:click', 'document:keydown.escape', 'InstitutionalOverlayRegistry', 'data-ui-action-menu-panel'];
   for (const token of requiredBounded) if (!bounded.includes(token)) errors.push(`BOUNDED_SELECT_CONTRACT_MISSING:${token}`);
   for (const token of requiredAction) if (!action.includes(token)) errors.push(`ACTION_MENU_CONTRACT_MISSING:${token}`);
   for (const token of ['calculateInstitutionalOverlayPlacement', 'maxHeight', 'direction']) if (!positioning.includes(token)) errors.push(`POSITIONING_CONTRACT_MISSING:${token}`);
+  for (const token of ['selector: \'button[title]\'', 'role', 'aria-describedby', 'getBoundingClientRect', 'window:resize', 'window:scroll']) if (!tooltip.includes(token)) errors.push(`TOOLTIP_CONTRACT_MISSING:${token}`);
   return errors;
 }
 
 function validate(root = DEFAULT_ROOT) {
   const inventory = analyzeSource(walkFiles(SOURCE_ROOT));
   const errors = validateSharedContracts(root);
+  const requiredFamilyComponents = [
+    'features/admin/matrices-riesgos/components/familia-crear-modal/familia-crear-modal.component.ts',
+    'features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.ts',
+    'features/admin/matrices-riesgos/components/familia-editar-modal/familia-editar-modal.component.ts',
+    'features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts',
+    'features/admin/matrices-riesgos/components/form-builder/form-builder.component.ts'
+  ];
+  for (const relative of requiredFamilyComponents) {
+    const file = path.join(SOURCE_ROOT, relative);
+    if (!fs.existsSync(file)) errors.push(`FAMILY_SURFACE_MISSING:${relative}`);
+    else if (!fs.readFileSync(file, 'utf8').includes('InstitutionalTooltipDirective')) errors.push(`TOOLTIP_STANDARD_MISSING:${relative}`);
+  }
   if (inventory.detailFiles.length > 0) errors.push(`UNSTANDARDIZED_DETAILS_OR_SUMMARY:${inventory.detailFiles.map(item => item.file).join(',')}`);
   return { pass: errors.length === 0, errors, inventory };
 }
@@ -87,6 +107,8 @@ function printResult(result) {
   console.log(`TOTAL_NATIVE_SELECTS=${inventory.totalNativeSelects}`);
   console.log(`TOTAL_REVIEWED=${inventory.totalReviewed}`);
   console.log(`UNREVIEWED_COMPONENTS=${inventory.unreviewedComponents}`);
+  console.log(`FAMILY_SURFACE_FILES=${inventory.familySurfaceFiles.length}`);
+  console.log(`TOOLTIP_STANDARD_FILES=${inventory.tooltipStandardFiles.length}`);
   for (const error of result.errors) console.error(error);
 }
 

@@ -405,6 +405,24 @@
     transform: translateY(0) scale(0.97);
   }
 
+  .institutional-tooltip-layer {
+    position: fixed;
+    z-index: 2147483000;
+    max-width: min(22rem, calc(100vw - 1rem));
+    padding: .375rem .625rem;
+    border: 1px solid rgb(255 255 255 / .14);
+    border-radius: .5rem;
+    background: rgb(17 24 39 / .98);
+    color: #fff;
+    box-shadow: 0 12px 28px rgb(15 23 42 / .22);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+    pointer-events: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .modal-footer-institutional .modal-action-icon:disabled {
     opacity: 0.78;
     cursor: not-allowed;

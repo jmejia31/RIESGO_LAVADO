@@ -45,11 +45,12 @@ export interface FeedbackCatalogo {
 }
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-form-builder',
   standalone: true,
-  imports: [ActionIconComponent,
+  imports: [ActionIconComponent, InstitutionalTooltipDirective,
     CommonModule,
     FormsModule,
     FormBuilderToolbarComponent,

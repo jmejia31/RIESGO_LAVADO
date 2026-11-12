@@ -13,11 +13,12 @@ function normalizarTexto(valor: string | undefined | null): string {
 }
 
 import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
   selector: 'app-form-builder-palette',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
   templateUrl: './form-builder-palette.component.html',
   styleUrls: ['./form-builder-palette.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

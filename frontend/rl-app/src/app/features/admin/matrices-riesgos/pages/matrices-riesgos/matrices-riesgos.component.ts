@@ -54,6 +54,7 @@ type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 type AlertScope = 'page' | 'newEvaluation' | 'editEvaluation' | 'formBuilder';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
@@ -68,7 +69,7 @@ type EstadoCargaWorkflow = 'LOADING' | 'SUCCESS_WITH_DATA' | 'SUCCESS_EMPTY' | '
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [ActionIconComponent, BoundedSelectComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent, MatricesRiesgosMitigacionComponent, MatricesRiesgosMonitoreoOperativoComponent],
+  imports: [ActionIconComponent, InstitutionalTooltipDirective, BoundedSelectComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent, MatricesRiesgosMitigacionComponent, MatricesRiesgosMonitoreoOperativoComponent],
   templateUrl: './matrices-riesgos.component.html',
   styleUrl: './matrices-riesgos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
