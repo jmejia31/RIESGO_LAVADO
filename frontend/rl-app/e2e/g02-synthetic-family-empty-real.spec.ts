@@ -59,7 +59,9 @@ test('GATE02 verifica el estado vacio de una familia eliminada desde la API y An
   await expect(search).toBeVisible();
   await search.fill(code);
 
-  // The current institutional UI applies the search when the tab reloads.
+  // B02 avoids redundant fetches when the active tab is selected again.
+  // Leave Plantillas and return so the updated search is applied by the real API.
+  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
   const filteredResponse = page.waitForResponse(httpResponse =>
     httpResponse.request().method() === 'GET'
     && new URL(httpResponse.url()).pathname === '/api/matrices-riesgos/familias/paginado'
@@ -68,6 +70,7 @@ test('GATE02 verifica el estado vacio de una familia eliminada desde la API y An
   const filtered = await filteredResponse;
   expect(filtered.status()).toBe(200);
   const filteredBody = await filtered.json() as PagedResponse;
+  await expect(search).toHaveValue(code);
   expect(filteredBody.datos?.items).toEqual([]);
   expect(filteredBody.datos?.totalRegistros).toBe(0);
 

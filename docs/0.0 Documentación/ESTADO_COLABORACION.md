@@ -4214,3 +4214,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `CI_NEW_SHA=NOT_YET_VERIFIED`, `QUALITY_GATE_NEW_SHA=PENDING`; última verificación local de contrato estático PASS, compilación/PowerShell/E2E no ejecutados localmente por ausencia de checkout.
 - `ORACLE_TOUCHED=NO`, `MAIN_TOUCHED=NO`, `PRODUCTION_TOUCHED=NO`, `DB_MIGRATION_TOUCHED=NO`, `BLOCK10_AUTHORIZED=NO`.
 - Punto exacto: consultar por API nuevo SHA de `origin/desarrollo`; correr/analisar Quality Gates del SHA exacto; no declarar recuperación cerrada sin gate PASS. Mantener referencias P06/P07/B01/B02/B03 y los pendientes de aceptación institucional intactos.
+
+## Estado vigente — Recuperación GATE_02 E2E postpurga — 2026-11-11 23:21:59 -06:00
+
+- `EVENT_ID=RL-CI-G02-POSTPURGE-TAB-20261111`, `BASE_SHA=50758bfa940b25a41633d7655155e9d97c16e68d`, `BRANCH=desarrollo`, `ACCOUNT=jmejia31`.
+- `RUN_43160101092=FAIL`: FE-03/FE-04 PASS, backend/rollback TX12/purga de Oracle XE descartable PASS; G02 API real PASS; E2E Angular FAIL por `page.waitForResponse` al no producirse solicitud con segundo clic sobre pestaña `Plantillas` activa.
+- `ROOT_CAUSE=OBSOLETE_E2E_RESELECT_ACTIVE_TAB`; navegación de B02 evita solicitudes redundantes. E2E cambia a `Evaluaciones` y vuelve a `Plantillas` para disparar consulta real del filtro y sigue exigiendo resultado vacío HTTP + Angular. No se introducen mocks ni skip.
+- `NEW_SHA_CI=PENDING`; `MAIN_TOUCHED=NO`; `PRODUCTION_ORACLE_TOUCHED=NO`; `DISPOSABLE_ORACLE_XE_CI=EXECUTED`; `CODE_RUNTIME_CHANGED=NO`; `BLOCK10_AUTHORIZED=NO`.
+- Continuación: comprobar `origin/desarrollo`, nuevo Quality Gate exact-SHA y corregir únicamente nuevas causas reales; no cerrar certificación sin SUCCESS.
