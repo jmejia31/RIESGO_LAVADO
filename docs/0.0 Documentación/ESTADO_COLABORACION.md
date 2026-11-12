@@ -4246,3 +4246,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `FIX=EXPECT_HEADER_ROLE_WITH_NAMED_SORT_BUTTON_AND_VISIBLE_LABEL` en ambas transiciones de UAT. Código Angular, lógica, Oracle institucional, seguridad y gates conservados.
 - `NEW_QUALITY_GATE_EXACT_SHA=PENDING`, `LOCAL_TESTS=NOT_EXECUTED_NO_CHECKOUT`, `MAIN_TOUCHED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`, `BLOCK10_AUTHORIZED=NO`.
 - Continuación: comprobar publicación exacta, resultado de GitHub Actions, otros checks requeridos y documentar dictamen basado en SHA. No declarar SUCCESS antes del run nuevo.
+
+## Estado vigente — Actualización integral B03 de listados — 2026-11-12 08:49:18 -06:00
+
+- `BASE_SHA=58c7270514f8c1ef601079a8c85ef26d87f736f2`; autor `COD`; rama autorizada `desarrollo`; cambios P06 locales preservados fuera del stage.
+- `B03_TABLE_INVENTORY=23`; `B03_KPI_CANDIDATES=14`; auditoría estática ejecutada en esta intervención. `B03_GLOBAL_INVENTORY=PARTIAL` porque Bitácora, Tipo de Listas, Cargar Listas, Configuración y tablas de dominio aún requieren revisión específica.
+- Usuarios, Monitoreo y Coincidencias ahora envían y validan `orden`/`direccion`; el backend aplica whitelist SQL, ASC/DESC restringido y desempate canónico antes de paginar. Acciones no son ordenables. Se conserva el refresco silencioso B02.
+- Verificación local: `ANGULAR_BUILD=PASS` con warnings preexistentes; `DOTNET_BUILD=BLOCKED_EXISTING_API_PROCESS_LOCK`; `PLAYWRIGHT_B03=NOT_EXECUTED`; `ORACLE=NOT_EXECUTED`; `FULL_REGRESSION=NOT_EXECUTED`.
+- GitHub: run base `43165972065`, SHA `58c72705`, `FAILURE` con `75 PASS / 1 FAIL / 15 SKIP`; falla única `modal-shell-lock.spec.ts` por diferencia cromática del constructor. No es certificación B03.
+- `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO`.
+- `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `GITHUB_EVIDENCE_INDEX_URL=PENDING`; `GITHUB_SIGNOFF_URL=PENDING`; `SOURCE_CODE_SHA=58c7270514f8c1ef601079a8c85ef26d87f736f2`; `EVIDENCE_COMMIT_SHA=PENDING`; `GITHUB_REMOTE_VERIFIED=PENDING_NEW_PUSH`.
+- Punto de continuación: validar stage selectivo, hacer commit B03, publicar en `origin/desarrollo`, verificar GitHub y documentar el run exacto posterior al push.

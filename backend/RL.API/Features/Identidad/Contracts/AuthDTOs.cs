@@ -86,6 +86,8 @@ public class ConsultaUsuariosPaginadaDto
     public int Pagina { get; set; } = 1;
     public int TamanoPagina { get; set; } = 25;
     public string? Buscar { get; set; }
+    public string Orden { get; set; } = "id";
+    public string Direccion { get; set; } = "asc";
 }
 
 public class UsuariosPaginadosDto : PaginadoDto<UsuarioInfoDto>

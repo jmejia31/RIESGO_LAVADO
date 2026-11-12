@@ -2,9 +2,9 @@
 
 ## Estado de esta intervencion
 
-`SOURCE_CODE_SHA=b9b914449cae5006d032b07e7e1061c465fef2f3`
+`SOURCE_CODE_SHA=58c7270514f8c1ef601079a8c85ef26d87f736f2`
 
-La implementacion B03 de esta intervencion establece el contrato reutilizable de encabezados ordenables y aplica el ordenamiento server-side al nucleo de Matrices de Riesgos. El inventario global se conserva en estado `PARTIAL` hasta extender y verificar los listados administrativos restantes.
+Esta actualización extiende el contrato reutilizable de encabezados ordenables a Usuarios, Monitoreo de Listas y los resúmenes/detalles paginados de Coincidencias. El inventario exhaustivo local detectó `23` tablas/listados y `14` superficies de KPI candidatas; B03 permanece `PARTIAL` porque aún faltan las superficies no paginadas o de dominio que requieren revisión individual y la verificación visual con datos autorizados.
 
 ## Cierre heredado de B02
 
@@ -44,11 +44,12 @@ Comportamiento:
 | Matrices - Familias | `FAM_ID` | Si | `SORT_REQUIRED` -> implementado | whitelist `id`, codigo, nombre, estado, fecha |
 | Matrices - Gestion de riesgos | `RIE_ID` | Si | `SORT_REQUIRED` -> implementado | whitelist `id`, codigo, nombre, estado |
 | Familias - versiones y Form Builder | claves de version/campo | Mixta | `REQUIRES_CANONICAL_KEY_REVIEW` | no alterado en esta intervencion |
-| Monitoreo de Listas | RTN / identidad / numero patronal | Si | `REQUIRES_BACKEND_EXTENSION` | requiere contrato especifico por entidad |
-| Usuarios | `USR_ID` | Si | `REQUIRES_BACKEND_EXTENSION` | orden historico por nombre; no alterado |
+| Monitoreo de Listas | RTN / identidad / numero patronal | Si | `IMPLEMENTED_THIS_UPDATE` | whitelist por tipo, ASC/DESC, desempate ID y clave de caché con orden |
+| Usuarios | `USR_ID` | Si | `IMPLEMENTED_THIS_UPDATE` | whitelist `id`, nombre, email, rol y dominio; ID ASC inicial |
 | Tipo de Listas | `TIPO_LISTA_CAUTELA_ID` | No confirmado | `CLIENT_ONLY_LIST` | no alterado |
 | Bitacora | `AUD_ID` | Si | `REQUIRES_BACKEND_EXTENSION` | requiere contrato de consulta sin cambiar auditoria |
-| Cargar Listas y coincidencias | clave de dominio | Mixta | `NON_SORTABLE_BY_DOMAIN` / revision pendiente | no alterado |
+| Cargar Listas | lista / fecha / cantidad | Mixta | `REQUIRES_CANONICAL_KEY_REVIEW` | no alterado; exportación y validación preservadas |
+| Coincidencias patrono/empleado | fecha / reporte / DNI | Si | `IMPLEMENTED_THIS_UPDATE` | resumen y detalle con whitelist y orden antes de ROWNUM |
 | Configuracion de calculo | ids propios y orden funcional | Mixta | `REQUIRES_CANONICAL_KEY_REVIEW` | no alterado |
 | Reporte consolidado / preview | orden metodologico del reporte | No | `NON_SORTABLE_BY_DOMAIN` | no alterado |
 
@@ -64,15 +65,13 @@ No se modificaron Oracle, migraciones, auditoria, permisos, autenticacion, P06, 
 
 Ejecutado en `C:\RIESGO_LAVADO`:
 
-- componente compartido: `3/3 PASS`;
-- regresiones Matrices/Gestion y componente compartido: `17 archivos, 274/274 PASS`;
-- suite Angular completa posterior a la limpieza de encabezados: `93 archivos, 978/978 PASS`;
-- build Angular: `PASS` (warnings preexistentes de presupuesto/CommonJS);
-- build aislado `backend/RL.API`: `PASS`, 0 warnings, 0 errors; el proceso API existente mantuvo bloqueada la salida Debug y no fue detenido;
-- ESLint frontend: `PASS`;
-- se eliminaron del HTML los bloques muertos y las filas duplicadas; `B03_CORE_VISIBLE_HEADERS=PASS`;
-- la carga ordinaria conserva filas validas durante la solicitud; `B03_SILENT_REFRESH=PASS` en los consumidores modificados;
-- `git diff --check`: se verificara sobre el stage selectivo B03; los archivos ajenos conservan sus diferencias preexistentes;
+- auditoría estática fresca: `23` tablas/listados detectados y `14` candidatos KPI; inventario documentado sin contar acciones como columnas ordenables;
+- componente compartido y Matrices: evidencia heredada, no reproducida en esta intervención;
+- build Angular de esta intervención: `PASS`, con warnings preexistentes de presupuesto/CommonJS;
+- build .NET: compilación alcanzó el ensamblado pero terminó `BLOCKED` porque el proceso API existente bloqueó `bin/Debug/net10.0/RL.API.dll`; no se detuvo dicho proceso ni se modificó su salida;
+- ordenamientos de Usuarios, Monitoreo y Coincidencias: implementados con whitelist, dirección restringida y desempate canónico;
+- `B03_SILENT_REFRESH`: se preservó el contrato existente; no se agregaron overlays ni se vaciaron filas válidas durante refresh;
+- `git diff --check`: pendiente sobre stage selectivo B03; las diferencias ajenas conservan sus efectos preexistentes;
 - Oracle institucional: no tocado;
 - Playwright visual B03: pendiente de servidor y datos autorizados;
 - Quality Gate remoto: no se espera indefinidamente; la cola externa se registra sin convertirla en PASS.
@@ -83,4 +82,13 @@ Ejecutado en `C:\RIESGO_LAVADO`:
 
 `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`
 
-La extension a Usuarios, Bitacora, Monitoreo y demas listados administrativos queda como trabajo B03 pendiente; no se declara completitud global ni aprobacion del propietario.
+La extensión a Bitácora, Tipo de Listas, Cargar Listas, Configuración y tablas de dominio queda pendiente de revisión o implementación específica; no se declara completitud global ni aprobación del propietario.
+
+## Actualización B03 — 2026-11-12 — COD
+
+- `BASE_SHA=58c7270514f8c1ef601079a8c85ef26d87f736f2`; rama `desarrollo`; se preservaron todos los cambios locales ajenos y untracked P06.
+- Contratos añadidos: `orden` y `direccion` en consultas de usuarios, monitoreo y coincidencias. Los repositorios usan whitelists cerradas, ASC/DESC explícito y desempate por clave canónica antes de `ROWNUM`; el orden forma parte de la clave de caché de monitoreo.
+- Cabeceras compartidas integradas en Usuarios, Monitoreo (jurídicas/naturales/empleados) y Coincidencias patrono/empleado (resumen y detalle). Las columnas de acciones permanecen no ordenables.
+- `ANGULAR_BUILD=PASS`; `DOTNET_BUILD=BLOCKED_EXISTING_API_PROCESS_LOCK`; no se ejecutaron Oracle, Playwright, E2E ni suite completa de regresión en esta intervención.
+- `GITHUB_ACTIONS_BASE_RUN=43165972065` sobre `58c72705`: `FAILURE`, `75 PASS / 1 FAIL / 15 SKIP`; la falla única heredada está en `modal-shell-lock.spec.ts` por diferencia de color del constructor. No se presenta como resultado B03 PASS.
+- `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `ORACLE_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.

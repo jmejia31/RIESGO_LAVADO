@@ -10828,3 +10828,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Validación en esta intervención: lectura por GitHub API del run/job/log, código Angular, componente de ordenamiento y preflight estático de sustituciones `PASS`. Local `npm`, PowerShell, Playwright y Oracle `NOT_EXECUTED_NO_CHECKOUT`; `NEXT_CI_EXACT_SHA=PENDING_AFTER_PUSH`.
 - `MAIN_TOUCHED=NO`, `PRODUCTION_TOUCHED=NO`, `ORACLE_INSTITUTIONAL_TOUCHED=NO`, `GITHUB_REMOTE_VERIFIED=PENDING`, `FORCE_PUSH=NO`, `BLOCK10_AUTHORIZED=NO`. Oracle XE se ejecutó exclusivamente por el CI anterior en un servicio descartable.
 - Archivos modificados: `frontend/rl-app/e2e/matrices-uat-integral.spec.ts`, `BITACORA_COLABORACION.md`, `docs/0.0 Documentación/ESTADO_COLABORACION.md`. Continuación exacta: validar SHA final publicado, ejecutar gate integral nuevo y analizar resultado sin certificar hasta `SUCCESS` sobre SHA exacto.
+
+## 2026-11-12 08:49:18 -06:00 — Actualización integral B03 de listados administrativos (COD)
+
+- Inicio: `BASE_SHA=58c7270514f8c1ef601079a8c85ef26d87f736f2`, rama `desarrollo`, `HEAD_LOCAL=origin/desarrollo`; se preservaron sin stage los cambios y archivos ajenos P06.
+- Alcance exclusivo B03: contratos y cabeceras de ordenamiento para Usuarios, Monitoreo de Listas y Coincidencias patrono/empleado; inventario estático actualizado a `23` tablas/listados y `14` candidatos KPI.
+- Seguridad: `orden` se resuelve por whitelist de columnas por entidad; `direccion` sólo admite `ASC`/`DESC`; el orden se aplica antes de `ROWNUM` y el ID canónico desempata. No hubo DDL/DML Oracle ni cambios en migración 54, producción, `main`, autenticación ni código ajeno.
+- Archivos propios: contratos/repositorios de Identidad y Listas; modelos/servicio/componentes/plantillas de Usuarios, Monitoreo y Coincidencias; `B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`; este registro; `ESTADO_COLABORACION.md`.
+- Verificado: `npm run build` Angular `PASS` con warnings preexistentes de presupuesto/CommonJS. `dotnet build --no-restore` quedó `BLOCKED` porque el proceso API existente mantiene bloqueado `bin/Debug/net10.0/RL.API.dll`; no se detuvo el proceso. No ejecutados localmente: Oracle, Playwright/E2E y suite completa de regresión.
+- Evidencia remota: run `43165972065` sobre SHA `58c72705` terminó `FAILURE` (`75 PASS / 1 FAIL / 15 SKIP`); la falla única está en `modal-shell-lock.spec.ts` por diferencia de color del constructor, no se convierte en PASS B03.
+- Estado: `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_TECHNICAL_STATUS=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `GITHUB_REMOTE_VERIFIED=PENDING_NEW_PUSH`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO` hasta publicar y verificar el nuevo SHA.
+- Continuación: revisar diff/stage selectivo, ejecutar validaciones disponibles, commit B03, push fast-forward a `origin/desarrollo`, verificar SHA remoto y consultar el nuevo run de GitHub Actions.

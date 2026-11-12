@@ -17,11 +17,12 @@ import { DataPaginationComponent } from '../../../../../shared/components/data-p
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { createHttpErrorScopeContext } from '../../../../../core/http/http-error-scope';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
   selector:    'app-usuarios',
   standalone:  true,
-  imports:     [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports:     [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './usuarios.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })
@@ -40,6 +41,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   errorGuardar = signal<string | null>(null);
   errorListado = signal<string | null>(null);
   errorCatalogos = signal<string | null>(null);
+  orden = signal('id');
+  direccion = signal<SortDirection>('asc');
   
   editando             = signal(false);
   usuarioUidParaEditar = signal<string | null>(null);
@@ -170,7 +173,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     this.errorListado.set(null);
     this.http.get<{ success: boolean; datos: { items: UsuarioInfoDto[]; pagina: number; tamanoPagina: number; totalRegistros: number; totalPaginas: number } }>(`${environment.apiUrl}/auth/usuarios/paginado`, {
-      params: { pagina: this.paginaActual(), tamanoPagina: this.registrosPorPagina(), buscar: this.buscar() }
+      params: { pagina: this.paginaActual(), tamanoPagina: this.registrosPorPagina(), buscar: this.buscar(), orden: this.orden(), direccion: this.direccion() }
     , context: createHttpErrorScopeContext('local')})
       .subscribe({
         next:  r => { if (solicitudId !== this.secuenciaCarga) return; this.usuarios.set(r.datos.items); this.totalRegistros.set(r.datos.totalRegistros); this.paginaActual.set(r.datos.pagina); this.cargando.set(false); },
@@ -199,6 +202,13 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   cambiarRegistrosPorPagina(valor: number): void {
     if (![10, 25, 50].includes(Number(valor))) return;
     this.registrosPorPagina.set(Number(valor));
+    this.paginaActual.set(1);
+    this.cargar();
+  }
+
+  ordenar(columna: string): void {
+    if (this.orden() === columna) this.direccion.set(this.direccion() === 'asc' ? 'desc' : 'asc');
+    else { this.orden.set(columna); this.direccion.set('asc'); }
     this.paginaActual.set(1);
     this.cargar();
   }

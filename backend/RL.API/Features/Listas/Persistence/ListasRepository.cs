@@ -1030,7 +1030,9 @@ namespace RL.API.Features.Listas.Persistence
             await conn.OpenAsync(cancellationToken);
             connectionStopwatch.Stop();
 
-            if (fastPathResponseFactory is not null && requestedPage == 1)
+            // B03 exige que la página respete el orden solicitado; el fast-path heredado
+            // no recibe el ORDER BY y sólo queda habilitado para consultas legadas.
+            if (fastPathResponseFactory is not null && requestedPage == 1 && string.IsNullOrWhiteSpace(consulta.Orden))
             {
                 var limitedPage = await EjecutarPrimeraPaginaMonitoreoLimitadaAsync(
                     conn, filteredSql, pageSize, consulta, map, cancellationToken);
@@ -1050,8 +1052,9 @@ namespace RL.API.Features.Listas.Persistence
                 }
             }
 
+            var effectiveOrderBy = ResolverOrdenMonitoreo(baseSql, consulta);
             var pageResult = await EjecutarPaginaMonitoreoAsync(
-                conn, filteredSql, orderBy, requestedPage, pageSize, consulta, map, cancellationToken);
+                conn, filteredSql, effectiveOrderBy, requestedPage, pageSize, consulta, map, cancellationToken);
 
             var metadataLookupStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var metadata = await _cache.GetOrCreateAsync(
@@ -1070,7 +1073,7 @@ namespace RL.API.Features.Listas.Persistence
             {
                 // Sólo una página vacía activa la normalización y el único reintento.
                 pageResult = await EjecutarPaginaMonitoreoAsync(
-                    conn, filteredSql, orderBy, effectivePage, pageSize, consulta, map, cancellationToken);
+                    conn, filteredSql, effectiveOrderBy, effectivePage, pageSize, consulta, map, cancellationToken);
             }
 
             requestStopwatch.Stop();
@@ -1357,7 +1360,35 @@ namespace RL.API.Features.Listas.Persistence
         private static string CrearClaveMetadataMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
             => string.Join("|", ResolveMonitoringType(baseSql), consulta.Buscar?.Trim().ToUpperInvariant(),
                 consulta.Estado?.Trim().ToLowerInvariant(), consulta.FechaDesde?.ToString("O"),
-                consulta.FechaHasta?.ToString("O"));
+                consulta.FechaHasta?.ToString("O"), consulta.Orden?.Trim().ToLowerInvariant(),
+                consulta.Direccion?.Trim().ToLowerInvariant());
+
+        private static string ResolverOrdenMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
+        {
+            var tipo = ResolveMonitoringType(baseSql);
+            var campos = tipo switch
+            {
+                "juridica" => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["id"] = "NUMEPATRO", ["patrono"] = "NUMEPATRO", ["nombre"] = "NOMBRE", ["lista"] = "LISTA_CONCIDENCIA",
+                    ["fechaCoincidencia"] = "FECHA_ENCONTRO", ["fechaCalificacion"] = "FECHA_CALIFICO", ["registro"] = "FECHA_REGISTRO_INTERNO", ["estado"] = "ESTADO_MONITOREO"
+                },
+                "empleado" => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["id"] = "IDENTIDAD", ["identidad"] = "IDENTIDAD", ["nombre"] = "NOMBRE", ["lista"] = "LISTA_CONCIDENCIA",
+                    ["fechaCoincidencia"] = "FECHA_ENCONTRO", ["registro"] = "FECHA_REGISTRO_INTERNO", ["estado"] = "ESTADO_MONITOREO"
+                },
+                _ => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["id"] = "NUMERO_IDENTIFICACION", ["identidad"] = "NUMERO_IDENTIFICACION", ["nombre"] = "NOMBRE", ["lista"] = "LISTA_CONCIDENCIA",
+                    ["fechaCoincidencia"] = "FECHA_ENCONTRO", ["registro"] = "FECHA_REGISTRO_INTERNO", ["estado"] = "ESTADO_MONITOREO"
+                }
+            };
+            var key = string.IsNullOrWhiteSpace(consulta.Orden) ? "id" : consulta.Orden.Trim();
+            var column = campos.TryGetValue(key, out var resolved) ? resolved : campos["id"];
+            var direction = string.Equals(consulta.Direccion, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+            return $"{column} {direction}, {campos["id"]} ASC";
+        }
 
         private static string ResolveMonitoringType(string baseSql)
             => baseSql.Contains("TIPO_EMPRESA_ID", StringComparison.OrdinalIgnoreCase)
@@ -1733,7 +1764,7 @@ namespace RL.API.Features.Listas.Persistence
             sql += " GROUP BY FECHA_ENCONTRO";
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
-            return await ExecutePageAsync(conn, sql, "FECHA_ENCONTRO DESC", consulta.Pagina, consulta.TamanoPagina, command => { if (!string.IsNullOrWhiteSpace(consulta.Buscar)) command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim())); }, reader => new CoincidenciaPatronoResumenDto { FechaEncontro = Fecha(reader, "FechaEncontro"), CantidadRegistros = Entero(reader, "CantidadRegistros") });
+            return await ExecutePageAsync(conn, sql, ResolverOrdenCoincidenciasResumen(consulta), consulta.Pagina, consulta.TamanoPagina, command => { if (!string.IsNullOrWhiteSpace(consulta.Buscar)) command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim())); }, reader => new CoincidenciaPatronoResumenDto { FechaEncontro = Fecha(reader, "FechaEncontro"), CantidadRegistros = Entero(reader, "CantidadRegistros") });
         }
 
         public Task<PaginadoDto<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta)
@@ -1750,7 +1781,7 @@ namespace RL.API.Features.Listas.Persistence
             if (!string.IsNullOrWhiteSpace(consulta.Calificacion)) sql += " AND UPPER(TIPO_CALIFICACION) = UPPER(:calificacion)";
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
-            return await ExecutePageAsync(conn, sql, "NOMBRE ASC, REPORTE_COINCIDENCIA_ID ASC", consulta.Pagina, consulta.TamanoPagina, command =>
+            return await ExecutePageAsync(conn, sql, ResolverOrdenCoincidenciasDetalle(consulta), consulta.Pagina, consulta.TamanoPagina, command =>
             {
                 command.Parameters.Add(new OracleParameter("fecha", consulta.Fecha ?? string.Empty));
                 if (!string.IsNullOrWhiteSpace(consulta.Buscar)) command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
@@ -1759,6 +1790,25 @@ namespace RL.API.Features.Listas.Persistence
             {
                 ReporteCoincidenciaId = Convert.ToInt64(reader["REPORTE_COINCIDENCIA_ID"]), DataId = reader["DATA_ID"] == DBNull.Value ? 0 : Convert.ToInt64(reader["DATA_ID"]), Dni = Texto(reader, "DNI"), FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), Nacionalidad = Texto(reader, "NACIONALIDAD"), Nombre = Texto(reader, "NOMBRE"), NumeroPatrono = Texto(reader, "NUMERO_PATRONO"), ObservacionLista = Texto(reader, "OBSERVACION_LISTA"), TipoPersona = Texto(reader, "TIPO_PERSONA"), UsuarioEncontro = reader["USUARIO_ENCONTRO"] == DBNull.Value ? 0 : Convert.ToInt64(reader["USUARIO_ENCONTRO"]), TipoCalificacion = Texto(reader, "TIPO_CALIFICACION")
             });
+        }
+
+        private static string ResolverOrdenCoincidenciasResumen(ConsultaCoincidenciasPaginadaDto consulta)
+        {
+            var column = string.Equals(consulta.Orden, "total", StringComparison.OrdinalIgnoreCase) ? "COUNT(*)" : "FECHA_ENCONTRO";
+            var direction = string.Equals(consulta.Direccion, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+            return $"{column} {direction}, FECHA_ENCONTRO ASC";
+        }
+
+        private static string ResolverOrdenCoincidenciasDetalle(ConsultaCoincidenciasPaginadaDto consulta)
+        {
+            var columns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["id"] = "REPORTE_COINCIDENCIA_ID", ["dni"] = "DNI", ["nombre"] = "NOMBRE", ["numero"] = "NUMERO_PATRONO",
+                ["tipo"] = "TIPO_PERSONA", ["lista"] = "LISTA_CONCIDENCIA", ["calificacion"] = "TIPO_CALIFICACION", ["nacionalidad"] = "NACIONALIDAD"
+            };
+            var column = columns.TryGetValue(consulta.Orden ?? "id", out var resolved) ? resolved : columns["id"];
+            var direction = string.Equals(consulta.Direccion, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+            return $"{column} {direction}, REPORTE_COINCIDENCIA_ID ASC";
         }
 
         public async Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoParaExportarAsync(string fecha)

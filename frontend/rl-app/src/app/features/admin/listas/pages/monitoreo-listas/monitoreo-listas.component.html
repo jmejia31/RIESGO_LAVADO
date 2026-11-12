@@ -151,38 +151,38 @@
 
               @if (tipoActivo() === 'juridica') {
                 <tr>
-                  <th class="px-6 py-3 text-left">Patrono / RTN</th>
-                  <th class="px-6 py-3 text-left">Nombre de la Empresa</th>
-                  <th class="px-6 py-3 text-left">Lista Coincidencia</th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="patrono" label="Patrono / RTN" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar coincidencias jurídicas por patrono" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="nombre" label="Nombre de la Empresa" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar coincidencias jurídicas por empresa" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="lista" label="Lista Coincidencia" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar coincidencias jurídicas por lista" (sortChange)="ordenar($event)" /></th>
                   <th class="px-6 py-3 text-left">Proveedor IHSS</th>
-                  <th class="px-6 py-3 text-left">Fecha Coincidencia</th>
-                  <th class="px-6 py-3 text-left">Fecha Calificación</th>
-                  <th class="px-6 py-3 text-left">Registro Interno</th>
-                  <th class="px-6 py-3 text-left">Estado</th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="fechaCoincidencia" label="Fecha Coincidencia" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por fecha de coincidencia" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="fechaCalificacion" label="Fecha Calificación" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por fecha de calificación" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="registro" label="Registro Interno" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por registro interno" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="estado" label="Estado" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por estado" (sortChange)="ordenar($event)" /></th>
                   <th class="px-6 py-3 text-center">Acciones</th>
                 </tr>
               }
 
               @if (tipoActivo() === 'natural') {
                 <tr>
-                  <th class="px-6 py-3 text-left">Identificación</th>
-                  <th class="px-6 py-3 text-left">Nombre Completo</th>
-                  <th class="px-6 py-3 text-left">Lista Coincidencia</th>
-                  <th class="px-6 py-3 text-left">Estado</th>
-                  <th class="px-6 py-3 text-left">Fecha Coincidencia</th>
-                  <th class="px-6 py-3 text-left">Registro Interno</th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="identidad" label="Identificación" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar coincidencias naturales por identificación" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="nombre" label="Nombre Completo" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar coincidencias naturales por nombre" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="lista" label="Lista Coincidencia" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar coincidencias naturales por lista" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="estado" label="Estado" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar coincidencias naturales por estado" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="fechaCoincidencia" label="Fecha Coincidencia" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por fecha de coincidencia" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="registro" label="Registro Interno" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por registro interno" (sortChange)="ordenar($event)" /></th>
                   <th class="px-6 py-3 text-center">Acciones</th>
                 </tr>
               }
 
               @if (tipoActivo() === 'empleado') {
                 <tr>
-                  <th class="px-6 py-3 text-left">Identidad</th>
-                  <th class="px-6 py-3 text-left">Nombre Empleado</th>
-                  <th class="px-6 py-3 text-left">Lista Coincidencia</th>
-                  <th class="px-6 py-3 text-left">Estado</th>
-                  <th class="px-6 py-3 text-left">Fecha Coincidencia</th>
-                  <th class="px-6 py-3 text-left">Registro Interno</th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="identidad" label="Identidad" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar empleados por identidad" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="nombre" label="Nombre Empleado" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar empleados por nombre" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="lista" label="Lista Coincidencia" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar empleados por lista" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="estado" label="Estado" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar empleados por estado" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="fechaCoincidencia" label="Fecha Coincidencia" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por fecha de coincidencia" (sortChange)="ordenar($event)" /></th>
+                  <th class="px-6 py-3 text-left"><app-sortable-table-header column="registro" label="Registro Interno" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar por registro interno" (sortChange)="ordenar($event)" /></th>
                   <th class="px-6 py-3 text-center">Acciones</th>
                 </tr>
               }

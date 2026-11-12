@@ -470,7 +470,7 @@ public class UsuarioRepository : IUsuarioRepository
                                U.USR_DOM_ID, D.DOM_NOMBRE, U.USR_DNI
                         {from}
                         WHERE 1 = 1 {filter}
-                        ORDER BY U.USR_NOMBRE ASC, U.USR_APELLIDO ASC, U.USR_ID ASC
+                        ORDER BY {ResolverOrdenUsuarios(consulta)}
                     ) q
                     WHERE ROWNUM <= :filaFinal
                 ) WHERE NUMERO_FILA > :filaInicial";
@@ -513,6 +513,18 @@ public class UsuarioRepository : IUsuarioRepository
         }
 
         return new UsuariosPaginadosDto { Items = users, Pagina = page, TamanoPagina = pageSize, TotalRegistros = total, TotalPaginas = totalPages };
+    }
+
+    private static string ResolverOrdenUsuarios(ConsultaUsuariosPaginadaDto consulta)
+    {
+        var columns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["id"] = "U.USR_ID", ["nombre"] = "U.USR_NOMBRE", ["email"] = "U.USR_EMAIL",
+            ["rol"] = "R.ROL_NOMBRE", ["dominio"] = "D.DOM_NOMBRE"
+        };
+        var column = columns.TryGetValue(consulta.Orden ?? "id", out var resolved) ? resolved : columns["id"];
+        var direction = string.Equals(consulta.Direccion, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
+        return $"{column} {direction}, U.USR_ID ASC";
     }
 
     private static Usuario MapUsuario(System.Data.Common.DbDataReader r) => new()

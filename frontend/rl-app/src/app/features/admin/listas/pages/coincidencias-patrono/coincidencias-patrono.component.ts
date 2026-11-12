@@ -11,11 +11,12 @@ import { DataPaginationComponent } from '../../../../../shared/components/data-p
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
   selector: 'app-coincidencias-patrono',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, SortableTableHeaderComponent, CommonModule, FormsModule],
   templateUrl: './coincidencias-patrono.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })
@@ -44,6 +45,10 @@ export class CoincidenciasPatronoComponent implements OnInit {
   registrosDetallePorPagina = signal(25);
   totalRegistrosDetalle = signal(0);
   totalPaginasDetalleServidor = signal(0);
+  ordenResumen = signal('id');
+  direccionResumen = signal<SortDirection>('asc');
+  ordenDetalle = signal('id');
+  direccionDetalle = signal<SortDirection>('asc');
   private secuenciaCargaResumen = 0;
   private secuenciaCargaDetalle = 0;
 
@@ -62,7 +67,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
   cargarResumen() {
     const solicitudId = ++this.secuenciaCargaResumen;
     this.cargando.set(true);
-    this.listasService.getResumenCoincidenciasPatronoPaginado({ pagina: this.paginaActual(), tamanoPagina: this.registrosPorPagina(), buscar: this.buscarTerm() }).subscribe({
+    this.listasService.getResumenCoincidenciasPatronoPaginado({ pagina: this.paginaActual(), tamanoPagina: this.registrosPorPagina(), buscar: this.buscarTerm(), orden: this.ordenResumen(), direccion: this.direccionResumen() }).subscribe({
       next: (datos) => {
         if (solicitudId !== this.secuenciaCargaResumen) return;
         this.resumen.set(datos.items);
@@ -154,6 +159,12 @@ export class CoincidenciasPatronoComponent implements OnInit {
     this.cargarResumen();
   }
 
+  ordenarResumen(columna: string): void {
+    if (this.ordenResumen() === columna) this.direccionResumen.set(this.direccionResumen() === 'asc' ? 'desc' : 'asc');
+    else { this.ordenResumen.set(columna); this.direccionResumen.set('asc'); }
+    this.paginaActual.set(1); this.cargarResumen();
+  }
+
   cambiarBuscarDetalle(valor: string): void {
     this.buscarTermDetalle.set(valor);
     this.paginaDetalleActual.set(1);
@@ -175,7 +186,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
   private cargarDetalle(): void {
     const solicitudId = ++this.secuenciaCargaDetalle;
     this.cargandoDetalle.set(true);
-    this.listasService.getDetalleCoincidenciasPatronoPaginado({ fecha: this.fechaSeleccionada(), pagina: this.paginaDetalleActual(), tamanoPagina: this.registrosDetallePorPagina(), buscar: this.buscarTermDetalle(), calificacion: this.filtroCalificacion() === 'Todas' ? '' : this.filtroCalificacion() }).subscribe({
+    this.listasService.getDetalleCoincidenciasPatronoPaginado({ fecha: this.fechaSeleccionada(), pagina: this.paginaDetalleActual(), tamanoPagina: this.registrosDetallePorPagina(), buscar: this.buscarTermDetalle(), calificacion: this.filtroCalificacion() === 'Todas' ? '' : this.filtroCalificacion(), orden: this.ordenDetalle(), direccion: this.direccionDetalle() }).subscribe({
       next: (datos) => {
         if (solicitudId !== this.secuenciaCargaDetalle) return;
         this.detalleRegistros.set(datos.items);
@@ -194,6 +205,12 @@ export class CoincidenciasPatronoComponent implements OnInit {
         );
       }
     });
+  }
+
+  ordenarDetalle(columna: string): void {
+    if (this.ordenDetalle() === columna) this.direccionDetalle.set(this.direccionDetalle() === 'asc' ? 'desc' : 'asc');
+    else { this.ordenDetalle.set(columna); this.direccionDetalle.set('asc'); }
+    this.paginaDetalleActual.set(1); this.cargarDetalle();
   }
 
   cerrarModal() {

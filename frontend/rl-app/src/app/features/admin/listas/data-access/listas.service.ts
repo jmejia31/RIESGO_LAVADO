@@ -93,6 +93,8 @@ export class ListasService {
     if (consulta.estado) params = params.set('estado', consulta.estado);
     if (consulta.fechaDesde) params = params.set('fechaDesde', consulta.fechaDesde);
     if (consulta.fechaHasta) params = params.set('fechaHasta', consulta.fechaHasta);
+    if (consulta.orden) params = params.set('orden', consulta.orden);
+    if (consulta.direccion) params = params.set('direccion', consulta.direccion);
     return params;
   }
 
@@ -101,6 +103,8 @@ export class ListasService {
     if (consulta.buscar) params = params.set('buscar', consulta.buscar);
     if (consulta.calificacion) params = params.set('calificacion', consulta.calificacion);
     if (consulta.fecha) params = params.set('fecha', consulta.fecha);
+    if (consulta.orden) params = params.set('orden', consulta.orden);
+    if (consulta.direccion) params = params.set('direccion', consulta.direccion);
     return params;
   }
 

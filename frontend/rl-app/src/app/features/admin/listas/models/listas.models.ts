@@ -155,6 +155,8 @@ export interface ConsultaMonitoreoPaginada {
   estado?: string;
   fechaDesde?: string | null;
   fechaHasta?: string | null;
+  orden?: string;
+  direccion?: 'asc' | 'desc';
 }
 
 export interface ConsultaCoincidenciasPaginada {
@@ -163,6 +165,8 @@ export interface ConsultaCoincidenciasPaginada {
   buscar?: string;
   calificacion?: string;
   fecha?: string;
+  orden?: string;
+  direccion?: 'asc' | 'desc';
 }
 
 export interface Evidencia {

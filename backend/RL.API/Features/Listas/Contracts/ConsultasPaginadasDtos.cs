@@ -10,6 +10,8 @@ public sealed class ConsultaCoincidenciasPaginadaDto
     public string? Buscar { get; set; }
     public string? Calificacion { get; set; }
     public string? Fecha { get; set; }
+    public string Orden { get; set; } = "id";
+    public string Direccion { get; set; } = "asc";
 }
 
 public sealed class ConsultaMonitoreoPaginadaDto
@@ -20,6 +22,8 @@ public sealed class ConsultaMonitoreoPaginadaDto
     public string Estado { get; set; } = "todos";
     public DateTime? FechaDesde { get; set; }
     public DateTime? FechaHasta { get; set; }
+    public string Orden { get; set; } = "id";
+    public string Direccion { get; set; } = "asc";
 }
 
 public sealed class MonitoreoTotalesDto

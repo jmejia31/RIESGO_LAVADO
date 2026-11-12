@@ -40,8 +40,8 @@
         <table class="min-w-[640px] w-full divide-y divide-gray-200 text-xs">
           <thead class="bg-gray-50 text-gray-700 font-semibold uppercase tracking-wider text-center">
             <tr>
-              <th scope="col" class="px-6 py-4">Fecha</th>
-              <th scope="col" class="px-6 py-4">Total Coincidencias</th>
+              <th scope="col" class="px-6 py-4"><app-sortable-table-header column="id" label="Fecha" [activeColumn]="ordenResumen()" [direction]="direccionResumen()" ariaLabel="Ordenar resumen por fecha" (sortChange)="ordenarResumen($event)" /></th>
+              <th scope="col" class="px-6 py-4"><app-sortable-table-header column="total" label="Total Coincidencias" [activeColumn]="ordenResumen()" [direction]="direccionResumen()" ariaLabel="Ordenar resumen por total" (sortChange)="ordenarResumen($event)" /></th>
               <th scope="col" class="px-6 py-4 w-40">Acciones</th>
             </tr>
           </thead>
@@ -177,14 +177,14 @@
               <thead class="bg-gray-50 text-gray-700 font-semibold uppercase tracking-wider text-center">
                 <tr>
                   <th scope="col" class="px-4 py-3 w-44">Acciones</th>
-                  <th scope="col" class="px-4 py-3">ID Reporte</th>
-                  <th scope="col" class="px-4 py-3">Identidad/DNI</th>
-                  <th scope="col" class="px-4 py-3">Nombre</th>
-                  <th scope="col" class="px-4 py-3">Número Patrono</th>
-                  <th scope="col" class="px-4 py-3">Tipo Persona</th>
-                  <th scope="col" class="px-4 py-3">Lista Coincidencia</th>
-                  <th scope="col" class="px-4 py-3">Calificación</th>
-                  <th scope="col" class="px-4 py-3">Nacionalidad</th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="id" label="ID Reporte" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por identificador" (sortChange)="ordenarDetalle($event)" /></th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="dni" label="Identidad/DNI" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por identidad" (sortChange)="ordenarDetalle($event)" /></th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="nombre" label="Nombre" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por nombre" (sortChange)="ordenarDetalle($event)" /></th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="numero" label="Número Patrono" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por número patronal" (sortChange)="ordenarDetalle($event)" /></th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="tipo" label="Tipo Persona" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por tipo" (sortChange)="ordenarDetalle($event)" /></th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="lista" label="Lista Coincidencia" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por lista" (sortChange)="ordenarDetalle($event)" /></th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="calificacion" label="Calificación" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por calificación" (sortChange)="ordenarDetalle($event)" /></th>
+                  <th scope="col" class="px-4 py-3"><app-sortable-table-header column="nacionalidad" label="Nacionalidad" [activeColumn]="ordenDetalle()" [direction]="direccionDetalle()" ariaLabel="Ordenar detalle por nacionalidad" (sortChange)="ordenarDetalle($event)" /></th>
                   <th scope="col" class="px-4 py-3">Observaciones</th>
                 </tr>
               </thead>

@@ -84,11 +84,12 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
+import { SortableTableHeaderComponent } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalFileUploadComponent, SortableTableHeaderComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html'
 })

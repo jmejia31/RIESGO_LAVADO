@@ -16,6 +16,7 @@ import { InstitutionalFileUploadComponent } from '../../../../../shared/componen
 import { INSTITUTIONAL_EVIDENCE_FILE_POLICY, InstitutionalFileUploadPolicy } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
 type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
@@ -36,7 +37,7 @@ type RespuestaMonitoreo = {
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalFileUploadComponent, SortableTableHeaderComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html',
 })
@@ -182,6 +183,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   // Paginación
   paginaActual = signal(1);
   limite = signal(10);
+  orden = signal('id');
+  direccion = signal<SortDirection>('asc');
 
   constructor(private listasService: ListasService) {}
 
@@ -257,6 +260,13 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargarDatos();
   }
 
+  ordenar(columna: string): void {
+    if (this.orden() === columna) this.direccion.set(this.direccion() === 'asc' ? 'desc' : 'asc');
+    else { this.orden.set(columna); this.direccion.set('asc'); }
+    this.paginaActual.set(1);
+    this.cargarDatos({ force: true });
+  }
+
   limpiarFiltrosPrincipales() {
     this.busqueda.set('');
     this.filtroEstado.set('todos');
@@ -287,7 +297,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const tipo = options.tipo ?? this.tipoActivo();
     const forzar = options.force ?? false;
     const mostrarLoader = options.mostrarLoader ?? true;
-    const consulta = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null };
+    const consulta = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null, orden: this.orden(), direccion: this.direccion() };
     const contexto = JSON.stringify([tipo, consulta]);
     if (!forzar && (contexto === this.contextoMonitoreoCargado || contexto === this.contextoMonitoreoEnCarga)) return;
 
