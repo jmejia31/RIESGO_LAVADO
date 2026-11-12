@@ -196,6 +196,13 @@ Los filtros `Estado` y `Archivo` del gestor de familias son selectores nativos c
 - `EVIDENCE_COMMIT_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
 - `QUALITY_GATE_RUN=43272797472` — [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43272797472), `STATUS=completed`, `CONCLUSION=success`.
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+
+### Quality Gate final del expediente
+
+- `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
+- `EVIDENCE_COMMIT_SHA=7585fd12cc637d76b7ad87c96ad626ea14594c3f`.
+- `QUALITY_GATE_RUN=43279214059` — [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43279214059), `STATUS=completed`, `CONCLUSION=success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 - `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
 - `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; la aceptación visual del propietario permanece pendiente y por eso `B04_FINAL_STATUS=OPEN`.
 

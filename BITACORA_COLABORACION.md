@@ -10934,3 +10934,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Quality Gate del SHA documental final: [run 43275934595](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43275934595), `status=completed`, `conclusion=success`; ambos jobs `success`, sin pasos fallidos.
 - `GITHUB_REMOTE_VERIFIED=YES`; el árbol remoto contiene Bitácora, Estado y el índice B04 en `origin/desarrollo`; `AHEAD=0`; `BEHIND=0`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 - La auditoría browser autorizada y aceptación visual siguen pendientes: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+
+## 2026-11-12 12:35:00 -06:00 — Quality Gate final del expediente B04 (COD)
+
+- `EVIDENCE_COMMIT_SHA=7585fd12cc637d76b7ad87c96ad626ea14594c3f`; `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
+- Quality Gate final exacto: [run 43279214059](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43279214059), `status=completed`, `conclusion=success`; ambos jobs `success`, sin pasos fallidos.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `HEAD=origin/desarrollo`; `AHEAD=0`; `BEHIND=0`.
+- `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
