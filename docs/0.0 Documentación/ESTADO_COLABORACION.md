@@ -4363,7 +4363,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `SOURCE_CODE_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`; `EVIDENCE_COMMIT_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`.
 - Quality Gate [43291627396](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43291627396): `STATUS=completed`; `CONCLUSION=success`; ambos jobs en verde.
 - Evidencia remota: Bloque 7 Oracle/browser, H08 A–E, matrices, Oracle XE posterior y contenedores `PASS`; `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0`.
-- `GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENT_COMMIT`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/fee973a2c61236296e70fdc3d45948cac3f9ccc0/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 - Continuación: publicar esta actualización documental selectiva y verificar por API el árbol remoto final.
 
 ## Estado vigente — Orden complementaria B04 de cobertura global — 2026-11-12 13:07:25 -06:00

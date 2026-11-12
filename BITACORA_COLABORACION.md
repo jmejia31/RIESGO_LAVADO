@@ -10967,7 +10967,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `SOURCE_CODE_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`; `EVIDENCE_COMMIT_SHA=dfb2f20247906d4c30c77e5692f4c15835cf4452`.
 - Quality Gate exacto [run 43291627396](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43291627396): `status=completed`, `conclusion=success`; ambos jobs pasaron.
 - El run certificó `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`, H08 A–E `PASS`, `BLOCK7_UNEXPECTED_ORACLE_ERRORS=0`, suites de matrices y contenedores en verde. Las advertencias de analizadores son heredadas/no bloqueantes y no corresponden a archivos de esta intervención.
-- `GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENT_COMMIT`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica. La aceptación visual del propietario sigue pendiente: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`, `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`, `B04_FINAL_STATUS=OPEN`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/fee973a2c61236296e70fdc3d45948cac3f9ccc0/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica. La aceptación visual del propietario sigue pendiente: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`, `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`, `B04_FINAL_STATUS=OPEN`.
 - No se modificaron `main`, producción, Oracle institucional, P06, P07, B05 ni Block 10. Los cambios locales ajenos continúan preservados y fuera del stage.
 
 ## 2026-11-12 12:35:00 -06:00 — Quality Gate final del expediente B04 (COD)
