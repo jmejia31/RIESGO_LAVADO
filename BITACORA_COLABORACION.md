@@ -10927,3 +10927,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - La auditoría browser local de las cuatro viewport y capturas reales continúa `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; no se presenta como PASS. `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
 - Restricciones confirmadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`. Los cambios ajenos permanecen fuera del stage.
 - Punto exacto de continuación: aceptación visual del propietario y eventual auditoría browser autorizada; no se requieren correcciones técnicas adicionales según el Quality Gate verde.
+
+## 2026-11-12 12:20:00 -06:00 — Cierre del SHA documental final B04 (COD)
+
+- `EVIDENCE_COMMIT_SHA=5582c1e8c9078a391850a9785764873314447cbb`; `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
+- Quality Gate del SHA documental final: [run 43275934595](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43275934595), `status=completed`, `conclusion=success`; ambos jobs `success`, sin pasos fallidos.
+- `GITHUB_REMOTE_VERIFIED=YES`; el árbol remoto contiene Bitácora, Estado y el índice B04 en `origin/desarrollo`; `AHEAD=0`; `BEHIND=0`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- La auditoría browser autorizada y aceptación visual siguen pendientes: `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.

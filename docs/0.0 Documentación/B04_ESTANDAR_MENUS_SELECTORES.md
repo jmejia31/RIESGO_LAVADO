@@ -198,3 +198,10 @@ Los filtros `Estado` y `Archivo` del gestor de familias son selectores nativos c
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 - `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
 - `AUDIT_2_BROWSER=BLOCKED_EXTERNAL`; la aceptación visual del propietario permanece pendiente y por eso `B04_FINAL_STATUS=OPEN`.
+
+### SHA documental final
+
+- `SOURCE_CODE_SHA=35d1e1a8e4bfde8ec15a7423aecb92aa26f5f54f`.
+- `EVIDENCE_COMMIT_SHA=5582c1e8c9078a391850a9785764873314447cbb`.
+- `QUALITY_GATE_RUN=43275934595` — [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43275934595), `STATUS=completed`, `CONCLUSION=success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
