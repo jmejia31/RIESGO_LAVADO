@@ -61,26 +61,22 @@
   min-height: 5.5rem;
   border-color: var(--matrices-line) !important;
   border-radius: 0.95rem !important;
-  background: var(--matrices-surface) !important;
   box-shadow: 0 5px 16px rgb(var(--ihss-primary-rgb, 30 58 138) / 0.045) !important;
   padding: 0.95rem 1.05rem !important;
 }
 
 .matrices-kpi-strip > article p:first-child {
-  color: var(--matrices-muted) !important;
   letter-spacing: 0.08em;
 }
 
 .matrices-kpi-strip > article p:nth-child(2) {
   margin-top: 0.3rem !important;
-  color: var(--matrices-ink) !important;
   font-size: 1.55rem !important;
   line-height: 1.1;
 }
 
 .matrices-kpi-strip > article p:last-child {
   margin-top: 0.3rem !important;
-  color: var(--matrices-muted) !important;
 }
 
 .matrices-tabs-shell {

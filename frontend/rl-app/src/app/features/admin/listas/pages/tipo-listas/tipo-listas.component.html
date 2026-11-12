@@ -35,15 +35,15 @@
         <table class="min-w-[760px] w-full text-left border-collapse">
           <thead>
             <tr class="bg-gray-50/75 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <th class="px-6 py-4">ID</th>
-              <th class="px-6 py-4">Descripción / Nombre de Lista</th>
-              <th class="px-6 py-4">Tipo de Archivo</th>
-              <th class="px-6 py-4">Cantidad Columnas</th>
+              <th class="px-6 py-4"><app-sortable-table-header column="id" label="ID" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar tipos de lista por identificador" (sortChange)="ordenar($event)" /></th>
+              <th class="px-6 py-4"><app-sortable-table-header column="descripcion" label="Descripción / Nombre de Lista" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar tipos de lista por descripción" (sortChange)="ordenar($event)" /></th>
+              <th class="px-6 py-4"><app-sortable-table-header column="archivo" label="Tipo de Archivo" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar tipos de lista por tipo de archivo" (sortChange)="ordenar($event)" /></th>
+              <th class="px-6 py-4"><app-sortable-table-header column="columnas" label="Cantidad Columnas" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar tipos de lista por cantidad de columnas" (sortChange)="ordenar($event)" /></th>
               <th class="px-6 py-4 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
-            @for (item of listas(); track item.tipoListaCautelaId) {
+            @for (item of listasOrdenadas(); track item.tipoListaCautelaId) {
               <tr class="hover:bg-gray-50/50 transition-colors">
                 <td class="px-6 py-4 font-mono text-xs text-gray-400">{{ item.tipoListaCautelaId }}</td>
                 <td class="px-6 py-4 font-medium text-gray-800">{{ item.descripcion }}</td>

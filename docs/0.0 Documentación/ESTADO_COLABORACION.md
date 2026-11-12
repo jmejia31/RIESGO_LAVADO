@@ -4266,3 +4266,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `FIX=PLAYWRIGHT_RETRY_FINAL_SELECTED_CSS`: sin modificar código funcional, `aria-selected`, `:focus-visible`, igualdad de fondo y foreground entre tabs activos, y blanco independiente siguen exigidos mediante auto-retry de `toHaveCSS`.
 - `NEW_QUALITY_GATE_EXACT_SHA=PENDING_AFTER_PUBLICATION`, `LOCAL_TESTS=NOT_EXECUTED_NO_CHECKOUT`, `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`, `MAIN_TOUCHED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`.
 - B03 continúa `GLOBAL_INVENTORY=PARTIAL`, `OWNER_VISUAL_ACCEPTANCE=PENDING`. Continuación: certificar solo con `SUCCESS` del SHA publicado y conservar el trabajo de `COD`.
+
+## Estado vigente — Corrección visual y ordenamiento B03 de listados — 2026-11-12 09:31:54 -06:00
+
+- `EVENT_ID=RL-B03-LISTAS-MATRICES-20261112`; `BASE_SHA=cd68036711f638e4477b2c936125412f60c4af0b`; autor `COD`; rama autorizada `desarrollo`; cliente `CLI`.
+- Tipo de Listas y Cargar Listas ahora usan el encabezado ordenable compartido para ordenar localmente sus datos completos por columnas de contenido, con ASC inicial y alternancia DESC; acciones/exportación quedan excluidas. No se tocaron API, Oracle, paginación ni validación de archivos.
+- Las KPI de Evaluaciones y Plantillas de Matrices ya no son forzadas a fondo/texto neutro por SCSS: usan color IHSS/semántico coherente con Monitoreo. No se alteraron valores, fórmulas ni reglas de negocio.
+- Archivos propios: seis archivos frontend de Tipo de Listas, Cargar Listas y Matrices de Riesgos, más `B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`, `BITACORA_COLABORACION.md` y este estado.
+- Verificación fresca: `ANGULAR_BUILD=PASS` con warnings no bloqueantes de presupuesto/CommonJS; `FRONTEND_TESTS=93_FILES/981_TESTS_PASS`; `ESLINT=PASS`; diff selectivo sin errores. `PLAYWRIGHT_E2E=NOT_EXECUTED`; `ORACLE=NOT_EXECUTED`; `SECURITY_SCAN=NOT_RUN`.
+- P06 local y artefactos ajenos permanecen sin stage. `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `FORCE_PUSH=NO`.
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `REVIEW_READY=NO`; `B03_FINAL_STATUS=OPEN`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`.
+- Punto exacto de continuación: stage selectivo, commit/push en `origin/desarrollo`, verificar archivos vía GitHub API y revisar Quality Gate del SHA final.

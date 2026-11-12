@@ -70,15 +70,15 @@
         <table class="min-w-[860px] w-full text-center border-collapse border border-gray-200">
             <thead>
               <tr class="bg-gray-50/75 text-xs font-bold text-gray-700 uppercase tracking-wider">
-                <th class="px-6 py-3.5 border border-gray-200">Lista</th>
-                <th class="px-6 py-3.5 border border-gray-200">Usuario</th>
-                <th class="px-6 py-3.5 border border-gray-200">Fecha Creación</th>
-                <th class="px-6 py-3.5 border border-gray-200">Cantidad de Registros</th>
+                <th class="px-6 py-3.5 border border-gray-200"><app-sortable-table-header column="lista" label="Lista" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar cargas por lista" (sortChange)="ordenar($event)" /></th>
+                <th class="px-6 py-3.5 border border-gray-200"><app-sortable-table-header column="usuario" label="Usuario" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar cargas por usuario" (sortChange)="ordenar($event)" /></th>
+                <th class="px-6 py-3.5 border border-gray-200"><app-sortable-table-header column="fecha" label="Fecha Creación" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar cargas por fecha" (sortChange)="ordenar($event)" /></th>
+                <th class="px-6 py-3.5 border border-gray-200"><app-sortable-table-header column="cantidad" label="Cantidad de Registros" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar cargas por cantidad de registros" (sortChange)="ordenar($event)" /></th>
                 <th class="px-6 py-3.5 border border-gray-200">Exportar</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 text-sm text-gray-700 bg-white">
-              @for (item of resumenListas(); track item.lista) {
+              @for (item of resumenOrdenado(); track item.lista) {
                 <tr class="hover:bg-gray-50/50 transition-colors">
                   <td class="px-6 py-3 border border-gray-200 font-medium text-gray-800">{{ item.lista }}</td>
                   <td class="px-6 py-3 border border-gray-200">{{ item.usuario }}</td>

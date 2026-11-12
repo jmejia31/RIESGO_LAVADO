@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
@@ -6,11 +6,12 @@ import { TipoListaCautela } from '../../models/listas.models';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
   selector: 'app-tipo-listas',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, SortableTableHeaderComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './tipo-listas.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })
@@ -23,6 +24,18 @@ export class TipoListasComponent implements OnInit {
   errorGuardar = signal<string | null>(null);
   errorCarga = signal<string | null>(null);
   idParaEditar = signal<number | null>(null);
+  orden = signal('id');
+  direccion = signal<SortDirection>('asc');
+  listasOrdenadas = computed(() => {
+    const factor = this.direccion() === 'asc' ? 1 : -1;
+    const campo = this.orden();
+    return [...this.listas()].sort((a, b) => {
+      const izquierda = campo === 'id' ? a.tipoListaCautelaId : campo === 'columnas' ? (a.cantidadColumnas ?? 0) : campo === 'archivo' ? (a.tipoArchivo ?? '') : a.descripcion;
+      const derecha = campo === 'id' ? b.tipoListaCautelaId : campo === 'columnas' ? (b.cantidadColumnas ?? 0) : campo === 'archivo' ? (b.tipoArchivo ?? '') : b.descripcion;
+      if (typeof izquierda === 'number' && typeof derecha === 'number') return (izquierda - derecha) * factor;
+      return String(izquierda).localeCompare(String(derecha), 'es', { sensitivity: 'base' }) * factor;
+    });
+  });
 
   form!: FormGroup;
 
@@ -60,6 +73,11 @@ export class TipoListasComponent implements OnInit {
         this.cargando.set(false);
       }
     });
+  }
+
+  ordenar(columna: string): void {
+    if (this.orden() === columna) this.direccion.set(this.direccion() === 'asc' ? 'desc' : 'asc');
+    else { this.orden.set(columna); this.direccion.set('asc'); }
   }
 
   prepararNuevo() {

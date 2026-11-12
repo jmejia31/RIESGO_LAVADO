@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
@@ -10,11 +10,12 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
 import { LIST_IMPORT_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
   selector: 'app-cargar-listas',
   standalone: true,
-  imports: [ActionIconComponent, InstitutionalFileUploadComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, InstitutionalFileUploadComponent, SortableTableHeaderComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './cargar-listas.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -28,6 +29,18 @@ export class CargarListasComponent implements OnInit {
   exportandoTipoId = signal<number | null>(null);
   errorTipos = signal<string | null>(null);
   errorResumen = signal<string | null>(null);
+  orden = signal('id');
+  direccion = signal<SortDirection>('asc');
+  resumenOrdenado = computed(() => {
+    const factor = this.direccion() === 'asc' ? 1 : -1;
+    const campo = this.orden();
+    return [...this.resumenListas()].sort((a, b) => {
+      const izquierda = campo === 'id' ? (a.tipoListaCautelaId ?? 0) : campo === 'cantidad' ? a.cantidadRegistros : campo === 'fecha' ? (a.fechaCreacion ?? '') : campo === 'usuario' ? a.usuario : a.lista;
+      const derecha = campo === 'id' ? (b.tipoListaCautelaId ?? 0) : campo === 'cantidad' ? b.cantidadRegistros : campo === 'fecha' ? (b.fechaCreacion ?? '') : campo === 'usuario' ? b.usuario : b.lista;
+      if (typeof izquierda === 'number' && typeof derecha === 'number') return (izquierda - derecha) * factor;
+      return String(izquierda).localeCompare(String(derecha), 'es', { sensitivity: 'base' }) * factor;
+    });
+  });
 
   readonly politicaCargaListas = LIST_IMPORT_FILE_POLICY;
 
@@ -83,6 +96,11 @@ export class CargarListasComponent implements OnInit {
         this.cargandoResumen.set(false);
       }
     });
+  }
+
+  ordenar(columna: string): void {
+    if (this.orden() === columna) this.direccion.set(this.direccion() === 'asc' ? 'desc' : 'asc');
+    else { this.orden.set(columna); this.direccion.set('asc'); }
   }
 
   readonly archivoSeleccionado = signal<File | null>(null);

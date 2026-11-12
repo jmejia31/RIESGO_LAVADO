@@ -52,9 +52,9 @@ Comportamiento:
 | Familias - versiones y Form Builder | claves de version/campo | Mixta | `REQUIRES_CANONICAL_KEY_REVIEW` | no alterado en esta intervencion |
 | Monitoreo de Listas | RTN / identidad / numero patronal | Si | `IMPLEMENTED_THIS_UPDATE` | whitelist por tipo, ASC/DESC, desempate ID y clave de caché con orden |
 | Usuarios | `USR_ID` | Si | `IMPLEMENTED_THIS_UPDATE` | whitelist `id`, nombre, email, rol y dominio; ID ASC inicial |
-| Tipo de Listas | `TIPO_LISTA_CAUTELA_ID` | No confirmado | `CLIENT_ONLY_LIST` | no alterado |
+| Tipo de Listas | `TIPO_LISTA_CAUTELA_ID` | No confirmado | `IMPLEMENTED_THIS_UPDATE` | ordenamiento cliente por ID, descripción, tipo de archivo y cantidad de columnas |
 | Bitacora | `AUD_ID` | Si | `REQUIRES_BACKEND_EXTENSION` | requiere contrato de consulta sin cambiar auditoria |
-| Cargar Listas | lista / fecha / cantidad | Mixta | `REQUIRES_CANONICAL_KEY_REVIEW` | no alterado; exportación y validación preservadas |
+| Cargar Listas | lista / fecha / cantidad | Mixta | `IMPLEMENTED_THIS_UPDATE` | ordenamiento cliente del resumen; exportación y validación preservadas |
 | Coincidencias patrono/empleado | fecha / reporte / DNI | Si | `IMPLEMENTED_THIS_UPDATE` | resumen y detalle con whitelist y orden antes de ROWNUM |
 | Configuracion de calculo | ids propios y orden funcional | Mixta | `REQUIRES_CANONICAL_KEY_REVIEW` | no alterado |
 | Reporte consolidado / preview | orden metodologico del reporte | No | `NON_SORTABLE_BY_DOMAIN` | no alterado |
@@ -98,3 +98,13 @@ La extensión a Bitácora, Tipo de Listas, Cargar Listas, Configuración y tabla
 - `ANGULAR_BUILD=PASS`; `DOTNET_BUILD=BLOCKED_EXISTING_API_PROCESS_LOCK`; no se ejecutaron Oracle, Playwright, E2E ni suite completa de regresión en esta intervención.
 - `GITHUB_ACTIONS_BASE_RUN=43165972065` sobre `58c72705`: `FAILURE`, `75 PASS / 1 FAIL / 15 SKIP`; la falla única heredada está en `modal-shell-lock.spec.ts` por diferencia de color del constructor. No se presenta como resultado B03 PASS.
 - `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `ORACLE_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+
+## Actualización B03 — 2026-11-12 — COD — filtros visuales y colores semánticos
+
+- `BASE_SHA=cd68036711f638e4477b2c936125412f60c4af0b`; rama `desarrollo`; alcance exclusivo frontend B03.
+- Tipo de Listas y el resumen de Cargar Listas incorporan `app-sortable-table-header` con ordenamiento local ASC/DESC para sus columnas de datos. Las columnas de acciones/exportación permanecen fuera del ordenamiento; no se modifican contratos REST, paginación, cargas ni exportaciones.
+- Las tarjetas KPI de Evaluaciones y Plantillas de Matrices recuperan color IHSS/semántico mediante las mismas clases visuales del módulo Monitoreo; se retiraron únicamente reglas SCSS que forzaban fondo y tipografía neutros.
+- `ANGULAR_BUILD=PASS` con warnings preexistentes de presupuesto/CommonJS; `FRONTEND_TESTS=93_FILES/981_TESTS_PASS`; `ESLINT=PASS`; `GIT_DIFF_CHECK=PASS` sobre el stage selectivo propio.
+- Playwright visual/E2E local y Oracle no ejecutados por alcance frontend y dependencia de servidor/datos autorizados; el CI remoto del SHA publicado queda como verificación posterior.
+- `ORACLE_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; cambios P06 locales preservados fuera del stage.
+- `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO` hasta verificar GitHub sobre el SHA final.
