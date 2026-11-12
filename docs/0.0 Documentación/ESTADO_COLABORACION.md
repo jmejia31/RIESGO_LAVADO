@@ -4257,3 +4257,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO`.
 - `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/0.0%20Documentaci%C3%B3n/B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`; `SOURCE_CODE_SHA=4dc8bc9921cc5d55bd07f8c0bcfdeaabec4d0484`; `EVIDENCE_COMMIT_SHA=1904e31cc4534250e809842ca5f89a2214a04f66`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO`.
 - Punto de continuación: validar stage selectivo, hacer commit B03, publicar en `origin/desarrollo`, verificar GitHub y documentar el run exacto posterior al push.
+
+## Estado vigente — recuperación cromática E2E Form Builder — 2026-11-12 09:08:16 -06:00
+
+- `EVENT_ID=RL-CI-FORM-BUILDER-SELECTED-CSS-20261112`; `BASE_SHA=e036e573b98483cbfd674f2585ec511b26fd0a70`, `ACCOUNT=jmejia31`, `BRANCH=desarrollo`.
+- `QUALITY_GATE_43165972065=FAIL` y `QUALITY_GATE_43242234881=FAIL`: ambas ejecuciones quedaron bloqueadas por `modal-shell-lock.spec.ts:635-636` con lectura de color transitorio, último run 75 E2E PASS / 1 FAIL / 15 SKIP. Las capturas finales conservan la selección azul con texto blanco.
+- `ROOT_CAUSE=E2E_CSS_TRANSITION_SNAPSHOT_RACE`: transición institucional de 150 ms y prueba con espera fija de 200 ms más instantánea `getComputedStyle`.
+- `FIX=PLAYWRIGHT_RETRY_FINAL_SELECTED_CSS`: sin modificar código funcional, `aria-selected`, `:focus-visible`, igualdad de fondo y foreground entre tabs activos, y blanco independiente siguen exigidos mediante auto-retry de `toHaveCSS`.
+- `NEW_QUALITY_GATE_EXACT_SHA=PENDING_AFTER_PUBLICATION`, `LOCAL_TESTS=NOT_EXECUTED_NO_CHECKOUT`, `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`, `MAIN_TOUCHED=NO`, `PRODUCTION_ORACLE_TOUCHED=NO`.
+- B03 continúa `GLOBAL_INVENTORY=PARTIAL`, `OWNER_VISUAL_ACCEPTANCE=PENDING`. Continuación: certificar solo con `SUCCESS` del SHA publicado y conservar el trabajo de `COD`.
