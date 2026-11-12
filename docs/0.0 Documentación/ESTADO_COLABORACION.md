@@ -4204,3 +4204,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Verificacion local: `FRONTEND_TESTS=978/978_PASS` en `93` archivos; `FRONTEND_BUILD=PASS` con warnings preexistentes; `FRONTEND_LINT=PASS`; `BACKEND_BUILD_ISOLATED=PASS` (`0 warnings / 0 errors`).
 - Playwright visual B03 permanece `PENDING` por depender de servidor y datos autorizados. Oracle, main, produccion, migraciones, auditoria, permisos, autenticacion, P06, P07, watcher y cola Codex no fueron tocados.
 - `B03_GLOBAL_INVENTORY=PARTIAL`; faltan contratos server-side especificos para Usuarios, Bitacora, Monitoreo y otros listados. `B03_TECHNICAL_STATUS=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `BLOCK10_AUTHORIZED=NO`.
+
+## Estado vigente — Recuperación GitHub Actions FE-03/B02 — 2026-11-11 23:14:39 -06:00
+
+- `EVENT_ID=RL-CI-FE03-B02-SILENT-20261111-RECOVERY`, `BASE_SHA=25b586da170edfd7bd15e2c5bfc94ffdafc963b5`, `ACCOUNT=jmejia31`, `BRANCH=desarrollo`.
+- `GH_QUALITY_RUN_BASE=43107636635`, `GH_QUALITY_BASE_RESULT=FAIL` en `Validate FE-03 accessibility and FE-04 loading contract`: `Estado aria-busy global`. Este run demuestra capacidad de ejecución GitHub-hosted; no es una falta global de minutos/runners.
+- `ROOT_CAUSE=STALE_FE03_VALIDATOR_AFTER_B02_SILENT_REFRESH`. Nueva semántica: `aria-busy` solo para `globalState.indicadorVisible()`; prohibido volver a vincularlo al contador técnico `globalState.cargando()`. Validador actualizado con positivo/negativo, sin desactivar gates.
+- `PR_OPEN=0`, `QUEUED_HISTORICAL_RUNS=43098519970,43095145607`; estos runs no se marcan completados sin API. No reabrir PR antiguos.
+- `CI_NEW_SHA=NOT_YET_VERIFIED`, `QUALITY_GATE_NEW_SHA=PENDING`; última verificación local de contrato estático PASS, compilación/PowerShell/E2E no ejecutados localmente por ausencia de checkout.
+- `ORACLE_TOUCHED=NO`, `MAIN_TOUCHED=NO`, `PRODUCTION_TOUCHED=NO`, `DB_MIGRATION_TOUCHED=NO`, `BLOCK10_AUTHORIZED=NO`.
+- Punto exacto: consultar por API nuevo SHA de `origin/desarrollo`; correr/analisar Quality Gates del SHA exacto; no declarar recuperación cerrada sin gate PASS. Mantener referencias P06/P07/B01/B02/B03 y los pendientes de aceptación institucional intactos.
