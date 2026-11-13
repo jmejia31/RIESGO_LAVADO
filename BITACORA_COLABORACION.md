@@ -11160,3 +11160,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Aprobaciones del propietario: `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`. La aceptación del selector de columnas y la aceptación global permanecen pendientes; B05 no se cierra.
 - `HEAD_LOCAL=HEAD_REMOTE=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`; `AHEAD=0`; `BEHIND=0`; el stage fue selectivo y los cambios ajenos siguen sin commit.
 - Punto exacto de continuación: aprobación visual pendiente del propietario para el selector de columnas y cierre global de B05; no se requiere reabrir el código técnico certificado.
+
+## 2026-11-13 — Cierre formal B05 y autorización B06 (COD)
+
+- La orden maestra del propietario aceptó el alcance entregado de B05 y autorizó expresamente iniciar B06. Se conserva el estado técnico honesto `B05_TECHNICAL_STATUS=PARTIAL`; la aceptación no amplía el alcance ni elimina sus limitaciones históricas.
+- `B05_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_DELIVERED_SCOPE=ACCEPTED_BY_OWNER`; `B05_HISTORICAL_LIMITATIONS=PRESERVED`; `B05_SIGNOFF=APPROVED_WITH_DOCUMENTED_SCOPE`; `B05_FINAL_STATUS=OWNER_ACCEPTED_WITH_DOCUMENTED_LIMITATIONS`.
+- `B05_SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; `B05_EVIDENCE_COMMIT_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; Quality Gate exacto [43467368640](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43467368640), `QUALITY_GATE_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd`, `STATUS=completed`, `CONCLUSION=success`.
+- Se actualizaron selectivamente este registro, `docs/0.0 Documentación/ESTADO_COLABORACION.md` y `docs/0.0 Documentación/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`; no se stagearon cambios ajenos del checkout.
+- `B06_IMPLEMENTATION_AUTHORIZED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`. El Issue #40 queda pendiente de comentario de cierre y cierre remoto posterior a la publicación de este expediente.
+- Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos permanecen fuera del stage.
+- Punto de continuación: publicar el commit documental de cierre, verificar su Quality Gate exacto y cerrar el Issue #40; solo después comenzar el inventario e implementación B06.

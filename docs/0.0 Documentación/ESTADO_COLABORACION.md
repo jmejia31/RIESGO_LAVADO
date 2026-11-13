@@ -4555,3 +4555,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Local: regresión focalizada CI `6/6 PASS` con tres repeticiones y un worker; ESLint `PASS`; Agent Skills `14/14 PASS`. La suite completa local con 6 workers conserva el resultado no certificable ya documentado por cuatro flakes ajenos.
 - Índice remoto: [B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md](https://github.com/jmejia31/RIESGO_LAVADO/blob/ed8353e6d97e5164f82f1647dc055df6d075bc77/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md); `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
 - Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B06_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
+
+## Estado vigente — Cierre formal B05 y autorización B06 — 2026-11-13
+
+- `B05_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_DELIVERED_SCOPE=ACCEPTED_BY_OWNER`; `B05_HISTORICAL_LIMITATIONS=PRESERVED`; `B05_SIGNOFF=APPROVED_WITH_DOCUMENTED_SCOPE`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_FINAL_STATUS=OWNER_ACCEPTED_WITH_DOCUMENTED_LIMITATIONS`.
+- `B05_SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; `B05_EVIDENCE_COMMIT_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; `B05_QUALITY_GATE_RUN=43467368640`; `B05_QUALITY_GATE_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; `B05_QUALITY_GATE_STATUS=completed`; `B05_QUALITY_GATE_CONCLUSION=success`.
+- El alcance aceptado corresponde a la corrección P0 del constructor, menú de acciones, tooltip institucional y selector de columnas documentados en B05. Las limitaciones históricas continúan explícitas; no se declara `PASS_GLOBAL`.
+- `B06_IMPLEMENTATION_AUTHORIZED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`. El Issue #40 está pendiente de cierre remoto después de publicar esta actualización documental.
+- Commit inicial de esta intervención: `9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; commit documental de cierre: `PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `REVIEW_READY=PENDING_NEW_GATE`.
+- Restricciones: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage.
+- Punto exacto de continuación: stage selectivo de los tres documentos, commit/push, lectura remota del Quality Gate de ese SHA, comentario y cierre del Issue #40; luego auditoría B06.

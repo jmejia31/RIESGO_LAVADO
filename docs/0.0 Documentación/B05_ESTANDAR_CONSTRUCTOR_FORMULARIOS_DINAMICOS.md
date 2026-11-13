@@ -181,3 +181,27 @@ B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 - `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
 - El run funcional anterior `43462444453` fue cancelado por GitHub al entrar el push documental posterior; no se usa como certificación. La certificación vigente es exclusivamente `43464664638` sobre `EVIDENCE_COMMIT_SHA`.
 - `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_COLUMNS_SELECTOR_VISUAL_ACCEPTANCE=PENDING`; `B05_OVERALL_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+
+## Cierre formal B05 y autorización B06 — 2026-11-13
+
+La orden maestra del propietario acepta expresamente el alcance entregado de B05 y autoriza el inicio de B06. Este registro es un cierre documental aditivo: no reescribe ni invalida las limitaciones históricas del alcance técnico.
+
+```ini
+B05_OWNER_VISUAL_ACCEPTANCE=APPROVED
+B05_DELIVERED_SCOPE=ACCEPTED_BY_OWNER
+B05_HISTORICAL_LIMITATIONS=PRESERVED
+B05_SIGNOFF=APPROVED_WITH_DOCUMENTED_SCOPE
+B05_TECHNICAL_STATUS=PARTIAL
+B05_FINAL_STATUS=OWNER_ACCEPTED_WITH_DOCUMENTED_LIMITATIONS
+B05_SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14
+B05_EVIDENCE_COMMIT_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd
+B05_QUALITY_GATE_RUN=43467368640
+B05_QUALITY_GATE_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd
+B05_QUALITY_GATE_STATUS=completed
+B05_QUALITY_GATE_CONCLUSION=success
+B06_IMPLEMENTATION_AUTHORIZED=YES
+B07_AUTHORIZED=NO
+BLOCK10_AUTHORIZED=NO
+```
+
+El cierre formal se publica en `origin/desarrollo` mediante un commit documental selectivo y se verifica contra el Quality Gate exacto [43467368640](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43467368640). La aceptación de B05 no convierte sus limitaciones históricas en una certificación global fuera del alcance entregado.
