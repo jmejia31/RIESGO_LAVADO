@@ -4606,3 +4606,26 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El checkout conserva archivos ajenos modificados/no rastreados fuera del stage. No hay cambios funcionales adicionales de COD pendientes de publicación.
 - B06 sigue abierto y no se certifica el logo: `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
 - Continuación: entregar activo IHSS autorizado y aprobación visual del propietario; después ejecutar solo la verificación específica del logo.
+## Estado vigente — B06 corrección global PDF/Excel/preview — 2026-11-13 14:01:02 -06:00
+
+- `PHASE=B06_GLOBAL_REPORTING_STANDARD`; `SOURCE_CODE_SHA=f43a275fa04d7b878908b0ade92e0ecff0cb19b4`; commit funcional publicado en `origin/desarrollo`; `HEAD_LOCAL=HEAD_REMOTE`; divergencia `0/0`.
+- Inventario auditado: una familia de exportación backend de Matrices, dos familias Angular de reportería/listas y un preview compartido. La corrección está en los generadores institucionales y no en reportes particulares.
+- PDF: orientación y densidad compartidas para 82 campos, header adaptable, etiquetas/valores envueltos y paginación protegida. XLSX: paleta compartida, filas institucionales envueltas y alturas de título/metadatos/cabeceras. Preview: roles contextuales preservados, sin concatenación `|`, celdas con wrap y scroll solo como protección para tablas anchas.
+- Pruebas locales frescas: backend focalizado `15/15`; Angular `997/997`; ESLint `PASS`; build `PASS` con warnings preexistentes; Playwright Chromium `1/1` con `390x844`, `768x1024`, `1366x768`, `1536x1024` y tamaños complementarios; diff selectivo `PASS`.
+- Quality Gate exacto `43497280782` para `f43a275fa04d7b878908b0ade92e0ecff0cb19b4`: `STATUS=in_progress`; `CONCLUSION=PENDING`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_QUALITY_GATE`.
+- `B06_PDF_LAYOUT_SHARED=PASS`; `B06_XLSX_LAYOUT_SHARED=PASS`; `B06_PREVIEW_ROLE_RENDERING=PASS`; `B06_PDF_82_FIELDS_VERTICAL_STACKING=0`; `B06_EXCEL_CONTEXT_PIPE_FLATTENING=0`.
+- `B06_OWNER_VISUAL_ACCEPTANCE=CHANGES_REQUESTED`; `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_REVIEW`. La prueba técnica no equivale a aprobación visual.
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_EVIDENCE_INDEX_URL=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=YES_FOR_FUNCTIONAL_COMMIT`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`.
+- Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Continuación: observar el gate funcional; publicar expediente documental selectivo; consultar GitHub API para `HEAD`, archivos, `SOURCE_CODE_SHA`, `EVIDENCE_COMMIT_SHA`, conclusión del gate y seguridad; mantener B06 abierto hasta aceptación del propietario y resolver por separado el activo/logo autorizado.
+
+## Estado vigente — B06 Quality Gate correctivo verde y expediente documental en preparación — 2026-11-13 14:22:52 -06:00
+
+- `PHASE=B06_GLOBAL_REPORTING_STANDARD`; `SOURCE_CODE_SHA=f43a275fa04d7b878908b0ade92e0ecff0cb19b4`; `REGRESSION_FIX_SHA=d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a`; `HEAD_LOCAL=HEAD_REMOTE=d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a`; divergencia `0/0`.
+- Quality Gate exacto [43498122123](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43498122123), sobre `d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a`, terminó `STATUS=completed`, `CONCLUSION=success`; ambos jobs y la matriz integral quedaron verdes.
+- El gate histórico `43497280782` se identifica como fallido únicamente por la expectativa heredada del `MediaBox` vertical; la corrección de contrato fue publicada en el commit de regresión y verificada por el gate verde posterior. No se hizo bypass, reducción de cobertura ni silenciamiento de errores.
+- `B06_PDF_LAYOUT_SHARED=PASS`; `B06_XLSX_LAYOUT_SHARED=PASS`; `B06_PREVIEW_ROLE_RENDERING=PASS`; `B06_PDF_82_FIELDS_VERTICAL_STACKING=0`; `B06_EXCEL_CONTEXT_PIPE_FLATTENING=0`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES_FOR_TECHNICAL_REVIEW`.
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_EVIDENCE_INDEX_URL=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=YES_FOR_FUNCTIONAL_COMMIT_AND_GREEN_GATE`. El expediente documental se publicará selectivamente en el siguiente commit.
+- `B06_OWNER_VISUAL_ACCEPTANCE=CHANGES_REQUESTED`; `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_REVIEW`. El gate técnico no equivale a aprobación visual ni autoriza incorporar el logo IHSS sin activo y procedencia verificables.
+- Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuación: publicar el expediente documental con stage selectivo, verificar su contenido mediante GitHub API y observar el Quality Gate exacto del SHA publicado.

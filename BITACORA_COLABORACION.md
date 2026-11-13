@@ -11211,3 +11211,26 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Se preservaron los cambios ajenos preexistentes sin stage ni corrección. No se tocaron `main`, producción, Oracle institucional, migración 54, B07 ni Bloque 10.
 - B06 permanece `PARTIAL_BLOCKED_LOGO_AUTHORIZATION`, con aceptación visual del propietario pendiente; la certificación técnica y el expediente remoto están listos para revisión.
 - Punto exacto de continuación: esperar activo IHSS autorizado y aceptación visual del propietario para reabrir únicamente la verificación de logo; no cerrar B06 por inferencia técnica.
+## 2026-11-13 14:01:02 -06:00 — B06 corrección global del estándar PDF/Excel y preview (COD)
+
+- `EVENT_ID=RL-B06-GLOBAL-REPORTING-20261113`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Punto de partida `INITIAL_SHA=3adbf209be5f0ac294b3804af9f25e1515157e77`. Se auditó el generador PDF/OpenXML backend, las utilidades Angular, el preview compartido y los consumidores activos de monitoreo/listas y Matrices.
+- Se corrigió únicamente el estándar compartido: `InstitutionalReportStandard`, `InstitutionalPdfDocument`, `InstitutionalXlsxWorkbook`, `institutional-report.util.ts`, `excel-export.util.ts` y `report-preview.component.*`. Matrices dejó de usar una columna forzada para los 82 campos; el preview Excel dejó de aplanar el contexto con `|`; las fichas dejaron de usar posiciones verticales fijas.
+- Se agregaron regresiones de orientación/densidad, altura de encabezado/filtros extensos, roles contextuales y geometría del PDF de 82 campos. No se cambiaron valores, IDs, fórmulas, contratos, Oracle, auditoría, autorizaciones, producción, `main`, B07, Bloque 10 ni migración 54.
+- Verificado en esta intervención: backend focalizado `15/15 PASS`; Angular `997/997 PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes de presupuesto SCSS/CommonJS; Playwright Chromium `1/1 PASS` con viewport real `390x844`, `768x1024`, `1366x768`, `1536x1024` y tamaños complementarios; diff selectivo `PASS`.
+- Commit funcional publicado: `f43a275fa04d7b878908b0ade92e0ecff0cb19b4` (`fix(b06): unificar layout institucional de reportes`). `HEAD_LOCAL=HEAD_REMOTE`; divergencia `0/0`; cambios ajenos permanecen fuera del stage.
+- Quality Gate exacto de este commit: run `43497280782`, URL `https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43497280782`, observado `in_progress` al preparar este registro. No se declara verde hasta observar `completed/success`.
+- `B06_OWNER_VISUAL_ACCEPTANCE=CHANGES_REQUESTED`; `B06_PLAYWRIGHT_VISUAL=PASS`; `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_REVIEW`.
+- Evidencia primaria sintética preparada en `docs/certificaciones/B06_reporteria_global_f43a275f.md`; el commit documental y la URL GitHub verificable quedan pendientes del stage selectivo posterior al gate funcional.
+- Restricciones: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuación: observar el run `43497280782`, completar `B06_ESTANDAR_REPORTERIA_PDF_EXCEL_LOGO_IHSS.md`, este registro, `ESTADO_COLABORACION.md` y la evidencia sanitizada; crear/push commit documental selectivo; verificar API remota y gate exacto final sin cerrar B06.
+
+## 2026-11-13 14:22:52 -06:00 — B06 Quality Gate correctivo verde y expediente documental en preparación (COD)
+
+- El gate correctivo del commit `d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a` terminó en verde: [run 43498122123](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43498122123), `STATUS=completed`, `CONCLUSION=success`, con ambos jobs verdes y la matriz integral completa.
+- El run previo `43497280782` falló exclusivamente por una expectativa heredada que seguía comparando el `MediaBox` vertical anterior contra el PDF de Matrices ya convertido correctamente a paisaje. La prueba fue actualizada selectivamente; no se alteró código funcional adicional ni se relajó ningún gate.
+- `SOURCE_CODE_SHA=f43a275fa04d7b878908b0ade92e0ecff0cb19b4` permanece como SHA del cambio funcional; `REGRESSION_FIX_SHA=d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a`; `QUALITY_GATE_SHA=d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a`.
+- `GITHUB_REMOTE_VERIFIED=YES_FOR_FUNCTIONAL_COMMIT_AND_GREEN_GATE`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES_FOR_TECHNICAL_REVIEW`. La aceptación visual del propietario continúa `B06_OWNER_VISUAL_ACCEPTANCE=CHANGES_REQUESTED` y B06 permanece `OPEN_PENDING_OWNER_REVIEW`.
+- Se actualizaron el índice B06 y la evidencia sintética sanitizada con el resultado remoto. `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT` hasta crear el commit documental selectivo; no se stagean archivos ajenos.
+- Restricciones confirmadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuación: stage selectivo de índice, evidencia, bitácora y estado; commit/push documental; verificación remota por API y Quality Gate exacto del expediente.
