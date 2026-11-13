@@ -11050,3 +11050,24 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac` permanece como SHA funcional; `EVIDENCE_COMMIT_SHA=7a538f139665962e38295075bc30f02aad483be8` identifica el commit publicado que contiene el test correctivo y todo el expediente anterior.
 - `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. No se cierra B04 con el gate técnico.
 - Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage.
+
+## 2026-11-12 21:31:12 -06:00 — B05 P0 de contención de expresiones largas (COD)
+
+- `EVENT_ID=RL-B05-LONG-FORMULA-20261112`; `BASE_SHA=e9992bd9f646a86f00801e77ae747a6c59694542`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Se auditó el estado B04 aprobado en el issue [#39](https://github.com/jmejia31/RIESGO_LAVADO/issues/39) y se aplicó una regla compartida `.form-builder-long-content` para el lienzo del Form Builder y `DynamicFieldRendererComponent`. La expresión completa se envuelve visualmente sin truncarse ni mutarse.
+- Se agregaron regresiones para 50, 100, 250 y 500 caracteres, preservación exacta de fórmula, clases de contención y tarjeta de fórmula del canvas. No se modificaron modelo, serializador, persistencia, backend, Oracle, auditoría, autorizaciones, producción, `main`, B06, Block 10 ni migración 54.
+- Verificado en esta intervención: unit focalizadas `56/56 PASS`; suite Angular `95/993 PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes de presupuesto SCSS/CommonJS; estructura `PASS`; enlaces documentales `PASS`; validador de diálogos nativos `6/6 PASS`.
+- Playwright Form Builder se ejecutó en navegador Chromium real. La primera corrida completa registró un timeout de un caso de captura a 1536x1024; el caso aislado posterior terminó `1/1 PASS` con timeout explícito de 120 s. La suite completa queda pendiente de una repetición final después del ajuste de fixture válido.
+- Estado honesto: `B05_LONG_FORMULA_FULL_TEXT=PASS`; `B05_FORMULA_VALUE_PRESERVED=PASS`; `B05_FORMULA_HORIZONTAL_OVERFLOW=0`; `B05_DOCUMENT_HORIZONTAL_OVERFLOW=0`; `B05_UNIT_LENGTHS_50_100_250_500=PASS`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+- `SOURCE_CODE_SHA=PENDING_FUNCTIONAL_COMMIT`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+- Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B04_PRESERVED=YES`; `B06_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage.
+- Punto exacto de continuación: repetir Playwright completo, ejecutar validación de skills y quality gates locales, revisar stage selectivo, crear commits B05 funcional/documental, publicar en `origin/desarrollo`, consultar el Quality Gate exact-SHA y completar los enlaces remotos sin cerrar B05 sin aceptación visual del propietario.
+
+## 2026-11-12 21:35:20 -06:00 — B05 verificación local completa y commit funcional (COD)
+
+- `SOURCE_CODE_SHA=390a5f3b5249129cfe424433b1d02f4a8cd9dacf`; commit funcional `fix(b05): contain long dynamic form expressions`; rama `desarrollo`.
+- Playwright Chromium final: `15/15 PASS`, incluyendo la auditoría de selector/expresión en `390x844`, `768x1024`, `1366x768` y `1536x864`. El fixture usa una expresión extensa válida para que el JSON técnico siga siendo válido.
+- Verificación acumulada: Angular `95/993 PASS`; unit focalizadas `56/56 PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes no bloqueantes; Agent Skills `14/14 PASS`; validación de estructura, base de datos y enlaces `PASS`; native dialogs `6/6 PASS`; `git diff --check=PASS` en el alcance propio.
+- `B05_LONG_FORMULA_FULL_TEXT=PASS`; `B05_FORMULA_VALUE_PRESERVED=PASS`; `B05_FORMULA_HORIZONTAL_OVERFLOW=0`; `B05_DOCUMENT_HORIZONTAL_OVERFLOW=0`; `B05_UNIT_LENGTHS_50_100_250_500=PASS`; `B05_PLAYWRIGHT_VISUAL=PASS`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+- El commit funcional no contiene documentación ni cambios ajenos. `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+- Continuación: publicar el expediente documental en un commit selectivo separado y completar la verificación remota exact-SHA.

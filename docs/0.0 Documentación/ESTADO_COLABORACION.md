@@ -4445,3 +4445,24 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `EVIDENCE_COMMIT_SHA=7a538f139665962e38295075bc30f02aad483be8`; índice: [B04](https://github.com/jmejia31/RIESGO_LAVADO/blob/7a538f139665962e38295075bc30f02aad483be8/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md).
 - `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`; el cierre funcional requiere aprobación visual del propietario.
 - `HEAD_LOCAL=HEAD_REMOTE=7a538f139665962e38295075bc30f02aad483be8`; `AHEAD=0`; `BEHIND=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`.
+
+## Estado vigente — B05 P0 de contención de expresiones largas — 2026-11-12 21:31:12 -06:00
+
+- `PHASE=B05_DYNAMIC_FORM_BUILDER`; `BASE_SHA=e9992bd9f646a86f00801e77ae747a6c59694542`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Se incorporó la regla compartida `.form-builder-long-content` para la tarjeta de fórmulas del lienzo y el renderer dinámico. El texto completo se conserva, se envuelve con `overflow-wrap:anywhere`/`word-break:break-word`, y los contenedores flex/grid pueden encogerse sin overflow horizontal.
+- Regresiones frescas: unit focalizadas `56/56 PASS`; suite Angular `95/993 PASS`; ESLint `PASS`; build `PASS` con warnings no bloqueantes preexistentes; estructura y enlaces `PASS`; validador native dialogs `6/6 PASS`.
+- `B05_UNIT_LENGTHS_50_100_250_500=PASS`; `B05_FORMULA_VALUE_PRESERVED=PASS`; `B05_FORMULA_HORIZONTAL_OVERFLOW=0`; `B05_DOCUMENT_HORIZONTAL_OVERFLOW=0`.
+- Playwright focalizado usa Chromium real y cuatro viewports (`390x844`, `768x1024`, `1366x768`, `1536x864`); el caso aislado del timeout quedó `1/1 PASS`, pero la repetición final de los `15` casos quedó pendiente tras el ajuste del fixture sintético válido.
+- `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`. No se emite cierre visual del propietario.
+- `SOURCE_CODE_SHA=PENDING_FUNCTIONAL_COMMIT`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_EVIDENCE_INDEX_URL=PENDING_PUSH`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/39`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+- Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B06_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos permanecen fuera del stage.
+- Punto exacto de continuación: repetir suite Playwright completa, validar skills/quality gates, stage selectivo, commits B05, push fast-forward, verificación GitHub exact-SHA y completar el expediente [B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md](B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md).
+
+## Estado vigente — B05 commit funcional y verificaciones locales completas — 2026-11-12 21:35:20 -06:00
+
+- `SOURCE_CODE_SHA=390a5f3b5249129cfe424433b1d02f4a8cd9dacf`; commit funcional B05 publicado localmente en `desarrollo`; expediente documental pendiente de commit separado.
+- `B05_LONG_FORMULA_FULL_TEXT=PASS`; `B05_FORMULA_VALUE_PRESERVED=PASS`; `B05_FORMULA_HORIZONTAL_OVERFLOW=0`; `B05_DOCUMENT_HORIZONTAL_OVERFLOW=0`; `B05_UNIT_LENGTHS_50_100_250_500=PASS`; `B05_PLAYWRIGHT_VISUAL=PASS`.
+- Evidencia fresca: Angular `95/993 PASS`; unit focalizadas `56/56 PASS`; Playwright Chromium `15/15 PASS` en `390x844`, `768x1024`, `1366x768`, `1536x864`; ESLint/build/skills/estructura/base de datos/enlaces/native dialogs `PASS`.
+- `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`. `PARTIAL` mantiene el alcance honesto: la corrección P0 y sus consumidores directos están verificados, pero la aceptación visual global del propietario sigue pendiente.
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_EVIDENCE_INDEX_URL=PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+- Restricciones: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B06_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
