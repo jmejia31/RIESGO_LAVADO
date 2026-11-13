@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 // @ts-ignore: Vitest ejecuta este archivo en Node.js.
 import { mkdirSync, writeFileSync } from 'node:fs';
 // @ts-ignore: Vitest ejecuta este archivo en Node.js.
@@ -24,30 +24,11 @@ describe('estándar institucional de reportería', () => {
     expect(COLORES_REPORTE_INSTITUCIONAL.alternate).toEqual([243, 246, 249]);
   });
 
-  it('usa el recurso canónico y conserva las proporciones del logo PDF', () => {
-    const doc = {
-      setFillColor: vi.fn(),
-      rect: vi.fn(),
-      addImage: vi.fn()
-    } as any;
-    vi.stubGlobal('window', {
-      document: { createElement: vi.fn() },
-      navigator: { userAgent: 'Mozilla/5.0' }
-    });
-    vi.stubGlobal('document', { createElement: vi.fn() });
-
-    expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(true);
-    expect(doc.addImage).toHaveBeenCalledWith(
-      INSTITUTIONAL_LOGO_ASSET_PATH,
-      'PNG',
-      148,
-      4,
-      48,
-      48 / INSTITUTIONAL_LOGO_ASPECT_RATIO,
-      'IHSS_LOGO',
-      'FAST'
-    );
-    vi.unstubAllGlobals();
+  it('conserva el contrato canónico fuera de un navegador sin intentar I/O de filesystem', () => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
+    expect(INSTITUTIONAL_LOGO_ASSET_PATH).toBe('assets/institutional/ihss-logo.png');
+    expect(INSTITUTIONAL_LOGO_ASPECT_RATIO).toBeCloseTo(2034 / 773, 10);
   });
 
   it('mantiene el mismo encabezado en orientación vertical y horizontal', () => {

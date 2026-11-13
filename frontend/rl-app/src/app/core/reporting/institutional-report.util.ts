@@ -67,9 +67,10 @@ export function dibujarLogoInstitucionalPdf(
 }
 
 function esNavegadorReal(): boolean {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
-  const userAgent = window.navigator?.userAgent ?? '';
-  return typeof document.createElement === 'function' && !/jsdom/i.test(userAgent);
+  if (typeof window === 'undefined') return false;
+  const browserWindow = window as Window & { document?: Document };
+  const userAgent = browserWindow.navigator?.userAgent ?? '';
+  return typeof browserWindow.document?.createElement === 'function' && !/jsdom/i.test(userAgent);
 }
 
 export function agregarEncabezadoInstitucionalPdf(

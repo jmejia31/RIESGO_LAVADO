@@ -92,7 +92,7 @@ async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promis
   // assets. En el navegador la ruta es same-origin y el PNG queda embebido en
   // el ZIP real mediante ExcelJS, no como una imagen HTML del preview.
   if (!esNavegadorReal() || typeof fetch !== 'function') return false;
-  const assetUrl = new URL(INSTITUTIONAL_LOGO_ASSET_PATH, document.baseURI).toString();
+  const assetUrl = new URL(INSTITUTIONAL_LOGO_ASSET_PATH, window.document.baseURI).toString();
   const response = await fetch(assetUrl, { cache: 'force-cache' });
   if (!response.ok) throw new Error(`No se pudo cargar el recurso institucional (${response.status}).`);
   const bytes = new Uint8Array(await response.arrayBuffer());
@@ -108,9 +108,10 @@ async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promis
 }
 
 function esNavegadorReal(): boolean {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
-  const userAgent = window.navigator?.userAgent ?? '';
-  return typeof document.createElement === 'function' && !/jsdom/i.test(userAgent);
+  if (typeof window === 'undefined') return false;
+  const browserWindow = window as Window & { document?: Document };
+  const userAgent = browserWindow.navigator?.userAgent ?? '';
+  return typeof browserWindow.document?.createElement === 'function' && !/jsdom/i.test(userAgent);
 }
 
 function convertirABase64(bytes: Uint8Array): string {

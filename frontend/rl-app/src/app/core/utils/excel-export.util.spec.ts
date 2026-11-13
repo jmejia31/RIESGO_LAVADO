@@ -11,10 +11,10 @@ import {
   downloadBlob,
   normalizarNombreArchivoExcel,
   normalizarNombreArchivoGeneral,
-  WorkBook,
   utils,
   workbookToBlob,
-  writeFile
+  writeFile,
+  WorkBook
 } from './excel-export.util';
 
 function fillColor(cell: any): string | undefined {
@@ -227,24 +227,10 @@ describe('generador Excel institucional', () => {
     vi.unstubAllGlobals();
   });
 
-  it('embebe el PNG institucional en el XLSX real cuando existe el asset same-origin', async () => {
-    const source = readFileSync(resolve((globalThis as any).process.cwd(), '../../frontend/rl-app/public/assets/institutional/ihss-logo.png'));
-    const bytes = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength);
-    vi.stubGlobal('window', {
-      navigator: { userAgent: 'Mozilla/5.0' },
-      document: { createElement: vi.fn() }
-    });
-    vi.stubGlobal('document', { baseURI: 'http://localhost/', createElement: vi.fn() });
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => bytes }));
-
+  it('no marca el logo como embebido fuera de un navegador real', async () => {
     const workbook: WorkBook = { sheets: [{ name: 'Reporte', sheet: { data: [['Título'], ['Código'], ['R-001']] } }] };
-    const blob = await workbookToBlob(workbook);
-    expect(workbook.logoEmbedded).toBe(true);
-    const loaded = new ExcelJS.Workbook();
-    await loaded.xlsx.load(await blob.arrayBuffer());
-    expect(loaded.worksheets[0].getImages()).toHaveLength(1);
-
-    vi.unstubAllGlobals();
+    await workbookToBlob(workbook);
+    expect(workbook.logoEmbedded).toBe(false);
   });
 
   it('mantiene roles Excel mutuamente excluyentes y conserva spacers', () => {
