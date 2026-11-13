@@ -360,3 +360,13 @@ B04_FINAL_STATUS=OPEN
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/bbe7aae6ee0a9887165b2af4b07879afe2009383/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
 - Los dos jobs remotos terminaron `success`; la verificación incluyó analizadores, ESLint, build Release, Oracle XE desechable, quality gates, pruebas, E2E, cálculos workbook, contenedores y usuarios non-root.
 - `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. La aprobación visual del propietario sigue siendo el único cierre funcional pendiente.
+
+## Corrección del gate E2E y Quality Gate final
+
+- El intento `43347184650` quedó `failure` únicamente porque la auditoría de cuatro viewports agotó el timeout global de 30 s en la ejecución integral; no fue un fallo funcional del Inspector ni del selector compartido.
+- Corrección publicada en `7a538f139665962e38295075bc30f02aad483be8`: la prueba usa la apertura estable del selector y un timeout de 120 s para completar los cuatro viewports conservando todas las aserciones.
+- Playwright local posterior: `15/15 PASS`.
+- `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `EVIDENCE_COMMIT_SHA=7a538f139665962e38295075bc30f02aad483be8`.
+- `QUALITY_GATE_RUN=43349408095`; [Quality Gates final](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43349408095); `QUALITY_GATE_SHA=7a538f139665962e38295075bc30f02aad483be8`; `STATUS=completed`; `CONCLUSION=success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
+- `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.

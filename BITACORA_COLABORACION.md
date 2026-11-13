@@ -11039,3 +11039,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. El gate verde no sustituye la aprobación visual del propietario.
 - Se preservan las restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
 - La presente actualización es exclusivamente documental y se publicará selectivamente; no altera código funcional ni los SHA históricos del cambio B04.
+
+## 2026-11-12 20:20:00 -06:00 — Corrección del Quality Gate y verificación final B04 (COD)
+
+- El run [43347184650](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43347184650) sobre `55f2c9b613512e4d911671d697a1c376bbf89106` terminó `failure` únicamente en la auditoría E2E de los cuatro viewports: el test excedió el timeout global de 30 s durante la lectura de geometría del panel. No hubo fallos de backend, Oracle, compilación ni seguridad.
+- Corrección quirúrgica en `frontend/rl-app/e2e/modal-shell-lock.spec.ts`: la auditoría reutiliza el helper de apertura estable del selector y dispone de timeout explícito de 120 s para cubrir sus cuatro viewports sin reducir aserciones ni introducir esperas ciegas.
+- Verificación local posterior: Playwright `15/15 PASS`, incluyendo `390x844`, `768x1024`, `1366x768` y `1536x864`; `git diff --check` del archivo corregido `PASS`.
+- Commit correctivo publicado: `7a538f139665962e38295075bc30f02aad483be8`; solo modifica la regresión Playwright. El run final [43349408095](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43349408095) sobre ese SHA terminó `STATUS=completed`, `CONCLUSION=success`; ambos jobs remotos `success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `QUALITY_GATE_SHA=7a538f139665962e38295075bc30f02aad483be8`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/7a538f139665962e38295075bc30f02aad483be8/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`.
+- `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac` permanece como SHA funcional; `EVIDENCE_COMMIT_SHA=7a538f139665962e38295075bc30f02aad483be8` identifica el commit publicado que contiene el test correctivo y todo el expediente anterior.
+- `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. No se cierra B04 con el gate técnico.
+- Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage.

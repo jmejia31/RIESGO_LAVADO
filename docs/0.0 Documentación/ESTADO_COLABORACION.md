@@ -4435,3 +4435,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`; el gate verde no cierra B04 sin aprobación visual del propietario.
 - `HEAD_LOCAL=HEAD_REMOTE=bbe7aae6ee0a9887165b2af4b07879afe2009383`; `AHEAD=0`; `BEHIND=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`.
 - Punto de continuación: revisar la aceptación visual del propietario; no reabrir ni cerrar B04 técnicamente sin esa decisión.
+
+## Corrección y Quality Gate final B04 — 2026-11-12 20:20:00 -06:00
+
+- El run intermedio `43347184650` falló solo por timeout global de 30 s en la auditoría Playwright de cuatro viewports; se corrigió el test, no la funcionalidad.
+- `FINAL_TEST_FIX_SHA=7a538f139665962e38295075bc30f02aad483be8`; la prueba usa helper de apertura estable y timeout explícito de 120 s. Verificación local: `PLAYWRIGHT_MODAL_SHELL=15/15 PASS`.
+- `QUALITY_GATE_RUN=43349408095`; `QUALITY_GATE_SHA=7a538f139665962e38295075bc30f02aad483be8`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`.
+- El run final validó ambos jobs en verde, incluidos analizadores, ESLint, build Release, Oracle XE, quality gates, pruebas, E2E, workbook, contenedores y cierre de recursos. Ver: [run final](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43349408095).
+- `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `EVIDENCE_COMMIT_SHA=7a538f139665962e38295075bc30f02aad483be8`; índice: [B04](https://github.com/jmejia31/RIESGO_LAVADO/blob/7a538f139665962e38295075bc30f02aad483be8/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md).
+- `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`; el cierre funcional requiere aprobación visual del propietario.
+- `HEAD_LOCAL=HEAD_REMOTE=7a538f139665962e38295075bc30f02aad483be8`; `AHEAD=0`; `BEHIND=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`.
