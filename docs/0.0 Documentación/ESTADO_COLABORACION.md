@@ -4425,3 +4425,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Pendiente externo: push selectivo, Quality Gate GitHub exact-SHA y verificación remota/API. `EVIDENCE_COMMIT_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
 - Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
 - Continuación exacta: inspeccionar diff/stage selectivo, crear commits funcionales y documentales únicamente de B04, publicar en `origin/desarrollo`, observar Quality Gate y actualizar SHA/enlaces remotos sin cerrar B04 sin aceptación visual del propietario.
+
+## Actualización remota — Quality Gate B04 verde — 2026-11-12 19:43:00 -06:00
+
+- `QUALITY_GATE_RUN=43345092363`; `QUALITY_GATE_SHA=bbe7aae6ee0a9887165b2af4b07879afe2009383`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`; evento `push`.
+- `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `EVIDENCE_COMMIT_SHA=bbe7aae6ee0a9887165b2af4b07879afe2009383`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`.
+- Ambos jobs terminaron `success`: control de alcance y matriz integral de validadores, analizadores, build, tests, cobertura, E2E, Oracle XE y contenedores. El run es verificable en [GitHub Actions](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43345092363).
+- Índice B04 remoto: [B04_ESTANDAR_MENUS_SELECTORES.md](https://github.com/jmejia31/RIESGO_LAVADO/blob/bbe7aae6ee0a9887165b2af4b07879afe2009383/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md). Signoff: [Issue #23](https://github.com/jmejia31/RIESGO_LAVADO/issues/23).
+- `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`; el gate verde no cierra B04 sin aprobación visual del propietario.
+- `HEAD_LOCAL=HEAD_REMOTE=bbe7aae6ee0a9887165b2af4b07879afe2009383`; `AHEAD=0`; `BEHIND=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`.
+- Punto de continuación: revisar la aceptación visual del propietario; no reabrir ni cerrar B04 técnicamente sin esa decisión.

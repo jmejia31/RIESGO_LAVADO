@@ -11028,3 +11028,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - No ejecutado aún: `tools/run_quality_gates.ps1`, Quality Gate GitHub exact-SHA y verificación API remota; se ejecutarán después del push. `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `EVIDENCE_COMMIT_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
 - Restricciones verificadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
 - Punto exacto de continuación: revisión del diff selectivo, commit y push a `origin/desarrollo`; luego consultar el run de GitHub exacto del SHA, registrar la evidencia remota y conservar `B04_FINAL_STATUS=OPEN` hasta la aprobación visual del propietario.
+
+## 2026-11-12 19:43:00 -06:00 — Quality Gate remoto verde de la corrección responsive B04 (COD)
+
+- El commit publicado `bbe7aae6ee0a9887165b2af4b07879afe2009383` contiene la corrección funcional B04 y su expediente documental; `HEAD_LOCAL=HEAD_REMOTE`; `AHEAD=0`; `BEHIND=0`.
+- Quality Gate exacto [43345092363](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43345092363): `STATUS=completed`; `CONCLUSION=success`; evento `push`; SHA verificado `bbe7aae6ee0a9887165b2af4b07879afe2009383`.
+- Ambos jobs terminaron en verde: `Detect CI scope and validate control files=success` y `Validator, analyzers, build, tests, coverage, E2E and containers=success`. La matriz remota incluyó analizadores, ESLint, build Release, Oracle XE desechable, validaciones de base de datos, pruebas, E2E, workbook, contenedores y cierre de recursos.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/bbe7aae6ee0a9887165b2af4b07879afe2009383/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
+- `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac` permanece como SHA del código funcional certificado; `EVIDENCE_COMMIT_SHA=bbe7aae6ee0a9887165b2af4b07879afe2009383` identifica el expediente publicado que contiene la evidencia y los documentos de cierre.
+- `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. El gate verde no sustituye la aprobación visual del propietario.
+- Se preservan las restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
+- La presente actualización es exclusivamente documental y se publicará selectivamente; no altera código funcional ni los SHA históricos del cambio B04.

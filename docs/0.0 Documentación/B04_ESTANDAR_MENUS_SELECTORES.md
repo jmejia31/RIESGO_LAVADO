@@ -351,3 +351,12 @@ B04_FINAL_STATUS=OPEN
 - Pruebas verificadas: suite Angular `95` archivos / `991` pruebas `PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes de presupuesto SCSS/CommonJS; validador B04 `PASS`; estructura y enlaces documentales `PASS`; Playwright Form Builder `15/15 PASS`.
 - No ejecutado en esta intervención: Quality Gate remoto exact-SHA y validaciones Oracle/infraestructura; no se modificaron backend, Oracle institucional, producción, `main`, B05, Block 10, P06 ni P07.
 - `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `EVIDENCE_COMMIT_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+
+## Verificación remota posterior — Quality Gate verde
+
+- `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac` — código funcional B04 preservado y certificado.
+- `EVIDENCE_COMMIT_SHA=bbe7aae6ee0a9887165b2af4b07879afe2009383` — expediente B04 publicado en `origin/desarrollo`.
+- `QUALITY_GATE_RUN=43345092363`; [Quality Gates](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43345092363); `QUALITY_GATE_SHA=bbe7aae6ee0a9887165b2af4b07879afe2009383`; `STATUS=completed`; `CONCLUSION=success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/bbe7aae6ee0a9887165b2af4b07879afe2009383/docs/0.0%20Documentaci%C3%B3n/B04_ESTANDAR_MENUS_SELECTORES.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/23`.
+- Los dos jobs remotos terminaron `success`; la verificación incluyó analizadores, ESLint, build Release, Oracle XE desechable, quality gates, pruebas, E2E, cálculos workbook, contenedores y usuarios non-root.
+- `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. La aprobación visual del propietario sigue siendo el único cierre funcional pendiente.
