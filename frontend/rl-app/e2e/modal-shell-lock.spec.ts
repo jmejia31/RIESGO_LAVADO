@@ -69,11 +69,10 @@ async function preparar(page: Page): Promise<void> {
 
 async function abrirSelectorDeFormula(page: Page, selector: Locator): Promise<Locator> {
   const panel = page.locator('[data-ui-bounded-select-panel]');
-  for (let intento = 0; intento < 4; intento += 1) {
-    if (await panel.isVisible().catch(() => false)) return panel;
-    await selector.click();
-    await page.waitForTimeout(150);
-  }
+  await expect(selector).toBeVisible();
+  await selector.scrollIntoViewIfNeeded();
+  await selector.click();
+  await page.waitForTimeout(220);
   await expect(panel).toBeVisible();
   return panel;
 }
@@ -136,20 +135,20 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v24');
   await expect(inspector.locator('.inspector-central-preview span')).toContainText('CAT_EFECTIVIDAD_24');
 
-  await selector.click();
+  await abrirSelectorDeFormula(page, selector);
   await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).fill('CAT_EFECTIVIDAD_23');
   await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).press('ArrowDown');
   await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).press('Enter');
   await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v23');
 
-  await selector.click();
+  await abrirSelectorDeFormula(page, selector);
   const escapeSearch = panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' });
   await escapeSearch.focus();
   await expect(escapeSearch).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(panel).toBeHidden();
 
-  await selector.click();
+  await abrirSelectorDeFormula(page, selector);
   await page.locator('.form-builder-canvas__scroll').click({ position: { x: 8, y: 8 } });
   await expect(panel).toBeHidden();
 });
@@ -198,6 +197,7 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
       await expect(toggle).toBeVisible();
       await toggle.click();
       await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await page.waitForTimeout(220);
     }
 
     await expect(selector).toBeVisible();
@@ -234,7 +234,11 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
       await expect(toggle).toHaveAttribute('aria-expanded', 'false');
       await toggle.click();
       await expect(inspector).toBeVisible();
-      await dialogo.locator('[data-ui-form-builder-inspector-backdrop]').click({ position: { x: 8, y: 8 } });
+      const backdrop = dialogo.locator('[data-ui-form-builder-inspector-backdrop]');
+      await expect(backdrop).toBeVisible();
+      await page.waitForTimeout(220);
+      await backdrop.click({ position: { x: 8, y: 8 } });
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
       await expect(inspector).toBeHidden();
     }
     resultados.push(`${viewport.width}x${viewport.height}=PASS`);
