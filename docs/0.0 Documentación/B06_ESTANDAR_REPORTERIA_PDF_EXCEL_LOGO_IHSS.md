@@ -14,7 +14,7 @@ BRANCH=desarrollo
 INITIAL_SHA=3adbf209be5f0ac294b3804af9f25e1515157e77
 SOURCE_CODE_SHA=f43a275fa04d7b878908b0ade92e0ecff0cb19b4
 FUNCTIONAL_COMMIT=f43a275fa04d7b878908b0ade92e0ecff0cb19b4
-DOCUMENTAL_COMMIT=PENDING_DOCUMENTAL_COMMIT
+DOCUMENTAL_COMMIT=3757456f774a51dc767089d0706414d82ec78599
 ACTIVE_BACKEND_EXPORTER_FAMILIES=1
 ACTIVE_ANGULAR_REPORT_GENERATOR_FAMILIES=2
 ACTIVE_SHARED_PREVIEW_CONSUMERS=1
@@ -60,7 +60,7 @@ B06_OWNER_VISUAL_ACCEPTANCE=CHANGES_REQUESTED
 B06_PLAYWRIGHT_VISUAL=PASS
 B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION
 B06_FINAL_STATUS=OPEN_PENDING_OWNER_REVIEW
-EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
+EVIDENCE_COMMIT_SHA=3757456f774a51dc767089d0706414d82ec78599
 QUALITY_GATE_RUN=43498122123
 QUALITY_GATE_SHA=d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a
 QUALITY_GATE_STATUS=completed
@@ -68,13 +68,15 @@ QUALITY_GATE_CONCLUSION=success
 GITHUB_REMOTE_VERIFIED=YES_FOR_FUNCTIONAL_COMMIT_AND_GREEN_GATE
 SECURITY_SCAN=PASS_GITHUB_ACTIONS
 REVIEW_READY=YES_FOR_TECHNICAL_REVIEW
-GITHUB_EVIDENCE_INDEX_URL=PENDING_DOCUMENTAL_COMMIT
+GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/3757456f774a51dc767089d0706414d82ec78599/docs/0.0%20Documentaci%C3%B3n/B06_ESTANDAR_REPORTERIA_PDF_EXCEL_LOGO_IHSS.md
 GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40
 ```
 
 El primer gate del cambio funcional, `43497280782`, falló únicamente porque una regresión heredada todavía esperaba la orientación vertical anterior para el PDF de Matrices. El contrato fue actualizado en `d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a`; el gate exacto del SHA correctivo, `43498122123`, terminó `completed/success` con la matriz integral verde.
 
 El gate técnico y el expediente no cierran B06: falta la aceptación visual del propietario y permanece bloqueada la incorporación del logo hasta recibir un activo autorizado con procedencia verificable.
+
+El expediente documental que contiene esta actualización y la evidencia sanitizada fue publicado en `3757456f774a51dc767089d0706414d82ec78599`. Su Quality Gate exacto [43501151431](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43501151431) terminó `completed/success`.
 
 ## Expediente y alcance
 

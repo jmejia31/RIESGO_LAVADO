@@ -11234,3 +11234,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Se actualizaron el índice B06 y la evidencia sintética sanitizada con el resultado remoto. `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT` hasta crear el commit documental selectivo; no se stagean archivos ajenos.
 - Restricciones confirmadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto de continuación: stage selectivo de índice, evidencia, bitácora y estado; commit/push documental; verificación remota por API y Quality Gate exacto del expediente.
+
+## 2026-11-13 14:39:00 -06:00 — B06 expediente documental publicado y Quality Gate verde (COD)
+
+- Commit documental del índice B06, evidencia sanitizada, bitácora y estado: `3757456f774a51dc767089d0706414d82ec78599` (`docs(b06): publicar evidencia del estandar global`), publicado en `origin/desarrollo` con stage exclusivamente documental.
+- `SOURCE_CODE_SHA=f43a275fa04d7b878908b0ade92e0ecff0cb19b4`; `REGRESSION_FIX_SHA=d2d31a7bb2f6667d0c5da30bb95c7959c701fc3a`; `EVIDENCE_COMMIT_SHA=3757456f774a51dc767089d0706414d82ec78599`.
+- Quality Gate exacto del expediente [43501151431](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43501151431): `STATUS=completed`; `CONCLUSION=success`; jobs de alcance e integral verdes, incluyendo validadores, analyzers, build, tests, cobertura, Oracle XE, cálculos, E2E y contenedores.
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/3757456f774a51dc767089d0706414d82ec78599/docs/0.0%20Documentaci%C3%B3n/B06_ESTANDAR_REPORTERIA_PDF_EXCEL_LOGO_IHSS.md`; evidencia técnica adicional: `docs/certificaciones/B06_reporteria_global_f43a275f.md`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES_FOR_TECHNICAL_REVIEW`.
+- La aprobación visual del propietario permanece `B06_OWNER_VISUAL_ACCEPTANCE=CHANGES_REQUESTED`; `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_REVIEW`. No se declara cierre ni aprobación del logo.
+- Paridad del momento de publicación: `HEAD_LOCAL=HEAD_REMOTE=3757456f774a51dc767089d0706414d82ec78599`; `AHEAD=0`; `BEHIND=0`. Cambios ajenos del checkout permanecen fuera del stage.
+- Restricciones finales: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`.
+- Punto exacto de continuación: revisión visual del propietario y, si corresponde, entrega de un activo IHSS autorizado; no reabrir el código compartido certificado sin una nueva orden.
