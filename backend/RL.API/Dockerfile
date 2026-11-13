@@ -3,6 +3,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS restore
 WORKDIR /src
 COPY backend/RL.API/RL.API.csproj backend/RL.API/
+COPY frontend/rl-app/public/assets/institutional/ihss-logo.png frontend/rl-app/public/assets/institutional/ihss-logo.png
 RUN dotnet restore backend/RL.API/RL.API.csproj
 
 FROM restore AS publish
