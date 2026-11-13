@@ -83,16 +83,16 @@ B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 
 ## Publicación y verificación remota
 
-- `SOURCE_CODE_SHA=390a5f3b5249129cfe424433b1d02f4a8cd9dacf`
-- `EVIDENCE_COMMIT_SHA=17000efc99f6c1c72f91771e6a8f7ad53ef5290b`
+- `SOURCE_CODE_SHA=f09364c08c472c4ecf401db5e1c931974a228fde`
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`
 - `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/700bb760bf2082199f68a124a3e1c4ac1884a1c5/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`
 - `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/39`
 - `GITHUB_REMOTE_VERIFIED=YES`
-- `QUALITY_GATE_RUN=43360138895`
-- `QUALITY_GATE_SHA=700bb760bf2082199f68a124a3e1c4ac1884a1c5`
+- `QUALITY_GATE_RUN=43365628698`
+- `QUALITY_GATE_SHA=f09364c08c472c4ecf401db5e1c931974a228fde`
 - `QUALITY_GATE_STATUS=completed`
 - `QUALITY_GATE_CONCLUSION=success`
 - `SECURITY_SCAN=PASS_GITHUB_ACTIONS`
 - `REVIEW_READY=YES`
 
-Este expediente se completa después del stage selectivo, los commits B05, el push fast-forward a `origin/desarrollo` y la lectura remota del Quality Gate exacto del SHA publicado.
+El Quality Gate remoto exacto del commit correctivo terminó verde después de estabilizar la apertura del selector responsive. El expediente documental final se completa con el SHA del commit que contiene esta actualización.
