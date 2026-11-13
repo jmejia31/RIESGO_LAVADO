@@ -2,16 +2,24 @@
 
 ## Expediente de la intervención
 
-- `PHASE=B05_DYNAMIC_FORM_BUILDER`
-- `BASE_SHA=e9992bd9f646a86f00801e77ae747a6c59694542`
+- `PHASE=B05_ACTION_MENU_AND_TOOLTIP_REFINEMENT`
+- `BASE_SHA=4bdd986d08db8bd0514571a57bb0baf857d99ab1`
 - `BRANCH=desarrollo`
 - `AUTHOR=COD / CODEX`
 - `CLIENT=CLI`
-- `OWNER_SIGNOFF_B04=https://github.com/jmejia31/RIESGO_LAVADO/issues/39`
+- `OWNER_SIGNOFF_B05=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`
 - `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`
 - `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`
 
-Esta intervención continúa el B04 aprobado técnicamente y mantiene su SHA histórico. El alcance B05 aplicado es la corrección P0 de presentación de expresiones largas en el constructor y en el renderer dinámico, sin reconstruir el Form Builder ni alterar su contrato.
+Esta intervención continúa el B05 P0 de expresiones largas y mantiene sus SHA históricos. El alcance aplicado es la corrección quirúrgica del menú superior «Acciones» del Form Builder y del tooltip institucional «Cerrar constructor», sin reconstruir el Form Builder ni alterar su contrato.
+
+## Correcciones aplicadas
+
+- El disparador superior usa la iconografía SVG institucional `more-actions` y `collapse`, con un único chevrón sincronizado con `aria-expanded`; se retiraron los caracteres Unicode y el CSS obsoleto del antiguo `details`/popover.
+- Las acciones conservan sus IDs, condiciones, eventos, títulos y valores, pero ahora exponen las etiquetas visibles `Crear nueva sección` y `Crear nuevo catálogo` junto al icono y con `role="menuitem"`.
+- `app-institutional-action-menu` conserva el posicionamiento fijo institucional, scroll y límites de viewport. Además, el `panelId` se deriva del `triggerId` real para que `aria-controls` apunte al panel correcto, y `Escape` cierra el menú incluso dentro del bloqueo de eventos del modal.
+- `InstitutionalTooltipDirective` distingue foco programático, pointer y teclado: el foco programático ya no abre tooltips negros invasivos; hover y navegación por teclado continúan mostrando el nombre accesible; `Escape`, `focusout` y destrucción limpian la capa y `aria-describedby`.
+- Las regresiones cubren el menú compartido, toolbar, tooltip, foco/teclado y Chromium real. No se modificaron fórmulas, bindings, backend, Oracle, auditoría, autorizaciones ni persistencia.
 
 ## Regla visual canónica
 
@@ -37,30 +45,47 @@ Tampoco se modificaron backend, Oracle institucional, producción, `main`, migra
 
 ### Pruebas automatizadas
 
-- Unit focalizadas de renderer, canvas, inspector y roundtrip: `56/56 PASS`.
-- Suite Angular completa posterior a la corrección: `95 archivos / 993 pruebas PASS`.
+- Unit focalizadas finales del menú compartido: `3/3 PASS`.
+- Suite Angular completa posterior a la corrección: `95 archivos / 995 pruebas PASS`.
 - ESLint: `PASS`.
 - Build Angular: `PASS`; permanecen únicamente warnings preexistentes de presupuesto SCSS y CommonJS (`exceljs`), sin error de compilación.
-- Estructura del repositorio: `PASS`.
-- Enlaces documentales: `PASS`.
+- B04 selector/menu: `2/2 PASS`; self-test y auditoría estática: `PASS`, `63` selectores y `2` menús revisados.
+- Estructura del repositorio: `PASS` (`118` rutas obligatorias, `1237` archivos rastreados).
+- Enlaces documentales: `PASS` (`227` documentos, `237` enlaces locales).
+- Skills institucionales: `14/14 PASS`.
 - Validador de diálogos nativos: `6/6 PASS`; usos productivos `0`.
 
-La regresión unitaria verifica fórmulas de 50, 100, 250 y 500 caracteres y comprueba que el texto técnico se conserve exactamente. La regresión del canvas verifica una fórmula extensa dentro de una tarjeta de dos columnas sin mutar el modelo.
+La regresión unitaria heredada mantiene las fórmulas de 50, 100, 250 y 500 caracteres y la preservación exacta de valores. Las nuevas regresiones comprueban iconografía, etiquetas, `role="menuitem"`, `aria-controls`, cierre Escape y ausencia de tooltip con foco programático.
 
 ### Navegador real
 
-La suite Playwright focalizada del Form Builder cubre selección, teclado, Escape, clic externo, JSON técnico, duplicación, modo solo lectura y contención de fórmula. La aserción B05 mide texto completo, `scrollWidth <= clientWidth`, wrapping y ausencia de overflow horizontal en:
+Playwright Chromium real verificó el menú, tooltip y selector compartido. La aserción B05 mide texto completo, `scrollWidth <= clientWidth`, wrapping, límites del panel y ausencia de overflow horizontal en:
 
 - `390x844`
 - `768x1024`
 - `1366x768`
 - `1536x864`
 
-Resultado local final de la suite focalizada: `15/15 PASS`.
+Resultado local final: `2/2 PASS` en los escenarios B05 focalizados; la auditoría compartida recorrió los cuatro viewports y registró `4/4 PASS` internamente. El caso editable de acciones/tooltip en `1536x1024` terminó `1/1 PASS`.
+
+### Quality Gate local
+
+`tools/run_quality_gates.ps1` avanzó en verde por los validadores institucionales y compiló el backend, pero no pudo completar la cobertura por una dependencia externa del checkout: `Database:Profile=LOCAL_XE` no está configurado. Resultado observado: `1099` pruebas backend superadas, `8` fallidas por ausencia de perfil Oracle local y `2` omitidas; no se modificó Oracle ni se alteró ninguna configuración para ocultar el bloqueo. La certificación integral queda delegada al Quality Gate de GitHub Actions, que dispone del Oracle XE desechable.
 
 ## Resultado B05
 
 ```ini
+B05_ACTION_MENU_ICONOGRAPHY=PASS
+B05_ACTION_MENU_LABELS=PASS
+B05_ACTION_MENU_POSITIONING=PASS
+B05_ACTION_MENU_KEYBOARD_ESCAPE=PASS
+B05_PROGRAMMATIC_FOCUS_TOOLTIP=0
+B05_NATIVE_TOOLTIP_INTERFERENCE=0
+B05_OPTION_HORIZONTAL_OVERFLOW=0
+B05_SHARED_ACTION_MENU_REGRESSION=PASS
+B05_CLOSE_TOOLTIP_REGRESSION=PASS
+B05_PLAYWRIGHT_VIEWPORTS=390x844,768x1024,1366x768,1536x864
+B05_PLAYWRIGHT_VISUAL=PASS
 B05_LONG_FORMULA_FULL_TEXT=PASS
 B05_FORMULA_VALUE_PRESERVED=PASS
 B05_FORMULA_HORIZONTAL_OVERFLOW=0
@@ -69,7 +94,6 @@ B05_SHARED_LONG_CONTENT_RULE=PASS
 B05_FORM_BUILDER_REGRESSION=PASS
 B05_FORMULA_BINDINGS_PRESERVED=PASS
 B05_UNIT_LENGTHS_50_100_250_500=PASS
-B05_PLAYWRIGHT_VISUAL=PASS
 B01_PRESERVED=YES
 B02_PRESERVED=YES
 B03_PRESERVED=YES
@@ -79,20 +103,20 @@ B05_OWNER_VISUAL_ACCEPTANCE=PENDING
 B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 ```
 
-`PARTIAL` identifica que esta entrega certifica la corrección P0 de contenido largo y sus consumidores directos; no sustituye la revisión visual global del propietario sobre todas las familias, tipos y superficies del expediente B05. No se emite cierre visual ni aprobación por parte de Codex.
+`PARTIAL` identifica que esta entrega certifica técnicamente las correcciones P0 de contenido largo, menú y tooltip; no sustituye la revisión visual del propietario. No se emite cierre visual ni aprobación por parte de Codex.
 
 ## Publicación y verificación remota
 
-- `SOURCE_CODE_SHA=df6887e5a8bb2edc71882ed8aa3f8d33ad9e6d43`
-- `EVIDENCE_COMMIT_SHA=6605a9e84d1ec5d40d442fc49df7b483b65d5901`
-- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/ed8353e6d97e5164f82f1647dc055df6d075bc77/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`
-- `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/39`
+- `SOURCE_CODE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`
+- `GITHUB_EVIDENCE_INDEX_URL=PENDING_DOCUMENTAL_COMMIT`
+- `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`
 - `GITHUB_REMOTE_VERIFIED=YES`
-- `QUALITY_GATE_RUN=43369679490`
-- `QUALITY_GATE_SHA=df6887e5a8bb2edc71882ed8aa3f8d33ad9e6d43`
-- `QUALITY_GATE_STATUS=completed`
-- `QUALITY_GATE_CONCLUSION=success`
-- `SECURITY_SCAN=PASS_GITHUB_ACTIONS`
-- `REVIEW_READY=YES`
+- `QUALITY_GATE_RUN=43448960282`
+- `QUALITY_GATE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`
+- `QUALITY_GATE_STATUS=in_progress`
+- `QUALITY_GATE_CONCLUSION=PENDING`
+- `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`
+- `REVIEW_READY=PENDING_QUALITY_GATE`
 
-El Quality Gate remoto exacto del commit correctivo terminó verde después de estabilizar la apertura del selector responsive. El expediente documental final se completa con el SHA del commit que contiene esta actualización.
+El Quality Gate remoto exacto del commit funcional está en ejecución. El expediente documental final se completará con su conclusión y el SHA del commit documental que lo publique. La aprobación visual del propietario continúa pendiente.
