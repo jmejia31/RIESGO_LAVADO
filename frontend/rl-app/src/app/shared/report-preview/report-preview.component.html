@@ -31,8 +31,33 @@
 
             @if (contextRows().length > 0) {
               <div class="report-preview-context rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-700" data-excel-preview-context>
-                @for (row of contextRows(); track $index) {
-                  <p class="border-b border-slate-100 py-1 last:border-b-0">{{ row.join(' | ') }}</p>
+                @for (row of contextRows(); track $index; let contextIndex = $index) {
+                  @switch (contextRowRoles()[contextIndex]) {
+                    @case ('TITLE') {
+                      <h3 class="border-b border-slate-100 py-2 text-sm font-bold text-slate-900" [attr.data-excel-context-role]="contextRowRoles()[contextIndex]">
+                        @for (cell of row; track $index) { <span class="block break-words">{{ cell }}</span> }
+                      </h3>
+                    }
+                    @case ('SECTION') {
+                      <h4 class="border-b border-slate-100 py-2 font-semibold text-ihss-700" [attr.data-excel-context-role]="contextRowRoles()[contextIndex]">
+                        @for (cell of row; track $index) { <span class="block break-words">{{ cell }}</span> }
+                      </h4>
+                    }
+                    @case ('KEY_VALUE') {
+                      <dl class="grid grid-cols-1 gap-x-4 gap-y-1 border-b border-slate-100 py-2 sm:grid-cols-2" [attr.data-excel-context-role]="contextRowRoles()[contextIndex]">
+                        @for (cell of row; track $index; let cellIndex = $index) {
+                          <div class="min-w-0" [class.font-semibold]="cellIndex % 2 === 0" [class.text-slate-500]="cellIndex % 2 === 0">
+                            <dt class="break-words">{{ cell }}</dt>
+                          </div>
+                        }
+                      </dl>
+                    }
+                    @default {
+                      <p class="border-b border-slate-100 py-1 last:border-b-0" [attr.data-excel-context-role]="contextRowRoles()[contextIndex]">
+                        @for (cell of row; track $index) { <span class="mr-3 inline-block break-words">{{ cell }}</span> }
+                      </p>
+                    }
+                  }
                 }
               </div>
             }
@@ -45,7 +70,7 @@
                 @if (headerRow(); as header) {
                   <thead class="sticky top-0 z-10 bg-slate-900 text-white">
                     <tr>
-                      @for (cell of header; track $index) { <th class="whitespace-nowrap px-3 py-2 font-semibold">{{ cell }}</th> }
+                      @for (cell of header; track $index) { <th class="whitespace-normal break-words px-3 py-2 font-semibold">{{ cell }}</th> }
                     </tr>
                   </thead>
                 }
@@ -54,7 +79,7 @@
                     @for (row of currentRows(); track $index; let rowIndex = $index) {
                       <tr class="border-t border-slate-200 even:bg-slate-50" [attr.data-excel-row-role]="currentRowRoles()[rowIndex]">
                         @for (cell of row; track $index) {
-                          <td class="max-w-[28rem] px-3 py-2 align-top text-slate-700" [class.font-semibold]="currentRowRoles()[rowIndex] === 'SECTION' || currentRowRoles()[rowIndex] === 'HEADER'">{{ cell }}</td>
+                          <td class="max-w-[28rem] whitespace-normal break-words px-3 py-2 align-top text-slate-700" [class.font-semibold]="currentRowRoles()[rowIndex] === 'SECTION' || currentRowRoles()[rowIndex] === 'HEADER'">{{ cell }}</td>
                         }
                       </tr>
                     }

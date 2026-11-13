@@ -154,18 +154,18 @@ public sealed class InstitutionalXlsxWorkbook
         "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
         "<numFmts count=\"1\"><numFmt numFmtId=\"165\" formatCode=\"dd/mm/yyyy hh:mm\"/></numFmts>" +
         "<fonts count=\"8\">" +
-        "<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FF1F2937\"/></font>" +
+        $"<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"{Argb(InstitutionalReportStandard.Palette.BodyText)}\"/></font>" +
         "<font><b/><sz val=\"14\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
         "<font><b/><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
-        "<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"FF17466F\"/></font>" +
+        $"<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"{Argb(InstitutionalReportStandard.Palette.Navy)}\"/></font>" +
         "<font><b/><sz val=\"8\"/><name val=\"Arial\"/><color rgb=\"FF64748B\"/></font>" +
-        "<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"FF17466F\"/></font>" +
+        $"<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"{Argb(InstitutionalReportStandard.Palette.Navy)}\"/></font>" +
         "<font><sz val=\"9\"/><name val=\"Arial\"/><color rgb=\"FFE2E8F0\"/></font>" +
         "<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
         "</fonts>" +
-        "<fills count=\"5\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill>" +
-        "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FF17466F\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
-        "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFF3F6F9\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
+        $"<fills count=\"5\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill>" +
+        $"<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{Argb(InstitutionalReportStandard.Palette.Navy)}\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
+        $"<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{Argb(InstitutionalReportStandard.Palette.AlternateRow)}\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
         "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFEEF3F7\"/><bgColor indexed=\"64\"/></patternFill></fill></fills>" +
         "<borders count=\"3\"><border/><border><left style=\"thin\"><color rgb=\"FFD5DEE7\"/></left>" +
         "<right style=\"thin\"><color rgb=\"FFD5DEE7\"/></right><top style=\"thin\"><color rgb=\"FFD5DEE7\"/></top>" +
@@ -200,13 +200,13 @@ public sealed class InstitutionalXlsxWorkbook
             $"<col min=\"{index + 1}\" max=\"{index + 1}\" width=\"{width:0.##}\" customWidth=\"1\"/>"));
 
         var rows = new StringBuilder();
-        rows.Append(RowXml(1, new object?[] { sheet.Title }, 1, maxColumns));
-        rows.Append(RowXml(2, new object?[] { $"{InstitutionalReportStandard.InstitutionName} · Generado {DateTime.Now.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}" }, 0, maxColumns));
+        rows.Append(RowXml(1, new object?[] { sheet.Title }, 1, maxColumns, 30m));
+        rows.Append(RowXml(2, new object?[] { $"{InstitutionalReportStandard.InstitutionName} · Generado {DateTime.Now.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}" }, 0, maxColumns, 22m));
         if (string.IsNullOrWhiteSpace(sheet.Metadata))
             rows.Append("<row r=\"3\"/>");
         else
-            rows.Append(RowXml(3, new object?[] { sheet.Metadata }, 6, maxColumns));
-        rows.Append(RowXml(4, sheet.Headers.Cast<object?>().ToArray(), 2, maxColumns));
+            rows.Append(RowXml(3, new object?[] { sheet.Metadata }, 6, maxColumns, 24m));
+        rows.Append(RowXml(4, sheet.Headers.Cast<object?>().ToArray(), 2, maxColumns, 30m));
         for (var index = 0; index < sheet.Rows.Count; index++)
             rows.Append(RowXml(index + 5, sheet.Rows[index], index % 2 == 1 ? 3 : 4, maxColumns));
 
@@ -297,7 +297,7 @@ public sealed class InstitutionalXlsxWorkbook
         return $"<row r=\"{rowNumber}\" ht=\"{height:0.##}\" customHeight=\"1\">{cells}</row>";
     }
 
-    private static string RowXml(int rowNumber, IReadOnlyList<object?> values, int style, int maxColumns)
+    private static string RowXml(int rowNumber, IReadOnlyList<object?> values, int style, int maxColumns, decimal? height = null)
     {
         var cells = new StringBuilder();
         for (var column = 0; column < maxColumns; column++)
@@ -305,7 +305,8 @@ public sealed class InstitutionalXlsxWorkbook
             var value = column < values.Count ? values[column] : null;
             cells.Append(CellXml(rowNumber, column + 1, value, style));
         }
-        return $"<row r=\"{rowNumber}\">{cells}</row>";
+        var heightAttribute = height.HasValue ? $" ht=\"{height.Value:0.##}\" customHeight=\"1\"" : string.Empty;
+        return $"<row r=\"{rowNumber}\"{heightAttribute}>{cells}</row>";
     }
 
     private static string CellXml(int rowNumber, int columnNumber, object? value, int style)
@@ -417,6 +418,7 @@ public sealed class InstitutionalXlsxWorkbook
     }
 
     private static string Xml(string value) => SecurityElement.Escape(value) ?? string.Empty;
+    private static string Argb(string color) => $"FF{color.TrimStart('#')}";
     private static string XmlAttribute(string value) => Xml(value).Replace("\"", "&quot;");
 
     private sealed record InstitutionalXlsxSheet(

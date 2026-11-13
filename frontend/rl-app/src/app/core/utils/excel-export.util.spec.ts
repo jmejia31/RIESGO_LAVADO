@@ -172,6 +172,26 @@ describe('generador Excel institucional', () => {
     expect(preview.totalRows).toBe(125);
   });
 
+  it('conserva roles del contexto para renderizar títulos y pares clave/valor sin concatenarlos', () => {
+    const rows = [
+      ['Reporte Integral de Patrono'],
+      ['Instituto Hondureño de Seguridad Social'],
+      ['Fecha de Generación: 13/11/2026'],
+      [],
+      ['INFORMACION GENERAL DEL PATRONO'],
+      ['Numero Patronal', '201200601751', 'RTN', '05019006500703'],
+      [],
+      ['Codigo', 'Nombre', 'Estado'],
+      ['R-001', 'Riesgo UAT 1', 'ACTIVO']
+    ];
+    const preview = createExcelPreviewFromRows('Ficha', rows);
+
+    expect(preview.contextRows).toEqual(rows.slice(0, 7));
+    expect(preview.contextRowRoles).toEqual(['TITLE', 'DATA', 'DATA', 'SPACER', 'SECTION', 'KEY_VALUE', 'SPACER']);
+    expect(preview.contextRowRoles.filter(role => role === 'DATA')).toHaveLength(2);
+    expect(preview.headerRow).toEqual(rows[7]);
+  });
+
   it('preserva nombre y MIME al descargar PDF y Excel', async () => {
     const pdf = new Blob(['pdf'], { type: 'application/pdf' });
     const xlsx = await workbookToBlob({ sheets: [{ name: 'Reporte', sheet: { data: [['Codigo'], ['R-001']] } }] });

@@ -56,10 +56,11 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
     {
         IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog = new InstitutionalProjectionMapper().GetFieldCatalog();
         ValidarProyecciones(filas, proyecciones, catalog);
+        var orientation = InstitutionalReportStandard.ResolveOrientation(catalog.Count);
         var document = new InstitutionalPdfDocument(
             "Matriz Consolidada de Riesgos — Matriz completa 82 campos",
             "Matrices de Riesgos",
-            InstitutionalReportOrientation.Portrait,
+            orientation,
             DateTime.Now);
         document.AddSection("Filtros aplicados");
         document.AddParagraph(DescribirFiltros(filtros));
@@ -70,7 +71,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
             InstitutionalEvaluationProjectionDto projection = proyecciones[fila.EvaluacionId];
             document.AddSection($"{projection.RiskCode} — Evaluación {projection.EvaluationId}");
             document.AddKeyValueGrid(projection.Fields.Select(field =>
-                (field.FieldLabel, FormatearValorVisible(field.Value, field.State))), columns: 1, preserveLabelCase: true);
+                (field.FieldLabel, FormatearValorVisible(field.Value, field.State))), preserveLabelCase: true);
         }
         return new ArchivoReporteDto(document.ToBytes(), "application/pdf",
             $"Matriz_Riesgos_Completa_{DateTime.UtcNow:yyyyMMdd_HHmmss}.pdf");

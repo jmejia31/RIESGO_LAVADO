@@ -50,6 +50,7 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
         Assert.Equal("application/pdf", file.ContentType);
         string content = Encoding.Latin1.GetString(file.Contenido);
         Assert.StartsWith("%PDF-1.4", content, StringComparison.Ordinal);
+        Assert.Contains("/MediaBox [0 0 841.89 595.28]", content, StringComparison.Ordinal);
         Assert.Contains("/Count ", content, StringComparison.Ordinal);
         Assert.Contains("R-003", content, StringComparison.Ordinal);
         Assert.Contains("Estado=APROBADA", content, StringComparison.Ordinal);

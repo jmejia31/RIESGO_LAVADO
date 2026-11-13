@@ -1498,6 +1498,7 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
   page.on('pageerror', error => pageErrors.push(error.stack || error.message));
   for (const viewport of [
     { width: 320, height: 568 },
+    { width: 390, height: 844 },
     { width: 375, height: 812 },
     { width: 768, height: 1024 },
     { width: 1024, height: 768 },

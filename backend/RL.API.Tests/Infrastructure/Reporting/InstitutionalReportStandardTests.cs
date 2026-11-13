@@ -24,6 +24,18 @@ public sealed class InstitutionalReportStandardTests
     }
 
     [Theory]
+    [InlineData(82, InstitutionalReportOrientation.Landscape, 3)]
+    [InlineData(4, InstitutionalReportOrientation.Portrait, 2)]
+    [InlineData(2, InstitutionalReportOrientation.Portrait, 1)]
+    public void ResolveKeyValueLayout_UsesSharedDensityRule(int fields, InstitutionalReportOrientation orientation, int expectedColumns)
+    {
+        var layout = InstitutionalReportStandard.ResolveKeyValueLayout(fields, orientation);
+
+        Assert.Equal(expectedColumns, layout.Columns);
+        Assert.Equal(orientation, layout.Orientation);
+    }
+
+    [Theory]
     [InlineData(100, 20, 140, false)]
     [InlineData(125, 20, 140, true)]
     public void MustMoveRowToNextPage_PreventsSplitRows(decimal currentY, decimal rowHeight, decimal footerStartY, bool expected)

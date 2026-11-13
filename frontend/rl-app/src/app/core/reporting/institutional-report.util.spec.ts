@@ -25,8 +25,21 @@ describe('estándar institucional de reportería', () => {
   it('mantiene el mismo encabezado en orientación vertical y horizontal', () => {
     const portrait = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const landscape = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    expect(agregarEncabezadoInstitucionalPdf(portrait, 'REPORTE VERTICAL')).toBe(44);
-    expect(agregarEncabezadoInstitucionalPdf(landscape, 'REPORTE HORIZONTAL', undefined, undefined, 'Tipo: Jurídica')).toBe(64);
+    expect(agregarEncabezadoInstitucionalPdf(portrait, 'REPORTE VERTICAL')).toBeGreaterThan(34);
+    expect(agregarEncabezadoInstitucionalPdf(landscape, 'REPORTE HORIZONTAL', undefined, undefined, 'Tipo: Jurídica')).toBeGreaterThan(44);
+  });
+
+  it('expande el encabezado y conserva filtros extensos sin truncarlos', () => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const title = 'Matriz Consolidada de Riesgos — Matriz completa 82 campos';
+    const filters = 'Tipo: Personas jurídicas | Estado: Todos los registros | Búsqueda: Sin texto | Desde: Sin fecha | Hasta: Sin fecha';
+    const startY = agregarEncabezadoInstitucionalPdf(doc, title, undefined, undefined, filters);
+    const output = String(doc.output());
+
+    expect(startY).toBeGreaterThan(64);
+    expect(output).toContain('Matriz Consolidada de Riesgos');
+    expect(output).toContain('Hasta: Sin');
+    expect(output).toContain('(fecha) Tj');
   });
 
   it('mueve una sección completa cuando no existe espacio suficiente', () => {

@@ -25,6 +25,7 @@ export class ReportPreviewComponent implements OnDestroy {
   });
   readonly headerRow = computed(() => this.currentSheet()?.headerRow ?? null);
   readonly contextRows = computed(() => this.currentSheet()?.contextRows ?? []);
+  readonly contextRowRoles = computed(() => this.currentSheet()?.contextRowRoles ?? []);
   readonly currentRows = computed(() => {
     const rows = this.currentSheet()?.dataRows ?? [];
     const start = this.page() * this.pageSize();

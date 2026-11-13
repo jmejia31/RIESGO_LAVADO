@@ -1,4 +1,5 @@
 import * as ExcelJS from 'exceljs';
+import { INSTITUTIONAL_REPORT_EXCEL_COLORS } from '../reporting/institutional-report-standard';
 
 export interface ColInfo {
   wch?: number;
@@ -26,17 +27,18 @@ export interface ExcelPreviewSheet {
   rowRoles: ExcelRowRole[];
   headerRow: unknown[] | null;
   contextRows: unknown[][];
+  contextRowRoles: ExcelRowRole[];
   dataRows: unknown[][];
   dataRowRoles: ExcelRowRole[];
   totalRows: number;
   sourceRows: number;
 }
 
-const NAVY = 'FF123B63';
-const WHITE = 'FFFFFFFF';
-const BODY = 'FF1F2937';
-const ALTERNATE = 'FFF3F6F9';
-const BORDER = 'FFD8E0E8';
+const NAVY = INSTITUTIONAL_REPORT_EXCEL_COLORS.navy;
+const WHITE = INSTITUTIONAL_REPORT_EXCEL_COLORS.white;
+const BODY = INSTITUTIONAL_REPORT_EXCEL_COLORS.body;
+const ALTERNATE = INSTITUTIONAL_REPORT_EXCEL_COLORS.alternate;
+const BORDER = INSTITUTIONAL_REPORT_EXCEL_COLORS.border;
 
 export const utils = {
   aoa_to_sheet(data: unknown[][]): WorkSheet {
@@ -334,7 +336,17 @@ export function detectarRolesFilasExcel(data: unknown[][], source: WorkSheet = {
   const explicitHeaders = new Set(normalizarFilas(source['!headerRows'] ?? [], maxRow));
   const detectedHeaders = new Set(detectarFilasEncabezado(data, new Set([...keyValueRows, ...paragraphRows])));
   const headers = explicitHeaders.size ? explicitHeaders : detectedHeaders;
-  const sections = new Set(normalizarFilas(source['!sectionRows'] ?? [], maxRow));
+  const detectedSections = detectarFilasSeccion(data, new Set([
+    ...keyValueRows,
+    ...paragraphRows,
+    ...explicitHeaders,
+    ...detectedHeaders
+  ]));
+  const sections = new Set(
+    source['!sectionRows']?.length
+      ? normalizarFilas(source['!sectionRows'], maxRow)
+      : detectedSections
+  );
 
   return data.map((row, index) => {
     const rowNumber = index + 1;
@@ -354,6 +366,7 @@ function createExcelPreviewSheet(name: string, source: WorkSheet): ExcelPreviewS
   const headerIndex = rowRoles.findIndex(role => role === 'HEADER');
   const headerRow = headerIndex >= 0 ? rows[headerIndex] : null;
   const contextRows = headerIndex > 0 ? rows.slice(0, headerIndex) : [];
+  const contextRowRoles = headerIndex > 0 ? rowRoles.slice(0, headerIndex) : [];
   const dataStart = headerIndex >= 0 ? headerIndex + 1 : 0;
   const dataRows = rows.slice(dataStart);
   const dataRowRoles = rowRoles.slice(dataStart);
@@ -364,6 +377,7 @@ function createExcelPreviewSheet(name: string, source: WorkSheet): ExcelPreviewS
     rowRoles,
     headerRow,
     contextRows,
+    contextRowRoles,
     dataRows,
     dataRowRoles,
     totalRows: dataRows.length,

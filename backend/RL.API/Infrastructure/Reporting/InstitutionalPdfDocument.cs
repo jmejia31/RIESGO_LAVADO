@@ -13,9 +13,7 @@ public sealed class InstitutionalPdfDocument
 
     private const decimal MarginLeft = 36m;
     private const decimal MarginRight = 36m;
-    private const decimal HeaderHeight = 64m;
     private const decimal FooterHeight = 30m;
-    private const decimal BodyTop = 82m;
     private const decimal DefaultFontSize = 8.5m;
     private const decimal DefaultLineHeight = 11m;
 
@@ -24,6 +22,9 @@ public sealed class InstitutionalPdfDocument
     private readonly string _title;
     private readonly string _module;
     private readonly DateTime _generatedAt;
+    private readonly InstitutionalReportOrientation _orientation;
+    private readonly decimal _headerHeight;
+    private readonly decimal _bodyTop;
     private readonly List<PdfPage> _pages = new();
     private PdfPage _current = null!;
 
@@ -36,9 +37,12 @@ public sealed class InstitutionalPdfDocument
         _title = Sanitizar(title);
         _module = Sanitizar(module);
         _generatedAt = generatedAt ?? DateTime.Now;
+        _orientation = orientation;
         (_pageWidth, _pageHeight) = orientation == InstitutionalReportOrientation.Landscape
             ? (841.89m, 595.28m)
             : (595.28m, 841.89m);
+        _headerHeight = CalcularAltoEncabezado();
+        _bodyTop = _headerHeight + 18m;
         NuevaPagina();
     }
 
@@ -46,13 +50,13 @@ public sealed class InstitutionalPdfDocument
     {
         const decimal topSpacing = 12m;
         const decimal bottomSpacing = 10m;
-        var requiereSeparacion = _current.CursorY > BodyTop + 0.5m;
+        var requiereSeparacion = _current.CursorY > _bodyTop + 0.5m;
         AsegurarEspacio((requiereSeparacion ? topSpacing : 0m) + 30m);
 
         // Si AsegurarEspacio abrió una página nueva, el título inicia en el margen
         // institucional. En caso contrario se conserva una sangría vertical clara
         // respecto de la tabla o bloque anterior.
-        if (_current.CursorY > BodyTop + 0.5m)
+        if (_current.CursorY > _bodyTop + 0.5m)
             _current.CursorY += topSpacing;
 
         DrawText(Sanitizar(title).ToUpperInvariant(), MarginLeft, _current.CursorY, 11m, bold: true,
@@ -102,11 +106,13 @@ public sealed class InstitutionalPdfDocument
         _current.CursorY += totalHeight + 8m;
     }
 
-    public void AddKeyValueGrid(IEnumerable<(string Label, string Value)> items, int columns = 2, bool preserveLabelCase = false)
+    public void AddKeyValueGrid(IEnumerable<(string Label, string Value)> items, int columns = 0, bool preserveLabelCase = false)
     {
         var data = items.ToList();
         if (data.Count == 0) return;
-        columns = Math.Clamp(columns, 1, 3);
+        columns = columns <= 0
+            ? InstitutionalReportStandard.ResolveKeyValueLayout(data.Count, _orientation).Columns
+            : Math.Clamp(columns, 1, 3);
         var available = _pageWidth - MarginLeft - MarginRight;
         var cellWidth = available / columns;
         var rows = (int)Math.Ceiling(data.Count / (decimal)columns);
@@ -114,9 +120,11 @@ public sealed class InstitutionalPdfDocument
         for (var row = 0; row < rows; row++)
         {
             var rowItems = data.Skip(row * columns).Take(columns).ToList();
-            var wrapped = rowItems.Select(item => Wrap(Sanitizar(item.Value), cellWidth - 18m, 8.5m)).ToList();
-            var maxLines = wrapped.Count == 0 ? 1 : wrapped.Max(lines => Math.Max(1, lines.Count));
-            var rowHeight = 27m + maxLines * 10m;
+            var wrappedLabels = rowItems.Select(item => Wrap(Sanitizar(item.Label), cellWidth - 14m, 7m)).ToList();
+            var wrappedValues = rowItems.Select(item => Wrap(Sanitizar(item.Value), cellWidth - 14m, 8.5m)).ToList();
+            var maxLabelLines = wrappedLabels.Count == 0 ? 1 : wrappedLabels.Max(lines => Math.Max(1, lines.Count));
+            var maxValueLines = wrappedValues.Count == 0 ? 1 : wrappedValues.Max(lines => Math.Max(1, lines.Count));
+            var rowHeight = 12m + maxLabelLines * 8m + maxValueLines * 10m;
             AsegurarEspacio(rowHeight);
 
             for (var col = 0; col < columns; col++)
@@ -126,9 +134,10 @@ public sealed class InstitutionalPdfDocument
                     col % 2 == 0 ? "#FFFFFF" : InstitutionalReportStandard.Palette.AlternateRow,
                     InstitutionalReportStandard.Palette.Border);
                 if (col >= rowItems.Count) continue;
-                DrawText(preserveLabelCase ? Sanitizar(rowItems[col].Label) : Sanitizar(rowItems[col].Label).ToUpperInvariant(), x + 7m, _current.CursorY + 13m,
-                    7m, true, InstitutionalReportStandard.Palette.Muted);
-                DrawLines(wrapped[col], x + 7m, _current.CursorY + 28m, 8.5m, 10m,
+                var labels = wrappedLabels[col].Select(label => preserveLabelCase ? label : label.ToUpperInvariant()).ToArray();
+                DrawLines(labels, x + 7m, _current.CursorY + 10m, 7m, 8m,
+                    InstitutionalReportStandard.Palette.Muted, bold: true);
+                DrawLines(wrappedValues[col], x + 7m, _current.CursorY + 10m + labels.Length * 8m, 8.5m, 10m,
                     InstitutionalReportStandard.Palette.BodyText);
             }
 
@@ -251,7 +260,7 @@ public sealed class InstitutionalPdfDocument
 
     private void NuevaPagina()
     {
-        _current = new PdfPage { CursorY = BodyTop };
+        _current = new PdfPage { CursorY = _bodyTop };
         _pages.Add(_current);
         DibujarEncabezado(_current);
     }
@@ -260,15 +269,27 @@ public sealed class InstitutionalPdfDocument
     {
         var previous = _current;
         _current = page;
-        DrawRect(0m, 0m, _pageWidth, HeaderHeight, InstitutionalReportStandard.Palette.Navy,
+        DrawRect(0m, 0m, _pageWidth, _headerHeight, InstitutionalReportStandard.Palette.Navy,
             InstitutionalReportStandard.Palette.Navy);
-        DrawText(InstitutionalReportStandard.InstitutionName, MarginLeft, 23m, 10m, true, "#FFFFFF");
-        DrawText(_title, MarginLeft, 43m, 15m, true, "#FFFFFF");
-        DrawText($"{InstitutionalReportStandard.SystemName} · {_module}", _pageWidth - MarginRight, 23m,
-            8m, false, "#DCE6F0", alignRight: true);
-        DrawText($"Generado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}",
-            _pageWidth - MarginRight, 43m, 8m, false, "#DCE6F0", alignRight: true);
+        var leftWidth = _pageWidth * 0.62m - MarginLeft;
+        var rightWidth = _pageWidth - MarginRight - _pageWidth * 0.66m;
+        var institution = Wrap(InstitutionalReportStandard.InstitutionName, leftWidth, 10m);
+        var title = Wrap(_title, leftWidth, 15m);
+        var metadata = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", rightWidth, 8m);
+        DrawLines(institution, MarginLeft, 19m, 10m, 11m, InstitutionalReportStandard.Palette.HeaderText, bold: true);
+        DrawLines(title, MarginLeft, 36m, 15m, 16m, InstitutionalReportStandard.Palette.HeaderText, bold: true);
+        DrawLines(metadata, _pageWidth - MarginRight - rightWidth, 22m, 8m, 11m, "#DCE6F0");
         _current = previous;
+    }
+
+    private decimal CalcularAltoEncabezado()
+    {
+        var leftWidth = _pageWidth * 0.62m - MarginLeft;
+        var rightWidth = _pageWidth - MarginRight - _pageWidth * 0.66m;
+        var institutionLines = Wrap(InstitutionalReportStandard.InstitutionName, leftWidth, 10m).Count;
+        var titleLines = Wrap(_title, leftWidth, 15m).Count;
+        var metadataLines = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", rightWidth, 8m).Count;
+        return Math.Max(64m, Math.Max(20m + institutionLines * 11m + 8m + titleLines * 16m, 14m + metadataLines * 11m) + 10m);
     }
 
     private void DibujarPie(PdfPage page, int pageNumber, int totalPages)

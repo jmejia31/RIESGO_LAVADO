@@ -536,7 +536,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       format: 'a4'
     });
 
-    this.agregarEncabezadoPdf(
+    const headerStartY = this.agregarEncabezadoPdf(
       doc,
       isEmpleado
         ? 'REPORTE DETALLADO DE COINCIDENCIAS - EMPLEADO IHSS'
@@ -547,14 +547,15 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(55, 65, 81); // Gray 700
-    doc.text('Nombre:', 14, 40);
+    const identityStartY = headerStartY;
+    doc.text('Nombre:', 14, identityStartY);
     doc.setFont('helvetica', 'normal');
-    doc.text(isEmpleado ? personaEmpleado!.nombre : personaNatural!.nombre, 32, 40);
+    doc.text(isEmpleado ? personaEmpleado!.nombre : personaNatural!.nombre, 32, identityStartY);
 
     doc.setFont('helvetica', 'bold');
-    doc.text(isEmpleado ? 'Identidad:' : 'DNI:', 14, 46);
+    doc.text(isEmpleado ? 'Identidad:' : 'DNI:', 14, identityStartY + 6);
     doc.setFont('helvetica', 'normal');
-    doc.text(isEmpleado ? personaEmpleado!.identidad : personaNatural!.numeroIdentificacion, 32, 46);
+    doc.text(isEmpleado ? personaEmpleado!.identidad : personaNatural!.numeroIdentificacion, 32, identityStartY + 6);
 
     // Tabla de coincidencias
     let tableHead: string[][];
@@ -949,10 +950,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       format: 'a4'
     });
 
-    this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE PERSONA NATURAL');
+    let y = this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE PERSONA NATURAL');
 
     // Información General
-    let y = 48;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(30, 41, 59);
@@ -1131,10 +1131,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       format: 'a4'
     });
 
-    this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE EMPLEADO IHSS');
+    let y = this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE EMPLEADO IHSS');
 
     // Información General
-    let y = 48;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(30, 41, 59);
@@ -1260,10 +1259,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       format: 'a4'
     });
 
-    this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE PATRONO');
+    let y = this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE PATRONO');
 
     // Grid de Información General del Patrono
-    let y = 48;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(30, 41, 59); // Slate 800

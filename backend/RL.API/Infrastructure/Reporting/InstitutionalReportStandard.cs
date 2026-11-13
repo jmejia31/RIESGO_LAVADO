@@ -26,6 +26,15 @@ public static class InstitutionalReportStandard
     public static InstitutionalReportOrientation ResolveOrientation(int visibleColumns) =>
         visibleColumns > 8 ? InstitutionalReportOrientation.Landscape : InstitutionalReportOrientation.Portrait;
 
+    public static InstitutionalKeyValueLayout ResolveKeyValueLayout(
+        int fieldCount,
+        InstitutionalReportOrientation orientation)
+    {
+        var columns = orientation == InstitutionalReportOrientation.Landscape ? 3 : 2;
+        if (fieldCount <= 2) columns = 1;
+        return new InstitutionalKeyValueLayout(orientation, columns);
+    }
+
     public static bool MustMoveRowToNextPage(decimal currentY, decimal rowHeight, decimal footerStartY) =>
         rowHeight > 0 && currentY + rowHeight > footerStartY;
 
@@ -67,6 +76,10 @@ public sealed record InstitutionalTablePolicy(
     bool KeepSectionTitleWithFirstRow = true,
     bool PreventDateWrapping = true,
     bool AlternateRows = true);
+
+public sealed record InstitutionalKeyValueLayout(
+    InstitutionalReportOrientation Orientation,
+    int Columns);
 
 public enum InstitutionalReportOrientation
 {
