@@ -4412,3 +4412,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B04_PLAYWRIGHT_VISUAL=BLOCKED`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`. `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`.
 - Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage. Punto siguiente: commit/push selectivo, Quality Gate exact-SHA y verificación remota.
 - Quality Gate exacto [43316052382](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43316052382): `STATUS=completed`; `CONCLUSION=success`; `GITHUB_REMOTE_VERIFIED=YES`; `EVIDENCE_COMMIT_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`.
+
+## Estado vigente — Corrección responsive del Inspector B04 — 2026-11-12 19:23:06 -06:00
+
+- `INITIAL_SHA=32a6528e06bf8e311b3679a713eee4b947a7e7bf`; `FINAL_SHA=PENDING_COMMIT`; rama `desarrollo`; autor `COD` / `CODEX`; cliente `CLI`.
+- El Inspector ya no se elimina en tablet/móvil. La toolbar ofrece acceso responsive y la única instancia existente se muestra como panel sobre el mismo estado, con backdrop, scroll interno, cierre externo, Escape y retorno de foco.
+- `B04_INSPECTOR_DESKTOP=PASS`; `B04_INSPECTOR_TABLET=PASS`; `B04_INSPECTOR_MOBILE=PASS`; `B04_FORMULA_SELECTOR_RESPONSIVE=PASS`; `B04_NO_HORIZONTAL_OVERFLOW=PASS`; `B04_FORMULA_VERSION_BINDING=PASS`.
+- `B04_OPTION_FULL_TEXT=PASS`; `B04_NATIVE_TOOLTIP_INTERFERENCE=0`; `B04_OPTION_HORIZONTAL_OVERFLOW=0`; `B04_SHARED_SELECTOR_REGRESSION=PASS`; `B04_PLAYWRIGHT_VISUAL=PASS`.
+- Pruebas locales: Angular `95/991 PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes no bloqueantes; B04 validator `PASS`; estructura/enlaces `PASS`; Playwright Form Builder `15/15 PASS` en `390x844`, `768x1024`, `1366x768`, `1536x864`.
+- Archivos funcionales: Form Builder padre, toolbar, `app-bounded-select` compartido y regresión Playwright. Archivos documentales: B04 estándar, Bitácora y este estado.
+- `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B04_FINAL_STATUS=OPEN`.
+- Pendiente externo: commit/push selectivo, Quality Gate GitHub exact-SHA y verificación remota/API. `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+- Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B05_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `P06_PRESERVED=YES`; `P07_PRESERVED=YES`; `FORCE_PUSH=NO`.
+- Continuación exacta: inspeccionar diff/stage selectivo, crear commits funcionales y documentales únicamente de B04, publicar en `origin/desarrollo`, observar Quality Gate y actualizar SHA/enlaces remotos sin cerrar B04 sin aceptación visual del propietario.

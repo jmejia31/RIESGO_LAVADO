@@ -32,6 +32,17 @@
     </div>
 
     <div class="form-builder-toolbar__secondary-actions">
+      @if (mostrarInspectorResponsive) {
+        <button type="button" class="form-builder-toolbar__inspector-toggle"
+                [attr.aria-expanded]="inspectorResponsiveAbierto"
+                [attr.aria-label]="inspectorResponsiveAbierto ? 'Cerrar Inspector de propiedades' : 'Abrir Inspector de propiedades'"
+                [attr.title]="inspectorResponsiveAbierto ? 'Cerrar Inspector de propiedades' : 'Abrir Inspector de propiedades'"
+                data-ui-form-builder-inspector-toggle
+                (click)="toggleInspector.emit()">
+          <app-action-icon action="configure"></app-action-icon>
+          <span>Inspector</span>
+        </button>
+      }
       <button type="button" (click)="toggleJson.emit()" class="form-builder-toolbar__preview-toggle"
               [attr.aria-label]="mostrarJsonAvanzado ? 'Ver modo visual' : 'Ver JSON técnico'"
               [attr.title]="mostrarJsonAvanzado ? 'Ver modo visual' : 'Ver JSON técnico'"><app-action-icon action="preview"></app-action-icon></button>

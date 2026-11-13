@@ -76,8 +76,8 @@ export type BoundedSelectPlacement = InstitutionalOverlayPlacement;
                   [attr.aria-label]="'Buscar en ' + ariaLabel"
                   data-ui-bounded-select-search
                   (input)="actualizarConsulta($event)"
-                  (keydown.escape)="$event.preventDefault(); cerrar(true)"
-                  (keyup.escape)="$event.preventDefault(); cerrar(true)">
+                  (keydown.escape)="$event.preventDefault(); $event.stopPropagation(); cerrar(true)"
+                  (keyup.escape)="$event.preventDefault(); $event.stopPropagation(); cerrar(true)">
               </div>
             </div>
           }
@@ -307,6 +307,7 @@ export class BoundedSelectComponent implements OnDestroy {
     }
     else if (event.key === 'Escape' && this.abierto()) {
       event.preventDefault();
+      event.stopPropagation();
       this.cerrar(true);
     }
   }
@@ -314,6 +315,7 @@ export class BoundedSelectComponent implements OnDestroy {
   manejarTeclasPanel(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       this.cerrar(true);
     }
     else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {

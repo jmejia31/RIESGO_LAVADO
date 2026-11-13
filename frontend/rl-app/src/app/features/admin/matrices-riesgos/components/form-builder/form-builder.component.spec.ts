@@ -43,6 +43,26 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component).toBeTruthy();
   });
 
+  it('mantiene un único Inspector y lo expone como panel responsive con cierre por Escape', () => {
+    component.toggleInspectorResponsive();
+    fixture.detectChanges();
+
+    const shell = fixture.nativeElement.querySelector('[data-form-builder-shell="true"]') as HTMLElement;
+    const toggle = fixture.nativeElement.querySelector('[data-ui-form-builder-inspector-toggle]') as HTMLButtonElement;
+    expect(shell.classList.contains('form-builder-shell--inspector-open')).toBe(true);
+    expect(fixture.nativeElement.querySelectorAll('app-form-builder-inspector')).toHaveLength(1);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+    component.manejarEscapeInspector(new Event('keydown'));
+    fixture.detectChanges();
+    expect(component.inspectorResponsiveAbierto()).toBe(false);
+    expect(shell.classList.contains('form-builder-shell--inspector-open')).toBe(false);
+
+    component.toggleInspectorResponsive();
+    component.cambiarVista('preview');
+    expect(component.inspectorResponsiveAbierto()).toBe(false);
+  });
+
   it('bloquea la visualización del editor JSON técnico si esAdministrador es false', () => {
     component.esAdministrador = false;
     component.toggleModoJson();

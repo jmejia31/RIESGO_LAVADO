@@ -28,6 +28,8 @@ export class FormBuilderToolbarComponent {
   @Input() puedePublicar: boolean = false;
   @Input() procesando: boolean = false;
   @Input() operacion: 'guardar' | 'publicar' | null = null;
+  @Input() mostrarInspectorResponsive: boolean = false;
+  @Input() inspectorResponsiveAbierto: boolean = false;
 
   @Output() cambiarVista = new EventEmitter<'secciones' | 'catalogos' | 'preview'>();
   @Output() toggleJson = new EventEmitter<void>();
@@ -36,6 +38,7 @@ export class FormBuilderToolbarComponent {
   @Output() guardar = new EventEmitter<void>();
   @Output() publicar = new EventEmitter<void>();
   @Output() cerrar = new EventEmitter<void>();
+  @Output() toggleInspector = new EventEmitter<void>();
 
   get estaProcesando(): boolean {
     return this.procesando || this.operacion !== null;

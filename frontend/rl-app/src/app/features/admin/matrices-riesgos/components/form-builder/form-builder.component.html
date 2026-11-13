@@ -19,7 +19,7 @@
   </div>
 }
 
-<section class="form-builder-shell" [class.form-builder-shell--has-feedback]="!!errorFeedback || !!mensajeFeedback" [class.form-builder-shell--has-both-feedback]="!!errorFeedback && !!mensajeFeedback" data-form-builder-shell="true" aria-label="Espacio de trabajo del constructor de formularios">
+<section class="form-builder-shell" [class.form-builder-shell--has-feedback]="!!errorFeedback || !!mensajeFeedback" [class.form-builder-shell--has-both-feedback]="!!errorFeedback && !!mensajeFeedback" [class.form-builder-shell--inspector-open]="inspectorResponsiveAbierto()" data-form-builder-shell="true" aria-label="Espacio de trabajo del constructor de formularios">
   <app-form-builder-toolbar
     [title]="'Constructor de Formularios Dinámicos'"
     [versionCodigo]="versionCodigo"
@@ -34,12 +34,15 @@
     [puedePublicar]="puedePublicar"
     [procesando]="procesando"
     [operacion]="operacion"
+    [mostrarInspectorResponsive]="vistaActiva() === 'secciones' && !mostrarJsonAvanzado()"
+    [inspectorResponsiveAbierto]="inspectorResponsiveAbierto()"
     (cambiarVista)="cambiarVista($event)"
     (toggleJson)="toggleModoJson()"
     (agregarSeccion)="agregarSeccion()"
     (agregarCatalogo)="iniciarNuevoCatalogo(); cambiarVista('catalogos')"
     (guardar)="emitirGuardado()"
     (publicar)="emitirPublicar()"
+    (toggleInspector)="toggleInspectorResponsive()"
     (cerrar)="cerrar.emit()">
   </app-form-builder-toolbar>
 
@@ -260,7 +263,10 @@
     </div>
   }
   @else {
-    <div class="form-builder-shell__body" data-modal-shell-region="body">
+    <div class="form-builder-shell__body" data-modal-shell-region="body" (keydown.escape)="manejarEscapeInspector($event)">
+      @if (inspectorResponsiveAbierto()) {
+        <button type="button" class="form-builder-inspector-backdrop" aria-label="Cerrar Inspector de propiedades" title="Cerrar Inspector de propiedades" data-ui-form-builder-inspector-backdrop (click)="cerrarInspectorResponsive()"><app-action-icon action="close" class="sr-only"></app-action-icon></button>
+      }
       <app-form-builder-palette
         [tiposControles]="tiposControles"
         [secciones]="model().secciones"
@@ -291,6 +297,7 @@
       </app-form-builder-canvas>
 
       <app-form-builder-inspector
+        [attr.data-ui-form-builder-inspector-panel]="true"
         [campoActivo]="campoActivo()"
         [soloLectura]="bloqueadoParaMutacion"
         [tiposControles]="tiposControles"

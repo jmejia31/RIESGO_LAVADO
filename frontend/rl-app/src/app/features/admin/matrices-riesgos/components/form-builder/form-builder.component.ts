@@ -97,6 +97,7 @@ export class FormBuilderComponent implements OnInit {
   readonly mostrarJsonAvanzado = signal<boolean>(false);
   readonly jsonAvanzadoStr = signal<string>('');
   readonly erroresValidacion = signal<FormBuilderValidationError[]>([]);
+  readonly inspectorResponsiveAbierto = signal(false);
 
   readonly vistaActiva = signal<'secciones' | 'catalogos' | 'preview'>('secciones');
   readonly busquedaJson = signal('');
@@ -150,6 +151,7 @@ export class FormBuilderComponent implements OnInit {
 
   cambiarVista(vista: 'secciones' | 'catalogos' | 'preview'): void {
     this.vistaActiva.set(vista);
+    if (vista !== 'secciones') this.cerrarInspectorResponsive(false);
     this.feedbackCatalogo.set(null);
     this.catalogoEnEdicion.set(null);
     this.elementoEnEdicion.set(null);
@@ -158,6 +160,33 @@ export class FormBuilderComponent implements OnInit {
       const cats = this.catalogosList();
       if (!this.catalogoActivoCodigo() && cats.length > 0) this.catalogoActivoCodigo.set(cats[0].codigo);
     }
+  }
+
+  toggleInspectorResponsive(): void {
+    if (this.vistaActiva() !== 'secciones' || this.mostrarJsonAvanzado()) return;
+    this.inspectorResponsiveAbierto.update(abierto => !abierto);
+    if (this.inspectorResponsiveAbierto()) {
+      setTimeout(() => {
+        const control = document.querySelector<HTMLElement>(
+          '[data-ui-form-builder-inspector-panel] button, [data-ui-form-builder-inspector-panel] input, [data-ui-form-builder-inspector-panel] select, [data-ui-form-builder-inspector-panel] textarea'
+        );
+        control?.focus();
+      }, 0);
+    }
+  }
+
+  cerrarInspectorResponsive(devolverFoco = true): void {
+    if (!this.inspectorResponsiveAbierto()) return;
+    this.inspectorResponsiveAbierto.set(false);
+    if (devolverFoco) {
+      setTimeout(() => document.querySelector<HTMLElement>('[data-ui-form-builder-inspector-toggle]')?.focus(), 0);
+    }
+  }
+
+  manejarEscapeInspector(event: Event): void {
+    if (!this.inspectorResponsiveAbierto()) return;
+    event.preventDefault();
+    this.cerrarInspectorResponsive();
   }
 
   agregarSeccion(): void {

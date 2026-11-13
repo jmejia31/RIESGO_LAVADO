@@ -322,3 +322,32 @@ B04_FINAL_STATUS=OPEN
 - Se conservaron los contratos funcionales y el posicionamiento institucional. La aceptación visual del propietario permanece pendiente; B04 no se cierra.
 - `SOURCE_CODE_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`; `EVIDENCE_COMMIT_SHA=47a1fe1d4e6cc7121a81fcbe89a01291db3033f9`.
 - Quality Gate exacto [43316052382](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43316052382): `STATUS=completed`; `CONCLUSION=success`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+
+## Corrección responsive del Inspector de propiedades — 2026-11-12
+
+La ocultación del Inspector a `max-width: 980px` fue reemplazada por un único panel responsive sobre la misma instancia y el mismo modelo del Form Builder. La toolbar expone el acceso solo en tablet/móvil; el panel conserva el `app-bounded-select` compartido, el estado de `formulaVersionId`, el preview de la expresión y el cierre por clic externo. El Escape del selector se detiene en el componente compartido para respetar la prioridad desplegable → Inspector → modal.
+
+```ini
+BASE_SHA=32a6528e06bf8e311b3679a713eee4b947a7e7bf
+B04_INSPECTOR_DESKTOP=PASS
+B04_INSPECTOR_TABLET=PASS
+B04_INSPECTOR_MOBILE=PASS
+B04_FORMULA_SELECTOR_RESPONSIVE=PASS
+B04_NO_HORIZONTAL_OVERFLOW=PASS
+B04_FORMULA_VERSION_BINDING=PASS
+B04_OPTION_FULL_TEXT=PASS
+B04_NATIVE_TOOLTIP_INTERFERENCE=0
+B04_OPTION_HORIZONTAL_OVERFLOW=0
+B04_SHARED_SELECTOR_REGRESSION=PASS
+B04_PLAYWRIGHT_VISUAL=PASS
+B01_PRESERVED=YES
+B02_PRESERVED=YES
+B03_PRESERVED=YES
+B04_OWNER_VISUAL_ACCEPTANCE=PENDING
+B04_FINAL_STATUS=OPEN
+```
+
+- Archivos funcionales: Form Builder padre, toolbar, `app-bounded-select` compartido y regresión Playwright.
+- Pruebas verificadas: suite Angular `95` archivos / `991` pruebas `PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes de presupuesto SCSS/CommonJS; validador B04 `PASS`; estructura y enlaces documentales `PASS`; Playwright Form Builder `15/15 PASS`.
+- No ejecutado en esta intervención: Quality Gate remoto exact-SHA y validaciones Oracle/infraestructura; no se modificaron backend, Oracle institucional, producción, `main`, B05, Block 10, P06 ni P07.
+- `SOURCE_CODE_SHA=PENDING_COMMIT`; `EVIDENCE_COMMIT_SHA=PENDING_COMMIT`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.

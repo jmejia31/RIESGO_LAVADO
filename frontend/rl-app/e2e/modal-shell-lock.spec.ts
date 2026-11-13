@@ -1,4 +1,4 @@
-import { expect, Page, test } from './support/telemetry-test';
+import { expect, Locator, Page, test } from './support/telemetry-test';
 import { Buffer } from 'node:buffer';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -65,6 +65,17 @@ async function preparar(page: Page): Promise<void> {
   await page.route('**/api/matrices-riesgos*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) }));
 }
 
+async function abrirSelectorDeFormula(page: Page, selector: Locator): Promise<Locator> {
+  const panel = page.locator('[data-ui-bounded-select-panel]');
+  for (let intento = 0; intento < 4; intento += 1) {
+    if (await panel.isVisible().catch(() => false)) return panel;
+    await selector.click();
+    await page.waitForTimeout(150);
+  }
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
 test.beforeEach(async ({ page }) => preparar(page));
 
 test('el selector de fórmula usa bounded select, búsqueda y contención de expresión', async ({ page }) => {
@@ -73,7 +84,10 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   await page.getByRole('tab', { name: 'Plantillas' }).click();
   await page.getByRole('button', { name: 'Ver detalle' }).first().click();
   const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  const versionesFormulas = page.waitForResponse(response => response.url().endsWith('/api/matrices-riesgos/configuracion-calculo/formulas/1/versiones') && response.ok());
   await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+  await versionesFormulas;
+  await page.waitForTimeout(150);
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const formulaCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').filter({ hasText: 'Resultado calculado' });
@@ -81,10 +95,7 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
   const selector = inspector.getByRole('combobox', { name: 'Fórmula central y versión exacta' });
   await expect(selector).toBeVisible();
-  await selector.click();
-
-  const panel = page.locator('[data-ui-bounded-select-panel]');
-  await expect(panel).toBeVisible();
+  const panel = await abrirSelectorDeFormula(page, selector);
   await expect(panel.locator('[role="option"]')).toHaveCount(25);
   await expect(panel.locator('[data-ui-bounded-select-option][title]')).toHaveCount(0);
   const opcionesExtensas = panel.locator('[data-ui-bounded-select-option]');
@@ -147,7 +158,9 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
     await page.getByRole('tab', { name: 'Plantillas' }).click();
     await page.getByRole('button', { name: 'Ver detalle' }).first().click();
     const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+    const versionesFormulas = page.waitForResponse(response => response.url().endsWith('/api/matrices-riesgos/configuracion-calculo/formulas/1/versiones') && response.ok());
     await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+    await versionesFormulas;
     const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
     const formulaCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').filter({ hasText: 'Resultado calculado' });
     await formulaCard.click();
@@ -155,9 +168,11 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
     const selector = inspector.getByRole('combobox', { name: 'Fórmula central y versión exacta' });
 
     if (viewport.expected !== 'desktop') {
-      await expect(selector).toBeHidden();
-      resultados.push(`${viewport.width}x${viewport.height}=BLOCKED_INSPECTOR_NOT_VISIBLE`);
-      continue;
+      const toggle = dialogo.locator('[data-ui-form-builder-inspector-toggle]');
+      await expect(toggle).toHaveAttribute('aria-label', 'Abrir Inspector de propiedades');
+      await expect(toggle).toBeVisible();
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     }
 
     await expect(selector).toBeVisible();
@@ -171,13 +186,40 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
     await expect(panel.locator('[data-ui-bounded-select-option][title]')).toHaveCount(0);
+    const dimensiones = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth
+    }));
+    expect(dimensiones.documentWidth, `desbordamiento horizontal en ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(dimensiones.viewportWidth);
+
+    const search = panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' });
+    await search.fill('CAT_EFECTIVIDAD_24');
+    await panel.getByRole('option').filter({ hasText: 'F01_FORMULA_UAT' }).click();
+    await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v24');
+
+    if (viewport.expected !== 'desktop') {
+      const toggle = dialogo.locator('[data-ui-form-builder-inspector-toggle]');
+      await expect(toggle).toHaveAttribute('aria-label', 'Cerrar Inspector de propiedades');
+      await selector.click();
+      await expect(page.locator('[data-ui-bounded-select-panel]')).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(page.locator('[data-ui-bounded-select-panel]')).toBeHidden();
+      await expect(inspector).toBeVisible();
+      await toggle.click();
+      await expect(inspector).toBeHidden();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await toggle.click();
+      await expect(inspector).toBeVisible();
+      await dialogo.locator('[data-ui-form-builder-inspector-backdrop]').click({ position: { x: 8, y: 8 } });
+      await expect(inspector).toBeHidden();
+    }
     resultados.push(`${viewport.width}x${viewport.height}=PASS`);
     await page.keyboard.press('Escape');
   }
 
   expect(resultados).toEqual([
-    '390x844=BLOCKED_INSPECTOR_NOT_VISIBLE',
-    '768x1024=BLOCKED_INSPECTOR_NOT_VISIBLE',
+    '390x844=PASS',
+    '768x1024=PASS',
     '1366x768=PASS',
     '1536x864=PASS'
   ]);
