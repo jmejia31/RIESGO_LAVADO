@@ -11071,3 +11071,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `B05_LONG_FORMULA_FULL_TEXT=PASS`; `B05_FORMULA_VALUE_PRESERVED=PASS`; `B05_FORMULA_HORIZONTAL_OVERFLOW=0`; `B05_DOCUMENT_HORIZONTAL_OVERFLOW=0`; `B05_UNIT_LENGTHS_50_100_250_500=PASS`; `B05_PLAYWRIGHT_VISUAL=PASS`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
 - El commit funcional no contiene documentación ni cambios ajenos. `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
 - Continuación: publicar el expediente documental en un commit selectivo separado y completar la verificación remota exact-SHA.
+
+## 2026-11-12 21:36:30 -06:00 — B05 expediente publicado en origin/desarrollo (COD)
+
+- Commit funcional: `390a5f3b5249129cfe424433b1d02f4a8cd9dacf`. Commit documental: `17000efc99f6c1c72f91771e6a8f7ad53ef5290b`.
+- `git push origin desarrollo` fue aceptado; remoto y local quedaron en `17000efc99f6c1c72f91771e6a8f7ad53ef5290b`, sin force push. El expediente B05 ya es legible directamente desde [GitHub](https://github.com/jmejia31/RIESGO_LAVADO/blob/17000efc99f6c1c72f91771e6a8f7ad53ef5290b/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md).
+- `SOURCE_CODE_SHA=390a5f3b5249129cfe424433b1d02f4a8cd9dacf`; `EVIDENCE_COMMIT_SHA=17000efc99f6c1c72f91771e6a8f7ad53ef5290b`; `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/39`.
+- El Quality Gate y el security scan del push permanecen `PENDING_GITHUB_ACTIONS`; no se declara `REVIEW_READY=YES` hasta observar el run exacto.
