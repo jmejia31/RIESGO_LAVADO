@@ -11,6 +11,7 @@ CLIENT=CLI
 BRANCH=desarrollo
 INITIAL_SHA=2d6c07b0c9bfc1b9666489d8ecbf74b8cd1e92c4
 SOURCE_CODE_SHA=3400fadb1e942cd4c8e948a5c91bb92ebf2cb83f
+REGRESSION_FIX_SHA=3d8cc1aeaf27cda48d74c6cf90061bac795499a5
 B05_PRESERVED=YES
 B07_AUTHORIZED=NO
 BLOCK10_AUTHORIZED=NO
@@ -102,11 +103,20 @@ Para convertir este punto en `PASS` se requiere que el propietario o custodio au
 B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION
 B06_OWNER_VISUAL_ACCEPTANCE=PENDING
 B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE
-EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
-QUALITY_GATE_SHA=PENDING_DOCUMENTAL_COMMIT
-GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENTAL_COMMIT
-SECURITY_SCAN=PENDING_GITHUB_ACTIONS
-REVIEW_READY=PENDING_GITHUB_ACTIONS
+EVIDENCE_COMMIT_SHA=30b92f83e4354caa660b020b2389975cadec0edb
+QUALITY_GATE_RUN=43481762215
+QUALITY_GATE_SHA=3d8cc1aeaf27cda48d74c6cf90061bac795499a5
+QUALITY_GATE_STATUS=completed
+QUALITY_GATE_CONCLUSION=success
+GITHUB_REMOTE_VERIFIED=YES
+SECURITY_SCAN=PASS_GITHUB_ACTIONS
+REVIEW_READY=YES_FOR_TECHNICAL_REVIEW
 ```
 
 B06 no se cierra con este expediente: queda abierto para la entrega/autorización del logo y la aceptación visual del propietario. B07 y Bloque 10 permanecen fuera de alcance.
+
+## Verificación remota del código y regresión
+
+- El primer gate documental sobre `30b92f83e4354caa660b020b2389975cadec0edb` quedó `failure` exclusivamente porque la regresión E2E de B05 leía la grilla antes del reflow Angular. No se usó como certificación.
+- La espera de reflow se corrigió de forma aislada en `3d8cc1aeaf27cda48d74c6cf90061bac795499a5` y el caso Chromium pasó `1/1` localmente.
+- Quality Gate exacto de código, pruebas y expediente previo: [run 43481762215](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43481762215), `STATUS=completed`, `CONCLUSION=success`; ambos jobs y todos los pasos integrales terminaron verdes.

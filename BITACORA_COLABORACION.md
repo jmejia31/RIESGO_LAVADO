@@ -11191,3 +11191,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - B06 queda técnicamente `PARTIAL_BLOCKED_LOGO_AUTHORIZATION`, con `B06_OWNER_VISUAL_ACCEPTANCE=PENDING` y `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`; B07 y Bloque 10 permanecen no autorizados.
 - El `git diff --check` global no es certificable por trailing whitespace/CRLF en archivos ajenos preexistentes; el diff de los archivos B06 fue limpio. Esos archivos ajenos siguen fuera del stage.
 - Punto exacto de continuación: publicar el expediente B06, observar el Quality Gate exacto del commit documental, verificar por API que `origin/desarrollo` contiene el índice y conservar B06 abierto hasta activo IHSS autorizado y aprobación visual del propietario.
+
+## 2026-11-13 — B06 Quality Gate verde y corrección de regresión E2E (COD)
+
+- El primer gate del expediente B06, [43479451941](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43479451941) sobre `30b92f83e4354caa660b020b2389975cadec0edb`, falló únicamente en la regresión heredada de B05 que comprobaba `repeat(3)` antes del reflow Angular. Los validadores, analyzers, build y controles previos estaban verdes.
+- Se corrigió solo la sincronización de `frontend/rl-app/e2e/modal-shell-lock.spec.ts` con `expect.poll`; no se modificó código funcional. El caso focalizado ejecutó `1/1 PASS` con el runner institucional y los cuatro viewports del escenario.
+- Commit de regresión publicado: `3d8cc1aeaf27cda48d74c6cf90061bac795499a5` (`test(b05): await grid reflow after selector change`).
+- Quality Gate exacto [43481762215](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43481762215) sobre `3d8cc1aeaf27cda48d74c6cf90061bac795499a5`: `STATUS=completed`; `CONCLUSION=success`; ambos jobs y todos los pasos integrales terminaron verdes, incluyendo E2E, Oracle XE, cálculos, contenedores y publicación/cierre de recursos.
+- `B06_SOURCE_CODE_SHA=3400fadb1e942cd4c8e948a5c91bb92ebf2cb83f`; `B06_REGRESSION_FIX_SHA=3d8cc1aeaf27cda48d74c6cf90061bac795499a5`; `B06_QUALITY_GATE_RUN=43481762215`; `B06_SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `B06_REVIEW_READY=YES_FOR_TECHNICAL_REVIEW`.
+- El logo permanece bloqueado honestamente: `IHSS_LOGO_SOURCE=NOT_VERIFIED`; `IHSS_LOGO_ASSET_STATUS=BLOCKED_AUTHORIZED_ASSET`; no se usaron capturas, slides, internet ni sustitutos.
+- B06 sigue abierto: `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`. B07 y Bloque 10 no fueron autorizados.
+- Punto exacto de continuación: publicar esta actualización documental, verificar el gate exacto del commit final de documentación y confirmar por API el expediente remoto y la paridad de `desarrollo`.

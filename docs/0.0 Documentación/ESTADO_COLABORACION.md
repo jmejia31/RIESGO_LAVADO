@@ -4587,3 +4587,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENTAL_COMMIT`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
 - Restricción de checkout: cambios ajenos permanecen sin stage; el `git diff --check` global refleja CRLF/trailing whitespace ajeno, mientras el diff B06 está limpio.
 - Punto exacto de continuación: commit/push documental selectivo, lectura remota del Quality Gate exacto, confirmación API de paridad local/remota y mantenimiento de B06 abierto.
+
+## Estado vigente — B06 gate verde y regresión E2E sincronizada — 2026-11-13
+
+- `B06_SOURCE_CODE_SHA=3400fadb1e942cd4c8e948a5c91bb92ebf2cb83f`; `B06_REGRESSION_FIX_SHA=3d8cc1aeaf27cda48d74c6cf90061bac795499a5`; ambos publicados en `origin/desarrollo`.
+- El primer gate B06 falló en una aserción E2E de B05 que observaba el estilo previo `repeat(2)` antes del reflow, no en funcionalidad de reportería. La prueba fue sincronizada con `expect.poll` y pasó `1/1` localmente.
+- Quality Gate exacto [43481762215](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43481762215): `STATUS=completed`; `CONCLUSION=success`; matriz integral verde con validadores, analyzers, build, E2E, Oracle XE, cálculos y contenedores.
+- `B06_QUALITY_GATE_SHA=3d8cc1aeaf27cda48d74c6cf90061bac795499a5`; `B06_SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `B06_REVIEW_READY=YES_FOR_TECHNICAL_REVIEW`; `GITHUB_REMOTE_VERIFIED=YES` para código y regresión.
+- `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`; el expediente no cierra B06 porque falta activo IHSS autorizado y aprobación visual.
+- `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto: publicar el commit documental de esta certificación y verificar su Quality Gate final; no modificar código funcional adicional ni cerrar B06.
