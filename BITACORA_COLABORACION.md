@@ -11178,3 +11178,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `B05_SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; `B05_EVIDENCE_COMMIT_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; `B05_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_SIGNOFF=APPROVED_WITH_DOCUMENTED_SCOPE`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_HISTORICAL_LIMITATIONS=PRESERVED`.
 - Se cierra formalmente B05 dentro del alcance aceptado. `B06_IMPLEMENTATION_AUTHORIZED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`. No se modificaron código funcional, Oracle institucional, producción, `main` ni migración 54.
 - Punto exacto de continuación: inventario activo de reportería B06 y localización de un activo de logo IHSS auténtico/autorizado; si no existe, documentar el bloqueo sin fabricar ni descargar un logo.
+
+## 2026-11-13 12:05:52 -06:00 — B06 reportería PDF/Excel y logo IHSS (COD)
+
+- `EVENT_ID=RL-B06-REPORTING-LOGO-20261113`; `INITIAL_SHA=2d6c07b0c9bfc1b9666489d8ecbf74b8cd1e92c4`; `SOURCE_CODE_SHA=3400fadb1e942cd4c8e948a5c91bb92ebf2cb83f`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Se auditó el inventario activo de reportería: `MatricesRiesgosReportesController`, `MatricesRiesgosReportExportService`, `InstitutionalPdfDocument`, `InstitutionalXlsxWorkbook`, las utilidades Angular de paridad y el preview compartido. Los inventarios históricos no se trataron como productores activos.
+- Corrección funcional única: los reportes vacíos de Matrices conservan la estructura XLSX de 82 columnas y muestran `Sin información`; el PDF conserva su validez y agrega `SIN INFORMACIÓN`. Los reportes con datos, fórmulas, identificadores, contratos, auditoría, autorizaciones y proyecciones permanecen sin cambios.
+- Commit funcional selectivo publicado: `3400fadb1e942cd4c8e948a5c91bb92ebf2cb83f` (`fix(b06): preserve empty report visibility`). No se stagearon cambios ajenos.
+- Verificado en esta intervención: backend focalizado `6/6 PASS`; Angular reportería focalizada `62/62 PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes de presupuesto SCSS/CommonJS; diff B06 `PASS`; hook Agent Skills `14/14 PASS`.
+- Oracle institucional y rendimiento operativo: `NOT_EXECUTED` por alcance/dependencia externa. No se modificó Oracle ni se sustituyó una integración por una afirmación documental.
+- Logo IHSS: no existe activo oficial con autorización y procedencia verificables en el checkout. No se usaron capturas, slides de login, internet ni sustitutos: `IHSS_LOGO_SOURCE=NOT_VERIFIED`; `IHSS_LOGO_ASSET_STATUS=BLOCKED_AUTHORIZED_ASSET`; PDF/XLSX/proporciones/calidad de impresión `BLOCKED`.
+- B06 queda técnicamente `PARTIAL_BLOCKED_LOGO_AUTHORIZATION`, con `B06_OWNER_VISUAL_ACCEPTANCE=PENDING` y `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`; B07 y Bloque 10 permanecen no autorizados.
+- El `git diff --check` global no es certificable por trailing whitespace/CRLF en archivos ajenos preexistentes; el diff de los archivos B06 fue limpio. Esos archivos ajenos siguen fuera del stage.
+- Punto exacto de continuación: publicar el expediente B06, observar el Quality Gate exacto del commit documental, verificar por API que `origin/desarrollo` contiene el índice y conservar B06 abierto hasta activo IHSS autorizado y aprobación visual del propietario.

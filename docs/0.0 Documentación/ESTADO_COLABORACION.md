@@ -4575,3 +4575,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Commit inicial de la intervención: `9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; commit actual de esta actualización: `PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `REVIEW_READY=PENDING_NEW_GATE`.
 - Restricciones preservadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
 - Punto exacto: publicar esta actualización documental selectiva, verificar su gate exacto y comenzar el inventario B06; no cerrar B06 sin aprobación visual posterior.
+
+## Estado vigente — B06 reportería PDF/Excel y bloqueo seguro del logo — 2026-11-13 12:05:52 -06:00
+
+- `PHASE=B06_REPORTERIA_PDF_EXCEL_LOGO_IHSS`; `SOURCE_CODE_SHA=3400fadb1e942cd4c8e948a5c91bb92ebf2cb83f`; commit funcional publicado en `origin/desarrollo`.
+- Inventario activo confirmado: backend Matrices (`MatricesRiesgosReportExportService` + estándares PDF/OpenXML), utilidades Angular de listas y preview compartido. Los reportes vacíos ahora conservan 82 columnas en XLSX y emiten `Sin información`; PDF válido con `SIN INFORMACIÓN`.
+- Pruebas frescas: backend focalizado `6/6 PASS`; frontend reportería `62/62 PASS`; ESLint `PASS`; build Angular `PASS`; hook de skills `14/14 PASS`. Oracle institucional y performance quedan `NOT_EXECUTED` por alcance/dependencia.
+- `IHSS_LOGO_SOURCE=NOT_VERIFIED`; `IHSS_LOGO_AUTHORIZATION=NOT_VERIFIED`; `IHSS_LOGO_ASSET_STATUS=BLOCKED_AUTHORIZED_ASSET`; `IHSS_LOGO_PDF=BLOCKED`; `IHSS_LOGO_XLSX=BLOCKED`; `IHSS_LOGO_PROPORTIONS=BLOCKED`; `IHSS_LOGO_PRINT_QUALITY=BLOCKED`.
+- `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`; no se cierra B06 sin activo IHSS autorizado y aprobación visual.
+- `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENTAL_COMMIT`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+- Restricción de checkout: cambios ajenos permanecen sin stage; el `git diff --check` global refleja CRLF/trailing whitespace ajeno, mientras el diff B06 está limpio.
+- Punto exacto de continuación: commit/push documental selectivo, lectura remota del Quality Gate exacto, confirmación API de paridad local/remota y mantenimiento de B06 abierto.

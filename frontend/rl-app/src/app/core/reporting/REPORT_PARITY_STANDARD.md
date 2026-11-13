@@ -11,7 +11,7 @@ Todo reporte publicado simultáneamente en PDF y Excel debe construir ambos form
 5. Las tablas deben usar encabezado institucional, panel congelado, anchos controlados y ajuste de impresión. El autofiltro se aplica cuando existe una tabla principal continua y no debe abarcar secciones heterogéneas.
 6. Cada módulo debe reutilizar el generador institucional correspondiente a la capa propietaria del archivo:
    - Monitoreo de Listas en Angular: `institutional-report-parity.util.ts` y `excel-export.util.ts`.
-   - Matrices de Riesgos en Backend: `MatricesRiesgosReportRenderer` e `InstitutionalXlsxWorkbook`.
+   - Matrices de Riesgos en Backend: `MatricesRiesgosReportExportService`, `InstitutionalPdfDocument` e `InstitutionalXlsxWorkbook`.
 7. Un reporte ejecutivo equivalente a un PDF continuo debe salir en una sola hoja Excel, salvo requerimiento funcional expreso que autorice múltiples hojas.
 8. Toda incorporación debe incluir una prueba de regresión que compare secciones, encabezados, filas, valores, mensajes vacíos y cantidad de hojas.
 9. Los archivos oficiales se generan desde la fuente de datos del reporte; no se reconstruyen manualmente en el cliente con contratos distintos.
