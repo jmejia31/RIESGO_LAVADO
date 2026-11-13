@@ -108,8 +108,8 @@ B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 ## Publicación y verificación remota
 
 - `SOURCE_CODE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`
-- `EVIDENCE_COMMIT_SHA=cafb3d8f6b5d72871f7724adb40cabae8e107b44`
-- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/cafb3d8f6b5d72871f7724adb40cabae8e107b44/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`
+- `EVIDENCE_COMMIT_SHA=299773a5811b6898681cb364d5133b6882244506`
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/299773a5811b6898681cb364d5133b6882244506/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`
 - `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`
 - `GITHUB_REMOTE_VERIFIED=YES`
 - `QUALITY_GATE_RUN=43448960282`
@@ -118,5 +118,9 @@ B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 - `QUALITY_GATE_CONCLUSION=success`
 - `SECURITY_SCAN=PASS_GITHUB_ACTIONS`
 - `REVIEW_READY=YES`
+- `DOCUMENTAL_QUALITY_GATE_RUN=43452216100`
+- `DOCUMENTAL_QUALITY_GATE_SHA=299773a5811b6898681cb364d5133b6882244506`
+- `DOCUMENTAL_QUALITY_GATE_STATUS=completed`
+- `DOCUMENTAL_QUALITY_GATE_CONCLUSION=success`
 
-El Quality Gate remoto exacto [43448960282](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43448960282) terminó verde sobre `SOURCE_CODE_SHA`, con ambos jobs en `success`. El expediente queda publicado para revisión técnica; la aprobación visual del propietario continúa pendiente y por eso B05 no se cierra.
+El Quality Gate remoto exacto [43448960282](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43448960282) terminó verde sobre `SOURCE_CODE_SHA`, y el gate documental [43452216100](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43452216100) terminó verde sobre `EVIDENCE_COMMIT_SHA`; ambos jobs en `success`. El expediente queda publicado para revisión técnica; la aprobación visual del propietario continúa pendiente y por eso B05 no se cierra.
