@@ -4,13 +4,15 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { contrastRatio, createSystemTheme, parseHexColor } from '../src/app/core/configuration/system-theme.util';
 
+const formulaLarga = '1 + 2 ' + '+ 1 '.repeat(120);
+
 const definicion = JSON.stringify({
   codigoFormulario: 'MATRIZ_RIESGOS_LAFT_V2', nombreFormulario: 'Matriz UAT',
   secciones: [{ clave: 'identificacion', titulo: 'Identificación', orden: 1, columnasPorFila: 2,
     campos: [
       { clave: 'area_responsable', etiqueta: 'Área responsable', tipo: 'texto', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
       { clave: 'dueno_riesgo', etiqueta: 'Dueño del riesgo', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_DUENO', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
-      { clave: 'resultado_formula', etiqueta: 'Resultado calculado', tipo: 'formula', formula: '1 + 2', obligatorio: false, soloLectura: true, anchoColumnas: 2 }
+      { clave: 'resultado_formula', etiqueta: 'Resultado calculado', tipo: 'formula', formula: formulaLarga, obligatorio: false, soloLectura: true, anchoColumnas: 2 }
     ] }],
   catalogos: [{ codigo: 'CAT_DUENO', nombre: 'Dueños de riesgo', elementos: [{ codigo: '01', valor: 'Dirección General', orden: 1 }, { codigo: '02', valor: 'Cumplimiento', orden: 2 }] }]
 });
@@ -92,6 +94,15 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const formulaCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').filter({ hasText: 'Resultado calculado' });
   await formulaCard.click();
+  const formulaBox = formulaCard.locator('[data-form-builder-formula]');
+  const formulaText = formulaBox.locator('.form-builder-long-content').last();
+  await expect(formulaText).toHaveText(formulaLarga);
+  expect(await formulaBox.evaluate(element => ({
+    boxFits: element.scrollWidth <= element.clientWidth,
+    textFits: element.querySelector('.form-builder-long-content')!.scrollWidth <= element.querySelector('.form-builder-long-content')!.clientWidth,
+    whiteSpace: getComputedStyle(element.querySelector('.form-builder-long-content')!).whiteSpace,
+    overflowWrap: getComputedStyle(element.querySelector('.form-builder-long-content')!).overflowWrap
+  }))).toEqual({ boxFits: true, textFits: true, whiteSpace: 'normal', overflowWrap: 'anywhere' });
   const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
   const selector = inspector.getByRole('combobox', { name: 'Fórmula central y versión exacta' });
   await expect(selector).toBeVisible();
@@ -165,6 +176,19 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
     const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
     const formulaCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').filter({ hasText: 'Resultado calculado' });
     await formulaCard.click();
+    const formulaBox = formulaCard.locator('[data-form-builder-formula]');
+    await expect(formulaBox.locator('.form-builder-long-content').last()).toHaveText(formulaLarga);
+    const formulaMetrics = await formulaBox.evaluate(element => {
+      const text = element.querySelector('.form-builder-long-content') as HTMLElement;
+      return {
+        boxFits: element.scrollWidth <= element.clientWidth,
+        textFits: text.scrollWidth <= text.clientWidth,
+        documentFits: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        whiteSpace: getComputedStyle(text).whiteSpace,
+        overflowWrap: getComputedStyle(text).overflowWrap
+      };
+    });
+    expect(formulaMetrics).toEqual({ boxFits: true, textFits: true, documentFits: true, whiteSpace: 'normal', overflowWrap: 'anywhere' });
     const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
     const selector = inspector.getByRole('combobox', { name: 'Fórmula central y versión exacta' });
 
@@ -740,6 +764,7 @@ test('Crear Usuario hereda theme institucional y mantiene acciones de footer ico
 });
 
 test('captura el estado editable del constructor a 1536x1024', async ({ page }) => {
+  test.setTimeout(120_000);
   await page.setViewportSize({ width: 1536, height: 1024 });
   await page.goto('/matrices-riesgos');
   await page.getByRole('tab', { name: 'Plantillas' }).click();

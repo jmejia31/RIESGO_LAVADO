@@ -132,6 +132,15 @@
     background: linear-gradient(180deg, #fff 0%, rgb(248 250 252 / 0.74) 100%);
     box-shadow: 0 1px 2px rgb(15 23 42 / 0.035);
   }
+
+  /* B05: contenido técnico largo debe envolver, nunca ocultarse ni truncarse. */
+  .form-builder-long-content {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
   /* ==========================================================================
      SISTEMA INSTITUCIONAL DE MODALES Y OVERLAYS (SGRLA-IHSS)
      Única fuente de verdad canónica para geometría, backdrop, tarjeta y variantes

@@ -211,9 +211,9 @@
                         </div>
                       }
                       @case ('formula') {
-                        <div class="flex items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 font-mono text-xs text-amber-900">
-                          <span class="font-bold text-amber-700">f(x) =</span>
-                          <span class="font-semibold text-slate-800">{{ cmp.formula || 'Sin fórmula asignada' }}</span>
+                        <div class="form-builder-long-content flex min-w-0 items-start gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 font-mono text-xs text-amber-900" data-form-builder-formula>
+                          <span class="shrink-0 font-bold text-amber-700">f(x) =</span>
+                          <span class="form-builder-long-content min-w-0 flex-1 font-semibold text-slate-800">{{ cmp.formula || 'Sin fórmula asignada' }}</span>
                         </div>
                       }
                     }

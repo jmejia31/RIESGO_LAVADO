@@ -169,6 +169,21 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
     expect(host.textContent).toContain('probabilidad * impacto');
   });
 
+  it('envuelve fórmulas extensas sin mutar el valor técnico', () => {
+    for (const longitud of [50, 100, 250, 500]) {
+      const formula = 'FÓRMULA_' + 'A'.repeat(longitud);
+      const host = render(campo('formula', { formula }), 12);
+      const formulaBox = host.querySelector('[aria-readonly="true"]') as HTMLElement;
+      const formulaText = host.querySelectorAll('.form-builder-long-content').item(2) as HTMLElement;
+
+      expect(formulaBox).not.toBeNull();
+      expect(formulaText.textContent?.trim()).toBe(formula);
+      expect(formulaText.textContent?.trim().length).toBeGreaterThanOrEqual(longitud);
+      expect(formulaText.classList.contains('form-builder-long-content')).toBe(true);
+      expect(formulaText.classList.contains('min-w-0')).toBe(true);
+    }
+  });
+
   it('bloquea tipos desconocidos y expone el tipo original sin crear input editable', () => {
     const host = render(campo('desconocido', { tipoOriginal: 'widget-v2', soloLectura: true }), 'histórico');
     expect(host.querySelector('input, textarea, select')).toBeNull();

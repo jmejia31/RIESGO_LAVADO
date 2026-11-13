@@ -387,4 +387,37 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
       expect(JSON.stringify(component.secciones)).toBe(antes);
     });
   });
+
+  describe('7. Contención de fórmulas B05', () => {
+    it('conserva y expone completa una fórmula extensa dentro de la tarjeta', () => {
+      const formula = 'IFERROR(LOOKUP("CAT_EFECTIVIDAD_' + 'X'.repeat(500) + '", escala_correctivo, NUMBER), "")';
+      component.secciones = [{
+        id: 'sec_formula',
+        clave: 'sec_formula',
+        titulo: 'Fórmulas',
+        orden: 1,
+        columnasPorFila: 2,
+        campos: [{
+          id: 'cmp_formula',
+          clave: 'formula_larga',
+          etiqueta: 'Resultado calculado',
+          tipo: 'formula',
+          formula,
+          orden: 1,
+          anchoColumnas: 2,
+          obligatorio: false,
+          soloLectura: true
+        }]
+      }];
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const formulaBox = el.querySelector('[data-form-builder-formula]') as HTMLElement;
+      const formulaText = formulaBox.querySelector('.form-builder-long-content') as HTMLElement;
+
+      expect(formulaText.textContent?.trim()).toBe(formula);
+      expect(formulaText.classList.contains('min-w-0')).toBe(true);
+      expect(formulaText.classList.contains('form-builder-long-content')).toBe(true);
+    });
+  });
 });

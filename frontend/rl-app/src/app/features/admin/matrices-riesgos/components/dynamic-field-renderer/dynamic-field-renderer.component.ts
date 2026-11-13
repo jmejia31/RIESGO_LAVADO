@@ -241,10 +241,10 @@ export interface OpcionCampoRenderer {
           }
           @case ('formula') {
             <div [id]="idControl"
-                 class="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-ihss-900 shadow-inner"
+                  class="form-builder-long-content flex min-w-0 items-start justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-ihss-900 shadow-inner"
                  aria-readonly="true">
-              <span>{{ textoLectura === '-' ? 'Calculado automáticamente' : textoLectura }}</span>
-              <span class="rounded-md border border-ihss-100 bg-ihss-50 px-2 py-0.5 text-[10px] font-semibold text-ihss-700">
+               <span class="min-w-0 flex-1 form-builder-long-content">{{ textoLectura === '-' ? 'Calculado automáticamente' : textoLectura }}</span>
+               <span class="min-w-0 flex-1 rounded-md border border-ihss-100 bg-ihss-50 px-2 py-0.5 text-[10px] font-semibold text-ihss-700 form-builder-long-content">
                 {{ campo.formula || 'Fórmula calculada' }}
               </span>
             </div>
