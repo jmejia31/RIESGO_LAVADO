@@ -134,6 +134,44 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
       expect(el.querySelector('#btn-agregar-seccion')).toBeTruthy();
     });
 
+    it('muestra iconografía SVG, chevrón único y etiqueta visible para el menú de acciones', () => {
+      component.soloLectura = false;
+      component.vistaActiva = 'secciones';
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const trigger = el.querySelector('#summary-acciones-builder') as HTMLButtonElement;
+      const triggerText = trigger.textContent ?? '';
+      const action = el.querySelector('#btn-agregar-seccion') as HTMLButtonElement;
+
+      expect(triggerText).toContain('Acciones');
+      expect(triggerText).not.toContain('⌄');
+      expect(triggerText).not.toContain('⋮');
+      expect(trigger.querySelectorAll('app-action-icon')).toHaveLength(2);
+      expect(trigger.querySelector('[data-ui-action-menu-chevron]')).toBeTruthy();
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+      expect(action.getAttribute('role')).toBe('menuitem');
+      expect(action.textContent).toContain('Crear nueva sección');
+      expect(action.querySelectorAll('app-action-icon')).toHaveLength(1);
+    });
+
+    it('muestra la etiqueta visible del catálogo sin alterar su evento', () => {
+      component.soloLectura = false;
+      component.vistaActiva = 'catalogos';
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const action = el.querySelector('#btn-nuevo-catalogo-header') as HTMLButtonElement;
+      let emitCount = 0;
+      component.agregarCatalogo.subscribe(() => emitCount += 1);
+
+      expect(action.getAttribute('role')).toBe('menuitem');
+      expect(action.textContent).toContain('Crear nuevo catálogo');
+      expect(action.querySelectorAll('app-action-icon')).toHaveLength(1);
+      action.click();
+      expect(emitCount).toBe(1);
+    });
+
     it('muestra botón de nuevo catálogo en vista catalogos', () => {
       component.soloLectura = false;
       component.vistaActiva = 'catalogos';

@@ -49,15 +49,22 @@
       <app-institutional-action-menu
         ariaLabel="Acciones del constructor"
         triggerId="summary-acciones-builder"
+        [panelWidth]="224"
         triggerClass="form-builder-toolbar__control inline-flex h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm"
         panelClass="form-builder-toolbar__actions-popover">
-        <span action-menu-trigger>⋮ Acciones⌄</span>
+        <span action-menu-trigger class="form-builder-toolbar__actions-trigger">
+          <app-action-icon action="more-actions"></app-action-icon>
+          <span>Acciones</span>
+          <app-action-icon action="collapse" data-ui-action-menu-chevron></app-action-icon>
+        </span>
         <div action-menu-content>
-          @if (!soloLectura && vistaActiva === 'secciones' && !mostrarJsonAvanzado) { <button type="button" id="btn-agregar-seccion" title="Crear nueva sección" aria-label="Crear nueva sección" data-ui-action-menu-item (click)="agregarSeccion.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
+          @if (!soloLectura && vistaActiva === 'secciones' && !mostrarJsonAvanzado) { <button type="button" id="btn-agregar-seccion" title="Crear nueva sección" aria-label="Crear nueva sección" role="menuitem" data-ui-action-menu-item (click)="agregarSeccion.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
             <app-action-icon action="create"></app-action-icon>
+            <span>Crear nueva sección</span>
           </button> }
-          @if (!soloLectura && vistaActiva === 'catalogos' && !mostrarJsonAvanzado) { <button type="button" id="btn-nuevo-catalogo-header" title="Crear nuevo catálogo" aria-label="Crear nuevo catálogo" data-ui-action-menu-item (click)="agregarCatalogo.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
+          @if (!soloLectura && vistaActiva === 'catalogos' && !mostrarJsonAvanzado) { <button type="button" id="btn-nuevo-catalogo-header" title="Crear nuevo catálogo" aria-label="Crear nuevo catálogo" role="menuitem" data-ui-action-menu-item (click)="agregarCatalogo.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">
             <app-action-icon action="create"></app-action-icon>
+            <span>Crear nuevo catálogo</span>
           </button> }
           @if (soloLectura || (vistaActiva !== 'secciones' && vistaActiva !== 'catalogos') || mostrarJsonAvanzado) { <span class="form-builder-toolbar__menu-empty">No hay acciones disponibles</span> }
         </div>

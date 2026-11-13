@@ -29,11 +29,16 @@ describe('InstitutionalTooltipDirective', () => {
     expect(button.getAttribute('aria-describedby')).toMatch(/^institutional-tooltip-/);
   });
 
-  it('muestra el tooltip con foco y lo cierra con Escape', () => {
+  it('ignora el foco programático y muestra el tooltip con navegación de teclado', () => {
     const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    button.focus();
+    fixture.detectChanges();
+    expect(document.body.querySelector('[data-ui-tooltip="institutional"]')).toBeNull();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
     button.dispatchEvent(new FocusEvent('focusin'));
     fixture.detectChanges();
-    expect(document.body.querySelector('[role="tooltip"]')).not.toBeNull();
+    expect(document.body.querySelector('[data-ui-tooltip="institutional"]')).not.toBeNull();
 
     button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();

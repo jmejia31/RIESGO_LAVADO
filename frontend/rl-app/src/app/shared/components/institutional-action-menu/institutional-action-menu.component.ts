@@ -82,6 +82,12 @@ import {
       outline: 3px solid rgb(var(--ihss-accent-rgb) / 0.35);
       outline-offset: 2px;
     }
+    [data-ui-action-menu-trigger] ::ng-deep [data-ui-action-menu-chevron] {
+      transition: transform 160ms ease;
+    }
+    [data-ui-action-menu-trigger][aria-expanded='true'] ::ng-deep [data-ui-action-menu-chevron] {
+      transform: rotate(180deg);
+    }
   `]
 })
 export class InstitutionalActionMenuComponent implements OnDestroy {
@@ -103,10 +109,13 @@ export class InstitutionalActionMenuComponent implements OnDestroy {
 
   readonly abierto = signal(false);
   readonly placement = signal<InstitutionalOverlayPlacement | null>(null);
-  readonly panelId = `${this.triggerId}-panel`;
+  get panelId(): string {
+    return `${this.triggerId}-panel`;
+  }
 
   constructor() {
     this.registry.register(this.handle);
+    if (typeof window !== 'undefined') window.addEventListener('keydown', this.windowKeydown, true);
   }
 
   alternar(event?: Event): void {
@@ -137,6 +146,7 @@ export class InstitutionalActionMenuComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.registry.unregister(this.handle);
     this.removerListenersViewport();
+    if (typeof window !== 'undefined') window.removeEventListener('keydown', this.windowKeydown, true);
     if (this.positionFrame !== null) cancelAnimationFrame(this.positionFrame);
   }
 
@@ -193,6 +203,12 @@ export class InstitutionalActionMenuComponent implements OnDestroy {
   }
 
   private readonly viewportListener = (): void => this.programarPosicionamiento();
+
+  private readonly windowKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' || !this.abierto()) return;
+    event.preventDefault();
+    this.cerrar(true);
+  };
 
   private programarPosicionamiento(): void {
     if (!this.abierto() || typeof window === 'undefined') return;

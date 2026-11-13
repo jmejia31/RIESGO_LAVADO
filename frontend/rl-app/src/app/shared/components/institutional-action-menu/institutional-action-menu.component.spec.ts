@@ -5,7 +5,7 @@ import { InstitutionalActionMenuComponent } from './institutional-action-menu.co
 @Component({
   standalone: true,
   imports: [InstitutionalActionMenuComponent],
-  template: `<app-institutional-action-menu ariaLabel="Acciones de prueba"><span action-menu-trigger>Acciones</span><button action-menu-content data-ui-action-menu-item type="button">Primera acción</button></app-institutional-action-menu>`
+  template: `<app-institutional-action-menu ariaLabel="Acciones de prueba" triggerId="acciones-prueba"><span action-menu-trigger>Acciones</span><button action-menu-content data-ui-action-menu-item type="button">Primera acción</button></app-institutional-action-menu>`
 })
 class HostComponent {}
 
@@ -25,7 +25,8 @@ describe('InstitutionalActionMenuComponent', () => {
     fixture.detectChanges();
 
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    expect(root.querySelector('[data-ui-action-menu-panel]')).not.toBeNull();
+    expect(trigger.getAttribute('aria-controls')).toBe('acciones-prueba-panel');
+    expect(root.querySelector('#acciones-prueba-panel')).not.toBeNull();
     expect(root.querySelector('[data-ui-action-menu-item]')).not.toBeNull();
 
     trigger.click();

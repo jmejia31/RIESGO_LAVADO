@@ -3,6 +3,60 @@ import { Directive, ElementRef, HostListener, Inject, OnDestroy, Renderer2 } fro
 
 let tooltipSequence = 0;
 
+type InputModality = 'keyboard' | 'pointer' | 'programmatic';
+
+interface InputModalityState {
+  count: number;
+  modality: InputModality;
+  onPointerDown: () => void;
+  onKeyDown: (event: KeyboardEvent) => void;
+}
+
+const inputModalityStates = new WeakMap<Document, InputModalityState>();
+const keyboardNavigationKeys = new Set(['Tab', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End']);
+
+function registerInputModality(document: Document): void {
+  const current = inputModalityStates.get(document);
+  if (current) {
+    current.count += 1;
+    return;
+  }
+
+  const state: InputModalityState = {
+    count: 1,
+    modality: 'programmatic',
+    onPointerDown: () => {
+      state.modality = 'pointer';
+    },
+    onKeyDown: (event: KeyboardEvent) => {
+      state.modality = keyboardNavigationKeys.has(event.key) ? 'keyboard' : 'programmatic';
+    }
+  };
+
+  document.addEventListener('pointerdown', state.onPointerDown, true);
+  document.addEventListener('keydown', state.onKeyDown, true);
+  inputModalityStates.set(document, state);
+}
+
+function unregisterInputModality(document: Document): void {
+  const state = inputModalityStates.get(document);
+  if (!state) return;
+
+  state.count -= 1;
+  if (state.count > 0) return;
+
+  document.removeEventListener('pointerdown', state.onPointerDown, true);
+  document.removeEventListener('keydown', state.onKeyDown, true);
+  inputModalityStates.delete(document);
+}
+
+function consumeKeyboardFocus(document: Document): boolean {
+  const state = inputModalityStates.get(document);
+  if (!state || state.modality !== 'keyboard') return false;
+  state.modality = 'programmatic';
+  return true;
+}
+
 @Directive({
   selector: 'button[title]',
   standalone: true
@@ -13,12 +67,17 @@ export class InstitutionalTooltipDirective implements OnDestroy {
   private legacyTooltip: HTMLElement | null = null;
   private previousLegacyHidden = false;
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly windowKeydown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape') this.hide();
+  };
 
   constructor(
     private readonly elementRef: ElementRef<HTMLButtonElement>,
     private readonly renderer: Renderer2,
     @Inject(DOCUMENT) private readonly document: Document
   ) {
+    registerInputModality(this.document);
+    this.document.defaultView?.addEventListener('keydown', this.windowKeydown, true);
     this.prepareLegacyTooltip();
   }
 
@@ -29,6 +88,8 @@ export class InstitutionalTooltipDirective implements OnDestroy {
       this.renderer.setProperty(this.legacyTooltip, 'hidden', this.previousLegacyHidden);
       this.renderer.removeAttribute(this.legacyTooltip, 'data-ui-tooltip-legacy');
     }
+    this.document.defaultView?.removeEventListener('keydown', this.windowKeydown, true);
+    unregisterInputModality(this.document);
   }
 
   @HostListener('mouseenter')
@@ -43,7 +104,7 @@ export class InstitutionalTooltipDirective implements OnDestroy {
 
   @HostListener('focusin')
   onFocusIn(): void {
-    this.show();
+    if (consumeKeyboardFocus(this.document)) this.show();
   }
 
   @HostListener('focusout', ['$event'])
