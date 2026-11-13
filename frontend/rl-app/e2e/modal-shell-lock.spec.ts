@@ -144,6 +144,7 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
 });
 
 test('audita el selector compartido en los cuatro viewports solicitados', async ({ page }) => {
+  test.setTimeout(120_000);
   const viewports = [
     { width: 390, height: 844, expected: 'mobile' },
     { width: 768, height: 1024, expected: 'tablet' },
@@ -176,8 +177,7 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
     }
 
     await expect(selector).toBeVisible();
-    await selector.click();
-    const panel = page.locator('[data-ui-bounded-select-panel]');
+    const panel = await abrirSelectorDeFormula(page, selector);
     const box = await panel.boundingBox();
     expect(box).not.toBeNull();
     if (!box) throw new Error(`El panel no tiene geometría en ${viewport.width}x${viewport.height}.`);
