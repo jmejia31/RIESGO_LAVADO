@@ -10,7 +10,10 @@
 - Verificado en esta intervención: backend B06 `3/3 PASS`; Angular focalizado `23/23 PASS`; suite Angular `95 archivos / 999 pruebas PASS`; ESLint, build Angular y build Release PASS. Docker local queda pendiente por daemon no disponible; el build remoto fue PASS.
 - `B06_TECHNICAL_STATUS=PASS`; `B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
 - Restricciones preservadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
-- Punto exacto de continuación: commit/push documental selectivo, completar SHA/URL GitHub del expediente y observar el Quality Gate del expediente; no cerrar B06 sin aprobación visual del propietario.
+- Commit documental final de evidencia: `93fe1ed918137062bccd13a61e74a59334600eaf`; `HEAD_LOCAL=HEAD_REMOTE=93fe1ed918137062bccd13a61e74a59334600eaf`; `AHEAD=0`; `BEHIND=0`.
+- Quality Gate exacto del expediente final [43521788411](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43521788411): `STATUS=completed`; `CONCLUSION=success`; validadores, analyzers, build, tests, Oracle XE, E2E, workbook, contenedores y cierre de recursos en verde.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`; el índice y la evidencia quedaron publicados en GitHub bajo el commit `39a31d36629217c711939f0d459a83f375bae177`.
+- Punto exacto de continuación: revisión visual del propietario; no cerrar B06 ni cambiar el estado de aprobación sin su aceptación explícita.
 
 ## Archivado reversible y purga fail-closed
 

@@ -79,6 +79,10 @@ SECURITY_SCAN=PASS_GITHUB_ACTIONS
 REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW
 GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/39a31d36629217c711939f0d459a83f375bae177/docs/0.0%20Documentaci%C3%B3n/B06_ESTANDAR_REPORTERIA_PDF_EXCEL_LOGO_IHSS.md
 GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40
+DOCUMENTATION_QUALITY_GATE_RUN=43521788411
+DOCUMENTATION_QUALITY_GATE_SHA=93fe1ed918137062bccd13a61e74a59334600eaf
+DOCUMENTATION_QUALITY_GATE_STATUS=completed
+DOCUMENTATION_QUALITY_GATE_CONCLUSION=success
 ```
 
 El gate verde certifica la implementación técnica y la integridad del expediente; no sustituye la aprobación visual final del propietario. B06 permanece abierto hasta esa aprobación.
