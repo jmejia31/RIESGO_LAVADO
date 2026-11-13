@@ -344,7 +344,9 @@ test('el selector de columnas conserva un solo chevron, contrato y geometría en
     await selector.press('ArrowDown');
     await expect(selector).toHaveValue('3');
     expect(await selector.evaluate(element => (element as HTMLSelectElement).value)).toBe('3');
-    expect(await selector.evaluate(element => (element.closest('.form-builder-section')?.querySelector('.form-builder-fields-grid') as HTMLElement | null)?.getAttribute('style') ?? '')).toContain('repeat(3');
+    await expect.poll(async () => selector.evaluate(element =>
+      (element.closest('.form-builder-section')?.querySelector('.form-builder-fields-grid') as HTMLElement | null)?.getAttribute('style') ?? ''))
+      .toContain('repeat(3');
     await selector.selectOption('2');
     await expect(selector).toHaveValue('2');
   }
