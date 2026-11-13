@@ -409,7 +409,7 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         Assert.StartsWith("%PDF-1.4", header, StringComparison.Ordinal);
         Assert.Contains("INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL", texto, StringComparison.Ordinal);
         Assert.Contains("SGRLA-IHSS", texto, StringComparison.Ordinal);
-        Assert.Contains("/MediaBox [0 0 595.28 841.89]", texto, StringComparison.Ordinal);
+        Assert.Contains("/MediaBox [0 0 841.89 595.28]", texto, StringComparison.Ordinal);
         Assert.Contains("COD-MUY-LARGO", texto, StringComparison.Ordinal);
         Assert.Contains("XXXXXXXXXX", texto, StringComparison.Ordinal);
         Assert.Contains("María", texto, StringComparison.Ordinal);
