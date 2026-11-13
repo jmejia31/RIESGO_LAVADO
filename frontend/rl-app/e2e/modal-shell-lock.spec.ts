@@ -71,8 +71,13 @@ async function abrirSelectorDeFormula(page: Page, selector: Locator): Promise<Lo
   const panel = page.locator('[data-ui-bounded-select-panel]');
   await expect(selector).toBeVisible();
   await selector.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(250);
   await selector.click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(250);
+  if (!(await panel.isVisible().catch(() => false))) {
+    await selector.press('ArrowDown');
+    await page.waitForTimeout(250);
+  }
   await expect(panel).toBeVisible();
   return panel;
 }
