@@ -97,6 +97,9 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
 
       expect(inputTitulo.value).toBe('Datos Principales');
       expect(selectColumnas.value).toBe('2');
+      expect(Array.from(selectColumnas.options).map(option => option.value)).toEqual(['1', '2', '3', '4', '6']);
+      expect(selectColumnas.parentElement?.querySelectorAll('[data-ui-columns-selector-chevron]')).toHaveLength(1);
+      expect(selectColumnas.parentElement?.querySelector('[data-ui-columns-selector-chevron]')?.getAttribute('aria-hidden')).toBe('true');
     });
 
     it('cambiar título emite tituloSeccionChange con seccionId y nuevo título', () => {

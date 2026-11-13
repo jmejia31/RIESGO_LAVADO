@@ -283,6 +283,73 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
   ]);
 });
 
+test('el selector de columnas conserva un solo chevron, contrato y geometría en los cuatro viewports', async ({ page }) => {
+  test.setTimeout(120_000);
+  const viewports = [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1366, height: 768 },
+    { width: 1536, height: 864 }
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await page.goto('/matrices-riesgos');
+    await page.getByRole('tab', { name: 'Plantillas' }).click();
+    await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+    const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+    const versionesFormulas = page.waitForResponse(response => response.url().endsWith('/api/matrices-riesgos/configuracion-calculo/formulas/1/versiones') && response.ok());
+    await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+    await versionesFormulas;
+
+    const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+    const selector = dialogo.locator('select[id^="seccion-columnas-"]').first();
+    await expect(selector).toBeVisible();
+    await expect(selector.locator('option')).toHaveCount(5);
+    expect(await selector.locator('option').evaluateAll(options => options.map(option => (option as HTMLOptionElement).value))).toEqual(['1', '2', '3', '4', '6']);
+
+    const metrics = await selector.evaluate(element => {
+      const select = element as HTMLSelectElement;
+      const wrapper = select.parentElement!;
+      const indicator = wrapper.querySelector('[data-ui-columns-selector-chevron]') as SVGElement | null;
+      const selectBounds = select.getBoundingClientRect();
+      const indicatorBounds = indicator?.getBoundingClientRect();
+      const style = getComputedStyle(select);
+      const grid = select.closest('.form-builder-section')?.querySelector('.form-builder-fields-grid') as HTMLElement | null;
+      return {
+        appearance: style.appearance,
+        webkitAppearance: style.getPropertyValue('-webkit-appearance'),
+        backgroundImage: style.backgroundImage,
+        select: { left: selectBounds.left, right: selectBounds.right, top: selectBounds.top, bottom: selectBounds.bottom, width: selectBounds.width, height: selectBounds.height },
+        indicator: indicator && indicatorBounds ? { left: indicatorBounds.left, right: indicatorBounds.right, top: indicatorBounds.top, bottom: indicatorBounds.bottom, width: indicatorBounds.width, height: indicatorBounds.height, visibility: getComputedStyle(indicator).visibility, opacity: getComputedStyle(indicator).opacity } : null,
+        wrapperFits: wrapper.scrollWidth <= wrapper.clientWidth,
+        gridStyle: grid ? getComputedStyle(grid).gridTemplateColumns : ''
+      };
+    });
+    expect(metrics.appearance).toBe('none');
+    expect(metrics.webkitAppearance).toBe('none');
+    expect(metrics.backgroundImage).toBe('none');
+    expect(metrics.indicator).not.toBeNull();
+    expect(metrics.indicator?.visibility).toBe('visible');
+    expect(metrics.indicator?.opacity).toBe('1');
+    expect(metrics.indicator?.width).toBeGreaterThan(0);
+    expect(metrics.indicator?.height).toBeGreaterThan(0);
+    expect(metrics.indicator?.right).toBeLessThanOrEqual(metrics.select.right);
+    expect(metrics.indicator?.top).toBeGreaterThanOrEqual(metrics.select.top);
+    expect(metrics.indicator?.bottom).toBeLessThanOrEqual(metrics.select.bottom);
+    expect(metrics.wrapperFits).toBe(true);
+
+    await selector.focus();
+    await expect(selector).toBeFocused();
+    await selector.press('ArrowDown');
+    await expect(selector).toHaveValue('3');
+    expect(await selector.evaluate(element => (element as HTMLSelectElement).value)).toBe('3');
+    expect(await selector.evaluate(element => (element.closest('.form-builder-section')?.querySelector('.form-builder-fields-grid') as HTMLElement | null)?.getAttribute('style') ?? '')).toContain('repeat(3');
+    await selector.selectOption('2');
+    await expect(selector).toHaveValue('2');
+  }
+});
+
 test('bloquea el shell y conserva el foco dentro del Form Builder modal', async ({ page }) => {
   await page.goto('/matrices-riesgos');
   await page.getByRole('tab', { name: 'Plantillas' }).click();
