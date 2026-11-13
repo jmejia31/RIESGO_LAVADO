@@ -14,6 +14,7 @@
     <EmbeddedResource Include="Features\MatricesRiesgos\Contracts\matriz_riesgos_catalogos_manifest.json" />
     <EmbeddedResource Include="Features\MatricesRiesgos\Contracts\matriz_riesgos_82_campos_manifest.json" />
     <EmbeddedResource Include="Features\MatricesRiesgos\Contracts\block6_risk_ordinal_map.json" />
+    <EmbeddedResource Include="..\..\frontend\rl-app\public\assets\institutional\ihss-logo.png" LogicalName="RL.API.Infrastructure.Reporting.ihss-logo.png" />
 
     <!-- Oracle -->
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />

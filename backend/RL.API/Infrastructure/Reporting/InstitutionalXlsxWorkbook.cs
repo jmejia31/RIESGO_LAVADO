@@ -79,9 +79,16 @@ public sealed class InstitutionalXlsxWorkbook
             WriteEntry(archive, "xl/workbook.xml", WorkbookXml());
             WriteEntry(archive, "xl/_rels/workbook.xml.rels", WorkbookRelationships());
             WriteEntry(archive, "xl/styles.xml", StylesXml());
+            WriteBinaryEntry(archive, "xl/media/image1.png", InstitutionalLogoAsset.PngBytes);
 
             for (var index = 0; index < _sheets.Count; index++)
-                WriteEntry(archive, $"xl/worksheets/sheet{index + 1}.xml", WorksheetXml(_sheets[index]));
+            {
+                var sheetNumber = index + 1;
+                WriteEntry(archive, $"xl/worksheets/sheet{sheetNumber}.xml", WorksheetXml(_sheets[index], sheetNumber));
+                WriteEntry(archive, $"xl/worksheets/_rels/sheet{sheetNumber}.xml.rels", WorksheetRelationships(sheetNumber));
+                WriteEntry(archive, $"xl/drawings/drawing{sheetNumber}.xml", DrawingXml(_sheets[index], sheetNumber));
+                WriteEntry(archive, $"xl/drawings/_rels/drawing{sheetNumber}.xml.rels", DrawingRelationships());
+            }
         }
         return stream.ToArray();
     }
@@ -89,11 +96,12 @@ public sealed class InstitutionalXlsxWorkbook
     private string ContentTypes()
     {
         var overrides = string.Join(string.Empty, Enumerable.Range(1, _sheets.Count)
-            .Select(index => $"<Override PartName=\"/xl/worksheets/sheet{index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"));
+            .Select(index => $"<Override PartName=\"/xl/worksheets/sheet{index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/xl/drawings/drawing{index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawing+xml\"/>"));
         return $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
                "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
+               "<Default Extension=\"png\" ContentType=\"image/png\"/>" +
                "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
                "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>" +
                "<Override PartName=\"/docProps/core.xml\" ContentType=\"application/vnd.openxmlformats-package.core-properties+xml\"/>" +
@@ -189,10 +197,10 @@ public sealed class InstitutionalXlsxWorkbook
         "<xf numFmtId=\"165\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyNumberFormat=\"1\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
         "</cellXfs><cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>";
 
-    private string WorksheetXml(InstitutionalXlsxSheet sheet) =>
-        sheet.Document is null ? TabularWorksheetXml(sheet) : DocumentWorksheetXml(sheet);
+    private string WorksheetXml(InstitutionalXlsxSheet sheet, int sheetNumber) =>
+        sheet.Document is null ? TabularWorksheetXml(sheet, sheetNumber) : DocumentWorksheetXml(sheet, sheetNumber);
 
-    private string TabularWorksheetXml(InstitutionalXlsxSheet sheet)
+    private string TabularWorksheetXml(InstitutionalXlsxSheet sheet, int sheetNumber)
     {
         var maxColumns = Math.Max(1, sheet.Headers.Count);
         var columnWidths = CalculateWidths(sheet);
@@ -214,7 +222,7 @@ public sealed class InstitutionalXlsxWorkbook
         var lastColumn = ColumnName(maxColumns);
         var orientation = sheet.Orientation == InstitutionalReportOrientation.Landscape ? "landscape" : "portrait";
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-               "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
+               "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
                "<sheetPr><pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/></sheetPr>" +
                $"<dimension ref=\"A1:{lastColumn}{lastRow}\"/>" +
                "<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"4\" topLeftCell=\"A5\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>" +
@@ -225,11 +233,11 @@ public sealed class InstitutionalXlsxWorkbook
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.35\" right=\"0.35\" top=\"0.65\" bottom=\"0.55\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
                "<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL</oddHeader>" +
-               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter>" +
+               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter><drawing r:id=\"rId1\"/>" +
                "</worksheet>";
     }
 
-    private string DocumentWorksheetXml(InstitutionalXlsxSheet sheet)
+    private string DocumentWorksheetXml(InstitutionalXlsxSheet sheet, int sheetNumber)
     {
         var document = sheet.Document!;
         var columns = string.Join(string.Empty, document.ColumnWidths.Select((width, index) =>
@@ -251,7 +259,7 @@ public sealed class InstitutionalXlsxWorkbook
             : string.Empty;
 
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-               "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
+               "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
                "<sheetPr><pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/></sheetPr>" +
                $"<dimension ref=\"A1:{lastColumn}{lastRow}\"/>" +
                $"<sheetViews><sheetView workbookViewId=\"0\">{freezePane}</sheetView></sheetViews>" +
@@ -260,7 +268,7 @@ public sealed class InstitutionalXlsxWorkbook
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.25\" right=\"0.25\" top=\"0.45\" bottom=\"0.45\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
                "<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL</oddHeader>" +
-               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter>" +
+               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter><drawing r:id=\"rId1\"/>" +
                "</worksheet>";
     }
 
@@ -395,6 +403,42 @@ public sealed class InstitutionalXlsxWorkbook
         var entry = archive.CreateEntry(name, CompressionLevel.Optimal);
         using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
         writer.Write(content);
+    }
+
+    private static void WriteBinaryEntry(ZipArchive archive, string name, byte[] content)
+    {
+        var entry = archive.CreateEntry(name, CompressionLevel.Optimal);
+        using var output = entry.Open();
+        output.Write(content, 0, content.Length);
+    }
+
+    private static string WorksheetRelationships(int sheetNumber) =>
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+        $"<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing\" Target=\"../drawings/drawing{sheetNumber}.xml\"/>" +
+        "</Relationships>";
+
+    private static string DrawingRelationships() =>
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+        "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\" Target=\"../media/image1.png\"/>" +
+        "</Relationships>";
+
+    private static string DrawingXml(InstitutionalXlsxSheet sheet, int sheetNumber)
+    {
+        var columnCount = sheet.Document?.ColumnCount ?? Math.Max(1, sheet.Headers.Count);
+        var column = Math.Max(0, columnCount - 3);
+        const int cx = 1_143_000;
+        const int cy = 434_000;
+        return $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+               "<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
+               "<xdr:oneCellAnchor>" +
+               $"<xdr:from><xdr:col>{column}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>0</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>" +
+               $"<xdr:ext cx=\"{cx}\" cy=\"{cy}\"/>" +
+               $"<xdr:pic><xdr:nvPicPr><xdr:cNvPr id=\"{sheetNumber}\" name=\"IHSS logo\"/><xdr:cNvPicPr/></xdr:nvPicPr>" +
+               "<xdr:blipFill><a:blip r:embed=\"rId1\"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>" +
+               $"<xdr:spPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"{cx}\" cy=\"{cy}\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></xdr:spPr>" +
+               "</xdr:pic><xdr:clientData/></xdr:oneCellAnchor></xdr:wsDr>";
     }
 
     private static string NormalizeSheetName(string name)

@@ -22,6 +22,9 @@
                 <p class="text-sm font-semibold text-slate-800">Vista previa del libro Excel</p>
                 <p class="text-xs text-slate-500">{{ currentSheet()?.totalRows ?? 0 }} filas de datos en la hoja seleccionada</p>
               </div>
+              @if (state.logoEmbedded) {
+                <img [src]="institutionalLogoAssetPath" alt="Instituto Hondureño de Seguridad Social" class="h-10 max-w-[10rem] object-contain" data-institutional-logo-preview />
+              }
               <nav class="institutional-selection institutional-selection--compact flex max-w-full flex-wrap" aria-label="Hojas del libro Excel" role="tablist">
                 @for (sheet of sheets; track sheet.name; let i = $index) {
                   <button type="button" class="institutional-selection__item px-3 py-1.5 text-xs" role="tab" [attr.aria-selected]="selectedSheet() === i" (click)="selectSheet(i)">{{ sheet.name }}</button>

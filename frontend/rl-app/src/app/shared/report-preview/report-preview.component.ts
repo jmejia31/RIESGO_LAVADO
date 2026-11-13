@@ -4,6 +4,7 @@ import { DataPaginationComponent } from '../components/data-pagination/data-pagi
 import { PageSizeSelectorComponent } from '../components/page-size-selector/page-size-selector.component';
 import { InstitutionalTooltipDirective } from '../components/institutional-tooltip/institutional-tooltip.directive';
 import { ReportPreviewService } from './report-preview.service';
+import { INSTITUTIONAL_LOGO_ASSET_PATH } from '../../core/reporting/institutional-report-standard';
 
 @Component({
   selector: 'app-report-preview',
@@ -14,6 +15,7 @@ import { ReportPreviewService } from './report-preview.service';
 })
 export class ReportPreviewComponent implements OnDestroy {
   readonly Math = Math;
+  readonly institutionalLogoAssetPath = INSTITUTIONAL_LOGO_ASSET_PATH;
   readonly preview = inject(ReportPreviewService);
   readonly selectedSheet = signal(0);
   readonly page = signal(0);

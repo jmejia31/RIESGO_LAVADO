@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Compression;
 using System.Text;
 
 namespace RL.API.Infrastructure.Reporting;
@@ -16,6 +17,8 @@ public sealed class InstitutionalPdfDocument
     private const decimal FooterHeight = 30m;
     private const decimal DefaultFontSize = 8.5m;
     private const decimal DefaultLineHeight = 11m;
+    private const decimal LogoWidth = 72m;
+    private const decimal LogoTop = 7m;
 
     private readonly decimal _pageWidth;
     private readonly decimal _pageHeight;
@@ -219,13 +222,15 @@ public sealed class InstitutionalPdfDocument
         for (var index = 0; index < _pages.Count; index++)
             DibujarPie(_pages[index], index + 1, _pages.Count);
 
-        var objects = new List<string>
+        var objects = new List<byte[]>
         {
-            "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [] /Count 0 >>",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
+            PdfBytes("<< /Type /Catalog /Pages 2 0 R >>"),
+            PdfBytes("<< /Type /Pages /Kids [] /Count 0 >>"),
+            PdfBytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"),
+            PdfBytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>")
         };
+        var logoObjectId = objects.Count + 1;
+        objects.Add(BuildPdfLogoObject());
         var pageIds = new List<int>();
 
         foreach (var page in _pages)
@@ -233,28 +238,30 @@ public sealed class InstitutionalPdfDocument
             var pageId = objects.Count + 1;
             var contentId = objects.Count + 2;
             pageIds.Add(pageId);
-            objects.Add(FormattableString.Invariant(
-                $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {_pageWidth:0.##} {_pageHeight:0.##}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents {contentId} 0 R >>"));
+            objects.Add(PdfBytes(FormattableString.Invariant(
+                $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {_pageWidth:0.##} {_pageHeight:0.##}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /ImIHSS {logoObjectId} 0 R >> >> /Contents {contentId} 0 R >>")));
             var content = page.Content.ToString();
-            objects.Add($"<< /Length {PdfTextEncoding.GetByteCount(content)} >>\nstream\n{content}\nendstream");
+            objects.Add(PdfBytes($"<< /Length {PdfTextEncoding.GetByteCount(content)} >>\nstream\n{content}\nendstream"));
         }
 
-        objects[1] = $"<< /Type /Pages /Kids [{string.Join(" ", pageIds.Select(id => $"{id} 0 R"))}] /Count {pageIds.Count} >>";
+        objects[1] = PdfBytes($"<< /Type /Pages /Kids [{string.Join(" ", pageIds.Select(id => $"{id} 0 R"))}] /Count {pageIds.Count} >>");
 
         using var stream = new MemoryStream();
         var offsets = new List<long> { 0 };
-        WriteWinAnsi(stream, "%PDF-1.4\n");
+        WriteAscii(stream, "%PDF-1.4\n");
         for (var index = 0; index < objects.Count; index++)
         {
             offsets.Add(stream.Position);
-            WriteWinAnsi(stream, $"{index + 1} 0 obj\n{objects[index]}\nendobj\n");
+            WriteAscii(stream, $"{index + 1} 0 obj\n");
+            stream.Write(objects[index], 0, objects[index].Length);
+            WriteAscii(stream, "\nendobj\n");
         }
 
         var xref = stream.Position;
-        WriteWinAnsi(stream, $"xref\n0 {objects.Count + 1}\n0000000000 65535 f \n");
+        WriteAscii(stream, $"xref\n0 {objects.Count + 1}\n0000000000 65535 f \n");
         foreach (var offset in offsets.Skip(1))
-            WriteWinAnsi(stream, $"{offset:0000000000} 00000 n \n");
-        WriteWinAnsi(stream, $"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
+            WriteAscii(stream, $"{offset:0000000000} 00000 n \n");
+        WriteAscii(stream, $"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
         return stream.ToArray();
     }
 
@@ -278,7 +285,11 @@ public sealed class InstitutionalPdfDocument
         var metadata = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", rightWidth, 8m);
         DrawLines(institution, MarginLeft, 19m, 10m, 11m, InstitutionalReportStandard.Palette.HeaderText, bold: true);
         DrawLines(title, MarginLeft, 36m, 15m, 16m, InstitutionalReportStandard.Palette.HeaderText, bold: true);
-        DrawLines(metadata, _pageWidth - MarginRight - rightWidth, 22m, 8m, 11m, "#DCE6F0");
+        var logoHeight = LogoWidth / InstitutionalLogoAsset.AspectRatio;
+        var logoX = _pageWidth - MarginRight - LogoWidth;
+        DrawRect(logoX, LogoTop, LogoWidth, logoHeight, "#FFFFFF", "#FFFFFF");
+        DrawImage(logoX, LogoTop, LogoWidth, logoHeight);
+        DrawLines(metadata, _pageWidth - MarginRight - rightWidth, LogoTop + logoHeight + 7m, 8m, 11m, "#DCE6F0");
         _current = previous;
     }
 
@@ -289,7 +300,8 @@ public sealed class InstitutionalPdfDocument
         var institutionLines = Wrap(InstitutionalReportStandard.InstitutionName, leftWidth, 10m).Count;
         var titleLines = Wrap(_title, leftWidth, 15m).Count;
         var metadataLines = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", rightWidth, 8m).Count;
-        return Math.Max(64m, Math.Max(20m + institutionLines * 11m + 8m + titleLines * 16m, 14m + metadataLines * 11m) + 10m);
+        var logoHeight = LogoWidth / InstitutionalLogoAsset.AspectRatio;
+        return Math.Max(72m, Math.Max(20m + institutionLines * 11m + 8m + titleLines * 16m, 14m + logoHeight + 7m + metadataLines * 11m) + 10m);
     }
 
     private void DibujarPie(PdfPage page, int pageNumber, int totalPages)
@@ -428,6 +440,31 @@ public sealed class InstitutionalPdfDocument
             $"{r:0.###} {g:0.###} {b:0.###} RG {width:0.##} w {x1:0.##} {y1:0.##} m {x2:0.##} {y2:0.##} l S"));
     }
 
+    private void DrawImage(decimal x, decimal top, decimal width, decimal height)
+    {
+        var y = _pageHeight - top - height;
+        _current.Content.AppendLine(FormattableString.Invariant(
+            $"q {width:0.##} 0 0 {height:0.##} {x:0.##} {y:0.##} cm /ImIHSS Do Q"));
+    }
+
+    private static byte[] BuildPdfLogoObject()
+    {
+        var logo = InstitutionalLogoAsset.GetPdfRgb();
+        using var compressed = new MemoryStream();
+        using (var deflate = new ZLibStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
+            deflate.Write(logo.Rgb, 0, logo.Rgb.Length);
+
+        var header = Encoding.ASCII.GetBytes(FormattableString.Invariant(
+            $"<< /Type /XObject /Subtype /Image /Width {logo.Width} /Height {logo.Height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length {compressed.Length} >>\nstream\n"));
+        var footer = Encoding.ASCII.GetBytes("\nendstream");
+        using var output = new MemoryStream(header.Length + (int)compressed.Length + footer.Length);
+        output.Write(header, 0, header.Length);
+        compressed.Position = 0;
+        compressed.CopyTo(output);
+        output.Write(footer, 0, footer.Length);
+        return output.ToArray();
+    }
+
     private static (decimal R, decimal G, decimal B) ParseColor(string color)
     {
         var value = color.TrimStart('#');
@@ -452,9 +489,11 @@ public sealed class InstitutionalPdfDocument
         return Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
     }
 
-    private static void WriteWinAnsi(Stream stream, string value)
+    private static byte[] PdfBytes(string value) => PdfTextEncoding.GetBytes(value);
+
+    private static void WriteAscii(Stream stream, string value)
     {
-        var bytes = PdfTextEncoding.GetBytes(value);
+        var bytes = Encoding.ASCII.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
     }
 

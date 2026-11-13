@@ -25,3 +25,8 @@ export const INSTITUTIONAL_REPORT_LAYOUT = {
   pdfHeaderPadding: 14,
   pdfHeaderMinimumHeight: 34
 } as const;
+
+/** Fuente canónica servida por Angular; no se obtiene desde una URL externa. */
+export const INSTITUTIONAL_LOGO_ASSET_PATH = 'assets/institutional/ihss-logo.png';
+export const INSTITUTIONAL_LOGO_SHA256 = 'D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543';
+export const INSTITUTIONAL_LOGO_ASPECT_RATIO = 2034 / 773;

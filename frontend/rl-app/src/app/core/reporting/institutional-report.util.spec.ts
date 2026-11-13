@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 // @ts-ignore: Vitest ejecuta este archivo en Node.js.
 import { mkdirSync, writeFileSync } from 'node:fs';
 // @ts-ignore: Vitest ejecuta este archivo en Node.js.
@@ -7,6 +7,7 @@ import { jsPDF } from 'jspdf';
 import {
   agregarEncabezadoInstitucionalPdf,
   agregarPiesInstitucionalesPdf,
+  dibujarLogoInstitucionalPdf,
   asegurarEspacioSeccionPdf,
   autoTableInstitucional,
   COLORES_REPORTE_INSTITUCIONAL,
@@ -15,11 +16,38 @@ import {
   resolverAnchoUtilPdf,
   resolverMargenesTablaInstitucional
 } from './institutional-report.util';
+import { INSTITUTIONAL_LOGO_ASSET_PATH, INSTITUTIONAL_LOGO_ASPECT_RATIO } from './institutional-report-standard';
 
 describe('estándar institucional de reportería', () => {
   it('usa la paleta institucional aprobada', () => {
     expect(COLORES_REPORTE_INSTITUCIONAL.navy).toEqual([18, 59, 99]);
     expect(COLORES_REPORTE_INSTITUCIONAL.alternate).toEqual([243, 246, 249]);
+  });
+
+  it('usa el recurso canónico y conserva las proporciones del logo PDF', () => {
+    const doc = {
+      setFillColor: vi.fn(),
+      rect: vi.fn(),
+      addImage: vi.fn()
+    } as any;
+    vi.stubGlobal('window', {
+      document: { createElement: vi.fn() },
+      navigator: { userAgent: 'Mozilla/5.0' }
+    });
+    vi.stubGlobal('document', { createElement: vi.fn() });
+
+    expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(true);
+    expect(doc.addImage).toHaveBeenCalledWith(
+      INSTITUTIONAL_LOGO_ASSET_PATH,
+      'PNG',
+      148,
+      4,
+      48,
+      48 / INSTITUTIONAL_LOGO_ASPECT_RATIO,
+      'IHSS_LOGO',
+      'FAST'
+    );
+    vi.unstubAllGlobals();
   });
 
   it('mantiene el mismo encabezado en orientación vertical y horizontal', () => {

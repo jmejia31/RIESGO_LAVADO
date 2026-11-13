@@ -21,6 +21,7 @@ export interface ReportPreviewState {
   pdfUrl?: SafeResourceUrl;
   workbook?: WorkBook;
   sheets?: ExcelPreviewSheet[];
+  logoEmbedded?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -56,7 +57,8 @@ export class ReportPreviewService {
       fileName,
       blob,
       workbook,
-      sheets: createExcelPreview(workbook)
+      sheets: createExcelPreview(workbook),
+      logoEmbedded: workbook.logoEmbedded === true
     });
   }
 
@@ -64,11 +66,13 @@ export class ReportPreviewService {
     this.close();
     const sequence = this.previewSequence;
     let sheets: ExcelPreviewSheet[] = [];
+    let logoEmbedded = false;
     try {
       if (typeof blob.arrayBuffer !== 'function') throw new Error('El archivo Excel no expone un buffer legible.');
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await blob.arrayBuffer());
       sheets = workbook.worksheets.map(worksheet => {
+        logoEmbedded ||= worksheet.getImages().length > 0;
         const rows: unknown[][] = [];
         worksheet.eachRow({ includeEmpty: true }, row => {
           const values: unknown[] = [];
@@ -83,7 +87,7 @@ export class ReportPreviewService {
       sheets = [createExcelPreviewFromRows('Reporte', [])];
     }
     if (sequence === this.previewSequence) {
-      this.state.set({ kind: 'excel', title, description, fileName, blob, sheets });
+      this.state.set({ kind: 'excel', title, description, fileName, blob, sheets, logoEmbedded });
     }
   }
 

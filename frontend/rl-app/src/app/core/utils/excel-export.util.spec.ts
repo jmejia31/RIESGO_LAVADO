@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import * as ExcelJS from 'exceljs';
 // @ts-ignore: Vitest ejecuta este archivo en Node.js.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 // @ts-ignore: Vitest ejecuta este archivo en Node.js.
 import { resolve } from 'node:path';
 import {
@@ -10,6 +11,7 @@ import {
   downloadBlob,
   normalizarNombreArchivoExcel,
   normalizarNombreArchivoGeneral,
+  WorkBook,
   utils,
   workbookToBlob,
   writeFile
@@ -222,6 +224,26 @@ describe('generador Excel institucional', () => {
     expect(revoke).toHaveBeenCalledTimes(3);
     blobUrl.mockRestore();
     revoke.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
+  it('embebe el PNG institucional en el XLSX real cuando existe el asset same-origin', async () => {
+    const source = readFileSync(resolve((globalThis as any).process.cwd(), '../../frontend/rl-app/public/assets/institutional/ihss-logo.png'));
+    const bytes = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength);
+    vi.stubGlobal('window', {
+      navigator: { userAgent: 'Mozilla/5.0' },
+      document: { createElement: vi.fn() }
+    });
+    vi.stubGlobal('document', { baseURI: 'http://localhost/', createElement: vi.fn() });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => bytes }));
+
+    const workbook: WorkBook = { sheets: [{ name: 'Reporte', sheet: { data: [['Título'], ['Código'], ['R-001']] } }] };
+    const blob = await workbookToBlob(workbook);
+    expect(workbook.logoEmbedded).toBe(true);
+    const loaded = new ExcelJS.Workbook();
+    await loaded.xlsx.load(await blob.arrayBuffer());
+    expect(loaded.worksheets[0].getImages()).toHaveLength(1);
+
     vi.unstubAllGlobals();
   });
 

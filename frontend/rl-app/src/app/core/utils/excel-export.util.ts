@@ -1,5 +1,8 @@
 import * as ExcelJS from 'exceljs';
-import { INSTITUTIONAL_REPORT_EXCEL_COLORS } from '../reporting/institutional-report-standard';
+import {
+  INSTITUTIONAL_LOGO_ASSET_PATH,
+  INSTITUTIONAL_REPORT_EXCEL_COLORS
+} from '../reporting/institutional-report-standard';
 
 export interface ColInfo {
   wch?: number;
@@ -17,6 +20,7 @@ export interface WorkSheet {
 
 export interface WorkBook {
   sheets: Array<{ name: string; sheet: WorkSheet }>;
+  logoEmbedded?: boolean;
 }
 
 export type ExcelRowRole = 'TITLE' | 'HEADER' | 'SECTION' | 'KEY_VALUE' | 'PARAGRAPH' | 'DATA' | 'SPACER';
@@ -76,10 +80,46 @@ export async function writeFile(workbook: WorkBook, fileName: string): Promise<v
 /** Genera el mismo binario que se presenta en el visor, sin iniciar una descarga. */
 export async function workbookToBlob(workbook: WorkBook): Promise<Blob> {
   const excel = construirLibroInstitucional(workbook);
+  workbook.logoEmbedded = await agregarLogoInstitucionalExcel(excel);
   const buffer = await excel.xlsx.writeBuffer();
   return new Blob([buffer as BlobPart], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
+}
+
+async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promise<boolean> {
+  // La suite Node verifica el contrato del generador sin simular un servidor de
+  // assets. En el navegador la ruta es same-origin y el PNG queda embebido en
+  // el ZIP real mediante ExcelJS, no como una imagen HTML del preview.
+  if (!esNavegadorReal() || typeof fetch !== 'function') return false;
+  const assetUrl = new URL(INSTITUTIONAL_LOGO_ASSET_PATH, document.baseURI).toString();
+  const response = await fetch(assetUrl, { cache: 'force-cache' });
+  if (!response.ok) throw new Error(`No se pudo cargar el recurso institucional (${response.status}).`);
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const base64 = convertirABase64(bytes);
+  const imageId = workbook.addImage({ base64: `data:image/png;base64,${base64}`, extension: 'png' });
+  for (const worksheet of workbook.worksheets) {
+    worksheet.addImage(imageId, {
+      tl: { col: Math.max(0, worksheet.columnCount - 3), row: 0 },
+      ext: { width: 120, height: 45 }
+    });
+  }
+  return true;
+}
+
+function esNavegadorReal(): boolean {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+  const userAgent = window.navigator?.userAgent ?? '';
+  return typeof document.createElement === 'function' && !/jsdom/i.test(userAgent);
+}
+
+function convertirABase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, Math.min(index + chunkSize, bytes.length)));
+  }
+  return btoa(binary);
 }
 
 /** Descarga explícita desde un flujo que ya pasó por una vista previa. */
