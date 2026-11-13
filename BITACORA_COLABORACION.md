@@ -11170,3 +11170,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `B06_IMPLEMENTATION_AUTHORIZED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`. El Issue #40 queda pendiente de comentario de cierre y cierre remoto posterior a la publicación de este expediente.
 - Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos permanecen fuera del stage.
 - Punto de continuación: publicar el commit documental de cierre, verificar su Quality Gate exacto y cerrar el Issue #40; solo después comenzar el inventario e implementación B06.
+
+## 2026-11-13 — B05 cerrado remotamente y gate exacto verificado (COD)
+
+- `B05_CLOSURE_DOCUMENT_COMMIT_SHA=cf27755ec9c9d638da9f465b85ef6ff1b6ab324f`; Quality Gate exacto [43475061756](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43475061756) sobre ese SHA: `STATUS=completed`, `CONCLUSION=success`. El job de alcance y la matriz integral terminaron verdes.
+- El comentario de aceptación fue publicado en [Issue #40](https://github.com/jmejia31/RIESGO_LAVADO/issues/40#issuecomment-6860723472) y el issue quedó `CLOSED`; `B05_CLOSURE_GATE=PASS`; `B05_GITHUB_REMOTE_VERIFIED=YES`; `B05_SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `B05_REVIEW_READY=YES`.
+- `B05_SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; `B05_EVIDENCE_COMMIT_SHA=9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; `B05_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_SIGNOFF=APPROVED_WITH_DOCUMENTED_SCOPE`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_HISTORICAL_LIMITATIONS=PRESERVED`.
+- Se cierra formalmente B05 dentro del alcance aceptado. `B06_IMPLEMENTATION_AUTHORIZED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`. No se modificaron código funcional, Oracle institucional, producción, `main` ni migración 54.
+- Punto exacto de continuación: inventario activo de reportería B06 y localización de un activo de logo IHSS auténtico/autorizado; si no existe, documentar el bloqueo sin fabricar ni descargar un logo.

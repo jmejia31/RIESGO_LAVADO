@@ -4565,3 +4565,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Commit inicial de esta intervención: `9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; commit documental de cierre: `PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `REVIEW_READY=PENDING_NEW_GATE`.
 - Restricciones: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos preservados fuera del stage.
 - Punto exacto de continuación: stage selectivo de los tres documentos, commit/push, lectura remota del Quality Gate de ese SHA, comentario y cierre del Issue #40; luego auditoría B06.
+
+## Estado vigente — B05 cerrado y B06 habilitado — 2026-11-13
+
+- `B05_CLOSURE_DOCUMENT_COMMIT_SHA=cf27755ec9c9d638da9f465b85ef6ff1b6ab324f`; `B05_CLOSURE_GATE=PASS`; Quality Gate exacto [43475061756](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43475061756), `QUALITY_GATE_SHA=cf27755ec9c9d638da9f465b85ef6ff1b6ab324f`, `STATUS=completed`, `CONCLUSION=success`.
+- `B05_ISSUE_40_STATE=CLOSED`; comentario verificable: [Issue #40 comment](https://github.com/jmejia31/RIESGO_LAVADO/issues/40#issuecomment-6860723472); `B05_GITHUB_REMOTE_VERIFIED=YES`; `B05_SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `B05_REVIEW_READY=YES`.
+- `B05_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_DELIVERED_SCOPE=ACCEPTED_BY_OWNER`; `B05_SIGNOFF=APPROVED_WITH_DOCUMENTED_SCOPE`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_HISTORICAL_LIMITATIONS=PRESERVED`; `B05_FINAL_STATUS=OWNER_ACCEPTED_WITH_DOCUMENTED_LIMITATIONS`.
+- `B06_IMPLEMENTATION_AUTHORIZED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `B06_TOUCHED=NO` hasta este punto.
+- Commit inicial de la intervención: `9808c8e92685fe7d1d28fa4bd350d08dfa137abd`; commit actual de esta actualización: `PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `REVIEW_READY=PENDING_NEW_GATE`.
+- Restricciones preservadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
+- Punto exacto: publicar esta actualización documental selectiva, verificar su gate exacto y comenzar el inventario B06; no cerrar B06 sin aprobación visual posterior.

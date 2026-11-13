@@ -205,3 +205,21 @@ BLOCK10_AUTHORIZED=NO
 ```
 
 El cierre formal se publica en `origin/desarrollo` mediante un commit documental selectivo y se verifica contra el Quality Gate exacto [43467368640](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43467368640). La aceptación de B05 no convierte sus limitaciones históricas en una certificación global fuera del alcance entregado.
+
+## Verificación de cierre remoto B05 — 2026-11-13
+
+```ini
+B05_CLOSURE_DOCUMENT_COMMIT_SHA=cf27755ec9c9d638da9f465b85ef6ff1b6ab324f
+B05_QUALITY_GATE_RUN=43475061756
+B05_QUALITY_GATE_SHA=cf27755ec9c9d638da9f465b85ef6ff1b6ab324f
+B05_QUALITY_GATE_STATUS=completed
+B05_QUALITY_GATE_CONCLUSION=success
+B05_ISSUE_40_STATE=CLOSED
+B05_ISSUE_40_COMMENT_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40#issuecomment-6860723472
+B05_CLOSURE_GATE=PASS
+B05_GITHUB_REMOTE_VERIFIED=YES
+B05_SECURITY_SCAN=PASS_GITHUB_ACTIONS
+B05_REVIEW_READY=YES
+```
+
+La API de GitHub confirmó que `origin/desarrollo` contiene el commit de cierre, el expediente es legible en GitHub y el Issue #40 quedó cerrado después del comentario de aceptación. B06 queda autorizado; B05 no requiere reabrir su código funcional.
