@@ -1,5 +1,17 @@
 # Estado vigente — Ciclo de vida seguro de familias de formularios (COD) — 2026-10-27 09:10 -06:00
 
+## Estado vigente — B06 logo IHSS integrado globalmente y Quality Gate verde — 2026-11-13 16:41:32 -06:00
+
+- `INITIAL_SHA=62fddeb2860d82f127e617ef3dc2a140850a638d`; `SOURCE_CODE_SHA=15ae2ab7ce220bcdc1b0f3d5343cf2f168c802f5`; `REGRESSION_FIX_SHA=40199d45718b24279701d006c1bb6bd8451a1ad3`; `CERTIFIED_HEAD_SHA=e9f9e95759c3f717c9950ae4d6a8a28d5e690a58`.
+- Se integró el logo IHSS adjunto por el propietario en `frontend/rl-app/public/assets/institutional/ihss-logo.png`; SHA-256 `D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543`; dimensiones `2034x773`; procedencia `OWNER_ATTACHED_AUTHORIZED`.
+- El cambio es compartido: backend PDF/XLSX, utilidades Angular de PDF/Excel y preview consumen el mismo activo. Se preservan datos, fórmulas, identificadores, contratos REST, Oracle, auditoría y autorizaciones.
+- Se corrigió el contexto Docker con un `COPY` selectivo del PNG. El Quality Gate exacto [43519183344](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43519183344) terminó `completed/success`; todos los jobs, validadores, pruebas Oracle, cálculos, contenedores y cierre de recursos quedaron verdes.
+- Evidencia primaria nueva: `docs/certificaciones/B06_logo_ihss_e9f9e957.md`; índice B06: `docs/0.0 Documentación/B06_ESTANDAR_REPORTERIA_PDF_EXCEL_LOGO_IHSS.md`; `EVIDENCE_COMMIT_SHA=INITIAL_DOCUMENTATION_COMMIT_TO_BE_REGISTERED` hasta el commit documental inmediato.
+- Verificado en esta intervención: backend B06 `3/3 PASS`; Angular focalizado `23/23 PASS`; suite Angular `95 archivos / 999 pruebas PASS`; ESLint, build Angular y build Release PASS. Docker local queda pendiente por daemon no disponible; el build remoto fue PASS.
+- `B06_TECHNICAL_STATUS=PASS`; `B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
+- Restricciones preservadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuación: commit/push documental selectivo, completar SHA/URL GitHub del expediente y observar el Quality Gate del expediente; no cerrar B06 sin aprobación visual del propietario.
+
 ## Archivado reversible y purga fail-closed
 
 ## Current state - Technical corrective execution (COD) - 2026-11-05

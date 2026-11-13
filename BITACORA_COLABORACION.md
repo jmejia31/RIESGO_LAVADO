@@ -11245,3 +11245,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Paridad del momento de publicación: `HEAD_LOCAL=HEAD_REMOTE=3757456f774a51dc767089d0706414d82ec78599`; `AHEAD=0`; `BEHIND=0`. Cambios ajenos del checkout permanecen fuera del stage.
 - Restricciones finales: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`.
 - Punto exacto de continuación: revisión visual del propietario y, si corresponde, entrega de un activo IHSS autorizado; no reabrir el código compartido certificado sin una nueva orden.
+# 2026-11-13 16:41:32 -06:00 — B06 integración global del logo IHSS y cierre técnico del Quality Gate (COD)
+
+- `EVENT_ID=RL-B06-IHSS-LOGO-GLOBAL-20261113`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Punto de partida `INITIAL_SHA=62fddeb2860d82f127e617ef3dc2a140850a638d`; cambios funcionales publicados en `15ae2ab7ce220bcdc1b0f3d5343cf2f168c802f5`, regresión de aislamiento en `40199d45718b24279701d006c1bb6bd8451a1ad3` y corrección de contexto Docker en `e9f9e95759c3f717c9950ae4d6a8a28d5e690a58`.
+- Se incorporó el PNG oficial adjunto por el propietario como `frontend/rl-app/public/assets/institutional/ihss-logo.png`; SHA-256 `D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543`; `2034x773`; procedencia `OWNER_ATTACHED_AUTHORIZED`.
+- La implementación es compartida para PDF, XLSX y preview. Backend embebe el recurso y lo valida; Angular reutiliza el path canónico; XLSX conserva datos y relaciones; Docker copia exclusivamente el asset requerido. No se modificaron Oracle institucional, producción, `main`, B07, Bloque 10 ni migración 54.
+- Verificaciones: backend B06 `3/3 PASS`; Angular focalizado `23/23 PASS`; suite Angular `95 archivos / 999 pruebas PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes; build Release `PASS`; Docker local `PENDIENTE` por daemon ausente.
+- Quality Gate exacto [43519183344](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43519183344): `STATUS=completed`; `CONCLUSION=success`; backend multistage, frontend multistage, validadores, Oracle XE, cálculos, E2E y cierre de recursos en verde. `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES` para el código certificado.
+- Se creó la evidencia sanitizada `docs/certificaciones/B06_logo_ihss_e9f9e957.md` y se actualizó el índice B06. `EVIDENCE_COMMIT_SHA` queda temporal hasta confirmar el commit documental selectivo.
+- Estado: `B06_TECHNICAL_STATUS=PASS`; `B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; no se emite cierre ni aprobación visual por inferencia técnica.
+- Cambios ajenos preexistentes del checkout permanecen sin stage ni modificación adicional. Punto de continuación: publicar documentación, verificar GitHub por API y observar el gate documental exacto.
+

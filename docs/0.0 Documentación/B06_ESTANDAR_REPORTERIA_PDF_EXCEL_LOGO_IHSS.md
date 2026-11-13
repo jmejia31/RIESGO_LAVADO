@@ -1,5 +1,88 @@
 # B06 — Estándar de reportería institucional PDF/Excel y logo IHSS
 
+## Actualización vigente — integración global del logo IHSS — 2026-11-13
+
+La orden B06 incorporó el activo IHSS adjunto por el propietario como recurso canónico compartido para reportería PDF/XLSX y preview. La implementación se realizó una sola vez en los componentes institucionales; no se agregaron logos por reporte ni se modificaron datos, fórmulas, identificadores, contratos REST, Oracle institucional, auditoría o autorizaciones.
+
+```ini
+PHASE=B06_LOGO_GLOBAL_REPORTING
+AUTHOR=COD/CODEX
+CLIENT=CLI
+BRANCH=desarrollo
+INITIAL_SHA=62fddeb2860d82f127e617ef3dc2a140850a638d
+SOURCE_CODE_SHA=15ae2ab7ce220bcdc1b0f3d5343cf2f168c802f5
+REGRESSION_FIX_SHA=40199d45718b24279701d006c1bb6bd8451a1ad3
+CONTAINER_CONTEXT_FIX_SHA=e9f9e95759c3f717c9950ae4d6a8a28d5e690a58
+CERTIFIED_HEAD_SHA=e9f9e95759c3f717c9950ae4d6a8a28d5e690a58
+LOGO_ASSET=frontend/rl-app/public/assets/institutional/ihss-logo.png
+LOGO_SHA256=D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543
+LOGO_DIMENSIONS=2034x773
+LOGO_PROVENANCE=OWNER_ATTACHED_AUTHORIZED
+B06_LOGO_PDF=PASS
+B06_LOGO_XLSX=PASS
+B06_PREVIEW_PARITY=PASS
+B06_SHARED_COMPONENT_IMPLEMENTATION=PASS
+B06_FORMULA_VALUES_PRESERVED=YES
+B06_IDENTIFIERS_PRESERVED=YES
+B01_PRESERVED=YES
+B02_PRESERVED=YES
+B03_PRESERVED=YES
+B04_PRESERVED=YES
+B05_PRESERVED=YES
+B07_AUTHORIZED=NO
+BLOCK10_AUTHORIZED=NO
+MAIN_TOUCHED=NO
+PRODUCTION_TOUCHED=NO
+ORACLE_INSTITUTIONAL_TOUCHED=NO
+MIGRATION_54_TOUCHED=NO
+B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
+EVIDENCE_COMMIT_SHA=INITIAL_DOCUMENTATION_COMMIT_TO_BE_REGISTERED
+```
+
+### Implementación y consumidores
+
+- El backend carga el PNG canónico como recurso embebido validado por SHA-256, lo inserta en el encabezado de cada página PDF y lo incorpora en cada hoja XLSX mediante OpenXML, sin alterar las celdas ni la proyección de datos.
+- Angular reutiliza el mismo recurso para el estándar PDF, el exportador Excel y el preview. El preview PDF sigue mostrando el blob real; el preview XLSX indica el logo únicamente cuando el workbook contiene la imagen real.
+- Consumidores cubiertos por las utilidades compartidas: Matrices de Riesgos, Monitoreo de Listas, Coincidencias de Patrono, Coincidencias de Empleado y Cargar Listas. No se crearon implementaciones específicas por interfaz.
+- El Dockerfile copia únicamente el PNG canónico al contexto de compilación para que el recurso embebido esté disponible en la imagen backend; no copia el frontend completo.
+
+### Verificaciones reproducidas
+
+| Verificación | Resultado |
+|---|---|
+| Tests backend B06 focalizados | PASS — 3/3 |
+| Suite Angular completa | PASS — 95 archivos / 999 pruebas |
+| Regresiones Angular focalizadas | PASS — 23/23 |
+| ESLint | PASS |
+| Build Angular | PASS; solo warnings preexistentes SCSS/CommonJS |
+| Build Release de solución | PASS |
+| Quality Gate GitHub exact-SHA | PASS — run [43519183344](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43519183344) |
+| Contenedor backend multistage remoto | PASS |
+| Seguridad y validadores GitHub Actions | PASS |
+| Docker local | PENDIENTE — daemon Docker no disponible en este checkout; verificado remotamente |
+
+El gate anterior [43516782096](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43516782096) falló únicamente al construir el contenedor porque faltaba el PNG en el contexto Docker. El commit `e9f9e95759c3f717c9950ae4d6a8a28d5e690a58` corrigió ese contexto de forma selectiva y el gate exacto posterior terminó completamente verde.
+
+### Estado de revisión
+
+```ini
+B06_TECHNICAL_STATUS=PASS
+B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
+QUALITY_GATE_RUN=43519183344
+QUALITY_GATE_SHA=e9f9e95759c3f717c9950ae4d6a8a28d5e690a58
+QUALITY_GATE_STATUS=completed
+QUALITY_GATE_CONCLUSION=success
+GITHUB_REMOTE_VERIFIED=YES
+SECURITY_SCAN=PASS_GITHUB_ACTIONS
+REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW
+GITHUB_EVIDENCE_INDEX_URL=PENDING_DOCUMENTAL_COMMIT
+GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40
+```
+
+El gate verde certifica la implementación técnica y la integridad del expediente; no sustituye la aprobación visual final del propietario. B06 permanece abierto hasta esa aprobación.
+
 ## Actualización global B06 — 2026-11-13
 
 La intervención funcional `f43a275fa04d7b878908b0ade92e0ecff0cb19b4` corrige el estándar compartido de reportería, no un reporte aislado. El PDF backend dejó de forzar la matriz de 82 campos a una sola columna: la orientación y la densidad de la grilla etiqueta/valor se resuelven desde `InstitutionalReportStandard`, y el encabezado calcula alto y saltos de línea. El workbook OpenXML reutiliza la paleta institucional y alturas de fila con envoltura para títulos, metadatos y cabeceras.
