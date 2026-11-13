@@ -31,11 +31,16 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog = new InstitutionalProjectionMapper().GetFieldCatalog();
         ValidarProyecciones(filas, proyecciones, catalog);
         var workbook = new InstitutionalXlsxWorkbook();
+        var emptyRow = Enumerable.Repeat<object?>(string.Empty, catalog.Count).ToArray();
+        emptyRow[0] = "Sin información";
+        var rows = filas.Count == 0
+            ? new[] { (IReadOnlyList<object?>)emptyRow }
+            : filas.Select(row => MapearProyeccionExcel(proyecciones[row.EvaluacionId], catalog)).ToArray();
         workbook.AddSheet(
             "Matriz Consolidada",
             "Matriz Consolidada de Riesgos — Matriz completa 82 campos",
             catalog.Select(field => field.FieldLabel).ToArray(),
-            filas.Select(row => MapearProyeccionExcel(proyecciones[row.EvaluacionId], catalog)),
+            rows,
             InstitutionalReportOrientation.Landscape,
             $"Filtros aplicados: {DescribirFiltros(filtros)}");
         return new ArchivoReporteDto(
@@ -58,6 +63,8 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
             DateTime.Now);
         document.AddSection("Filtros aplicados");
         document.AddParagraph(DescribirFiltros(filtros));
+        if (filas.Count == 0)
+            document.AddSection("Sin información");
         foreach (RiesgoReporteFilaDto fila in filas)
         {
             InstitutionalEvaluationProjectionDto projection = proyecciones[fila.EvaluacionId];

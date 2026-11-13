@@ -80,8 +80,10 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
         XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         XElement header = sheet.Descendants(ns + "row").Single(row => (string?)row.Attribute("r") == "4");
         Assert.Equal(82, header.Elements(ns + "c").Count());
+        Assert.Contains("Sin información", sheet.ToString(SaveOptions.DisableFormatting), StringComparison.Ordinal);
         string pdfText = Encoding.Latin1.GetString(pdf.Contenido);
         Assert.StartsWith("%PDF-1.4", pdfText, StringComparison.Ordinal);
+        Assert.Contains(EscapePdfString("SIN INFORMACIÓN"), pdfText, StringComparison.Ordinal);
         Assert.EndsWith("%%EOF", pdfText, StringComparison.Ordinal);
     }
 
