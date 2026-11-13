@@ -4506,6 +4506,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_COLUMNS_SELECTOR_VISUAL_ACCEPTANCE=PENDING`; `B05_OVERALL_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `B06_AUTHORIZED=NO`.
 - Continuación exacta: observar el run `43462444453`, completar el expediente B05, publicar documentación y volver a comprobar por lectura remota el SHA final y el Quality Gate documental.
 
+## Estado vigente — B05 expediente remoto certificado — 2026-11-13 10:53:12 -06:00
+
+- `SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; `EVIDENCE_COMMIT_SHA=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`; `HEAD_LOCAL=HEAD_REMOTE=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`; divergencia `0/0`.
+- Quality Gate exacto [43464664638](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43464664638): `STATUS=completed`; `CONCLUSION=success`; todos los jobs/pasos integrales `success`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica; `GITHUB_REMOTE_VERIFIED=YES`.
+- Expediente verificable: [B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md](https://github.com/jmejia31/RIESGO_LAVADO/blob/802a5d80a8ac4a99af3a574cfed4841cfcf1d378/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md); signoff: [Issue #40](https://github.com/jmejia31/RIESGO_LAVADO/issues/40).
+- `B05_COLUMNS_SELECTOR_ROOT_CAUSE=TAILWIND_BACKGROUND_IMAGE_WITH_CUSTOM_SVG`; `B05_COLUMNS_SELECTOR_SINGLE_CHEVRON=PASS`; `B05_COLUMNS_SELECTOR_PLAYWRIGHT=PASS`; `B05_COLUMNS_SELECTOR_HORIZONTAL_OVERFLOW=0`.
+- `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_COLUMNS_SELECTOR_VISUAL_ACCEPTANCE=PENDING`; `B05_OVERALL_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `B06_AUTHORIZED=NO`.
+- El run funcional `43462444453` fue cancelado por GitHub al publicar el expediente; no es evidencia de fallo de código. El run verde vigente es `43464664638` sobre el SHA documental.
+- No se tocaron `main`, producción, backend, Oracle institucional, migración 54, B06 ni Bloque 10. Los cambios ajenos permanecen fuera del stage.
+- Continuación exacta: revisión visual y aceptación del propietario; no cerrar B05 ni emitir aprobación visual por Codex.
+
 ## Estado vigente — B05 menú Acciones y tooltip institucional — 2026-11-13 09:09:06 -06:00
 
 - `PHASE=B05_ACTION_MENU_AND_TOOLTIP_REFINEMENT`; `INITIAL_SHA=4bdd986d08db8bd0514571a57bb0baf857d99ab1`; `SOURCE_CODE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.

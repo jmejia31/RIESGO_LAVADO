@@ -171,3 +171,13 @@ B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 ```
 
 `EVIDENCE_COMMIT_SHA`, el run remoto exacto del commit funcional y el enlace del expediente final se completarán después del push documental. La aprobación explícita recibida aplica únicamente a Acciones y Cerrar; B05 no se cierra sin aceptación visual global del propietario.
+
+## Verificación remota y publicación final de esta intervención
+
+- `SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`.
+- `EVIDENCE_COMMIT_SHA=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`.
+- Quality Gate exacto del expediente publicado: [run 43464664638](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43464664638), `QUALITY_GATE_SHA=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`, `STATUS=completed`, `CONCLUSION=success`; ambos jobs y todos los pasos de la matriz integral terminaron `success`.
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/802a5d80a8ac4a99af3a574cfed4841cfcf1d378/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`.
+- `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- El run funcional anterior `43462444453` fue cancelado por GitHub al entrar el push documental posterior; no se usa como certificación. La certificación vigente es exclusivamente `43464664638` sobre `EVIDENCE_COMMIT_SHA`.
+- `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_COLUMNS_SELECTOR_VISUAL_ACCEPTANCE=PENDING`; `B05_OVERALL_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.

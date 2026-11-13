@@ -11150,3 +11150,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Aprobaciones heredadas expresamente confirmadas por el propietario: `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`. La aceptación visual del selector de columnas y la aceptación global de B05 permanecen pendientes.
 - Quality Gate remoto exact-SHA: [run 43462444453](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43462444453), SHA `f9441e9a2772f2421c91a095b2139fb97f737c14`, `STATUS=in_progress` al momento de este registro; `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_QUALITY_GATE`.
 - Continuación exacta: esperar el run remoto, completar `QUALITY_GATE_CONCLUSION`, actualizar expediente B05 y Estado colaborativo, publicar el commit documental selectivo y verificar por API `HEAD_LOCAL=HEAD_REMOTE` sin stagear cambios ajenos.
+
+## 2026-11-13 10:53:12 -06:00 — B05 Quality Gate verde y expediente remoto verificable (COD)
+
+- `SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; `EVIDENCE_COMMIT_SHA=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`; ambos commits publicados en `origin/desarrollo`.
+- Quality Gate exacto del expediente: [run 43464664638](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43464664638), `QUALITY_GATE_SHA=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`, `STATUS=completed`, `CONCLUSION=success`; jobs y matriz integral completos en `success`, incluidos Oracle XE, E2E, cobertura, workbook, contenedores y cierre de recursos.
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/802a5d80a8ac4a99af3a574cfed4841cfcf1d378/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- El run funcional `43462444453` quedó `cancelled` por la llegada del push documental siguiente; no se presenta como certificación. La certificación vigente es únicamente el run verde `43464664638` sobre el SHA documental.
+- Aprobaciones del propietario: `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`. La aceptación del selector de columnas y la aceptación global permanecen pendientes; B05 no se cierra.
+- `HEAD_LOCAL=HEAD_REMOTE=802a5d80a8ac4a99af3a574cfed4841cfcf1d378`; `AHEAD=0`; `BEHIND=0`; el stage fue selectivo y los cambios ajenos siguen sin commit.
+- Punto exacto de continuación: aprobación visual pendiente del propietario para el selector de columnas y cierre global de B05; no se requiere reabrir el código técnico certificado.
