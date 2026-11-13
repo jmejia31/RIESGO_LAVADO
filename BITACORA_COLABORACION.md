@@ -11078,3 +11078,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `git push origin desarrollo` fue aceptado; remoto y local quedaron en `17000efc99f6c1c72f91771e6a8f7ad53ef5290b`, sin force push. El expediente B05 ya es legible directamente desde [GitHub](https://github.com/jmejia31/RIESGO_LAVADO/blob/17000efc99f6c1c72f91771e6a8f7ad53ef5290b/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md).
 - `SOURCE_CODE_SHA=390a5f3b5249129cfe424433b1d02f4a8cd9dacf`; `EVIDENCE_COMMIT_SHA=17000efc99f6c1c72f91771e6a8f7ad53ef5290b`; `GITHUB_REMOTE_VERIFIED=YES`; `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/39`.
 - El Quality Gate y el security scan del push permanecen `PENDING_GITHUB_ACTIONS`; no se declara `REVIEW_READY=YES` hasta observar el run exacto.
+
+## 2026-11-12 21:52:21 -06:00 — B05 Quality Gate remoto verde (COD)
+
+- Quality Gate exacto [run 43360138895](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43360138895) para `QUALITY_GATE_SHA=700bb760bf2082199f68a124a3e1c4ac1884a1c5` terminó `STATUS=completed`, `CONCLUSION=success`.
+- Ambos jobs terminaron `success`: control de alcance y matriz integral de validadores, analizadores, build, tests, cobertura, E2E, Oracle XE, workbook y contenedores. `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica.
+- `SOURCE_CODE_SHA=390a5f3b5249129cfe424433b1d02f4a8cd9dacf`; `EVIDENCE_COMMIT_SHA=17000efc99f6c1c72f91771e6a8f7ad53ef5290b`; `GITHUB_REMOTE_VERIFIED=YES`.
+- Índice remoto verificable: [B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md](https://github.com/jmejia31/RIESGO_LAVADO/blob/700bb760bf2082199f68a124a3e1c4ac1884a1c5/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md). La aceptación visual del propietario continúa pendiente: `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
