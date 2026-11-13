@@ -2,13 +2,16 @@
 
 ## Expediente de la intervención
 
-- `PHASE=B05_ACTION_MENU_AND_TOOLTIP_REFINEMENT`
+- `PHASE=B05_COLUMNS_SELECTOR_INDICATOR_REFINEMENT`
 - `BASE_SHA=4bdd986d08db8bd0514571a57bb0baf857d99ab1`
 - `BRANCH=desarrollo`
 - `AUTHOR=COD / CODEX`
 - `CLIENT=CLI`
 - `OWNER_SIGNOFF_B05=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`
-- `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`
+- `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`
+- `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`
+- `B05_COLUMNS_SELECTOR_VISUAL_ACCEPTANCE=PENDING`
+- `B05_OVERALL_OWNER_VISUAL_ACCEPTANCE=PENDING`
 - `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`
 
 Esta intervención continúa el B05 P0 de expresiones largas y mantiene sus SHA históricos. El alcance aplicado es la corrección quirúrgica del menú superior «Acciones» del Form Builder y del tooltip institucional «Cerrar constructor», sin reconstruir el Form Builder ni alterar su contrato.
@@ -124,3 +127,47 @@ B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 - `DOCUMENTAL_QUALITY_GATE_CONCLUSION=success`
 
 El Quality Gate remoto exacto [43448960282](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43448960282) terminó verde sobre `SOURCE_CODE_SHA`, y el gate documental [43452216100](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43452216100) terminó verde sobre `EVIDENCE_COMMIT_SHA`; ambos jobs en `success`. El expediente queda publicado para revisión técnica; la aprobación visual del propietario continúa pendiente y por eso B05 no se cierra.
+
+## B05 P0 — Indicador duplicado del selector de columnas (2026-11-13)
+
+- `EVENT_ID=RL-B05-COLUMNS-SELECTOR-INDICATOR-20261113`; `INITIAL_SHA=22a24bc9ae85daf4eb045fe1954798a9b619ff9c`; `SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Reproducción fresca en Chromium antes de editar: el `<select>` reportó `appearance=none` y `-webkit-appearance=none`, pero `backgroundImage` todavía contenía el SVG de Tailwind Forms; el wrapper ya mostraba el SVG institucional propio. Esa combinación era la causa concreta del doble chevron observado.
+- Corrección quirúrgica: el selector de columnas conserva `[ngModel]="sec.columnasPorFila"`, `(ngModelChange)="columnasSeccionChange.emit({ seccionId: sec.id, columnas: +$event })"`, opciones `1/2/3/4/6`, grilla, modo solo lectura y teclado. La regla scoped `.form-builder-canvas__columns-control` fija `appearance`, `-webkit-appearance` y `background-image: none`; el SVG institucional único queda marcado como decorativo y accesible con `aria-hidden`.
+- No se modificaron menú Acciones ni tooltip Cerrar, formulas, IDs, serialización, persistencia, backend, Oracle institucional, producción, `main`, migración 54, B06 ni Bloque 10.
+- Archivos funcionales publicados en el commit `f9441e9a2772f2421c91a095b2139fb97f737c14`: canvas HTML/SCSS/spec y regresión Playwright `modal-shell-lock.spec.ts`.
+
+### Verificación fresca de esta corrección
+
+- Unit focalizada del canvas: `1 archivo / 25 pruebas PASS`.
+- Suite Angular completa: `95 archivos / 995 pruebas PASS`.
+- ESLint: `PASS`; build: `PASS`, con warnings preexistentes de presupuesto SCSS y CommonJS `exceljs`.
+- Playwright Chromium real: `1/1 PASS` del selector de columnas en `390x844`, `768x1024`, `1366x768` y `1536x864`; la regresión ampliada relacionada terminó `4/4 PASS` incluyendo fórmula, auditoría compartida y menú contextual.
+- El caso Playwright verifica valores exactos, `ngModel` numérico, navegación `ArrowDown`, actualización `repeat(3, ...)` de la grilla, `appearance=none`, `-webkit-appearance=none`, `backgroundImage=none`, un único SVG visible alineado y ausencia de overflow horizontal.
+- Validadores frescos: B04 `PASS` (`63` selectores, `2` menús, `48` nativos, `5` bounded, `0` no revisados); estructura `PASS` (`118` rutas, `1237` archivos); base de datos `PASS`; enlaces `PASS` (`227` documentos, `237` enlaces); diálogos nativos `6/6 PASS`; Agent Skills `14/14 PASS`.
+- Quality Gate local: `BLOCKED_EXTERNAL`, no por esta corrección: `1099` pruebas backend pasaron, `8` fallaron al no existir `Database:Profile=LOCAL_XE` y `2` fueron omitidas. No se modificó configuración Oracle para ocultar el bloqueo.
+
+```ini
+B05_COLUMNS_SELECTOR_ROOT_CAUSE=TAILWIND_BACKGROUND_IMAGE_WITH_CUSTOM_SVG
+B05_COLUMNS_SELECTOR_NATIVE_BACKGROUND=REMOVED
+B05_COLUMNS_SELECTOR_SINGLE_CHEVRON=PASS
+B05_COLUMNS_SELECTOR_OPTIONS=1,2,3,4,6
+B05_COLUMNS_SELECTOR_NUMERIC_BINDING=PASS
+B05_COLUMNS_SELECTOR_GRID_PERSISTENCE_CONTRACT=PASS
+B05_COLUMNS_SELECTOR_READONLY=PASS
+B05_COLUMNS_SELECTOR_KEYBOARD=PASS
+B05_COLUMNS_SELECTOR_HORIZONTAL_OVERFLOW=0
+B05_COLUMNS_SELECTOR_VIEWPORTS=390x844,768x1024,1366x768,1536x864
+B05_COLUMNS_SELECTOR_PLAYWRIGHT=PASS
+B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED
+B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED
+B05_COLUMNS_SELECTOR_VISUAL_ACCEPTANCE=PENDING
+B05_OVERALL_OWNER_VISUAL_ACCEPTANCE=PENDING
+B05_ACTION_MENU_REWORK_AUTHORIZED=NO
+B05_CLOSE_TOOLTIP_REWORK_AUTHORIZED=NO
+B06_AUTHORIZED=NO
+B05_TECHNICAL_STATUS=PARTIAL
+B05_OWNER_VISUAL_ACCEPTANCE=PENDING
+B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
+```
+
+`EVIDENCE_COMMIT_SHA`, el run remoto exacto del commit funcional y el enlace del expediente final se completarán después del push documental. La aprobación explícita recibida aplica únicamente a Acciones y Cerrar; B05 no se cierra sin aceptación visual global del propietario.

@@ -4495,6 +4495,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_NEW_GATE`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
 - Restricciones preservadas: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B06_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
 
+## Estado vigente — B05 selector de columnas corregido, Quality Gate en ejecución — 2026-11-13 10:33:15 -06:00
+
+- `PHASE=B05_COLUMNS_SELECTOR_INDICATOR_REFINEMENT`; `INITIAL_SHA=22a24bc9ae85daf4eb045fe1954798a9b619ff9c`; `SOURCE_CODE_SHA=f9441e9a2772f2421c91a095b2139fb97f737c14`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Causa raíz verificada: Tailwind Forms mantenía un `background-image` aunque el `<select>` ya tenía `appearance=none`; el SVG custom del wrapper producía el segundo chevron. El CSS scoped del selector elimina solo ese fondo y conserva el SVG institucional único.
+- `B05_COLUMNS_SELECTOR_SINGLE_CHEVRON=PASS`; `B05_COLUMNS_SELECTOR_NATIVE_BACKGROUND=REMOVED`; `B05_COLUMNS_SELECTOR_OPTIONS=1,2,3,4,6`; `B05_COLUMNS_SELECTOR_NUMERIC_BINDING=PASS`; `B05_COLUMNS_SELECTOR_READONLY=PASS`; `B05_COLUMNS_SELECTOR_KEYBOARD=PASS`; `B05_COLUMNS_SELECTOR_HORIZONTAL_OVERFLOW=0`; `B05_COLUMNS_SELECTOR_PLAYWRIGHT=PASS`.
+- Pruebas frescas: unit canvas `25/25`; Angular `95/995`; Playwright focalizado `1/1` en `390x844`, `768x1024`, `1366x768`, `1536x864`; regresión relacionada `4/4`; ESLint/build/validadores B04/estructura/base de datos/enlaces/native dialogs/skills `PASS`. La cobertura local integral sigue bloqueada externamente por ausencia de `Database:Profile=LOCAL_XE` (`1099` pass, `8` fallos de perfil, `2` omitidas).
+- Commit funcional publicado: `f9441e9a2772f2421c91a095b2139fb97f737c14`; `HEAD_LOCAL=HEAD_REMOTE`; divergencia `0/0`; los cambios ajenos permanecen fuera del stage.
+- Quality Gate exacto [43462444453](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43462444453): `STATUS=in_progress`; `CONCLUSION=PENDING`; `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_QUALITY_GATE`.
+- `B05_ACTION_MENU_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_CLOSE_TOOLTIP_OWNER_VISUAL_ACCEPTANCE=APPROVED`; `B05_COLUMNS_SELECTOR_VISUAL_ACCEPTANCE=PENDING`; `B05_OVERALL_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; `B06_AUTHORIZED=NO`.
+- Continuación exacta: observar el run `43462444453`, completar el expediente B05, publicar documentación y volver a comprobar por lectura remota el SHA final y el Quality Gate documental.
+
 ## Estado vigente — B05 menú Acciones y tooltip institucional — 2026-11-13 09:09:06 -06:00
 
 - `PHASE=B05_ACTION_MENU_AND_TOOLTIP_REFINEMENT`; `INITIAL_SHA=4bdd986d08db8bd0514571a57bb0baf857d99ab1`; `SOURCE_CODE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
