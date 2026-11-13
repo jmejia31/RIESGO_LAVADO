@@ -350,4 +350,4 @@ B04_FINAL_STATUS=OPEN
 - Archivos funcionales: Form Builder padre, toolbar, `app-bounded-select` compartido y regresión Playwright.
 - Pruebas verificadas: suite Angular `95` archivos / `991` pruebas `PASS`; ESLint `PASS`; build `PASS` con warnings preexistentes de presupuesto SCSS/CommonJS; validador B04 `PASS`; estructura y enlaces documentales `PASS`; Playwright Form Builder `15/15 PASS`.
 - No ejecutado en esta intervención: Quality Gate remoto exact-SHA y validaciones Oracle/infraestructura; no se modificaron backend, Oracle institucional, producción, `main`, B05, Block 10, P06 ni P07.
-- `SOURCE_CODE_SHA=PENDING_COMMIT`; `EVIDENCE_COMMIT_SHA=PENDING_COMMIT`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
+- `SOURCE_CODE_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `EVIDENCE_COMMIT_SHA=0e0ab6d0e551e61f6c13ca2046eeb60b54a514ac`; `GITHUB_REMOTE_VERIFIED=PENDING_PUSH`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_GITHUB_ACTIONS`.
