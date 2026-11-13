@@ -4508,6 +4508,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Estado B05: `B05_ACTION_MENU_ICONOGRAPHY=PASS`; `B05_ACTION_MENU_LABELS=PASS`; `B05_PROGRAMMATIC_FOCUS_TOOLTIP=0`; `B05_NATIVE_TOOLTIP_INTERFERENCE=0`; `B05_PLAYWRIGHT_VISUAL=PASS`; `B05_TECHNICAL_STATUS=PARTIAL`; `B05_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
 - Restricciones: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B06_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; cambios ajenos fuera del stage.
 - Continuación exacta: esperar el gate remoto; actualizar este estado, la bitácora y el expediente B05 con `QUALITY_GATE_CONCLUSION`, `EVIDENCE_COMMIT_SHA` y enlaces finales; crear/push documental selectivo y verificar paridad `HEAD_LOCAL=HEAD_REMOTE`.
+
+## Estado vigente — B05 Quality Gate funcional verde y expediente final en publicación — 2026-11-13 09:23:00 -06:00
+
+- `SOURCE_CODE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`; `QUALITY_GATE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`; `QUALITY_GATE_RUN=43448960282`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`.
+- Los dos jobs remotos terminaron `success`; `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES` para revisión técnica. El gate valida la corrección funcional, no sustituye la aceptación visual del propietario.
+- `EVIDENCE_COMMIT_SHA=cafb3d8f6b5d72871f7724adb40cabae8e107b44`; índice documental: [B05](https://github.com/jmejia31/RIESGO_LAVADO/blob/cafb3d8f6b5d72871f7724adb40cabae8e107b44/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md); signoff: [Issue #40](https://github.com/jmejia31/RIESGO_LAVADO/issues/40).
+- La corrección mantiene `B05_ACTION_MENU_ICONOGRAPHY=PASS`, `B05_ACTION_MENU_LABELS=PASS`, `B05_ACTION_MENU_KEYBOARD_ESCAPE=PASS`, `B05_PROGRAMMATIC_FOCUS_TOOLTIP=0`, `B05_NATIVE_TOOLTIP_INTERFERENCE=0`, `B05_PLAYWRIGHT_VISUAL=PASS` y `B05_TECHNICAL_STATUS=PARTIAL`.
+- Se preparó la actualización documental final de `B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`, `BITACORA_COLABORACION.md` y este estado. Se publicará selectivamente y generará un nuevo Quality Gate; no se considerará cerrado hasta verificar ese SHA documental y la aprobación visual.
+- Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B06_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; cambios ajenos fuera del stage.
 ## Estado vigente — B05 reflow E2E final y Quality Gate verde — 2026-11-12 23:18:00 -06:00
 
 - `SOURCE_CODE_SHA=df6887e5a8bb2edc71882ed8aa3f8d33ad9e6d43`; `EVIDENCE_COMMIT_SHA=6605a9e84d1ec5d40d442fc49df7b483b65d5901`; rama `desarrollo`; commit funcional final publicado en `origin/desarrollo`.

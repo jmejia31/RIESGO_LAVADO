@@ -108,15 +108,15 @@ B05_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 ## Publicación y verificación remota
 
 - `SOURCE_CODE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`
-- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`
-- `GITHUB_EVIDENCE_INDEX_URL=PENDING_DOCUMENTAL_COMMIT`
+- `EVIDENCE_COMMIT_SHA=cafb3d8f6b5d72871f7724adb40cabae8e107b44`
+- `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/cafb3d8f6b5d72871f7724adb40cabae8e107b44/docs/0.0%20Documentaci%C3%B3n/B05_ESTANDAR_CONSTRUCTOR_FORMULARIOS_DINAMICOS.md`
 - `GITHUB_SIGNOFF_URL=https://github.com/jmejia31/RIESGO_LAVADO/issues/40`
 - `GITHUB_REMOTE_VERIFIED=YES`
 - `QUALITY_GATE_RUN=43448960282`
 - `QUALITY_GATE_SHA=0f0cc7220b7347f2d588a2e90c3383ccb7a2f31f`
-- `QUALITY_GATE_STATUS=in_progress`
-- `QUALITY_GATE_CONCLUSION=PENDING`
-- `SECURITY_SCAN=IN_PROGRESS_GITHUB_ACTIONS`
-- `REVIEW_READY=PENDING_QUALITY_GATE`
+- `QUALITY_GATE_STATUS=completed`
+- `QUALITY_GATE_CONCLUSION=success`
+- `SECURITY_SCAN=PASS_GITHUB_ACTIONS`
+- `REVIEW_READY=YES`
 
-El Quality Gate remoto exacto del commit funcional está en ejecución. El expediente documental final se completará con su conclusión y el SHA del commit documental que lo publique. La aprobación visual del propietario continúa pendiente.
+El Quality Gate remoto exacto [43448960282](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43448960282) terminó verde sobre `SOURCE_CODE_SHA`, con ambos jobs en `success`. El expediente queda publicado para revisión técnica; la aprobación visual del propietario continúa pendiente y por eso B05 no se cierra.
