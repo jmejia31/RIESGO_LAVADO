@@ -11245,6 +11245,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Paridad del momento de publicación: `HEAD_LOCAL=HEAD_REMOTE=3757456f774a51dc767089d0706414d82ec78599`; `AHEAD=0`; `BEHIND=0`. Cambios ajenos del checkout permanecen fuera del stage.
 - Restricciones finales: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`.
 - Punto exacto de continuación: revisión visual del propietario y, si corresponde, entrega de un activo IHSS autorizado; no reabrir el código compartido certificado sin una nueva orden.
+# 2026-11-13 16:44:00 -06:00 — B06 expediente remoto verificable (COD)
+
+- Commit documental inicial publicado: `39a31d36629217c711939f0d459a83f375bae177` (`docs(b06): documentar evidencia global del logo ihss`), con índice B06, evidencia sanitizada, bitácora y estado colaborativo.
+- `EVIDENCE_COMMIT_SHA=39a31d36629217c711939f0d459a83f375bae177`; índice remoto: `https://github.com/jmejia31/RIESGO_LAVADO/blob/39a31d36629217c711939f0d459a83f375bae177/docs/0.0%20Documentaci%C3%B3n/B06_ESTANDAR_REPORTERIA_PDF_EXCEL_LOGO_IHSS.md`; evidencia: `https://github.com/jmejia31/RIESGO_LAVADO/blob/39a31d36629217c711939f0d459a83f375bae177/docs/certificaciones/B06_logo_ihss_e9f9e957.md`.
+- Se sustituyeron los placeholders de SHA/URL en el expediente y se prepara el commit documental final; su Quality Gate será observado antes del cierre.
+- `SOURCE_CODE_SHA=15ae2ab7ce220bcdc1b0f3d5343cf2f168c802f5`; `CERTIFIED_HEAD_SHA=e9f9e95759c3f717c9950ae4d6a8a28d5e690a58`; `B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+
 # 2026-11-13 16:41:32 -06:00 — B06 integración global del logo IHSS y cierre técnico del Quality Gate (COD)
 
 - `EVENT_ID=RL-B06-IHSS-LOGO-GLOBAL-20261113`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
