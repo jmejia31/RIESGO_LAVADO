@@ -4597,3 +4597,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`; el expediente no cierra B06 porque falta activo IHSS autorizado y aprobación visual.
 - `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto: publicar el commit documental de esta certificación y verificar su Quality Gate final; no modificar código funcional adicional ni cerrar B06.
+
+## Cierre operativo de publicación B06 — 2026-11-13 12:51 -06:00
+
+- Commit final documental: `2eea92640d3c19fea9a919e60fb35dab341fd875`; Quality Gate [43484290449](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43484290449) `completed/success`.
+- Paridad confirmada: `HEAD=origin/desarrollo=2eea92640d3c19fea9a919e60fb35dab341fd875`; `git rev-list --left-right --count HEAD...origin/desarrollo = 0 0`; GitHub API devolvió el expediente B06 en `desarrollo`.
+- `B06_DOCUMENTATION_QUALITY_GATE=PASS`; `GITHUB_REMOTE_VERIFIED=YES`; `REVIEW_READY=YES_FOR_TECHNICAL_REVIEW`.
+- El checkout conserva archivos ajenos modificados/no rastreados fuera del stage. No hay cambios funcionales adicionales de COD pendientes de publicación.
+- B06 sigue abierto y no se certifica el logo: `B06_TECHNICAL_STATUS=PARTIAL_BLOCKED_LOGO_AUTHORIZATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
+- Continuación: entregar activo IHSS autorizado y aprobación visual del propietario; después ejecutar solo la verificación específica del logo.

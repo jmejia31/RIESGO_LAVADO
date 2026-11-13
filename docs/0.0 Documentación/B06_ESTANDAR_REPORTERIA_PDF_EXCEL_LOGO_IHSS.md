@@ -108,6 +108,10 @@ QUALITY_GATE_RUN=43481762215
 QUALITY_GATE_SHA=3d8cc1aeaf27cda48d74c6cf90061bac795499a5
 QUALITY_GATE_STATUS=completed
 QUALITY_GATE_CONCLUSION=success
+DOCUMENTATION_QUALITY_GATE_RUN=43484290449
+DOCUMENTATION_QUALITY_GATE_SHA=2eea92640d3c19fea9a919e60fb35dab341fd875
+DOCUMENTATION_QUALITY_GATE_STATUS=completed
+DOCUMENTATION_QUALITY_GATE_CONCLUSION=success
 GITHUB_REMOTE_VERIFIED=YES
 SECURITY_SCAN=PASS_GITHUB_ACTIONS
 REVIEW_READY=YES_FOR_TECHNICAL_REVIEW
@@ -120,3 +124,5 @@ B06 no se cierra con este expediente: queda abierto para la entrega/autorizació
 - El primer gate documental sobre `30b92f83e4354caa660b020b2389975cadec0edb` quedó `failure` exclusivamente porque la regresión E2E de B05 leía la grilla antes del reflow Angular. No se usó como certificación.
 - La espera de reflow se corrigió de forma aislada en `3d8cc1aeaf27cda48d74c6cf90061bac795499a5` y el caso Chromium pasó `1/1` localmente.
 - Quality Gate exacto de código, pruebas y expediente previo: [run 43481762215](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43481762215), `STATUS=completed`, `CONCLUSION=success`; ambos jobs y todos los pasos integrales terminaron verdes.
+- El commit documental final `2eea92640d3c19fea9a919e60fb35dab341fd875` quedó publicado en `origin/desarrollo` y su Quality Gate [43484290449](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43484290449) terminó `STATUS=completed`, `CONCLUSION=success`.
+- La referencia remota `desarrollo` y el checkout local tienen el mismo SHA (`2eea92640d3c19fea9a919e60fb35dab341fd875`); GitHub API devolvió el expediente B06 y su URL verificable.
