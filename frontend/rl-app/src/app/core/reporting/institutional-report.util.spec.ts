@@ -16,7 +16,11 @@ import {
   resolverAnchoUtilPdf,
   resolverMargenesTablaInstitucional
 } from './institutional-report.util';
-import { INSTITUTIONAL_LOGO_ASSET_PATH, INSTITUTIONAL_LOGO_ASPECT_RATIO } from './institutional-report-standard';
+import {
+  INSTITUTIONAL_LOGO_ASSET_PATH,
+  INSTITUTIONAL_LOGO_ASPECT_RATIO,
+  INSTITUTIONAL_PDF_LOGO_SCALE
+} from './institutional-report-standard';
 
 describe('estándar institucional de reportería', () => {
   it('usa la paleta institucional aprobada', () => {
@@ -29,6 +33,7 @@ describe('estándar institucional de reportería', () => {
     expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
     expect(INSTITUTIONAL_LOGO_ASSET_PATH).toBe('assets/institutional/ihss-logo.png');
     expect(INSTITUTIONAL_LOGO_ASPECT_RATIO).toBeCloseTo(2034 / 773, 10);
+    expect(INSTITUTIONAL_PDF_LOGO_SCALE).toBe(1.4);
   });
 
   it('mantiene el mismo encabezado en orientación vertical y horizontal', () => {

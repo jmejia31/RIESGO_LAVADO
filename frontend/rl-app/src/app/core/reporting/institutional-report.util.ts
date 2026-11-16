@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import {
   INSTITUTIONAL_LOGO_ASSET_PATH,
   INSTITUTIONAL_LOGO_ASPECT_RATIO,
+  INSTITUTIONAL_PDF_LOGO_SCALE,
   INSTITUTIONAL_REPORT_COLORS,
   INSTITUTIONAL_REPORT_LAYOUT
 } from './institutional-report-standard';
@@ -32,7 +33,10 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   const width = doc.internal.pageSize.getWidth();
   const leftWidth = width * 0.62 - INSTITUTIONAL_REPORT_LAYOUT.pdfMargin;
   const titleLines = doc.splitTextToSize(meta.titulo, leftWidth);
-  const height = Math.max(18, 8 + titleLines.length * 4.5);
+  const logoWidth = 32 * INSTITUTIONAL_PDF_LOGO_SCALE;
+  const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
+  const metadataTop = 10.5 + titleLines.length * 4.5 + 2;
+  const height = Math.max(18, metadataTop + 4.5 + 2, logoHeight + 2);
   doc.setFillColor(...COLORES_REPORTE_INSTITUCIONAL.navyDark);
   doc.rect(0, 0, width, height, 'F');
   doc.setFont('helvetica', 'bold');
@@ -42,8 +46,8 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.text(titleLines, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, 10.5);
-  dibujarLogoInstitucionalPdf(doc, width, 4, 32, 12);
-  doc.text(meta.sistema, width - INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, 22, { align: 'right' });
+  dibujarLogoInstitucionalPdf(doc, width, Math.max(0, (height - logoHeight) / 2), logoWidth, logoHeight);
+  doc.text(meta.sistema, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, metadataTop);
 }
 
 /** Inserta el PNG canónico en el documento real; no agrega una capa HTML de marca. */
@@ -93,7 +97,6 @@ export function agregarEncabezadoInstitucionalPdf(
 
   const margin = INSTITUTIONAL_REPORT_LAYOUT.pdfMargin;
   const leftWidth = width * 0.62 - margin;
-  const rightWidth = width - margin * 2 - width * 0.66;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   const institutionLines = doc.splitTextToSize(meta.institucion, leftWidth);
@@ -101,14 +104,16 @@ export function agregarEncabezadoInstitucionalPdf(
   const titleLines = doc.splitTextToSize(meta.titulo, leftWidth);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
-  const metadataLines = doc.splitTextToSize(`${sistema} | Generado: ${fecha}`, rightWidth);
-  const logoWidth = Math.min(48, Math.max(34, width * 0.16));
+  const metadataLines = doc.splitTextToSize(`${sistema} | Generado: ${fecha}`, leftWidth);
+  const logoWidth = Math.min(48, Math.max(34, width * 0.16)) * INSTITUTIONAL_PDF_LOGO_SCALE;
   const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
+  const titleBottom = 9 + institutionLines.length * 5 + 6 + titleLines.length * 7;
+  const metadataTop = titleBottom + 4;
   const headerHeight = Math.max(
     INSTITUTIONAL_REPORT_LAYOUT.pdfHeaderMinimumHeight,
     8 + institutionLines.length * 5 + 5 + titleLines.length * 7,
-    12 + metadataLines.length * 4.5,
-    logoHeight + 28
+    metadataTop + metadataLines.length * 4.5 + 5,
+    logoHeight + 12
   );
   doc.setFillColor(...COLORES_REPORTE_INSTITUCIONAL.navy);
   doc.rect(0, 0, width, headerHeight, 'F');
@@ -121,8 +126,9 @@ export function agregarEncabezadoInstitucionalPdf(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(220, 230, 240);
-  dibujarLogoInstitucionalPdf(doc, width, 4, logoWidth, logoHeight);
-  doc.text(metadataLines, width - margin - rightWidth, Math.max(24, logoHeight + 9), { align: 'left' });
+  const logoTop = Math.max(0, (headerHeight - logoHeight) / 2);
+  dibujarLogoInstitucionalPdf(doc, width, logoTop, logoWidth, logoHeight);
+  doc.text(metadataLines, margin, metadataTop, { align: 'left' });
 
   if (!filtros) return headerHeight + 10;
 

@@ -46,6 +46,21 @@ public sealed class InstitutionalReportLogoTests
     }
 
     [Fact]
+    public void Pdf_ScalesTheLogoByFortyPercentAndCentersItVerticallyInTheHeader()
+    {
+        var document = new InstitutionalPdfDocument(
+            "Reporte institucional de prueba",
+            "Pruebas",
+            InstitutionalReportOrientation.Portrait,
+            new DateTime(2026, 11, 16, 12, 0, 0));
+
+        var pdf = Encoding.ASCII.GetString(document.ToBytes());
+
+        Assert.Contains("q 100.8 0 0 38.31 458.48 779.24 cm /ImIHSS Do Q", pdf, StringComparison.Ordinal);
+        Assert.Contains("1 0 0 1 36 784.89 Tm (SGRLA-IHSS", pdf, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Xlsx_EmbedsValidDrawingRelationshipsAndPreservesData()
     {
         var workbook = new InstitutionalXlsxWorkbook();

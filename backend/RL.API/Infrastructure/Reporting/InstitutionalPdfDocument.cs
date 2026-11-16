@@ -17,8 +17,7 @@ public sealed class InstitutionalPdfDocument
     private const decimal FooterHeight = 30m;
     private const decimal DefaultFontSize = 8.5m;
     private const decimal DefaultLineHeight = 11m;
-    private const decimal LogoWidth = 72m;
-    private const decimal LogoTop = 7m;
+    private const decimal LogoWidth = 100.8m;
 
     private readonly decimal _pageWidth;
     private readonly decimal _pageHeight;
@@ -279,29 +278,33 @@ public sealed class InstitutionalPdfDocument
         DrawRect(0m, 0m, _pageWidth, _headerHeight, InstitutionalReportStandard.Palette.Navy,
             InstitutionalReportStandard.Palette.Navy);
         var leftWidth = _pageWidth * 0.62m - MarginLeft;
-        var rightWidth = _pageWidth - MarginRight - _pageWidth * 0.66m;
         var institution = Wrap(InstitutionalReportStandard.InstitutionName, leftWidth, 10m);
         var title = Wrap(_title, leftWidth, 15m);
-        var metadata = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", rightWidth, 8m);
+        var metadata = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", leftWidth, 8m);
         DrawLines(institution, MarginLeft, 19m, 10m, 11m, InstitutionalReportStandard.Palette.HeaderText, bold: true);
         DrawLines(title, MarginLeft, 36m, 15m, 16m, InstitutionalReportStandard.Palette.HeaderText, bold: true);
         var logoHeight = LogoWidth / InstitutionalLogoAsset.AspectRatio;
         var logoX = _pageWidth - MarginRight - LogoWidth;
-        DrawRect(logoX, LogoTop, LogoWidth, logoHeight, "#FFFFFF", "#FFFFFF");
-        DrawImage(logoX, LogoTop, LogoWidth, logoHeight);
-        DrawLines(metadata, _pageWidth - MarginRight - rightWidth, LogoTop + logoHeight + 7m, 8m, 11m, "#DCE6F0");
+        var logoTop = Math.Max(0m, (_headerHeight - logoHeight) / 2m);
+        var metadataTop = 36m + title.Count * 16m + 5m;
+        DrawRect(logoX, logoTop, LogoWidth, logoHeight, "#FFFFFF", "#FFFFFF");
+        DrawImage(logoX, logoTop, LogoWidth, logoHeight);
+        DrawLines(metadata, MarginLeft, metadataTop, 8m, 11m, "#DCE6F0");
         _current = previous;
     }
 
     private decimal CalcularAltoEncabezado()
     {
         var leftWidth = _pageWidth * 0.62m - MarginLeft;
-        var rightWidth = _pageWidth - MarginRight - _pageWidth * 0.66m;
         var institutionLines = Wrap(InstitutionalReportStandard.InstitutionName, leftWidth, 10m).Count;
         var titleLines = Wrap(_title, leftWidth, 15m).Count;
-        var metadataLines = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", rightWidth, 8m).Count;
+        var metadataLines = Wrap($"{InstitutionalReportStandard.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", leftWidth, 8m).Count;
         var logoHeight = LogoWidth / InstitutionalLogoAsset.AspectRatio;
-        return Math.Max(72m, Math.Max(20m + institutionLines * 11m + 8m + titleLines * 16m, 14m + logoHeight + 7m + metadataLines * 11m) + 10m);
+        var metadataBottom = 36m + titleLines * 16m + 5m + metadataLines * 11m;
+        var textHeight = Math.Max(
+            20m + institutionLines * 11m + 8m + titleLines * 16m,
+            metadataBottom);
+        return Math.Max(72m, Math.Max(textHeight + 8m, logoHeight + 20m));
     }
 
     private void DibujarPie(PdfPage page, int pageNumber, int totalPages)
