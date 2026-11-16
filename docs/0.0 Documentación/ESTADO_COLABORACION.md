@@ -4699,3 +4699,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `SOURCE_CODE_SHA=331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`; `EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211`; ambos commits pertenecen a `desarrollo`.
 - El indice y la evidencia sintetica fueron publicados; el Quality Gate exacto del commit documental sigue pendiente de lectura remota. No se declara verde por herencia.
 - `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_AND_DOCUMENT_BUNDLE`; `SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_DOCUMENTAL_GATE`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
+
+## Estado vigente — B06 identidad institucional parametrizada y Quality Gate verde — 2026-11-16 12:02 -06:00
+
+- `SOURCE_CODE_SHA=331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`; `EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211`.
+- Quality Gate exacto [43920939882](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882): `STATUS=completed`; `CONCLUSION=success`; validadores, analyzers, build, tests, Oracle XE, 2.006 calculos de workbook, E2E y contenedores verdes.
+- `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
+- `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`; no se declara cierre funcional por inferencia tecnica.
+- Restricciones preservadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuacion: publicar y verificar el commit documental de este registro; despues queda pendiente unicamente la aceptacion visual del propietario y la aprobacion DBA para ejecutar la columna Oracle opcional.

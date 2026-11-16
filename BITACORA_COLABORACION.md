@@ -11314,3 +11314,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211`; contiene el indice, la evidencia sintetica, la bitacora, el estado colaborativo y el estandar B06 actualizado.
 - Enlaces remotos preparados: `docs/certificaciones/B06_dynamic_branding_331e9617.md` y `docs/0.0 Documentación/B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md`. El Quality Gate exacto de este SHA queda pendiente de observacion.
 - `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_AND_DOCUMENT_BUNDLE`; `SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_DOCUMENTAL_GATE`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`.
+
+## 2026-11-16 12:02 -06:00 — B06 Quality Gate remoto verde de identidad dinamica (COD)
+
+- El Quality Gate exacto del expediente documental terminó `STATUS=completed`, `CONCLUSION=success` en el [run 43920939882](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882), sobre `HEAD=341367d16933a966345ac1b15d29243f7bc5c3da`.
+- Quedaron verdes los validadores, analizadores, build, pruebas, Oracle XE, los 2.006 calculos de workbook, E2E, contenedores y cierre de recursos; el aviso deprecado de Node.js 20 de Actions no fue un fallo del gate.
+- `SOURCE_CODE_SHA=331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`; `EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211`; `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
+- `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`. El gate tecnico no sustituye la aprobacion visual del propietario ni la ventana DBA para la columna Oracle opcional.
+- Punto exacto de continuacion: publicar esta actualizacion documental de cierre tecnico, verificar su contenido por API de GitHub y conservar B06 abierto hasta la aceptacion visual explicita.

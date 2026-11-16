@@ -13,7 +13,7 @@ CLIENT=CLI
 BRANCH=desarrollo
 INITIAL_SHA=167d5f72ea20e72000553ad190c7089eaea41a85
 SOURCE_CODE_SHA=331e9617c9ee2dba9e008ae3f3b7071b9b8551b5
-EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
+EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211
 LOGO_CANONICAL_SHA256=D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543
 LOGO_CANONICAL_DIMENSIONS=2034x773
 LOGO_PHYSICAL_WIDTH_MM=72.644
@@ -42,9 +42,12 @@ MAIN_TOUCHED=NO
 PRODUCTION_TOUCHED=NO
 ORACLE_INSTITUTIONAL_TOUCHED=NO
 MIGRATION_54_TOUCHED=NO
-SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS
+QUALITY_GATE_STATUS=SUCCESS
+QUALITY_GATE_RUN=43920939882
+QUALITY_GATE_URL=https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882
+SECURITY_SCAN=PASS_GITHUB_ACTIONS
 GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT
-REVIEW_READY=PENDING_DOCUMENTAL_GATE
+REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW
 ```
 
 ## Verificaciones reproducidas
@@ -62,4 +65,4 @@ REVIEW_READY=PENDING_DOCUMENTAL_GATE
 
 El cambio funcional esta publicado en [`331e9617`](https://github.com/jmejia31/RIESGO_LAVADO/commit/331e9617c9ee2dba9e008ae3f3b7071b9b8551b5). Este expediente no cierra B06 por inferencia tecnica: la revision visual del propietario y el gate remoto del SHA documental siguen siendo pendientes.
 
-El expediente documental que contiene esta evidencia fue publicado en [`55190a7a`](https://github.com/jmejia31/RIESGO_LAVADO/commit/55190a7a9efc25541c1bd1b9bb2bd34d965f8211). El gate de ese SHA se observa por separado; hasta su conclusion, `REVIEW_READY=PENDING_DOCUMENTAL_GATE`.
+El expediente documental base que contiene esta evidencia fue publicado en [`55190a7a`](https://github.com/jmejia31/RIESGO_LAVADO/commit/55190a7a9efc25541c1bd1b9bb2bd34d965f8211). El Quality Gate exacto del estado documental publicado terminó verde en el [run 43920939882](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882): `STATUS=completed`, `CONCLUSION=success`. La revisión visual del propietario permanece pendiente.

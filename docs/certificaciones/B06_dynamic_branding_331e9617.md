@@ -44,10 +44,12 @@ MAIN_TOUCHED=NO
 PRODUCTION_TOUCHED=NO
 ORACLE_INSTITUTIONAL_TOUCHED=NO
 MIGRATION_54_TOUCHED=NO
-QUALITY_GATE_STATUS=PENDING_DOCUMENTAL_COMMIT
-GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT
-SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS
-REVIEW_READY=PENDING_DOCUMENTAL_GATE
+QUALITY_GATE_STATUS=SUCCESS
+QUALITY_GATE_RUN=43920939882
+QUALITY_GATE_URL=https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882
+GITHUB_REMOTE_VERIFIED=YES
+SECURITY_SCAN=PASS_GITHUB_ACTIONS
+REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW
 ```
 
 ## Procedencia e implementacion
@@ -60,3 +62,9 @@ REVIEW_READY=PENDING_DOCUMENTAL_GATE
 ## Limites
 
 La columna Oracle no se ejecuta desde Codex. El backend rechaza URL remota para reportes de servidor por seguridad; una URL externa requiere una integracion aprobada con allowlist y descarga controlada. La aceptacion visual del propietario permanece pendiente y no se sustituye con pruebas unitarias.
+
+## Quality Gate remoto del expediente
+
+- Run exacto: [43920939882](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882), `STATUS=completed`, `CONCLUSION=success`.
+- Alcance verde: validadores, analizadores, build, pruebas, Oracle XE, 2.006 calculos de workbook, E2E, contenedores y cierre de recursos.
+- `EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211` contiene este expediente base; la actualizacion documental queda publicada por el commit posterior de esta intervencion.
