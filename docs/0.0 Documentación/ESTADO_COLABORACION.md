@@ -4747,3 +4747,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - El expediente B06 queda publicado y legible en GitHub con evidencia primaria sanitizada, SHA de codigo, SHA del commit de evidencia, hashes y limites.
 - Gate del codigo: `43936758470=SUCCESS`. Gate del expediente `f841b5ee`: `43939723032=SUCCESS`. No se declaran aprobacion funcional ni aceptacion visual por inferencia tecnica.
 - `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
+## Estado vigente — B06 corrección del logo local en reportería — 2026-11-16
+
+- `PHASE=B06_DYNAMIC_INSTITUTIONAL_BRANDING_CORRECTION`; `INITIAL_SHA=f90d0815dd2bfdc5a6c9d733e0255e05c04d75e6`; `SOURCE_CODE_SHA=f1d42079bc549ded50a9d245fc1132fc5da2e08d`; rama `desarrollo`; `HEAD_LOCAL=HEAD_REMOTE` al registrar.
+- Se corrigió el defecto por el que el enlace remoto se veía en Angular pero el logo cargado por archivo no llegaba de forma utilizable a la reportería. El frontend re-encodea la selección a PNG compatible; carga y resolver comparten `wwwroot/uploads`; activos configurados no resolubles dejan de ocultarse con el logo canónico; el preview XLSX usa configuración compartida.
+- `B06_LOCAL_UPLOAD_NORMALIZATION=PASS`; `B06_LOCAL_ASSET_HTTP=PASS`; `B06_CONFIGURED_LOCAL_RESOLUTION=PASS`; `B06_REMOTE_SERVER_FETCH=BLOCKED_SSRF`; `B06_BACKEND_REGRESSION=PASS_9`; `B06_FRONTEND_REGRESSION=PASS_96_FILES_1007`; `B06_BACKEND_BUILD=PASS_0_ERRORS`; `B06_FRONTEND_BUILD=PASS`; `B06_FRONTEND_LINT=PASS`.
+- `B06_REAL_ADMIN_LOGO_A_LOGO_B=NOT_VERIFIED_AUTHENTICATED`; `B06_REAL_PDF_EXCEL_FLOW=NOT_VERIFIED_AUTHENTICATED`; `B06_PLAYWRIGHT_VISUAL=BLOCKED_BROWSER_AUTHENTICATION`. La configuración consultada aún contenía una URL externa; no se forzó una sustitución directa en Oracle para no saltar la publicación auditada de la interfaz.
+- `ORACLE_B06_PRECHECK=PASS`; `ORACLE_B06_POSTCHECK=PASS`; cambio de base aditivo B06 únicamente, sin borrados ni migración 54.
+- `QUALITY_GATE_RUN=43955398124`; `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_SHA_AND_GREEN_GATE`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
+- `B06_TECHNICAL_STATUS=PARTIAL_PENDING_AUTHENTICATED_E2E`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
+- Punto exacto de continuación: completar el gate remoto, publicar el expediente documental y comprobar desde GitHub que el índice y la evidencia son legibles. El propietario deberá ejecutar carga local, Guardar, recarga y generación de reportes para la aceptación visual final.

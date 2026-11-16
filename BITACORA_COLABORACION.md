@@ -11362,3 +11362,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - El Quality Gate del expediente documental `f841b5ee` fue el run [43939723032](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43939723032), terminado `STATUS=completed`, `CONCLUSION=success`.
 - `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `SOURCE_CODE_SHA=359c9720f20af2ab8363e2650ff84d1f1c562564`; `EVIDENCE_COMMIT_SHA=f841b5eedefc8e9a773888e6df2a3f77f1205f37`.
 - El expediente diferencia el gate exacto del codigo `43936758470` del gate documental `43939723032`. El propietario conserva la decision visual final; B06 no se cierra por inferencia tecnica.
+# 2026-11-16 - B06 corrección del flujo de logo local y reportería (COD)
+
+- `EVENT_ID=RL-B06-LOCAL-LOGO-PUBLICATION-20261116`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- `INITIAL_SHA=f90d0815dd2bfdc5a6c9d733e0255e05c04d75e6`; `SOURCE_CODE_SHA=f1d42079bc549ded50a9d245fc1132fc5da2e08d`; publicado y alineado con `origin/desarrollo`.
+- Diagnóstico reproducido: el navegador podía mostrar una URL remota, pero el backend no debe descargarla por SSRF; el resolver anterior ocultaba el error con el logo canónico. La normalización frontend también permitía PNGs que el decodificador documental no podía consumir.
+- Corrección: raíz de almacenamiento compartida `WebRootPath/uploads`; normalización de imágenes seleccionadas a PNG compatible; resolver fail-closed para activos configurados inválidos o remotos; respuestas B06 explícitas en reportería; preview XLSX sin ruta canónica fija.
+- Pruebas ejecutadas: backend focalizado `9 PASS`; Angular `96 archivos / 1007 PASS`; ESLint `PASS`; build frontend `PASS` con warnings preexistentes; build backend `PASS` con `0 errores`; encoding `PASS`; asset estático local `200 image/png`; resolver local `PASS`; precheck/postcheck B06 `PASS`.
+- Pruebas no ejecutadas: flujo autenticado real `LOGO_A/LOGO_B → guardar → releer → PDF/XLSX/preview` y Playwright visual, por limitación de autenticación/control del navegador local. Se registra como `NOT_VERIFIED`/`BLOCKED`, no como PASS.
+- Base de datos: se aplicó únicamente el cambio aditivo B06 autorizado para la parametrización del color; no hubo eliminación de información ni modificación de migración 54.
+- Quality Gate exacto del SHA funcional: run [`43955398124`](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124), `STATUS=completed`, `CONCLUSION=success`. `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
+- Expediente nuevo: `docs/certificaciones/B06_logo_local_publicacion_f1d42079.md`; índice actualizado selectivamente. Se preservan B01–B05, `main`, B07, Bloque 10 y los cambios ajenos del checkout.
+- Punto exacto de continuación: esperar el run `43955398124`; completar el expediente con su resultado y SHA documental; publicar el commit documental selectivo; verificar índice/evidencia mediante GitHub; mantener aceptación visual del propietario pendiente.

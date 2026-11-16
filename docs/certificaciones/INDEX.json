@@ -75,6 +75,21 @@
       "security_scan": "PENDING_GITHUB_ACTIONS",
       "review_ready": "BLOCKED_ENVIRONMENTAL_VERIFICATION",
       "owner_visual_acceptance": "PENDING"
+    },
+    {
+      "id": "B06-LOCAL-LOGO-PUBLICATION-F1D42079",
+      "path": "B06_logo_local_publicacion_f1d42079.md",
+      "status": "READY_FOR_OWNER_VISUAL_REVIEW",
+      "source_code_sha": "f1d42079bc549ded50a9d245fc1132fc5da2e08d",
+      "evidence_commit_sha": "PENDING_DOCUMENTAL_COMMIT",
+      "github_evidence_url": "PENDING_DOCUMENTAL_COMMIT",
+      "quality_gate_run": 43955398124,
+      "quality_gate_status": "SUCCESS",
+      "quality_gate_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124",
+      "github_remote_verified": "YES_SOURCE_SHA_AND_GREEN_GATE",
+      "security_scan": "PASS_GITHUB_ACTIONS",
+      "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
+      "owner_visual_acceptance": "PENDING"
     }
   ]
 }

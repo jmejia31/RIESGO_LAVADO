@@ -127,3 +127,34 @@ El Quality Gate verde valida el SHA exacto publicado, pero no sustituye la acept
 ## Cierre documental remoto B06 - 2026-11-16 13:26:24 -06:00
 
 El expediente sanitizado se consulta directamente en GitHub mediante el indice `docs/certificaciones/INDEX.json` y la evidencia B06 anclada al commit `f841b5eedefc8e9a773888e6df2a3f77f1205f37`. El gate del codigo es `43936758470=SUCCESS` y el gate del expediente es `43939723032=SUCCESS`. B06 continua abierto solo por la aceptacion visual del propietario y la validacion manual del flujo local.
+## Actualización B06 — corrección del flujo de logo local — 2026-11-16
+
+El commit funcional [`f1d42079`](https://github.com/jmejia31/RIESGO_LAVADO/commit/f1d42079bc549ded50a9d245fc1132fc5da2e08d) corrige la diferencia observada por el propietario entre cargar un enlace y arrastrar un archivo. La carga local ahora normaliza la imagen a un PNG documental compatible; carga y resolución utilizan la misma raíz `wwwroot/uploads`; y el resolver ya no reemplaza silenciosamente una configuración inválida por el logo canónico. La vista previa Excel también obtiene el logo desde la configuración compartida.
+
+```ini
+SOURCE_CODE_SHA=f1d42079bc549ded50a9d245fc1132fc5da2e08d
+EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
+B06_LOCAL_UPLOAD_NORMALIZATION=PASS
+B06_LOCAL_ASSET_HTTP=PASS_200_IMAGE_PNG
+B06_CONFIGURED_LOCAL_RESOLUTION=PASS
+B06_REMOTE_SERVER_FETCH=BLOCKED_SSRF
+B06_CANONICAL_FALLBACK_HIDING_CONFIG_ERROR=REMOVED
+B06_BACKEND_REGRESSION=PASS_9_TESTS
+B06_FRONTEND_REGRESSION=PASS_96_FILES_1007_TESTS
+B06_BACKEND_BUILD=PASS_0_ERRORS
+B06_FRONTEND_BUILD=PASS_WITH_PREEXISTING_WARNINGS
+B06_FRONTEND_LINT=PASS
+B06_ORACLE_B06_PRECHECK=PASS
+B06_ORACLE_B06_POSTCHECK=PASS
+B06_REAL_ADMIN_LOGO_A_LOGO_B=NOT_VERIFIED_AUTHENTICATED
+B06_REAL_PDF_EXCEL_FLOW=NOT_VERIFIED_AUTHENTICATED
+B06_PLAYWRIGHT_VISUAL=BLOCKED_BROWSER_AUTHENTICATION
+B06_QUALITY_GATE=SUCCESS
+B06_QUALITY_GATE_RUN=43955398124
+B06_QUALITY_GATE_URL=https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124
+B06_TECHNICAL_STATUS=PARTIAL_PENDING_AUTHENTICATED_E2E
+B06_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE
+```
+
+El expediente sanitizado es [`B06_logo_local_publicacion_f1d42079.md`](../certificaciones/B06_logo_local_publicacion_f1d42079.md). El mensaje de carga pendiente no equivale a publicación: después de arrastrar el archivo se debe pulsar Guardar y esperar la lectura posterior de la configuración. Una URL externa puede verse en el navegador, pero no es aceptada por la reportería de servidor; el flujo institucional soportado es un archivo local publicado bajo `/uploads/...`.

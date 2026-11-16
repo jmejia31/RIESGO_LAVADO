@@ -410,3 +410,8 @@ MIGRATION_54_TOUCHED=NO
 El detalle verificable queda en [`B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md`](B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md) y [`B06_dynamic_branding_331e9617.md`](../certificaciones/B06_dynamic_branding_331e9617.md). El expediente permanece abierto hasta el gate remoto documental y la aceptacion visual explicita del propietario.
 
 El expediente documental activo fue publicado en el commit [`55190a7a`](https://github.com/jmejia31/RIESGO_LAVADO/commit/55190a7a9efc25541c1bd1b9bb2bd34d965f8211); su Quality Gate exacto permanece pendiente de observacion y no se reutiliza un gate historico.
+## Corrección del activo local de branding — 2026-11-16
+
+La reportería compartida ahora exige que un logo configurado sea un activo local resoluble bajo `wwwroot/uploads`. El frontend convierte la imagen seleccionada por arrastre a PNG compatible antes de subirla, y el backend utiliza la misma raíz para publicar y resolver el archivo. Si la configuración contiene una URL remota o un archivo inexistente, PDF y XLSX no vuelven a mostrar silenciosamente el logo canónico: responden con el código B06 correspondiente para que el administrador corrija la publicación.
+
+La vista previa Excel dejó de usar la ruta fija del logo canónico y toma el activo desde el contrato de configuración. Esta modificación no permite descargas server-side de URLs externas, preservando la protección SSRF. El expediente de evidencia es [`B06_logo_local_publicacion_f1d42079.md`](../certificaciones/B06_logo_local_publicacion_f1d42079.md); el gate exacto [`43955398124`](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124) terminó verde y la aceptación visual permanece pendiente del flujo autenticado.
