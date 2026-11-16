@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using RL.API.Features.Configuracion.Application;
+using RL.API.Features.Configuracion.Contracts;
 
 namespace RL.API.Infrastructure.Reporting;
 
@@ -7,11 +8,16 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
 {
     private readonly IConfiguracionService _configuration;
     private readonly IWebHostEnvironment _environment;
+    private readonly ILogger<InstitutionalBrandingResolver>? _logger;
 
-    public InstitutionalBrandingResolver(IConfiguracionService configuration, IWebHostEnvironment environment)
+    public InstitutionalBrandingResolver(
+        IConfiguracionService configuration,
+        IWebHostEnvironment environment,
+        ILogger<InstitutionalBrandingResolver>? logger = null)
     {
         _configuration = configuration;
         _environment = environment;
+        _logger = logger;
     }
 
     public InstitutionalBrandingSnapshot Resolve()
@@ -33,9 +39,7 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
 
         var path = InstitutionalBrandingStorage.ResolveLocalAsset(_environment, configuration.LogoUrl);
         if (path is null)
-            throw new InstitutionalBrandingUnavailableException(
-                "B06_BRANDING_LOGO_NOT_READY",
-                "El logotipo configurado no es un archivo local accesible. Use la carga institucional y guarde la configuración antes de generar reportes.");
+            return FallbackToCanonical(configuration, header, "configured-logo-not-local");
 
         try
         {
@@ -49,10 +53,31 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
         {
-            throw new InstitutionalBrandingUnavailableException(
-                "B06_BRANDING_LOGO_INVALID",
-                "El archivo de logotipo configurado no puede utilizarse en reportería institucional.",
-                exception);
+            return FallbackToCanonical(configuration, header, "configured-logo-invalid", exception);
         }
+    }
+
+    private InstitutionalBrandingSnapshot FallbackToCanonical(
+        ConfigSistema configuration,
+        string header,
+        string reason,
+        Exception? exception = null)
+    {
+        _logger?.LogWarning(
+            exception,
+            "B06: se usará el logo institucional canónico porque el logo configurado no está disponible para reportería. Motivo: {Reason}",
+            reason);
+
+        return InstitutionalBrandingSnapshot.Canonical with
+        {
+            InstitutionName = string.IsNullOrWhiteSpace(configuration.NombreInstitucion)
+                ? InstitutionalReportStandard.InstitutionName
+                : configuration.NombreInstitucion.Trim(),
+            SystemName = string.IsNullOrWhiteSpace(configuration.NombreSistema)
+                ? InstitutionalReportStandard.SystemName
+                : configuration.NombreSistema.Trim(),
+            Palette = InstitutionalReportStandard.CreatePalette(header),
+            Source = $"canonical-fallback-{reason}"
+        };
     }
 }

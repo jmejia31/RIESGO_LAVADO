@@ -4,7 +4,7 @@ Esta actualizacion agrega una unica resolucion de identidad para los reportes in
 
 La carga de imagen conserva la politica institucional existente, normaliza JPG/JPEG/WEBP a PNG en el navegador, limita el archivo a 5 MB y usa una operacion auditada de imagen. El backend valida el PNG, dimensiones, cantidad de pixeles y SHA-256 antes de embebido. Las URL remotas no se descargan desde el backend: se rechazan para evitar SSRF; los reportes de servidor solo aceptan rutas locales bajo `wwwroot`. La interfaz puede mostrar una URL same-origin valida y el backend usa el fallback canonico si no puede verificarla.
 
-El color se valida como hexadecimal de seis digitos y se calcula automaticamente el texto blanco/oscuro mediante contraste. La resolucion falla cerrada al logo canonico si la configuracion, ruta o imagen no son validas. La columna Oracle `SFS_COLOR_ENCABEZADO_REPORTES` queda preparada mediante scripts controlados en `database/_utilitarios/b06_dynamic_branding/`; Codex no ejecuta DDL/DML contra Oracle institucional.
+El color se valida como hexadecimal de seis digitos y se calcula automaticamente el texto blanco/oscuro mediante contraste. La resolucion usa el logo canonico como fallback seguro si la configuracion, ruta o imagen no son validas; una ruta local valida en `wwwroot/uploads` sigue siendo la fuente activa. Las URL externas nunca se descargan desde el backend. La columna Oracle `SFS_COLOR_ENCABEZADO_REPORTES` queda preparada mediante scripts controlados en `database/_utilitarios/b06_dynamic_branding/`; Codex no ejecuta DDL/DML contra Oracle institucional.
 
 ```ini
 PHASE=B06_DYNAMIC_INSTITUTIONAL_BRANDING

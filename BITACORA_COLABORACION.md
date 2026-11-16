@@ -11374,3 +11374,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Quality Gate exacto del SHA funcional: run [`43955398124`](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124), `STATUS=completed`, `CONCLUSION=success`. Gate documental exacto: [`43958425555`](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43958425555), `STATUS=completed`, `CONCLUSION=success`. `EVIDENCE_COMMIT_SHA=286689c9328aad2b84594f00dd86333311fd33c2`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
 - Expediente nuevo: `docs/certificaciones/B06_logo_local_publicacion_f1d42079.md`; índice actualizado selectivamente. Se preservan B01–B05, `main`, B07, Bloque 10 y los cambios ajenos del checkout.
 - Punto exacto de continuación: esperar el run `43955398124`; completar el expediente con su resultado y SHA documental; publicar el commit documental selectivo; verificar índice/evidencia mediante GitHub; mantener aceptación visual del propietario pendiente.
+
+## 2026-11-16 - B06 recuperación de generación de reportes (COD)
+
+- `EVENT_ID=RL-B06-REPORT-AVAILABILITY-RECOVERY-20261116`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- `INITIAL_SHA=13436555ea25980ac206fda15af1e915f0402f9c`; `SOURCE_CODE_SHA=PENDING_SOURCE_COMMIT`; stage selectivo previsto. Se preservan los cambios ajenos preexistentes del checkout.
+- Diagnóstico reproducido: la URL externa persistida era rechazada por SSRF y el error se propagaba como 503, por lo que fallaban PDF y Excel de Matrices. El frontend también podía entregar la URL externa a jsPDF/ExcelJS aunque una etiqueta HTML sí la mostrara.
+- Corrección compartida: fallback canónico controlado en backend para URL remota/activo inválido; reportería Angular usa solo activo local o canónico; preview comparte el mismo contrato. No se toca Oracle, no se cambia la URL almacenada y se preservan nombre, color y campos de seguridad.
+- Verificado: resolver B06 `3/3 PASS`; exportación Matrices PDF/XLSX `7/7 PASS`; Angular focalizado `22/22 PASS`; build Angular `PASS` con warnings preexistentes; ESLint `PASS`.
+- No verificado todavía: flujo autenticado real LOGO_A/LOGO_B, Playwright visual contra la base del propietario y Oracle institucional. Se mantienen como `NOT_VERIFIED`/`NO EJECUTADO`.
+- `B06_REPORT_GENERATION_RECOVERY=IMPLEMENTED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
+- Punto exacto de continuación: ejecutar suite completa y Quality Gate del commit funcional; actualizar este registro, estado e índice documental con SHA remotos; mantener servicios locales detenidos al finalizar para que el propietario los levante manualmente.

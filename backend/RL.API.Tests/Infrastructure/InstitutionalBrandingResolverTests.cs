@@ -48,7 +48,7 @@ public sealed class InstitutionalBrandingResolverTests
     }
 
     [Fact]
-    public void Resolver_BloqueaUrlRemotaEnLugarDeOcultarlaConElLogoCanonico()
+    public void Resolver_UsaFallbackCanonicoSeguroCuandoLaUrlNoEsUnArchivoLocal()
     {
         var configuration = InterfaceStub.Create<IConfiguracionService>(out var configurationStub);
         configurationStub.On(nameof(IConfiguracionService.ObtenerConfigSistemaAsync), _ => Task.FromResult<ConfigSistema?>(new ConfigSistema
@@ -61,9 +61,46 @@ public sealed class InstitutionalBrandingResolverTests
 
         var environment = InterfaceStub.Create<IWebHostEnvironment>(out _);
 
-        var exception = Assert.Throws<InstitutionalBrandingUnavailableException>(
-            () => new InstitutionalBrandingResolver(configuration, environment).Resolve());
+        var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
 
-        Assert.Equal("B06_BRANDING_LOGO_NOT_READY", exception.Code);
+        Assert.StartsWith("canonical-fallback-", snapshot.Source);
+        Assert.Equal(InstitutionalLogoAsset.Sha256, snapshot.LogoSha256);
+        Assert.Equal("Institución sintética", snapshot.InstitutionName);
+        Assert.Equal("Sistema sintético", snapshot.SystemName);
+    }
+
+    [Fact]
+    public void Resolver_UsaFallbackCanonicoSeguroCuandoElArchivoPublicadoNoEsValido()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"b06-branding-invalid-{Guid.NewGuid():N}");
+        var uploads = Path.Combine(root, "uploads");
+        Directory.CreateDirectory(uploads);
+        var fileName = "invalid-logo.png";
+        File.WriteAllText(Path.Combine(uploads, fileName), "not-an-image");
+
+        try
+        {
+            var configuration = InterfaceStub.Create<IConfiguracionService>(out var configurationStub);
+            configurationStub.On(nameof(IConfiguracionService.ObtenerConfigSistemaAsync), _ => Task.FromResult<ConfigSistema?>(new ConfigSistema
+            {
+                NombreInstitucion = "Institución sintética",
+                NombreSistema = "Sistema sintético",
+                LogoUrl = InstitutionalBrandingStorage.BuildPublicUploadUrl(fileName),
+                ColorEncabezadoReportes = "#FFFFFF"
+            }));
+
+            var environment = InterfaceStub.Create<IWebHostEnvironment>(out var environmentStub);
+            environmentStub.On("get_WebRootPath", _ => root);
+            environmentStub.On("get_ContentRootPath", _ => root);
+
+            var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
+
+            Assert.Equal("canonical-fallback-configured-logo-invalid", snapshot.Source);
+            Assert.Equal(InstitutionalLogoAsset.Sha256, snapshot.LogoSha256);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 }

@@ -93,6 +93,17 @@
       "security_scan": "PASS_GITHUB_ACTIONS",
       "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
       "owner_visual_acceptance": "PENDING"
+    },
+    {
+      "id": "B06-REPORT-AVAILABILITY-RECOVERY-20261116",
+      "path": "B06_report_availability_recovery_20261116.md",
+      "status": "OPEN_PENDING_OWNER_ACCEPTANCE",
+      "source_code_sha": "PENDING_SOURCE_COMMIT",
+      "evidence_commit_sha": "PENDING_DOCUMENTAL_COMMIT",
+      "github_remote_verified": "PENDING",
+      "security_scan": "PENDING_GITHUB_ACTIONS",
+      "review_ready": "PENDING_QUALITY_GATE",
+      "owner_visual_acceptance": "PENDING"
     }
   ]
 }

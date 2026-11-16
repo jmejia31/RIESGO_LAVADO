@@ -4757,3 +4757,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUALITY_GATE_RUN=43955398124`; `QUALITY_GATE_STATUS=SUCCESS`; `DOCUMENTAL_QUALITY_GATE_RUN=43958425555`; `DOCUMENTAL_QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `EVIDENCE_COMMIT_SHA=286689c9328aad2b84594f00dd86333311fd33c2`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
 - `B06_TECHNICAL_STATUS=PARTIAL_PENDING_AUTHENTICATED_E2E`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
 - Punto exacto de continuación: completar el gate remoto, publicar el expediente documental y comprobar desde GitHub que el índice y la evidencia son legibles. El propietario deberá ejecutar carga local, Guardar, recarga y generación de reportes para la aceptación visual final.
+
+## Estado vigente — B06 recuperación de generación de reportes — 2026-11-16
+
+- `PHASE=B06_REPORT_AVAILABILITY_RECOVERY`; `INITIAL_SHA=13436555ea25980ac206fda15af1e915f0402f9c`; `SOURCE_CODE_SHA=PENDING_SOURCE_COMMIT`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Se corrigió la causa que dejaba Matrices sin PDF ni Excel: una URL externa persistida era rechazada por SSRF y el error se propagaba como 503. El backend conserva la protección y usa fallback canónico controlado; Angular evita URLs externas en PDF/Excel y la preview consume el mismo contrato.
+- Evidencia focalizada: backend resolver `3/3 PASS`; exportación Matrices `7/7 PASS`; Angular configuración/reportería/preview `22/22 PASS`; build Angular y ESLint `PASS`.
+- `B06_REPORT_GENERATION_RECOVERY=IMPLEMENTED`; `B06_SECURITY_FIELDS_PRESERVED=YES`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `B06_REAL_AUTHENTICATED_E2E=NOT_VERIFIED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
+- Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuación: publicar selectivamente código y expediente, observar el Quality Gate exact-SHA, verificar paridad local/remota y dejar frontend/backend detenidos para pruebas manuales del propietario.

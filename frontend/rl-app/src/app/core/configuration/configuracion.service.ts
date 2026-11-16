@@ -5,7 +5,7 @@ import { map, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
 import { bestContrastForeground, createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
 import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
-import { setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
+import { INSTITUTIONAL_LOGO_ASSET_PATH, setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
 
 @Injectable({
   providedIn: 'root'
@@ -116,12 +116,23 @@ export class ConfiguracionService {
   private aplicarBrandingReportes(config: ConfigSistema): void {
     const header = parseHexColor(config.colorEncabezadoReportes) ?? parseHexColor('#123B63')!;
     const foreground = bestContrastForeground(header);
+    const logoUrl = this.resolverLogoParaReportes(config.logoUrl);
     setInstitutionalReportBranding({
       institutionName: (config.nombreInstitucion || 'Instituto Hondureño de Seguridad Social').toUpperCase(),
       systemName: config.nombreSistema || 'SGRLA-IHSS',
-      logoUrl: this.resolverUrlImagen(config.logoUrl || 'assets/institutional/ihss-logo.png'),
+      logoUrl,
       headerColor: [header.r, header.g, header.b],
       headerTextColor: [foreground.r, foreground.g, foreground.b]
     });
+  }
+
+  /**
+   * La reportería del navegador necesita un recurso local embebible. El backend
+   * no descarga URLs externas por seguridad; mantener la misma regla aquí evita
+   * que PDF/Excel fallen aunque el logo remoto se vea en una etiqueta <img>.
+   */
+  private resolverLogoParaReportes(url?: string | null): string {
+    if (!url || /^(https?:|data:)/i.test(url)) return INSTITUTIONAL_LOGO_ASSET_PATH;
+    return this.resolverUrlImagen(url);
   }
 }
