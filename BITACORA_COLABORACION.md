@@ -11385,3 +11385,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - No verificado todavía: flujo autenticado real LOGO_A/LOGO_B, Playwright visual contra la base del propietario y Oracle institucional. Se mantienen como `NOT_VERIFIED`/`NO EJECUTADO`.
 - `B06_REPORT_GENERATION_RECOVERY=IMPLEMENTED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
 - Punto exacto de continuación: observar el Quality Gate exact-SHA del commit funcional, actualizar este registro, estado e índice documental con el resultado remoto y mantener servicios locales detenidos para que el propietario los levante manualmente.
+
+- Quality Gate documental exacto [43978907601](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43978907601) sobre `3635cf5389da68162591f1efe12610884d05c155`: `STATUS=completed`, `CONCLUSION=success`; ambos jobs terminaron correctamente.
+- `SOURCE_CODE_SHA=0ea9df6b62a4aa1da85eb9e320f263518c397310`; `EVIDENCE_COMMIT_SHA=3635cf5389da68162591f1efe12610884d05c155`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`.
+- `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`: el flujo autenticado real LOGO_A/LOGO_B y la aceptación visual del propietario siguen sin ejecutarse en esta intervención. B06 permanece abierto.
