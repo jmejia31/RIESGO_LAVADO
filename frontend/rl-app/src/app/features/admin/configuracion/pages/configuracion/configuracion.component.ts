@@ -327,7 +327,6 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   private async normalizarLogoPng(file: File): Promise<File> {
-    if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) return file;
     const objectUrl = URL.createObjectURL(file);
     try {
       const image = await new Promise<HTMLImageElement>((resolve, reject) => {

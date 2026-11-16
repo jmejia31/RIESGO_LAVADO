@@ -22,8 +22,20 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
         var header = string.IsNullOrWhiteSpace(configuration.ColorEncabezadoReportes)
             ? InstitutionalReportStandard.Palette.Navy
             : configuration.ColorEncabezadoReportes;
-        var path = ResolveLocalLogo(configuration.LogoUrl);
-        if (path is null) return CreateMetadataOnly(configuration, header, "canonical-fallback");
+        if (string.IsNullOrWhiteSpace(configuration.LogoUrl))
+            return InstitutionalBrandingSnapshot.Canonical with
+            {
+                InstitutionName = configuration.NombreInstitucion,
+                SystemName = configuration.NombreSistema,
+                Palette = InstitutionalReportStandard.CreatePalette(header),
+                Source = "canonical-default"
+            };
+
+        var path = InstitutionalBrandingStorage.ResolveLocalAsset(_environment, configuration.LogoUrl);
+        if (path is null)
+            throw new InstitutionalBrandingUnavailableException(
+                "B06_BRANDING_LOGO_NOT_READY",
+                "El logotipo configurado no es un archivo local accesible. Use la carga institucional y guarde la configuración antes de generar reportes.");
 
         try
         {
@@ -35,40 +47,12 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
                 header,
                 "configured-local-file");
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
         {
-            return CreateMetadataOnly(configuration, header, "canonical-fallback-invalid-logo");
+            throw new InstitutionalBrandingUnavailableException(
+                "B06_BRANDING_LOGO_INVALID",
+                "El archivo de logotipo configurado no puede utilizarse en reportería institucional.",
+                exception);
         }
-    }
-
-    private InstitutionalBrandingSnapshot CreateMetadataOnly(
-        RL.API.Features.Configuracion.Contracts.ConfigSistema configuration,
-        string header,
-        string source) => InstitutionalBrandingSnapshot.FromImage(
-            InstitutionalLogoAsset.PngBytes,
-            configuration.NombreInstitucion,
-            configuration.NombreSistema,
-            configuration.LogoUrl ?? InstitutionalBrandingSnapshot.Canonical.LogoUrl,
-            header,
-            source);
-
-    private string? ResolveLocalLogo(string? logoUrl)
-    {
-        if (string.IsNullOrWhiteSpace(logoUrl)
-            || logoUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-            || logoUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-            || logoUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        var relative = logoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var rootPath = string.IsNullOrWhiteSpace(_environment.WebRootPath)
-            ? Path.Combine(_environment.ContentRootPath, "wwwroot")
-            : _environment.WebRootPath;
-        var root = Path.GetFullPath(rootPath);
-        var candidate = Path.GetFullPath(Path.Combine(root, relative));
-        var prefix = root.EndsWith(Path.DirectorySeparatorChar) ? root : root + Path.DirectorySeparatorChar;
-        return candidate.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && File.Exists(candidate)
-            ? candidate
-            : null;
     }
 }

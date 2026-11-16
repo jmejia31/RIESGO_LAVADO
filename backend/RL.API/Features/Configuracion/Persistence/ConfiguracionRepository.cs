@@ -156,7 +156,7 @@ public class ConfiguracionRepository : IConfiguracionRepository, ITransactionalC
             }
             catch (OracleException exception) when (EsFalloEsquemaBranding(exception))
             {
-                try { await transaction.RollbackAsync(); } catch { /* preservar la excepciÃ³n primaria */ }
+                try { await transaction.RollbackAsync(); } catch { /* preservar la excepción primaria */ }
                 throw CrearErrorEsquemaBranding(exception);
             }
 
@@ -197,7 +197,7 @@ public class ConfiguracionRepository : IConfiguracionRepository, ITransactionalC
 
     private static InvalidOperationException CrearErrorEsquemaBranding(OracleException exception) =>
         new(
-            "B06_BRANDING_SCHEMA=NOT_READY: falta la estructura de persistencia de identidad institucional. Aplique la migraciÃ³n B06 autorizada y ejecute su postcheck.",
+            "B06_BRANDING_SCHEMA=NOT_READY: falta la estructura de persistencia de identidad institucional. Aplique la migración B06 autorizada y ejecute su postcheck.",
             exception);
 
     private static bool DebeEjecutarActualizacionCompatibilidad(int rowsAffected, string? color) => false;

@@ -5,6 +5,7 @@ using RL.API.Core.Security;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Shared.Results;
+using RL.API.Infrastructure.Reporting;
 
 namespace RL.API.Features.MatricesRiesgos;
 
@@ -42,8 +43,15 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
         if (!proyecciones.Success || proyecciones.Data is null)
             return StatusCode(proyecciones.StatusCode, new { success = false, mensaje = proyecciones.Message });
 
-        ArchivoReporteDto archivo = _exportador.CrearExcelMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
-        return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
+        try
+        {
+            ArchivoReporteDto archivo = _exportador.CrearExcelMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
+            return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
+        }
+        catch (InstitutionalBrandingUnavailableException exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { success = false, codigo = exception.Code, mensaje = exception.Message });
+        }
     }
 
     [HttpGet("consolidado.pdf")]
@@ -60,8 +68,15 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
         if (!proyecciones.Success || proyecciones.Data is null)
             return StatusCode(proyecciones.StatusCode, new { success = false, mensaje = proyecciones.Message });
 
-        ArchivoReporteDto archivo = _exportador.CrearPdfMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
-        return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
+        try
+        {
+            ArchivoReporteDto archivo = _exportador.CrearPdfMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
+            return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
+        }
+        catch (InstitutionalBrandingUnavailableException exception)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { success = false, codigo = exception.Code, mensaje = exception.Message });
+        }
     }
 
     private Task<ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>> ObtenerProyeccionesAsync(

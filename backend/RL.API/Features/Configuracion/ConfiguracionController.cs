@@ -5,6 +5,7 @@ using RL.API.Features.Configuracion.Contracts;
 using RL.API.Core.Security;
 using RL.API.Infrastructure.Http;
 using RL.API.Infrastructure.Files;
+using RL.API.Infrastructure.Reporting;
 using Microsoft.AspNetCore.Hosting;
 using System.Security.Claims;
 
@@ -149,10 +150,10 @@ public class ConfiguracionController : ControllerBase
             return BadRequest(new { success = false, mensaje = validationError });
 
         var extension = Path.GetExtension(Path.GetFileName(archivo.FileName)).ToLowerInvariant();
-        var webRoot = string.IsNullOrWhiteSpace(_environment?.WebRootPath)
-            ? Path.Combine(_environment?.ContentRootPath ?? Directory.GetCurrentDirectory(), "wwwroot")
-            : _environment.WebRootPath;
-        var uploadsFolder = Path.Combine(webRoot, "uploads");
+        if (_environment is null)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { success = false, mensaje = "El almacenamiento institucional no está disponible." });
+
+        var uploadsFolder = InstitutionalBrandingStorage.GetUploadsDirectory(_environment);
         Directory.CreateDirectory(uploadsFolder);
 
         var nombreUnico = $"{Guid.NewGuid()}{extension}";
@@ -172,7 +173,7 @@ public class ConfiguracionController : ControllerBase
             stream.Flush(flushToDisk: true);
         }
 
-        var urlRelativa = $"/uploads/{nombreUnico}";
+        var urlRelativa = InstitutionalBrandingStorage.BuildPublicUploadUrl(nombreUnico);
         await _service.RegistrarCargaImagenAsync(
             Path.GetFileName(archivo.FileName),
             nombreUnico,

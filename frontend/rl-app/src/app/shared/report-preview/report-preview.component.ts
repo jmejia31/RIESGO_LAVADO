@@ -5,6 +5,7 @@ import { PageSizeSelectorComponent } from '../components/page-size-selector/page
 import { InstitutionalTooltipDirective } from '../components/institutional-tooltip/institutional-tooltip.directive';
 import { ReportPreviewService } from './report-preview.service';
 import { INSTITUTIONAL_LOGO_ASSET_PATH } from '../../core/reporting/institutional-report-standard';
+import { ConfiguracionService } from '../../core/configuration/configuracion.service';
 
 @Component({
   selector: 'app-report-preview',
@@ -15,7 +16,10 @@ import { INSTITUTIONAL_LOGO_ASSET_PATH } from '../../core/reporting/institutiona
 })
 export class ReportPreviewComponent implements AfterViewInit, OnDestroy {
   readonly Math = Math;
-  readonly institutionalLogoAssetPath = INSTITUTIONAL_LOGO_ASSET_PATH;
+  readonly configService = inject(ConfiguracionService);
+  readonly institutionalLogoUrl = computed(() => this.configService.resolverUrlImagen(
+    this.configService.configSistema()?.logoUrl || INSTITUTIONAL_LOGO_ASSET_PATH
+  ));
   readonly preview = inject(ReportPreviewService);
   readonly selectedSheet = signal(0);
   readonly page = signal(0);
