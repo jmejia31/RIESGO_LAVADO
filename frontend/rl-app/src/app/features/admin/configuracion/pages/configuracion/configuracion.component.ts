@@ -137,7 +137,7 @@ export class ConfiguracionComponent implements OnInit {
           error: () => {
             this.guardando.set(false);
             this.estadoLogo.set('LOGO_SAVE_FAILED');
-            this.mostrarError('No se pudo verificar la configuraciÃ³n persistida en el servidor.');
+            this.mostrarError('No se pudo verificar la configuracion persistida en el servidor.');
           }
         });
       },
