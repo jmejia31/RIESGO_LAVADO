@@ -32,6 +32,17 @@
       "auth_real_e2e": "PENDING_ALLOWED_ENVIRONMENT",
       "p06_status": "READY_FOR_DOCUMENTARY_PREPARATION",
       "github_remote_verified": "YES"
+    },
+    {
+      "id": "B06-UNIFIED-LOGO-48532E3D",
+      "path": "B06_logo_geometria_unica_7e656fc5.md",
+      "status": "PENDING_OWNER_ACCEPTANCE",
+      "source_code_sha": "7e656fc57548e1d1a2ee5c4ead81455765690f38",
+      "evidence_commit_sha": "PENDING_DOCUMENTATION_COMMIT",
+      "quality_gate_run": 43899780242,
+      "quality_gate_status": "PENDING_REMOTE",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/PENDING_DOCUMENTATION_COMMIT/docs/certificaciones/B06_logo_geometria_unica_7e656fc5.md",
+      "github_remote_verified": "YES_AFTER_PUSH"
     }
   ]
 }

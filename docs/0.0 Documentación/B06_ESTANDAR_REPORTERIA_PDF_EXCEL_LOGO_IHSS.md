@@ -1,5 +1,51 @@
 # B06 — Estándar de reportería institucional PDF/Excel y logo IHSS
 
+## Actualización vigente — geometría única del logo en PDF — 2026-11-16
+
+Las capturas del propietario demostraron una divergencia entre los dos generadores activos: Monitoreo de Listas producía el PDF desde Angular y Matrices de Riesgos desde ASP.NET. Ambos usaban el PNG canónico, pero no la misma medida física. La corrección fija el ancho institucional en `72,644 mm` (`2,86 pulgadas`), un incremento uniforme de 30% sobre el estándar base de `55,88 mm`, en ambos generadores. Conserva el centrado vertical y aplica la misma medida en páginas continuas. El cambio es compartido y no modifica cada reporte de forma particular.
+
+```ini
+PHASE=B06_UNIFIED_PDF_LOGO_GEOMETRY
+AUTHOR=COD/CODEX
+CLIENT=CLI
+BRANCH=desarrollo
+INITIAL_SHA=357108044a1a6311306a9073de0c1ccae415e928
+SOURCE_CODE_SHA=7e656fc57548e1d1a2ee5c4ead81455765690f38
+FUNCTIONAL_COMMIT=7e656fc57548e1d1a2ee5c4ead81455765690f38
+PREVIOUS_FUNCTIONAL_COMMIT=48532e3d5beb43ec545c18a1ce9d67995af36b83
+LOGO_BASE_WIDTH_MM=55.88
+LOGO_UNIFORM_INCREMENT=30_PERCENT
+LOGO_PHYSICAL_WIDTH_MM=72.644
+LOGO_PHYSICAL_WIDTH_INCHES=2.86
+BACKEND_PDF_LOGO_WIDTH_POINTS=205.92
+ANGULAR_PDF_LOGO_WIDTH_MM=72.644
+LOGO_VERTICAL_ALIGNMENT=HEADER_CENTER
+REPORT_METADATA_PLACEMENT=UNDER_TITLE_LEFT
+B06_SHARED_LOGO_GEOMETRY=PASS
+B06_ALL_SHARED_PDF_CONSUMERS=PASS
+B06_CONTINUATION_HEADERS=PASS
+B06_EXCEL_HORIZONTAL_SCROLLBAR=PRESERVED
+B06_REPORT_DATA_PRESERVED=YES
+B06_IDENTIFIERS_PRESERVED=YES
+B01_PRESERVED=YES
+B02_PRESERVED=YES
+B03_PRESERVED=YES
+B04_PRESERVED=YES
+B05_PRESERVED=YES
+B07_AUTHORIZED=NO
+BLOCK10_AUTHORIZED=NO
+MAIN_TOUCHED=NO
+PRODUCTION_TOUCHED=NO
+ORACLE_INSTITUTIONAL_TOUCHED=NO
+MIGRATION_54_TOUCHED=NO
+QUALITY_GATE_RUN=43899780242
+QUALITY_GATE_STATUS=PENDING_REMOTE
+B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
+```
+
+La prueba Angular focalizada pasó `10/10`, la prueba backend focalizada pasó `4/4`, ESLint pasó y el build Angular pasó con advertencias preexistentes de presupuesto SCSS/CommonJS. La aprobación estética final sigue pendiente del propietario después de reiniciar frontend/backend y regenerar un PDF de cada módulo.
+
 ## Actualización vigente — logo ampliado, centrado y sin solapamiento — 2026-11-16
 
 La solicitud visual del propietario se implementó en los generadores compartidos de reportería. El logo conserva su ubicación derecha, aumenta uniformemente un 40% (`1.40x`) y se centra verticalmente dentro del encabezado. El texto de sistema, módulo y fecha ya no comparte el área blanca del logo: se renderiza debajo del título, en la columna izquierda del mismo encabezado institucional.

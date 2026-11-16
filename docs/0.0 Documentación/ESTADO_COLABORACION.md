@@ -4665,3 +4665,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `HEAD_LOCAL=HEAD_REMOTE=3757456f774a51dc767089d0706414d82ec78599`; `AHEAD=0`; `BEHIND=0`. El stage fue selectivo y los archivos ajenos continúan preservados fuera del commit.
 - Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto de continuación: revisión visual del propietario; el código compartido y su evidencia remota quedan disponibles para consulta directa desde GitHub.
+## Estado vigente — B06 geometría única de logo PDF publicada para revisión (COD) — 2026-11-16 09:42 -06:00
+
+- `B06_SOURCE_CODE_SHA=7e656fc57548e1d1a2ee5c4ead81455765690f38`; `B06_PREVIOUS_FUNCTIONAL_SHA=48532e3d5beb43ec545c18a1ce9d67995af36b83`; rama `desarrollo`; paridad local/remota verificada después del push funcional.
+- Se corrigió la causa de la diferencia visible entre Monitoreo de Listas y Matrices de Riesgos: el generador Angular y el backend tenían medidas distintas. El estándar común ahora fija `72.644 mm / 2.86 in`, un incremento uniforme de 30% sobre `55.88 mm`, centrado vertical, para la primera página y continuaciones.
+- Pruebas reproducidas: Angular `10/10 PASS`; backend `4/4 PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes SCSS/CommonJS. No se modificaron datos, fórmulas, identificadores, Oracle, producción, `main`, B07, Bloque 10 ni migración 54.
+- Evidencia nueva: `docs/certificaciones/B06_logo_geometria_unica_7e656fc5.md`; índice actualizado. Quality Gate exacto [43899780242](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43899780242) estaba `PENDING` por serialización al registrar este estado.
+- `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`. El propietario debe reiniciar los servicios locales, recargar la aplicación y regenerar un PDF de cada módulo para validar visualmente la equivalencia.
+- Punto exacto de continuación: verificar el estado final del run `43899780242`; completar `EVIDENCE_COMMIT_SHA`, URL GitHub y estado del gate en la evidencia sin alterar los archivos ajenos del worktree.
