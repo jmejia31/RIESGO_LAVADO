@@ -34,4 +34,4 @@ export const INSTITUTIONAL_LOGO_ASSET_PATH = 'assets/institutional/ihss-logo.png
 export const INSTITUTIONAL_LOGO_SHA256 = 'D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543';
 export const INSTITUTIONAL_LOGO_ASPECT_RATIO = 2034 / 773;
 /** Ancho físico canónico del logo en todos los encabezados PDF (milímetros). */
-export const INSTITUTIONAL_PDF_LOGO_WIDTH_MM = 55.88;
+export const INSTITUTIONAL_PDF_LOGO_WIDTH_MM = 72.644;

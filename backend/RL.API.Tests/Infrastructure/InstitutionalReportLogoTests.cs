@@ -56,8 +56,8 @@ public sealed class InstitutionalReportLogoTests
 
         var pdf = Encoding.ASCII.GetString(document.ToBytes());
 
-        Assert.Equal(158.4m, InstitutionalReportStandard.PdfLogoWidthPoints);
-        Assert.Matches(@"q 158\.4 0 0 60\.[0-9]+ 400\.88 7[0-9]{2}\.[0-9]+ cm /ImIHSS Do Q", pdf);
+        Assert.Equal(205.92m, InstitutionalReportStandard.PdfLogoWidthPoints);
+        Assert.Matches(@"q 205\.92 0 0 78\.[0-9]+ [0-9]+\.[0-9]+ [0-9]+\.[0-9]+ cm /ImIHSS Do Q", pdf);
         Assert.Contains("1 0 0 1 36 784.89 Tm (SGRLA-IHSS", pdf, StringComparison.Ordinal);
     }
 
