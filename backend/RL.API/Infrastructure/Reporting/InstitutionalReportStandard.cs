@@ -26,6 +26,32 @@ public static class InstitutionalReportStandard
         Danger: "#B91C1C",
         Muted: "#64748B");
 
+    public static InstitutionalReportPalette CreatePalette(string? headerColor)
+    {
+        var navy = IsHexColor(headerColor) ? headerColor!.ToUpperInvariant() : Palette.Navy;
+        var foreground = ContrastRatio(navy, "#FFFFFF") >= 4.5m ? "#FFFFFF" : "#111827";
+        return Palette with { Navy = navy, HeaderText = foreground };
+    }
+
+    private static bool IsHexColor(string? value) => !string.IsNullOrWhiteSpace(value)
+        && System.Text.RegularExpressions.Regex.IsMatch(value, "^#[0-9A-Fa-f]{6}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    private static decimal ContrastRatio(string left, string right)
+    {
+        static decimal Channel(int value)
+        {
+            var normalized = value / 255m;
+            return normalized <= 0.03928m ? normalized / 12.92m : (decimal)Math.Pow((double)((normalized + 0.055m) / 1.055m), 2.4);
+        }
+        static decimal Luminance(string color)
+        {
+            var rgb = Enumerable.Range(0, 3).Select(index => Convert.ToInt32(color.Substring(1 + index * 2, 2), 16)).ToArray();
+            return Channel(rgb[0]) * 0.2126m + Channel(rgb[1]) * 0.7152m + Channel(rgb[2]) * 0.0722m;
+        }
+        var a = Luminance(left); var b = Luminance(right);
+        return (Math.Max(a, b) + 0.05m) / (Math.Min(a, b) + 0.05m);
+    }
+
     public static InstitutionalReportOrientation ResolveOrientation(int visibleColumns) =>
         visibleColumns > 8 ? InstitutionalReportOrientation.Landscape : InstitutionalReportOrientation.Portrait;
 

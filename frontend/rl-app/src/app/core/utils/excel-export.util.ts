@@ -1,7 +1,8 @@
 import * as ExcelJS from 'exceljs';
 import {
   INSTITUTIONAL_LOGO_ASSET_PATH,
-  INSTITUTIONAL_REPORT_EXCEL_COLORS
+  INSTITUTIONAL_REPORT_EXCEL_COLORS,
+  getInstitutionalReportBranding
 } from '../reporting/institutional-report-standard';
 
 export interface ColInfo {
@@ -36,6 +37,11 @@ export interface ExcelPreviewSheet {
   dataRowRoles: ExcelRowRole[];
   totalRows: number;
   sourceRows: number;
+}
+
+function hexRgbToArgb(value: string, fallback: string): string {
+  const normalized = (value || '').replace('#', '').toUpperCase();
+  return /^[0-9A-F]{6}$/.test(normalized) ? `FF${normalized}` : fallback;
 }
 
 const NAVY = INSTITUTIONAL_REPORT_EXCEL_COLORS.navy;
@@ -92,7 +98,8 @@ async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promis
   // assets. En el navegador la ruta es same-origin y el PNG queda embebido en
   // el ZIP real mediante ExcelJS, no como una imagen HTML del preview.
   if (!esNavegadorReal() || typeof fetch !== 'function') return false;
-  const assetUrl = new URL(INSTITUTIONAL_LOGO_ASSET_PATH, window.document.baseURI).toString();
+  const branding = getInstitutionalReportBranding();
+  const assetUrl = new URL(branding.logoUrl || INSTITUTIONAL_LOGO_ASSET_PATH, window.document.baseURI).toString();
   const response = await fetch(assetUrl, { cache: 'force-cache' });
   if (!response.ok) throw new Error(`No se pudo cargar el recurso institucional (${response.status}).`);
   const bytes = new Uint8Array(await response.arrayBuffer());
@@ -146,6 +153,11 @@ export function createExcelPreviewFromRows(name: string, rows: unknown[][]): Exc
 }
 
 function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source: WorkSheet): void {
+  const branding = getInstitutionalReportBranding();
+  const headerRgb = branding.headerColor.map(channel => channel.toString(16).padStart(2, '0')).join('');
+  const headerTextRgb = branding.headerTextColor.map(channel => channel.toString(16).padStart(2, '0')).join('');
+  const headerArgb = hexRgbToArgb(headerRgb, NAVY);
+  const headerTextArgb = hexRgbToArgb(headerTextRgb, WHITE);
   const data = (source.data ?? []).map(recortarFilaVaciaFinal);
   const maxColumns = Math.max(1, ...data.map(row => row.length));
   const worksheet = workbook.addWorksheet(normalizarNombreHoja(name), {
@@ -201,8 +213,8 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
   firstRow.height = 28;
   for (let column = 1; column <= maxColumns; column++) {
     const cell = firstRow.getCell(column);
-    cell.font = { name: 'Arial', size: 14, bold: true, color: { argb: WHITE } };
-    cell.fill = relleno(NAVY);
+    cell.font = { name: 'Arial', size: 14, bold: true, color: { argb: headerTextArgb } };
+    cell.fill = relleno(headerArgb);
     cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
   }
   if (maxColumns > 1) worksheet.mergeCells(1, 1, 1, maxColumns);
@@ -213,7 +225,7 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
     const usedColumns = Math.max(1, data[rowIndex - 1]?.length ?? 1);
     for (let column = 1; column <= usedColumns; column++) {
       const cell = row.getCell(column);
-      cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: NAVY } };
+      cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: headerArgb } };
       cell.alignment = { vertical: 'middle', wrapText: true };
       cell.border = {
         bottom: { style: 'thin', color: { argb: BORDER } }
@@ -234,7 +246,7 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
         name: 'Arial',
         size: 10,
         bold: esEtiqueta,
-        color: { argb: esEtiqueta ? NAVY : BODY }
+        color: { argb: esEtiqueta ? headerArgb : BODY }
       };
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
       cell.border = bordeInstitucional();
@@ -260,8 +272,8 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
     const usedColumns = Math.max(1, data[rowIndex - 1]?.length ?? 1);
     for (let column = 1; column <= usedColumns; column++) {
       const cell = row.getCell(column);
-      cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: WHITE } };
-      cell.fill = relleno(NAVY);
+      cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: headerTextArgb } };
+      cell.fill = relleno(headerArgb);
       cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
       cell.border = bordeInstitucional();
     }
@@ -291,7 +303,7 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
 
   const lastColumn = worksheet.getColumn(maxColumns).letter;
   worksheet.pageSetup.printArea = `A1:${lastColumn}${worksheet.rowCount}`;
-  worksheet.headerFooter.oddHeader = '&C&"Arial,Bold"&10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL';
+  worksheet.headerFooter.oddHeader = `&C&"Arial,Bold"&10 ${branding.institutionName}`;
   worksheet.headerFooter.oddFooter = '&LSGRLA-IHSS&CGenerado: &D &T&RPágina &P de &N';
   worksheet.properties.defaultRowHeight = 18;
 }

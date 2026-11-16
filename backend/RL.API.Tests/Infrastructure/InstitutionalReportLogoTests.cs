@@ -89,6 +89,38 @@ public sealed class InstitutionalReportLogoTests
         Assert.Contains("0703197300189", sheet, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Xlsx_UsesTheResolvedBrandingForHeaderAndMetadata()
+    {
+        var (rgb, width, height) = InstitutionalLogoAsset.GetPdfRgb();
+        var branding = new InstitutionalBrandingSnapshot(
+            "INSTITUCIÓN DE PRUEBA",
+            "SISTEMA DE PRUEBA",
+            "uploads/logo-prueba.png",
+            InstitutionalLogoAsset.Sha256,
+            InstitutionalLogoAsset.PngBytes,
+            rgb,
+            width,
+            height,
+            InstitutionalReportStandard.CreatePalette("#FFFFFF"),
+            "test");
+        var workbook = new InstitutionalXlsxWorkbook(branding);
+        workbook.AddSheet(
+            "Prueba",
+            "Reporte dinámico",
+            new[] { "Código" },
+            new[] { new object?[] { "R-001" } });
+
+        using var archive = new ZipArchive(new MemoryStream(workbook.ToBytes()), ZipArchiveMode.Read);
+        var sheet = ReadEntryText(archive, "xl/worksheets/sheet1.xml");
+        var styles = ReadEntryText(archive, "xl/styles.xml");
+        var core = ReadEntryText(archive, "docProps/core.xml");
+
+        Assert.Contains("INSTITUCIÓN DE PRUEBA", sheet, StringComparison.Ordinal);
+        Assert.Contains("rgb=\"FFFFFFFF\"", styles, StringComparison.Ordinal);
+        Assert.Contains("SISTEMA DE PRUEBA", core, StringComparison.Ordinal);
+    }
+
     private static byte[] ReadEntry(ZipArchive archive, string name)
     {
         using var stream = archive.GetEntry(name)?.Open() ?? throw new InvalidOperationException($"Falta {name}.");

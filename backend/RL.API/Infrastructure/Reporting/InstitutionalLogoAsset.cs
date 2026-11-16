@@ -31,6 +31,12 @@ public static class InstitutionalLogoAsset
         return (png.Rgb.ToArray(), png.Width, png.Height);
     }
 
+    internal static (byte[] Rgb, int Width, int Height) DecodePngForBranding(byte[] bytes)
+    {
+        var decoded = Decode(bytes);
+        return (decoded.Rgb.ToArray(), decoded.Width, decoded.Height);
+    }
+
     private static InstitutionalPng Load()
     {
         var assembly = typeof(InstitutionalLogoAsset).Assembly;

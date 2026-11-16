@@ -10,6 +10,7 @@ using RL.API.Infrastructure.Files;
 using RL.API.Infrastructure.Health;
 using RL.API.Infrastructure.Http;
 using RL.API.Infrastructure.RateLimiting;
+using RL.API.Infrastructure.Reporting;
 using RL.API.Middleware;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Persistence;
@@ -227,7 +228,8 @@ builder.Services.AddScoped<IMatricesRiesgosGestionService, MatricesRiesgosGestio
 builder.Services.AddScoped<IMatricesRiesgosMitigacionService, MatricesRiesgosMitigacionService>();
 builder.Services.AddScoped<IMatricesRiesgosMonitoreoService, MatricesRiesgosMonitoreoService>();
 builder.Services.AddScoped<ICalculoConfiguracionService, CalculoConfiguracionService>();
-builder.Services.AddSingleton<IMatricesRiesgosReportExportService, MatricesRiesgosReportExportService>();
+builder.Services.AddScoped<IInstitutionalBrandingResolver, InstitutionalBrandingResolver>();
+builder.Services.AddScoped<IMatricesRiesgosReportExportService, MatricesRiesgosReportExportService>();
 
 // Proceso de contexto: permite obtener IP, usuario y datos de solicitud para auditoría.
 builder.Services.AddHttpContextAccessor();

@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { map, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
-import { createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
+import { bestContrastForeground, createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
 import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
+import { setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
 
 @Injectable({
   providedIn: 'root'
@@ -27,12 +28,14 @@ export class ConfiguracionService {
           const cfg = res.datos;
           if (!cfg.colorPrimario) cfg.colorPrimario = DEFAULT_SYSTEM_PRIMARY;
           if (!cfg.colorSecundario) cfg.colorSecundario = DEFAULT_SYSTEM_ACCENT;
+          if (!cfg.colorEncabezadoReportes) cfg.colorEncabezadoReportes = '#123B63';
           if (!cfg.timeoutSesion || cfg.timeoutSesion <= 0) cfg.timeoutSesion = 30;
           return cfg;
         }),
         tap(cfg => {
           this.configSistema.set(cfg);
           this.aplicarTemaSistema(cfg);
+          this.aplicarBrandingReportes(cfg);
         })
       );
   }
@@ -53,6 +56,7 @@ export class ConfiguracionService {
         tap(() => {
           this.configSistema.set(config);
           this.aplicarTemaSistema(config);
+          this.aplicarBrandingReportes(config);
         })
       );
   }
@@ -107,5 +111,17 @@ export class ConfiguracionService {
     if (url.startsWith('assets/')) return url;
     const base = environment.apiUrl.replace('/api', '');
     return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
+  private aplicarBrandingReportes(config: ConfigSistema): void {
+    const header = parseHexColor(config.colorEncabezadoReportes) ?? parseHexColor('#123B63')!;
+    const foreground = bestContrastForeground(header);
+    setInstitutionalReportBranding({
+      institutionName: (config.nombreInstitucion || 'Instituto Hondureño de Seguridad Social').toUpperCase(),
+      systemName: config.nombreSistema || 'SGRLA-IHSS',
+      logoUrl: this.resolverUrlImagen(config.logoUrl || 'assets/institutional/ihss-logo.png'),
+      headerColor: [header.r, header.g, header.b],
+      headerTextColor: [foreground.r, foreground.g, foreground.b]
+    });
   }
 }

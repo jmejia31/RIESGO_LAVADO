@@ -15,6 +15,7 @@ export interface ConfigSistema {
   iconoUrl?: string;
   colorPrimario?: string;
   colorSecundario?: string;
+  colorEncabezadoReportes?: string;
   timeoutSesion: number;
   acuerdoLegal?: string;
   maxIntentos?: number;

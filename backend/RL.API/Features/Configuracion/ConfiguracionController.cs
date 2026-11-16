@@ -35,6 +35,7 @@ public class ConfiguracionController : ControllerBase
             iconoUrl = config.IconoUrl,
             colorPrimario = config.ColorPrimario,
             colorSecundario = config.ColorSecundario,
+            colorEncabezadoReportes = config.ColorEncabezadoReportes,
             timeoutSesion = config.TimeoutSesion,
             acuerdoLegal = config.AcuerdoLegal,
             maxIntentos = config.MaxIntentos

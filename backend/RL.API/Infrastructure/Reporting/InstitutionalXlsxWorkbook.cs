@@ -12,6 +12,12 @@ namespace RL.API.Infrastructure.Reporting;
 public sealed class InstitutionalXlsxWorkbook
 {
     private readonly List<InstitutionalXlsxSheet> _sheets = new();
+    private readonly InstitutionalBrandingSnapshot _branding;
+
+    public InstitutionalXlsxWorkbook(InstitutionalBrandingSnapshot? branding = null)
+    {
+        _branding = branding ?? InstitutionalBrandingSnapshot.Canonical;
+    }
 
     public void AddSheet(
         string name,
@@ -79,7 +85,7 @@ public sealed class InstitutionalXlsxWorkbook
             WriteEntry(archive, "xl/workbook.xml", WorkbookXml());
             WriteEntry(archive, "xl/_rels/workbook.xml.rels", WorkbookRelationships());
             WriteEntry(archive, "xl/styles.xml", StylesXml());
-            WriteBinaryEntry(archive, "xl/media/image1.png", InstitutionalLogoAsset.PngBytes);
+            WriteBinaryEntry(archive, "xl/media/image1.png", _branding.LogoPngBytes);
 
             for (var index = 0; index < _sheets.Count; index++)
             {
@@ -117,15 +123,15 @@ public sealed class InstitutionalXlsxWorkbook
         "<Relationship Id=\"rId3\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties\" Target=\"docProps/app.xml\"/>" +
         "</Relationships>";
 
-    private static string CoreProperties()
+    private string CoreProperties()
     {
         var now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" " +
                "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\" " +
                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-               $"<dc:creator>{Xml(InstitutionalReportStandard.SystemName)}</dc:creator>" +
-               $"<dc:title>Reporte institucional</dc:title><dc:subject>{Xml(InstitutionalReportStandard.InstitutionName)}</dc:subject>" +
+               $"<dc:creator>{Xml(_branding.SystemName)}</dc:creator>" +
+               $"<dc:title>Reporte institucional</dc:title><dc:subject>{Xml(_branding.InstitutionName)}</dc:subject>" +
                $"<dcterms:created xsi:type=\"dcterms:W3CDTF\">{now}</dcterms:created>" +
                $"<dcterms:modified xsi:type=\"dcterms:W3CDTF\">{now}</dcterms:modified></cp:coreProperties>";
     }
@@ -157,23 +163,23 @@ public sealed class InstitutionalXlsxWorkbook
                "</Relationships>";
     }
 
-    private static string StylesXml() =>
+    private string StylesXml() =>
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
         "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
         "<numFmts count=\"1\"><numFmt numFmtId=\"165\" formatCode=\"dd/mm/yyyy hh:mm\"/></numFmts>" +
         "<fonts count=\"8\">" +
-        $"<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"{Argb(InstitutionalReportStandard.Palette.BodyText)}\"/></font>" +
+        $"<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.BodyText)}\"/></font>" +
         "<font><b/><sz val=\"14\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
         "<font><b/><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
-        $"<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"{Argb(InstitutionalReportStandard.Palette.Navy)}\"/></font>" +
+        $"<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.Navy)}\"/></font>" +
         "<font><b/><sz val=\"8\"/><name val=\"Arial\"/><color rgb=\"FF64748B\"/></font>" +
-        $"<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"{Argb(InstitutionalReportStandard.Palette.Navy)}\"/></font>" +
+        $"<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.Navy)}\"/></font>" +
         "<font><sz val=\"9\"/><name val=\"Arial\"/><color rgb=\"FFE2E8F0\"/></font>" +
         "<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
         "</fonts>" +
         $"<fills count=\"5\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill>" +
-        $"<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{Argb(InstitutionalReportStandard.Palette.Navy)}\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
-        $"<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{Argb(InstitutionalReportStandard.Palette.AlternateRow)}\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
+        $"<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{Argb(_branding.Palette.Navy)}\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
+        $"<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{Argb(_branding.Palette.AlternateRow)}\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
         "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFEEF3F7\"/><bgColor indexed=\"64\"/></patternFill></fill></fills>" +
         "<borders count=\"3\"><border/><border><left style=\"thin\"><color rgb=\"FFD5DEE7\"/></left>" +
         "<right style=\"thin\"><color rgb=\"FFD5DEE7\"/></right><top style=\"thin\"><color rgb=\"FFD5DEE7\"/></top>" +
@@ -209,7 +215,7 @@ public sealed class InstitutionalXlsxWorkbook
 
         var rows = new StringBuilder();
         rows.Append(RowXml(1, new object?[] { sheet.Title }, 1, maxColumns, 30m));
-        rows.Append(RowXml(2, new object?[] { $"{InstitutionalReportStandard.InstitutionName} · Generado {DateTime.Now.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}" }, 0, maxColumns, 22m));
+            rows.Append(RowXml(2, new object?[] { $"{_branding.InstitutionName} · Generado {DateTime.Now.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}" }, 0, maxColumns, 22m));
         if (string.IsNullOrWhiteSpace(sheet.Metadata))
             rows.Append("<row r=\"3\"/>");
         else
@@ -232,7 +238,7 @@ public sealed class InstitutionalXlsxWorkbook
                $"<mergeCells count=\"{(string.IsNullOrWhiteSpace(sheet.Metadata) ? 2 : 3)}\"><mergeCell ref=\"A1:{lastColumn}1\"/><mergeCell ref=\"A2:{lastColumn}2\"/>{(string.IsNullOrWhiteSpace(sheet.Metadata) ? string.Empty : $"<mergeCell ref=\"A3:{lastColumn}3\"/>")}</mergeCells>" +
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.35\" right=\"0.35\" top=\"0.65\" bottom=\"0.55\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
-               "<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL</oddHeader>" +
+               $"<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 {Xml(_branding.InstitutionName)}</oddHeader>" +
                "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter><drawing r:id=\"rId1\"/>" +
                "</worksheet>";
     }
@@ -267,7 +273,7 @@ public sealed class InstitutionalXlsxWorkbook
                $"<cols>{columns}</cols><sheetData>{rows}</sheetData>{mergeXml}" +
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.25\" right=\"0.25\" top=\"0.45\" bottom=\"0.45\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
-               "<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL</oddHeader>" +
+               $"<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 {Xml(_branding.InstitutionName)}</oddHeader>" +
                "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter><drawing r:id=\"rId1\"/>" +
                "</worksheet>";
     }
@@ -424,12 +430,12 @@ public sealed class InstitutionalXlsxWorkbook
         "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\" Target=\"../media/image1.png\"/>" +
         "</Relationships>";
 
-    private static string DrawingXml(InstitutionalXlsxSheet sheet, int sheetNumber)
+    private string DrawingXml(InstitutionalXlsxSheet sheet, int sheetNumber)
     {
         var columnCount = sheet.Document?.ColumnCount ?? Math.Max(1, sheet.Headers.Count);
         var column = Math.Max(0, columnCount - 3);
         const int cx = 1_143_000;
-        const int cy = 434_000;
+        var cy = (int)Math.Round(cx / (double)_branding.LogoAspectRatio);
         return $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
                "<xdr:oneCellAnchor>" +

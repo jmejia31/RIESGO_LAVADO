@@ -14,6 +14,17 @@ public sealed class InstitutionalReportStandardTests
     }
 
     [Theory]
+    [InlineData("#123B63", "#FFFFFF")]
+    [InlineData("#FFFFFF", "#111827")]
+    public void CreatePalette_ResolvesReadableHeaderForeground(string background, string expectedForeground)
+    {
+        var palette = InstitutionalReportStandard.CreatePalette(background);
+
+        Assert.Equal(background, palette.Navy);
+        Assert.Equal(expectedForeground, palette.HeaderText);
+    }
+
+    [Theory]
     [InlineData(6, InstitutionalReportOrientation.Portrait)]
     [InlineData(8, InstitutionalReportOrientation.Portrait)]
     [InlineData(9, InstitutionalReportOrientation.Landscape)]

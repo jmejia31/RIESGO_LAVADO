@@ -20,3 +20,10 @@ export const LOGIN_SLIDE_IMAGE_FILE_POLICY: InstitutionalFileUploadPolicy = {
   allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
   allowedTypesText: 'Imágenes (JPG, PNG, GIF, WebP)',
 };
+
+export const INSTITUTIONAL_LOGO_FILE_POLICY: InstitutionalFileUploadPolicy = {
+  allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+  allowedTypesText: 'Logo (JPG, PNG, WebP)',
+  maxFileSizeBytes: 5 * 1024 * 1024,
+  maxFiles: 1
+};

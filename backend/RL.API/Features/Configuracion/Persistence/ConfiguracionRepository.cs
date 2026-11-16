@@ -33,6 +33,7 @@ public class ConfiguracionRepository : IConfiguracionRepository
             IconoUrl = reader["SFS_ICONO_URL"] == DBNull.Value ? null : reader["SFS_ICONO_URL"].ToString(),
             ColorPrimario = reader["SFS_COLOR_PRIMARIO"] == DBNull.Value ? null : reader["SFS_COLOR_PRIMARIO"].ToString(),
             ColorSecundario = reader["SFS_COLOR_SECUNDARIO"] == DBNull.Value ? null : reader["SFS_COLOR_SECUNDARIO"].ToString(),
+            ColorEncabezadoReportes = TryGetString(reader, "SFS_COLOR_ENCABEZADO_REPORTES"),
             TimeoutSesion = Convert.ToInt32(reader["SFS_TIMEOUT_SESION"]),
             AcuerdoLegal = reader["SFS_ACUERDO_LEGAL"] == DBNull.Value ? null : reader["SFS_ACUERDO_LEGAL"].ToString(),
             MaxIntentos = reader["SFS_MAX_INTENTOS"] == DBNull.Value ? 5 : Convert.ToInt32(reader["SFS_MAX_INTENTOS"]),
@@ -75,7 +76,39 @@ public class ConfiguracionRepository : IConfiguracionRepository
         cmd.Parameters.Add(new OracleParameter("ValidezClaveTemp", config.ValidezClaveTemp));
 
         var rowsAffected = await cmd.ExecuteNonQueryAsync();
+        if (rowsAffected > 0 && !string.IsNullOrWhiteSpace(config.ColorEncabezadoReportes))
+        {
+            // La columna se incorpora mediante la migración B06 controlada. Mantener
+            // el resto de la configuración operativa aun cuando la migración aún no
+            // se haya desplegado en una base de desarrollo.
+            try
+            {
+                await using var brandingCmd = conn.CreateCommand();
+                brandingCmd.BindByName = true;
+                brandingCmd.CommandText = "UPDATE RL_CONFIG_SISTEMA SET SFS_COLOR_ENCABEZADO_REPORTES = :ColorEncabezadoReportes WHERE SFS_ID = 1";
+                brandingCmd.Parameters.Add(new OracleParameter("ColorEncabezadoReportes", config.ColorEncabezadoReportes));
+                await brandingCmd.ExecuteNonQueryAsync();
+            }
+            catch (OracleException exception) when (exception.Number is 904 or 942 or 2289)
+            {
+                // La ausencia de la columna es una dependencia de despliegue, no un
+                // motivo para romper el guardado de las columnas existentes.
+            }
+        }
         return rowsAffected > 0;
+    }
+
+    private static string? TryGetString(OracleDataReader reader, string columnName)
+    {
+        try
+        {
+            var value = reader[columnName];
+            return value == DBNull.Value ? null : value.ToString();
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return null;
+        }
     }
 
     public async Task<List<LoginSlide>> ObtenerSlidesAsync()

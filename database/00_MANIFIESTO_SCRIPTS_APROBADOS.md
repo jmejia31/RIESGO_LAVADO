@@ -94,6 +94,15 @@ Orden interno:
 | `17_validate_module_ids.sql` | Validación final | Solo lectura. |
 | `18_add_missing_comments.sql` | Ambos flujos | Comentarios de tablas y columnas. |
 
+## B06 — branding dinámico de reportes
+
+Los scripts `20_b06_dynamic_branding_precheck.sql`, `20_b06_dynamic_branding.sql`,
+`20_b06_dynamic_branding_postcheck.sql` y `20_b06_dynamic_branding_rollback.sql`
+son un paquete manual controlado. No forman parte de los maestros automáticos y
+no fueron ejecutados por Codex. Requieren respaldo, ventana DBA y aprobación
+operativa. La migración agrega únicamente `SFS_COLOR_ENCABEZADO_REPORTES` y deja
+el valor institucional vigente como fallback `#123B63`.
+
 ## Paquete 19 — Matrices de Riesgos
 
 El paquete:

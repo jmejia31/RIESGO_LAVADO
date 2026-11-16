@@ -7,7 +7,7 @@ import { DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY } from '../../../../../co
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
-import { LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
+import { INSTITUTIONAL_LOGO_FILE_POLICY, LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
@@ -41,6 +41,9 @@ export class ConfiguracionComponent implements OnInit {
   guardandoSlide = signal(false);
   subiendoImagen = signal(false);
   readonly politicaImagenSlide = LOGIN_SLIDE_IMAGE_FILE_POLICY;
+  readonly politicaLogoInstitucional = INSTITUTIONAL_LOGO_FILE_POLICY;
+  archivosLogoPendientes = signal<File[]>([]);
+  subiendoLogo = signal(false);
   archivosImagenPendientes = signal<File[]>([]);
 
   ngOnInit() {
@@ -58,6 +61,7 @@ export class ConfiguracionComponent implements OnInit {
       iconoUrl: [''],
       colorPrimario: [DEFAULT_SYSTEM_PRIMARY, [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
       colorSecundario: [DEFAULT_SYSTEM_ACCENT, [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
+      colorEncabezadoReportes: ['#123B63', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
       timeoutSesion: [30, [Validators.required, Validators.min(1), Validators.max(1440)]],
       acuerdoLegal: ['', [Validators.maxLength(this.maxTextoTextarea)]],
       maxIntentos: [5, [Validators.required, Validators.min(1), Validators.max(20)]]
@@ -272,5 +276,55 @@ export class ConfiguracionComponent implements OnInit {
         });
       }
     });
+  }
+
+  onLogoSeleccionado(files: File[]) {
+    const file = files[0];
+    if (!file) return;
+    this.archivosLogoPendientes.set([file]);
+    this.subiendoLogo.set(true);
+    void this.normalizarLogoPng(file).then(normalized => {
+      this.configService.subirImagen(normalized).subscribe({
+        next: response => {
+          this.subiendoLogo.set(false);
+          this.archivosLogoPendientes.set([]);
+          // La URL queda en el formulario y no se vuelve activa hasta pulsar Guardar.
+          this.form.patchValue({ logoUrl: response.url });
+          this.mostrarExito('Logo cargado. Guarde la configuración para publicarlo.');
+        },
+        error: error => {
+          this.subiendoLogo.set(false);
+          this.archivosLogoPendientes.set([]);
+          this.mostrarError(error?.error?.mensaje || 'No se pudo cargar el logo institucional.');
+        }
+      });
+    }).catch(() => {
+      this.subiendoLogo.set(false);
+      this.archivosLogoPendientes.set([]);
+      this.mostrarError('No se pudo leer el logo. Use un PNG, JPG, JPEG o WEBP válido.');
+    });
+  }
+
+  private async normalizarLogoPng(file: File): Promise<File> {
+    if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) return file;
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error('invalid-image'));
+        element.src = objectUrl;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      if (!context || canvas.width <= 0 || canvas.height <= 0) throw new Error('invalid-image');
+      context.drawImage(image, 0, 0);
+      const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('encode-failed')), 'image/png'));
+      return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.png`, { type: 'image/png', lastModified: file.lastModified });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   }
 }

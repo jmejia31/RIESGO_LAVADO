@@ -23,6 +23,13 @@ public interface IMatricesRiesgosReportExportService
 /// </summary>
 public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportExportService
 {
+    private readonly IInstitutionalBrandingResolver? _brandingResolver;
+
+    public MatricesRiesgosReportExportService(IInstitutionalBrandingResolver? brandingResolver = null)
+    {
+        _brandingResolver = brandingResolver;
+    }
+
     public ArchivoReporteDto CrearExcelMatrizCompleta(
         IReadOnlyList<RiesgoReporteFilaDto> filas,
         IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
@@ -30,7 +37,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
     {
         IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog = new InstitutionalProjectionMapper().GetFieldCatalog();
         ValidarProyecciones(filas, proyecciones, catalog);
-        var workbook = new InstitutionalXlsxWorkbook();
+        var workbook = new InstitutionalXlsxWorkbook(_brandingResolver?.Resolve() ?? InstitutionalBrandingSnapshot.Canonical);
         var emptyRow = Enumerable.Repeat<object?>(string.Empty, catalog.Count).ToArray();
         emptyRow[0] = "Sin información";
         var rows = filas.Count == 0
@@ -61,7 +68,8 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
             "Matriz Consolidada de Riesgos — Matriz completa 82 campos",
             "Matrices de Riesgos",
             orientation,
-            DateTime.Now);
+            DateTime.Now,
+            _brandingResolver?.Resolve() ?? InstitutionalBrandingSnapshot.Canonical);
         document.AddSection("Filtros aplicados");
         document.AddParagraph(DescribirFiltros(filtros));
         if (filas.Count == 0)

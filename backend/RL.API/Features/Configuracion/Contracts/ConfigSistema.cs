@@ -9,6 +9,7 @@ public class ConfigSistema
     public string? IconoUrl { get; set; }
     public string? ColorPrimario { get; set; }
     public string? ColorSecundario { get; set; }
+    public string? ColorEncabezadoReportes { get; set; }
     public int TimeoutSesion { get; set; }
     public string? AcuerdoLegal { get; set; }
     public int MaxIntentos { get; set; } = 5;

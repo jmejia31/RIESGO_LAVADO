@@ -105,6 +105,15 @@
                 <label class="text-xs font-semibold text-gray-500 uppercase">URL del Logo principal</label>
                 <input type="text" formControlName="logoUrl"
                   class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" />
+                <app-institutional-file-upload
+                  label="Cargar logo institucional"
+                  [policy]="politicaLogoInstitucional"
+                  [multiple]="false"
+                  [disabled]="subiendoLogo()"
+                  [uploading]="subiendoLogo()"
+                  [selectedFiles]="archivosLogoPendientes()"
+                  (filesChange)="onLogoSeleccionado($event)">
+                </app-institutional-file-upload>
               </div>
 
               <div class="space-y-1">
@@ -129,6 +138,16 @@
                   <input type="text" formControlName="colorSecundario"
                     class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm font-mono uppercase" />
                 </div>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-500 uppercase">Color del encabezado de reportes</label>
+                <div class="flex gap-2">
+                  <input type="color" formControlName="colorEncabezadoReportes" class="w-12 h-10 p-1 bg-white border border-gray-200 rounded-xl cursor-pointer" />
+                  <input type="text" formControlName="colorEncabezadoReportes"
+                    class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm font-mono uppercase" />
+                </div>
+                <p class="text-[11px] text-gray-500">Se aplica de forma uniforme a PDF, Excel y sus vistas previas.</p>
               </div>
             </div>
           </div>
