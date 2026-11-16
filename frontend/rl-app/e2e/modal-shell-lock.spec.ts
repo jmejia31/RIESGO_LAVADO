@@ -72,11 +72,19 @@ async function abrirSelectorDeFormula(page: Page, selector: Locator): Promise<Lo
   await expect(selector).toBeVisible();
   await selector.scrollIntoViewIfNeeded();
   await page.waitForTimeout(250);
-  await selector.click();
-  await page.waitForTimeout(250);
-  if (!(await panel.isVisible().catch(() => false))) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await selector.click();
+    await page.waitForTimeout(250);
+    if (await panel.isVisible().catch(() => false)) break;
+
+    await selector.focus();
+    await selector.press('Enter');
+    await page.waitForTimeout(150);
+    if (await panel.isVisible().catch(() => false)) break;
+
     await selector.press('ArrowDown');
     await page.waitForTimeout(250);
+    if (await panel.isVisible().catch(() => false)) break;
   }
   await expect(panel).toBeVisible();
   return panel;
