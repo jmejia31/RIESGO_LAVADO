@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import {
   INSTITUTIONAL_LOGO_ASSET_PATH,
   INSTITUTIONAL_LOGO_ASPECT_RATIO,
-  INSTITUTIONAL_PDF_LOGO_SCALE,
+  INSTITUTIONAL_PDF_LOGO_WIDTH_MM,
   INSTITUTIONAL_REPORT_COLORS,
   INSTITUTIONAL_REPORT_LAYOUT
 } from './institutional-report-standard';
@@ -39,7 +39,7 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   const metadataGap = 3;
   const metadataLineHeight = 4.5;
   const metadataTop = titleTop + titleLines.length * titleLineHeight + metadataGap;
-  const logoWidth = 32 * INSTITUTIONAL_PDF_LOGO_SCALE;
+  const logoWidth = INSTITUTIONAL_PDF_LOGO_WIDTH_MM;
   const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
   const headerHeight = Math.max(
     INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationHeaderHeight,
@@ -115,7 +115,7 @@ export function agregarEncabezadoInstitucionalPdf(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   const metadataLines = doc.splitTextToSize(`${sistema} | Generado: ${fecha}`, leftWidth);
-  const logoWidth = Math.min(48, Math.max(34, width * 0.16)) * INSTITUTIONAL_PDF_LOGO_SCALE;
+  const logoWidth = Math.min(INSTITUTIONAL_PDF_LOGO_WIDTH_MM, width - margin * 2);
   const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
   const titleBottom = 9 + institutionLines.length * 5 + 6 + titleLines.length * 7;
   const metadataTop = titleBottom + 4;

@@ -46,7 +46,7 @@ public sealed class InstitutionalReportLogoTests
     }
 
     [Fact]
-    public void Pdf_ScalesTheLogoBySixtyPercentAndCentersItVerticallyInTheHeader()
+    public void Pdf_UsesTheCanonicalLogoWidthAndCentersItVerticallyInTheHeader()
     {
         var document = new InstitutionalPdfDocument(
             "Reporte institucional de prueba",
@@ -56,6 +56,7 @@ public sealed class InstitutionalReportLogoTests
 
         var pdf = Encoding.ASCII.GetString(document.ToBytes());
 
+        Assert.Equal(158.4m, InstitutionalReportStandard.PdfLogoWidthPoints);
         Assert.Matches(@"q 158\.4 0 0 60\.[0-9]+ 400\.88 7[0-9]{2}\.[0-9]+ cm /ImIHSS Do Q", pdf);
         Assert.Contains("1 0 0 1 36 784.89 Tm (SGRLA-IHSS", pdf, StringComparison.Ordinal);
     }

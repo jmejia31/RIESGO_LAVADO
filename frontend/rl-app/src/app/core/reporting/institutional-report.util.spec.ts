@@ -20,7 +20,7 @@ import {
   INSTITUTIONAL_LOGO_ASSET_PATH,
   INSTITUTIONAL_LOGO_ASPECT_RATIO,
   INSTITUTIONAL_REPORT_LAYOUT,
-  INSTITUTIONAL_PDF_LOGO_SCALE
+  INSTITUTIONAL_PDF_LOGO_WIDTH_MM
 } from './institutional-report-standard';
 
 describe('estándar institucional de reportería', () => {
@@ -34,7 +34,7 @@ describe('estándar institucional de reportería', () => {
     expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
     expect(INSTITUTIONAL_LOGO_ASSET_PATH).toBe('assets/institutional/ihss-logo.png');
     expect(INSTITUTIONAL_LOGO_ASPECT_RATIO).toBeCloseTo(2034 / 773, 10);
-    expect(INSTITUTIONAL_PDF_LOGO_SCALE).toBe(2.2);
+    expect(INSTITUTIONAL_PDF_LOGO_WIDTH_MM).toBe(55.88);
   });
 
   it('mantiene el mismo encabezado en orientación vertical y horizontal', () => {

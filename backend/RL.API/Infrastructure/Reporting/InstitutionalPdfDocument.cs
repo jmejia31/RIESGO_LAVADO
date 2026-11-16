@@ -17,7 +17,7 @@ public sealed class InstitutionalPdfDocument
     private const decimal FooterHeight = 30m;
     private const decimal DefaultFontSize = 8.5m;
     private const decimal DefaultLineHeight = 11m;
-    private const decimal LogoWidth = 158.4m;
+    private const decimal LogoWidth = InstitutionalReportStandard.PdfLogoWidthPoints;
 
     private readonly decimal _pageWidth;
     private readonly decimal _pageHeight;

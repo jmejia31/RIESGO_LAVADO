@@ -10,6 +10,8 @@ public static class InstitutionalReportStandard
     public const string SystemName = "SGRLA-IHSS";
     public const string DateFormat = "dd/MM/yyyy";
     public const string DateTimeFormat = "dd/MM/yyyy HH:mm";
+    // Equivalente a 55.88 mm, usado también por el generador Angular (2.2 pulgadas).
+    public const decimal PdfLogoWidthPoints = 158.4m;
 
     public static InstitutionalReportPalette Palette { get; } = new(
         Navy: "#123B63",
