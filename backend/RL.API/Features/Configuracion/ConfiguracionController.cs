@@ -54,7 +54,21 @@ public class ConfiguracionController : ControllerBase
     {
         if (config == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
 
-        var ok = await _service.GuardarConfigSistemaAsync(config, ObtenerUsuarioId(), ObtenerIp());
+        bool ok;
+        try
+        {
+            ok = await _service.GuardarConfigSistemaAsync(config, ObtenerUsuarioId(), ObtenerIp());
+        }
+        catch (InvalidOperationException exception)
+            when (exception.Message.StartsWith("B06_BRANDING_SCHEMA=NOT_READY", StringComparison.Ordinal))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                success = false,
+                codigo = "B06_BRANDING_SCHEMA=NOT_READY",
+                mensaje = "La configuracion institucional no puede publicarse hasta aplicar la migracion B06 en la base de datos autorizada."
+            });
+        }
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo actualizar la configuración" });
 
         return Ok(new { success = true, mensaje = "Configuración actualizada exitosamente" });

@@ -143,6 +143,7 @@ export class ConfiguracionComponent implements OnInit {
       },
       error: (err) => {
         this.guardando.set(false);
+        this.estadoLogo.set('LOGO_SAVE_FAILED');
         const msg = err?.error?.mensaje || 'Error al guardar los cambios en la base de datos.';
         this.mostrarError(msg);
       }
