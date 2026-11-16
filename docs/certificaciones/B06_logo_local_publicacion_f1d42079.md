@@ -9,7 +9,7 @@ CLIENT=CLI
 BRANCH=desarrollo
 INITIAL_SHA=f90d0815dd2bfdc5a6c9d733e0255e05c04d75e6
 SOURCE_CODE_SHA=f1d42079bc549ded50a9d245fc1132fc5da2e08d
-EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
+EVIDENCE_COMMIT_SHA=286689c9328aad2b84594f00dd86333311fd33c2
 EVIDENCE_TYPE=PRIMARY_SYNTHETIC_SANITIZED
 ROOT_CAUSE_LOCAL_UPLOAD=FRONTEND_ACCEPTED_UNSUPPORTED_PNG_VARIANTS
 ROOT_CAUSE_REPORTING_FALLBACK=CONFIGURED_ASSET_ERROR_WAS_HIDDEN_BY_CANONICAL_FALLBACK
@@ -38,7 +38,7 @@ QUALITY_GATE_STATUS=SUCCESS
 QUALITY_GATE_RUN=43955398124
 QUALITY_GATE_URL=https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124
 SECURITY_SCAN=PASS_GITHUB_ACTIONS
-GITHUB_REMOTE_VERIFIED=YES_SOURCE_SHA
+GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA
 REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW
 B06_TECHNICAL_STATUS=PARTIAL_PENDING_AUTHENTICATED_E2E
 B06_OWNER_VISUAL_ACCEPTANCE=PENDING
@@ -66,4 +66,4 @@ El mensaje `LOGO_UPLOADED_PENDING_SAVE` continúa siendo correcto después de ar
 
 La configuración consultada durante esta intervención tenía una URL externa persistida. No se sustituyó directamente en Oracle porque eso saltaría el flujo administrativo auditado. La prueba autenticada completa `carga local → guardar → releer → PDF → XLSX → preview` y la aceptación visual del propietario siguen pendientes. El enlace externo no es el único flujo soportado: no es una fuente válida para la reportería de servidor; el flujo soportado es carga local, publicación y persistencia de una ruta bajo `wwwroot/uploads`.
 
-El Quality Gate exacto terminó correctamente en el run [`43955398124`](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124). No se declara PASS global mientras falte la integración autenticada.
+El Quality Gate exacto del código terminó correctamente en el run [`43955398124`](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43955398124). El Quality Gate exacto del expediente documental terminó correctamente en [`43958425555`](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43958425555). No se declara PASS global mientras falte la integración autenticada.
