@@ -57,6 +57,19 @@
       "quality_gate_status": "SUCCESS",
       "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/767cece877cf17d1c2821739019f658d01e5aa14/docs/certificaciones/B06_logo_geometria_unica_7e656fc5.md",
       "github_remote_verified": "YES"
+    },
+    {
+      "id": "B06-DYNAMIC-BRANDING-CORRECTION-14B238AD",
+      "path": "B06_dynamic_branding_14b238ad.md",
+      "status": "BLOCKED_ENVIRONMENTAL_VERIFICATION",
+      "source_code_sha": "14b238ad8ef8533564012113cec621423757e821",
+      "evidence_commit_sha": "PENDING_DOCUMENTAL_COMMIT",
+      "github_evidence_url": "PENDING_DOCUMENTAL_COMMIT",
+      "quality_gate_status": "PENDING_NEW_SOURCE_SHA",
+      "github_remote_verified": "YES_FOR_SOURCE_COMMIT",
+      "security_scan": "PENDING_GITHUB_ACTIONS",
+      "review_ready": "BLOCKED_ENVIRONMENTAL_VERIFICATION",
+      "owner_visual_acceptance": "PENDING"
     }
   ]
 }

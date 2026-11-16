@@ -4708,3 +4708,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`; no se declara cierre funcional por inferencia tecnica.
 - Restricciones preservadas: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto de continuacion: publicar y verificar el commit documental de este registro; despues queda pendiente unicamente la aceptacion visual del propietario y la aprobacion DBA para ejecutar la columna Oracle opcional.
+
+## Estado vigente — B06 correccion P0 de publicacion institucional — 2026-11-16 12:59:58 -06:00
+
+- `PHASE=B06_DYNAMIC_INSTITUTIONAL_BRANDING_CORRECTION`; `INITIAL_SHA=bd1deb43e8996efa6fc6a5690dcd005e56c5a778`; `SOURCE_CODE_SHA=14b238ad8ef8533564012113cec621423757e821`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- El commit funcional `14b238ad8ef8533564012113cec621423757e821` fue publicado selectivamente. Los cambios ajenos del checkout permanecen fuera del stage.
+- Correcciones aplicadas: almacenamiento/resolucion unificados por `WebRootPath`; publicacion de configuracion y auditoria en una transaccion; campos de seguridad omitidos preservados; estado de carga/publicacion de logo explicitado; exito Angular diferido hasta releer el estado persistido; contraste y geometria de reportes compartidos reforzados.
+- Verificado ahora: Angular `96 archivos / 1007 pruebas PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes; build backend aislado `PASS`, `0 errores`, `505 warnings` heredados.
+- `BACKEND_FULL_TEST_SUITE=BLOCKED_ACTIVE_RL_API_DLL_LOCK`; `ORACLE_XE_INTEGRATION=NOT_EXECUTED_THIS_INTERVENTION`; `LOGO_A_LOGO_B_REAL_FLOW=NOT_VERIFIED`; `PLAYWRIGHT_REAL_CONFIG_FLOW=NOT_VERIFIED`.
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_SHA`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT`; `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`.
+- `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
+- Preservacion: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuacion: commit/push documental selectivo, verificacion remota de los archivos y observacion del Quality Gate del nuevo expediente; mantener B06 abierto mientras falten pruebas de integración real y aprobación visual.

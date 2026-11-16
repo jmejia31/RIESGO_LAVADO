@@ -65,4 +65,32 @@ REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW
 
 El cambio funcional esta publicado en [`331e9617`](https://github.com/jmejia31/RIESGO_LAVADO/commit/331e9617c9ee2dba9e008ae3f3b7071b9b8551b5). Este expediente no cierra B06 por inferencia tecnica: la revision visual del propietario y el gate remoto del SHA documental siguen siendo pendientes.
 
+## Actualizacion B06 — correccion P0 de publicacion y persistencia — 2026-11-16
+
+La auditoria funcional posterior al expediente anterior encontro que el flujo podia informar exito sin demostrar que el archivo cargado fuera el activo utilizado por todos los consumidores. El commit [`14b238ad`](https://github.com/jmejia31/RIESGO_LAVADO/commit/14b238ad8ef8533564012113cec621423757e821) corrige la raiz compartida: carga y resolucion usan la misma raiz `WebRootPath`, la ruta productiva de configuracion y auditoria comparte transaccion, los campos de seguridad omitidos se preservan y la interfaz relee el estado publicado antes de mostrar exito.
+
+```ini
+SOURCE_CODE_SHA=14b238ad8ef8533564012113cec621423757e821
+EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
+B06_CONFIGURATION_ATOMICITY=IMPLEMENTED
+B06_AUDIT_TRANSACTIONALITY=IMPLEMENTED
+B06_SECURITY_SETTINGS_PRESERVED=IMPLEMENTED
+B06_LOGO_STORAGE_ROOT=WEB_ROOT_PATH
+B06_CONTRAST_POLICY=WCAG_AA_DERIVED
+B06_FRONTEND_REGRESSION=PASS_96_FILES_1007_TESTS
+B06_FRONTEND_BUILD=PASS
+B06_FRONTEND_LINT=PASS
+B06_BACKEND_BUILD=PASS_0_ERRORS
+B06_BACKEND_FULL_TESTS=BLOCKED_ACTIVE_PROCESS_LOCK
+B06_REAL_LOGO_A_LOGO_B=NOT_VERIFIED
+B06_REAL_PDF_EXCEL_FLOW=NOT_VERIFIED
+B06_PLAYWRIGHT_REAL_FLOW=NOT_VERIFIED
+B06_ORACLE_XE_THIS_INTERVENTION=NOT_EXECUTED
+B06_QUALITY_GATE=PENDING_NEW_SOURCE_SHA
+B06_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE
+```
+
+La evidencia detallada y sanitizada esta en [`docs/certificaciones/B06_dynamic_branding_14b238ad.md`](../certificaciones/B06_dynamic_branding_14b238ad.md). No se presenta `PASS` tecnico global mientras permanezcan sin verificar la prueba real LOGO_A/LOGO_B, la generacion PDF/Excel desde configuracion persistida, la prueba E2E autenticada y el Quality Gate del nuevo SHA.
+
 El expediente documental base que contiene esta evidencia fue publicado en [`55190a7a`](https://github.com/jmejia31/RIESGO_LAVADO/commit/55190a7a9efc25541c1bd1b9bb2bd34d965f8211). El Quality Gate exacto del estado documental publicado terminó verde en el [run 43920939882](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882): `STATUS=completed`, `CONCLUSION=success`. La revisión visual del propietario permanece pendiente.

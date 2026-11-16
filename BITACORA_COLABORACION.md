@@ -11322,3 +11322,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `SOURCE_CODE_SHA=331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`; `EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211`; `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
 - `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`. El gate tecnico no sustituye la aprobacion visual del propietario ni la ventana DBA para la columna Oracle opcional.
 - Punto exacto de continuacion: publicar esta actualizacion documental de cierre tecnico, verificar su contenido por API de GitHub y conservar B06 abierto hasta la aceptacion visual explicita.
+
+## 2026-11-16 12:59:58 -06:00 — B06 correccion P0 de publicacion institucional (COD)
+
+- `EVENT_ID=RL-B06-P0-PUBLICATION-CORRECTION-20261116`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- `INITIAL_SHA=bd1deb43e8996efa6fc6a5690dcd005e56c5a778`; `SOURCE_CODE_SHA=14b238ad8ef8533564012113cec621423757e821`; commit funcional publicado en `origin/desarrollo` mediante stage selectivo.
+- Se corrigieron las causas compartidas identificadas: raiz de almacenamiento inconsistente (`WebRootPath`), exito parcial por segundo UPDATE, posible sobrescritura de campos de seguridad omitidos, auditoria fuera de la transaccion y confirmacion prematura del formulario Angular.
+- Se reforzo la politica institucional de contraste, la geometria compartida de logo PDF/XLSX, la composicion alfa y la resolucion de URLs del logo del sistema. No se tocaron `main`, produccion, Oracle institucional, migracion 54, B07, Bloque 10 ni cambios ajenos del checkout.
+- Pruebas ejecutadas en esta intervencion: Angular `96 archivos / 1007 pruebas PASS`; `npm run lint PASS`; `npm run build PASS` con warnings preexistentes de SCSS/CommonJS; build aislado backend `PASS`, `0 errores`, `505 warnings` de analizadores heredados; `git diff --cached --check PASS`.
+- Pruebas no ejecutadas o bloqueadas: suite .NET completa en checkout normal por bloqueo activo de `RL.API.dll` en `bin/Debug/net10.0`; Oracle XE y flujo real autenticado Configuracion→LOGO_A/LOGO_B→PDF/Excel/preview no reproducidos en esta intervencion; Playwright real queda `NOT_VERIFIED`.
+- Expediente nuevo: `docs/certificaciones/B06_dynamic_branding_14b238ad.md`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_SHA`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT`.
+- Dictamen: `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
+- Punto exacto de continuacion: publicar el expediente documental y verificar por GitHub el SHA, sus archivos y el Quality Gate exacto; no declarar PASS global ni cerrar B06 sin la evidencia de integración real y la aceptación visual del propietario.
