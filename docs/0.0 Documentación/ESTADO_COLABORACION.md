@@ -1,5 +1,15 @@
 # Estado vigente — Ciclo de vida seguro de familias de formularios (COD) — 2026-10-27 09:10 -06:00
 
+## Estado vigente — B06 logo ampliado y encabezado sin solapamiento — 2026-11-16 08:25:47 -06:00
+
+- La corrección funcional fue publicada en `origin/desarrollo`: `SOURCE_CODE_SHA=bd923c7c77dce7404cd52a639d18d1b02354d4ea` (`fix(b06): center enlarged report logo without overlap`), sobre `INITIAL_SHA=06cdda89832d3cd4e3194cd28756884e9b42b981`.
+- El logo PDF backend pasó de `72` a `100.8` puntos de ancho (`1.40x`), conserva el aspect ratio canónico y se centra verticalmente en el encabezado. El texto de sistema/módulo/fecha se ubica debajo del título, en la columna izquierda; `B06_LOGO_TEXT_OVERLAP=0`.
+- Angular aplica la misma escala `1.40x` y la misma regla de no solapamiento en el helper compartido para todos sus reportes PDF, incluidos páginas de continuación.
+- Verificado en esta intervención: backend focalizado `4/4 PASS`; Angular focalizado `9/9 PASS`; suite Angular `95 archivos / 999 pruebas PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes; build Release de solución `PASS` con warnings preexistentes; `git diff --check` del alcance `PASS`.
+- `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Quality Gate remoto del SHA `bd923c7c`: pendiente de conclusión; no se presenta como verde hasta leer el run exacto. La aceptación visual del propietario permanece pendiente.
+- Punto exacto de continuación: verificar el Quality Gate exact-SHA, actualizar el expediente con su run y publicar el commit documental posterior; no cerrar B06 sin aprobación visual explícita.
+
 ## Estado vigente — B06 logo IHSS integrado globalmente y Quality Gate verde — 2026-11-13 16:41:32 -06:00
 
 - `INITIAL_SHA=62fddeb2860d82f127e617ef3dc2a140850a638d`; `SOURCE_CODE_SHA=15ae2ab7ce220bcdc1b0f3d5343cf2f168c802f5`; `REGRESSION_FIX_SHA=40199d45718b24279701d006c1bb6bd8451a1ad3`; `CERTIFIED_HEAD_SHA=e9f9e95759c3f717c9950ae4d6a8a28d5e690a58`.

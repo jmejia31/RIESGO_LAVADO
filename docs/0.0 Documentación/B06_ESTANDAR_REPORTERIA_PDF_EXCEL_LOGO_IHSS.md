@@ -1,5 +1,45 @@
 # B06 — Estándar de reportería institucional PDF/Excel y logo IHSS
 
+## Actualización vigente — logo ampliado, centrado y sin solapamiento — 2026-11-16
+
+La solicitud visual del propietario se implementó en los generadores compartidos de reportería. El logo conserva su ubicación derecha, aumenta uniformemente un 40% (`1.40x`) y se centra verticalmente dentro del encabezado. El texto de sistema, módulo y fecha ya no comparte el área blanca del logo: se renderiza debajo del título, en la columna izquierda del mismo encabezado institucional.
+
+```ini
+PHASE=B06_LOGO_LAYOUT_NON_OVERLAP
+AUTHOR=COD/CODEX
+CLIENT=CLI
+BRANCH=desarrollo
+INITIAL_SHA=06cdda89832d3cd4e3194cd28756884e9b42b981
+SOURCE_CODE_SHA=bd923c7c77dce7404cd52a639d18d1b02354d4ea
+FUNCTIONAL_COMMIT=bd923c7c77dce7404cd52a639d18d1b02354d4ea
+LOGO_SCALE=1.40
+BACKEND_PDF_LOGO_WIDTH=72_TO_100.8_POINTS
+ANGULAR_PDF_LOGO_SCALE=1.40
+LOGO_VERTICAL_ALIGNMENT=HEADER_CENTER
+REPORT_METADATA_PLACEMENT=UNDER_TITLE_LEFT
+B06_ALL_SHARED_PDF_CONSUMERS=PASS
+B06_LOGO_TEXT_OVERLAP=0
+B06_LOGO_UNIFORM_SCALE=PASS
+B06_REPORT_DATA_PRESERVED=YES
+B06_IDENTIFIERS_PRESERVED=YES
+B01_PRESERVED=YES
+B02_PRESERVED=YES
+B03_PRESERVED=YES
+B04_PRESERVED=YES
+B05_PRESERVED=YES
+B07_AUTHORIZED=NO
+BLOCK10_AUTHORIZED=NO
+MAIN_TOUCHED=NO
+PRODUCTION_TOUCHED=NO
+ORACLE_INSTITUTIONAL_TOUCHED=NO
+MIGRATION_54_TOUCHED=NO
+QUALITY_GATE_RUN=PENDING_REMOTE
+B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
+```
+
+El alcance cubre todos los consumidores de los componentes compartidos: Matrices de Riesgos, Monitoreo de Listas, Coincidencias de Patrono, Coincidencias de Empleado, Cargar Listas y cualquier reporte Angular que use `institutional-report.util.ts`. El generador backend `InstitutionalPdfDocument` cubre los reportes PDF API. No se modificaron datos, fórmulas, identificadores, contratos REST, XLSX, Oracle, auditoría ni autorizaciones.
+
 ## Actualización vigente — integración global del logo IHSS — 2026-11-13
 
 La orden B06 incorporó el activo IHSS adjunto por el propietario como recurso canónico compartido para reportería PDF/XLSX y preview. La implementación se realizó una sola vez en los componentes institucionales; no se agregaron logos por reporte ni se modificaron datos, fórmulas, identificadores, contratos REST, Oracle institucional, auditoría o autorizaciones.

@@ -11271,3 +11271,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Estado: `B06_TECHNICAL_STATUS=PASS`; `B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`; no se emite cierre ni aprobación visual por inferencia técnica.
 - Cambios ajenos preexistentes del checkout permanecen sin stage ni modificación adicional. Punto de continuación: publicar documentación, verificar GitHub por API y observar el gate documental exacto.
 
+## 2026-11-16 08:25:47 -06:00 — B06 logo ampliado, centrado y separado del texto (COD)
+
+- `EVENT_ID=RL-B06-LOGO-SCALE-NON-OVERLAP-20261116`; `INITIAL_SHA=06cdda89832d3cd4e3194cd28756884e9b42b981`; `SOURCE_CODE_SHA=bd923c7c77dce7404cd52a639d18d1b02354d4ea`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- La captura del propietario mostró que el aumento anterior había centrado el logo sobre el bloque `SGRLA-IHSS · módulo / Generado`, invadiendo su caja blanca. Se corrigió la causa común, no cada reporte: `InstitutionalPdfDocument` y `institutional-report.util.ts` mantienen el logo a la derecha, aumentan uniformemente el ancho actual un 40% y lo centran verticalmente; el texto pasa debajo del título, en la columna izquierda.
+- Alcance global: Matrices de Riesgos, Monitoreo de Listas, Coincidencias de Patrono, Coincidencias de Empleado, Cargar Listas y consumidores futuros de los helpers institucionales. No se modificaron valores, fórmulas, identificadores, contratos, XLSX, Oracle institucional, auditoría, autorizaciones, producción, `main`, B07, Bloque 10 ni migración 54.
+- Archivos funcionales: `backend/RL.API/Infrastructure/Reporting/InstitutionalPdfDocument.cs`, `backend/RL.API.Tests/Infrastructure/InstitutionalReportLogoTests.cs`, `frontend/rl-app/src/app/core/reporting/institutional-report-standard.ts`, `frontend/rl-app/src/app/core/reporting/institutional-report.util.ts` y su spec.
+- Verificado en esta intervención: backend B06 focalizado `4/4 PASS`; Angular focalizado `9/9 PASS`; suite Angular `95/95 archivos, 999/999 pruebas PASS`; ESLint `PASS`; build Angular `PASS` con warnings preexistentes; `dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore` `PASS` (`0 errores`, warnings preexistentes); `git diff --check` propio `PASS`; validación Agent Skills `14/14 PASS` durante commit.
+- Commit funcional `bd923c7c` publicado en `origin/desarrollo`; el stage fue selectivo y los cambios ajenos del checkout permanecen fuera del commit. Quality Gate exact-SHA queda pendiente de lectura remota.
+- Estado: `B06_LOGO_UNIFORM_SCALE=PASS`; `B06_LOGO_VERTICAL_CENTER=PASS`; `B06_LOGO_TEXT_OVERLAP=0`; `B06_ALL_SHARED_PDF_CONSUMERS=PASS`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+- Punto exacto de continuación: esperar/verificar el Quality Gate del commit `bd923c7c`, completar el expediente documental y solicitar únicamente la revisión visual final del propietario.
+
