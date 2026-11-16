@@ -1557,6 +1557,19 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     await expect(preview.locator('[data-excel-preview-table]')).toBeVisible();
     await expect(preview.getByText('Matriz Consolidada', { exact: true })).toBeVisible();
     await expect(preview.locator('[data-excel-preview-table] thead th')).toHaveCount(82);
+    const excelTableMetrics = await preview.locator('[data-excel-preview-table]').evaluate(element => {
+      const table = element.querySelector('table');
+      const styles = getComputedStyle(element);
+      return {
+        overflowX: styles.overflowX,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        tableWidth: table?.getBoundingClientRect().width ?? 0
+      };
+    });
+    expect(excelTableMetrics.overflowX).toBe('scroll');
+    expect(excelTableMetrics.scrollWidth).toBeGreaterThan(excelTableMetrics.clientWidth);
+    expect(excelTableMetrics.tableWidth).toBeGreaterThan(excelTableMetrics.clientWidth);
     const canonicalFields = JSON.parse(await readFile(resolve(process.cwd(), '../../backend/RL.API/Features/MatricesRiesgos/Contracts/matriz_riesgos_82_campos_manifest.json'), 'utf8')) as Array<{ number: number; label: string }>;
     await expect(preview.getByRole('columnheader', { name: canonicalFields[1].label })).toBeVisible();
     await expect(preview.getByText('R-001', { exact: true })).toBeVisible();

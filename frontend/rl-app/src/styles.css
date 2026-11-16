@@ -565,6 +565,18 @@
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+/* Vista previa institucional: la tabla conserva su ancho y deja la barra horizontal
+   visible en la base del área desplazable para reportes con muchas columnas. */
+.report-preview-table-scroll {
+  scrollbar-gutter: stable;
+  overscroll-behavior-inline: contain;
+}
+
+.report-preview-table-scroll .report-preview-table {
+  width: max-content;
+  min-width: 100%;
+}
+
 /* Animaciones para la Línea de Tiempo Visual */
 @keyframes shimmer {
   0% { transform: translateX(-100%); }

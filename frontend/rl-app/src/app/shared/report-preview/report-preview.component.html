@@ -68,7 +68,7 @@
             <div class="flex justify-end">
               <app-page-size-selector [value]="pageSize()" [options]="[25, 50, 100]" ariaLabel="Filas de la vista previa por página" (valueChange)="changePageSize($event)" />
             </div>
-            <div class="overflow-x-auto rounded-xl border border-slate-200" data-excel-preview-table>
+            <div class="report-preview-table-scroll overflow-x-scroll rounded-xl border border-slate-200" data-excel-preview-table>
               <table class="report-preview-table min-w-full border-collapse text-left text-xs">
                 @if (headerRow(); as header) {
                   <thead class="sticky top-0 z-10 bg-slate-900 text-white">
