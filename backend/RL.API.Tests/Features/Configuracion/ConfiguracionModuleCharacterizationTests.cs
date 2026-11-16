@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Auditoria.Contracts;
@@ -43,6 +45,31 @@ public sealed class ConfiguracionModuleCharacterizationTests
         Assert.DoesNotContain("sfsId", json, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("\"validezClaveTemp\":15", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ultimaActualizacion", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task GuardarSistema_MapeaEsquemaB06NoDisponibleComo503()
+    {
+        var controller = new RL.API.Features.Configuracion.ConfiguracionController(
+            new ConfiguracionServiceFake(CrearConfiguracion(), lanzarEsquemaB06NoDisponible: true))
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                        new[] { new Claim(ClaimTypes.NameIdentifier, "27") },
+                        "test"))
+                }
+            }
+        };
+
+        var result = await controller.GuardarSistema(CrearConfiguracion());
+
+        var response = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, response.StatusCode);
+        var json = JsonSerializer.Serialize(response.Value);
+        Assert.Contains("B06_BRANDING_SCHEMA=NOT_READY", json, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -165,16 +192,21 @@ public sealed class ConfiguracionModuleCharacterizationTests
     private sealed class ConfiguracionServiceFake : IConfiguracionService
     {
         private readonly ConfigSistema _configuracion;
+        private readonly bool _lanzarEsquemaB06NoDisponible;
 
-        public ConfiguracionServiceFake(ConfigSistema configuracion)
+        public ConfiguracionServiceFake(ConfigSistema configuracion, bool lanzarEsquemaB06NoDisponible = false)
         {
             _configuracion = configuracion;
+            _lanzarEsquemaB06NoDisponible = lanzarEsquemaB06NoDisponible;
         }
 
         public Task<ConfigSistema?> ObtenerConfigSistemaAsync() => Task.FromResult<ConfigSistema?>(_configuracion);
         public Task<List<LoginSlide>> ObtenerSlidesAsync() => Task.FromResult(new List<LoginSlide>());
         public Task<List<LoginSlide>> ObtenerTodosSlidesAsync() => Task.FromResult(new List<LoginSlide>());
-        public Task<bool> GuardarConfigSistemaAsync(ConfigSistema config, long usuarioId, string? ip) => Task.FromResult(false);
+        public Task<bool> GuardarConfigSistemaAsync(ConfigSistema config, long usuarioId, string? ip) =>
+            _lanzarEsquemaB06NoDisponible
+                ? throw new InvalidOperationException("B06_BRANDING_SCHEMA=NOT_READY")
+                : Task.FromResult(false);
         public Task<bool> CrearSlideAsync(LoginSlide slide, long usuarioId, string? ip) => Task.FromResult(false);
         public Task<bool> ActualizarSlideAsync(int id, LoginSlide slide, long usuarioId, string? ip) => Task.FromResult(false);
         public Task<bool> EliminarSlideAsync(int id, long usuarioId, string? ip) => Task.FromResult(false);

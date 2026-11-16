@@ -78,7 +78,15 @@ public class ConfiguracionRepository : IConfiguracionRepository, ITransactionalC
         cmd.Parameters.Add(new OracleParameter("AcuerdoLegal", (object?)config.AcuerdoLegal ?? DBNull.Value));
 
 
-        var rowsAffected = await cmd.ExecuteNonQueryAsync();
+        int rowsAffected;
+        try
+        {
+            rowsAffected = await cmd.ExecuteNonQueryAsync();
+        }
+        catch (OracleException exception) when (EsFalloEsquemaBranding(exception))
+        {
+            throw CrearErrorEsquemaBranding(exception);
+        }
         // La ruta de producción utiliza la operación transaccional; esta compatibilidad
         // directa no debe ejecutar un segundo UPDATE ni publicar éxito parcial.
         if (DebeEjecutarActualizacionCompatibilidad(rowsAffected, config.ColorEncabezadoReportes))
@@ -141,7 +149,18 @@ public class ConfiguracionRepository : IConfiguracionRepository, ITransactionalC
             cmd.Parameters.Add(new OracleParameter("ColorEncabezadoReportes", (object?)config.ColorEncabezadoReportes ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("AcuerdoLegal", (object?)config.AcuerdoLegal ?? DBNull.Value));
 
-            if (await cmd.ExecuteNonQueryAsync() <= 0)
+            int rowsAffected;
+            try
+            {
+                rowsAffected = await cmd.ExecuteNonQueryAsync();
+            }
+            catch (OracleException exception) when (EsFalloEsquemaBranding(exception))
+            {
+                try { await transaction.RollbackAsync(); } catch { /* preservar la excepciÃ³n primaria */ }
+                throw CrearErrorEsquemaBranding(exception);
+            }
+
+            if (rowsAffected <= 0)
             {
                 await transaction.RollbackAsync();
                 return false;
@@ -172,6 +191,14 @@ public class ConfiguracionRepository : IConfiguracionRepository, ITransactionalC
             return null;
         }
     }
+
+    private static bool EsFalloEsquemaBranding(OracleException exception) =>
+        exception.Number is 904 or 942 or 2289;
+
+    private static InvalidOperationException CrearErrorEsquemaBranding(OracleException exception) =>
+        new(
+            "B06_BRANDING_SCHEMA=NOT_READY: falta la estructura de persistencia de identidad institucional. Aplique la migraciÃ³n B06 autorizada y ejecute su postcheck.",
+            exception);
 
     private static bool DebeEjecutarActualizacionCompatibilidad(int rowsAffected, string? color) => false;
 
