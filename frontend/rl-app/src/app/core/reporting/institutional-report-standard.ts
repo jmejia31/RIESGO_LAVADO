@@ -21,7 +21,10 @@ export const INSTITUTIONAL_REPORT_EXCEL_COLORS = {
 export const INSTITUTIONAL_REPORT_LAYOUT = {
   pdfMargin: 14,
   pdfFooterMargin: 13,
-  pdfContinuationTop: 20,
+  // Reserva el encabezado compacto y una separación visual antes de tablas
+  // o secciones que continúan en páginas posteriores.
+  pdfContinuationHeaderHeight: 34,
+  pdfContinuationTop: 40,
   pdfHeaderPadding: 14,
   pdfHeaderMinimumHeight: 34
 } as const;

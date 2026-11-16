@@ -33,20 +33,30 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   const width = doc.internal.pageSize.getWidth();
   const leftWidth = width * 0.62 - INSTITUTIONAL_REPORT_LAYOUT.pdfMargin;
   const titleLines = doc.splitTextToSize(meta.titulo, leftWidth);
+  const institutionTop = 5.5;
+  const titleTop = 12;
+  const titleLineHeight = 5.2;
+  const metadataGap = 3;
+  const metadataLineHeight = 4.5;
+  const metadataTop = titleTop + titleLines.length * titleLineHeight + metadataGap;
   const logoWidth = 32 * INSTITUTIONAL_PDF_LOGO_SCALE;
   const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
-  const metadataTop = 10.5 + titleLines.length * 4.5 + 2;
-  const height = Math.max(18, metadataTop + 4.5 + 2, logoHeight + 2);
+  const headerHeight = Math.max(
+    INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationHeaderHeight,
+    metadataTop + metadataLineHeight + 4,
+    logoHeight + 6
+  );
   doc.setFillColor(...COLORES_REPORTE_INSTITUCIONAL.navyDark);
-  doc.rect(0, 0, width, height, 'F');
+  doc.rect(0, 0, width, headerHeight, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.white);
-  doc.text(meta.institucion, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, 5.5);
+  doc.text(meta.institucion, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, institutionTop);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text(titleLines, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, 10.5);
-  dibujarLogoInstitucionalPdf(doc, width, Math.max(0, (height - logoHeight) / 2), logoWidth, logoHeight);
+  doc.text(titleLines, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, titleTop, { lineHeightFactor: 1.2 });
+  dibujarLogoInstitucionalPdf(doc, width, Math.max(0, (headerHeight - logoHeight) / 2), logoWidth, logoHeight);
+  doc.setTextColor(220, 230, 240);
   doc.text(meta.sistema, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, metadataTop);
 }
 
@@ -224,7 +234,7 @@ export function asegurarEspacioSeccionPdf(doc: jsPDF, y: number, altoMinimo = 28
   if (y + altoMinimo <= limite) return y;
   doc.addPage();
   dibujarEncabezadoCompacto(doc);
-  return 24;
+  return INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationTop + 2;
 }
 
 export function agregarPiesInstitucionalesPdf(doc: jsPDF): void {

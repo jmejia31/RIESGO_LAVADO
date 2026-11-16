@@ -19,6 +19,7 @@ import {
 import {
   INSTITUTIONAL_LOGO_ASSET_PATH,
   INSTITUTIONAL_LOGO_ASPECT_RATIO,
+  INSTITUTIONAL_REPORT_LAYOUT,
   INSTITUTIONAL_PDF_LOGO_SCALE
 } from './institutional-report-standard';
 
@@ -61,7 +62,7 @@ describe('estándar institucional de reportería', () => {
     agregarEncabezadoInstitucionalPdf(doc, 'REPORTE');
     const y = asegurarEspacioSeccionPdf(doc, 280, 30);
     expect(doc.getNumberOfPages()).toBe(2);
-    expect(y).toBe(24);
+    expect(y).toBe(INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationTop + 2);
   });
 
   it('impide que un margen de primera página genere espacios gigantes en páginas continuas', () => {
@@ -71,6 +72,11 @@ describe('estándar institucional de reportería', () => {
       right: 14,
       top: MARGEN_SUPERIOR_TABLA_CONTINUACION_MM
     });
+  });
+
+  it('reserva el encabezado compacto completo antes de tablas y secciones continuas', () => {
+    expect(INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationTop - INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationHeaderHeight)
+      .toBeGreaterThanOrEqual(6);
   });
 
   it('repite encabezados y evita dividir filas en tablas de varias páginas', () => {
