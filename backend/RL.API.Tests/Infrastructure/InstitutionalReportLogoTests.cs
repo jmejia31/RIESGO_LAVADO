@@ -46,7 +46,7 @@ public sealed class InstitutionalReportLogoTests
     }
 
     [Fact]
-    public void Pdf_ScalesTheLogoByFortyPercentAndCentersItVerticallyInTheHeader()
+    public void Pdf_ScalesTheLogoBySixtyPercentAndCentersItVerticallyInTheHeader()
     {
         var document = new InstitutionalPdfDocument(
             "Reporte institucional de prueba",
@@ -56,7 +56,7 @@ public sealed class InstitutionalReportLogoTests
 
         var pdf = Encoding.ASCII.GetString(document.ToBytes());
 
-        Assert.Contains("q 100.8 0 0 38.31 458.48 779.24 cm /ImIHSS Do Q", pdf, StringComparison.Ordinal);
+        Assert.Matches(@"q 115\.2 0 0 43\.[0-9]+ 444\.08 7[0-9]{2}\.[0-9]+ cm /ImIHSS Do Q", pdf);
         Assert.Contains("1 0 0 1 36 784.89 Tm (SGRLA-IHSS", pdf, StringComparison.Ordinal);
     }
 

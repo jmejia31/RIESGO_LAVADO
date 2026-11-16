@@ -568,12 +568,31 @@
 /* Vista previa institucional: la tabla conserva su ancho y deja la barra horizontal
    visible en la base del área desplazable para reportes con muchas columnas. */
 .report-preview-table-scroll {
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+.report-preview-table-scroll::-webkit-scrollbar { display: none; }
+
+.report-preview-table-scroll .report-preview-table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.report-preview-horizontal-scroll {
+  height: 0.9rem;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  border: 1px solid #cbd5e1;
+  border-top: 0;
+  border-radius: 0 0 0.75rem 0.75rem;
+  background: #f1f5f9;
   scrollbar-gutter: stable;
   overscroll-behavior-inline: contain;
 }
 
-.report-preview-table-scroll .report-preview-table {
-  width: max-content;
+.report-preview-horizontal-scroll__content {
+  height: 1px;
   min-width: 100%;
 }
 

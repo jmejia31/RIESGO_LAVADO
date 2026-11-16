@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
 import { ActionIconComponent } from '../components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../components/page-size-selector/page-size-selector.component';
@@ -13,7 +13,7 @@ import { INSTITUTIONAL_LOGO_ASSET_PATH } from '../../core/reporting/institutiona
   templateUrl: './report-preview.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ReportPreviewComponent implements OnDestroy {
+export class ReportPreviewComponent implements AfterViewInit, OnDestroy {
   readonly Math = Math;
   readonly institutionalLogoAssetPath = INSTITUTIONAL_LOGO_ASSET_PATH;
   readonly preview = inject(ReportPreviewService);
@@ -38,13 +38,27 @@ export class ReportPreviewComponent implements OnDestroy {
     const start = this.page() * this.pageSize();
     return roles.slice(start, start + this.pageSize());
   });
+  readonly horizontalScrollContentWidth = signal(0);
+  private readonly excelTableScroll = viewChild<ElementRef<HTMLDivElement>>('excelTableScroll');
+  private readonly excelHorizontalScroll = viewChild<ElementRef<HTMLDivElement>>('excelHorizontalScroll');
+  private horizontalSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     effect(() => {
       this.preview.state();
       this.selectedSheet.set(0);
       this.page.set(0);
+      this.scheduleHorizontalScrollSync();
     });
+    effect(() => {
+      this.headerRow();
+      this.currentRows();
+      this.scheduleHorizontalScrollSync();
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.scheduleHorizontalScrollSync();
   }
 
   close(): void {
@@ -77,7 +91,33 @@ export class ReportPreviewComponent implements OnDestroy {
     this.page.set(0);
   }
 
+  onTableScroll(event: Event): void {
+    const source = event.currentTarget as HTMLDivElement | null;
+    const target = this.excelHorizontalScroll()?.nativeElement;
+    if (source && target && target.scrollLeft !== source.scrollLeft) target.scrollLeft = source.scrollLeft;
+  }
+
+  onHorizontalScroll(event: Event): void {
+    const source = event.currentTarget as HTMLDivElement | null;
+    const target = this.excelTableScroll()?.nativeElement;
+    if (source && target && target.scrollLeft !== source.scrollLeft) target.scrollLeft = source.scrollLeft;
+  }
+
+  private scheduleHorizontalScrollSync(): void {
+    if (this.horizontalSyncTimer !== null) clearTimeout(this.horizontalSyncTimer);
+    this.horizontalSyncTimer = setTimeout(() => {
+      this.horizontalSyncTimer = null;
+      const viewport = this.excelTableScroll()?.nativeElement;
+      const table = viewport?.querySelector('table');
+      const width = table?.scrollWidth ?? 0;
+      this.horizontalScrollContentWidth.set(width);
+      const horizontalScroll = this.excelHorizontalScroll()?.nativeElement;
+      if (viewport && horizontalScroll) horizontalScroll.scrollLeft = viewport.scrollLeft;
+    }, 0);
+  }
+
   ngOnDestroy(): void {
+    if (this.horizontalSyncTimer !== null) clearTimeout(this.horizontalSyncTimer);
     this.preview.destroy();
   }
 }

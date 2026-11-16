@@ -68,7 +68,7 @@
             <div class="flex justify-end">
               <app-page-size-selector [value]="pageSize()" [options]="[25, 50, 100]" ariaLabel="Filas de la vista previa por página" (valueChange)="changePageSize($event)" />
             </div>
-            <div class="report-preview-table-scroll overflow-x-scroll rounded-xl border border-slate-200" data-excel-preview-table>
+            <div #excelTableScroll class="report-preview-table-scroll overflow-x-auto rounded-xl border border-slate-200" data-excel-preview-table (scroll)="onTableScroll($event)">
               <table class="report-preview-table min-w-full border-collapse text-left text-xs">
                 @if (headerRow(); as header) {
                   <thead class="sticky top-0 z-10 bg-slate-900 text-white">
@@ -92,6 +92,11 @@
                 </tbody>
               </table>
             </div>
+            @if ((headerRow()?.length ?? 0) > 0) {
+              <div #excelHorizontalScroll class="report-preview-horizontal-scroll" data-excel-preview-horizontal-scroll role="region" aria-label="Desplazamiento horizontal de los campos del reporte" tabindex="0" (scroll)="onHorizontalScroll($event)">
+                <div class="report-preview-horizontal-scroll__content" [style.width.px]="horizontalScrollContentWidth()" aria-hidden="true"></div>
+              </div>
+            }
 
             <app-data-pagination [page]="page() + 1" [pageSize]="pageSize()" [totalRecords]="currentSheet()?.totalRows ?? 0" itemLabel="filas" (pageChange)="changePage($event)" />
           }

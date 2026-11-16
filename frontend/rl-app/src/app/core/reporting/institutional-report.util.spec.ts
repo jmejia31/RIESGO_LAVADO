@@ -34,7 +34,7 @@ describe('estándar institucional de reportería', () => {
     expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
     expect(INSTITUTIONAL_LOGO_ASSET_PATH).toBe('assets/institutional/ihss-logo.png');
     expect(INSTITUTIONAL_LOGO_ASPECT_RATIO).toBeCloseTo(2034 / 773, 10);
-    expect(INSTITUTIONAL_PDF_LOGO_SCALE).toBe(1.4);
+    expect(INSTITUTIONAL_PDF_LOGO_SCALE).toBe(1.6);
   });
 
   it('mantiene el mismo encabezado en orientación vertical y horizontal', () => {

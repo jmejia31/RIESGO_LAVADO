@@ -1559,17 +1559,19 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     await expect(preview.locator('[data-excel-preview-table] thead th')).toHaveCount(82);
     const excelTableMetrics = await preview.locator('[data-excel-preview-table]').evaluate(element => {
       const table = element.querySelector('table');
-      const styles = getComputedStyle(element);
       return {
-        overflowX: styles.overflowX,
         scrollWidth: element.scrollWidth,
         clientWidth: element.clientWidth,
         tableWidth: table?.getBoundingClientRect().width ?? 0
       };
     });
-    expect(excelTableMetrics.overflowX).toBe('scroll');
     expect(excelTableMetrics.scrollWidth).toBeGreaterThan(excelTableMetrics.clientWidth);
     expect(excelTableMetrics.tableWidth).toBeGreaterThan(excelTableMetrics.clientWidth);
+    const horizontalScroll = preview.locator('[data-excel-preview-horizontal-scroll]');
+    await expect(horizontalScroll).toBeVisible();
+    await expect.poll(() => horizontalScroll.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
+    await horizontalScroll.evaluate(element => { element.scrollLeft = element.scrollWidth; element.dispatchEvent(new Event('scroll')); });
+    await expect.poll(() => preview.locator('[data-excel-preview-table]').evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
     const canonicalFields = JSON.parse(await readFile(resolve(process.cwd(), '../../backend/RL.API/Features/MatricesRiesgos/Contracts/matriz_riesgos_82_campos_manifest.json'), 'utf8')) as Array<{ number: number; label: string }>;
     await expect(preview.getByRole('columnheader', { name: canonicalFields[1].label })).toBeVisible();
     await expect(preview.getByText('R-001', { exact: true })).toBeVisible();
