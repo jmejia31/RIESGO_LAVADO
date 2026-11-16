@@ -11343,3 +11343,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Punto exacto de continuacion: aplicar/verificar B06 en una base descartable autorizada o registrar la migración en el entorno de prueba; ejecutar el flujo real autenticado LOGO_A/LOGO_B, color, PDF, Excel y previews; observar el Quality Gate del SHA funcional/documental.
 - Dictamen: `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
 - Punto exacto de continuacion: publicar el expediente documental y verificar por GitHub el SHA, sus archivos y el Quality Gate exacto; no declarar PASS global ni cerrar B06 sin la evidencia de integración real y la aceptación visual del propietario.
+- Punto exacto de continuaciÃ³n: publicar el expediente documental y verificar por GitHub el SHA, sus archivos y el Quality Gate exacto; no declarar PASS global ni cerrar B06 sin la evidencia de integraciÃ³n real y la aceptaciÃ³n visual del propietario.
+
+# 2026-11-16 13:26:24 -06:00 - B06 Quality Gate exacto verde sobre la correccion P0 (COD)
+
+- `EVENT_ID=RL-B06-P0-QUALITY-GATE-20261116`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- `SOURCE_CODE_SHA=359c9720f20af2ab8363e2650ff84d1f1c562564`; el commit funcional/documental de encoding fue publicado en `origin/desarrollo` con stage selectivo; los cambios ajenos del checkout permanecen sin stage.
+- Quality Gate exacto [43936758470](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43936758470) termino `STATUS=completed`, `CONCLUSION=success`. La matriz integral valido UTF-8, analyzers, lint, build, quality gates del repositorio, Oracle XE, E2E, workbook, compose y contenedores non-root.
+- `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT_AND_GREEN_GATE`; `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`.
+- El hallazgo rojo corregido fue un texto mojibake en el mensaje Angular de error (`configuraciÃ³n`); se reemplazo por texto ASCII seguro en `359c9720`, sin cambiar contratos ni comportamiento funcional.
+- B06 sigue abierto: `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`. El gate verde no sustituye la aceptacion visual del propietario ni la comprobacion manual local del flujo de branding.
+- Preservacion: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto de continuacion: commit/push documental selectivo, verificar por API de GitHub el expediente B06 y observar el gate del commit documental; no stagear los cambios ajenos del worktree.

@@ -4730,3 +4730,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
 - Preservacion: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto de continuacion: commit/push documental selectivo, verificacion remota de los archivos y observacion del Quality Gate del nuevo expediente; mantener B06 abierto mientras falten pruebas de integración real y aprobación visual.
+- B06 Quality Gate exacto [43936758470](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43936758470): `STATUS=completed`; `CONCLUSION=success`; todos los pasos integrales terminaron verdes, incluyendo quality gates del repositorio, Oracle XE, E2E, workbook y contenedores.
+
+## Estado vigente - B06 Quality Gate verde sobre la correccion P0 - 2026-11-16 13:26:24 -06:00
+
+- `SOURCE_CODE_SHA=359c9720f20af2ab8363e2650ff84d1f1c562564`; rama `desarrollo`; el SHA remoto coincide con el local al registrar este estado.
+- `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT_AND_GREEN_GATE`; `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`.
+- El hallazgo corregido fue un texto mojibake en el mensaje Angular de error; `359c9720` lo reemplaza por texto ASCII seguro sin cambiar contratos ni comportamiento funcional.
+- B06 permanece `BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`: la suite local no reprodujo el flujo autenticado LOGO_A/LOGO_B ni la aceptacion visual del propietario; no se declara PASS global por inferencia del gate.
+- `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto de continuacion: publicar el expediente documental selectivo, verificar indice/evidencia/estado mediante GitHub y conservar la aceptacion visual pendiente.

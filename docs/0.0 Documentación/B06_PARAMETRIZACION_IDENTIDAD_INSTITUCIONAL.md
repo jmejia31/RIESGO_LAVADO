@@ -94,3 +94,31 @@ B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE
 La evidencia detallada y sanitizada esta en [`docs/certificaciones/B06_dynamic_branding_14b238ad.md`](../certificaciones/B06_dynamic_branding_14b238ad.md). No se presenta `PASS` tecnico global mientras permanezcan sin verificar la prueba real LOGO_A/LOGO_B, la generacion PDF/Excel desde configuracion persistida, la prueba E2E autenticada y el Quality Gate del nuevo SHA.
 
 El expediente documental base que contiene esta evidencia fue publicado en [`55190a7a`](https://github.com/jmejia31/RIESGO_LAVADO/commit/55190a7a9efc25541c1bd1b9bb2bd34d965f8211). El Quality Gate exacto del estado documental publicado terminó verde en el [run 43920939882](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43920939882): `STATUS=completed`, `CONCLUSION=success`. La revisión visual del propietario permanece pendiente.
+- Quality Gate exacto [43936758470](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43936758470): `STATUS=completed`; `CONCLUSION=success`; la matriz integral termino verde.
+
+## Actualizacion B06 - Quality Gate exacto del P0 - 2026-11-16 13:26:24 -06:00
+
+```ini
+SOURCE_CODE_SHA=359c9720f20af2ab8363e2650ff84d1f1c562564
+QUALITY_GATE_RUN=43936758470
+QUALITY_GATE_STATUS=SUCCESS
+SECURITY_SCAN=PASS_GITHUB_ACTIONS
+GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT_AND_GREEN_GATE
+REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION
+B06_TECHNICAL_STATUS=BLOCKED
+B06_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE
+B01_PRESERVED=YES
+B02_PRESERVED=YES
+B03_PRESERVED=YES
+B04_PRESERVED=YES
+B05_PRESERVED=YES
+B07_AUTHORIZED=NO
+BLOCK10_AUTHORIZED=NO
+MAIN_TOUCHED=NO
+PRODUCTION_TOUCHED=NO
+ORACLE_INSTITUTIONAL_TOUCHED=NO
+MIGRATION_54_TOUCHED=NO
+```
+
+El Quality Gate verde valida el SHA exacto publicado, pero no sustituye la aceptacion visual del propietario ni la verificaciÃ³n manual del flujo local autenticado de configuracion y reportes.
