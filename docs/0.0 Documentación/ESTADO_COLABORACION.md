@@ -4740,3 +4740,10 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - B06 permanece `BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`: la suite local no reprodujo el flujo autenticado LOGO_A/LOGO_B ni la aceptacion visual del propietario; no se declara PASS global por inferencia del gate.
 - `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto de continuacion: publicar el expediente documental selectivo, verificar indice/evidencia/estado mediante GitHub y conservar la aceptacion visual pendiente.
+- `EVIDENCE_COMMIT_SHA=f841b5eedefc8e9a773888e6df2a3f77f1205f37`; `GITHUB_EVIDENCE_INDEX_URL=https://github.com/jmejia31/RIESGO_LAVADO/blob/f841b5eedefc8e9a773888e6df2a3f77f1205f37/docs/certificaciones/INDEX.json`; `GITHUB_REMOTE_VERIFIED=YES`.
+
+## Estado vigente - B06 expediente remoto verificable - 2026-11-16 13:26:24 -06:00
+
+- El expediente B06 queda publicado y legible en GitHub con evidencia primaria sanitizada, SHA de codigo, SHA del commit de evidencia, hashes y limites.
+- Gate del codigo: `43936758470=SUCCESS`. Gate del expediente `f841b5ee`: `43939723032=SUCCESS`. No se declaran aprobacion funcional ni aceptacion visual por inferencia tecnica.
+- `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.

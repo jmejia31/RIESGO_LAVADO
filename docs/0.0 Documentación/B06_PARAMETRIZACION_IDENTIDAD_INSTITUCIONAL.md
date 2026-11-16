@@ -122,3 +122,8 @@ MIGRATION_54_TOUCHED=NO
 ```
 
 El Quality Gate verde valida el SHA exacto publicado, pero no sustituye la aceptacion visual del propietario ni la verificaciÃ³n manual del flujo local autenticado de configuracion y reportes.
+- `EVIDENCE_COMMIT_SHA=f841b5eedefc8e9a773888e6df2a3f77f1205f37`; indice y evidencia remota verificables en GitHub; Quality Gate documental `43939723032=SUCCESS`.
+
+## Cierre documental remoto B06 - 2026-11-16 13:26:24 -06:00
+
+El expediente sanitizado se consulta directamente en GitHub mediante el indice `docs/certificaciones/INDEX.json` y la evidencia B06 anclada al commit `f841b5eedefc8e9a773888e6df2a3f77f1205f37`. El gate del codigo es `43936758470=SUCCESS` y el gate del expediente es `43939723032=SUCCESS`. B06 continua abierto solo por la aceptacion visual del propietario y la validacion manual del flujo local.

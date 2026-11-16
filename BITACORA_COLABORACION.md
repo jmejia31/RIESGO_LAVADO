@@ -11355,3 +11355,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - B06 sigue abierto: `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`. El gate verde no sustituye la aceptacion visual del propietario ni la comprobacion manual local del flujo de branding.
 - Preservacion: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto de continuacion: commit/push documental selectivo, verificar por API de GitHub el expediente B06 y observar el gate del commit documental; no stagear los cambios ajenos del worktree.
+- `EVIDENCE_COMMIT_SHA=f841b5eedefc8e9a773888e6df2a3f77f1205f37`; el expediente queda disponible desde GitHub en `docs/certificaciones/INDEX.json` y `docs/certificaciones/B06_dynamic_branding_14b238ad.md`.
+
+# 2026-11-16 13:26:24 -06:00 - B06 publicacion remota de evidencia verificada (COD)
+
+- El Quality Gate del expediente documental `f841b5ee` fue el run [43939723032](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43939723032), terminado `STATUS=completed`, `CONCLUSION=success`.
+- `GITHUB_REMOTE_VERIFIED=YES`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `SOURCE_CODE_SHA=359c9720f20af2ab8363e2650ff84d1f1c562564`; `EVIDENCE_COMMIT_SHA=f841b5eedefc8e9a773888e6df2a3f77f1205f37`.
+- El expediente diferencia el gate exacto del codigo `43936758470` del gate documental `43939723032`. El propietario conserva la decision visual final; B06 no se cierra por inferencia tecnica.
