@@ -93,7 +93,7 @@
               </table>
             </div>
             @if ((headerRow()?.length ?? 0) > 0) {
-              <div #excelHorizontalScroll class="report-preview-horizontal-scroll" data-excel-preview-horizontal-scroll role="region" aria-label="Desplazamiento horizontal de los campos del reporte" tabindex="0" (scroll)="onHorizontalScroll($event)">
+              <div #excelHorizontalScroll class="report-preview-horizontal-scroll sticky bottom-0 z-20" data-excel-preview-horizontal-scroll role="region" aria-label="Desplazamiento horizontal de los campos del reporte" tabindex="0" (scroll)="onHorizontalScroll($event)">
                 <div class="report-preview-horizontal-scroll__content" [style.width.px]="horizontalScrollContentWidth()" aria-hidden="true"></div>
               </div>
             }
