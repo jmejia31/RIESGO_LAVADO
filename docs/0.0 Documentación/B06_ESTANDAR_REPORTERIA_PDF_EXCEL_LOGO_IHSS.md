@@ -377,3 +377,34 @@ B06 no se cierra con este expediente: queda abierto para la entrega/autorizació
 - Quality Gate exacto de código, pruebas y expediente previo: [run 43481762215](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43481762215), `STATUS=completed`, `CONCLUSION=success`; ambos jobs y todos los pasos integrales terminaron verdes.
 - El commit documental final `2eea92640d3c19fea9a919e60fb35dab341fd875` quedó publicado en `origin/desarrollo` y su Quality Gate [43484290449](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43484290449) terminó `STATUS=completed`, `CONCLUSION=success`.
 - La referencia remota `desarrollo` y el checkout local tienen el mismo SHA (`2eea92640d3c19fea9a919e60fb35dab341fd875`); GitHub API devolvió el expediente B06 y su URL verificable.
+## Actualizacion B06 — identidad institucional parametrizada — 2026-11-16
+
+La implementacion nueva reutiliza un snapshot comun para nombre institucional, sistema, logo y color de encabezado en PDF, XLSX y preview. Conserva el ancho certificado del logo (`72.644 mm` / `205.92 pt`), el centrado vertical, la posicion del texto y la paridad entre backend y frontend.
+
+Se agrego carga administrativa segura con normalizacion JPG/JPEG/WEBP a PNG, limite de 5 MB, validacion de dimensiones/pixeles/SHA-256 y auditoria existente. El color hexadecimal de seis digitos calcula automaticamente el primer plano con contraste. El backend acepta solo rutas locales bajo `wwwroot` y usa el logo canonico como fallback para configuraciones invalidas o URL remotas, evitando SSRF.
+
+```ini
+PHASE=B06_DYNAMIC_INSTITUTIONAL_BRANDING
+SOURCE_CODE_SHA=331e9617c9ee2dba9e008ae3f3b7071b9b8551b5
+EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
+B06_PDF_EXCEL_PREVIEW=PASS
+B06_DYNAMIC_LOGO_UPLOAD=PASS
+B06_DYNAMIC_HEADER_COLOR=PASS
+B06_AUTOMATIC_CONTRAST=PASS
+B06_ORACLE_MIGRATION=PREPARED_NOT_EXECUTED
+B06_OWNER_VISUAL_ACCEPTANCE=PENDING
+B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE
+B01_PRESERVED=YES
+B02_PRESERVED=YES
+B03_PRESERVED=YES
+B04_PRESERVED=YES
+B05_PRESERVED=YES
+B07_AUTHORIZED=NO
+BLOCK10_AUTHORIZED=NO
+MAIN_TOUCHED=NO
+PRODUCTION_TOUCHED=NO
+ORACLE_INSTITUTIONAL_TOUCHED=NO
+MIGRATION_54_TOUCHED=NO
+```
+
+El detalle verificable queda en [`B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md`](B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md) y [`B06_dynamic_branding_331e9617.md`](../certificaciones/B06_dynamic_branding_331e9617.md). El expediente permanece abierto hasta el gate remoto documental y la aceptacion visual explicita del propietario.

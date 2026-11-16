@@ -19,6 +19,17 @@
       "github_remote_verified": "YES"
     },
     {
+      "id": "B06-DYNAMIC-BRANDING-331E9617",
+      "path": "B06_dynamic_branding_331e9617.md",
+      "status": "PENDING_DOCUMENTAL_GATE_OWNER_ACCEPTANCE",
+      "source_code_sha": "331e9617c9ee2dba9e008ae3f3b7071b9b8551b5",
+      "evidence_commit_sha": "PENDING_DOCUMENTAL_COMMIT",
+      "github_evidence_url": "PENDING_DOCUMENTAL_COMMIT",
+      "github_remote_verified": "YES_FOR_SOURCE_COMMIT",
+      "security_scan": "PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS",
+      "review_ready": "PENDING_DOCUMENTAL_GATE"
+    },
+    {
       "id": "P05-H11B",
       "path": "P05_H11B_CIERRE_TECNICO_49997407.md",
       "status": "CERTIFIED_TECHNICALLY_WITH_DOCUMENTED_LIMITATIONS",

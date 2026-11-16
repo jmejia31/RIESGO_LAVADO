@@ -11300,3 +11300,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Documentación actualizada:** evidencia, índice y estándar B06 ya apuntan al run verde y al commit documental verificable. La aceptación visual del propietario continúa pendiente y B06 no se declara cerrado por inferencia técnica.
 - **Punto exacto de continuación:** reiniciar backend/frontend, recargar la aplicación y regenerar un PDF de Monitoreo y uno de Matrices para confirmar visualmente la equivalencia del logo; después registrar la aceptación explícita del propietario.
 
+## 2026-11-16 11:40 -06:00 — B06 parametrizacion dinamica de identidad institucional (COD)
+
+- `EVENT_ID=RL-B06-DYNAMIC-BRANDING-20261116`; `SOURCE_CODE_SHA=331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`; rama `desarrollo`.
+- Se implemento una ruta compartida para identidad institucional en PDF, XLSX y preview: nombre, sistema, logo, color y contraste automatico; se conserva `72.644 mm / 205.92 pt`.
+- Se agrego carga segura de logo con normalizacion a PNG, limite de 5 MB, validacion de dimensiones/pixeles/SHA-256 y auditoria; URL remota rechazada por SSRF y rutas locales limitadas a `wwwroot`.
+- Verificado: backend `18/18 PASS`; Angular `95 archivos / 1000 pruebas PASS`; build backend/frontend `PASS`; ESLint `PASS`; validador de base de datos `PASS`; Agent Skills `14/14 PASS`.
+- Publicado funcionalmente en `origin/desarrollo`: `331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`. Oracle institucional no ejecutado; B06 sigue abierto a revision visual.
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_DOCUMENTAL_GATE`; cambios ajenos preservados.
