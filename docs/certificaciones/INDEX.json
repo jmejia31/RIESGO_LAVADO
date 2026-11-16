@@ -98,7 +98,7 @@
       "id": "B06-REPORT-AVAILABILITY-RECOVERY-20261116",
       "path": "B06_report_availability_recovery_20261116.md",
       "status": "OPEN_PENDING_OWNER_ACCEPTANCE",
-      "source_code_sha": "PENDING_SOURCE_COMMIT",
+      "source_code_sha": "0ea9df6b62a4aa1da85eb9e320f263518c397310",
       "evidence_commit_sha": "PENDING_DOCUMENTAL_COMMIT",
       "github_remote_verified": "PENDING",
       "security_scan": "PENDING_GITHUB_ACTIONS",

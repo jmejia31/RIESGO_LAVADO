@@ -11378,10 +11378,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 ## 2026-11-16 - B06 recuperación de generación de reportes (COD)
 
 - `EVENT_ID=RL-B06-REPORT-AVAILABILITY-RECOVERY-20261116`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
-- `INITIAL_SHA=13436555ea25980ac206fda15af1e915f0402f9c`; `SOURCE_CODE_SHA=PENDING_SOURCE_COMMIT`; stage selectivo previsto. Se preservan los cambios ajenos preexistentes del checkout.
+- `INITIAL_SHA=13436555ea25980ac206fda15af1e915f0402f9c`; `SOURCE_CODE_SHA=0ea9df6b62a4aa1da85eb9e320f263518c397310`; commit funcional publicado mediante stage selectivo. Se preservan los cambios ajenos preexistentes del checkout.
 - Diagnóstico reproducido: la URL externa persistida era rechazada por SSRF y el error se propagaba como 503, por lo que fallaban PDF y Excel de Matrices. El frontend también podía entregar la URL externa a jsPDF/ExcelJS aunque una etiqueta HTML sí la mostrara.
 - Corrección compartida: fallback canónico controlado en backend para URL remota/activo inválido; reportería Angular usa solo activo local o canónico; preview comparte el mismo contrato. No se toca Oracle, no se cambia la URL almacenada y se preservan nombre, color y campos de seguridad.
 - Verificado: resolver B06 `3/3 PASS`; exportación Matrices PDF/XLSX `7/7 PASS`; Angular focalizado `22/22 PASS`; build Angular `PASS` con warnings preexistentes; ESLint `PASS`.
 - No verificado todavía: flujo autenticado real LOGO_A/LOGO_B, Playwright visual contra la base del propietario y Oracle institucional. Se mantienen como `NOT_VERIFIED`/`NO EJECUTADO`.
 - `B06_REPORT_GENERATION_RECOVERY=IMPLEMENTED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
-- Punto exacto de continuación: ejecutar suite completa y Quality Gate del commit funcional; actualizar este registro, estado e índice documental con SHA remotos; mantener servicios locales detenidos al finalizar para que el propietario los levante manualmente.
+- Punto exacto de continuación: observar el Quality Gate exact-SHA del commit funcional, actualizar este registro, estado e índice documental con el resultado remoto y mantener servicios locales detenidos para que el propietario los levante manualmente.
