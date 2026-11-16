@@ -28,6 +28,17 @@ public class ConfiguracionService : IConfiguracionService
     public async Task<bool> GuardarConfigSistemaAsync(ConfigSistema config, long usuarioId, string? ip)
     {
         var anterior = await _repository.ObtenerConfigSistemaAsync();
+
+        if (_repository is ITransactionalConfiguracionRepository transactional)
+        {
+            return await transactional.GuardarConfigSistemaConAuditoriaAsync(
+                config,
+                anterior == null ? null : JsonConvert.SerializeObject(anterior),
+                JsonConvert.SerializeObject(config),
+                usuarioId,
+                ip);
+        }
+
         var guardado = await _repository.GuardarConfigSistemaAsync(config);
         if (!guardado)
         {

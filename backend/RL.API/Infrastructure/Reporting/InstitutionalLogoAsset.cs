@@ -126,9 +126,10 @@ public static class InstitutionalLogoAsset
             for (var pixel = 0; pixel < width; pixel++)
             {
                 var source = pixel * bytesPerPixel;
-                rgb[rgbOffset++] = current[source];
-                rgb[rgbOffset++] = current[source + 1];
-                rgb[rgbOffset++] = current[source + 2];
+                var alpha = colorType == 6 ? current[source + 3] : (byte)255;
+                rgb[rgbOffset++] = CompositeOnWhite(current[source], alpha);
+                rgb[rgbOffset++] = CompositeOnWhite(current[source + 1], alpha);
+                rgb[rgbOffset++] = CompositeOnWhite(current[source + 2], alpha);
             }
 
             (previous, current) = (current, previous);
@@ -166,6 +167,9 @@ public static class InstitutionalLogoAsset
             ? left
             : upDistance <= upLeftDistance ? up : upLeft;
     }
+
+    private static byte CompositeOnWhite(byte channel, byte alpha) =>
+        (byte)Math.Clamp((channel * alpha + 255 * (255 - alpha) + 127) / 255, 0, 255);
 
     private sealed record InstitutionalPng(byte[] Bytes, byte[] Rgb, int Width, int Height);
 }

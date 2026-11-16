@@ -35,6 +35,11 @@ export const INSTITUTIONAL_LOGO_SHA256 = 'D57799214B441EA834320A1069D46A6930590E
 export const INSTITUTIONAL_LOGO_ASPECT_RATIO = 2034 / 773;
 /** Ancho físico canónico del logo en todos los encabezados PDF (milímetros). */
 export const INSTITUTIONAL_PDF_LOGO_WIDTH_MM = 72.644;
+export const INSTITUTIONAL_LOGO_POLICY = {
+  pdfWidthMm: INSTITUTIONAL_PDF_LOGO_WIDTH_MM,
+  excelWidthPx: 156,
+  excelHeightPx: 156 / INSTITUTIONAL_LOGO_ASPECT_RATIO
+} as const;
 
 export interface InstitutionalReportBranding {
   institutionName: string;

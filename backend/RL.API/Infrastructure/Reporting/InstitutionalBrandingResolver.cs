@@ -61,7 +61,10 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
             return null;
 
         var relative = logoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var root = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, "wwwroot"));
+        var rootPath = string.IsNullOrWhiteSpace(_environment.WebRootPath)
+            ? Path.Combine(_environment.ContentRootPath, "wwwroot")
+            : _environment.WebRootPath;
+        var root = Path.GetFullPath(rootPath);
         var candidate = Path.GetFullPath(Path.Combine(root, relative));
         var prefix = root.EndsWith(Path.DirectorySeparatorChar) ? root : root + Path.DirectorySeparatorChar;
         return candidate.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && File.Exists(candidate)

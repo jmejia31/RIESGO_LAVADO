@@ -10,7 +10,7 @@
 
       <!-- Botón de guardar cambios rápidos para la pestaña sistema -->
       @if (activeTab() === 'sistema') {
-        <button (click)="guardar()" [disabled]="guardando() || form.invalid" title="Guardar cambios del sistema" aria-label="Guardar cambios del sistema"
+        <button (click)="guardar()" [disabled]="guardando() || subiendoLogo() || form.invalid" title="Guardar cambios del sistema" aria-label="Guardar cambios del sistema"
           class="px-6 py-2.5 bg-ihss-900 text-white rounded-xl font-medium shadow-sm hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ihss-600 transition-all disabled:opacity-50 flex items-center gap-2">
 <app-action-icon action="save" [loading]="guardando()"></app-action-icon>
           </button>
@@ -182,6 +182,16 @@
                 }
               </div>
 
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-500 uppercase">Validez de clave temporal (minutos)</label>
+                <input type="number" formControlName="validezClaveTemp" min="1" max="1440"
+                  class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors"
+                  [class.border-red-500]="esInvalido('validezClaveTemp')" />
+                @if (esInvalido('validezClaveTemp')) {
+                  <p class="text-xs text-red-500">Debe ser un valor entre 1 y 1440 minutos.</p>
+                }
+              </div>
+
               <div class="col-span-1 md:col-span-2 space-y-1">
                 <label class="text-xs font-semibold text-gray-500 uppercase">Acuerdo Legal / Términos de Acceso</label>
                 <div class="flex justify-end">
@@ -227,7 +237,7 @@
                   <div class="flex items-center gap-1">
                     <div class="w-5 h-5 rounded bg-white/20 flex-shrink-0 flex items-center justify-center p-0.5 overflow-hidden">
                       @if (form.get('iconoUrl')?.value || form.get('logoUrl')?.value) {
-                        <img [src]="form.get('iconoUrl')?.value || form.get('logoUrl')?.value" class="w-full h-full object-contain" />
+                        <img [src]="configService.resolverUrlImagen(form.get('iconoUrl')?.value || form.get('logoUrl')?.value)" class="w-full h-full object-contain" />
                       } @else {
                         <span class="font-bold text-[8px]">IHSS</span>
                       }

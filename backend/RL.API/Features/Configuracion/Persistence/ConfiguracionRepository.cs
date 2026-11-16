@@ -1,16 +1,19 @@
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Configuracion.Contracts;
 using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.Configuracion.Persistence;
 
-public class ConfiguracionRepository : IConfiguracionRepository
+public class ConfiguracionRepository : IConfiguracionRepository, ITransactionalConfiguracionRepository
 {
     private readonly OracleDbContext _db;
+    private readonly IAuditoriaRepository _auditoria;
 
-    public ConfiguracionRepository(OracleDbContext db)
+    public ConfiguracionRepository(OracleDbContext db, IAuditoriaRepository auditoria)
     {
         _db = db;
+        _auditoria = auditoria;
     }
 
     public async Task<ConfigSistema?> ObtenerConfigSistemaAsync()
@@ -57,10 +60,11 @@ public class ConfiguracionRepository : IConfiguracionRepository
                 SFS_ICONO_URL = :IconoUrl,
                 SFS_COLOR_PRIMARIO = :ColorPrimario,
                 SFS_COLOR_SECUNDARIO = :ColorSecundario,
-                SFS_TIMEOUT_SESION = :TimeoutSesion,
+                SFS_COLOR_ENCABEZADO_REPORTES = :ColorEncabezadoReportes,
+                SFS_TIMEOUT_SESION = SFS_TIMEOUT_SESION,
                 SFS_ACUERDO_LEGAL = :AcuerdoLegal,
-                SFS_MAX_INTENTOS = :MaxIntentos,
-                SFS_VALIDEZ_CLAVE_TEMP = :ValidezClaveTemp,
+                SFS_MAX_INTENTOS = SFS_MAX_INTENTOS,
+                SFS_VALIDEZ_CLAVE_TEMP = SFS_VALIDEZ_CLAVE_TEMP,
                 SFS_ULTIMA_ACTUALIZACION = SYSDATE
             WHERE SFS_ID = 1";
 
@@ -70,13 +74,14 @@ public class ConfiguracionRepository : IConfiguracionRepository
         cmd.Parameters.Add(new OracleParameter("IconoUrl", (object?)config.IconoUrl ?? DBNull.Value));
         cmd.Parameters.Add(new OracleParameter("ColorPrimario", (object?)config.ColorPrimario ?? DBNull.Value));
         cmd.Parameters.Add(new OracleParameter("ColorSecundario", (object?)config.ColorSecundario ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("TimeoutSesion", config.TimeoutSesion));
+        cmd.Parameters.Add(new OracleParameter("ColorEncabezadoReportes", (object?)config.ColorEncabezadoReportes ?? DBNull.Value));
         cmd.Parameters.Add(new OracleParameter("AcuerdoLegal", (object?)config.AcuerdoLegal ?? DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("MaxIntentos", config.MaxIntentos));
-        cmd.Parameters.Add(new OracleParameter("ValidezClaveTemp", config.ValidezClaveTemp));
+
 
         var rowsAffected = await cmd.ExecuteNonQueryAsync();
-        if (rowsAffected > 0 && !string.IsNullOrWhiteSpace(config.ColorEncabezadoReportes))
+        // La ruta de producción utiliza la operación transaccional; esta compatibilidad
+        // directa no debe ejecutar un segundo UPDATE ni publicar éxito parcial.
+        if (DebeEjecutarActualizacionCompatibilidad(rowsAffected, config.ColorEncabezadoReportes))
         {
             // La columna se incorpora mediante la migración B06 controlada. Mantener
             // el resto de la configuración operativa aun cuando la migración aún no
@@ -91,11 +96,68 @@ public class ConfiguracionRepository : IConfiguracionRepository
             }
             catch (OracleException exception) when (exception.Number is 904 or 942 or 2289)
             {
-                // La ausencia de la columna es una dependencia de despliegue, no un
-                // motivo para romper el guardado de las columnas existentes.
+                throw new InvalidOperationException("B06_BRANDING_SCHEMA=NOT_READY: falta la columna de color de encabezado de reportes.", exception);
             }
         }
         return rowsAffected > 0;
+    }
+
+    public async Task<bool> GuardarConfigSistemaConAuditoriaAsync(
+        ConfigSistema config,
+        string? datosAnteriores,
+        string datosNuevos,
+        long usuarioId,
+        string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = transaction;
+            cmd.BindByName = true;
+            cmd.CommandText = @"
+                UPDATE RL_CONFIG_SISTEMA
+                SET SFS_NOMBRE_INSTITUCION = :NombreInstitucion,
+                    SFS_NOMBRE_SISTEMA = :NombreSistema,
+                    SFS_LOGO_URL = :LogoUrl,
+                    SFS_ICONO_URL = :IconoUrl,
+                    SFS_COLOR_PRIMARIO = :ColorPrimario,
+                    SFS_COLOR_SECUNDARIO = :ColorSecundario,
+                    SFS_COLOR_ENCABEZADO_REPORTES = :ColorEncabezadoReportes,
+                    SFS_TIMEOUT_SESION = SFS_TIMEOUT_SESION,
+                    SFS_ACUERDO_LEGAL = :AcuerdoLegal,
+                    SFS_MAX_INTENTOS = SFS_MAX_INTENTOS,
+                    SFS_VALIDEZ_CLAVE_TEMP = SFS_VALIDEZ_CLAVE_TEMP,
+                    SFS_ULTIMA_ACTUALIZACION = SYSDATE
+                WHERE SFS_ID = 1";
+            cmd.Parameters.Add(new OracleParameter("NombreInstitucion", config.NombreInstitucion));
+            cmd.Parameters.Add(new OracleParameter("NombreSistema", config.NombreSistema));
+            cmd.Parameters.Add(new OracleParameter("LogoUrl", (object?)config.LogoUrl ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("IconoUrl", (object?)config.IconoUrl ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("ColorPrimario", (object?)config.ColorPrimario ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("ColorSecundario", (object?)config.ColorSecundario ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("ColorEncabezadoReportes", (object?)config.ColorEncabezadoReportes ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("AcuerdoLegal", (object?)config.AcuerdoLegal ?? DBNull.Value));
+
+            if (await cmd.ExecuteNonQueryAsync() <= 0)
+            {
+                await transaction.RollbackAsync();
+                return false;
+            }
+
+            await _auditoria.RegistrarAsync(
+                conn, transaction, "RL_CONFIG_SISTEMA", "1", "UPDATE",
+                datosAnteriores, datosNuevos, usuarioId, null, ip, "Configuracion");
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            try { await transaction.RollbackAsync(); } catch { /* preservar la excepción primaria */ }
+            throw;
+        }
     }
 
     private static string? TryGetString(OracleDataReader reader, string columnName)
@@ -110,6 +172,8 @@ public class ConfiguracionRepository : IConfiguracionRepository
             return null;
         }
     }
+
+    private static bool DebeEjecutarActualizacionCompatibilidad(int rowsAffected, string? color) => false;
 
     public async Task<List<LoginSlide>> ObtenerSlidesAsync()
     {

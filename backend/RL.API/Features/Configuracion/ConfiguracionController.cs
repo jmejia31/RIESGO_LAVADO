@@ -5,6 +5,7 @@ using RL.API.Features.Configuracion.Contracts;
 using RL.API.Core.Security;
 using RL.API.Infrastructure.Http;
 using RL.API.Infrastructure.Files;
+using Microsoft.AspNetCore.Hosting;
 using System.Security.Claims;
 
 namespace RL.API.Features.Configuracion;
@@ -15,10 +16,12 @@ namespace RL.API.Features.Configuracion;
 public class ConfiguracionController : ControllerBase
 {
     private readonly IConfiguracionService _service;
+    private readonly IWebHostEnvironment? _environment;
 
-    public ConfiguracionController(IConfiguracionService service)
+    public ConfiguracionController(IConfiguracionService service, IWebHostEnvironment? environment = null)
     {
         _service = service;
+        _environment = environment;
     }
 
     [HttpGet("sistema")]
@@ -38,7 +41,8 @@ public class ConfiguracionController : ControllerBase
             colorEncabezadoReportes = config.ColorEncabezadoReportes,
             timeoutSesion = config.TimeoutSesion,
             acuerdoLegal = config.AcuerdoLegal,
-            maxIntentos = config.MaxIntentos
+            maxIntentos = config.MaxIntentos,
+            validezClaveTemp = config.ValidezClaveTemp
         }});
     }
 
@@ -131,7 +135,10 @@ public class ConfiguracionController : ControllerBase
             return BadRequest(new { success = false, mensaje = validationError });
 
         var extension = Path.GetExtension(Path.GetFileName(archivo.FileName)).ToLowerInvariant();
-        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        var webRoot = string.IsNullOrWhiteSpace(_environment?.WebRootPath)
+            ? Path.Combine(_environment?.ContentRootPath ?? Directory.GetCurrentDirectory(), "wwwroot")
+            : _environment.WebRootPath;
+        var uploadsFolder = Path.Combine(webRoot, "uploads");
         Directory.CreateDirectory(uploadsFolder);
 
         var nombreUnico = $"{Guid.NewGuid()}{extension}";

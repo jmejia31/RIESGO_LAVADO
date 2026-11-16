@@ -19,4 +19,5 @@ export interface ConfigSistema {
   timeoutSesion: number;
   acuerdoLegal?: string;
   maxIntentos?: number;
+  validezClaveTemp?: number;
 }

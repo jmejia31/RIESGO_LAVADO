@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import {
   INSTITUTIONAL_LOGO_ASSET_PATH,
   INSTITUTIONAL_LOGO_ASPECT_RATIO,
-  INSTITUTIONAL_PDF_LOGO_WIDTH_MM,
+  INSTITUTIONAL_LOGO_POLICY,
   INSTITUTIONAL_REPORT_COLORS,
   INSTITUTIONAL_REPORT_LAYOUT,
   getInstitutionalReportBranding,
@@ -42,7 +42,7 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   const metadataGap = 3;
   const metadataLineHeight = 4.5;
   const metadataTop = titleTop + titleLines.length * titleLineHeight + metadataGap;
-  const logoWidth = INSTITUTIONAL_PDF_LOGO_WIDTH_MM;
+  const logoWidth = INSTITUTIONAL_LOGO_POLICY.pdfWidthMm;
   const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
   const headerHeight = Math.max(
     INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationHeaderHeight,
@@ -59,7 +59,7 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   doc.setFontSize(7.5);
   doc.text(titleLines, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, titleTop, { lineHeightFactor: 1.2 });
   dibujarLogoInstitucionalPdf(doc, width, Math.max(0, (headerHeight - logoHeight) / 2), logoWidth, logoHeight, branding);
-  doc.setTextColor(220, 230, 240);
+  doc.setTextColor(...branding.headerTextColor);
   doc.text(meta.sistema, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, metadataTop);
 }
 
@@ -120,7 +120,7 @@ export function agregarEncabezadoInstitucionalPdf(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   const metadataLines = doc.splitTextToSize(`${meta.sistema} | Generado: ${fecha}`, leftWidth);
-  const logoWidth = Math.min(INSTITUTIONAL_PDF_LOGO_WIDTH_MM, width - margin * 2);
+  const logoWidth = Math.min(INSTITUTIONAL_LOGO_POLICY.pdfWidthMm, width - margin * 2);
   const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
   const titleBottom = 9 + institutionLines.length * 5 + 6 + titleLines.length * 7;
   const metadataTop = titleBottom + 4;
@@ -140,7 +140,7 @@ export function agregarEncabezadoInstitucionalPdf(
   doc.text(titleLines, margin, 9 + institutionLines.length * 5 + 6);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
-  doc.setTextColor(220, 230, 240);
+  doc.setTextColor(...branding.headerTextColor);
   const logoTop = Math.max(0, (headerHeight - logoHeight) / 2);
   dibujarLogoInstitucionalPdf(doc, width, logoTop, logoWidth, logoHeight, branding);
   doc.text(metadataLines, margin, metadataTop, { align: 'left' });
@@ -218,8 +218,8 @@ export function autoTableInstitucional(doc: jsPDF, options: Record<string, any>)
     },
     headStyles: {
       ...(options['headStyles'] ?? {}),
-      fillColor: COLORES_REPORTE_INSTITUCIONAL.navy,
-      textColor: COLORES_REPORTE_INSTITUCIONAL.white,
+      fillColor: getInstitutionalReportBranding().headerColor,
+      textColor: getInstitutionalReportBranding().headerTextColor,
       fontStyle: 'bold'
     },
     alternateRowStyles: {

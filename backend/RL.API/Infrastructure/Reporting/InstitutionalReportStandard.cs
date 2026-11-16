@@ -29,9 +29,15 @@ public static class InstitutionalReportStandard
     public static InstitutionalReportPalette CreatePalette(string? headerColor)
     {
         var navy = IsHexColor(headerColor) ? headerColor!.ToUpperInvariant() : Palette.Navy;
-        var foreground = ContrastRatio(navy, "#FFFFFF") >= 4.5m ? "#FFFFFF" : "#111827";
-        return Palette with { Navy = navy, HeaderText = foreground };
+        var foreground = ResolveAccessibleForeground(navy);
+        var metadata = ContrastRatio(navy, "#DCE6F0") >= 4.5m ? "#DCE6F0" : ResolveAccessibleForeground(navy);
+        return Palette with { Navy = navy, HeaderText = foreground, HeaderMetadataText = metadata };
     }
+
+    public static string ResolveAccessibleForeground(string background) =>
+        ContrastRatio(background, "#FFFFFF") >= ContrastRatio(background, "#000000")
+            ? "#FFFFFF"
+            : "#000000";
 
     private static bool IsHexColor(string? value) => !string.IsNullOrWhiteSpace(value)
         && System.Text.RegularExpressions.Regex.IsMatch(value, "^#[0-9A-Fa-f]{6}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
@@ -90,7 +96,10 @@ public sealed record InstitutionalReportPalette(
     string Success,
     string Warning,
     string Danger,
-    string Muted);
+    string Muted)
+{
+    public string HeaderMetadataText { get; init; } = "#DCE6F0";
+}
 
 public sealed record InstitutionalReportMetadata(
     string Title,

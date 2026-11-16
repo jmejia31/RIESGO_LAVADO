@@ -15,7 +15,11 @@ public sealed class InstitutionalReportStandardTests
 
     [Theory]
     [InlineData("#123B63", "#FFFFFF")]
-    [InlineData("#FFFFFF", "#111827")]
+    [InlineData("#FFFFFF", "#000000")]
+    [InlineData("#000000", "#FFFFFF")]
+    [InlineData("#777777", "#000000")]
+    [InlineData("#767676", "#000000")]
+    [InlineData("#F3F6F9", "#000000")]
     public void CreatePalette_ResolvesReadableHeaderForeground(string background, string expectedForeground)
     {
         var palette = InstitutionalReportStandard.CreatePalette(background);

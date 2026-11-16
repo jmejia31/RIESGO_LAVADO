@@ -12,3 +12,13 @@ public interface IConfiguracionRepository
     Task<bool> ActualizarSlideAsync(LoginSlide slide);
     Task<bool> EliminarSlideAsync(int id);
 }
+
+public interface ITransactionalConfiguracionRepository
+{
+    Task<bool> GuardarConfigSistemaConAuditoriaAsync(
+        ConfigSistema config,
+        string? datosAnteriores,
+        string datosNuevos,
+        long usuarioId,
+        string? ip);
+}

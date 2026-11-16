@@ -169,13 +169,13 @@ public sealed class InstitutionalXlsxWorkbook
         "<numFmts count=\"1\"><numFmt numFmtId=\"165\" formatCode=\"dd/mm/yyyy hh:mm\"/></numFmts>" +
         "<fonts count=\"8\">" +
         $"<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.BodyText)}\"/></font>" +
-        "<font><b/><sz val=\"14\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
-        "<font><b/><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
+        $"<font><b/><sz val=\"14\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderText)}\"/></font>" +
+        $"<font><b/><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderText)}\"/></font>" +
         $"<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.Navy)}\"/></font>" +
         "<font><b/><sz val=\"8\"/><name val=\"Arial\"/><color rgb=\"FF64748B\"/></font>" +
         $"<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.Navy)}\"/></font>" +
-        "<font><sz val=\"9\"/><name val=\"Arial\"/><color rgb=\"FFE2E8F0\"/></font>" +
-        "<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
+        $"<font><sz val=\"9\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderMetadataText)}\"/></font>" +
+        $"<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderText)}\"/></font>" +
         "</fonts>" +
         $"<fills count=\"5\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill>" +
         $"<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{Argb(_branding.Palette.Navy)}\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
@@ -434,7 +434,7 @@ public sealed class InstitutionalXlsxWorkbook
     {
         var columnCount = sheet.Document?.ColumnCount ?? Math.Max(1, sheet.Headers.Count);
         var column = Math.Max(0, columnCount - 3);
-        const int cx = 1_143_000;
+        const int cx = 1_485_900;
         var cy = (int)Math.Round(cx / (double)_branding.LogoAspectRatio);
         return $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +

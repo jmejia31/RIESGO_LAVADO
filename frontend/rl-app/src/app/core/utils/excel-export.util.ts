@@ -1,6 +1,7 @@
 import * as ExcelJS from 'exceljs';
 import {
   INSTITUTIONAL_LOGO_ASSET_PATH,
+  INSTITUTIONAL_LOGO_POLICY,
   INSTITUTIONAL_REPORT_EXCEL_COLORS,
   getInstitutionalReportBranding
 } from '../reporting/institutional-report-standard';
@@ -108,7 +109,7 @@ async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promis
   for (const worksheet of workbook.worksheets) {
     worksheet.addImage(imageId, {
       tl: { col: Math.max(0, worksheet.columnCount - 3), row: 0 },
-      ext: { width: 120, height: 45 }
+      ext: { width: INSTITUTIONAL_LOGO_POLICY.excelWidthPx, height: INSTITUTIONAL_LOGO_POLICY.excelHeightPx }
     });
   }
   return true;

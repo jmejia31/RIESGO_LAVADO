@@ -44,6 +44,7 @@ export class ConfiguracionComponent implements OnInit {
   readonly politicaLogoInstitucional = INSTITUTIONAL_LOGO_FILE_POLICY;
   archivosLogoPendientes = signal<File[]>([]);
   subiendoLogo = signal(false);
+  readonly estadoLogo = signal<'IDLE' | 'LOGO_SELECTED' | 'LOGO_VALIDATING' | 'LOGO_UPLOADING' | 'LOGO_UPLOADED_PENDING_SAVE' | 'LOGO_SAVING' | 'LOGO_PUBLISHED' | 'LOGO_SAVE_FAILED'>('IDLE');
   archivosImagenPendientes = signal<File[]>([]);
 
   ngOnInit() {
@@ -64,7 +65,8 @@ export class ConfiguracionComponent implements OnInit {
       colorEncabezadoReportes: ['#123B63', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
       timeoutSesion: [30, [Validators.required, Validators.min(1), Validators.max(1440)]],
       acuerdoLegal: ['', [Validators.maxLength(this.maxTextoTextarea)]],
-      maxIntentos: [5, [Validators.required, Validators.min(1), Validators.max(20)]]
+      maxIntentos: [5, [Validators.required, Validators.min(1), Validators.max(20)]],
+      validezClaveTemp: [15, [Validators.required, Validators.min(1), Validators.max(1440)]]
     });
   }
 
@@ -117,15 +119,27 @@ export class ConfiguracionComponent implements OnInit {
 
     this.mensajeExito.set(null);
     this.mensajeError.set(null);
+    if (this.subiendoLogo()) return;
     this.guardando.set(true);
+    this.estadoLogo.set('LOGO_SAVING');
 
     const data: ConfigSistema = this.form.value;
 
     this.configService.GuardarConfiguracion(data).subscribe({
       next: () => {
-        this.guardando.set(false);
-        this.mostrarExito('¡Configuración guardada y aplicada exitosamente!');
-        this.configService.CargarConfiguracion().subscribe();
+        this.configService.CargarConfiguracion('local').subscribe({
+          next: persisted => {
+            this.form.patchValue(persisted);
+            this.estadoLogo.set('LOGO_PUBLISHED');
+            this.guardando.set(false);
+            this.mostrarExito('¡Configuración guardada y aplicada exitosamente!');
+          },
+          error: () => {
+            this.guardando.set(false);
+            this.estadoLogo.set('LOGO_SAVE_FAILED');
+            this.mostrarError('No se pudo verificar la configuraciÃ³n persistida en el servidor.');
+          }
+        });
       },
       error: (err) => {
         this.guardando.set(false);
@@ -282,24 +296,30 @@ export class ConfiguracionComponent implements OnInit {
     const file = files[0];
     if (!file) return;
     this.archivosLogoPendientes.set([file]);
+    this.estadoLogo.set('LOGO_SELECTED');
     this.subiendoLogo.set(true);
+    this.estadoLogo.set('LOGO_VALIDATING');
     void this.normalizarLogoPng(file).then(normalized => {
+      this.estadoLogo.set('LOGO_UPLOADING');
       this.configService.subirImagen(normalized).subscribe({
         next: response => {
           this.subiendoLogo.set(false);
           this.archivosLogoPendientes.set([]);
           // La URL queda en el formulario y no se vuelve activa hasta pulsar Guardar.
           this.form.patchValue({ logoUrl: response.url });
+          this.estadoLogo.set('LOGO_UPLOADED_PENDING_SAVE');
           this.mostrarExito('Logo cargado. Guarde la configuración para publicarlo.');
         },
         error: error => {
           this.subiendoLogo.set(false);
+          this.estadoLogo.set('LOGO_SAVE_FAILED');
           this.archivosLogoPendientes.set([]);
           this.mostrarError(error?.error?.mensaje || 'No se pudo cargar el logo institucional.');
         }
       });
     }).catch(() => {
       this.subiendoLogo.set(false);
+      this.estadoLogo.set('LOGO_SAVE_FAILED');
       this.archivosLogoPendientes.set([]);
       this.mostrarError('No se pudo leer el logo. Use un PNG, JPG, JPEG o WEBP válido.');
     });

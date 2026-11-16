@@ -292,7 +292,7 @@ public sealed class InstitutionalPdfDocument
         var metadataTop = 36m + title.Count * 16m + 5m;
         DrawRect(logoX, logoTop, logoWidth, logoHeight, "#FFFFFF", "#FFFFFF");
         DrawImage(logoX, logoTop, logoWidth, logoHeight);
-        DrawLines(metadata, MarginLeft, metadataTop, 8m, 11m, "#DCE6F0");
+        DrawLines(metadata, MarginLeft, metadataTop, 8m, 11m, _branding.Palette.HeaderMetadataText);
         _current = previous;
     }
 

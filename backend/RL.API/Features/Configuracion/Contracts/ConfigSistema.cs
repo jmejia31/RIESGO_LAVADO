@@ -13,6 +13,6 @@ public class ConfigSistema
     public int TimeoutSesion { get; set; }
     public string? AcuerdoLegal { get; set; }
     public int MaxIntentos { get; set; } = 5;
-    public int ValidezClaveTemp { get; set; } = 15;
+    public int ValidezClaveTemp { get; set; }
     public DateTime UltimaActualizacion { get; set; }
 }

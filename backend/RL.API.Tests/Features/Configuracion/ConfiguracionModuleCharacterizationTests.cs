@@ -41,7 +41,7 @@ public sealed class ConfiguracionModuleCharacterizationTests
         Assert.Contains("\"nombreSistema\":\"SGRLA-IHSS\"", json, StringComparison.Ordinal);
         Assert.Contains("\"timeoutSesion\":30", json, StringComparison.Ordinal);
         Assert.DoesNotContain("sfsId", json, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("validezClaveTemp", json, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("\"validezClaveTemp\":15", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ultimaActualizacion", json, StringComparison.OrdinalIgnoreCase);
     }
 
