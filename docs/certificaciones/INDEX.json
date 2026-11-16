@@ -62,7 +62,7 @@
       "id": "B06-DYNAMIC-BRANDING-CORRECTION-14B238AD",
       "path": "B06_dynamic_branding_14b238ad.md",
       "status": "BLOCKED_ENVIRONMENTAL_VERIFICATION",
-      "source_code_sha": "14b238ad8ef8533564012113cec621423757e821",
+      "source_code_sha": "510d4bea75f8ca5bd3ac42d470cfe7e4fac97880",
       "evidence_commit_sha": "PENDING_DOCUMENTAL_COMMIT",
       "github_evidence_url": "PENDING_DOCUMENTAL_COMMIT",
       "quality_gate_status": "PENDING_NEW_SOURCE_SHA",

@@ -8,7 +8,7 @@ AUTHOR=COD/CODEX
 CLIENT=CLI
 BRANCH=desarrollo
 INITIAL_SHA=bd1deb43e8996efa6fc6a5690dcd005e56c5a778
-SOURCE_CODE_SHA=14b238ad8ef8533564012113cec621423757e821
+SOURCE_CODE_SHA=510d4bea75f8ca5bd3ac42d470cfe7e4fac97880
 EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
 EVIDENCE_TYPE=PRIMARY_SYNTHETIC_SANITIZED
 ROOT_CAUSE_STORAGE_PATH=UPLOAD_USED_CURRENT_DIRECTORY_WHILE_RESOLVER_USED_CONTENT_ROOT
@@ -29,7 +29,7 @@ FRONTEND_TESTS=PASS_96_FILES_1007_TESTS
 FRONTEND_BUILD=PASS_WITH_PREEXISTING_WARNINGS
 FRONTEND_LINT=PASS
 BACKEND_BUILD=PASS_0_ERRORS_505_INHERITED_ANALYZER_WARNINGS
-BACKEND_FULL_TEST_SUITE=BLOCKED_ACTIVE_RL_API_DLL_LOCK
+BACKEND_FULL_TEST_SUITE=9_ENVIRONMENTAL_FAILURES_1113_PASS_2_SKIPPED
 ORACLE_XE_INTEGRATION=NOT_EXECUTED_THIS_INTERVENTION
 REAL_ADMIN_LOGO_A_LOGO_B_FLOW=NOT_VERIFIED
 REAL_PDF_EXCEL_PREVIEW_FLOW=NOT_VERIFIED
@@ -71,13 +71,13 @@ MIGRATION_54_TOUCHED=NO
 | `npm run build` | PASS | bundle generado; warnings de presupuesto SCSS/CommonJS preexistentes |
 | `dotnet build backend/RL.API/RL.API.csproj --no-restore` aislado | PASS | 0 errores; 505 warnings heredados |
 | `git diff --cached --check` | PASS | stage funcional selectivo |
-| Suite .NET completa en checkout normal | BLOCKED | `RL.API.dll` activo mantiene bloqueado `bin/Debug/net10.0` |
+| Suite .NET completa | BLOCKED_ENVIRONMENTAL | 1124 total; 1113 passed; 2 skipped; 9 fallas por falta de `Database:Profile=LOCAL_XE` |
 | Oracle institucional / migración | NOT_EXECUTED | prohibido sin DBA; no se ejecutó DDL/DML institucional |
 | Playwright real Configuración→reporte | NOT_VERIFIED | requiere entorno autenticado y base descartable |
 | LOGO_A/LOGO_B end-to-end | NOT_VERIFIED | no se inventa evidencia sintética de integración |
 
 ## Límites y dictamen
 
-El commit funcional es [`14b238ad`](https://github.com/jmejia31/RIESGO_LAVADO/commit/14b238ad). La suite local demuestra compilación y regresión Angular, pero no demuestra por sí sola la publicación real de dos logos, la persistencia Oracle ni la paridad de documentos generados. Por eso el estado máximo de esta intervención es `BLOCKED`, no `PASS`.
+El commit funcional vigente es [`510d4bea`](https://github.com/jmejia31/RIESGO_LAVADO/commit/510d4bea75f8ca5bd3ac42d470cfe7e4fac97880), precedido por [`14b238ad`](https://github.com/jmejia31/RIESGO_LAVADO/commit/14b238ad8ef8533564012113cec621423757e821). La suite local demuestra compilación y regresión Angular, pero no demuestra por sí sola la publicación real de dos logos, la persistencia Oracle ni la paridad de documentos generados. Por eso el estado máximo de esta intervención es `BLOCKED`, no `PASS`.
 
 La aceptación visual del propietario permanece pendiente. No se modifica `main`, producción, Oracle institucional, migración 54, B07, Bloque 10 ni se incluyen cambios ajenos del checkout.

@@ -70,7 +70,7 @@ El cambio funcional esta publicado en [`331e9617`](https://github.com/jmejia31/R
 La auditoria funcional posterior al expediente anterior encontro que el flujo podia informar exito sin demostrar que el archivo cargado fuera el activo utilizado por todos los consumidores. El commit [`14b238ad`](https://github.com/jmejia31/RIESGO_LAVADO/commit/14b238ad8ef8533564012113cec621423757e821) corrige la raiz compartida: carga y resolucion usan la misma raiz `WebRootPath`, la ruta productiva de configuracion y auditoria comparte transaccion, los campos de seguridad omitidos se preservan y la interfaz relee el estado publicado antes de mostrar exito.
 
 ```ini
-SOURCE_CODE_SHA=14b238ad8ef8533564012113cec621423757e821
+SOURCE_CODE_SHA=510d4bea75f8ca5bd3ac42d470cfe7e4fac97880
 EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT
 B06_CONFIGURATION_ATOMICITY=IMPLEMENTED
 B06_AUDIT_TRANSACTIONALITY=IMPLEMENTED

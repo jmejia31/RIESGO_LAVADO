@@ -4692,6 +4692,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Commit funcional publicado: `331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`; stage selectivo; cambios ajenos preservados fuera del commit. Expediente documental pendiente de su commit propio y gate exacto.
 - `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT`; `SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_DOCUMENTAL_GATE`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=OPEN_PENDING_OWNER_ACCEPTANCE`.
 - Preservacion: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+
+## Estado vigente — B06 esquema ausente expuesto sin éxito falso — 2026-11-16 13:08:00 -06:00
+
+- `SOURCE_CODE_SHA=510d4bea75f8ca5bd3ac42d470cfe7e4fac97880`; commit funcional publicado en `origin/desarrollo` después de las capturas del propietario.
+- La consulta local confirmó `GET /api/configuracion/sistema=200` y el asset `/uploads/...png=200`; el campo `colorEncabezadoReportes` no aparece con valor persistido. Se mantiene la dependencia real de la migración B06 para guardar el color de forma atómica.
+- El error de esquema ya no se presenta como 500 genérico: el backend devuelve 503 con `B06_BRANDING_SCHEMA=NOT_READY`, y Angular deja `LOGO_SAVE_FAILED`.
+- Suite .NET: `1124 total / 1113 passed / 2 skipped / 9 failed`, todas las fallas por falta de `Database:Profile=LOCAL_XE`; Angular `96/1007 PASS`; build backend aislado `0 errores`; ESLint/build Angular PASS.
+- `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_SHA`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT`; `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`.
+- `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
+- Punto exacto de continuacion: verificar la migración B06 en una base autorizada, ejecutar la integración real y no declarar verde mientras el entorno siga sin `LOCAL_XE`/flujo de configuración reproducible.
 - Punto exacto: commit/push documental, comprobacion GitHub de los archivos y del gate, y revision visual del propietario; no ejecutar Oracle institucional ni cerrar B06 por inferencia.
 
 ## Estado vigente — B06 expediente documental publicado — 2026-11-16 11:48 -06:00

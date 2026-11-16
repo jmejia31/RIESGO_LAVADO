@@ -11332,5 +11332,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Pruebas ejecutadas en esta intervencion: Angular `96 archivos / 1007 pruebas PASS`; `npm run lint PASS`; `npm run build PASS` con warnings preexistentes de SCSS/CommonJS; build aislado backend `PASS`, `0 errores`, `505 warnings` de analizadores heredados; `git diff --cached --check PASS`.
 - Pruebas no ejecutadas o bloqueadas: suite .NET completa en checkout normal por bloqueo activo de `RL.API.dll` en `bin/Debug/net10.0`; Oracle XE y flujo real autenticado Configuracion→LOGO_A/LOGO_B→PDF/Excel/preview no reproducidos en esta intervencion; Playwright real queda `NOT_VERIFIED`.
 - Expediente nuevo: `docs/certificaciones/B06_dynamic_branding_14b238ad.md`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_SHA`; `SECURITY_SCAN=PENDING_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_COMMIT`.
+
+## 2026-11-16 13:08:00 -06:00 — B06 error de esquema expuesto explícitamente (COD)
+
+- `SOURCE_CODE_SHA=510d4bea75f8ca5bd3ac42d470cfe7e4fac97880`; se publicó el commit funcional posterior a la evidencia visual del propietario.
+- La captura mostró una secuencia de éxito aparente seguida de error al releer Configuración. La consulta directa al servicio local confirmó `GET /api/configuracion/sistema=200` y `GET /uploads/<asset>.png=200` con `Content-Type=image/png`; la respuesta no contiene un color de encabezado persistido, lo que mantiene como dependencia la migración B06 en la base local.
+- El controlador ahora transforma `B06_BRANDING_SCHEMA=NOT_READY` en `503 Service Unavailable` con código explícito; Angular marca `LOGO_SAVE_FAILED` y no deja el mensaje verde como resultado final.
+- Suite .NET reproducida tras liberar el bloqueo: `1124 total; 1113 passed; 2 skipped; 9 failed` por ausencia explícita de `Database:Profile=LOCAL_XE` en pruebas Oracle, no por errores de compilación. Angular: `96 archivos / 1007 pruebas PASS`; ESLint y build PASS; backend aislado `0 errores`.
+- `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
+- Punto exacto de continuacion: aplicar/verificar B06 en una base descartable autorizada o registrar la migración en el entorno de prueba; ejecutar el flujo real autenticado LOGO_A/LOGO_B, color, PDF, Excel y previews; observar el Quality Gate del SHA funcional/documental.
 - Dictamen: `B06_TECHNICAL_STATUS=BLOCKED`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_FINAL_STATUS=BLOCKED_PENDING_REAL_FLOW_AND_OWNER_ACCEPTANCE`.
 - Punto exacto de continuacion: publicar el expediente documental y verificar por GitHub el SHA, sus archivos y el Quality Gate exacto; no declarar PASS global ni cerrar B06 sin la evidencia de integración real y la aceptación visual del propietario.
