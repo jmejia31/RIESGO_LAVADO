@@ -11292,3 +11292,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Seguridad y límites:** no se tocaron código de negocio, valores, identificadores, contratos REST, Oracle institucional, producción, `main`, B07, Bloque 10 ni migración 54. Las modificaciones ajenas del worktree se preservaron y no se incluyeron en el stage.
 - **Pendientes:** esperar el resultado del Quality Gate exact-SHA `43899780242`; luego actualizar el expediente con el commit documental y el enlace remoto verificable. La aceptación visual final del propietario sigue pendiente: debe reiniciar backend/frontend, hacer recarga fuerte y regenerar ambos PDFs.
 
+## 2026-11-16 10:06:28 -06:00 — Cierre remoto del Quality Gate B06 logo 30% (COD)
+
+- **Resultado:** el Quality Gate exacto del estado publicado terminó `completed/success`: [run 43900362542](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43900362542), sobre `EVIDENCE_COMMIT_SHA=767cece877cf17d1c2821739019f658d01e5aa14`. El run anterior `43899780242` fue cancelado por la serialización al publicar el expediente; no se usa para certificar.
+- **Certificación:** `SOURCE_CODE_SHA=7e656fc57548e1d1a2ee5c4ead81455765690f38`; `LOGO_PHYSICAL_WIDTH_MM=72.644`; `BACKEND_PDF_LOGO_WIDTH_POINTS=205.92`; `ANGULAR_PDF_LOGO_WIDTH_MM=72.644`; `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES`; `REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW`.
+- **Alcance preservado:** el cambio sigue siendo exclusivamente la geometría compartida del logo en los generadores PDF Angular/ASP.NET. No se modificaron código de negocio, Oracle institucional, producción, `main`, B07, Bloque 10 ni migración 54; los cambios ajenos del worktree permanecen fuera del stage.
+- **Documentación actualizada:** evidencia, índice y estándar B06 ya apuntan al run verde y al commit documental verificable. La aceptación visual del propietario continúa pendiente y B06 no se declara cerrado por inferencia técnica.
+- **Punto exacto de continuación:** reiniciar backend/frontend, recargar la aplicación y regenerar un PDF de Monitoreo y uno de Matrices para confirmar visualmente la equivalencia del logo; después registrar la aceptación explícita del propietario.
+

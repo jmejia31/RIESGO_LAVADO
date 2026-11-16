@@ -8,7 +8,7 @@ AUTHOR=COD/CODEX
 CLIENT=CLI
 BRANCH=desarrollo
 SOURCE_CODE_SHA=7e656fc57548e1d1a2ee5c4ead81455765690f38
-EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTATION_COMMIT
+EVIDENCE_COMMIT_SHA=767cece877cf17d1c2821739019f658d01e5aa14
 LOGO_PATH=frontend/rl-app/public/assets/institutional/ihss-logo.png
 LOGO_SHA256=D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543
 LOGO_DIMENSIONS=2034x773
@@ -37,8 +37,8 @@ MAIN_TOUCHED=NO
 PRODUCTION_TOUCHED=NO
 ORACLE_INSTITUTIONAL_TOUCHED=NO
 MIGRATION_54_TOUCHED=NO
-QUALITY_GATE_RUN=43899780242
-QUALITY_GATE_STATUS=PENDING_REMOTE
+QUALITY_GATE_RUN=43900362542
+QUALITY_GATE_STATUS=SUCCESS
 B06_LOGO_OWNER_VISUAL_ACCEPTANCE=PENDING
 B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE
 GITHUB_REMOTE_VERIFIED=YES_AFTER_PUSH
@@ -61,6 +61,6 @@ REVIEW_READY=YES_FOR_OWNER_VISUAL_REVIEW
 | Backend logo focalizado | PASS — 4/4 |
 | ESLint | PASS |
 | Build Angular | PASS; warnings preexistentes SCSS/CommonJS |
-| Quality Gate exact-SHA | PENDING_REMOTE — [run 43899780242](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43899780242) |
+| Quality Gate exact-SHA | SUCCESS — [run 43900362542](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43900362542), validado por API |
 
 La captura visual aportada por el propietario es evidencia de la divergencia previa; no se declara aceptación visual automática. Tras reiniciar los servicios locales, cerrar las vistas antiguas y regenerar ambos PDFs, el propietario debe confirmar que el tamaño visible es equivalente.
