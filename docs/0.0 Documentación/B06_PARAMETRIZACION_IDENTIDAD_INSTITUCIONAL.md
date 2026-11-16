@@ -61,3 +61,5 @@ REVIEW_READY=PENDING_DOCUMENTAL_GATE
 | Aceptacion visual del propietario | PENDING | requiere regenerar PDF/XLSX despues de guardar configuracion |
 
 El cambio funcional esta publicado en [`331e9617`](https://github.com/jmejia31/RIESGO_LAVADO/commit/331e9617c9ee2dba9e008ae3f3b7071b9b8551b5). Este expediente no cierra B06 por inferencia tecnica: la revision visual del propietario y el gate remoto del SHA documental siguen siendo pendientes.
+
+El expediente documental que contiene esta evidencia fue publicado en [`55190a7a`](https://github.com/jmejia31/RIESGO_LAVADO/commit/55190a7a9efc25541c1bd1b9bb2bd34d965f8211). El gate de ese SHA se observa por separado; hasta su conclusion, `REVIEW_READY=PENDING_DOCUMENTAL_GATE`.

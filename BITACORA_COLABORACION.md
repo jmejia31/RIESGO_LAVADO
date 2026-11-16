@@ -11308,3 +11308,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Verificado: backend `18/18 PASS`; Angular `95 archivos / 1000 pruebas PASS`; build backend/frontend `PASS`; ESLint `PASS`; validador de base de datos `PASS`; Agent Skills `14/14 PASS`.
 - Publicado funcionalmente en `origin/desarrollo`: `331e9617c9ee2dba9e008ae3f3b7071b9b8551b5`. Oracle institucional no ejecutado; B06 sigue abierto a revision visual.
 - `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_DOCUMENTAL_GATE`; cambios ajenos preservados.
+
+## 2026-11-16 11:48 -06:00 — B06 expediente documental publicado (COD)
+
+- `EVIDENCE_COMMIT_SHA=55190a7a9efc25541c1bd1b9bb2bd34d965f8211`; contiene el indice, la evidencia sintetica, la bitacora, el estado colaborativo y el estandar B06 actualizado.
+- Enlaces remotos preparados: `docs/certificaciones/B06_dynamic_branding_331e9617.md` y `docs/0.0 Documentación/B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md`. El Quality Gate exacto de este SHA queda pendiente de observacion.
+- `GITHUB_REMOTE_VERIFIED=YES_FOR_SOURCE_AND_DOCUMENT_BUNDLE`; `SECURITY_SCAN=PASS_LOCAL_SCOPE_PENDING_GITHUB_ACTIONS`; `REVIEW_READY=PENDING_DOCUMENTAL_GATE`; `B06_OWNER_VISUAL_ACCEPTANCE=PENDING`.

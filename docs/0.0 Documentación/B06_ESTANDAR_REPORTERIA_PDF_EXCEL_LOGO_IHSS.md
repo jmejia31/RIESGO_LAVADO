@@ -408,3 +408,5 @@ MIGRATION_54_TOUCHED=NO
 ```
 
 El detalle verificable queda en [`B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md`](B06_PARAMETRIZACION_IDENTIDAD_INSTITUCIONAL.md) y [`B06_dynamic_branding_331e9617.md`](../certificaciones/B06_dynamic_branding_331e9617.md). El expediente permanece abierto hasta el gate remoto documental y la aceptacion visual explicita del propietario.
+
+El expediente documental activo fue publicado en el commit [`55190a7a`](https://github.com/jmejia31/RIESGO_LAVADO/commit/55190a7a9efc25541c1bd1b9bb2bd34d965f8211); su Quality Gate exacto permanece pendiente de observacion y no se reutiliza un gate historico.
