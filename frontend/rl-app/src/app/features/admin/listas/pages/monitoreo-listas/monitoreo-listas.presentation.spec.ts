@@ -95,7 +95,7 @@ describe('MonitoreoListasComponent — deduplicación de detalle', () => {
     const panel = input?.parentElement;
     expect(panel?.classList.contains('border-ihss-100')).toBe(true);
     expect(panel?.classList.contains('bg-ihss-50/50')).toBe(true);
-    expect(panel?.className).not.toMatch(/\\b(?:text|bg|border|ring)-blue-\\d{2,3}/);
+    expect(panel?.className).not.toContain('-blue-');
   });
 
   it('renderiza cinco KPIs superiores sin bloque duplicado y cambia con el tipo activo', () => {
