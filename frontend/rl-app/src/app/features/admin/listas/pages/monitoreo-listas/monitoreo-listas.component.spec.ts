@@ -586,4 +586,40 @@ describe('MonitoreoListasComponent', () => {
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, esManual: true })).toBe('Debe registrar un motivo antes del seguimiento');
   });
 
+  it('permite reporte PDF de un natural no identificado sin solicitar asociaciones por documento', () => {
+    const row = {
+      numeroIdentificacion: 'N/A(3)', nombre: 'Origen N/A', listaCoincidencia: 'LISTA X',
+      idRegistroFuente: 501, tipoFuente: 'DNP_COINCIDENCIA', tieneMotivo: true,
+      estadoIdentidad: 'AMBIGUOUS', estadoAsociacion: 'AMBIGUOUS'
+    };
+    const generar = vi.spyOn(component, 'generarPdfNatural').mockImplementation(() => undefined);
+
+    component.imprimirReporteNatural(row as never);
+
+    expect(service['getDetalleNatural']).toHaveBeenCalledWith('N/A(3)', 'global', 501, 'DNP_COINCIDENCIA');
+    expect(service['getPositivoPorDocumento']).not.toHaveBeenCalled();
+    expect(service['getSeguimientos']).not.toHaveBeenCalled();
+    expect(service['registrarAuditoriaImpresion']).toHaveBeenCalledOnce();
+    expect(generar).toHaveBeenCalledWith(row, [], null, [], expect.anything());
+    expect(component.cargando()).toBe(false);
+  });
+
+  it('no incorpora motivo ni seguimiento de un empleado sin asociacion verificada en su PDF', () => {
+    const row = {
+      identidad: '08011999123456', nombre: 'Empleado de origen', listaCoincidencia: 'LISTA Y',
+      idRegistroFuente: 502, tipoFuente: 'DNP_COINCIDENCIA', tieneMotivo: true,
+      estadoIdentidad: 'VERIFIED', estadoAsociacion: 'UNVERIFIED_ASSOCIATION'
+    };
+    const generar = vi.spyOn(component, 'generarPdfEmpleado').mockImplementation(() => undefined);
+
+    component.imprimirReporteEmpleado(row as never);
+
+    expect(service['getDetalleEmpleado']).toHaveBeenCalledWith('08011999123456', 'global', 502, 'DNP_COINCIDENCIA', undefined);
+    expect(service['getPositivoPorDocumento']).not.toHaveBeenCalled();
+    expect(service['getSeguimientos']).not.toHaveBeenCalled();
+    expect(service['registrarAuditoriaImpresion']).toHaveBeenCalledOnce();
+    expect(generar).toHaveBeenCalledWith(row, [], null, [], expect.anything());
+    expect(component.cargando()).toBe(false);
+  });
+
 });

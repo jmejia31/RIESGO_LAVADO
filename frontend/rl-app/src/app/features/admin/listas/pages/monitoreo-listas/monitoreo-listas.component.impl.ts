@@ -942,11 +942,11 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
 
-    const obsPositivo = row.tieneMotivo 
+    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row) 
       ? this.listasService.getPositivoPorDocumento(row.numeroPatrono) 
       : of(null);
       
-    const obsSeguimientos = row.tieneMotivo 
+    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row) 
       ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
@@ -986,10 +986,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
     const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
-    const obsPositivo = row.tieneMotivo 
+    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row) 
       ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo 
+    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row) 
       ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
@@ -1166,10 +1166,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
     const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
-    const obsPositivo = row.tieneMotivo 
+    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row) 
       ? this.listasService.getPositivoPorDocumento(row.identidad)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo 
+    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row) 
       ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
@@ -1516,10 +1516,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
 
-    const obsPositivo = row.tieneMotivo
+    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row)
       ? this.listasService.getPositivoPorDocumento(row.numeroPatrono)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo
+    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row)
       ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
@@ -1567,10 +1567,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
     const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
-    const obsPositivo = row.tieneMotivo
+    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row)
       ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo
+    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row)
       ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
@@ -1626,10 +1626,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
     const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
-    const obsPositivo = row.tieneMotivo
+    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row)
       ? this.listasService.getPositivoPorDocumento(row.identidad)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo
+    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row)
       ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
