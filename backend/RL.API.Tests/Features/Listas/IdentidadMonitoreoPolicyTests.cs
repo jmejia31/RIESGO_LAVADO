@@ -29,4 +29,23 @@ public sealed class IdentidadMonitoreoPolicyTests
     {
         Assert.Equal(EstadoIdentidadMonitoreo.Invalid, IdentidadMonitoreoPolicy.EstadoParaPresentacion("   "));
     }
+
+    [Fact]
+    public void DocumentoNoVacioSinCardinalidad_NoSeMarcaComoVerificado()
+    {
+        Assert.Equal(
+            EstadoIdentidadMonitoreo.UnverifiedAssociation,
+            IdentidadMonitoreoPolicy.EstadoParaPresentacion("0801-1234"));
+    }
+
+    [Theory]
+    [InlineData(1, 1, "VERIFIED")]
+    [InlineData(2, 1, "VERIFIED")]
+    [InlineData(2, 2, "AMBIGUOUS")]
+    [InlineData(1, 0, "UNVERIFIED_ASSOCIATION")]
+    [InlineData(0, 0, "UNVERIFIED_ASSOCIATION")]
+    public void EstadoParaPresentacion_UsaCardinalidadDeFuente(int referencias, int sujetos, string esperado)
+    {
+        Assert.Equal(esperado, IdentidadMonitoreoPolicy.EstadoParaPresentacion("0801-1234", referencias, sujetos));
+    }
 }

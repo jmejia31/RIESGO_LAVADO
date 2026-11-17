@@ -47,9 +47,21 @@ public static class IdentidadMonitoreoPolicy
     }
 
     public static string EstadoParaPresentacion(string? documento)
-        => string.IsNullOrWhiteSpace(documento)
-            ? EstadoIdentidadMonitoreo.Invalid
-            : EsMarcadorNoIdentificacion(documento)
-            ? EstadoIdentidadMonitoreo.Ambiguous
-            : EstadoIdentidadMonitoreo.Verified;
+        => EstadoParaPresentacion(documento, 0, 0);
+
+    public static string EstadoParaPresentacion(string? documento, int referencias, int sujetosDistintos)
+    {
+        if (string.IsNullOrWhiteSpace(documento))
+            return EstadoIdentidadMonitoreo.Invalid;
+
+        if (EsMarcadorNoIdentificacion(documento))
+            return EstadoIdentidadMonitoreo.Ambiguous;
+
+        if (sujetosDistintos > 1)
+            return EstadoIdentidadMonitoreo.Ambiguous;
+
+        return referencias > 0 && sujetosDistintos == 1
+            ? EstadoIdentidadMonitoreo.Verified
+            : EstadoIdentidadMonitoreo.UnverifiedAssociation;
+    }
 }

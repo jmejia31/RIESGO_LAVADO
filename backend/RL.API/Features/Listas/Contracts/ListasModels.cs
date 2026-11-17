@@ -27,8 +27,8 @@ namespace RL.API.Features.Listas.Contracts
         public DateTime? FechaRegistroInterno { get; set; }
         public bool TieneMotivo { get; set; }
         public bool EsManual { get; set; }
-        public string EstadoIdentidad { get; set; } = EstadoIdentidadMonitoreo.Verified;
-        public string EstadoAsociacion { get; set; } = EstadoIdentidadMonitoreo.Verified;
+        public string EstadoIdentidad { get; set; } = EstadoIdentidadMonitoreo.UnverifiedAssociation;
+        public string EstadoAsociacion { get; set; } = EstadoIdentidadMonitoreo.UnverifiedAssociation;
     }
 
     public class CoincidenciaEmpleadoDto
@@ -42,8 +42,8 @@ namespace RL.API.Features.Listas.Contracts
         public DateTime? FechaRegistroInterno { get; set; }
         public bool TieneMotivo { get; set; }
         public bool EsManual { get; set; }
-        public string EstadoIdentidad { get; set; } = EstadoIdentidadMonitoreo.Verified;
-        public string EstadoAsociacion { get; set; } = EstadoIdentidadMonitoreo.Verified;
+        public string EstadoIdentidad { get; set; } = EstadoIdentidadMonitoreo.UnverifiedAssociation;
+        public string EstadoAsociacion { get; set; } = EstadoIdentidadMonitoreo.UnverifiedAssociation;
     }
 
     public class DetalleCoincidenciaNaturalDto

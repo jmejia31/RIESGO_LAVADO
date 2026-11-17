@@ -114,19 +114,58 @@ public sealed class EvidenciasService : IEvidenciasService
         if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
             return ServiceResult.Conflict("No es posible registrar el seguimiento porque existen múltiples positivos activos para el mismo documento.");
 
-        var positivoId = await _repo.ObtenerPositivoIdPorDocumentoAsync(noDocumento);
-        if (!positivoId.HasValue)
+        var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
+        if (positivo is null || positivo.PositivoId <= 0)
             return ServiceResult.NotFound("No se encontró un registro positivo activo para este documento.");
+
+        if (string.Equals(positivo.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
+        {
+            var resolucion = await _repo.ResolverIdentidadAsync(
+                noDocumento,
+                ConvertirTipoSujeto(positivo.TipoPositivoId));
+            if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
+                return ServiceResult.Conflict("No es posible registrar el seguimiento: el documento está asociado a múltiples sujetos.");
+            if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
+                return ServiceResult.UnprocessableEntity("No es posible registrar el seguimiento: la asociación del documento no está verificada.");
+        }
 
         var errorArchivo = ValidarArchivos(archivos);
         if (errorArchivo != null)
             return ServiceResult.BadRequest(errorArchivo);
 
-        var detalleId = await _repo.RegistrarSeguimientoAsync(positivoId.Value, motivoIngreso, usuarioId);
-        await GuardarArchivosAsync(detalleId, archivos, usuarioId);
+        var detalleId = await _repo.RegistrarSeguimientoAsync(positivo.PositivoId, motivoIngreso, usuarioId);
+        try
+        {
+            await GuardarArchivosAsync(detalleId, archivos, usuarioId);
+            return ServiceResult.Ok("Seguimiento y evidencia registrados correctamente.");
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                await _repo.EliminarSeguimientoLogicoAsync(
+                    detalleId,
+                    usuarioId,
+                    "Rollback compensatorio: no se pudo completar el almacenamiento de evidencias.");
+            }
+            catch (Exception rollbackEx)
+            {
+                Serilog.Log.Error(rollbackEx, "No se pudo completar el rollback compensatorio del seguimiento {DetalleId}", detalleId);
+            }
 
-        return ServiceResult.Ok("Seguimiento y evidencia registrados correctamente.");
+            Serilog.Log.Error(ex, "Se revirtió el seguimiento {DetalleId} porque falló el almacenamiento de evidencias", detalleId);
+            return ServiceResult.Failure("No se pudo completar el seguimiento y sus evidencias; la operación fue revertida.");
+        }
     }
+
+    private static TipoSujetoMonitoreo ConvertirTipoSujeto(int tipoPositivoId)
+        => tipoPositivoId switch
+        {
+            1 => TipoSujetoMonitoreo.Juridica,
+            2 => TipoSujetoMonitoreo.Natural,
+            3 => TipoSujetoMonitoreo.Empleado,
+            _ => throw new ArgumentOutOfRangeException(nameof(tipoPositivoId))
+        };
 
     public async Task<ServiceResult> ActualizarSeguimientoAsync(long detalleId, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId)
     {

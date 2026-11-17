@@ -62,6 +62,52 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
+    public async Task RegistrarPositivo_DnpConAsociacionNoVerificada_RechazaSinEscribir()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ResolverIdentidadAsync), _ => Task.FromResult(
+            new ResolucionIdentidadMonitoreo("0801", EstadoIdentidadMonitoreo.UnverifiedAssociation, 0, 0, "SOURCE_NOT_FOUND")));
+        var dto = CrearPositivo("DNP_LISTAS");
+
+        var result = await service.RegistrarPositivoAsync(dto, 9);
+
+        Assert.False(result.Success);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.ContarPositivosActivosAsync)));
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+    }
+
+    [Fact]
+    public async Task RegistrarPositivo_DnpConIdentidadAmbigua_RechazaSinEscribir()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ResolverIdentidadAsync), _ => Task.FromResult(
+            new ResolucionIdentidadMonitoreo("0801", EstadoIdentidadMonitoreo.Ambiguous, 2, 2, "DOCUMENTO_SHARED_OR_MULTIPLE_SUBJECTS")));
+        var dto = CrearPositivo("DNP_LISTAS");
+
+        var result = await service.RegistrarPositivoAsync(dto, 9);
+
+        Assert.False(result.Success);
+        Assert.Equal(409, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+    }
+
+    [Fact]
+    public async Task RegistrarPositivo_DnpVerificado_Delega()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ResolverIdentidadAsync), _ => Task.FromResult(
+            new ResolucionIdentidadMonitoreo("0801", EstadoIdentidadMonitoreo.Verified, 2, 1)));
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(0));
+        repo.On(nameof(IListasRepository.RegistrarPositivoAsync), _ => Task.FromResult(true));
+
+        var result = await service.RegistrarPositivoAsync(CrearPositivo("DNP_LISTAS"), 9);
+
+        Assert.True(result.Success);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+    }
+
+    [Fact]
     public async Task RegistrarPositivo_DocumentoConMultiplesPositivosActivos_RechazaSinEscribir()
     {
         var service = CrearServicio(out var repo, out _);
@@ -211,6 +257,17 @@ public sealed class ListasApplicationTests
         var auditoria = InterfaceStub.Create<IAuditoriaRepository>(out auditoriaStub);
         return new ListasService(repo, auditoria);
     }
+
+    private static RegistrarPositivoDto CrearPositivo(string origen) => new()
+    {
+        TipoDocumentoId = 1,
+        TipoPositivoId = 2,
+        NoDocumento = "0801",
+        NombreCompleto = "Persona Uno",
+        MotivoIngreso = "Revisión",
+        TipoListaCautelaId = 3,
+        OrigenRegistro = origen
+    };
 
     private static IFormFile CrearArchivo(string nombre)
     {

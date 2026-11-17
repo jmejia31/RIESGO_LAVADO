@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Data;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
@@ -21,6 +23,7 @@ namespace RL.API.Features.Listas.Persistence
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IApplicationCache _cache;
         private readonly ApplicationCacheSettings _cacheSettings;
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> PositivosPorDocumento = new(StringComparer.Ordinal);
 
         public ListasRepository(
             OracleDbContext db,
@@ -119,8 +122,8 @@ namespace RL.API.Features.Listas.Persistence
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1,
-                    EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION")),
-                    EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "NUMERO_IDENTIFICACION")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
+                    EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
+                    EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
                 }, cancellationToken);
 
             return ObtenerMonitoreoPaginadoCacheadoAsync(
@@ -132,8 +135,8 @@ namespace RL.API.Features.Listas.Persistence
             {
                 NumeroIdentificacion = Texto(reader, "NUMERO_IDENTIFICACION"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
                 FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
-                EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION")),
-                EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "NUMERO_IDENTIFICACION")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
+                EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
+                EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
             });
 
         public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
@@ -156,8 +159,8 @@ namespace RL.API.Features.Listas.Persistence
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1,
-                    EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD")),
-                    EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "IDENTIDAD")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
+                    EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
+                    EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
                 }, cancellationToken);
 
             return ObtenerMonitoreoPaginadoCacheadoAsync(
@@ -169,8 +172,8 @@ namespace RL.API.Features.Listas.Persistence
             {
                 Identidad = Texto(reader, "IDENTIDAD"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
                 FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
-                EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD")),
-                EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "IDENTIDAD")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
+                EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
+                EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
             });
 
         public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
@@ -257,13 +260,14 @@ namespace RL.API.Features.Listas.Persistence
             if (tipoSujeto == TipoSujetoMonitoreo.Natural)
             {
                 cmd.CommandText = @"
-                    SELECT COUNT(*) AS REFERENCIAS, COUNT(DISTINCT ID_PERSONA) AS SUJETOS
+                    SELECT COUNT(*) AS REFERENCIAS,
+                           COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL THEN TIPO_FUENTE || ':' || ID_PERSONA END) AS SUJETOS
                     FROM (
-                        SELECT S.SOCIO_ID AS ID_PERSONA
+                        SELECT 'SOCIO' AS TIPO_FUENTE, S.SOCIO_ID AS ID_PERSONA
                         FROM DNP_IHSS.SOCIOS S
                         WHERE S.NUMERO_IDENTIFICACION = :documento
                         UNION ALL
-                        SELECT R.REPRESENTANTE_ID AS ID_PERSONA
+                        SELECT 'REPRESENTANTE' AS TIPO_FUENTE, R.REPRESENTANTE_ID AS ID_PERSONA
                         FROM DNP_IHSS.REPRESENTANTES R
                         WHERE R.NUMERO_IDENTIFICACION = :documento
                     )";
@@ -377,9 +381,29 @@ namespace RL.API.Features.Listas.Persistence
 
         public async Task<bool> RegistrarPositivoAsync(RegistrarPositivoDto dto, long creadoPorId)
         {
+            var documento = IdentidadMonitoreoPolicy.NormalizarDocumento(dto.NoDocumento);
+            if (string.IsNullOrWhiteSpace(documento))
+                return false;
+
+            var gate = PositivosPorDocumento.GetOrAdd(documento, static _ => new SemaphoreSlim(1, 1));
+            await gate.WaitAsync();
+            try
+            {
+                return await RegistrarPositivoCoreAsync(dto, creadoPorId);
+            }
+            finally
+            {
+                gate.Release();
+                if (gate.CurrentCount == 1)
+                    PositivosPorDocumento.TryRemove(new KeyValuePair<string, SemaphoreSlim>(documento, gate));
+            }
+        }
+
+        private async Task<bool> RegistrarPositivoCoreAsync(RegistrarPositivoDto dto, long creadoPorId)
+        {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
-            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
+            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync(IsolationLevel.Serializable);
 
             try
             {
@@ -551,7 +575,7 @@ namespace RL.API.Features.Listas.Persistence
             await using var cmd = conn.CreateCommand();
             cmd.BindByName = true;
             cmd.CommandText = @"
-                SELECT LSP_TIPO_DOCUMENTO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
+                SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
                 FROM RL_LISTA_POSITIVOS 
                 WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
             cmd.Parameters.Add(new OracleParameter("noDoc", noDocumento));
@@ -567,7 +591,9 @@ namespace RL.API.Features.Listas.Persistence
 
                 result = new ExistingPositivoDto
                 {
+                    PositivoId = Convert.ToInt64(reader["LSP_POSITIVO_ID"]),
                     TipoDocumentoId = Convert.ToInt32(reader["LSP_TIPO_DOCUMENTO_ID"]),
+                    TipoPositivoId = Convert.ToInt32(reader["LSP_TIPO_POSITIVO_ID"]),
                     MotivoIngreso = reader["LSP_MOTIVO_INGRESO"]?.ToString() ?? string.Empty,
                     TipoListaCautelaId = reader["LSP_TIPO_LISTA_CAUTELA_ID"] == DBNull.Value ? null : Convert.ToInt32(reader["LSP_TIPO_LISTA_CAUTELA_ID"]),
                     OrigenRegistro = reader["LSP_ORIGEN_REGISTRO"] == DBNull.Value ? null : reader["LSP_ORIGEN_REGISTRO"]?.ToString(),
@@ -1779,6 +1805,18 @@ namespace RL.API.Features.Listas.Persistence
                 FROM RL_LISTA_POSITIVOS
                 WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 2
                 GROUP BY LSP_NO_DOCUMENTO
+            ), IDENTIDAD_AGG AS (
+                SELECT NUMERO_IDENTIFICACION,
+                       COUNT(*) AS REFERENCIAS,
+                       COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL THEN TIPO_FUENTE || ':' || ID_PERSONA END) AS SUJETOS
+                FROM (
+                    SELECT S.NUMERO_IDENTIFICACION, 'SOCIO' AS TIPO_FUENTE, S.SOCIO_ID AS ID_PERSONA
+                    FROM DNP_IHSS.SOCIOS S
+                    UNION ALL
+                    SELECT R.NUMERO_IDENTIFICACION, 'REPRESENTANTE' AS TIPO_FUENTE, R.REPRESENTANTE_ID AS ID_PERSONA
+                    FROM DNP_IHSS.REPRESENTANTES R
+                ) FUENTES
+                GROUP BY NUMERO_IDENTIFICACION
             ), REPORTE_AGG AS (
                 SELECT DNI, LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS,
                        COUNT(DISTINCT TRIM(REGEXP_REPLACE(NOMBRE, '[[:space:]]+', ' '))) TOTAL_NOMBRES,
@@ -1799,13 +1837,16 @@ namespace RL.API.Features.Listas.Persistence
                        END AS NOMBRE,
                        R.LISTA_CONCIDENCIA, R.TOTAL_REPETIDOS, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
                        p.FECHA_REGISTRO_INTERNO,
-                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO
+                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO,
+                       NVL(i.REFERENCIAS, 0) AS IDENTIDAD_REFERENCIAS,
+                       NVL(i.SUJETOS, 0) AS IDENTIDADES_DISTINTAS
                 FROM REPORTE_AGG R
                 LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = R.DNI
+                LEFT JOIN IDENTIDAD_AGG i ON i.NUMERO_IDENTIFICACION = R.DNI
             )
-            SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, NUMERO_IDENTIFICACION AS BUSQUEDA FROM Coincidencias
+            SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, NUMERO_IDENTIFICACION AS BUSQUEDA FROM Coincidencias
             UNION ALL
-            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
+            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, 0 AS IDENTIDAD_REFERENCIAS, 0 AS IDENTIDADES_DISTINTAS, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
             FROM RL_LISTA_POSITIVOS lp LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
             WHERE lp.LSP_TIPO_POSITIVO_ID = 2 AND lp.LSP_ESTADO_REGISTRO = 1
               AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMERO_IDENTIFICACION = lp.LSP_NO_DOCUMENTO)";
@@ -1818,18 +1859,28 @@ namespace RL.API.Features.Listas.Persistence
                 FROM RL_LISTA_POSITIVOS
                 WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 3
                 GROUP BY LSP_NO_DOCUMENTO
+            ), IDENTIDAD_AGG AS (
+                SELECT IDENTIDAD,
+                       COUNT(*) AS REFERENCIAS,
+                       COUNT(DISTINCT IDENTIDAD) AS SUJETOS
+                FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
+                WHERE PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
+                GROUP BY IDENTIDAD
             ), Coincidencias AS (
                 SELECT D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')) NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
                        p.FECHA_REGISTRO_INTERNO,
-                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO
+                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO,
+                       NVL(i.REFERENCIAS, 0) AS IDENTIDAD_REFERENCIAS,
+                       NVL(i.SUJETOS, 0) AS IDENTIDADES_DISTINTAS
                 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS D
                 JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
                 LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = D.IDENTIDAD
+                LEFT JOIN IDENTIDAD_AGG i ON i.IDENTIDAD = D.IDENTIDAD
                 WHERE D.PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
-                GROUP BY D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')), R.LISTA_CONCIDENCIA, p.FECHA_REGISTRO_INTERNO, p.TIENE_MOTIVO)
-            SELECT IDENTIDAD, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD AS BUSQUEDA FROM Coincidencias
+                GROUP BY D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')), R.LISTA_CONCIDENCIA, p.FECHA_REGISTRO_INTERNO, p.TIENE_MOTIVO, i.REFERENCIAS, i.SUJETOS)
+            SELECT IDENTIDAD, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, IDENTIDAD AS BUSQUEDA FROM Coincidencias
             UNION ALL
-            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
+            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, 0 AS IDENTIDAD_REFERENCIAS, 0 AS IDENTIDADES_DISTINTAS, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
             FROM RL_LISTA_POSITIVOS lp LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
             WHERE lp.LSP_TIPO_POSITIVO_ID = 3 AND lp.LSP_ESTADO_REGISTRO = 1
               AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.IDENTIDAD = lp.LSP_NO_DOCUMENTO)";

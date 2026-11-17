@@ -52,7 +52,9 @@ namespace RL.API.Features.Listas.Contracts
 
     public class ExistingPositivoDto
     {
+        public long PositivoId { get; set; }
         public int TipoDocumentoId { get; set; }
+        public int TipoPositivoId { get; set; }
         public string MotivoIngreso { get; set; } = string.Empty;
         public int? TipoListaCautelaId { get; set; }
         public string? OrigenRegistro { get; set; }

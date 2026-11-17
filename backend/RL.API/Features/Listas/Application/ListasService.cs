@@ -100,6 +100,19 @@ public sealed class ListasService : IListasService
         if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(dto.NoDocumento))
             return ServiceResult.Conflict("No es posible registrar un motivo sobre una identidad ambigua o no identificada.");
 
+        if (string.Equals(dto.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
+        {
+            var resolucion = await _repo.ResolverIdentidadAsync(
+                dto.NoDocumento!,
+                ConvertirTipoSujeto(dto.TipoPositivoId));
+
+            if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
+                return ServiceResult.Conflict("No es posible registrar el positivo: el documento está asociado a múltiples sujetos.");
+
+            if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
+                return ServiceResult.UnprocessableEntity("No es posible registrar el positivo: la asociación del documento no está verificada.");
+        }
+
         if (await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, 0) > 1)
             return ServiceResult.Conflict("No es posible actualizar el motivo porque existen múltiples positivos activos para el mismo documento.");
 
@@ -120,6 +133,18 @@ public sealed class ListasService : IListasService
         if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
             return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos porque existen múltiples positivos activos para el mismo documento.");
 
+        var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
+        if (positivo is not null && string.Equals(positivo.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
+        {
+            var resolucion = await _repo.ResolverIdentidadAsync(
+                noDocumento,
+                ConvertirTipoSujeto(positivo.TipoPositivoId));
+            if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
+                return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos: el documento está asociado a múltiples sujetos.");
+            if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
+                return ServiceResult<List<SeguimientoDto>>.UnprocessableEntity("No es posible consultar seguimientos: la asociación del documento no está verificada.");
+        }
+
         var result = await _repo.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
         return ServiceResult<List<SeguimientoDto>>.Ok(result);
     }
@@ -132,6 +157,15 @@ public sealed class ListasService : IListasService
         if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
             throw new UnverifiedAssociationException("Existen datos relacionados, pero no se ha confirmado su correspondencia individual.");
     }
+
+    private static TipoSujetoMonitoreo ConvertirTipoSujeto(int tipoPositivoId)
+        => tipoPositivoId switch
+        {
+            1 => TipoSujetoMonitoreo.Juridica,
+            2 => TipoSujetoMonitoreo.Natural,
+            3 => TipoSujetoMonitoreo.Empleado,
+            _ => throw new ArgumentOutOfRangeException(nameof(tipoPositivoId))
+        };
 
     public async Task<ServiceResult> ProcesarCargaCautelaAsync(IFormFile? archivo, int tipoListaCautelaId, long usuarioId)
     {

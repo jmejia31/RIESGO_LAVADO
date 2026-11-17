@@ -172,6 +172,9 @@ public sealed class DbPaginationRegressionGuardTests
         Assert.DoesNotContain("RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1", source, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("S.SOCIO_ID AS ID_PERSONA", source, StringComparison.Ordinal);
         Assert.Contains("R.REPRESENTANTE_ID AS ID_PERSONA", source, StringComparison.Ordinal);
+        Assert.Contains("'SOCIO' AS TIPO_FUENTE", source, StringComparison.Ordinal);
+        Assert.Contains("'REPRESENTANTE' AS TIPO_FUENTE", source, StringComparison.Ordinal);
+        Assert.Contains("TIPO_FUENTE || ':' || ID_PERSONA", source, StringComparison.Ordinal);
         Assert.Contains("candidateIds.Count < 2", source, StringComparison.Ordinal);
         Assert.Contains("AmbiguousIdentityException", source, StringComparison.Ordinal);
     }

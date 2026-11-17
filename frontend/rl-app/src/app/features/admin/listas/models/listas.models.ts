@@ -66,8 +66,8 @@ export interface CoincidenciaNatural {
   fechaRegistroInterno?: string | null;
   tieneMotivo?: boolean;
   esManual?: boolean;
-  estadoIdentidad?: 'VERIFIED' | 'AMBIGUOUS' | 'INVALID';
-  estadoAsociacion?: 'VERIFIED' | 'UNVERIFIED_ASSOCIATION';
+  estadoIdentidad?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID';
+  estadoAsociacion?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID';
 }
 
 export interface CoincidenciaEmpleado {
@@ -80,8 +80,8 @@ export interface CoincidenciaEmpleado {
   fechaRegistroInterno?: string | null;
   tieneMotivo?: boolean;
   esManual?: boolean;
-  estadoIdentidad?: 'VERIFIED' | 'AMBIGUOUS' | 'INVALID';
-  estadoAsociacion?: 'VERIFIED' | 'UNVERIFIED_ASSOCIATION';
+  estadoIdentidad?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID';
+  estadoAsociacion?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID';
 }
 
 export interface DetalleCoincidenciaNatural {
