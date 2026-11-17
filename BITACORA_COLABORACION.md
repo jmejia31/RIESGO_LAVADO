@@ -11531,3 +11531,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Expediente: `docs/certificaciones/M1_CI_FUNCIONAL_CORREGIDO_SEGURIDAD_ABIERTA_20261117.md`. `ORACLE_INSTITUTIONAL_READS=NOT_EXECUTED`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `B07/Block10/migration54=NOT_TOUCHED`.
 - `M1_COUNTS_242_190_52_7=PENDING_LIVE_READ_ONLY`; `OWNER_ACCEPTANCE=PENDING`; `SECURITY_REMEDIATION=PENDING_OFFICIAL_PATCH`. Punto exacto: mantener vigilancia de versión corregida de picomatch sin waivers; conciliar Oracle por lectura y verificar UI institucional.
 
+
+
+## Estado vigente — Microfase 1: correcciones adicionales identidad/lectura/reportes — 2026-11-17 16:09 -06:00 (CHAT)
+
+- `BRANCH=desarrollo`; `BASE_SHA=fdde9577fd4beb2d48d58a9fb3dcdfe1893f258c`; `PATCH_1_SHA=526c014a010e1de65c23367a0566e7c39c1ca5ab`; `SOURCE_CODE_SHA=2b36640eebe51e56f8774d52fea7121a15434f33`; autor `CHAT`, cuenta `jmejia31`.
+- Corregido el detalle manual/positivo de DNI vacío/`NULL` por referencia fuente nulo-segura; un positivo `N/A(3)` distinto ya no se deduplica contra cualquier coincidencia con marcador compartido; UI distingue motivos del bloqueo y las seis rutas PDF/Excel no unen positivos/seguimientos por DNI sin ambos estados `VERIFIED`.
+- Regresiones añadidas: 2 backend estructurales + 3 Angular. **Aún no se confirma su ejecución final sobre este SHA**. `QUALITY_GATE=44186677489=IN_PROGRESS_AT_16_09_CST`; `SECURITY_SCAN=FAIL_PREVIOUS_RUN_PICOMATCH_HIGH`; no declarar `SUCCESS`.
+- No se ejecutó Oracle institucional ni se verificaron los conteos 242/190/52 o 7 empleados; la relación fuente–motivo que depende de DNI requiere comprobación y fail-closed. [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) asignado a propietario para Q01-Q12, E2E autenticado y aceptación.
+- Expediente `docs/certificaciones/M1_CORRECCIONES_P0_IDENTIDAD_REPORTES_20261117.md`, entrada nueva en índice. `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- **Continuación exacta:** verificar el Quality Gate del SHA exacto y reparar nuevos fallos sin saltarse el audit; cerrar conciliación institucional y aprobar por propietario antes de poner M1 `CERRADA`.

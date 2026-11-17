@@ -207,6 +207,22 @@
       "main_touched": false,
       "owner_acceptance": "PENDING",
       "github_remote_verified": "PENDING_FINAL_REF_VERIFICATION"
+    },
+    {
+      "id": "M1-CORRECCIONES-P0-IDENTIDAD-20261117",
+      "path": "M1_CORRECCIONES_P0_IDENTIDAD_REPORTES_20261117.md",
+      "status": "CODE_PUBLISHED_PENDING_EXACT_SHA_CI_ORACLE_OWNER",
+      "source_code_sha": "2b36640eebe51e56f8774d52fea7121a15434f33",
+      "evidence_commit_sha": "SEE_PUBLISHED_DOCUMENT_COMMIT",
+      "quality_gate_run": 44186677489,
+      "quality_gate_status": "IN_PROGRESS_AS_OF_2026-11-17_16_09_CST",
+      "security_scan": "FULL_AUDIT_FAIL_PREVIOUS_SHA_PICOMATCH_HIGH",
+      "oracle_institutional_reads": "NOT_EXECUTED",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "owner_acceptance": "PENDING",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41",
+      "github_remote_verified": "PENDING_REF_CHECK"
     }
   ]
 }

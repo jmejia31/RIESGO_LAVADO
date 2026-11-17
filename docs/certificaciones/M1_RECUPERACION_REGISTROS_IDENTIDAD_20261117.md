@@ -100,3 +100,10 @@ B07_TOUCHED=NO
 BLOCK10_TOUCHED=NO
 MIGRATION_54_TOUCHED=NO
 ```
+
+
+## 7. Adenda P0 de corrección adicional — 2026-11-17 16:09 -06:00
+
+Tras la implementación anterior se detectaron y corrigieron problemas reproducibles por lectura del código: marcadores de documento compartidos ocultaban positivos DNP diferentes; el detalle manual con documento vacío no recuperaba su fuente; PDF y Excel intentaban anexar motivos/seguimientos por DNI a registros sin asociación verificable; el texto del botón de seguimiento confundía riesgo de identidad con ausencia de motivo. Correcciones en los commits `526c014a010e1de65c23367a0566e7c39c1ca5ab` y `2b36640eebe51e56f8774d52fea7121a15434f33`, ambas publicadas en `desarrollo`. Ver expediente [M1 correcciones P0](M1_CORRECCIONES_P0_IDENTIDAD_REPORTES_20261117.md).
+
+**Estado de la adenda:** pruebas nuevas agregadas, `Quality Gate 44186677489` en ejecución cuando se documentó; no se presenta como PASS. **Conciliación real 242/190/52, siete empleados, semántica calificación, asociaciones persona–empresa y signoff: pendientes** en [issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41). No se modificaron `main`, producción ni Oracle institucional.
