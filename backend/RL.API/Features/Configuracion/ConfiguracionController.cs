@@ -48,9 +48,10 @@ public class ConfiguracionController : ControllerBase
     }
 
     // Only the configured image from our uploads directory can be embedded by reports.
-    // Using the authenticated API avoids browser CORS restrictions on static files.
+    // The configured image is already public; the API endpoint provides CORS-safe bytes
+    // even when branding is loaded before user login.
     [HttpGet("sistema/logo-reportes")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> LogoReportes()
     {
         if (_environment is null) return NoContent();
