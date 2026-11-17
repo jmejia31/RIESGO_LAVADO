@@ -11410,3 +11410,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`.
 - El gate verde no convierte en verificada la ejecución autenticada del propietario ni la lectura de una base institucional: `PLAYWRIGHT_REAL_AUTHENTICATED=NOT_VERIFIED`, `ORACLE_INSTITUTIONAL_WRITES=0`, `DNP_IHSS_WRITES=0`.
 - `PHASE2A_TECHNICAL_STATUS=PARTIAL_PENDING_AUTHORIZED_RUNTIME_AND_E2E`; `READY_FOR_INDEPENDENT_REVIEW=YES_WITH_DOCUMENTED_LIMITATIONS`; la certificación final de Fase 2A y la aceptación visual permanecen pendientes.
+
+## 2026-11-17 — Fase 2A Monitoreo de Listas: cierre técnico de brechas residuales (COD)
+
+- `EVENT_ID=RL-FASE2A-MONITOREO-LISTAS-CIERRE-20261117`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- `INITIAL_SHA=624bdeab8ffe02efa46ff4e2993df44a028d2ff8`; `SOURCE_CODE_SHA=c49ced1c8be524a91ee5311004f19de214721385`; commit funcional publicado selectivamente en `origin/desarrollo`. Se preservaron los cambios ajenos preexistentes del checkout.
+- Se corrigieron las brechas residuales de identidad: repetición válida del mismo sujeto, colisión entre fuentes `SOCIO`/`REPRESENTANTE`, estados `VERIFIED` falsos por falta de cardinalidad, asociaciones DNP no verificadas, selección arbitraria del positivo, y asociación de evidencias/seguimientos.
+- Se añadió serialización por documento dentro del proceso, transacción `Serializable`, compensación auditada ante fallo de evidencia y transporte completo de `PositivoId`/`TipoPositivoId`. No se realizaron escrituras en `DNP_IHSS`, Oracle institucional ni migración 54.
+- Pruebas verificadas: backend focalizado `58 passed, 0 failed, 0 skipped`; build backend `PASS / 0 errores`; Angular `96 archivos / 1009 tests PASS`; ESLint/build frontend `PASS`; validadores de estructura, base, documentación y Agent Skills `PASS`.
+- E2E completo: `77 passed, 15 skipped, 2 failed`; los dos fallos pertenecen a escenarios de Matrices no relacionados con Fase 2A. El escenario focal de Monitoreo de Listas pasó. Suite .NET completa: `1138 passed, 2 skipped, 9 failed`, bloqueada únicamente por pruebas Oracle que requieren `Database:Profile=LOCAL_XE` no configurado.
+- `PHASE2A_TARGETED_REGRESSION=PASS`; `PHASE2A_E2E_FOCAL=PASS`; `PHASE2A_E2E_FULL=PARTIAL_UNRELATED_FAILURES`; `ORACLE_XE_INTEGRATION=BLOCKED_PROFILE_NOT_CONFIGURED`; `AUDIT_FAILURE_ROLLBACK=NOT_VERIFIED_ORACLE_REQUIRED`.
+- Expediente: `docs/certificaciones/FASE2A_MONITOREO_LISTAS_CIERRE_20261117.md`; `QUALITY_GATE=PENDING_NEW_SOURCE_SHA`; `OWNER_VISUAL_ACCEPTANCE=PENDING`; `PHASE2A_FINAL_STATUS=OPEN`.
+- Punto exacto de continuación: publicar el expediente documental selectivo, verificar el Quality Gate del SHA funcional y ejecutar en entorno Oracle autorizado la prueba distribuida/con transacción de auditoría. No cerrar Fase 2A por inferencia del gate ni por las pruebas unitarias.

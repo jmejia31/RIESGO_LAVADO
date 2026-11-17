@@ -125,6 +125,22 @@
       "oracle_institutional_writes": 0,
       "dnp_ihss_writes": 0,
       "owner_visual_acceptance": "PENDING"
+    },
+    {
+      "id": "FASE2A-MONITOREO-LISTAS-CIERRE-C49CED1C",
+      "path": "FASE2A_MONITOREO_LISTAS_CIERRE_20261117.md",
+      "status": "PARTIAL_PENDING_ORACLE_AND_UNRELATED_E2E_REPAIR",
+      "source_code_sha": "c49ced1c8be524a91ee5311004f19de214721385",
+      "evidence_commit_sha": "PENDING_DOCUMENT_BUNDLE_COMMIT",
+      "quality_gate_status": "PENDING_NEW_SOURCE_SHA",
+      "github_quality_gate_url": "PENDING",
+      "github_evidence_url": "PENDING_DOCUMENT_BUNDLE_SHA",
+      "github_remote_verified": "PENDING_DOCUMENT_BUNDLE_PUSH",
+      "security_scan": "PENDING_GITHUB_ACTIONS",
+      "review_ready": "YES_WITH_DOCUMENTED_LIMITATIONS",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "owner_visual_acceptance": "PENDING"
     }
   ]
 }
