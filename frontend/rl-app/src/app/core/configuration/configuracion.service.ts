@@ -1,11 +1,21 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { map, tap } from 'rxjs';
+import { catchError, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
 import { bestContrastForeground, createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
 import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
-import { INSTITUTIONAL_LOGO_ASSET_PATH, setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
+import { INSTITUTIONAL_LOGO_ASPECT_RATIO, setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
+
+interface ReportLogo {
+  dataUrl: string;
+  aspectRatio: number;
+}
+
+const NO_REPORT_LOGO: ReportLogo = {
+  dataUrl: '',
+  aspectRatio: INSTITUTIONAL_LOGO_ASPECT_RATIO
+};
 
 @Injectable({
   providedIn: 'root'
@@ -32,11 +42,14 @@ export class ConfiguracionService {
           if (!cfg.timeoutSesion || cfg.timeoutSesion <= 0) cfg.timeoutSesion = 30;
           return cfg;
         }),
-        tap(cfg => {
-          this.configSistema.set(cfg);
-          this.aplicarTemaSistema(cfg);
-          this.aplicarBrandingReportes(cfg);
-        })
+        switchMap(cfg => this.prepararLogoReporte(cfg).pipe(
+          tap(logo => {
+            this.configSistema.set(cfg);
+            this.aplicarTemaSistema(cfg);
+            this.aplicarBrandingReportes(cfg, logo);
+          }),
+          map(() => cfg)
+        ))
       );
   }
 
@@ -53,11 +66,14 @@ export class ConfiguracionService {
       context: createHttpErrorScopeContext('local')
     })
       .pipe(
-        tap(() => {
-          this.configSistema.set(config);
-          this.aplicarTemaSistema(config);
-          this.aplicarBrandingReportes(config);
-        })
+        switchMap(response => this.prepararLogoReporte(config).pipe(
+          tap(logo => {
+            this.configSistema.set(config);
+            this.aplicarTemaSistema(config);
+            this.aplicarBrandingReportes(config, logo);
+          }),
+          map(() => response)
+        ))
       );
   }
 
@@ -113,26 +129,64 @@ export class ConfiguracionService {
     return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
-  private aplicarBrandingReportes(config: ConfigSistema): void {
+  private aplicarBrandingReportes(config: ConfigSistema, logo: ReportLogo): void {
     const header = parseHexColor(config.colorEncabezadoReportes) ?? parseHexColor('#123B63')!;
     const foreground = bestContrastForeground(header);
-    const logoUrl = this.resolverLogoParaReportes(config.logoUrl);
     setInstitutionalReportBranding({
       institutionName: (config.nombreInstitucion || 'Instituto Hondureño de Seguridad Social').toUpperCase(),
       systemName: config.nombreSistema || 'SGRLA-IHSS',
-      logoUrl,
+      logoUrl: logo.dataUrl,
+      logoAspectRatio: logo.aspectRatio,
       headerColor: [header.r, header.g, header.b],
       headerTextColor: [foreground.r, foreground.g, foreground.b]
     });
   }
 
-  /**
-   * La reportería del navegador necesita un recurso local embebible. El backend
-   * no descarga URLs externas por seguridad; mantener la misma regla aquí evita
-   * que PDF/Excel fallen aunque el logo remoto se vea en una etiqueta <img>.
-   */
-  private resolverLogoParaReportes(url?: string | null): string {
-    if (!url || /^(https?:|data:)/i.test(url)) return INSTITUTIONAL_LOGO_ASSET_PATH;
-    return this.resolverUrlImagen(url);
+  private prepararLogoReporte(config: ConfigSistema): Observable<ReportLogo> {
+    const url = config.logoUrl?.trim();
+    if (!url || !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)$/i.test(url))
+      return of(NO_REPORT_LOGO);
+
+    return this.http.get(`${this.apiUrl}/sistema/logo-reportes`, {
+      responseType: 'blob',
+      context: createHttpErrorScopeContext('local')
+    }).pipe(
+      switchMap(blob => from(this.convertirLogoEnPng(blob))),
+      catchError(() => of(NO_REPORT_LOGO))
+    );
   }
+
+  private async convertirLogoEnPng(blob: Blob | null): Promise<ReportLogo> {
+    if (!blob || !/^image\/(png|jpeg|gif|webp)$/i.test(blob.type) || blob.size === 0 ||
+        blob.size > 10 * 1024 * 1024 || typeof Image === 'undefined' ||
+        typeof document === 'undefined' || typeof URL.createObjectURL !== 'function')
+      return NO_REPORT_LOGO;
+
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const img = new Image();
+      const loaded = new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('No se pudo decodificar el logo configurado.'));
+      });
+      img.src = objectUrl;
+      await loaded;
+
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+      if (width < 1 || height < 1 || width > 4096 || height > 4096 || width * height > 16_777_216)
+        return NO_REPORT_LOGO;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      if (!context) return NO_REPORT_LOGO;
+      context.drawImage(img, 0, 0);
+      return { dataUrl: canvas.toDataURL('image/png'), aspectRatio: width / height };
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
 }

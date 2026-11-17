@@ -231,6 +231,7 @@ describe('generador Excel institucional', () => {
     const workbook: WorkBook = { sheets: [{ name: 'Reporte', sheet: { data: [['Título'], ['Código'], ['R-001']] } }] };
     await workbookToBlob(workbook);
     expect(workbook.logoEmbedded).toBe(false);
+    expect(construirLibroInstitucional(workbook).worksheets[0].getCell('A1').value).toBe('Título');
   });
 
   it('mantiene roles Excel mutuamente excluyentes y conserva spacers', () => {

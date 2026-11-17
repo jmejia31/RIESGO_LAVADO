@@ -85,15 +85,19 @@ public sealed class InstitutionalXlsxWorkbook
             WriteEntry(archive, "xl/workbook.xml", WorkbookXml());
             WriteEntry(archive, "xl/_rels/workbook.xml.rels", WorkbookRelationships());
             WriteEntry(archive, "xl/styles.xml", StylesXml());
-            WriteBinaryEntry(archive, "xl/media/image1.png", _branding.LogoPngBytes);
+            if (_branding.HasLogo)
+                WriteBinaryEntry(archive, "xl/media/image1.png", _branding.LogoPngBytes);
 
             for (var index = 0; index < _sheets.Count; index++)
             {
                 var sheetNumber = index + 1;
                 WriteEntry(archive, $"xl/worksheets/sheet{sheetNumber}.xml", WorksheetXml(_sheets[index], sheetNumber));
-                WriteEntry(archive, $"xl/worksheets/_rels/sheet{sheetNumber}.xml.rels", WorksheetRelationships(sheetNumber));
-                WriteEntry(archive, $"xl/drawings/drawing{sheetNumber}.xml", DrawingXml(_sheets[index], sheetNumber));
-                WriteEntry(archive, $"xl/drawings/_rels/drawing{sheetNumber}.xml.rels", DrawingRelationships());
+                if (_branding.HasLogo)
+                {
+                    WriteEntry(archive, $"xl/worksheets/_rels/sheet{sheetNumber}.xml.rels", WorksheetRelationships(sheetNumber));
+                    WriteEntry(archive, $"xl/drawings/drawing{sheetNumber}.xml", DrawingXml(_sheets[index], sheetNumber));
+                    WriteEntry(archive, $"xl/drawings/_rels/drawing{sheetNumber}.xml.rels", DrawingRelationships());
+                }
             }
         }
         return stream.ToArray();
@@ -102,7 +106,8 @@ public sealed class InstitutionalXlsxWorkbook
     private string ContentTypes()
     {
         var overrides = string.Join(string.Empty, Enumerable.Range(1, _sheets.Count)
-            .Select(index => $"<Override PartName=\"/xl/worksheets/sheet{index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/xl/drawings/drawing{index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawing+xml\"/>"));
+            .Select(index => $"<Override PartName=\"/xl/worksheets/sheet{index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>" +
+                (_branding.HasLogo ? $"<Override PartName=\"/xl/drawings/drawing{index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawing+xml\"/>" : string.Empty)));
         return $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
@@ -239,7 +244,8 @@ public sealed class InstitutionalXlsxWorkbook
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.35\" right=\"0.35\" top=\"0.65\" bottom=\"0.55\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
                $"<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 {Xml(_branding.InstitutionName)}</oddHeader>" +
-               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter><drawing r:id=\"rId1\"/>" +
+               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter>" +
+               (_branding.HasLogo ? "<drawing r:id=\"rId1\"/>" : string.Empty) +
                "</worksheet>";
     }
 
@@ -274,7 +280,8 @@ public sealed class InstitutionalXlsxWorkbook
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.25\" right=\"0.25\" top=\"0.45\" bottom=\"0.45\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
                $"<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 {Xml(_branding.InstitutionName)}</oddHeader>" +
-               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter><drawing r:id=\"rId1\"/>" +
+               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter>" +
+               (_branding.HasLogo ? "<drawing r:id=\"rId1\"/>" : string.Empty) +
                "</worksheet>";
     }
 

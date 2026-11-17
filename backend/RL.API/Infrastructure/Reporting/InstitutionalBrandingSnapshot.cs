@@ -19,7 +19,8 @@ public sealed record InstitutionalBrandingSnapshot(
     InstitutionalReportPalette Palette,
     string Source)
 {
-    public decimal LogoAspectRatio => LogoWidth / (decimal)LogoHeight;
+    public bool HasLogo => LogoPngBytes.Length > 0 && LogoRgb.Length > 0 && LogoWidth > 0 && LogoHeight > 0;
+    public decimal LogoAspectRatio => HasLogo ? LogoWidth / (decimal)LogoHeight : 1m;
 
     public static InstitutionalBrandingSnapshot Canonical { get; } = CreateCanonical();
 
@@ -51,21 +52,18 @@ public sealed record InstitutionalBrandingSnapshot(
             source);
     }
 
-    private static InstitutionalBrandingSnapshot CreateCanonical()
-    {
-        var (rgb, width, height) = InstitutionalLogoAsset.GetPdfRgb();
-        return new InstitutionalBrandingSnapshot(
-            InstitutionalReportStandard.InstitutionName,
-            InstitutionalReportStandard.SystemName,
-            "assets/institutional/ihss-logo.png",
-            InstitutionalLogoAsset.Sha256,
-            InstitutionalLogoAsset.PngBytes,
-            rgb,
-            width,
-            height,
-            InstitutionalReportStandard.Palette,
-            "canonical-embedded");
-    }
+    private static InstitutionalBrandingSnapshot CreateCanonical() => new(
+        InstitutionalReportStandard.InstitutionName,
+        InstitutionalReportStandard.SystemName,
+        string.Empty,
+        string.Empty,
+        Array.Empty<byte>(),
+        Array.Empty<byte>(),
+        0,
+        0,
+        InstitutionalReportStandard.Palette,
+        "not-configured");
+
 }
 
 public interface IInstitutionalBrandingResolver

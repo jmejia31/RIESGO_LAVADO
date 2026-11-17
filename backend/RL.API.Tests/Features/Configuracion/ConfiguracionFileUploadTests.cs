@@ -2,6 +2,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
+using RL.API.Features.Configuracion.Contracts;
+using RL.API.Infrastructure.Reporting;
 using RL.API.Features.Configuracion;
 using RL.API.Features.Configuracion.Application;
 using RL.API.Tests.Support;
@@ -85,6 +88,51 @@ public sealed class ConfiguracionFileUploadTests
 
         Assert.IsType<BadRequestObjectResult>(result);
         Assert.Empty(serviceStub.CallsTo(nameof(IConfiguracionService.RegistrarCargaImagenAsync)));
+    }
+
+    [Fact]
+    public async Task LogoReportes_SinLogoConfigurado_NoDevuelveImagenPredeterminada()
+    {
+        var service = InterfaceStub.Create<IConfiguracionService>(out var stub);
+        stub.On(nameof(IConfiguracionService.ObtenerConfigSistemaAsync), _ => Task.FromResult<ConfigSistema?>(
+            new ConfigSistema { LogoUrl = null }));
+
+        var result = await CreateController(service).LogoReportes();
+
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task LogoReportes_ImagenCargada_EntregaArchivoConfiguradoPorApi()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"branding-report-test-{Guid.NewGuid():N}");
+        var uploads = Path.Combine(root, "uploads");
+        Directory.CreateDirectory(uploads);
+        const string fileName = "synthetic.png";
+        File.WriteAllBytes(Path.Combine(uploads, fileName), InstitutionalLogoAsset.PngBytes);
+
+        try
+        {
+            var service = InterfaceStub.Create<IConfiguracionService>(out var stub);
+            stub.On(nameof(IConfiguracionService.ObtenerConfigSistemaAsync), _ => Task.FromResult<ConfigSistema?>(
+                new ConfigSistema { LogoUrl = "/uploads/" + fileName }));
+
+            var environment = InterfaceStub.Create<IWebHostEnvironment>(out var env);
+            env.On("get_WebRootPath", _ => root);
+            env.On("get_ContentRootPath", _ => root);
+
+            var controller = new ConfiguracionController(service, environment)
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            };
+            var result = Assert.IsType<PhysicalFileResult>(await controller.LogoReportes());
+            Assert.Equal("image/png", result.ContentType);
+            Assert.Equal(Path.Combine(uploads, fileName), result.FileName);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
     private static ConfiguracionController CreateController(IConfiguracionService service)

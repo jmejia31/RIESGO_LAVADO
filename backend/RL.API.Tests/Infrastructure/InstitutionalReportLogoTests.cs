@@ -23,13 +23,13 @@ public sealed class InstitutionalReportLogoTests
     }
 
     [Fact]
-    public void Pdf_EmbedsTheCanonicalLogoAsAValidImageXObjectOnEveryPage()
+    public void Pdf_EmbedsConfiguredLogoAsAValidImageXObjectOnEveryPage()
     {
         var document = new InstitutionalPdfDocument(
             "Reporte institucional de prueba",
             "Pruebas",
             InstitutionalReportOrientation.Portrait,
-            new DateTime(2026, 11, 13, 12, 0, 0));
+            new DateTime(2026, 11, 13, 12, 0, 0), CreateConfiguredLogo());
         for (var index = 0; index < 100; index++)
             document.AddParagraph($"Contenido sintético {index} para verificar el encabezado y el recurso institucional.");
 
@@ -46,13 +46,13 @@ public sealed class InstitutionalReportLogoTests
     }
 
     [Fact]
-    public void Pdf_UsesTheCanonicalLogoWidthAndCentersItVerticallyInTheHeader()
+    public void Pdf_UsesConfiguredLogoWidthAndCentersItVerticallyInTheHeader()
     {
         var document = new InstitutionalPdfDocument(
             "Reporte institucional de prueba",
             "Pruebas",
             InstitutionalReportOrientation.Portrait,
-            new DateTime(2026, 11, 16, 12, 0, 0));
+            new DateTime(2026, 11, 16, 12, 0, 0), CreateConfiguredLogo());
 
         var pdf = Encoding.ASCII.GetString(document.ToBytes());
 
@@ -64,7 +64,7 @@ public sealed class InstitutionalReportLogoTests
     [Fact]
     public void Xlsx_EmbedsValidDrawingRelationshipsAndPreservesData()
     {
-        var workbook = new InstitutionalXlsxWorkbook();
+        var workbook = new InstitutionalXlsxWorkbook(CreateConfiguredLogo());
         workbook.AddSheet(
             "Coincidencias",
             "Reporte de prueba",
@@ -120,6 +120,41 @@ public sealed class InstitutionalReportLogoTests
         Assert.Contains("rgb=\"FFFFFFFF\"", styles, StringComparison.Ordinal);
         Assert.Contains("SISTEMA DE PRUEBA", core, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Pdf_WithoutConfiguredLogo_DoesNotEmbedFallbackImage()
+    {
+        var document = new InstitutionalPdfDocument(
+            "Reporte sin logo", "Pruebas", InstitutionalReportOrientation.Portrait, new DateTime(2026, 11, 17));
+        var pdf = Encoding.ASCII.GetString(document.ToBytes());
+
+        Assert.DoesNotContain("/Subtype /Image", pdf, StringComparison.Ordinal);
+        Assert.DoesNotContain("/ImIHSS", pdf, StringComparison.Ordinal);
+        Assert.Contains("Reporte sin logo", pdf, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Xlsx_WithoutConfiguredLogo_DoesNotCreateMediaOrBrokenRelationships()
+    {
+        var workbook = new InstitutionalXlsxWorkbook();
+        workbook.AddSheet("Reporte", "Sin logo", new[] { "Código" }, new[] { new object?[] { "A001" } });
+
+        using var archive = new ZipArchive(new MemoryStream(workbook.ToBytes()), ZipArchiveMode.Read);
+        Assert.Null(archive.GetEntry("xl/media/image1.png"));
+        Assert.Null(archive.GetEntry("xl/drawings/drawing1.xml"));
+        Assert.Null(archive.GetEntry("xl/worksheets/_rels/sheet1.xml.rels"));
+        Assert.DoesNotContain("<drawing r:id=", ReadEntryText(archive, "xl/worksheets/sheet1.xml"), StringComparison.Ordinal);
+        Assert.Contains("A001", ReadEntryText(archive, "xl/worksheets/sheet1.xml"), StringComparison.Ordinal);
+    }
+
+    private static InstitutionalBrandingSnapshot CreateConfiguredLogo() =>
+        InstitutionalBrandingSnapshot.FromImage(
+            InstitutionalLogoAsset.PngBytes,
+            "INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL",
+            "SGRLA-IHSS",
+            "/uploads/logo-prueba.png",
+            "#123B63",
+            "configured-local-file");
 
     private static byte[] ReadEntry(ZipArchive archive, string name)
     {

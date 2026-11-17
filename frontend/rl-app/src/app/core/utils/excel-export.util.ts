@@ -1,6 +1,5 @@
 import * as ExcelJS from 'exceljs';
 import {
-  INSTITUTIONAL_LOGO_ASSET_PATH,
   INSTITUTIONAL_LOGO_POLICY,
   INSTITUTIONAL_REPORT_EXCEL_COLORS,
   getInstitutionalReportBranding
@@ -95,21 +94,18 @@ export async function workbookToBlob(workbook: WorkBook): Promise<Blob> {
 }
 
 async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promise<boolean> {
-  // La suite Node verifica el contrato del generador sin simular un servidor de
-  // assets. En el navegador la ruta es same-origin y el PNG queda embebido en
-  // el ZIP real mediante ExcelJS, no como una imagen HTML del preview.
-  if (!esNavegadorReal() || typeof fetch !== 'function') return false;
+  if (!esNavegadorReal()) return false;
   const branding = getInstitutionalReportBranding();
-  const assetUrl = new URL(branding.logoUrl || INSTITUTIONAL_LOGO_ASSET_PATH, window.document.baseURI).toString();
-  const response = await fetch(assetUrl, { cache: 'force-cache' });
-  if (!response.ok) throw new Error(`No se pudo cargar el recurso institucional (${response.status}).`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  const base64 = convertirABase64(bytes);
-  const imageId = workbook.addImage({ base64: `data:image/png;base64,${base64}`, extension: 'png' });
+  // Never request the original static URL or resurrect the old embedded default.
+  if (!/^data:image\/png;base64,/i.test(branding.logoUrl)) return false;
+  const imageId = workbook.addImage({ base64: branding.logoUrl, extension: 'png' });
   for (const worksheet of workbook.worksheets) {
     worksheet.addImage(imageId, {
       tl: { col: Math.max(0, worksheet.columnCount - 3), row: 0 },
-      ext: { width: INSTITUTIONAL_LOGO_POLICY.excelWidthPx, height: INSTITUTIONAL_LOGO_POLICY.excelHeightPx }
+      ext: {
+        width: INSTITUTIONAL_LOGO_POLICY.excelWidthPx,
+        height: INSTITUTIONAL_LOGO_POLICY.excelWidthPx / branding.logoAspectRatio
+      }
     });
   }
   return true;
@@ -122,14 +118,6 @@ function esNavegadorReal(): boolean {
   return typeof browserWindow.document?.createElement === 'function' && !/jsdom/i.test(userAgent);
 }
 
-function convertirABase64(bytes: Uint8Array): string {
-  let binary = '';
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(index, Math.min(index + chunkSize, bytes.length)));
-  }
-  return btoa(binary);
-}
 
 /** Descarga explícita desde un flujo que ya pasó por una vista previa. */
 export function downloadBlob(blob: Blob, fileName: string): void {

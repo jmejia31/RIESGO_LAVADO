@@ -45,6 +45,7 @@ export interface InstitutionalReportBranding {
   institutionName: string;
   systemName: string;
   logoUrl: string;
+  logoAspectRatio: number;
   headerColor: [number, number, number];
   headerTextColor: [number, number, number];
 }
@@ -52,7 +53,8 @@ export interface InstitutionalReportBranding {
 const DEFAULT_BRANDING: InstitutionalReportBranding = {
   institutionName: 'INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL',
   systemName: 'SGRLA-IHSS',
-  logoUrl: INSTITUTIONAL_LOGO_ASSET_PATH,
+  logoUrl: '',
+  logoAspectRatio: INSTITUTIONAL_LOGO_ASPECT_RATIO,
   headerColor: INSTITUTIONAL_REPORT_COLORS.navy,
   headerTextColor: INSTITUTIONAL_REPORT_COLORS.white
 };

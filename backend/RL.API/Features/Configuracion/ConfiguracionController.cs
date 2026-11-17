@@ -47,6 +47,47 @@ public class ConfiguracionController : ControllerBase
         }});
     }
 
+    // Only the configured image from our uploads directory can be embedded by reports.
+    // Using the authenticated API avoids browser CORS restrictions on static files.
+    [HttpGet("sistema/logo-reportes")]
+    [Authorize]
+    public async Task<IActionResult> LogoReportes()
+    {
+        if (_environment is null) return NoContent();
+
+        var configuration = await _service.ObtenerConfigSistemaAsync();
+        var logoUrl = configuration?.LogoUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(logoUrl)
+            || !logoUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return NoContent();
+
+        var fileName = logoUrl["/uploads/".Length..];
+        if (string.IsNullOrWhiteSpace(fileName)
+            || fileName.Contains('/')
+            || fileName.Contains('\\')
+            || !string.Equals(fileName, Path.GetFileName(fileName), StringComparison.Ordinal))
+            return NoContent();
+
+        var path = InstitutionalBrandingStorage.ResolveLocalAsset(_environment, logoUrl);
+        if (path is null) return NoContent();
+
+        var mime = Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => null
+        };
+        if (mime is null) return NoContent();
+
+        var file = new FileInfo(path);
+        if (file.Length <= 0 || file.Length > 10L * 1024 * 1024) return NoContent();
+
+        Response.Headers["Cache-Control"] = "no-store";
+        return PhysicalFile(path, mime);
+    }
+
     [HttpPut("sistema")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]

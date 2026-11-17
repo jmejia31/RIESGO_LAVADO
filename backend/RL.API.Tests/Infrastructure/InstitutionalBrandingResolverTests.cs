@@ -48,7 +48,7 @@ public sealed class InstitutionalBrandingResolverTests
     }
 
     [Fact]
-    public void Resolver_UsaFallbackCanonicoSeguroCuandoLaUrlNoEsUnArchivoLocal()
+    public void Resolver_NoInsertaLogoCuandoLaUrlNoEsUnArchivoLocal()
     {
         var configuration = InterfaceStub.Create<IConfiguracionService>(out var configurationStub);
         configurationStub.On(nameof(IConfiguracionService.ObtenerConfigSistemaAsync), _ => Task.FromResult<ConfigSistema?>(new ConfigSistema
@@ -63,14 +63,15 @@ public sealed class InstitutionalBrandingResolverTests
 
         var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
 
-        Assert.StartsWith("canonical-fallback-", snapshot.Source);
-        Assert.Equal(InstitutionalLogoAsset.Sha256, snapshot.LogoSha256);
+        Assert.StartsWith("configured-no-logo-", snapshot.Source);
+        Assert.False(snapshot.HasLogo);
+        Assert.Empty(snapshot.LogoSha256);
         Assert.Equal("Institución sintética", snapshot.InstitutionName);
         Assert.Equal("Sistema sintético", snapshot.SystemName);
     }
 
     [Fact]
-    public void Resolver_UsaFallbackCanonicoSeguroCuandoElArchivoPublicadoNoEsValido()
+    public void Resolver_NoInsertaLogoCuandoElArchivoPublicadoNoEsValido()
     {
         var root = Path.Combine(Path.GetTempPath(), $"b06-branding-invalid-{Guid.NewGuid():N}");
         var uploads = Path.Combine(root, "uploads");
@@ -95,8 +96,9 @@ public sealed class InstitutionalBrandingResolverTests
 
             var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
 
-            Assert.Equal("canonical-fallback-configured-logo-invalid", snapshot.Source);
-            Assert.Equal(InstitutionalLogoAsset.Sha256, snapshot.LogoSha256);
+            Assert.Equal("configured-no-logo-configured-logo-invalid", snapshot.Source);
+            Assert.False(snapshot.HasLogo);
+            Assert.Empty(snapshot.LogoSha256);
         }
         finally
         {

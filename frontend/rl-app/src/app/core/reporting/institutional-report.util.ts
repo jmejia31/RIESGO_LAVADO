@@ -1,7 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
-  INSTITUTIONAL_LOGO_ASSET_PATH,
   INSTITUTIONAL_LOGO_ASPECT_RATIO,
   INSTITUTIONAL_LOGO_POLICY,
   INSTITUTIONAL_REPORT_COLORS,
@@ -43,7 +42,7 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   const metadataLineHeight = 4.5;
   const metadataTop = titleTop + titleLines.length * titleLineHeight + metadataGap;
   const logoWidth = INSTITUTIONAL_LOGO_POLICY.pdfWidthMm;
-  const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
+  const logoHeight = branding.logoUrl ? logoWidth / branding.logoAspectRatio : 0;
   const headerHeight = Math.max(
     INSTITUTIONAL_REPORT_LAYOUT.pdfContinuationHeaderHeight,
     metadataTop + metadataLineHeight + 4,
@@ -74,13 +73,13 @@ export function dibujarLogoInstitucionalPdf(
 ): boolean {
   // jsPDF carga la ruta same-origin de forma síncrona; en las pruebas Node no
   // existe un navegador y se verifica el contrato de la utilidad sin I/O web.
-  if (!esNavegadorReal()) return false;
+  if (!esNavegadorReal() || !/^data:image\/png;base64,/i.test(branding.logoUrl)) return false;
   const width = requestedWidth;
-  const height = requestedHeight ?? width / INSTITUTIONAL_LOGO_ASPECT_RATIO;
+  const height = requestedHeight ?? width / branding.logoAspectRatio;
   const x = pageWidth - INSTITUTIONAL_REPORT_LAYOUT.pdfMargin - width;
   doc.setFillColor(...INSTITUTIONAL_REPORT_COLORS.white);
   doc.rect(x, top, width, height, 'F');
-  doc.addImage(branding.logoUrl || INSTITUTIONAL_LOGO_ASSET_PATH, 'PNG', x, top, width, height, 'IHSS_LOGO', 'FAST');
+  doc.addImage(branding.logoUrl, 'PNG', x, top, width, height, 'CONFIGURED_REPORT_LOGO', 'FAST');
   return true;
 }
 
@@ -121,7 +120,7 @@ export function agregarEncabezadoInstitucionalPdf(
   doc.setFontSize(8.5);
   const metadataLines = doc.splitTextToSize(`${meta.sistema} | Generado: ${fecha}`, leftWidth);
   const logoWidth = Math.min(INSTITUTIONAL_LOGO_POLICY.pdfWidthMm, width - margin * 2);
-  const logoHeight = logoWidth / INSTITUTIONAL_LOGO_ASPECT_RATIO;
+  const logoHeight = branding.logoUrl ? logoWidth / branding.logoAspectRatio : 0;
   const titleBottom = 9 + institutionLines.length * 5 + 6 + titleLines.length * 7;
   const metadataTop = titleBottom + 4;
   const headerHeight = Math.max(

@@ -34,12 +34,12 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
                 InstitutionName = configuration.NombreInstitucion,
                 SystemName = configuration.NombreSistema,
                 Palette = InstitutionalReportStandard.CreatePalette(header),
-                Source = "canonical-default"
+                Source = "not-configured"
             };
 
         var path = InstitutionalBrandingStorage.ResolveLocalAsset(_environment, configuration.LogoUrl);
         if (path is null)
-            return FallbackToCanonical(configuration, header, "configured-logo-not-local");
+            return WithoutLogo(configuration, header, "configured-logo-not-local");
 
         try
         {
@@ -53,11 +53,11 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
         {
-            return FallbackToCanonical(configuration, header, "configured-logo-invalid", exception);
+            return WithoutLogo(configuration, header, "configured-logo-invalid", exception);
         }
     }
 
-    private InstitutionalBrandingSnapshot FallbackToCanonical(
+    private InstitutionalBrandingSnapshot WithoutLogo(
         ConfigSistema configuration,
         string header,
         string reason,
@@ -65,7 +65,7 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
     {
         _logger?.LogWarning(
             exception,
-            "B06: se usará el logo institucional canónico porque el logo configurado no está disponible para reportería. Motivo: {Reason}",
+            "B06: se omitirá el logo del reporte; el logo configurado no está disponible. Motivo: {Reason}",
             reason);
 
         return InstitutionalBrandingSnapshot.Canonical with
@@ -77,7 +77,7 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
                 ? InstitutionalReportStandard.SystemName
                 : configuration.NombreSistema.Trim(),
             Palette = InstitutionalReportStandard.CreatePalette(header),
-            Source = $"canonical-fallback-{reason}"
+            Source = $"configured-no-logo-{reason}"
         };
     }
 }

@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { vi } from 'vitest';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
@@ -32,6 +33,7 @@ describe('ConfiguracionService', () => {
 
   afterEach(() => {
     http.verify();
+    vi.restoreAllMocks();
     propiedadesTema.forEach(property => document.documentElement.style.removeProperty(property));
     TestBed.resetTestingModule();
   });
@@ -50,6 +52,7 @@ describe('ConfiguracionService', () => {
     expect(resultado?.colorSecundario).toBe('#1d4ed8');
     expect(resultado?.timeoutSesion).toBe(30);
     expect(service.configSistema()).toEqual(resultado);
+    expect(getInstitutionalReportBranding().logoUrl).toBe('');
     expect(document.documentElement.style.getPropertyValue('--ihss-primary-rgb')).toBe('30 58 138');
     expect(document.documentElement.style.getPropertyValue('--ihss-accent-rgb')).toBe('29 78 216');
     expect(document.documentElement.style.getPropertyValue('--ihss-50-rgb')).not.toBe('');
@@ -153,10 +156,13 @@ describe('ConfiguracionService', () => {
 
     expect(service.configSistema()).toEqual(expect.objectContaining({ logoUrl: 'https://example.invalid/logo.png' }));
     expect(getInstitutionalReportBranding().logoUrl)
-      .toBe('assets/institutional/ihss-logo.png');
+      .toBe('');
   });
 
-  it('resuelve una carga local para la identidad de reportería', () => {
+  it('carga el logo de /uploads mediante la API autenticada y conserva la imagen preparada', async () => {
+    const expected = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ';
+    vi.spyOn(service as any, 'convertirLogoEnPng').mockResolvedValue({ dataUrl: expected, aspectRatio: 2 });
+
     service.CargarConfiguracion().subscribe();
     http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
       success: true,
@@ -168,7 +174,27 @@ describe('ConfiguracionService', () => {
       }
     });
 
-    expect(getInstitutionalReportBranding().logoUrl)
-      .toBe('http://localhost:5043/uploads/synthetic-logo.png');
+    const logo = http.expectOne('http://localhost:5043/api/configuracion/sistema/logo-reportes');
+    expect(logo.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    logo.flush(new Blob(['synthetic'], { type: 'image/png' }));
+
+    await vi.waitFor(() => expect(getInstitutionalReportBranding().logoUrl).toBe(expected));
+    expect(getInstitutionalReportBranding().logoAspectRatio).toBe(2);
   });
+
+  it('si falta el archivo cargado conserva reportes sin logo y sin excepciones', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'SGRLA',
+        logoUrl: '/uploads/no-existe.png',
+        timeoutSesion: 30
+      }
+    });
+    http.expectOne('http://localhost:5043/api/configuracion/sistema/logo-reportes')
+      .flush('No existe', { status: 404, statusText: 'Not Found' });
+    expect(getInstitutionalReportBranding().logoUrl).toBe('');
+  }
 });

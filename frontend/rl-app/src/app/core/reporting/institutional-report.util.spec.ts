@@ -33,6 +33,7 @@ describe('estándar institucional de reportería', () => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
     expect(INSTITUTIONAL_LOGO_ASSET_PATH).toBe('assets/institutional/ihss-logo.png');
+    expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
     expect(INSTITUTIONAL_LOGO_ASPECT_RATIO).toBeCloseTo(2034 / 773, 10);
     expect(INSTITUTIONAL_PDF_LOGO_WIDTH_MM).toBe(72.644);
   });
