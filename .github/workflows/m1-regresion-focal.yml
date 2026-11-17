@@ -1,13 +1,8 @@
 name: M1 - Regresion focal complementaria (NO reemplaza Quality Gates)
 
+# Supplemental M1 tests are manual to avoid duplicate security scans.
+# Mandatory Quality Gates still runs on every code/configuration push.
 on:
-  push:
-    branches: [desarrollo]
-    paths:
-      - "backend/RL.API/Features/Listas/**"
-      - "backend/RL.API.Tests/Features/Listas/**"
-      - "frontend/rl-app/src/app/features/admin/listas/**"
-      - ".github/workflows/m1-regresion-focal.yml"
   workflow_dispatch:
 
 permissions:

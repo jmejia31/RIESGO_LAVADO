@@ -26,7 +26,7 @@ jobs:
 
       - name: Verify fail-closed CI scope regressions
         if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
-        run: python3 -m unittest discover -s tools/automatizacion -p 'test_ci_gate_scope.py'
+        run: python3 -m unittest discover -s tools/automatizacion -p 'test_ci_*.py'
 
       - name: Classify this push
         id: classify
@@ -93,12 +93,25 @@ jobs:
       - name: Restore backend
         run: dotnet restore RIESGO_LAVADO.sln
 
-      - name: Verify npm security audit and reproducible installation
+      - name: Verify reproducible npm installation
         working-directory: frontend/rl-app
         shell: bash
-        run: |
-          npm ci --ignore-scripts
-          npm audit
+        run: npm ci --ignore-scripts
+
+      - name: Audit production npm dependencies (blocking)
+        working-directory: frontend/rl-app
+        shell: bash
+        run: npm audit --omit=dev
+
+      # The complete tree is audited before quality checks; its error outcome
+      # is still BLOCKING at the final enforcement step. No vulnerability is
+      # excused or hidden by continue-on-error.
+      - name: Audit complete npm dependency tree (record and continue)
+        id: full_npm_audit
+        working-directory: frontend/rl-app
+        shell: bash
+        continue-on-error: true
+        run: npm audit
 
       - name: Validate GOV-02 analyzers and GOV-03 container contracts
         shell: pwsh
@@ -359,6 +372,18 @@ jobs:
           test "$frontend_user" = "nginx"
           echo "Backend runtime user: $api_user"
           echo "Frontend runtime user: $frontend_user"
+
+      - name: Enforce full npm audit result (blocking)
+        if: always()
+        shell: bash
+        env:
+          FULL_NPM_AUDIT_OUTCOME: ${{ steps.full_npm_audit.outcome }}
+        run: |
+          if [[ "$FULL_NPM_AUDIT_OUTCOME" != 'success' ]]; then
+            echo "::error::SECURITY_AUDIT=FAIL; the complete npm dependency audit did not succeed (outcome=$FULL_NPM_AUDIT_OUTCOME). The Quality Gate remains RED."
+            exit 1
+          fi
+          echo "SECURITY_AUDIT=PASS_FULL_TREE"
 
       - name: Publish Block 7 browser screenshots and traces
         if: always()
