@@ -1,7 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
-  INSTITUTIONAL_LOGO_ASPECT_RATIO,
   INSTITUTIONAL_LOGO_POLICY,
   INSTITUTIONAL_REPORT_COLORS,
   INSTITUTIONAL_REPORT_LAYOUT,
