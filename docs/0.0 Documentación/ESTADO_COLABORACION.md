@@ -4836,3 +4836,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `B06_SYNTHETIC_PNG_FIX=PASS_LOCAL`; `QUALITY_GATE_44120173083=FAIL_MALFORMED_TEST_FIXTURE`; `NEW_SOURCE_SHA=PENDING_COMMIT`; `NEW_QUALITY_GATE=PENDING`; `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; `OWNER_ACCEPTANCE=PENDING`.
 - El SHA remoto actual contiene nuestra corrección de rutas de Monitoreo de Listas y los commits B06 paralelos; el fixture corregido aún debe publicarse. Servicios locales detenidos; no hubo cambios Oracle ni en módulos protegidos.
 - Punto exacto de continuación: commit/push selectivo del fixture y documentación, esperar el gate final y después reiniciar manualmente backend/frontend para probar reportes PDF/Excel de jurídica, natural/empleado y `N/A(3)`.
+
+## Estado vigente — Reportes de Monitoreo de Listas y `N/A(3)` — 2026-11-17 10:38 -06:00
+
+- `PHASE=MONITOREO_LISTAS_REPORT_AVAILABILITY`; `SOURCE_CODE_SHA=e2f4737398c7e9b5a1a3c565ea5fbf0feebbea69`; rama `desarrollo`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_HEAD_SHA`.
+- La corrección publicada usa las rutas canónicas del backend para detalle, positivos y seguimientos; los marcadores `N/A(3)` y equivalentes se omiten de enriquecimientos no atribuibles, pero conservan la fila para generar reportes de solo lectura. La auditoría de impresión usa query parameter seguro para marcadores.
+- Verificado: Listas backend `13/13 PASS`; Angular focal `38/38 PASS`; Angular total `96 archivos / 1014 tests PASS`; contratos de rutas `18/18 PASS`; B06 logo/resolver `10/10 PASS`; backend focal combinado `23/23 PASS`; ESLint/build frontend `PASS`; build backend `PASS / 0 errores`.
+- Quality Gate [44125274529](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44125274529): `completed/success`; job integral verde, incluido Oracle XE descartable, pruebas, contenedores y validadores. `QUALITY_GATE=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`.
+- No se modificaron Oracle institucional, `DNP_IHSS`, `main`, migración 54, B07 ni Bloque 10. Se preservaron los cambios ajenos preexistentes del workspace. Servicios locales permanecen detenidos para reinicio manual.
+- Limitación real: `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; falta la comprobación manual del propietario con datos reales y los tres casos de PDF/Excel, incluido `N/A(3)`. `OWNER_ACCEPTANCE=PENDING`; `PHASE_FINAL_STATUS=OPEN_PENDING_OWNER_RUNTIME`.
+- Punto exacto de continuación: levantar manualmente ambos servicios desde este SHA, limpiar caché del navegador, generar PDF y Excel desde jurídica, natural/empleado y natural `N/A(3)`, y registrar el resultado visual/funcional antes de cerrar la fase.

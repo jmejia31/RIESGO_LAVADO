@@ -11464,3 +11464,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `INITIAL_SHA=ce61474f`; nuevo commit funcional/documental pendiente de push al cerrar esta entrada. `QUALITY_GATE_44120173083=FAIL_MALFORMED_TEST_FIXTURE`; `B06_SYNTHETIC_PNG_FIX=PASS_LOCAL`; `NEW_QUALITY_GATE=PENDING`.
 - Servicios backend/frontend continúan detenidos. No se realizaron escrituras en Oracle institucional ni cambios en `main`, migración 54, B07 o Bloque 10.
 - Punto exacto de continuación: publicar el fixture corregido, observar el nuevo Quality Gate sobre el SHA final remoto y mantener pendiente la verificación E2E autenticada de Monitoreo de Listas con registros reales y `N/A(3)`.
+
+## 2026-11-17 10:38 -06:00 — Reportes de Monitoreo de Listas: publicación y Quality Gate final (COD)
+
+- `EVENT_ID=RL-MONITOREO-REPORTES-N-A-QUALITY-GATE-20261117`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- `SOURCE_CODE_SHA=e2f4737398c7e9b5a1a3c565ea5fbf0feebbea69`; `origin/desarrollo` coincide con el checkout local (`0 0` de divergencia al verificar).
+- Corrección funcional publicada: rutas canónicas para detalle/positivo/seguimientos, manejo de marcadores `N/A(3)` como enriquecimiento opcional de solo lectura y auditoría por query para documentos especiales. Las acciones PDF/Excel ya no abortan únicamente porque el registro no tenga un identificador atribuible.
+- Regresiones verificadas: controlador Listas `13 passed, 0 failed, 0 skipped`; Angular focal `38 passed`; suite Angular completa `96 archivos / 1014 tests passed`; contratos de rutas `18/18 passed`; pruebas B06 de logo/resolver `10 passed`; regresión combinada backend focal `23 passed`; ESLint y build frontend `PASS`; build backend `PASS` con `0 errores`; `git diff --check=PASS`.
+- Quality Gate remoto exacto [44125274529](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44125274529): `completed/success`; `44` pasos del job integral terminaron verdes, incluidos restore, analizadores, ESLint, validadores de base, Oracle XE descartable, pruebas, contenedores y controles institucionales.
+- `QUALITY_GATE=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_HEAD_SHA`; no se escribieron Oracle institucional, `DNP_IHSS`, `main`, migración 54, B07 ni Bloque 10.
+- Servicios locales: backend y frontend permanecen detenidos por solicitud del propietario. `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; la prueba manual con datos reales, incluidos los iconos PDF/Excel de `N/A(3)`, queda pendiente del reinicio realizado por el propietario.
+- Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B06_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`.
+- Punto exacto de continuación: iniciar manualmente backend/frontend desde el SHA publicado, recargar con caché limpia y probar jurídica válida, natural/empleado válido y natural `N/A(3)` en PDF y Excel. No cerrar la aceptación funcional del propietario por inferencia del Quality Gate.
