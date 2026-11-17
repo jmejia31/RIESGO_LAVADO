@@ -4868,3 +4868,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `CODE_FUNCTIONAL_CHANGED=NO`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `MAIN_TOUCHED=NO`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - `QUALITY_GATE_PREVIOUS=44154367078:FAILURE_NPM_AUDIT`; los tests funcionales y E2E reales de M1 siguen `NOT_EXECUTED`; aceptación pendiente.
 - **Punto exacto de continuación:** ejecutar de manera controlada y lectura Q02–Q12 (agregados sanitizados), identificar claves de origen verdaderas y explicar 242 vs 190, cero vs siete empleados; luego diseñar/parchar SQL/DTO/Angular con pruebas, sin inventar asociaciones ni tocar Oracle.
+
+
+## Estado vigente — M1 implementación de datos/identidad publicada — 2026-11-17 (CHAT)
+
+- `M1_CODE_SHA=f744afa636c5f000b7b62079f7a03e5aa4c92a08`; `AUTHOR=CHAT`; `BRANCH=desarrollo`. Se implementó listado por referencia técnica de coincidencia, marcadores separados, detalles naturales y empleados por fila, manuales consultables, positivos DNP sin doble conteo, histórico empleado con filtro de período y paridad en contratos frontend/servicio.
+- Expediente: `docs/certificaciones/M1_RECUPERACION_REGISTROS_IDENTIDAD_20261117.md` (índice actualizado). Regresiones nuevas de backend/Angular; M1 `#44173253550` verificó 39 backend focales y 1020 Angular PASS en un SHA anterior, además builds/lint. `npm audit` continúa `FAILURE` por `picomatch`, sin debilitar controles. El SHA final requiere una corrida CI propia.
+- `ORACLE_INSTITUTIONAL_READS=NOT_EXECUTED`; `M1_242_190_RECONCILIATION=PENDING_ORACLE`; `M1_EMPLOYEE_7=PENDING_ORACLE`; `E2E_AUTHENTICATED=PENDING`; `OWNER_ACCEPTANCE=PENDING`.
+- `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- `M1_TECHNICAL_STATE=CODE_IMPLEMENTED_WITH_EVIDENCE_LIMITS`; `M1_CERTIFICATION=OPEN_PENDING_LIVE_READ_ONLY_AND_QG`.
+- Punto exacto de continuación: recoger CI real del commit M1, reconciliar conteos Oracle por lectura institucional autorizada y verificar detalles/filtros UI; no declarar recuperados 52/7 sin datos.

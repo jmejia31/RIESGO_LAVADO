@@ -11499,3 +11499,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - No se modificó código funcional; sin escrituras Oracle, datos reales, producción, `main`, B07, Bloque 10 ni migración 54. No se ejecutaron dotnet/npm/Oracle/Playwright locales en este cliente. El Quality Gate previo `44154367078` era `FAILURE` y sigue pendiente una ejecución válida del SHA nuevo.
 - No se atribuyó eliminación física de 52 registros. `M1_STATUS=STARTED_DIAGNOSTIC_ONLY`; pendiente ejecutar Q02-Q12 con lectura autorizada y revisar agregados sanitizados para implementar recuperación sin falsas asociaciones.
 - El SHA de publicación de este registro es el commit que incluye esta entrada; verificar contra `origin/desarrollo` antes de continuar.
+
+
+## 2026-11-17 — CHAT — M1: implementación de lectura por fuente y regresiones
+
+- `PHASE=M1_RECUPERACION_REGISTROS_IDENTIDAD`; cuenta `jmejia31`, rama `desarrollo`, autor `CHAT/ChatGPT`, **sin Codex**; código funcional `f744afa636c5f000b7b62079f7a03e5aa4c92a08`.
+- Se modificaron consultas naturales y empleado con `REPORTE_COINCIDENCIA_ID` en lugar de agrupación por DNI/lista y JOIN histórico multiplicador; detalle por `IdRegistroFuente/TipoFuente`, categoría `SIN_IDENTIFICACION`, histórico por período, consulta manual/positivo DNP diferenciada, búsqueda/paginación/exportación relacionadas; llamadas Angular/DTOs/API y regresiones.
+- Se verificó remoto `M1_CI_44173253550`: build .NET PASS, 39 tests focales PASS; Angular ESLint PASS, 96 archivos / 1020 tests PASS, build Angular PASS en SHA anterior `b8976843`; audit npm falla por `picomatch`. La nueva prueba DNI vacío requiere CI exacto del último SHA.
+- `docs/certificaciones/M1_RECUPERACION_REGISTROS_IDENTIDAD_20261117.md` contiene expediente, límites y URLs. El `INDEX.json` queda actualizado.
+- `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`.
+- **No se ejecutaron consultas reales** 242/190/52 ni siete empleados, E2E autenticado ni aceptación del propietario. Estado `CODE_IMPLEMENTED_PENDING_ORACLE_REAL`, `QUALITY_GATE=NOT_CERTIFIED_AUDIT_FAILURE`, `OWNER_ACCEPTANCE=PENDING`.
+- Punto exacto de continuación: revisar CI del SHA documental y funcional, obtener la conciliación real por lectura autorizada Q01-Q12 antes de certificar conteos; posteriormente M2 reportería/branding sin mezclarla con M1.
