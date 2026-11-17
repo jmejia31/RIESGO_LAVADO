@@ -11444,3 +11444,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Servicios locales: backend y frontend fueron detenidos para reinicio manual del propietario. `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; `OWNER_ACCEPTANCE=PENDING`.
 - Estado técnico focal: `MONITOREO_REPORTS_TARGETED_FIX=PASS`; `N_A_3_REPORT_READ_ONLY=PASS`; `VALID_REPORT_READ_PATHS=PASS`; `REMOTE_PARITY_AT_FUNCTIONAL_COMMIT=YES`.
 - Punto exacto de continuación: levantar manualmente backend y frontend desde `3bb4b61d`, recargar Angular y probar los iconos PDF/Excel de un registro jurídico válido, un registro natural/empleado válido y un registro natural `N/A(3)`. Si persiste un `404`, revisar en Network que el proceso levantado corresponda a este SHA y que la ruta observada sea la canónica.
+
+## 2026-11-17 09:52 -06:00 — Corrección de regresión detectada por Quality Gate (COD)
+
+- El Quality Gate [44116118025](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44116118025) del commit documental `da606fe2` terminó `completed/failure` en `Run repository quality gates`.
+- Causa exacta: `http-error-scope.service-contract.spec.ts` conservaba expectativas de las rutas antiguas por query, mientras el contrato funcional ya usa rutas canónicas por segmento; el fallo de expectativa dejaba solicitudes abiertas y contaminaba TestBed, produciendo errores secundarios de instanciación. No fue un fallo del endpoint de reportes ni una modificación de producción.
+- Corrección aplicada en `frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/http-error-scope.service-contract.spec.ts`: expectativas natural/empleado y seguimiento actualizadas a las rutas canónicas; `afterEach` protegido con `try/finally` para resetear TestBed incluso ante una aserción fallida.
+- Regresión verificada después de la corrección: suite Angular completa `96 archivos / 1014 tests PASS`; suite focal de contratos `18/18 PASS`; ESLint `PASS`; build backend `0 errores` con warnings de análisis preexistentes.
+- `INITIAL_SHA=da606fe2`; commit de corrección y documentación pendiente de publicación al cerrar esta entrada. Servicios backend/frontend permanecen detenidos por solicitud del propietario.
+- Estado exacto antes del nuevo gate: `QUALITY_GATE_44116118025=FAIL_KNOWN_TEST_CONTRACT_REGRESSION`; estado tras la corrección local: `FRONTEND_FULL_SUITE=PASS`; nuevo Quality Gate remoto: `PENDING`.
+- Punto exacto de continuación: publicar este commit selectivo, observar el Quality Gate exacto del nuevo SHA y mantener la validación E2E autenticada del propietario como pendiente hasta el reinicio manual y la prueba de los tres tipos de registro, incluido `N/A(3)`.

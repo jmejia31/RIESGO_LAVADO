@@ -4818,3 +4818,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - No verificado aún: flujo E2E autenticado en el runtime del propietario, Playwright visual completo y Oracle institucional. `MONITOREO_REPORTS_TARGETED_FIX=PASS`; `N_A_3_REPORT_READ_ONLY=PASS`; `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; `OWNER_ACCEPTANCE=PENDING`.
 - Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B06_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto de continuación: reiniciar manualmente ambos servicios desde `3bb4b61d`, ejecutar pruebas de las acciones PDF/Excel en jurídica, natural/empleado y natural `N/A(3)`, y registrar el resultado del entorno real. No cerrar la validación por inferencia de las pruebas focalizadas.
+
+## Estado vigente — Corrección de regresión del Quality Gate — 2026-11-17 09:52 -06:00
+
+- El run [44116118025](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44116118025) del commit `da606fe2` terminó en rojo durante `Run repository quality gates`. El fallo fue una expectativa de prueba Angular desactualizada y un aislamiento incompleto de TestBed; no se originó en una ruta de producción ni en Oracle.
+- Se actualizaron las expectativas compartidas de Monitoreo de Listas a los endpoints canónicos (`naturales/{id}/detalle`, `empleados/{id}/detalle`, `positivos/{id}/seguimientos`) y el `afterEach` ahora garantiza `TestBed.resetTestingModule()` en todos los casos.
+- Verificado después de corregir: `FRONTEND_FULL_SUITE=PASS` (`96` archivos, `1014` tests); regresión focal `18/18 PASS`; `ESLINT=PASS`; `BACKEND_BUILD=PASS`, `0 errores`. Los warnings de análisis .NET son preexistentes y no bloquearon la compilación local.
+- `QUALITY_GATE_44116118025=FAIL_KNOWN_TEST_CONTRACT_REGRESSION`; `NEW_SOURCE_SHA=PENDING_COMMIT`; `NEW_QUALITY_GATE=PENDING`; `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; `OWNER_ACCEPTANCE=PENDING`.
+- Se preservan `B01`–`B06`; no se tocó `main`, producción, Oracle institucional, migración 54, B07 ni Bloque 10. Los servicios locales continúan detenidos para reinicio manual.
+- Punto exacto de continuación: publicar el ajuste selectivo, verificar el nuevo run remoto completo y luego ejecutar manualmente PDF/Excel de jurídica, natural/empleado y natural `N/A(3)` con backend/frontend levantados desde el SHA final.

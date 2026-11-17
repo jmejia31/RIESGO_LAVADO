@@ -29,8 +29,11 @@ describe('HTTP error scope service contracts', () => {
   });
 
   afterEach(() => {
-    http.verify();
-    TestBed.resetTestingModule();
+    try {
+      http.verify();
+    } finally {
+      TestBed.resetTestingModule();
+    }
   });
 
   it('preserves global configuration and catalog defaults while allowing local call-site scope', () => {
@@ -64,17 +67,17 @@ describe('HTTP error scope service contracts', () => {
 
   it('preserves global default and local override for shared list details', () => {
     listas.getDetalleNatural('0801').subscribe();
-    const globalDetail = http.expectOne(req => req.url === `${root}/listas/naturales/detalle` && req.params.get('numeroIdentificacion') === '0801');
+    const globalDetail = http.expectOne(`${root}/listas/naturales/0801/detalle`);
     expect(globalDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('global');
     globalDetail.flush({ success: true, datos: [] });
 
     listas.getDetalleNatural('0801', 'local').subscribe();
-    const localDetail = http.expectOne(req => req.url === `${root}/listas/naturales/detalle` && req.params.get('numeroIdentificacion') === '0801');
+    const localDetail = http.expectOne(`${root}/listas/naturales/0801/detalle`);
     expect(localDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     localDetail.flush({ success: true, datos: [] });
 
     listas.getDetalleEmpleado('0801', 'local').subscribe();
-    const localEmployeeDetail = http.expectOne(req => req.url === `${root}/listas/empleados/detalle` && req.params.get('numeroIdentificacion') === '0801');
+    const localEmployeeDetail = http.expectOne(`${root}/listas/empleados/0801/detalle`);
     expect(localEmployeeDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     localEmployeeDetail.flush({ success: true, datos: [] });
 
@@ -91,7 +94,7 @@ describe('HTTP error scope service contracts', () => {
 
   it('marks contextual follow-up writes local without changing their payload', () => {
     listas.registrarSeguimiento('0801', 'Revision mensual', []).subscribe();
-    const request = http.expectOne(req => req.url === `${root}/listas/seguimientos` && req.params.get('noDocumento') === '0801');
+    const request = http.expectOne(`${root}/listas/positivos/0801/seguimientos`);
     expect(request.request.method).toBe('POST');
     expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     expect((request.request.body as FormData).get('motivoIngreso')).toBe('Revision mensual');
