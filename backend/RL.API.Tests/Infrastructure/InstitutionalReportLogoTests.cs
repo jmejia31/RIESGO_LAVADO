@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using RL.API.Infrastructure.Reporting;
+using RL.API.Tests.Support;
 using Xunit;
 
 namespace RL.API.Tests.Infrastructure;
