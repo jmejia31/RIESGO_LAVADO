@@ -128,6 +128,15 @@ describe('ListasService', () => {
     request.flush({ success: true, datos: [] });
   });
 
+  it('recupera por ID un registro de origen con documento nulo o vacío', () => {
+    service.getDetalleNatural('', 'local', 93, 'DNP_COINCIDENCIA').subscribe();
+    const request = http.expectOne(req => req.url === `${apiUrl}/naturales/detalle`);
+    expect(request.request.params.get('numeroIdentificacion')).toBe('');
+    expect(request.request.params.get('idRegistroFuente')).toBe('93');
+    expect(request.request.params.get('tipoFuente')).toBe('DNP_COINCIDENCIA');
+    request.flush({ success: true, datos: [{ nombresPersona: 'Fuente sin identificación' }] });
+  });
+
   it('preserva la referencia de empleado y su periodo historico', () => {
     service.getDetalleEmpleado('0801', 'local', 27, 'DNP_COINCIDENCIA', '2026-07-01').subscribe();
     const request = http.expectOne(req => req.url === `${apiUrl}/empleados/detalle`);

@@ -71,6 +71,35 @@ public sealed class ListasControllerTests
     }
 
     [Fact]
+    public async Task DetalleNaturalSinDni_ConReferenciaFuente_RecuperaOrigen()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerDetalleNaturalAsync), _ =>
+            Task.FromResult(new List<DetalleCoincidenciaNaturalDto>
+            {
+                new() { NombresPersona = "Registro fuente sin identificación" }
+            }));
+
+        var result = await controller.ObtenerDetalleNaturalPorConsulta(
+            null, idRegistroFuente: 42, tipoFuente: "DNP_COINCIDENCIA");
+
+        Assert.IsType<OkObjectResult>(result);
+        var invocation = Assert.Single(listasStub.CallsTo(nameof(IListasService.ObtenerDetalleNaturalAsync)));
+        Assert.Equal(string.Empty, invocation.Arguments[0]);
+        Assert.Equal(42L, invocation.Arguments[1]);
+        Assert.Equal("DNP_COINCIDENCIA", invocation.Arguments[2]);
+    }
+
+    [Fact]
+    public async Task DetalleConReferenciaNoValida_NoConsultaPersistencia()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        var result = await controller.ObtenerDetalleNatural("0801", -7, "DNP_COINCIDENCIA");
+        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Empty(listasStub.CallsTo(nameof(IListasService.ObtenerDetalleNaturalAsync)));
+    }
+
+    [Fact]
     public async Task ObtenerDetalleNatural_IdentidadAmbigua_RetornaConflict()
     {
         var controller = CrearController(out var listasStub, out _, out _);
