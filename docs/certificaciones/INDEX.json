@@ -177,7 +177,7 @@
       "path": "CI_DEPENDENCIAS_PICOMATCH_DIAGNOSTICO_20261117.md",
       "status": "FUNCTIONAL_QG_PASS_SECURITY_BLOCKED",
       "source_code_sha": "d216edf4c581c5724bfb582f5e05bebea9ff8669",
-      "evidence_commit_sha": "PENDING_PUBLICATION",
+      "evidence_commit_sha": "846845e79382c17aa5d8fdfc85ce453f213e2c2c",
       "security_scan": "FAIL_UPSTREAM_PICOMATCH_4_0_7_HIGH",
       "quality_gate_run_previous": 44173995200,
       "quality_gate_status_previous": "FAILURE",
@@ -194,7 +194,7 @@
       "path": "M1_CI_FUNCIONAL_CORREGIDO_SEGURIDAD_ABIERTA_20261117.md",
       "status": "FUNCTIONAL_SUITE_PASS_SECURITY_AUDIT_BLOCKED",
       "source_code_sha": "d216edf4c581c5724bfb582f5e05bebea9ff8669",
-      "evidence_commit_sha": "PENDING_EVIDENCE_C1",
+      "evidence_commit_sha": "405f16e20b791f1a14dbbfd9a2946f42cf26da7b",
       "quality_gate_run": 44181990671,
       "quality_gate_status": "completed/failure",
       "backend_tests": "1170_PASS_1_SKIPPED",
@@ -206,7 +206,7 @@
       "dnp_ihss_writes": 0,
       "main_touched": false,
       "owner_acceptance": "PENDING",
-      "github_remote_verified": "PENDING_PUSH"
+      "github_remote_verified": "PENDING_FINAL_REF_VERIFICATION"
     }
   ]
 }

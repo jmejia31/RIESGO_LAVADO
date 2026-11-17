@@ -64,3 +64,7 @@ ORACLE_INSTITUTIONAL_WRITES=0
 MAIN_TOUCHED=NO
 OWNER_ACCEPTANCE=PENDING
 ```
+
+## 5. Identificador de la evidencia y verificación remota
+
+`EVIDENCE_COMMIT_SHA=405f16e20b791f1a14dbbfd9a2946f42cf26da7b`: commit que incorpora este expediente, bitácora, estado e índice en el historial que será publicado en `origin/desarrollo` junto con la actualización de metadata. La lectura de la rama remota y la verificación final del expediente deben confirmarse después de publicar el SHA documental final; no se afirma publicación anticipada.
