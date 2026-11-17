@@ -49,6 +49,28 @@ public sealed class MonitoreoFuenteM1Tests
         Assert.DoesNotContain("COUNT(*) TOTAL_REPETIDOS", sql);
     }
 
+
+    [Fact]
+    public void PositivosDnpConMarcadores_NoSeOcultanPorCompartirDocumento()
+    {
+        foreach (var method in new[] { "ConstruirConsultaMonitoreoNaturales", "ConstruirConsultaMonitoreoEmpleados" })
+        {
+            var sql = Sql(method);
+            Assert.Contains("LP.LSP_NO_DOCUMENTO IS NULL", sql);
+            Assert.Contains("UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'", sql);
+            Assert.Contains("UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN ('NULL'", sql);
+            Assert.Contains("NOT EXISTS (SELECT 1 FROM Coincidencias C", sql);
+        }
+    }
+
+    [Fact]
+    public void DetallePorReferenciaManual_AdmiteDocumentoNuloOSinIdentificacion()
+    {
+        var sql = Sql("CompararDocumentoPositivoFuente");
+        Assert.Contains("NVL(TRIM(P.LSP_NO_DOCUMENTO), '__SIN_IDENTIFICACION__')", sql);
+        Assert.Contains("NVL(TRIM(:numeroIdentificacion), '__SIN_IDENTIFICACION__')", sql);
+    }
+
     [Theory]
     [InlineData("N/A(3)")]
     [InlineData("N/A(7)")]

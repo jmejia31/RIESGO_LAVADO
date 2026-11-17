@@ -212,6 +212,11 @@ namespace RL.API.Features.Listas.Persistence
             return count == 0 ? null : Convert.ToInt64(reader["ID"]);
         }
 
+        // Consulta puntual por PK + documento: Oracle trata las cadenas vacias como NULL.
+        // La misma condicion evita perder manuales y positivos DNP sin identificacion.
+        private static string CompararDocumentoPositivoFuente() =>
+            " AND NVL(TRIM(P.LSP_NO_DOCUMENTO), '__SIN_IDENTIFICACION__') = NVL(TRIM(:numeroIdentificacion), '__SIN_IDENTIFICACION__')";
+
         public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(
             string numeroIdentificacion, long? idRegistroFuente = null, string? tipoFuente = null)
         {
@@ -245,7 +250,7 @@ namespace RL.API.Features.Listas.Persistence
                       ON L.TIPO_LISTA_CAUTELA_ID = P.LSP_TIPO_LISTA_CAUTELA_ID
                     WHERE P.LSP_POSITIVO_ID = :registroId
                       AND P.LSP_TIPO_POSITIVO_ID = 2 AND P.LSP_ESTADO_REGISTRO = 1
-                      AND P.LSP_NO_DOCUMENTO = :numeroIdentificacion";
+                      " + CompararDocumentoPositivoFuente();
             }
             else if (tipoFuente is null or "DNP_COINCIDENCIA")
             {
@@ -344,7 +349,7 @@ namespace RL.API.Features.Listas.Persistence
                       ON L.TIPO_LISTA_CAUTELA_ID = P.LSP_TIPO_LISTA_CAUTELA_ID
                     WHERE P.LSP_POSITIVO_ID = :registroId
                       AND P.LSP_TIPO_POSITIVO_ID = 3 AND P.LSP_ESTADO_REGISTRO = 1
-                      AND P.LSP_NO_DOCUMENTO = :numeroIdentificacion";
+                      " + CompararDocumentoPositivoFuente();
             }
             else if (tipoFuente is null or "DNP_COINCIDENCIA")
             {
@@ -2065,6 +2070,10 @@ namespace RL.API.Features.Listas.Persistence
             WHERE LP.LSP_TIPO_POSITIVO_ID = 2 AND LP.LSP_ESTADO_REGISTRO = 1
               AND (
                  NVL(UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)), 'MANUAL_CUMPLIMIENTO') <> 'DNP_LISTAS'
+                 -- Un marcador compartido no prueba duplicidad entre fuentes.
+                 OR LP.LSP_NO_DOCUMENTO IS NULL
+                 OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'
+                 OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                  OR NOT EXISTS (SELECT 1 FROM Coincidencias C
                                 WHERE C.NUMERO_IDENTIFICACION = LP.LSP_NO_DOCUMENTO)
               )";
@@ -2144,6 +2153,10 @@ namespace RL.API.Features.Listas.Persistence
             WHERE LP.LSP_TIPO_POSITIVO_ID = 3 AND LP.LSP_ESTADO_REGISTRO = 1
               AND (
                  NVL(UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)), 'MANUAL_CUMPLIMIENTO') <> 'DNP_LISTAS'
+                 -- Un marcador compartido no prueba duplicidad entre fuentes.
+                 OR LP.LSP_NO_DOCUMENTO IS NULL
+                 OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'
+                 OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                  OR NOT EXISTS (SELECT 1 FROM Coincidencias C
                                 WHERE C.IDENTIDAD = LP.LSP_NO_DOCUMENTO)
               )";

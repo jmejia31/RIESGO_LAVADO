@@ -577,4 +577,13 @@ describe('MonitoreoListasComponent', () => {
     expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida' }));
     expect(consoleError).toHaveBeenCalled();
   });
+  it('explica el bloqueo de seguimiento sin atribuir un motivo faltante a identidades ambiguas o manuales', () => {
+    const validado = { tieneMotivo: true, estadoIdentidad: 'VERIFIED', estadoAsociacion: 'VERIFIED' };
+    expect(component.obtenerTextoAccionSeguimiento(validado)).toBe('Dar seguimiento');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, tieneMotivo: false })).toBe('Debe registrar un motivo antes del seguimiento');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoIdentidad: 'AMBIGUOUS' })).toBe('Seguimiento bloqueado: identidad ambigua');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'UNVERIFIED_ASSOCIATION' })).toBe('Seguimiento bloqueado: identidad o asociación no verificada');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, esManual: true })).toBe('Debe registrar un motivo antes del seguimiento');
+  });
+
 });

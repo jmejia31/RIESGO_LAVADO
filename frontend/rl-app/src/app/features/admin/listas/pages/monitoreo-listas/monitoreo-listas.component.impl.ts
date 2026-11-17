@@ -460,6 +460,17 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     return this.obtenerEstadoMonitoreo(item) === 'Con motivo' && this.esIdentidadOperable(item);
   }
 
+  obtenerTextoAccionSeguimiento(item: { tieneMotivo?: boolean; esManual?: boolean; estadoIdentidad?: string; estadoAsociacion?: string }): string {
+    if (!this.esIdentidadOperable(item)) {
+      if (item.estadoIdentidad === 'AMBIGUOUS' || item.estadoAsociacion === 'AMBIGUOUS')
+        return 'Seguimiento bloqueado: identidad ambigua';
+      return 'Seguimiento bloqueado: identidad o asociación no verificada';
+    }
+    return this.obtenerEstadoMonitoreo(item) === 'Con motivo'
+      ? 'Dar seguimiento'
+      : 'Debe registrar un motivo antes del seguimiento';
+  }
+
   private esIdentidadOperable(item: { estadoIdentidad?: string; estadoAsociacion?: string }): boolean {
     return item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'VERIFIED';
   }
