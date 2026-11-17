@@ -82,6 +82,22 @@ describe('MonitoreoListasComponent — deduplicación de detalle', () => {
     expect(subjectCard?.textContent).toContain(documento);
   });
 
+  it('M1: el filtro de período del empleado usa la paleta institucional dinámica', () => {
+    component.tipoActivo.set('empleado');
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const input = root.querySelector('#m1-periodo-planilla') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input?.classList.contains('border-ihss-200')).toBe(true);
+    expect(input?.getAttribute('aria-label')).toContain('período de planilla');
+
+    const panel = input?.parentElement;
+    expect(panel?.classList.contains('border-ihss-100')).toBe(true);
+    expect(panel?.classList.contains('bg-ihss-50/50')).toBe(true);
+    expect(panel?.className).not.toMatch(/\\b(?:text|bg|border|ring)-blue-\\d{2,3}/);
+  });
+
   it('renderiza cinco KPIs superiores sin bloque duplicado y cambia con el tipo activo', () => {
     fixture.detectChanges();
     component.juridicasTotales.set({

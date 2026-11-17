@@ -148,11 +148,11 @@
       </div>
     }
     @if (tipoActivo() === 'empleado') {
-      <div class="flex flex-wrap items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+      <div class="flex flex-wrap items-center gap-3 rounded-xl border border-ihss-100 bg-ihss-50/50 p-3">
         <label for="m1-periodo-planilla" class="text-xs font-semibold text-gray-700">Período de planilla</label>
         <input id="m1-periodo-planilla" type="month" [ngModel]="periodoPlanilla()" (ngModelChange)="cambiarPeriodoPlanilla($event)"
           aria-label="Filtrar empleados por período de planilla"
-          class="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600">
+          class="rounded-lg border border-ihss-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600">
         <span class="text-xs text-gray-600">Sin período: todas las coincidencias autorizadas. La planilla no crea coincidencias adicionales.</span>
       </div>
     }
