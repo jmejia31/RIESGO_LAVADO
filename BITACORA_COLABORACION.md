@@ -11454,3 +11454,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `INITIAL_SHA=da606fe2`; commit de corrección y documentación pendiente de publicación al cerrar esta entrada. Servicios backend/frontend permanecen detenidos por solicitud del propietario.
 - Estado exacto antes del nuevo gate: `QUALITY_GATE_44116118025=FAIL_KNOWN_TEST_CONTRACT_REGRESSION`; estado tras la corrección local: `FRONTEND_FULL_SUITE=PASS`; nuevo Quality Gate remoto: `PENDING`.
 - Punto exacto de continuación: publicar este commit selectivo, observar el Quality Gate exacto del nuevo SHA y mantener la validación E2E autenticada del propietario como pendiente hasta el reinicio manual y la prueba de los tres tipos de registro, incluido `N/A(3)`.
+
+## 2026-11-17 10:07 -06:00 — Reparación de fixture B06 detectado por Quality Gate (COD)
+
+- El Quality Gate [44120173083](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44120173083) del SHA `ce61474f` terminó en rojo en seis pruebas B06 de reportería. El run contenía los commits B06 publicados por el colaborador paralelo y también descendía de `dd830754`; los runs previos fueron cancelados por concurrencia.
+- Causa raíz exacta: `backend/RL.API.Tests/Support/SyntheticReportLogo.cs` contenía un PNG sintético malformado; su chunk `IDAT` declaraba 168 bytes, pero el buffer terminaba en 174 bytes totales antes del final declarado. El decoder rechazó correctamente el archivo como truncado y el resolver activó el fallback de logo inválido.
+- Corrección aplicada: se reemplazó únicamente la cadena Base64 del fixture por un PNG RGB sintético válido de `128x64`, generado con chunks `IHDR/IDAT/IEND` íntegros. No se reincorporó el logo IHSS, no se alteró producción, no se relajó el decoder y no se modificaron datos.
+- Verificado localmente: pruebas B06 `InstitutionalReportLogoTests` + `InstitutionalBrandingResolverTests` `10 passed, 0 failed, 0 skipped`. La suite Angular previa permanece `96 archivos / 1014 tests PASS`; la regresión de contratos permanece `18/18 PASS`.
+- `INITIAL_SHA=ce61474f`; nuevo commit funcional/documental pendiente de push al cerrar esta entrada. `QUALITY_GATE_44120173083=FAIL_MALFORMED_TEST_FIXTURE`; `B06_SYNTHETIC_PNG_FIX=PASS_LOCAL`; `NEW_QUALITY_GATE=PENDING`.
+- Servicios backend/frontend continúan detenidos. No se realizaron escrituras en Oracle institucional ni cambios en `main`, migración 54, B07 o Bloque 10.
+- Punto exacto de continuación: publicar el fixture corregido, observar el nuevo Quality Gate sobre el SHA final remoto y mantener pendiente la verificación E2E autenticada de Monitoreo de Listas con registros reales y `N/A(3)`.

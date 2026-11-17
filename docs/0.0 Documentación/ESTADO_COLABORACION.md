@@ -4827,3 +4827,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `QUALITY_GATE_44116118025=FAIL_KNOWN_TEST_CONTRACT_REGRESSION`; `NEW_SOURCE_SHA=PENDING_COMMIT`; `NEW_QUALITY_GATE=PENDING`; `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; `OWNER_ACCEPTANCE=PENDING`.
 - Se preservan `B01`–`B06`; no se tocó `main`, producción, Oracle institucional, migración 54, B07 ni Bloque 10. Los servicios locales continúan detenidos para reinicio manual.
 - Punto exacto de continuación: publicar el ajuste selectivo, verificar el nuevo run remoto completo y luego ejecutar manualmente PDF/Excel de jurídica, natural/empleado y natural `N/A(3)` con backend/frontend levantados desde el SHA final.
+
+## Estado vigente — Fixture sintético B06 reparado — 2026-11-17 10:07 -06:00
+
+- El run [44120173083](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44120173083) falló en seis pruebas de logo B06 porque el fixture sintético PNG estaba truncado; el decoder y el fallback se comportaron correctamente.
+- Se corrigió `backend/RL.API.Tests/Support/SyntheticReportLogo.cs` con un PNG RGB sintético válido de `128x64` y sin identidad institucional. El cambio es de prueba, no reintroduce el logo embebido ni debilita validaciones de imágenes.
+- Verificado localmente: `InstitutionalReportLogoTests` + `InstitutionalBrandingResolverTests` `10/10 PASS`; suite Angular `1014/1014 PASS`; contratos focales `18/18 PASS`. El backend compila con `0 errores`; permanecen warnings de análisis preexistentes.
+- `B06_SYNTHETIC_PNG_FIX=PASS_LOCAL`; `QUALITY_GATE_44120173083=FAIL_MALFORMED_TEST_FIXTURE`; `NEW_SOURCE_SHA=PENDING_COMMIT`; `NEW_QUALITY_GATE=PENDING`; `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; `OWNER_ACCEPTANCE=PENDING`.
+- El SHA remoto actual contiene nuestra corrección de rutas de Monitoreo de Listas y los commits B06 paralelos; el fixture corregido aún debe publicarse. Servicios locales detenidos; no hubo cambios Oracle ni en módulos protegidos.
+- Punto exacto de continuación: commit/push selectivo del fixture y documentación, esperar el gate final y después reiniciar manualmente backend/frontend para probar reportes PDF/Excel de jurídica, natural/empleado y `N/A(3)`.
