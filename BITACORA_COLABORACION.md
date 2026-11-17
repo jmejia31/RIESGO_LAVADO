@@ -11422,3 +11422,12 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `PHASE2A_TARGETED_REGRESSION=PASS`; `PHASE2A_E2E_FOCAL=PASS`; `PHASE2A_E2E_FULL=PARTIAL_UNRELATED_FAILURES`; `ORACLE_XE_INTEGRATION=BLOCKED_PROFILE_NOT_CONFIGURED`; `AUDIT_FAILURE_ROLLBACK=NOT_VERIFIED_ORACLE_REQUIRED`.
 - Expediente: `docs/certificaciones/FASE2A_MONITOREO_LISTAS_CIERRE_20261117.md`; `QUALITY_GATE=PENDING_NEW_SOURCE_SHA`; `OWNER_VISUAL_ACCEPTANCE=PENDING`; `PHASE2A_FINAL_STATUS=OPEN`.
 - Punto exacto de continuación: publicar el expediente documental selectivo, verificar el Quality Gate del SHA funcional y ejecutar en entorno Oracle autorizado la prueba distribuida/con transacción de auditoría. No cerrar Fase 2A por inferencia del gate ni por las pruebas unitarias.
+
+## 2026-11-17 — Fase 2A Quality Gate remoto y expediente verificable (COD)
+
+- El expediente quedó publicado en `EVIDENCE_COMMIT_SHA=8aee1e40e2d608cf9cc830c493850b94ad502470`, con índice, certificación, bitácora y estado colaborativo en `origin/desarrollo`.
+- Quality Gate exacto [44107498262](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44107498262): `STATUS=completed`; `CONCLUSION=success`; ambos jobs y los 44 pasos del job integral terminaron verdes. `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`.
+- El run directo del commit funcional `c49ced1c8be524a91ee5311004f19de214721385` (`44106838425`) quedó `cancelled` por la política de concurrencia cuando se publicó el commit documental posterior. No se interpreta como fallo funcional; el gate completo del commit `8aee1e40` validó el árbol que contiene el código y la evidencia.
+- Estado técnico real: `PHASE2A_TECHNICAL_STATUS=PARTIAL_PENDING_ORACLE_AND_UNRELATED_E2E_REPAIR`; `PHASE2A_E2E_FOCAL=PASS`; `PHASE2A_E2E_FULL=PARTIAL_UNRELATED_FAILURES`; `ORACLE_XE_INTEGRATION=BLOCKED_PROFILE_NOT_CONFIGURED` en local; `AUDIT_FAILURE_ROLLBACK=NOT_VERIFIED_ORACLE_REQUIRED`.
+- `OWNER_VISUAL_ACCEPTANCE=PENDING`; `PHASE2A_FINAL_STATUS=OPEN`; el Quality Gate verde no certifica por sí solo el flujo Oracle autorizado ni la aceptación funcional del propietario.
+- Punto exacto de continuación: si se requiere cierre total, ejecutar con autorización las pruebas Oracle/concurrencia/rollback y reparar los dos E2E fallidos de Matrices; después actualizar el expediente sin modificar B07, Bloque 10 ni los cambios ajenos.

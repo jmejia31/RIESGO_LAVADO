@@ -113,12 +113,14 @@ PHASE2A_E2E_FULL=PARTIAL_UNRELATED_FAILURES
 ORACLE_XE_INTEGRATION=BLOCKED_PROFILE_NOT_CONFIGURED
 ORACLE_INSTITUTIONAL_RUNTIME=NOT_EXECUTED
 AUDIT_FAILURE_ROLLBACK=NOT_VERIFIED_ORACLE_REQUIRED
-QUALITY_GATE=PENDING_NEW_SOURCE_SHA
-EVIDENCE_COMMIT_SHA=DOCUMENT_BUNDLE_COMMIT_REPORTED_IN_INDEX
-GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENT_BUNDLE_PUSH
+QUALITY_GATE=SUCCESS
+QUALITY_GATE_RUN=44107498262
+EVIDENCE_COMMIT_SHA=8aee1e40e2d608cf9cc830c493850b94ad502470
+GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA
+SECURITY_SCAN=PASS_GITHUB_ACTIONS
 READY_FOR_INDEPENDENT_REVIEW=YES_WITH_DOCUMENTED_LIMITATIONS
 PHASE2A_TECHNICAL_STATUS=PARTIAL_PENDING_ORACLE_AND_UNRELATED_E2E_REPAIR
 PHASE2A_FINAL_STATUS=OPEN
 ```
 
-No se declara cierre técnico total ni `QUALITY_GATE=SUCCESS` antes de que GitHub ejecute el gate del SHA `c49ced1c` y antes de que se atiendan las pruebas ambientales pendientes. La aceptación del propietario permanece pendiente.
+El run directo del SHA funcional `c49ced1c` fue cancelado por la política de concurrencia al publicarse el expediente; el commit `8aee1e40` contiene ese código y el expediente completo, y su Quality Gate [44107498262](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44107498262) terminó `completed/success` con sus 44 pasos verdes. Esto no sustituye las pruebas ambientales pendientes ni la aceptación del propietario.
