@@ -11521,3 +11521,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Preservación: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `BLOCK10_TOUCHED=NO`; `B07_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto: comprobar Quality Gates del SHA publicado; investigar fallos visibles después del audit y remediar solo errores propios del código; el arreglo upstream de picomatch queda bloqueado por publicación oficial segura.
 
+
+## 2026-11-17 15:53 -06:00 — CHAT — M1 CI funcional resuelto; auditoría de dependencia permanece bloqueante
+
+- `AUTHOR=CHAT`, `BRANCH=desarrollo`, `INITIAL_SHA=659332800ecd54576f21aa5208c3070fb5a5aabc`, `SOURCE_CODE_SHA=d216edf4c581c5724bfb582f5e05bebea9ff8669`, conexión exclusiva `jmejia31`.
+- El [run 44178196603](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44178196603) detectó un E2E fallido por botón de seguimiento jurídico inexistente en accesibilidad: el backend no proporcionaba `estadoIdentidad/estadoAsociacion` y la UI lo deshabilitaba.
+- Se publicó el parche `d216edf4c581c5724bfb582f5e05bebea9ff8669` en `origin/desarrollo`: contrato jurídico de estados con verificación solo para fuente institucional enlazada; manual/marcador permanece NO operable; tipado Angular, E2E y regresiones .NET/Angular. `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`.
+- [Quality Gate 44181990671](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44181990671): `completed/failure` exclusivamente por **npm audit completo `picomatch@4.0.7` (GHSA-fc5q-39xc-vjpf)**; 44 pasos verdes y 1 paso rojo de enforcement de seguridad. Backend `1170 PASS / 1 SKIPPED`, Angular `1023/1023 PASS, 96 archivos`, Playwright `79 PASS / 15 SKIPPED`, Node production audit PASS, Oracle XE y contenedores PASS. No se otorga `QUALITY_GATE=SUCCESS`.
+- Expediente: `docs/certificaciones/M1_CI_FUNCIONAL_CORREGIDO_SEGURIDAD_ABIERTA_20261117.md`. `ORACLE_INSTITUTIONAL_READS=NOT_EXECUTED`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `B07/Block10/migration54=NOT_TOUCHED`.
+- `M1_COUNTS_242_190_52_7=PENDING_LIVE_READ_ONLY`; `OWNER_ACCEPTANCE=PENDING`; `SECURITY_REMEDIATION=PENDING_OFFICIAL_PATCH`. Punto exacto: mantener vigilancia de versión corregida de picomatch sin waivers; conciliar Oracle por lectura y verificar UI institucional.
+

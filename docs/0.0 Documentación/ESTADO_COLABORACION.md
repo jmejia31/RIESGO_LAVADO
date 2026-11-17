@@ -4887,3 +4887,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Certificación `docs/certificaciones/CI_DEPENDENCIAS_PICOMATCH_DIAGNOSTICO_20261117.md`. `NEW_SHA_QUALITY_GATE=PENDING` hasta revisar GitHub actual, sin inventar verdes. Oracle institucional no tocado, `DNP_IHSS_WRITES=0`, `MAIN_TOUCHED=NO`.
 - Punto de continuación: revisar `QUALITY_GATE` del último SHA, corregir fallos nuevos realmente ejecutados, mantener la vulnerabilidad visible y bloquear certificación hasta parche oficial de la dependencia.
 
+
+## Estado vigente — M1 GitHub CI funcional corregido, seguridad de dependencias bloqueante — 2026-11-17 15:53 -06:00 (CHAT)
+
+- `SOURCE_CODE_SHA=d216edf4c581c5724bfb582f5e05bebea9ff8669`; autor `CHAT`; `BRANCH=desarrollo`, conexión `jmejia31`. E2E jurídico corregido al exponer identidad/asociación verificables desde DTO; las filas sin asociación segura continúan inoperables.
+- [QUALITY_GATE=44181990671](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44181990671) `completed/failure`, pero todos sus pasos funcionales terminaron `SUCCESS`: `BACKEND=1170_PASS_1_SKIP`, `ANGULAR=1023_PASS/96_FILES`, `E2E=79_PASS_15_SKIP`, Oracle XE descartable e imágenes no-root PASS. `FULL_NPM_AUDIT=FAIL_PICOMATCH_4.0.7_HIGH_NO_OFFICIAL_FIX`; enforcement de seguridad BLOQUEANTE.
+- `PRODUCTION_NPM_AUDIT=PASS`, riesgo del build/deps dev sin aceptación ni bypass; no declarar `QUALITY_GATE_GLOBAL=PASS`.
+- Expediente `docs/certificaciones/M1_CI_FUNCIONAL_CORREGIDO_SEGURIDAD_ABIERTA_20261117.md`, índice actualizado. No hubo escritura a Oracle institucional ni cambios en `main`, B07, Bloque10 o migración54.
+- `M1_ORACLE_242_190_52_7=PENDING_AUTHORIZED_READ_ONLY`; `OWNER_ACCEPTANCE=PENDING`; pendiente versión oficial segura de picomatch. Continuación exacta: corregir upstream, recertificar full audit y validar observaciones de propietario/Oracle.

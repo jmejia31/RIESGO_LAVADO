@@ -54,3 +54,11 @@ DNP_IHSS_WRITES=0
 MAIN_TOUCHED=NO
 PRODUCTION_TOUCHED=NO
 ```
+
+## 5. Resultado CI funcional posterior — 17 de noviembre de 2026, 15:53 -06:00
+
+- `SOURCE_CODE_SHA=d216edf4c581c5724bfb582f5e05bebea9ff8669`.
+- [Quality Gate 44181990671](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44181990671): `completed/failure` y **44 pasos SUCCESS / 1 FAIL**, el último `Enforce full npm audit result (blocking)`.
+- Backend `1170 PASS / 1 SKIPPED`; Angular `1023 PASS` en `96` archivos; E2E `79 PASS / 15 SKIPPED` (incluye carga institucional de archivos corregida); pruebas Oracle XE, Docker y checks no-root `SUCCESS`.
+- No confundir `npm audit --omit=dev: PASS` con `npm audit: FAIL`. `SECURITY_SCAN=FAIL` y `QUALITY_GATE_GLOBAL=FAIL` hasta parche verificable.
+- Contrato real jurídico recuperado en `d216edf4c581c5724bfb582f5e05bebea9ff8669`, con validación de identidad/relación de fuente. Expediente de detalle: [M1 CI funcional](M1_CI_FUNCIONAL_CORREGIDO_SEGURIDAD_ABIERTA_20261117.md).
