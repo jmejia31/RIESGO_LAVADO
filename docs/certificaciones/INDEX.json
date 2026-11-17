@@ -171,6 +171,21 @@
       "dnp_ihss_writes": 0,
       "owner_visual_acceptance": "PENDING",
       "github_remote_verified": "PENDING_EVIDENCE_PUSH"
+    },
+    {
+      "id": "CI-PICOMATCH-20261117",
+      "path": "CI_DEPENDENCIAS_PICOMATCH_DIAGNOSTICO_20261117.md",
+      "status": "CI_DIAGNOSTIC_IMPROVEMENT_PENDING_UPSTREAM_FIX_AND_LIVE_QG",
+      "source_code_sha": "ab25620e24cf83197a9a2c62d8febaf650d6fd71",
+      "evidence_commit_sha": "PENDING_PUBLICATION",
+      "security_scan": "HIGH_PICOMATCH_NO_PATCH_AVAILABLE",
+      "quality_gate_run_previous": 44173995200,
+      "quality_gate_status_previous": "FAILURE",
+      "main_touched": false,
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "owner_acceptance": "PENDING",
+      "github_remote_verified": "PENDING_PUSH"
     }
   ]
 }

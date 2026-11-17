@@ -4878,3 +4878,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - `M1_TECHNICAL_STATE=CODE_IMPLEMENTED_WITH_EVIDENCE_LIMITS`; `M1_CERTIFICATION=OPEN_PENDING_LIVE_READ_ONLY_AND_QG`.
 - Punto exacto de continuación: recoger CI real del commit M1, reconciliar conteos Oracle por lectura institucional autorizada y verificar detalles/filtros UI; no declarar recuperados 52/7 sin datos.
+
+## Estado vigente — recuperación de diagnóstico CI seguro — 2026-11-17 (CHAT)
+
+- `INITIAL_SHA=1ecd85629fee5dff25ebc1b697df58cc5e3a7cc5`; `CI_CODE_CANDIDATE_SHA=ab25620e24cf83197a9a2c62d8febaf650d6fd71`; `BRANCH=desarrollo`, autor `CHAT`, conexión exclusiva `jmejia31`. Se corrigió la visibilidad del Quality Gate: un `npm audit` completo fallido **no se ignora ni exime**, pero se pospone su enforcement hasta el final para ejecutar y recoger resultado del resto de validaciones.
+- `QUALITY_GATE_44173995200=FAIL` confirmado por `picomatch@4.0.7` / `GHSA-fc5q-39xc-vjpf` (`No fix available`, 21 hallazgos altos acumulativos). `AUDIT_REMEDIATION=PENDING_UPSTREAM_PATCH`; la auditoría completa seguirá bloqueando la aprobación.
+- Se separó la auditoría de producción, se mantuvieron los E2E, pruebas backend/Angular, Oracle XE y construcción de contenedores; la CI focal M1 ahora es manual y no duplica cada push. Contrato de no regresión CI añadido al enrutador.
+- Certificación `docs/certificaciones/CI_DEPENDENCIAS_PICOMATCH_DIAGNOSTICO_20261117.md`. `NEW_SHA_QUALITY_GATE=PENDING` hasta revisar GitHub actual, sin inventar verdes. Oracle institucional no tocado, `DNP_IHSS_WRITES=0`, `MAIN_TOUCHED=NO`.
+- Punto de continuación: revisar `QUALITY_GATE` del último SHA, corregir fallos nuevos realmente ejecutados, mantener la vulnerabilidad visible y bloquear certificación hasta parche oficial de la dependencia.
+

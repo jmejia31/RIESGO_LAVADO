@@ -11510,3 +11510,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`.
 - **No se ejecutaron consultas reales** 242/190/52 ni siete empleados, E2E autenticado ni aceptación del propietario. Estado `CODE_IMPLEMENTED_PENDING_ORACLE_REAL`, `QUALITY_GATE=NOT_CERTIFIED_AUDIT_FAILURE`, `OWNER_ACCEPTANCE=PENDING`.
 - Punto exacto de continuación: revisar CI del SHA documental y funcional, obtener la conciliación real por lectura autorizada Q01-Q12 antes de certificar conteos; posteriormente M2 reportería/branding sin mezclarla con M1.
+
+## 2026-11-17 — CHAT — Corrección de observabilidad CI manteniendo auditoría bloqueante
+
+- `PROJECT=RIESGO_LAVADO`; `INITIAL_SHA=1ecd85629fee5dff25ebc1b697df58cc5e3a7cc5`; `CI_CODE_SHA=ab25620e24cf83197a9a2c62d8febaf650d6fd71`; autor `CHAT`, conexión `jmejia31`, rama `desarrollo` (no `main`).
+- Evidencia real: `QUALITY_GATE_44173995200=FAILURE` por `npm audit` en `picomatch@4.0.7` (`GHSA-fc5q-39xc-vjpf`, high, `No fix available`); pasos posteriores se saltaron. `M1_44173494757=FAILURE_SECURITY_AUDIT`, aunque backend/Angular focales compilaron y aprobaron.
+- Parche de CI `.github/workflows/quality-gates.yml`: `npm ci`, `npm audit --omit=dev`, `npm audit` completo con resultado registrado para ejecutar posteriores controles, y enforcement final `if: always()` que exige `outcome=success` o falla el job. No se silenció la auditoría ni se alteraron pruebas, seguridad, Docker o credenciales. `m1-regresion-focal.yml` manual para no duplicar runs por cada push.
+- Se añadió prueba `tools/automatizacion/test_ci_gate_audit_contract.py` al descubrimiento del router. Expediente `docs/certificaciones/CI_DEPENDENCIAS_PICOMATCH_DIAGNOSTICO_20261117.md` e índice CI actualizados.
+- Estado **antes de verificar el nuevo SHA:** `SECURITY_AUDIT=FAIL_UPSTREAM_UNPATCHED`; `NEW_QUALITY_GATE=PENDING`; `REVIEW_READY=WITH_LIMITATIONS`. No declarar éxito hasta evidencias exactas del SHA final.
+- Preservación: `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `BLOCK10_TOUCHED=NO`; `B07_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- Punto exacto: comprobar Quality Gates del SHA publicado; investigar fallos visibles después del audit y remediar solo errores propios del código; el arreglo upstream de picomatch queda bloqueado por publicación oficial segura.
+
