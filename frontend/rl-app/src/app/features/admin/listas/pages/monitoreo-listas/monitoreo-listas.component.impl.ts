@@ -51,10 +51,13 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   private busquedaTimer: ReturnType<typeof setTimeout> | null = null;
   private contextoMonitoreoCargado: string | null = null;
   private contextoMonitoreoEnCarga: string | null = null;
+  private detalleSolicitud = 0;
+  private seguimientoSolicitud = 0;
   readonly maxTextoTextarea = 1000;
 
   tipoActivo = signal<FiltroTipo>('juridica');
   cargando = signal(false);
+  errorMonitoreo = signal<string | null>(null);
   busqueda = signal('');
   filtroEstado = signal<FiltroEstado>('todos');
   filtroFechaDesde = signal<string>('');
@@ -63,6 +66,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   // Modal Detalle
   modalDetalleAbierto = signal(false);
   detalleCargando = signal(false);
+  detalleError = signal<string | null>(null);
   detallesNatural = signal<DetalleCoincidenciaNatural[]>([]);
   detallesEmpleado = signal<DetalleCoincidenciaEmpleado[]>([]);
   personaSeleccionada = signal<CoincidenciaNatural | null>(null);
@@ -100,6 +104,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   // Modal Seguimiento
   modalSeguimientoAbierto = signal(false);
   cargandoSeguimiento = signal(false);
+  seguimientoError = signal<string | null>(null);
   listaSeguimientos = signal<Seguimiento[]>([]);
   formComentarioSeguimiento = signal<string>('');
   filtroSeguimientoDesde = signal<string>('');
@@ -303,6 +308,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     if (mostrarLoader && tipo === this.tipoActivo()) {
       this.cargando.set(true);
+      this.errorMonitoreo.set(null);
     }
     this.contextoMonitoreoEnCarga = contexto;
     this.solicitudesMonitoreo$.next({ tipo, consulta, contexto });
@@ -314,24 +320,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.monitoreoSubscription = this.solicitudesMonitoreo$.pipe(
       switchMap(({ tipo, consulta, contexto }) => this.consultarMonitoreo(tipo, consulta).pipe(
         map(respuesta => ({ tipo, contexto, respuesta } as RespuestaMonitoreo)),
-        catchError(() => {
+        catchError((err) => {
           if (tipo === this.tipoActivo() && this.contextoMonitoreoEnCarga === JSON.stringify([tipo, consulta])) {
             this.contextoMonitoreoEnCarga = null;
           }
           if (tipo === this.tipoActivo()) {
-            if (tipo === 'juridica') {
-              this.juridicasRaw.set([]);
-              this.juridicasTotales.set(this.totalesVacios);
-              this.juridicasPaginas.set(0);
-            } else if (tipo === 'natural') {
-              this.naturalesRaw.set([]);
-              this.naturalesTotales.set(this.totalesVacios);
-              this.naturalesPaginas.set(0);
-            } else {
-              this.empleadosRaw.set([]);
-              this.empleadosTotales.set(this.totalesVacios);
-              this.empleadosPaginas.set(0);
-            }
+            this.errorMonitoreo.set(this.mensajeErrorApi(err, 'No se pudieron cargar las coincidencias. Los datos mostrados anteriormente se conservaron.'));
             this.cargando.set(false);
           }
           return EMPTY;
@@ -354,6 +348,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       }
       this.contextoMonitoreoEnCarga = null;
       this.contextoMonitoreoCargado = contexto;
+      this.errorMonitoreo.set(null);
       this.paginaActual.set(respuesta.pagina);
       this.cargando.set(false);
     });
@@ -438,8 +433,31 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-600/10';
   }
 
-  puedeDarSeguimiento(item: { tieneMotivo?: boolean; esManual?: boolean }): boolean {
-    return this.obtenerEstadoMonitoreo(item) === 'Con motivo';
+  puedeDarSeguimiento(item: { tieneMotivo?: boolean; esManual?: boolean; estadoIdentidad?: string; estadoAsociacion?: string }): boolean {
+    return this.obtenerEstadoMonitoreo(item) === 'Con motivo' && this.esIdentidadOperable(item);
+  }
+
+  private esIdentidadOperable(item: { estadoIdentidad?: string; estadoAsociacion?: string }): boolean {
+    return item.estadoIdentidad !== 'AMBIGUOUS' && item.estadoIdentidad !== 'INVALID' && item.estadoAsociacion !== 'UNVERIFIED_ASSOCIATION';
+  }
+
+  private mensajeErrorApi(err: any, fallback: string): string {
+    const codigo = err?.error?.codigo;
+    if (codigo === 'AMBIGUOUS_IDENTITY') return 'No es posible identificar inequívocamente este registro. La operación quedó bloqueada.';
+    if (codigo === 'UNVERIFIED_ASSOCIATION') return 'La asociación encontrada no está verificada. La operación quedó bloqueada.';
+    return err?.error?.mensaje || err?.error?.message || fallback;
+  }
+
+  private bloquearIdentidad(item: { estadoIdentidad?: string; estadoAsociacion?: string }): boolean {
+    if (this.esIdentidadOperable(item)) return false;
+    void import('sweetalert2').then(Swal => Swal.default.fire({
+      allowOutsideClick: false,
+      title: 'Operación bloqueada',
+      text: this.mensajeErrorApi({ error: { codigo: item.estadoIdentidad === 'AMBIGUOUS' ? 'AMBIGUOUS_IDENTITY' : 'UNVERIFIED_ASSOCIATION' } }, 'La identidad no está verificada.'),
+      icon: 'warning',
+      confirmButtonColor: 'var(--ihss-primary-color)'
+    }));
+    return true;
   }
 
   // Datos paginados reactivos por tipo
@@ -465,43 +483,55 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   });
 
   abrirDetalle(row: CoincidenciaNatural) {
+    if (this.bloquearIdentidad(row)) return;
+    const solicitud = ++this.detalleSolicitud;
     this.personaSeleccionada.set(row);
     this.modalDetalleAbierto.set(true);
     this.detalleCargando.set(true);
+    this.detalleError.set(null);
     this.listasService.getDetalleNatural(row.numeroIdentificacion, 'local').subscribe({
       next: (res) => {
+        if (solicitud !== this.detalleSolicitud) return;
         this.detallesNatural.set(res);
         this.detalleCargando.set(false);
       },
-      error: () => {
-        this.detallesNatural.set([]);
+      error: (err) => {
+        if (solicitud !== this.detalleSolicitud) return;
+        this.detalleError.set(this.mensajeErrorApi(err, 'No se pudo cargar el detalle de la coincidencia.'));
         this.detalleCargando.set(false);
       }
     });
   }
 
   abrirDetalleEmpleado(row: CoincidenciaEmpleado) {
+    if (this.bloquearIdentidad(row)) return;
+    const solicitud = ++this.detalleSolicitud;
     this.personaSeleccionadaEmpleado.set(row);
     this.modalDetalleAbierto.set(true);
     this.detalleCargando.set(true);
+    this.detalleError.set(null);
     this.listasService.getDetalleEmpleado(row.identidad, 'local').subscribe({
       next: (res) => {
+        if (solicitud !== this.detalleSolicitud) return;
         this.detallesEmpleado.set(res);
         this.detalleCargando.set(false);
       },
-      error: () => {
-        this.detallesEmpleado.set([]);
+      error: (err) => {
+        if (solicitud !== this.detalleSolicitud) return;
+        this.detalleError.set(this.mensajeErrorApi(err, 'No se pudo cargar el detalle de la coincidencia.'));
         this.detalleCargando.set(false);
       }
     });
   }
 
   cerrarModal() {
+    ++this.detalleSolicitud;
     this.modalDetalleAbierto.set(false);
     this.personaSeleccionada.set(null);
     this.personaSeleccionadaEmpleado.set(null);
     this.detallesNatural.set([]);
     this.detallesEmpleado.set([]);
+    this.detalleError.set(null);
   }
 
   // Normaliza la lectura del sujeto mostrado en el modal de detalle, sin mezclar reglas entre natural y empleado.
@@ -901,6 +931,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   imprimirReporteNatural(row: CoincidenciaNatural) {
+    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
@@ -1082,6 +1113,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   imprimirReporteEmpleado(row: CoincidenciaEmpleado) {
+    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
@@ -1473,6 +1505,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   exportarFichaExcelNatural(row: CoincidenciaNatural) {
+    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
@@ -1535,6 +1568,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   exportarFichaExcelEmpleado(row: CoincidenciaEmpleado) {
+    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
@@ -1732,9 +1766,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   exportarListaPrincipal() {
+    if (this.errorMonitoreo()) return;
     const tipo = this.tipoActivo();
     const dataFiltrada = this.datosFiltrados();
-    if (dataFiltrada.length === 0) return;
 
     let headers: string[] = [];
     let title = '';
@@ -1861,7 +1895,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   public construirReporteListaPrincipalPdf(dataFiltrada: MonitoreoRegistro[] = this.datosFiltrados()): { title: string; headers: string[]; rows: string[][] } | null {
     const tipo = this.tipoActivo();
-    if (dataFiltrada.length === 0) return null;
 
     if (tipo === 'juridica') {
       return {
@@ -1913,6 +1946,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   exportarPdfListaPrincipal() {
+    if (this.errorMonitoreo()) return;
     this.cargando.set(true);
     this.obtenerDatosMonitoreoParaExportar().subscribe({
       next: dataFiltrada => {
@@ -2038,6 +2072,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   registrarMotivo(row: any) {
+    if (this.bloquearIdentidad(row)) return;
     this.esRegistroManual.set(false);
     this.formManualNombre.set('');
     this.formManualNoDocumento.set('');
@@ -2280,6 +2315,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   darSeguimiento(row: any) {
+    if (this.bloquearIdentidad(row)) return;
     let tipoPosId = 1;
     const tipo = this.tipoActivo();
     let docNum = '';
@@ -2320,15 +2356,19 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   cargarSeguimientos(noDocumento: string) {
+    const solicitud = ++this.seguimientoSolicitud;
     this.cargandoSeguimiento.set(true);
+    this.seguimientoError.set(null);
     this.listasService.getSeguimientos(noDocumento, this.filtroSeguimientoDesde(), this.filtroSeguimientoHasta()).subscribe({
       next: (res) => {
+        if (solicitud !== this.seguimientoSolicitud) return;
         this.listaSeguimientos.set(res);
         this.cargandoSeguimiento.set(false);
       },
       error: (err) => {
+        if (solicitud !== this.seguimientoSolicitud) return;
         console.error('Error al obtener historial de seguimientos:', err);
-        this.listaSeguimientos.set([]);
+        this.seguimientoError.set(this.mensajeErrorApi(err, 'No se pudo cargar el historial de seguimientos.'));
         this.cargandoSeguimiento.set(false);
       }
     });
@@ -2379,6 +2419,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   cerrarModalSeguimiento() {
+    ++this.seguimientoSolicitud;
     this.modalSeguimientoAbierto.set(false);
     this.entidadSeleccionada.set(null);
     this.listaSeguimientos.set([]);
@@ -2389,6 +2430,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.modoEdicion.set(false);
     this.seguimientoEditandoId.set(null);
     this.evidenciasExistentes.set([]);
+    this.seguimientoError.set(null);
   }
 
   onSeguimientoFilesSelected(files: File[]): void {

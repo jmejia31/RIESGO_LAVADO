@@ -152,32 +152,28 @@ public sealed class DbPaginationRegressionGuardTests
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
         var naturalesSql = ExtractSqlBuilder(source, "ConstruirConsultaMonitoreoNaturales");
-        var personaFuenteStart = naturalesSql.IndexOf("PERSONA_FUENTE AS (", StringComparison.Ordinal);
-        var personaFuenteEnd = naturalesSql.IndexOf("), PERSONA_FUENTE_DISTINCTA AS", personaFuenteStart, StringComparison.Ordinal);
-
-        Assert.True(personaFuenteStart >= 0 && personaFuenteEnd > personaFuenteStart);
-        var personaFuente = naturalesSql[personaFuenteStart..personaFuenteEnd];
 
         // El detalle natural requiere más columnas de la vista; esta guarda cubre sólo el hot path paginado.
         Assert.DoesNotContain("DNP_IHSS.V_SOCIOS_REPRESENTANTES", naturalesSql, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("DNP_IHSS.SOCIOS S", personaFuente, StringComparison.Ordinal);
-        Assert.Contains("DNP_IHSS.REPRESENTANTES R", personaFuente, StringComparison.Ordinal);
-        Assert.Contains("INNER JOIN REPORTE_IDS I ON I.DNI = S.NUMERO_IDENTIFICACION", personaFuente, StringComparison.Ordinal);
-        Assert.Contains("INNER JOIN REPORTE_IDS I ON I.DNI = R.NUMERO_IDENTIFICACION", personaFuente, StringComparison.Ordinal);
-        Assert.Contains("SELECT DISTINCT", personaFuente, StringComparison.Ordinal);
-        Assert.Contains("UNION", personaFuente, StringComparison.Ordinal);
-        Assert.DoesNotContain("UNION ALL", personaFuente, StringComparison.OrdinalIgnoreCase);
-
-        foreach (var requiredFunctionalRelation in new[]
-                 {
-                     "DNP_IHSS.TIPO_IDENTIFICACION", "DNP_IHSS.TIPO_GENERO", "DNP_IHSS.PAISES_NACIONALIDAD",
-                     "DNP_IHSS.DEPARTAMENTOS", "DNP_IHSS.MUNICIPIOS", "DNP_IHSS.TIPO_CONDICION_ACTUA",
-                     "DNP_IHSS.TIPO_OCUPACION", "DNP_IHSS.DATOS_EMPRESA", "MMATAMOROS.PATRONOS PA",
-                     "PA.NUMEPATRO = DE.NUMERO_PATRONAL"
-                 })
-            Assert.Contains(requiredFunctionalRelation, personaFuente, StringComparison.Ordinal);
+        Assert.Contains("REPORTE_AGG AS (", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("COUNT(DISTINCT TRIM(REGEXP_REPLACE(NOMBRE", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("ASOCIACIÓN NO VERIFICADA", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = R.DNI", naturalesSql, StringComparison.Ordinal);
+        Assert.DoesNotContain("PERSONA_FUENTE AS", naturalesSql, StringComparison.Ordinal);
 
         Assert.DoesNotContain("SELECT (SELECT", naturalesSql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void IdentidadYPositivos_NoSeleccionanCandidatosArbitrariamente()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+
+        Assert.DoesNotContain("RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1", source, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("S.SOCIO_ID AS ID_PERSONA", source, StringComparison.Ordinal);
+        Assert.Contains("R.REPRESENTANTE_ID AS ID_PERSONA", source, StringComparison.Ordinal);
+        Assert.Contains("candidateIds.Count < 2", source, StringComparison.Ordinal);
+        Assert.Contains("AmbiguousIdentityException", source, StringComparison.Ordinal);
     }
 
     [Fact]

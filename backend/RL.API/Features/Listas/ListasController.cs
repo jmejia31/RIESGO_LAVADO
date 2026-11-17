@@ -88,17 +88,37 @@ namespace RL.API.Features.Listas
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerDetalleNatural(string numeroIdentificacion)
         {
-            var result = await _listasService.ObtenerDetalleNaturalAsync(numeroIdentificacion);
-            return Ok(new { success = true, datos = result });
+            try
+            {
+                var result = await _listasService.ObtenerDetalleNaturalAsync(numeroIdentificacion);
+                return Ok(new { success = true, datos = result });
+            }
+            catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
+            catch (UnverifiedAssociationException ex) { return UnprocessableEntity(new { success = false, codigo = "UNVERIFIED_ASSOCIATION", mensaje = ex.Message }); }
         }
+
+        [HttpGet("naturales/detalle")]
+        [ModuloAuthorize(4)]
+        public Task<IActionResult> ObtenerDetalleNaturalPorConsulta([FromQuery] string numeroIdentificacion)
+            => ObtenerDetalleNatural(numeroIdentificacion);
 
         [HttpGet("empleados/{numeroIdentificacion}/detalle")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerDetalleEmpleado(string numeroIdentificacion)
         {
-            var result = await _listasService.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
-            return Ok(new { success = true, datos = result });
+            try
+            {
+                var result = await _listasService.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
+                return Ok(new { success = true, datos = result });
+            }
+            catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
+            catch (UnverifiedAssociationException ex) { return UnprocessableEntity(new { success = false, codigo = "UNVERIFIED_ASSOCIATION", mensaje = ex.Message }); }
         }
+
+        [HttpGet("empleados/detalle")]
+        [ModuloAuthorize(4)]
+        public Task<IActionResult> ObtenerDetalleEmpleadoPorConsulta([FromQuery] string numeroIdentificacion)
+            => ObtenerDetalleEmpleado(numeroIdentificacion);
 
         [HttpGet("tipos-documento")]
         [ModuloAuthorize(4)]
@@ -210,19 +230,37 @@ namespace RL.API.Features.Listas
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerPositivoPorDocumento(string noDocumento)
         {
-            var result = await _listasService.ObtenerPositivoPorDocumentoAsync(noDocumento);
-            return Ok(new { success = true, datos = result });
+            try
+            {
+                var result = await _listasService.ObtenerPositivoPorDocumentoAsync(noDocumento);
+                return Ok(new { success = true, datos = result });
+            }
+            catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
         }
+
+        [HttpGet("positivos")]
+        [ModuloAuthorize(4)]
+        public Task<IActionResult> ObtenerPositivoPorConsulta([FromQuery] string noDocumento)
+            => ObtenerPositivoPorDocumento(noDocumento);
 
         [HttpGet("positivos/{noDocumento}/seguimientos")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerSeguimientos(string noDocumento, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
         {
-            var result = await _listasService.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
-            return result.Success
-                ? Ok(new { success = true, datos = result.Data })
-                : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+            try
+            {
+                var result = await _listasService.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
+                return result.Success
+                    ? Ok(new { success = true, datos = result.Data })
+                    : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+            }
+            catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
         }
+
+        [HttpGet("seguimientos")]
+        [ModuloAuthorize(4)]
+        public Task<IActionResult> ObtenerSeguimientosPorConsulta([FromQuery] string noDocumento, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+            => ObtenerSeguimientos(noDocumento, desde, hasta);
 
         [HttpPost("positivos/{noDocumento}/seguimientos")]
         [ModuloAuthorize(4)]
@@ -232,9 +270,22 @@ namespace RL.API.Features.Listas
             [FromForm] string motivoIngreso,
             [FromForm] List<IFormFile>? archivos)
         {
-            var result = await _evidenciasService.RegistrarSeguimientoAsync(noDocumento, motivoIngreso, archivos, ObtenerUsuarioId());
-            return Responder(result);
+            try
+            {
+                var result = await _evidenciasService.RegistrarSeguimientoAsync(noDocumento, motivoIngreso, archivos, ObtenerUsuarioId());
+                return Responder(result);
+            }
+            catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
         }
+
+        [HttpPost("seguimientos")]
+        [ModuloAuthorize(4)]
+        [AuditRequired("Creación de seguimiento y evidencias")]
+        public Task<IActionResult> RegistrarSeguimientoPorConsulta(
+            [FromQuery] string noDocumento,
+            [FromForm] string motivoIngreso,
+            [FromForm] List<IFormFile>? archivos)
+            => RegistrarSeguimiento(noDocumento, motivoIngreso, archivos);
 
         [HttpGet("evidencias/{evidenciaId}")]
         [ModuloAuthorize(4)]

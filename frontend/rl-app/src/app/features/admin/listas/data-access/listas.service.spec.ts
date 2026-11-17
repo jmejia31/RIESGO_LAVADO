@@ -42,7 +42,8 @@ describe('ListasService', () => {
   it('envia el rango opcional al consultar seguimientos', () => {
     service.getSeguimientos('ID 10', '2026-07-01', '2026-07-15').subscribe();
 
-    const request = http.expectOne(req => req.url === `${apiUrl}/positivos/ID 10/seguimientos`);
+    const request = http.expectOne(req => req.url === `${apiUrl}/seguimientos`);
+    expect(request.request.params.get('noDocumento')).toBe('ID 10');
     expect(request.request.params.get('desde')).toBe('2026-07-01');
     expect(request.request.params.get('hasta')).toBe('2026-07-15');
     request.flush({ success: true, datos: [] });
@@ -50,12 +51,12 @@ describe('ListasService', () => {
 
   it('preserves global default and local overrides for shared detail queries', () => {
     service.getDetalleNatural('0801').subscribe();
-    const globalDetail = http.expectOne(`${apiUrl}/naturales/0801/detalle`);
+    const globalDetail = http.expectOne(req => req.url === `${apiUrl}/naturales/detalle` && req.params.get('numeroIdentificacion') === '0801');
     expect(globalDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('global');
     globalDetail.flush({ success: true, datos: [] });
 
     service.getDetalleNatural('0801', 'local').subscribe();
-    const localDetail = http.expectOne(`${apiUrl}/naturales/0801/detalle`);
+    const localDetail = http.expectOne(req => req.url === `${apiUrl}/naturales/detalle` && req.params.get('numeroIdentificacion') === '0801');
     expect(localDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     localDetail.flush({ success: true, datos: [] });
 
@@ -88,7 +89,7 @@ describe('ListasService', () => {
     const evidencia = new File(['contenido'], 'evidencia.txt', { type: 'text/plain' });
     service.registrarSeguimiento('0801', 'Revision mensual', [evidencia]).subscribe();
 
-    const request = http.expectOne(`${apiUrl}/positivos/0801/seguimientos`);
+    const request = http.expectOne(req => req.url === `${apiUrl}/seguimientos` && req.params.get('noDocumento') === '0801');
     const formData = request.request.body as FormData;
     expect(request.request.method).toBe('POST');
     expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');

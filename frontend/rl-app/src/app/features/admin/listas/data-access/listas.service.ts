@@ -109,14 +109,18 @@ export class ListasService {
   }
 
   getDetalleNatural(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaNatural[]> {
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/${numeroIdentificacion}/detalle`, {
+    const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/detalle`, {
+      params,
       context: createHttpErrorScopeContext(errorScope)
     })
       .pipe(map(res => res.datos));
   }
 
   getDetalleEmpleado(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaEmpleado[]> {
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/${numeroIdentificacion}/detalle`, {
+    const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/detalle`, {
+      params,
       context: createHttpErrorScopeContext(errorScope)
     })
       .pipe(map(res => res.datos));
@@ -143,7 +147,8 @@ export class ListasService {
   }
 
   getPositivoPorDocumento(noDocumento: string): Observable<ExistingPositivo | null> {
-    return this.http.get<{ success: boolean; datos: ExistingPositivo | null }>(`${this.apiUrl}/positivos/${noDocumento}`)
+    const params = new HttpParams().set('noDocumento', noDocumento);
+    return this.http.get<{ success: boolean; datos: ExistingPositivo | null }>(`${this.apiUrl}/positivos`, { params })
       .pipe(map(res => res.datos));
   }
 
@@ -157,7 +162,8 @@ export class ListasService {
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
 
-    return this.http.get<{ success: boolean; datos: Seguimiento[] }>(`${this.apiUrl}/positivos/${noDocumento}/seguimientos`, { params })
+    params = params.set('noDocumento', noDocumento);
+    return this.http.get<{ success: boolean; datos: Seguimiento[] }>(`${this.apiUrl}/seguimientos`, { params })
       .pipe(map(res => res.datos));
   }
 
@@ -170,7 +176,9 @@ export class ListasService {
         formData.append('archivos', file, file.name);
       });
     }
-    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos/${noDocumento}/seguimientos`, formData, {
+    const params = new HttpParams().set('noDocumento', noDocumento);
+    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos`, formData, {
+      params,
       headers: {
         [CONFIRMACION_TITULO_HEADER]: 'Confirmar seguimiento',
         [CONFIRMACION_TEXTO_HEADER]: '¿Desea guardar la nota de seguimiento y sus evidencias?',

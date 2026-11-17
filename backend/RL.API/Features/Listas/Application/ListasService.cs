@@ -24,12 +24,30 @@ public sealed class ListasService : IListasService
     public Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerNaturalesParaExportarAsync(consulta);
     public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default) => _repo.ObtenerEmpleadosPaginadasAsync(consulta, cancellationToken);
     public Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerEmpleadosParaExportarAsync(consulta);
-    public Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion) => _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion);
-    public Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion) => _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
+    public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
+    {
+        await ExigirIdentidadOperableAsync(numeroIdentificacion, TipoSujetoMonitoreo.Natural);
+        return await _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion);
+    }
+
+    public async Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion)
+    {
+        await ExigirIdentidadOperableAsync(numeroIdentificacion, TipoSujetoMonitoreo.Empleado);
+        return await _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
+    }
     public Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync() => _repo.ObtenerTiposDocumentoAsync();
     public Task<List<TipoListaCautelaDto>> ObtenerTiposListasCautelaAsync() => _repo.ObtenerTiposListasCautelaAsync();
     public Task<List<ResumenListaDto>> ObtenerResumenListasAsync() => _repo.ObtenerResumenListasAsync();
-    public Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento) => _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
+    public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento)
+    {
+        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento))
+            throw new AmbiguousIdentityException("No es posible seleccionar un positivo para una identidad ambigua o no identificada.");
+
+        if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
+            throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
+
+        return await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
+    }
 
     public async Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerDetalleListaParaExportarAsync(int id, long usuarioId, string? ip)
     {
@@ -79,6 +97,12 @@ public sealed class ListasService : IListasService
         if (validationError != null)
             return ServiceResult.BadRequest(validationError);
 
+        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(dto.NoDocumento))
+            return ServiceResult.Conflict("No es posible registrar un motivo sobre una identidad ambigua o no identificada.");
+
+        if (await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, 0) > 1)
+            return ServiceResult.Conflict("No es posible actualizar el motivo porque existen múltiples positivos activos para el mismo documento.");
+
         var ok = await _repo.RegistrarPositivoAsync(dto, creadoPorId);
         return ok
             ? ServiceResult.Ok("Motivo registrado exitosamente.")
@@ -90,8 +114,23 @@ public sealed class ListasService : IListasService
         if (desde.HasValue && hasta.HasValue && desde.Value.Date > hasta.Value.Date)
             return ServiceResult<List<SeguimientoDto>>.BadRequest("La fecha desde no puede ser mayor que la fecha hasta.");
 
+        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento))
+            return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos sobre una identidad ambigua o no identificada.");
+
+        if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
+            return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos porque existen múltiples positivos activos para el mismo documento.");
+
         var result = await _repo.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
         return ServiceResult<List<SeguimientoDto>>.Ok(result);
+    }
+
+    private async Task ExigirIdentidadOperableAsync(string documento, TipoSujetoMonitoreo tipoSujeto)
+    {
+        var resolucion = await _repo.ResolverIdentidadAsync(documento, tipoSujeto);
+        if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
+            throw new AmbiguousIdentityException("No es posible identificar inequívocamente este registro. La operación requiere validación.");
+        if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
+            throw new UnverifiedAssociationException("Existen datos relacionados, pero no se ha confirmado su correspondencia individual.");
     }
 
     public async Task<ServiceResult> ProcesarCargaCautelaAsync(IFormFile? archivo, int tipoListaCautelaId, long usuarioId)

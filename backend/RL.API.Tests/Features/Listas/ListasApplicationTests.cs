@@ -38,6 +38,7 @@ public sealed class ListasApplicationTests
     {
         var service = CrearServicio(out var repo, out _);
         repo.On(nameof(IListasRepository.RegistrarPositivoAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(0));
         var dto = new RegistrarPositivoDto
         {
             TipoDocumentoId = 1,
@@ -58,6 +59,53 @@ public sealed class ListasApplicationTests
         Assert.Equal("MANUAL_CUMPLIMIENTO", dto.OrigenRegistro);
         var call = Assert.Single(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
         Assert.Equal(9L, call.Arguments[1]);
+    }
+
+    [Fact]
+    public async Task RegistrarPositivo_DocumentoConMultiplesPositivosActivos_RechazaSinEscribir()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(2));
+        var dto = new RegistrarPositivoDto
+        {
+            TipoDocumentoId = 1,
+            TipoPositivoId = 2,
+            NoDocumento = "0801",
+            NombreCompleto = "Persona Uno",
+            MotivoIngreso = "Revisión",
+            TipoListaCautelaId = 3,
+            OrigenRegistro = "MANUAL_CUMPLIMIENTO"
+        };
+
+        var result = await service.RegistrarPositivoAsync(dto, 9);
+
+        Assert.False(result.Success);
+        Assert.Equal(409, result.StatusCode);
+        Assert.Contains("múltiples", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+    }
+
+    [Fact]
+    public async Task RegistrarPositivo_MarcadorNoIdentificacion_RechazaSinConsultarPositivos()
+    {
+        var service = CrearServicio(out var repo, out _);
+        var dto = new RegistrarPositivoDto
+        {
+            TipoDocumentoId = 1,
+            TipoPositivoId = 2,
+            NoDocumento = "N/A(3)",
+            NombreCompleto = "Persona no atribuida",
+            MotivoIngreso = "Revisión",
+            TipoListaCautelaId = 3,
+            OrigenRegistro = "MANUAL_CUMPLIMIENTO"
+        };
+
+        var result = await service.RegistrarPositivoAsync(dto, 9);
+
+        Assert.False(result.Success);
+        Assert.Equal(409, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.ContarPositivosActivosAsync)));
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
     }
 
     [Fact]

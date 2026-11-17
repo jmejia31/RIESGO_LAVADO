@@ -108,6 +108,12 @@ public sealed class EvidenciasService : IEvidenciasService
         if (motivoIngreso.Length > MaxTextoSeguimiento)
             return ServiceResult.BadRequest("El comentario de seguimiento no debe superar los 1000 caracteres.");
 
+        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento))
+            return ServiceResult.Conflict("No es posible registrar un seguimiento sobre una identidad ambigua o no identificada.");
+
+        if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
+            return ServiceResult.Conflict("No es posible registrar el seguimiento porque existen múltiples positivos activos para el mismo documento.");
+
         var positivoId = await _repo.ObtenerPositivoIdPorDocumentoAsync(noDocumento);
         if (!positivoId.HasValue)
             return ServiceResult.NotFound("No se encontró un registro positivo activo para este documento.");

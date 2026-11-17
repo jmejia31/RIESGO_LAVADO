@@ -118,7 +118,9 @@ namespace RL.API.Features.Listas.Persistence
                     FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
-                    EsManual = Entero(reader, "ES_MANUAL") == 1
+                    EsManual = Entero(reader, "ES_MANUAL") == 1,
+                    EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION")),
+                    EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "NUMERO_IDENTIFICACION")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
                 }, cancellationToken);
 
             return ObtenerMonitoreoPaginadoCacheadoAsync(
@@ -129,7 +131,9 @@ namespace RL.API.Features.Listas.Persistence
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoNaturales(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, NUMERO_IDENTIFICACION ASC", reader => new CoincidenciaNaturalDto
             {
                 NumeroIdentificacion = Texto(reader, "NUMERO_IDENTIFICACION"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
-                FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1
+                FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
+                EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION")),
+                EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "NUMERO_IDENTIFICACION")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
             });
 
         public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
@@ -151,7 +155,9 @@ namespace RL.API.Features.Listas.Persistence
                     FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
-                    EsManual = Entero(reader, "ES_MANUAL") == 1
+                    EsManual = Entero(reader, "ES_MANUAL") == 1,
+                    EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD")),
+                    EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "IDENTIDAD")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
                 }, cancellationToken);
 
             return ObtenerMonitoreoPaginadoCacheadoAsync(
@@ -162,7 +168,9 @@ namespace RL.API.Features.Listas.Persistence
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoEmpleados(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, IDENTIDAD ASC", reader => new CoincidenciaEmpleadoDto
             {
                 Identidad = Texto(reader, "IDENTIDAD"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
-                FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1
+                FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
+                EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD")),
+                EstadoAsociacion = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(Texto(reader, "IDENTIDAD")) ? EstadoIdentidadMonitoreo.UnverifiedAssociation : EstadoIdentidadMonitoreo.Verified
             });
 
         public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
@@ -235,6 +243,81 @@ namespace RL.API.Features.Listas.Persistence
             return list;
         }
 
+        public async Task<ResolucionIdentidadMonitoreo> ResolverIdentidadAsync(string documento, TipoSujetoMonitoreo tipoSujeto)
+        {
+            var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(documento);
+            if (string.IsNullOrWhiteSpace(normalizado))
+                return new ResolucionIdentidadMonitoreo(normalizado, EstadoIdentidadMonitoreo.Invalid, 0, 0, "DOCUMENTO_REQUIRED");
+
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.BindByName = true;
+
+            if (tipoSujeto == TipoSujetoMonitoreo.Natural)
+            {
+                cmd.CommandText = @"
+                    SELECT COUNT(*) AS REFERENCIAS, COUNT(DISTINCT ID_PERSONA) AS SUJETOS
+                    FROM (
+                        SELECT S.SOCIO_ID AS ID_PERSONA
+                        FROM DNP_IHSS.SOCIOS S
+                        WHERE S.NUMERO_IDENTIFICACION = :documento
+                        UNION ALL
+                        SELECT R.REPRESENTANTE_ID AS ID_PERSONA
+                        FROM DNP_IHSS.REPRESENTANTES R
+                        WHERE R.NUMERO_IDENTIFICACION = :documento
+                    )";
+            }
+            else if (tipoSujeto == TipoSujetoMonitoreo.Empleado)
+            {
+                cmd.CommandText = @"
+                    SELECT COUNT(*) AS REFERENCIAS, COUNT(DISTINCT IDENTIDAD) AS SUJETOS
+                    FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
+                    WHERE IDENTIDAD = :documento
+                      AND PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')";
+            }
+            else
+            {
+                return new ResolucionIdentidadMonitoreo(normalizado, EstadoIdentidadMonitoreo.Verified, 1, 1, "PATRONO_OR_RTN");
+            }
+
+            cmd.Parameters.Add(new OracleParameter("documento", normalizado));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return new ResolucionIdentidadMonitoreo(normalizado, EstadoIdentidadMonitoreo.UnverifiedAssociation, 0, 0, "SOURCE_NOT_FOUND");
+
+            var referencias = Convert.ToInt32(reader["REFERENCIAS"]);
+            var sujetos = Convert.ToInt32(reader["SUJETOS"]);
+            var estado = sujetos > 1 || (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado) && referencias > 0)
+                ? EstadoIdentidadMonitoreo.Ambiguous
+                : referencias == 0
+                    ? EstadoIdentidadMonitoreo.UnverifiedAssociation
+                    : EstadoIdentidadMonitoreo.Verified;
+
+            return new ResolucionIdentidadMonitoreo(normalizado, estado, referencias, sujetos,
+                estado == EstadoIdentidadMonitoreo.Ambiguous ? "DOCUMENTO_SHARED_OR_MULTIPLE_SUBJECTS" : null);
+        }
+
+        public async Task<int> ContarPositivosActivosAsync(string documento, int tipoPositivoId)
+        {
+            var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(documento);
+            if (string.IsNullOrWhiteSpace(normalizado)) return 0;
+
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.BindByName = true;
+            cmd.CommandText = @"
+                SELECT COUNT(*)
+                FROM RL_LISTA_POSITIVOS
+                WHERE LSP_NO_DOCUMENTO = :documento
+                  AND (:tipoPositivoId = 0 OR LSP_TIPO_POSITIVO_ID = :tipoPositivoId)
+                  AND LSP_ESTADO_REGISTRO = 1";
+            cmd.Parameters.Add(new OracleParameter("documento", normalizado));
+            cmd.Parameters.Add(new OracleParameter("tipoPositivoId", tipoPositivoId));
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        }
+
         public async Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync()
         {
             await using var conn = _db.CreateConnection();
@@ -296,43 +379,60 @@ namespace RL.API.Features.Listas.Persistence
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
+            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
 
-            long? existingId = null;
-            string? existingDataJson = null;
-            string? existingOrigenRegistro = null;
-            var origenRegistro = NormalizarOrigenRegistro(dto.OrigenRegistro);
-
-            await using (var checkCmd = conn.CreateCommand())
+            try
             {
-                checkCmd.CommandText = @"
+                long? existingId = null;
+                string? existingDataJson = null;
+                string? existingOrigenRegistro = null;
+                var origenRegistro = NormalizarOrigenRegistro(dto.OrigenRegistro);
+
+                await using (var checkCmd = conn.CreateCommand())
+                {
+                    checkCmd.Transaction = transaction;
+                    checkCmd.BindByName = true;
+                    checkCmd.CommandText = @"
                     SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO
                     FROM RL_LISTA_POSITIVOS 
-                    WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1";
-                checkCmd.Parameters.Add(new OracleParameter("noDoc", (object?)dto.NoDocumento ?? DBNull.Value));
+                    WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
+                    checkCmd.Parameters.Add(new OracleParameter("noDoc", (object?)dto.NoDocumento ?? DBNull.Value));
 
-                await using var reader = await checkCmd.ExecuteReaderAsync();
-                if (await reader.ReadAsync())
-                {
-                    existingId = Convert.ToInt64(reader["LSP_POSITIVO_ID"]);
-                    existingOrigenRegistro = reader["LSP_ORIGEN_REGISTRO"] == DBNull.Value ? null : reader["LSP_ORIGEN_REGISTRO"]?.ToString();
-                    var existingDto = new RegistrarPositivoDto
+                    var existingCount = 0;
+                    await using var reader = await checkCmd.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
                     {
-                        TipoDocumentoId = Convert.ToInt32(reader["LSP_TIPO_DOCUMENTO_ID"]),
-                        TipoPositivoId = dto.TipoPositivoId,
-                        NoDocumento = dto.NoDocumento,
-                        NombreCompleto = dto.NombreCompleto,
-                        MotivoIngreso = reader["LSP_MOTIVO_INGRESO"]?.ToString() ?? string.Empty,
-                        TipoListaCautelaId = reader["LSP_TIPO_LISTA_CAUTELA_ID"] == DBNull.Value ? null : Convert.ToInt32(reader["LSP_TIPO_LISTA_CAUTELA_ID"]),
-                        OrigenRegistro = existingOrigenRegistro
-                    };
-                    existingDataJson = Newtonsoft.Json.JsonConvert.SerializeObject(existingDto);
-                }
-            }
+                        existingCount++;
+                        if (existingCount != 1) continue;
 
-            if (existingId.HasValue)
-            {
-                await using var cmd = conn.CreateCommand();
-                cmd.CommandText = @"
+                        existingId = Convert.ToInt64(reader["LSP_POSITIVO_ID"]);
+                        existingOrigenRegistro = reader["LSP_ORIGEN_REGISTRO"] == DBNull.Value ? null : reader["LSP_ORIGEN_REGISTRO"]?.ToString();
+                        var existingDto = new RegistrarPositivoDto
+                        {
+                            TipoDocumentoId = Convert.ToInt32(reader["LSP_TIPO_DOCUMENTO_ID"]),
+                            TipoPositivoId = dto.TipoPositivoId,
+                            NoDocumento = dto.NoDocumento,
+                            NombreCompleto = dto.NombreCompleto,
+                            MotivoIngreso = reader["LSP_MOTIVO_INGRESO"]?.ToString() ?? string.Empty,
+                            TipoListaCautelaId = reader["LSP_TIPO_LISTA_CAUTELA_ID"] == DBNull.Value ? null : Convert.ToInt32(reader["LSP_TIPO_LISTA_CAUTELA_ID"]),
+                            OrigenRegistro = existingOrigenRegistro
+                        };
+                        existingDataJson = Newtonsoft.Json.JsonConvert.SerializeObject(existingDto);
+                    }
+
+                    if (existingCount > 1)
+                    {
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+                }
+
+                if (existingId.HasValue)
+                {
+                    await using var cmd = conn.CreateCommand();
+                    cmd.Transaction = transaction;
+                    cmd.BindByName = true;
+                    cmd.CommandText = @"
                     UPDATE RL_LISTA_POSITIVOS 
                     SET LSP_TIPO_DOCUMENTO_ID = :tipoDocId, 
                         LSP_TIPO_POSITIVO_ID = :tipoPosId,
@@ -343,7 +443,7 @@ namespace RL.API.Features.Listas.Persistence
                         LSP_ORIGEN_REGISTRO = NVL(:origenRegistro, LSP_ORIGEN_REGISTRO)
                     WHERE LSP_POSITIVO_ID = :id";
 
-                cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
+                    cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
                 cmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
                 cmd.Parameters.Add(new OracleParameter("nombre", dto.NombreCompleto));
                 cmd.Parameters.Add(new OracleParameter("motivo", dto.MotivoIngreso));
@@ -351,11 +451,11 @@ namespace RL.API.Features.Listas.Persistence
                 cmd.Parameters.Add(new OracleParameter("origenRegistro", (object?)origenRegistro ?? DBNull.Value));
                 cmd.Parameters.Add(new OracleParameter("id", existingId.Value));
 
-                int rows = await cmd.ExecuteNonQueryAsync();
-                bool success = rows > 0;
+                    int rows = await cmd.ExecuteNonQueryAsync();
+                    bool success = rows > 0;
 
-                if (success)
-                {
+                    if (success)
+                    {
                     var auditDto = new RegistrarPositivoDto
                     {
                         TipoDocumentoId = dto.TipoDocumentoId,
@@ -367,16 +467,23 @@ namespace RL.API.Features.Listas.Persistence
                         OrigenRegistro = origenRegistro ?? existingOrigenRegistro
                     };
                     string dataJsonNvo = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
-                    await _auditoriaRepo.RegistrarAsync("RL_LISTA_POSITIVOS", existingId.Value.ToString(), "UPDATE", existingDataJson, dataJsonNvo, creadoPorId, null, null, "MonitoreoListas");
-                    _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
+                        await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_LISTA_POSITIVOS", existingId.Value.ToString(), "UPDATE", existingDataJson, dataJsonNvo, creadoPorId, null, null, "MonitoreoListas");
+                        await transaction.CommitAsync();
+                        _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
+                    }
+                    else
+                    {
+                        await transaction.RollbackAsync();
+                    }
+                    return success;
                 }
-                return success;
-            }
-            else
-            {
-                var origenNuevo = origenRegistro ?? "MANUAL_CUMPLIMIENTO";
-                await using var cmd = conn.CreateCommand();
-                cmd.CommandText = @"
+                else
+                {
+                    var origenNuevo = origenRegistro ?? "MANUAL_CUMPLIMIENTO";
+                    await using var cmd = conn.CreateCommand();
+                    cmd.Transaction = transaction;
+                    cmd.BindByName = true;
+                    cmd.CommandText = @"
                     INSERT INTO RL_LISTA_POSITIVOS (
                         LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, 
                         LSP_NO_DOCUMENTO, LSP_NOMBRE_COMPLETO, LSP_MOTIVO_INGRESO, 
@@ -388,7 +495,7 @@ namespace RL.API.Features.Listas.Persistence
                         SYSDATE, :creadoPor, 1, :cautelaId, :origenRegistro
                     ) RETURNING LSP_POSITIVO_ID INTO :newId";
 
-                cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
+                    cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
                 cmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
                 cmd.Parameters.Add(new OracleParameter("noDoc", (object?)dto.NoDocumento ?? DBNull.Value));
                 cmd.Parameters.Add(new OracleParameter("nombre", dto.NombreCompleto));
@@ -400,11 +507,11 @@ namespace RL.API.Features.Listas.Persistence
                 var outParam = new OracleParameter("newId", OracleDbType.Int64, System.Data.ParameterDirection.Output);
                 cmd.Parameters.Add(outParam);
 
-                int rows = await cmd.ExecuteNonQueryAsync();
-                bool success = rows > 0;
+                    int rows = await cmd.ExecuteNonQueryAsync();
+                    bool success = rows > 0;
 
-                if (success && outParam.Value != DBNull.Value)
-                {
+                    if (success && outParam.Value != DBNull.Value)
+                    {
                     long newId = Convert.ToInt64(outParam.Value.ToString());
                     var auditDto = new RegistrarPositivoDto
                     {
@@ -417,11 +524,22 @@ namespace RL.API.Features.Listas.Persistence
                         OrigenRegistro = origenNuevo
                     };
                     string dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
-                    await _auditoriaRepo.RegistrarAsync("RL_LISTA_POSITIVOS", newId.ToString(), "INSERT", null, dataJson, creadoPorId, null, null, "MonitoreoListas");
-                    _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
-                }
+                        await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_LISTA_POSITIVOS", newId.ToString(), "INSERT", null, dataJson, creadoPorId, null, null, "MonitoreoListas");
+                        await transaction.CommitAsync();
+                        _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
+                    }
+                    else
+                    {
+                        await transaction.RollbackAsync();
+                    }
 
-                return success;
+                    return success;
+                }
+            }
+            catch
+            {
+                try { await transaction.RollbackAsync(); } catch { }
+                throw;
             }
         }
 
@@ -431,16 +549,23 @@ namespace RL.API.Features.Listas.Persistence
             await conn.OpenAsync();
 
             await using var cmd = conn.CreateCommand();
+            cmd.BindByName = true;
             cmd.CommandText = @"
                 SELECT LSP_TIPO_DOCUMENTO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
                 FROM RL_LISTA_POSITIVOS 
-                WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1";
+                WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
             cmd.Parameters.Add(new OracleParameter("noDoc", noDocumento));
 
+            ExistingPositivoDto? result = null;
+            var candidateCount = 0;
             await using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            while (await reader.ReadAsync())
             {
-                return new ExistingPositivoDto
+                candidateCount++;
+                if (candidateCount > 1)
+                    throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
+
+                result = new ExistingPositivoDto
                 {
                     TipoDocumentoId = Convert.ToInt32(reader["LSP_TIPO_DOCUMENTO_ID"]),
                     MotivoIngreso = reader["LSP_MOTIVO_INGRESO"]?.ToString() ?? string.Empty,
@@ -449,7 +574,7 @@ namespace RL.API.Features.Listas.Persistence
                     FechaRegistroInterno = reader["LSP_FECHA_CREACION"] == DBNull.Value ? null : Convert.ToDateTime(reader["LSP_FECHA_CREACION"])
                 };
             }
-            return null;
+            return result;
         }
 
         public async Task<List<SeguimientoDto>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde = null, DateTime? hasta = null)
@@ -460,13 +585,22 @@ namespace RL.API.Features.Listas.Persistence
             long? positivoId = null;
             await using (var findCmd = conn.CreateCommand())
             {
-                findCmd.CommandText = "SELECT LSP_POSITIVO_ID FROM RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1";
+                findCmd.BindByName = true;
+                findCmd.CommandText = "SELECT LSP_POSITIVO_ID FROM RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
                 findCmd.Parameters.Add(new OracleParameter("noDoc", noDocumento));
-                var res = await findCmd.ExecuteScalarAsync();
-                if (res != null && res != DBNull.Value)
+
+                var candidateIds = new List<long>(capacity: 2);
+                await using var reader = await findCmd.ExecuteReaderAsync();
+                while (candidateIds.Count < 2 && await reader.ReadAsync())
                 {
-                    positivoId = Convert.ToInt64(res);
+                    candidateIds.Add(Convert.ToInt64(reader["LSP_POSITIVO_ID"]));
                 }
+
+                if (candidateIds.Count > 1)
+                    throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
+
+                if (candidateIds.Count == 1)
+                    positivoId = candidateIds[0];
             }
 
             if (!positivoId.HasValue)
@@ -548,9 +682,14 @@ namespace RL.API.Features.Listas.Persistence
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
+            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
 
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
+            try
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.BindByName = true;
+                cmd.CommandText = @"
                 INSERT INTO RL_DETALLE_LISTA (
                     DLL_DETALLE_LISTA_ID, DLL_LSP_POSITIVO_ID, DLL_MOTIVO_INGRESO, 
                     DLL_USR_CREACION_ID, DLL_FECHA_CREACION, DLL_ESTADO_REGISTRO
@@ -566,23 +705,34 @@ namespace RL.API.Features.Listas.Persistence
             var outParam = new OracleParameter("newId", OracleDbType.Int64, System.Data.ParameterDirection.Output);
             cmd.Parameters.Add(outParam);
 
-            await cmd.ExecuteNonQueryAsync();
-            long newId = Convert.ToInt64(outParam.Value.ToString());
+                await cmd.ExecuteNonQueryAsync();
+                long newId = Convert.ToInt64(outParam.Value.ToString());
 
-            // Auditoría
-            var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { PositivoId = positivoId, Motivo = motivo });
-            await _auditoriaRepo.RegistrarAsync("RL_DETALLE_LISTA", newId.ToString(), "INSERT", null, dataJson, usuarioId, null, null, "MonitoreoListas");
-            _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
+                var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { PositivoId = positivoId, Motivo = motivo });
+                await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_DETALLE_LISTA", newId.ToString(), "INSERT", null, dataJson, usuarioId, null, null, "MonitoreoListas");
+                await transaction.CommitAsync();
+                _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
 
-            return newId;
+                return newId;
+            }
+            catch
+            {
+                try { await transaction.RollbackAsync(); } catch { }
+                throw;
+            }
         }
         public async Task GuardarEvidenciaMetaAsync(long detalleId, string nombreArchivo, string tipoMime, string rutaArchivo, long usuarioId)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
+            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
 
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
+            try
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.BindByName = true;
+                cmd.CommandText = @"
                 INSERT INTO RL_DETALLE_EVIDENCIA (
                     EVI_ID, EVI_DETALLE_ID, EVI_NOMBRE_ARCHIVO, 
                     EVI_TIPO_MIME, EVI_RUTA_ARCHIVO, EVI_FECHA_CREACION, EVI_USR_CREACION_ID,
@@ -601,12 +751,18 @@ namespace RL.API.Features.Listas.Persistence
             var outParam = new OracleParameter("newId", OracleDbType.Int64, System.Data.ParameterDirection.Output);
             cmd.Parameters.Add(outParam);
 
-            await cmd.ExecuteNonQueryAsync();
-            long newId = Convert.ToInt64(outParam.Value.ToString());
+                await cmd.ExecuteNonQueryAsync();
+                long newId = Convert.ToInt64(outParam.Value.ToString());
 
-            // Auditoría
-            var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { DetalleId = detalleId, NombreArchivo = nombreArchivo, TipoMime = tipoMime, NombreFisico = rutaArchivo });
-            await _auditoriaRepo.RegistrarAsync("RL_DETALLE_EVIDENCIA", newId.ToString(), "INSERT", null, dataJson, usuarioId, null, null, "MonitoreoListas");
+                var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { DetalleId = detalleId, NombreArchivo = nombreArchivo, TipoMime = tipoMime, NombreFisico = rutaArchivo });
+                await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_DETALLE_EVIDENCIA", newId.ToString(), "INSERT", null, dataJson, usuarioId, null, null, "MonitoreoListas");
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                try { await transaction.RollbackAsync(); } catch { }
+                throw;
+            }
         }
 
         public async Task<long?> ObtenerPositivoIdPorDocumentoAsync(string noDocumento)
@@ -615,15 +771,21 @@ namespace RL.API.Features.Listas.Persistence
             await conn.OpenAsync();
 
             await using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT LSP_POSITIVO_ID FROM RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1";
+            cmd.BindByName = true;
+            cmd.CommandText = "SELECT LSP_POSITIVO_ID FROM RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
             cmd.Parameters.Add(new OracleParameter("noDoc", noDocumento));
 
-            var res = await cmd.ExecuteScalarAsync();
-            if (res != null && res != DBNull.Value)
+            var candidateIds = new List<long>(capacity: 2);
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (candidateIds.Count < 2 && await reader.ReadAsync())
             {
-                return Convert.ToInt64(res);
+                candidateIds.Add(Convert.ToInt64(reader["LSP_POSITIVO_ID"]));
             }
-            return null;
+
+            if (candidateIds.Count > 1)
+                throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
+
+            return candidateIds.Count == 1 ? candidateIds[0] : null;
         }
 
         public async Task<(string Nombre, string Ruta, string Mime)?> ObtenerEvidenciaPorIdAsync(long evidenciaId)
@@ -660,19 +822,26 @@ namespace RL.API.Features.Listas.Persistence
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
+            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
 
-            string? anteriorMotivo = null;
-            await using (var getCmd = conn.CreateCommand())
+            try
             {
-                getCmd.CommandText = "SELECT DLL_MOTIVO_INGRESO FROM RL_DETALLE_LISTA WHERE DLL_DETALLE_LISTA_ID = :detId AND DLL_ESTADO_REGISTRO = 1";
-                getCmd.Parameters.Add(new OracleParameter("detId", detalleId));
-                var res = await getCmd.ExecuteScalarAsync();
-                if (res == null || res == DBNull.Value) return false;
-                anteriorMotivo = res.ToString();
-            }
+                string? anteriorMotivo = null;
+                await using (var getCmd = conn.CreateCommand())
+                {
+                    getCmd.Transaction = transaction;
+                    getCmd.BindByName = true;
+                    getCmd.CommandText = "SELECT DLL_MOTIVO_INGRESO FROM RL_DETALLE_LISTA WHERE DLL_DETALLE_LISTA_ID = :detId AND DLL_ESTADO_REGISTRO = 1";
+                    getCmd.Parameters.Add(new OracleParameter("detId", detalleId));
+                    var res = await getCmd.ExecuteScalarAsync();
+                    if (res == null || res == DBNull.Value) { await transaction.RollbackAsync(); return false; }
+                    anteriorMotivo = res.ToString();
+                }
 
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.BindByName = true;
+                cmd.CommandText = @"
                 UPDATE RL_DETALLE_LISTA 
                 SET DLL_MOTIVO_INGRESO = :motivo, 
                     DLL_USR_MODIFICACION_ID = :usrId, 
@@ -682,50 +851,63 @@ namespace RL.API.Features.Listas.Persistence
             cmd.Parameters.Add(new OracleParameter("usrId", usuarioId));
             cmd.Parameters.Add(new OracleParameter("detId", detalleId));
 
-            int rows = await cmd.ExecuteNonQueryAsync();
-            if (rows > 0)
-            {
+                int rows = await cmd.ExecuteNonQueryAsync();
+                if (rows > 0)
+                {
                 var valAnterior = Newtonsoft.Json.JsonConvert.SerializeObject(new { Motivo = anteriorMotivo });
                 var valNuevo = Newtonsoft.Json.JsonConvert.SerializeObject(new { Motivo = motivoIngreso });
-                await _auditoriaRepo.RegistrarAsync("RL_DETALLE_LISTA", detalleId.ToString(), "UPDATE", valAnterior, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                    await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_DETALLE_LISTA", detalleId.ToString(), "UPDATE", valAnterior, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                    await transaction.CommitAsync();
                 _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
                 return true;
+                }
+                await transaction.RollbackAsync();
+                return false;
             }
-            return false;
+            catch
+            {
+                try { await transaction.RollbackAsync(); } catch { }
+                throw;
+            }
         }
 
         public async Task<bool> EliminarEvidenciaMetaAsync(long evidenciaId, long usuarioId, string motivoEliminacion)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
+            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
 
-            // Se captura el estado anterior para que RL_AUDITORIA conserve que evidencia fue inactivada.
-            string? anteriorJson = null;
-            await using (var getCmd = conn.CreateCommand())
+            try
             {
-                getCmd.CommandText = @"
+                string? anteriorJson = null;
+                await using (var getCmd = conn.CreateCommand())
+                {
+                    getCmd.Transaction = transaction;
+                    getCmd.BindByName = true;
+                    getCmd.CommandText = @"
                     SELECT EVI_NOMBRE_ARCHIVO, EVI_RUTA_ARCHIVO, EVI_TIPO_MIME, EVI_ESTADO_REGISTRO
                     FROM RL_DETALLE_EVIDENCIA
                     WHERE EVI_ID = :eviId
                       AND EVI_ESTADO_REGISTRO = 1";
-                getCmd.Parameters.Add(new OracleParameter("eviId", evidenciaId));
-                await using var reader = await getCmd.ExecuteReaderAsync();
-                if (await reader.ReadAsync())
-                {
+                    getCmd.Parameters.Add(new OracleParameter("eviId", evidenciaId));
+                    await using var reader = await getCmd.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
+                    {
                     anteriorJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { 
                         Nombre = reader["EVI_NOMBRE_ARCHIVO"]?.ToString(), 
                         NombreFisico = reader["EVI_RUTA_ARCHIVO"]?.ToString(),
                         TipoMime = reader["EVI_TIPO_MIME"]?.ToString(),
                         Estado = Convert.ToInt32(reader["EVI_ESTADO_REGISTRO"])
                     });
+                    }
                 }
-            }
 
-            if (anteriorJson == null) return false;
+                if (anteriorJson == null) { await transaction.RollbackAsync(); return false; }
 
-            // Eliminación lógica: no se borra el archivo ni la fila; solo se marca inactiva.
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.BindByName = true;
+                cmd.CommandText = @"
                 UPDATE RL_DETALLE_EVIDENCIA
                 SET EVI_ESTADO_REGISTRO = 0,
                     EVI_USR_INACTIVO_ID = :usrId,
@@ -735,9 +917,9 @@ namespace RL.API.Features.Listas.Persistence
             cmd.Parameters.Add(new OracleParameter("usrId", usuarioId));
             cmd.Parameters.Add(new OracleParameter("eviId", evidenciaId));
 
-            int rows = await cmd.ExecuteNonQueryAsync();
-            if (rows > 0)
-            {
+                int rows = await cmd.ExecuteNonQueryAsync();
+                if (rows > 0)
+                {
                 var valNuevo = Newtonsoft.Json.JsonConvert.SerializeObject(new
                 {
                     Estado = 0,
@@ -745,30 +927,44 @@ namespace RL.API.Features.Listas.Persistence
                     TipoEliminacion = "LOGICA",
                     MotivoEliminacion = motivoEliminacion
                 });
-                await _auditoriaRepo.RegistrarAsync("RL_DETALLE_EVIDENCIA", evidenciaId.ToString(), "DELETE", anteriorJson, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                    await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_DETALLE_EVIDENCIA", evidenciaId.ToString(), "DELETE", anteriorJson, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                    await transaction.CommitAsync();
                 return true;
+                }
+                await transaction.RollbackAsync();
+                return false;
             }
-            return false;
+            catch
+            {
+                try { await transaction.RollbackAsync(); } catch { }
+                throw;
+            }
         }
 
         public async Task<bool> EliminarSeguimientoLogicoAsync(long detalleId, long usuarioId, string motivoEliminacion)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
+            await using var transaction = (OracleTransaction)await conn.BeginTransactionAsync();
 
-            // Guardamos el comentario original para poder comparar antes/despues en bitacora.
-            string? anteriorMotivo = null;
-            await using (var getCmd = conn.CreateCommand())
+            try
             {
-                getCmd.CommandText = "SELECT DLL_MOTIVO_INGRESO FROM RL_DETALLE_LISTA WHERE DLL_DETALLE_LISTA_ID = :detId AND DLL_ESTADO_REGISTRO = 1";
-                getCmd.Parameters.Add(new OracleParameter("detId", detalleId));
-                var res = await getCmd.ExecuteScalarAsync();
-                if (res == null || res == DBNull.Value) return false;
-                anteriorMotivo = res.ToString();
-            }
+                string? anteriorMotivo = null;
+                await using (var getCmd = conn.CreateCommand())
+                {
+                    getCmd.Transaction = transaction;
+                    getCmd.BindByName = true;
+                    getCmd.CommandText = "SELECT DLL_MOTIVO_INGRESO FROM RL_DETALLE_LISTA WHERE DLL_DETALLE_LISTA_ID = :detId AND DLL_ESTADO_REGISTRO = 1";
+                    getCmd.Parameters.Add(new OracleParameter("detId", detalleId));
+                    var res = await getCmd.ExecuteScalarAsync();
+                    if (res == null || res == DBNull.Value) { await transaction.RollbackAsync(); return false; }
+                    anteriorMotivo = res.ToString();
+                }
 
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.BindByName = true;
+                cmd.CommandText = @"
                 UPDATE RL_DETALLE_LISTA 
                 SET DLL_ESTADO_REGISTRO = 0, 
                     DLL_USR_INACTIVO_ID = :usrId, 
@@ -777,9 +973,9 @@ namespace RL.API.Features.Listas.Persistence
             cmd.Parameters.Add(new OracleParameter("usrId", usuarioId));
             cmd.Parameters.Add(new OracleParameter("detId", detalleId));
 
-            int rows = await cmd.ExecuteNonQueryAsync();
-            if (rows > 0)
-            {
+                int rows = await cmd.ExecuteNonQueryAsync();
+                if (rows > 0)
+                {
                 var valAnterior = Newtonsoft.Json.JsonConvert.SerializeObject(new { Motivo = anteriorMotivo, Estado = 1 });
                 // El motivo de eliminacion queda en AUD_DATOS_NVO, sin requerir campos nuevos.
                 var valNuevo = Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -790,11 +986,19 @@ namespace RL.API.Features.Listas.Persistence
                     TipoEliminacion = "LOGICA",
                     MotivoEliminacion = motivoEliminacion
                 });
-                await _auditoriaRepo.RegistrarAsync("RL_DETALLE_LISTA", detalleId.ToString(), "DELETE", valAnterior, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                    await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_DETALLE_LISTA", detalleId.ToString(), "DELETE", valAnterior, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                    await transaction.CommitAsync();
                 _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
                 return true;
+                }
+                await transaction.RollbackAsync();
+                return false;
             }
-            return false;
+            catch
+            {
+                try { await transaction.RollbackAsync(); } catch { }
+                throw;
+            }
         }
 
         public async Task RegistrarAuditoriaReporteImpresoAsync(string noDocumento, string dataJson, long usuarioId)
@@ -1577,139 +1781,27 @@ namespace RL.API.Features.Listas.Persistence
                 GROUP BY LSP_NO_DOCUMENTO
             ), REPORTE_AGG AS (
                 SELECT DNI, LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS,
+                       COUNT(DISTINCT TRIM(REGEXP_REPLACE(NOMBRE, '[[:space:]]+', ' '))) TOTAL_NOMBRES,
+                       MAX(TRIM(REGEXP_REPLACE(NOMBRE, '[[:space:]]+', ' '))) NOMBRE,
                        MAX(FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(FECHA_CALIFICO) FECHA_CALIFICO
                 FROM DNP_IHSS.REPORTE_COINCIDENCIAS
                 WHERE TIPO_CALIFICACION_ID = 1 AND FECHA_CALIFICO IS NOT NULL
                 GROUP BY DNI, LISTA_CONCIDENCIA
-            ), REPORTE_IDS AS (
-                SELECT DISTINCT DNI FROM REPORTE_AGG
-            ), PERSONA_FUENTE AS (
-                SELECT DISTINCT
-                       S.NUMERO_IDENTIFICACION,
-                       TRIM(S.NOMBRES || ' ' || S.APELLIDOS) AS NOMBRES_PERSONA
-                FROM DNP_IHSS.SOCIOS S
-                INNER JOIN REPORTE_IDS I ON I.DNI = S.NUMERO_IDENTIFICACION
-                WHERE EXISTS (
-                    SELECT 1
-                    FROM DNP_IHSS.TIPO_IDENTIFICACION TI
-                    WHERE TI.TIPO_IDENTIFICACION_ID = S.TIPO_IDENTIFICACION_ID
-                )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.TIPO_GENERO TG
-                        WHERE TG.TIPO_GENERO_ID = S.TIPO_GENERO_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.PAISES_NACIONALIDAD PN
-                        WHERE PN.PAIS_NACIONALIDAD_ID = S.PAIS_NACIONALIDAD_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.PAISES_NACIONALIDAD PD
-                        WHERE PD.PAIS_NACIONALIDAD_ID = S.PAIS_DOMICILIO_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.DEPARTAMENTOS D
-                        WHERE D.DEPARTAMENTO_ID = S.DEPARTAMENTO_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.MUNICIPIOS MU
-                        WHERE MU.DEPARTAMENTO_ID = S.DEPARTAMENTO_ID
-                          AND MU.MUNICIPIO_ID = S.MUNICIPIO_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.DATOS_EMPRESA DE
-                        WHERE DE.DATOS_EMPRESA_ID = S.DATOS_EMPRESA_ID
-                          AND EXISTS (
-                              SELECT 1
-                              FROM MMATAMOROS.PATRONOS PA
-                              WHERE PA.NUMEPATRO = DE.NUMERO_PATRONAL
-                          )
-                    )
-                UNION
-                SELECT DISTINCT
-                       R.NUMERO_IDENTIFICACION,
-                       TRIM(R.NOMBRES || ' ' || R.APELLIDOS) AS NOMBRES_PERSONA
-                FROM DNP_IHSS.REPRESENTANTES R
-                INNER JOIN REPORTE_IDS I ON I.DNI = R.NUMERO_IDENTIFICACION
-                WHERE EXISTS (
-                    SELECT 1
-                    FROM DNP_IHSS.TIPO_CONDICION_ACTUA CA
-                    WHERE CA.TIPO_CONDICION_ACTUA_ID = R.TIPO_CONDICION_ACTUA_ID
-                )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.TIPO_IDENTIFICACION TI
-                        WHERE TI.TIPO_IDENTIFICACION_ID = R.TIPO_IDENTIFICACION_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.TIPO_GENERO TG
-                        WHERE TG.TIPO_GENERO_ID = R.TIPO_GENERO_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.PAISES_NACIONALIDAD PN
-                        WHERE PN.PAIS_NACIONALIDAD_ID = R.PAIS_NACIONALIDAD_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.DEPARTAMENTOS DN
-                        WHERE DN.DEPARTAMENTO_ID = R.DEPARTAMENTO_NACIMIENTO_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.MUNICIPIOS MN
-                        WHERE MN.DEPARTAMENTO_ID = R.DEPARTAMENTO_NACIMIENTO_ID
-                          AND MN.MUNICIPIO_ID = R.MUNICIPIO_NACIMIENTO_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.DEPARTAMENTOS DR
-                        WHERE DR.DEPARTAMENTO_ID = R.DEPARTAMENTO_RESIDENCIA_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.MUNICIPIOS MR
-                        WHERE MR.DEPARTAMENTO_ID = R.DEPARTAMENTO_RESIDENCIA_ID
-                          AND MR.MUNICIPIO_ID = R.MUNICIPIO_RESIDENCIA_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.TIPO_OCUPACION OC
-                        WHERE OC.TIPO_OCUPACION_ID = R.TIPO_OCUPACION_ID
-                    )
-                    AND EXISTS (
-                        SELECT 1
-                        FROM DNP_IHSS.DATOS_EMPRESA DE
-                        WHERE DE.DATOS_EMPRESA_ID = R.DATOS_EMPRESA_ID
-                          AND EXISTS (
-                              SELECT 1
-                              FROM MMATAMOROS.PATRONOS PA
-                              WHERE PA.NUMEPATRO = DE.NUMERO_PATRONAL
-                          )
-                    )
-            ), PERSONA_FUENTE_DISTINCTA AS (
-                SELECT NUMERO_IDENTIFICACION, NOMBRES_PERSONA
-                FROM PERSONA_FUENTE
-                GROUP BY NUMERO_IDENTIFICACION, NOMBRES_PERSONA
-            ), PERSONAS AS (
-                SELECT NUMERO_IDENTIFICACION,
-                       TRIM(REGEXP_REPLACE(NOMBRES_PERSONA, '[[:space:]]+', ' ')) AS NOMBRE
-                FROM PERSONA_FUENTE_DISTINCTA
-                GROUP BY NUMERO_IDENTIFICACION,
-                         TRIM(REGEXP_REPLACE(NOMBRES_PERSONA, '[[:space:]]+', ' '))
             ), Coincidencias AS (
-                SELECT R.DNI AS NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA, R.TOTAL_REPETIDOS, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
+                SELECT R.DNI AS NUMERO_IDENTIFICACION,
+                       CASE
+                           WHEN R.DNI IS NULL
+                                OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
+                                OR UPPER(TRIM(R.DNI)) IN ('NULL', 'VACIO', 'VACÍO', 'SIN IDENTIFICACION', 'SIN IDENTIFICACIÓN')
+                               THEN 'ASOCIACIÓN NO VERIFICADA'
+                           WHEN R.TOTAL_NOMBRES = 1 THEN R.NOMBRE
+                           ELSE 'ASOCIACIÓN NO VERIFICADA'
+                       END AS NOMBRE,
+                       R.LISTA_CONCIDENCIA, R.TOTAL_REPETIDOS, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
                        p.FECHA_REGISTRO_INTERNO,
                        NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO
                 FROM REPORTE_AGG R
-                INNER JOIN PERSONAS D ON D.NUMERO_IDENTIFICACION = R.DNI
-                LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION
+                LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = R.DNI
             )
             SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, NUMERO_IDENTIFICACION AS BUSQUEDA FROM Coincidencias
             UNION ALL

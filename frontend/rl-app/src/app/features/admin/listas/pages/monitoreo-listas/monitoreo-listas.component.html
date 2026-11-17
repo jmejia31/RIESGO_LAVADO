@@ -88,11 +88,11 @@
         <p class="text-xs text-gray-500">La búsqueda se actualiza automáticamente y la exportación respeta la vista filtrada.</p>
       </div>
       <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
-        <button (click)="exportarListaPrincipal()" [disabled]="totalActual() === 0" title="Exportar coincidencias a Excel" aria-label="Exportar coincidencias a Excel"
+        <button (click)="exportarListaPrincipal()" [disabled]="cargando() || !!errorMonitoreo()" title="Exportar coincidencias a Excel" aria-label="Exportar coincidencias a Excel"
           class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
             <app-action-icon action="export-excel"></app-action-icon>
           </button>
-        <button (click)="exportarPdfListaPrincipal()" [disabled]="totalActual() === 0" title="Generar reporte PDF de coincidencias" aria-label="Generar reporte PDF de coincidencias"
+        <button (click)="exportarPdfListaPrincipal()" [disabled]="cargando() || !!errorMonitoreo()" title="Generar reporte PDF de coincidencias" aria-label="Generar reporte PDF de coincidencias"
           class="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
             <app-action-icon action="export-pdf"></app-action-icon>
           </button>
@@ -135,7 +135,12 @@
     <!-- Tabla -->
     <div class="relative overflow-x-auto rounded-xl border border-gray-200">
 
-        @if (datosFiltrados().length === 0) {
+        @if (errorMonitoreo()) {
+          <div class="py-20 flex flex-col items-center justify-center gap-2 text-center px-6">
+            <p class="text-sm font-semibold text-red-700">{{ errorMonitoreo() }}</p>
+            <p class="text-xs text-gray-500">Los datos anteriores no se reemplazaron. Reintente cuando el servicio esté disponible.</p>
+          </div>
+        } @else if (datosFiltrados().length === 0) {
           <!-- Vacío -->
           <div class="py-20 flex flex-col items-center justify-center gap-2">
             <svg class="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -191,7 +196,7 @@
             <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-700">
 
               @if (tipoActivo() === 'juridica') {
-                @for (row of juridicasPaginadas(); track row.rtn + row.numeroPatrono) {
+                @for (row of juridicasPaginadas(); track row) {
                   <tr class="hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4">
                       <span class="font-medium block text-gray-900">{{ row.numeroPatrono }}</span>
@@ -280,7 +285,7 @@
               }
 
               @if (tipoActivo() === 'natural') {
-                @for (row of naturalesPaginadas(); track row.numeroIdentificacion) {
+                @for (row of naturalesPaginadas(); track row) {
                   <tr class="hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4 font-medium text-gray-900">{{ row.numeroIdentificacion }}</td>
                      <td class="px-6 py-4 font-semibold text-gray-900">
@@ -372,7 +377,7 @@
               }
 
               @if (tipoActivo() === 'empleado') {
-                @for (row of empleadosPaginadas(); track row.identidad) {
+                @for (row of empleadosPaginadas(); track row) {
                   <tr class="hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4 font-medium text-gray-900">{{ row.identidad }}</td>
                     <td class="px-6 py-4 font-semibold text-gray-900">
@@ -500,6 +505,10 @@
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <p class="text-sm font-medium text-gray-500">Cargando detalles...</p>
+              </div>
+            } @else if (detalleError()) {
+              <div class="py-12 flex flex-col items-center justify-center gap-2 text-center px-6">
+                <p class="text-sm font-semibold text-red-700">{{ detalleError() }}</p>
               </div>
             } @else if ((tipoActivo() === 'empleado' ? detallesEmpleado().length : detallesNatural().length) === 0) {
               <div class="py-12 flex flex-col items-center justify-center gap-2">
@@ -834,6 +843,10 @@
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <span class="text-xs text-gray-400 font-medium">Cargando historial...</span>
+              </div>
+            } @else if (seguimientoError()) {
+              <div class="flex-1 flex flex-col items-center justify-center py-10 gap-2 text-center px-6">
+                <span class="text-xs text-red-700 font-semibold">{{ seguimientoError() }}</span>
               </div>
             } @else if (listaSeguimientos().length === 0) {
               <div class="flex-1 flex flex-col items-center justify-center py-10 gap-2">

@@ -130,14 +130,15 @@ describe('MonitoreoListasComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
-  it('limpia resultados de empleados y detiene la carga cuando el servicio falla', () => {
+  it('conserva resultados de empleados y expone el error cuando el servicio falla', () => {
     component.tipoActivo.set('empleado');
     component.empleadosRaw.set([{ identidad: '01' }] as never);
     service['getEmpleadosPaginadas'].mockReturnValue(throwError(() => new Error('API no disponible')));
 
     component.cargarDatos();
 
-    expect(component.empleadosRaw()).toEqual([]);
+    expect(component.empleadosRaw()).toEqual([{ identidad: '01' }]);
+    expect(component.errorMonitoreo()).toContain('No se pudieron cargar');
     expect(component.cargando()).toBe(false);
   });
 
@@ -154,14 +155,15 @@ describe('MonitoreoListasComponent', () => {
     expect(component.cargandoSeguimiento()).toBe(false);
   });
 
-  it('deja el historial vacio y recupera el estado si falla la consulta de seguimientos', () => {
+  it('conserva el historial y expone el error si falla la consulta de seguimientos', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     component.listaSeguimientos.set([{ detalleListaId: 12 }] as never);
     service['getSeguimientos'].mockReturnValue(throwError(() => new Error('Fallo controlado')));
 
     component.cargarSeguimientos('0801');
 
-    expect(component.listaSeguimientos()).toEqual([]);
+    expect(component.listaSeguimientos()).toEqual([{ detalleListaId: 12 }]);
+    expect(component.seguimientoError()).toContain('No se pudo cargar');
     expect(component.cargandoSeguimiento()).toBe(false);
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
@@ -388,14 +390,13 @@ describe('MonitoreoListasComponent', () => {
     }));
   });
 
-  it('no exporta la lista principal cuando no existen resultados filtrados', () => {
+  it('permite exportar un reporte vacío cuando la consulta terminó correctamente', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
     component.juridicasRaw.set([]);
 
     component.exportarListaPrincipal();
 
-    expect(service['registrarAuditoriaExportacion']).not.toHaveBeenCalled();
-    expect(click).not.toHaveBeenCalled();
+    expect(service['registrarAuditoriaExportacion']).toHaveBeenCalledOnce();
   });
 
   it('audita y abre la vista previa de la lista principal juridica con los datos filtrados', async () => {

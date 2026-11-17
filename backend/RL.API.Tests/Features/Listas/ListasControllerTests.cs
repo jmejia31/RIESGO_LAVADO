@@ -70,6 +70,32 @@ public sealed class ListasControllerTests
     }
 
     [Fact]
+    public async Task ObtenerDetalleNatural_IdentidadAmbigua_RetornaConflict()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerDetalleNaturalAsync), _ =>
+            Task.FromException<List<DetalleCoincidenciaNaturalDto>>(
+                new AmbiguousIdentityException("El documento tiene asociaciones ambiguas.")));
+
+        var result = await controller.ObtenerDetalleNatural("N/A(3)");
+
+        Assert.IsType<ConflictObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task ObtenerDetalleNatural_AsociacionNoVerificada_RetornaUnprocessableEntity()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerDetalleNaturalAsync), _ =>
+            Task.FromException<List<DetalleCoincidenciaNaturalDto>>(
+                new UnverifiedAssociationException("La asociación no pudo verificarse.")));
+
+        var result = await controller.ObtenerDetalleNatural("0801");
+
+        Assert.IsType<UnprocessableEntityObjectResult>(result);
+    }
+
+    [Fact]
     public async Task ObtenerDetalleEmpleado_RetornaOk()
     {
         var controller = CrearController(out var listasStub, out _, out _);
