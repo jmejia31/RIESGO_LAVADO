@@ -86,11 +86,13 @@ namespace RL.API.Features.Listas
 
         [HttpGet("naturales/{numeroIdentificacion}/detalle")]
         [ModuloAuthorize(4)]
-        public async Task<IActionResult> ObtenerDetalleNatural(string numeroIdentificacion)
+        public async Task<IActionResult> ObtenerDetalleNatural(string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null)
         {
+            if (idRegistroFuente is <= 0 || (idRegistroFuente.HasValue && tipoFuente is not ("DNP_COINCIDENCIA" or "MANUAL_CUMPLIMIENTO")))
+                return BadRequest(new { success = false, mensaje = "Referencia de origen inválida." });
             try
             {
-                var result = await _listasService.ObtenerDetalleNaturalAsync(numeroIdentificacion);
+                var result = await _listasService.ObtenerDetalleNaturalAsync(numeroIdentificacion, idRegistroFuente, tipoFuente);
                 return Ok(new { success = true, datos = result });
             }
             catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
@@ -99,16 +101,18 @@ namespace RL.API.Features.Listas
 
         [HttpGet("naturales/detalle")]
         [ModuloAuthorize(4)]
-        public Task<IActionResult> ObtenerDetalleNaturalPorConsulta([FromQuery] string numeroIdentificacion)
-            => ObtenerDetalleNatural(numeroIdentificacion);
+        public Task<IActionResult> ObtenerDetalleNaturalPorConsulta([FromQuery] string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null)
+            => ObtenerDetalleNatural(numeroIdentificacion, idRegistroFuente, tipoFuente);
 
         [HttpGet("empleados/{numeroIdentificacion}/detalle")]
         [ModuloAuthorize(4)]
-        public async Task<IActionResult> ObtenerDetalleEmpleado(string numeroIdentificacion)
+        public async Task<IActionResult> ObtenerDetalleEmpleado(string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null, [FromQuery] DateTime? periodoPlanilla = null)
         {
+            if (idRegistroFuente is <= 0 || (idRegistroFuente.HasValue && tipoFuente is not ("DNP_COINCIDENCIA" or "MANUAL_CUMPLIMIENTO")))
+                return BadRequest(new { success = false, mensaje = "Referencia de origen inválida." });
             try
             {
-                var result = await _listasService.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
+                var result = await _listasService.ObtenerDetalleEmpleadoAsync(numeroIdentificacion, idRegistroFuente, tipoFuente, periodoPlanilla);
                 return Ok(new { success = true, datos = result });
             }
             catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
@@ -117,8 +121,8 @@ namespace RL.API.Features.Listas
 
         [HttpGet("empleados/detalle")]
         [ModuloAuthorize(4)]
-        public Task<IActionResult> ObtenerDetalleEmpleadoPorConsulta([FromQuery] string numeroIdentificacion)
-            => ObtenerDetalleEmpleado(numeroIdentificacion);
+        public Task<IActionResult> ObtenerDetalleEmpleadoPorConsulta([FromQuery] string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null, [FromQuery] DateTime? periodoPlanilla = null)
+            => ObtenerDetalleEmpleado(numeroIdentificacion, idRegistroFuente, tipoFuente, periodoPlanilla);
 
         [HttpGet("tipos-documento")]
         [ModuloAuthorize(4)]

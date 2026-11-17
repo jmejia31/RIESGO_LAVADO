@@ -62,6 +62,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   filtroEstado = signal<FiltroEstado>('todos');
   filtroFechaDesde = signal<string>('');
   filtroFechaHasta = signal<string>('');
+  categoriaIdentidad = signal<'identificadas' | 'sin_identificacion'>('identificadas');
+  periodoPlanilla = signal<string>('');
 
   // Modal Detalle
   modalDetalleAbierto = signal(false);
@@ -182,7 +184,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     !!this.busqueda().trim() ||
     this.filtroEstado() !== 'todos' ||
     !!this.filtroFechaDesde() ||
-    !!this.filtroFechaHasta()
+    !!this.filtroFechaHasta() ||
+    (this.tipoActivo() === 'natural' && this.categoriaIdentidad() === 'sin_identificacion') ||
+    (this.tipoActivo() === 'empleado' && !!this.periodoPlanilla())
   );
 
   // Paginación
@@ -251,6 +255,21 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargarDatos();
   }
 
+  cambiarCategoriaIdentidad(valor: 'identificadas' | 'sin_identificacion'): void {
+    if (valor !== 'identificadas' && valor !== 'sin_identificacion') return;
+    this.categoriaIdentidad.set(valor);
+    this.paginaActual.set(1);
+    this.cargarDatos({ force: true });
+  }
+
+  cambiarPeriodoPlanilla(valor: string): void {
+    // input[type=month]; el backend recibe una fecha dia 1 valida.
+    if (valor && !/^\d{4}-(0[1-9]|1[0-2])$/.test(valor)) return;
+    this.periodoPlanilla.set(valor);
+    this.paginaActual.set(1);
+    this.cargarDatos({ force: true });
+  }
+
   cambiarLimite(valor: number): void {
     if (![10, 25, 50].includes(valor)) return;
     this.limite.set(valor);
@@ -277,6 +296,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.filtroEstado.set('todos');
     this.filtroFechaDesde.set('');
     this.filtroFechaHasta.set('');
+    this.categoriaIdentidad.set('identificadas');
+    this.periodoPlanilla.set('');
     this.paginaActual.set(1);
     this.cargarDatos();
   }
@@ -302,7 +323,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const tipo = options.tipo ?? this.tipoActivo();
     const forzar = options.force ?? false;
     const mostrarLoader = options.mostrarLoader ?? true;
-    const consulta = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null, orden: this.orden(), direccion: this.direccion() };
+    const consulta: ConsultaMonitoreoPaginada = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null, orden: this.orden(), direccion: this.direccion(),
+      categoriaIdentidad: tipo === 'natural' ? this.categoriaIdentidad() : undefined,
+      periodoPlanilla: tipo === 'empleado' && this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : null };
     const contexto = JSON.stringify([tipo, consulta]);
     if (!forzar && (contexto === this.contextoMonitoreoCargado || contexto === this.contextoMonitoreoEnCarga)) return;
 
@@ -441,7 +464,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     return item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'VERIFIED';
   }
 
-  obtenerEtiquetaIdentidad(item: { estadoIdentidad?: string; estadoAsociacion?: string }): string {
+  obtenerEtiquetaIdentidad(item: { estadoIdentidad?: string; estadoAsociacion?: string; categoriaIdentidad?: string }): string {
+    if (item.categoriaIdentidad === 'SIN_IDENTIFICACION') return 'Sin identificación atribuible';
     if (item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'VERIFIED') return 'Identidad verificada';
     if (item.estadoIdentidad === 'AMBIGUOUS' || item.estadoAsociacion === 'AMBIGUOUS') return 'Identidad ambigua';
     if (item.estadoIdentidad === 'INVALID' || item.estadoAsociacion === 'INVALID') return 'Sin identificación';
@@ -503,7 +527,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.modalDetalleAbierto.set(true);
     this.detalleCargando.set(true);
     this.detalleError.set(null);
-    this.listasService.getDetalleNatural(row.numeroIdentificacion, 'local').subscribe({
+    this.listasService.getDetalleNatural(row.numeroIdentificacion, 'local', row.idRegistroFuente, row.tipoFuente).subscribe({
       next: (res) => {
         if (solicitud !== this.detalleSolicitud) return;
         this.detallesNatural.set(res);
@@ -523,7 +547,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.modalDetalleAbierto.set(true);
     this.detalleCargando.set(true);
     this.detalleError.set(null);
-    this.listasService.getDetalleEmpleado(row.identidad, 'local').subscribe({
+    this.listasService.getDetalleEmpleado(row.identidad, 'local', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined).subscribe({
       next: (res) => {
         if (solicitud !== this.detalleSolicitud) return;
         this.detallesEmpleado.set(res);
@@ -950,7 +974,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
-    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion);
+    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
     const obsPositivo = row.tieneMotivo 
       ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
       : of(null);
@@ -1130,7 +1154,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
-    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad);
+    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
     const obsPositivo = row.tieneMotivo 
       ? this.listasService.getPositivoPorDocumento(row.identidad)
       : of(null);
@@ -1531,7 +1555,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
-    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion);
+    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
     const obsPositivo = row.tieneMotivo
       ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
       : of(null);
@@ -1590,7 +1614,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
-    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad);
+    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
     const obsPositivo = row.tieneMotivo
       ? this.listasService.getPositivoPorDocumento(row.identidad)
       : of(null);
@@ -1897,7 +1921,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       buscar: this.busqueda(),
       estado: this.filtroEstado(),
       fechaDesde: this.filtroFechaDesde() || null,
-      fechaHasta: this.filtroFechaHasta() || null
+      fechaHasta: this.filtroFechaHasta() || null,
+      categoriaIdentidad: this.tipoActivo() === 'natural' ? this.categoriaIdentidad() : undefined,
+      periodoPlanilla: this.tipoActivo() === 'empleado' && this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : null
     };
   }
 

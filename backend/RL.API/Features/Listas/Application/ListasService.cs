@@ -27,11 +27,11 @@ public sealed class ListasService : IListasService
     // La consulta de detalle es informativa. La identidad puede estar pendiente,
     // ser ambigua o no identificada; solo las operaciones que modifican datos
     // deben exigir una asociación verificada.
-    public Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
-        => _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion);
+    public Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion, long? idRegistroFuente = null, string? tipoFuente = null)
+        => _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion, idRegistroFuente, tipoFuente);
 
-    public Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion)
-        => _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
+    public Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion, long? idRegistroFuente = null, string? tipoFuente = null, DateTime? periodoPlanilla = null)
+        => _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion, idRegistroFuente, tipoFuente, periodoPlanilla);
     public Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync() => _repo.ObtenerTiposDocumentoAsync();
     public Task<List<TipoListaCautelaDto>> ObtenerTiposListasCautelaAsync() => _repo.ObtenerTiposListasCautelaAsync();
     public Task<List<ResumenListaDto>> ObtenerResumenListasAsync() => _repo.ObtenerResumenListasAsync();

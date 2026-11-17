@@ -118,6 +118,38 @@ describe('ListasService', () => {
     expect(seguimientos).toHaveBeenCalledWith([]);
   });
 
+  it('consulta una fuente exacta aunque el DNI sea N/A(3)', () => {
+    service.getDetalleNatural('N/A(3)', 'local', 91, 'DNP_COINCIDENCIA').subscribe();
+    const request = http.expectOne(req => req.url === `${apiUrl}/naturales/detalle`);
+    expect(request.request.params.get('idRegistroFuente')).toBe('91');
+    expect(request.request.params.get('tipoFuente')).toBe('DNP_COINCIDENCIA');
+    expect(request.request.params.get('numeroIdentificacion')).toBe('N/A(3)');
+    expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    request.flush({ success: true, datos: [] });
+  });
+
+  it('preserva la referencia de empleado y su periodo historico', () => {
+    service.getDetalleEmpleado('0801', 'local', 27, 'DNP_COINCIDENCIA', '2026-07-01').subscribe();
+    const request = http.expectOne(req => req.url === `${apiUrl}/empleados/detalle`);
+    expect(request.request.params.get('idRegistroFuente')).toBe('27');
+    expect(request.request.params.get('periodoPlanilla')).toBe('2026-07-01');
+    request.flush({ success: true, datos: [] });
+  });
+
+  it('filtra la categoria de naturales y planilla historica por separado', () => {
+    service.getNaturalesPaginadas({ pagina: 1, tamanoPagina: 10, categoriaIdentidad: 'sin_identificacion' }).subscribe();
+    const naturales = http.expectOne(req => req.url === `${apiUrl}/naturales/paginado`);
+    expect(naturales.request.params.get('categoriaIdentidad')).toBe('sin_identificacion');
+    expect(naturales.request.params.has('periodoPlanilla')).toBe(false);
+    naturales.flush({ success: true, datos: { items: [], pagina: 1, totalRegistros: 0, totalPaginas: 0 } });
+
+    service.getEmpleadosPaginadas({ pagina: 1, tamanoPagina: 10, periodoPlanilla: '2026-07-01' }).subscribe();
+    const empleados = http.expectOne(req => req.url === `${apiUrl}/empleados/paginado`);
+    expect(empleados.request.params.get('periodoPlanilla')).toBe('2026-07-01');
+    expect(empleados.request.params.has('categoriaIdentidad')).toBe(false);
+    empleados.flush({ success: true, datos: { items: [], pagina: 1, totalRegistros: 0, totalPaginas: 0 } });
+  });
+
   it('usa la ruta canónica para consultar el positivo de un documento real', () => {
     service.getPositivoPorDocumento('101196100011').subscribe();
 

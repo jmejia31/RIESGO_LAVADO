@@ -22,6 +22,10 @@ namespace RL.API.Features.Listas.Contracts
         public string Nombre { get; set; } = string.Empty;
         public string ListaCoincidencia { get; set; } = string.Empty;
         public int TotalRepetidos { get; set; }
+        public long IdRegistroFuente { get; set; }
+        public string TipoFuente { get; set; } = string.Empty;
+        public string NumeroPatronal { get; set; } = string.Empty;
+        public string CategoriaIdentidad { get; set; } = "IDENTIFICADA";
         public DateTime? FechaEncontro { get; set; }
         public DateTime? FechaCalifico { get; set; }
         public DateTime? FechaRegistroInterno { get; set; }
@@ -37,6 +41,10 @@ namespace RL.API.Features.Listas.Contracts
         public string Nombre { get; set; } = string.Empty;
         public string ListaCoincidencia { get; set; } = string.Empty;
         public int TotalRepetidos { get; set; }
+        public long IdRegistroFuente { get; set; }
+        public string TipoFuente { get; set; } = string.Empty;
+        public string NumeroPatrono { get; set; } = string.Empty;
+        public string CategoriaIdentidad { get; set; } = "IDENTIFICADA";
         public DateTime? FechaEncontro { get; set; }
         public DateTime? FechaCalifico { get; set; }
         public DateTime? FechaRegistroInterno { get; set; }
@@ -61,6 +69,7 @@ namespace RL.API.Features.Listas.Contracts
 
     public class DetalleCoincidenciaEmpleadoDto
     {
+        public DateTime? Periodo { get; set; }
         public string Identidad { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public string TipoCondicionActuaDesc { get; set; } = string.Empty;

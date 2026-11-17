@@ -117,6 +117,10 @@ namespace RL.API.Features.Listas.Persistence
                     Nombre = Texto(reader, "NOMBRE"),
                     ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
                     TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                    IdRegistroFuente = Convert.ToInt64(reader["ID_REGISTRO_FUENTE"]),
+                    TipoFuente = Texto(reader, "TIPO_FUENTE"),
+                    NumeroPatronal = Texto(reader, "NUMERO_PATRONAL"),
+                    CategoriaIdentidad = Texto(reader, "CATEGORIA_IDENTIDAD"),
                     FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"),
                     FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
@@ -134,6 +138,7 @@ namespace RL.API.Features.Listas.Persistence
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoNaturales(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, NUMERO_IDENTIFICACION ASC", reader => new CoincidenciaNaturalDto
             {
                 NumeroIdentificacion = Texto(reader, "NUMERO_IDENTIFICACION"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                IdRegistroFuente = Convert.ToInt64(reader["ID_REGISTRO_FUENTE"]), TipoFuente = Texto(reader, "TIPO_FUENTE"), NumeroPatronal = Texto(reader, "NUMERO_PATRONAL"), CategoriaIdentidad = Texto(reader, "CATEGORIA_IDENTIDAD"),
                 FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
                 EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
                 EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
@@ -154,6 +159,10 @@ namespace RL.API.Features.Listas.Persistence
                     Nombre = Texto(reader, "NOMBRE"),
                     ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
                     TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                    IdRegistroFuente = Convert.ToInt64(reader["ID_REGISTRO_FUENTE"]),
+                    TipoFuente = Texto(reader, "TIPO_FUENTE"),
+                    NumeroPatrono = Texto(reader, "NUMERO_PATRONO"),
+                    CategoriaIdentidad = Texto(reader, "CATEGORIA_IDENTIDAD"),
                     FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"),
                     FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
@@ -171,93 +180,227 @@ namespace RL.API.Features.Listas.Persistence
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoEmpleados(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, IDENTIDAD ASC", reader => new CoincidenciaEmpleadoDto
             {
                 Identidad = Texto(reader, "IDENTIDAD"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                IdRegistroFuente = Convert.ToInt64(reader["ID_REGISTRO_FUENTE"]), TipoFuente = Texto(reader, "TIPO_FUENTE"), NumeroPatrono = Texto(reader, "NUMERO_PATRONO"), CategoriaIdentidad = Texto(reader, "CATEGORIA_IDENTIDAD"),
                 FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
                 EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
                 EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
             });
 
-        public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
+        // La ruta antigua por documento se admite solo cuando identifica
+        // exactamente UNA coincidencia. El listado usa siempre la clave real.
+        private static async Task<long?> ResolverCoincidenciaUnicaAsync(
+            OracleConnection conn, string documento, bool empleado)
         {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(numeroIdentificacion)
-                ? @"
-                SELECT R.DNI NUMERO_IDENTIFICACION,
-                       NVL(R.NOMBRE, 'REGISTRO DE ORIGEN SIN IDENTIFICACIÓN') NOMBRES_PERSONA,
-                       'IDENTIFICACIÓN NO DISPONIBLE' TIPO_CONDICION_ACTUA_DESC,
-                       CAST(NULL AS VARCHAR2(100)) NUMERO_PATRONAL,
-                       CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
-                       CAST(NULL AS VARCHAR2(20)) ES_PEP,
-                       R.LISTA_CONCIDENCIA,
-                       TRUNC(R.FECHA_CALIFICO) FECHA_CALIFICO,
-                       TRUNC(R.FECHA_ENCONTRO) FECHA_COINCIDENCIA
+            await using var command = conn.CreateCommand();
+            command.BindByName = true;
+            command.CommandText = @"SELECT MIN(R.REPORTE_COINCIDENCIA_ID) ID, COUNT(*) TOTAL
                 FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
-                WHERE UPPER(TRIM(R.DNI)) = UPPER(TRIM(:numeroIdentificacion))
-                  AND R.TIPO_CALIFICACION_ID = 1
-                ORDER BY R.FECHA_ENCONTRO DESC, R.LISTA_CONCIDENCIA"
-                : @"
-                SELECT S.NUMERO_IDENTIFICACION, S.NOMBRES_PERSONA, S.TIPO_CONDICION_ACTUA_DESC, S.NUMERO_PATRONAL, S.NOMBRE_EMPRESA, S.ES_PEP , R.LISTA_CONCIDENCIA, TRUNC(R.FECHA_CALIFICO) FECHA_CALIFICO,
-                TRUNC(R.FECHA_ENCONTRO) FECHA_COINCIDENCIA
-                FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES S
-                INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON S.NUMERO_IDENTIFICACION = R.DNI AND R.TIPO_CALIFICACION_ID = 1
-                WHERE S.NUMERO_IDENTIFICACION = :numeroIdentificacion";
-            
-            cmd.Parameters.Add(new OracleParameter("numeroIdentificacion", numeroIdentificacion));
-
-            var list = new List<DetalleCoincidenciaNaturalDto>();
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                list.Add(new DetalleCoincidenciaNaturalDto
-                {
-                    NumeroIdentificacion = reader["NUMERO_IDENTIFICACION"]?.ToString() ?? string.Empty,
-                    NombresPersona = reader["NOMBRES_PERSONA"]?.ToString() ?? string.Empty,
-                    TipoCondicionActuaDesc = reader["TIPO_CONDICION_ACTUA_DESC"]?.ToString() ?? string.Empty,
-                    NumeroPatronal = reader["NUMERO_PATRONAL"]?.ToString() ?? string.Empty,
-                    NombreEmpresa = reader["NOMBRE_EMPRESA"]?.ToString() ?? string.Empty,
-                    EsPep = reader["ES_PEP"]?.ToString() ?? string.Empty,
-                    ListaCoincidencia = reader["LISTA_CONCIDENCIA"]?.ToString() ?? string.Empty,
-                    FechaCalifico = reader["FECHA_CALIFICO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_CALIFICO"]),
-                    FechaCoincidencia = reader["FECHA_COINCIDENCIA"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_COINCIDENCIA"])
-                });
-            }
-            return list;
+                WHERE NVL(TRIM(R.DNI), '__SIN_IDENTIFICACION__') = NVL(TRIM(:documento), '__SIN_IDENTIFICACION__')
+                  AND R.TIPO_CALIFICACION_ID = 1"
+                + (empleado ? @" AND EXISTS (
+                       SELECT 1 FROM DNP_IHSS.V_REPORTE_COINCIDENCIA V
+                       WHERE V.REPORTE_COINCIDENCIA_ID = R.REPORTE_COINCIDENCIA_ID
+                         AND V.TIPO_PERSONA LIKE '%IHSS')" : string.Empty);
+            command.Parameters.Add(new OracleParameter("documento",
+                string.IsNullOrWhiteSpace(documento) ? (object)DBNull.Value : documento));
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return null;
+            var count = Convert.ToInt32(reader["TOTAL"]);
+            if (count > 1)
+                throw new AmbiguousIdentityException(
+                    "El documento representa varias coincidencias. Seleccione una fila individual en Monitoreo de Listas.");
+            return count == 0 ? null : Convert.ToInt64(reader["ID"]);
         }
 
-        public async Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion)
+        public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(
+            string numeroIdentificacion, long? idRegistroFuente = null, string? tipoFuente = null)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
+            if (!idRegistroFuente.HasValue)
+                idRegistroFuente = await ResolverCoincidenciaUnicaAsync(conn, numeroIdentificacion, false);
+            if (!idRegistroFuente.HasValue)
+                return new List<DetalleCoincidenciaNaturalDto>();
+            if (idRegistroFuente <= 0)
+                throw new UnverifiedAssociationException("Referencia de origen inválida.");
 
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                SELECT DISTINCT R.DNI, R.NOMBRE,  'EMPLEADO IHSS' TIPO_CONDICION_ACTUA_DESC, E.NUMEPATRO, E.NOMBRE NOMBRE_EMPRESA, E.RAZOSOCI, R.LISTA_CONCIDENCIA, R.FECHA_CALIFICO, R.FECHA_ENCONTRO FECHA_COINCIDENCIA
-                FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
-                INNER JOIN  DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS E ON e.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
-                WHERE  R.DNI = :numeroIdentificacion";
-            
-            cmd.Parameters.Add(new OracleParameter("numeroIdentificacion", numeroIdentificacion));
+            await using var command = conn.CreateCommand();
+            command.BindByName = true;
+            if (tipoFuente == "MANUAL_CUMPLIMIENTO")
+            {
+                command.CommandText = @"
+                    SELECT P.LSP_NO_DOCUMENTO NUMERO_IDENTIFICACION,
+                           P.LSP_NOMBRE_COMPLETO NOMBRES_PERSONA,
+                           'REGISTRO MANUAL' TIPO_CONDICION_ACTUA_DESC,
+                           CAST(NULL AS VARCHAR2(100)) NUMERO_PATRONAL,
+                           CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
+                           CAST(NULL AS VARCHAR2(20)) ES_PEP,
+                           NVL(L.LISTA_CAUTELA_DESCRICPION,'MANUAL') LISTA_CONCIDENCIA,
+                           CAST(NULL AS DATE) FECHA_CALIFICO,
+                           P.LSP_FECHA_CREACION FECHA_COINCIDENCIA
+                    FROM RL_LISTA_POSITIVOS P
+                    LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA L
+                      ON L.TIPO_LISTA_CAUTELA_ID = P.LSP_TIPO_LISTA_CAUTELA_ID
+                    WHERE P.LSP_POSITIVO_ID = :registroId
+                      AND P.LSP_TIPO_POSITIVO_ID = 2 AND P.LSP_ESTADO_REGISTRO = 1
+                      AND P.LSP_NO_DOCUMENTO = :numeroIdentificacion";
+            }
+            else if (tipoFuente is null or "DNP_COINCIDENCIA")
+            {
+                // La coincidencia es la tabla conductora. El patrono procede de
+                // la misma fila del reporte. Solo se agrega empresa/condicion
+                // si DNI, patrono y nombre tienen UN candidato preciso.
+                command.CommandText = @"
+                    SELECT R.DNI NUMERO_IDENTIFICACION,
+                           NVL(R.NOMBRE,'SIN NOMBRE EN ORIGEN') NOMBRES_PERSONA,
+                           CASE WHEN S.NUMERO_IDENTIFICACION IS NOT NULL THEN S.TIPO_CONDICION_ACTUA_DESC
+                                WHEN R.DNI IS NULL OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
+                                  THEN 'SIN IDENTIFICACIÓN ATRIBUIBLE'
+                                ELSE 'COINCIDENCIA DE ORIGEN; ASOCIACIÓN NO VERIFICADA'
+                           END TIPO_CONDICION_ACTUA_DESC,
+                           TO_CHAR(R.NUMERO_PATRONO) NUMERO_PATRONAL,
+                           S.NOMBRE_EMPRESA, S.ES_PEP, R.LISTA_CONCIDENCIA,
+                           R.FECHA_CALIFICO, R.FECHA_ENCONTRO FECHA_COINCIDENCIA
+                    FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
+                    LEFT JOIN (
+                        SELECT S1.NUMERO_IDENTIFICACION, S1.NUMERO_PATRONAL,
+                               S1.NOMBRES_PERSONA, S1.TIPO_CONDICION_ACTUA_DESC,
+                               S1.NOMBRE_EMPRESA, S1.ES_PEP,
+                               COUNT(*) OVER (
+                                   PARTITION BY S1.NUMERO_IDENTIFICACION,
+                                     S1.NUMERO_PATRONAL,
+                                     UPPER(TRIM(S1.NOMBRES_PERSONA))) CANDIDATOS
+                        FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES S1
+                        WHERE S1.NUMERO_IDENTIFICACION = :numeroIdentificacion
+                    ) S ON S.NUMERO_IDENTIFICACION = R.DNI
+                       AND TRIM(S.NUMERO_PATRONAL) = TRIM(TO_CHAR(R.NUMERO_PATRONO))
+                       AND UPPER(TRIM(S.NOMBRES_PERSONA)) = UPPER(TRIM(R.NOMBRE))
+                       AND S.CANDIDATOS = 1
+                       AND R.DNI IS NOT NULL
+                       AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
+                                  AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                    WHERE R.REPORTE_COINCIDENCIA_ID = :registroId
+                      AND NVL(TRIM(R.DNI), '__SIN_IDENTIFICACION__') = NVL(TRIM(:numeroIdentificacion), '__SIN_IDENTIFICACION__')
+                      AND R.TIPO_CALIFICACION_ID = 1";
+            }
+            else throw new UnverifiedAssociationException("Tipo de fuente inválido.");
 
-            var list = new List<DetalleCoincidenciaEmpleadoDto>();
-            await using var reader = await cmd.ExecuteReaderAsync();
+            command.Parameters.Add(new OracleParameter("registroId", idRegistroFuente.Value));
+            command.Parameters.Add(new OracleParameter("numeroIdentificacion",
+                string.IsNullOrWhiteSpace(numeroIdentificacion) ? (object)DBNull.Value : numeroIdentificacion));
+            var rows = new List<DetalleCoincidenciaNaturalDto>();
+            await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                list.Add(new DetalleCoincidenciaEmpleadoDto
+                rows.Add(new DetalleCoincidenciaNaturalDto
                 {
-                    Identidad = reader["DNI"]?.ToString() ?? string.Empty,
-                    Nombre = reader["NOMBRE"]?.ToString() ?? string.Empty,
-                    TipoCondicionActuaDesc = reader["TIPO_CONDICION_ACTUA_DESC"]?.ToString() ?? string.Empty,
-                    NumeroPatrono = reader["NUMEPATRO"]?.ToString() ?? string.Empty,
-                    NombreEmpresa = reader["NOMBRE_EMPRESA"]?.ToString() ?? string.Empty,
-                    RazoSoci = reader["RAZOSOCI"]?.ToString() ?? string.Empty,
-                    ListaCoincidencia = reader["LISTA_CONCIDENCIA"]?.ToString() ?? string.Empty,
-                    FechaCalifico = reader["FECHA_CALIFICO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_CALIFICO"]),
-                    FechaCoincidencia = reader["FECHA_COINCIDENCIA"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_COINCIDENCIA"])
+                    NumeroIdentificacion = Texto(reader,"NUMERO_IDENTIFICACION"),
+                    NombresPersona = Texto(reader,"NOMBRES_PERSONA"),
+                    TipoCondicionActuaDesc = Texto(reader,"TIPO_CONDICION_ACTUA_DESC"),
+                    NumeroPatronal = Texto(reader,"NUMERO_PATRONAL"),
+                    NombreEmpresa = Texto(reader,"NOMBRE_EMPRESA"),
+                    EsPep = Texto(reader,"ES_PEP"),
+                    ListaCoincidencia = Texto(reader,"LISTA_CONCIDENCIA"),
+                    FechaCalifico = Fecha(reader,"FECHA_CALIFICO"),
+                    FechaCoincidencia = Fecha(reader,"FECHA_COINCIDENCIA")
                 });
             }
-            return list;
+            return rows;
+        }
+
+        public async Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(
+            string numeroIdentificacion, long? idRegistroFuente = null,
+            string? tipoFuente = null, DateTime? periodoPlanilla = null)
+        {
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
+            if (!idRegistroFuente.HasValue)
+                idRegistroFuente = await ResolverCoincidenciaUnicaAsync(conn, numeroIdentificacion, true);
+            if (!idRegistroFuente.HasValue)
+                return new List<DetalleCoincidenciaEmpleadoDto>();
+            if (idRegistroFuente <= 0)
+                throw new UnverifiedAssociationException("Referencia de origen inválida.");
+
+            await using var command = conn.CreateCommand();
+            command.BindByName = true;
+            if (tipoFuente == "MANUAL_CUMPLIMIENTO")
+            {
+                command.CommandText = @"
+                    SELECT P.LSP_NO_DOCUMENTO DNI, P.LSP_NOMBRE_COMPLETO NOMBRE,
+                           'REGISTRO MANUAL' TIPO_CONDICION_ACTUA_DESC,
+                           CAST(NULL AS VARCHAR2(100)) NUMEPATRO,
+                           CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
+                           CAST(NULL AS VARCHAR2(500)) RAZOSOCI,
+                           NVL(L.LISTA_CAUTELA_DESCRICPION,'MANUAL') LISTA_CONCIDENCIA,
+                           CAST(NULL AS DATE) FECHA_CALIFICO,
+                           P.LSP_FECHA_CREACION FECHA_COINCIDENCIA,
+                           CAST(NULL AS DATE) PERIODO
+                    FROM RL_LISTA_POSITIVOS P
+                    LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA L
+                      ON L.TIPO_LISTA_CAUTELA_ID = P.LSP_TIPO_LISTA_CAUTELA_ID
+                    WHERE P.LSP_POSITIVO_ID = :registroId
+                      AND P.LSP_TIPO_POSITIVO_ID = 3 AND P.LSP_ESTADO_REGISTRO = 1
+                      AND P.LSP_NO_DOCUMENTO = :numeroIdentificacion";
+            }
+            else if (tipoFuente is null or "DNP_COINCIDENCIA")
+            {
+                command.CommandText = @"
+                    SELECT R.DNI, NVL(R.NOMBRE,'SIN NOMBRE EN ORIGEN') NOMBRE,
+                           CASE WHEN E.IDENTIDAD IS NOT NULL THEN 'EMPLEADO IHSS'
+                                ELSE 'COINCIDENCIA DE ORIGEN; PLANILLA NO VINCULADA'
+                           END TIPO_CONDICION_ACTUA_DESC,
+                           TO_CHAR(R.NUMERO_PATRONO) NUMEPATRO,
+                           E.NOMBRE NOMBRE_EMPRESA, E.RAZOSOCI,
+                           R.LISTA_CONCIDENCIA, R.FECHA_CALIFICO,
+                           R.FECHA_ENCONTRO FECHA_COINCIDENCIA,
+                           E.PERIODO
+                    FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
+                    LEFT JOIN (
+                        SELECT DISTINCT IDENTIDAD, NUMEPATRO, NOMBRE, RAZOSOCI,
+                                        NOMBRE_EMPLEADO, PERIODO
+                        FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
+                        WHERE IDENTIDAD = :numeroIdentificacion
+                    ) E ON E.IDENTIDAD = R.DNI
+                       AND TRIM(E.NUMEPATRO) = TRIM(TO_CHAR(R.NUMERO_PATRONO))
+                       AND UPPER(TRIM(E.NOMBRE_EMPLEADO)) = UPPER(TRIM(R.NOMBRE))"
+                    + (periodoPlanilla.HasValue
+                        ? @" AND E.PERIODO >= TRUNC(:periodoPlanilla,'MM')
+                              AND E.PERIODO < ADD_MONTHS(TRUNC(:periodoPlanilla,'MM'),1)"
+                        : string.Empty)
+                    + @" WHERE R.REPORTE_COINCIDENCIA_ID = :registroId
+                          AND NVL(TRIM(R.DNI), '__SIN_IDENTIFICACION__') = NVL(TRIM(:numeroIdentificacion), '__SIN_IDENTIFICACION__')
+                          AND R.TIPO_CALIFICACION_ID = 1
+                          AND EXISTS (SELECT 1 FROM DNP_IHSS.V_REPORTE_COINCIDENCIA V
+                                      WHERE V.REPORTE_COINCIDENCIA_ID = R.REPORTE_COINCIDENCIA_ID
+                                        AND V.TIPO_PERSONA LIKE '%IHSS')";
+            }
+            else throw new UnverifiedAssociationException("Tipo de fuente inválido.");
+
+            command.Parameters.Add(new OracleParameter("registroId", idRegistroFuente.Value));
+            command.Parameters.Add(new OracleParameter("numeroIdentificacion",
+                string.IsNullOrWhiteSpace(numeroIdentificacion) ? (object)DBNull.Value : numeroIdentificacion));
+            if (periodoPlanilla.HasValue && tipoFuente != "MANUAL_CUMPLIMIENTO")
+                command.Parameters.Add(new OracleParameter("periodoPlanilla", OracleDbType.Date)
+                    { Value = periodoPlanilla.Value });
+            var rows = new List<DetalleCoincidenciaEmpleadoDto>();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                rows.Add(new DetalleCoincidenciaEmpleadoDto
+                {
+                    Identidad = Texto(reader,"DNI"),
+                    Nombre = Texto(reader,"NOMBRE"),
+                    TipoCondicionActuaDesc = Texto(reader,"TIPO_CONDICION_ACTUA_DESC"),
+                    NumeroPatrono = Texto(reader,"NUMEPATRO"),
+                    NombreEmpresa = Texto(reader,"NOMBRE_EMPRESA"),
+                    RazoSoci = Texto(reader,"RAZOSOCI"),
+                    ListaCoincidencia = Texto(reader,"LISTA_CONCIDENCIA"),
+                    FechaCalifico = Fecha(reader,"FECHA_CALIFICO"),
+                    FechaCoincidencia = Fecha(reader,"FECHA_COINCIDENCIA"),
+                    Periodo = Fecha(reader,"PERIODO")
+                });
+            }
+            return rows;
         }
 
         public async Task<ResolucionIdentidadMonitoreo> ResolverIdentidadAsync(string documento, TipoSujetoMonitoreo tipoSujeto)
@@ -289,7 +432,8 @@ namespace RL.API.Features.Listas.Persistence
             else if (tipoSujeto == TipoSujetoMonitoreo.Empleado)
             {
                 cmd.CommandText = @"
-                    SELECT COUNT(*) AS REFERENCIAS, COUNT(DISTINCT IDENTIDAD) AS SUJETOS
+                    SELECT COUNT(*) AS REFERENCIAS,
+                           COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(NOMBRE_EMPLEADO, '[[:space:]]+', ' ')))) AS SUJETOS
                     FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
                     WHERE IDENTIDAD = :documento";
             }
@@ -1603,7 +1747,8 @@ namespace RL.API.Features.Listas.Persistence
         private static string CrearClaveMetadataMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
             => string.Join("|", ResolveMonitoringType(baseSql), consulta.Buscar?.Trim().ToUpperInvariant(),
                 consulta.Estado?.Trim().ToLowerInvariant(), consulta.FechaDesde?.ToString("O"),
-                consulta.FechaHasta?.ToString("O"), consulta.Orden?.Trim().ToLowerInvariant(),
+                consulta.FechaHasta?.ToString("O"), consulta.CategoriaIdentidad?.Trim().ToLowerInvariant(),
+                consulta.PeriodoPlanilla?.ToString("yyyy-MM"), consulta.Orden?.Trim().ToLowerInvariant(),
                 consulta.Direccion?.Trim().ToLowerInvariant());
 
         private static string ResolverOrdenMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
@@ -1630,7 +1775,9 @@ namespace RL.API.Features.Listas.Persistence
             var key = string.IsNullOrWhiteSpace(consulta.Orden) ? "id" : consulta.Orden.Trim();
             var column = campos.TryGetValue(key, out var resolved) ? resolved : campos["id"];
             var direction = string.Equals(consulta.Direccion, "desc", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
-            return $"{column} {direction}, {campos["id"]} ASC";
+            return tipo == "juridica"
+                ? $"{column} {direction}, {campos["id"]} ASC"
+                : $"{column} {direction}, {campos["id"]} ASC, TIPO_FUENTE ASC, ID_REGISTRO_FUENTE ASC";
         }
 
         private static string ResolveMonitoringType(string baseSql)
@@ -1725,6 +1872,24 @@ namespace RL.API.Features.Listas.Persistence
                 sql += " AND NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO) >= TRUNC(:fechaDesde)";
             if (consulta.FechaHasta.HasValue)
                 sql += " AND NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO) < TRUNC(:fechaHasta) + 1";
+            if (!string.IsNullOrWhiteSpace(consulta.CategoriaIdentidad)
+                && sql.Contains("CATEGORIA_IDENTIDAD", StringComparison.OrdinalIgnoreCase))
+            {
+                if (consulta.CategoriaIdentidad.Equals("identificadas", StringComparison.OrdinalIgnoreCase))
+                    sql += " AND f.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'";
+                else if (consulta.CategoriaIdentidad.Equals("sin_identificacion", StringComparison.OrdinalIgnoreCase))
+                    sql += " AND f.CATEGORIA_IDENTIDAD = 'SIN_IDENTIFICACION'";
+                else
+                    sql += " AND 1 = 0";
+            }
+            if (consulta.PeriodoPlanilla.HasValue
+                && sql.Contains("V_EMPLEADOS_IHSS_PLANILLAS", StringComparison.OrdinalIgnoreCase))
+                sql += @" AND EXISTS (SELECT 1 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS M1P
+                    WHERE M1P.IDENTIDAD = f.IDENTIDAD
+                      AND TRIM(M1P.NUMEPATRO) = TRIM(f.NUMERO_PATRONO)
+                      AND UPPER(TRIM(M1P.NOMBRE_EMPLEADO)) = UPPER(TRIM(f.NOMBRE))
+                      AND M1P.PERIODO >= TRUNC(:periodoPlanilla,'MM')
+                      AND M1P.PERIODO < ADD_MONTHS(TRUNC(:periodoPlanilla,'MM'),1))";
         }
 
         private static void AddMonitoringParameters(OracleCommand command, ConsultaMonitoreoPaginadaDto consulta)
@@ -1733,6 +1898,10 @@ namespace RL.API.Features.Listas.Persistence
             if (!string.IsNullOrWhiteSpace(consulta.Estado) && !consulta.Estado.Equals("todos", StringComparison.OrdinalIgnoreCase)) command.Parameters.Add(new OracleParameter("estado", consulta.Estado));
             if (consulta.FechaDesde.HasValue) command.Parameters.Add(new OracleParameter("fechaDesde", consulta.FechaDesde.Value));
             if (consulta.FechaHasta.HasValue) command.Parameters.Add(new OracleParameter("fechaHasta", consulta.FechaHasta.Value));
+            if (consulta.PeriodoPlanilla.HasValue
+                && command.CommandText.Contains(":periodoPlanilla", StringComparison.OrdinalIgnoreCase))
+                command.Parameters.Add(new OracleParameter("periodoPlanilla", OracleDbType.Date)
+                    { Value = consulta.PeriodoPlanilla.Value });
         }
 
         private static string ConstruirConsultaMonitoreoJuridicas() => @"
@@ -1810,94 +1979,154 @@ namespace RL.API.Features.Listas.Persistence
             WHERE lp.LSP_TIPO_POSITIVO_ID = 1 AND lp.LSP_ESTADO_REGISTRO = 1
               AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMEPATRO = lp.LSP_NO_DOCUMENTO OR c.RTN = lp.LSP_NO_DOCUMENTO)";
 
+        // M1: una fila por coincidencia, con referencia a la fuente. El DNI
+        // no es una clave de persona y NO se usa para unir patronos de terceros.
         private static string ConstruirConsultaMonitoreoNaturales() => @"
             WITH POSITIVOS_AGG AS (
-                SELECT LSP_NO_DOCUMENTO,
-                       MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
-                       MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
+                SELECT LSP_NO_DOCUMENTO, MIN(LSP_FECHA_CREACION) FECHA_REGISTRO_INTERNO,
+                       MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END) TIENE_MOTIVO
                 FROM RL_LISTA_POSITIVOS
                 WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 2
                 GROUP BY LSP_NO_DOCUMENTO
             ), IDENTIDAD_AGG AS (
-                SELECT NUMERO_IDENTIFICACION,
-                       COUNT(*) AS REFERENCIAS,
-                       COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL THEN TIPO_FUENTE || ':' || ID_PERSONA END) AS SUJETOS
+                SELECT NUMERO_IDENTIFICACION, COUNT(*) REFERENCIAS,
+                       COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL
+                           THEN TIPO_FUENTE || ':' || ID_PERSONA END) SUJETOS
                 FROM (
-                    SELECT S.NUMERO_IDENTIFICACION, 'SOCIO' AS TIPO_FUENTE, S.SOCIO_ID AS ID_PERSONA
-                    FROM DNP_IHSS.SOCIOS S
+                    SELECT NUMERO_IDENTIFICACION, 'SOCIO' TIPO_FUENTE, SOCIO_ID ID_PERSONA
+                    FROM DNP_IHSS.SOCIOS
                     UNION ALL
-                    SELECT R.NUMERO_IDENTIFICACION, 'REPRESENTANTE' AS TIPO_FUENTE, R.REPRESENTANTE_ID AS ID_PERSONA
-                    FROM DNP_IHSS.REPRESENTANTES R
-                ) FUENTES
+                    SELECT NUMERO_IDENTIFICACION, 'REPRESENTANTE', REPRESENTANTE_ID
+                    FROM DNP_IHSS.REPRESENTANTES
+                ) FUENTE
                 GROUP BY NUMERO_IDENTIFICACION
-            ), REPORTE_AGG AS (
-                SELECT DNI, LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS,
-                       COUNT(DISTINCT TRIM(REGEXP_REPLACE(NOMBRE, '[[:space:]]+', ' '))) TOTAL_NOMBRES,
-                       MAX(TRIM(REGEXP_REPLACE(NOMBRE, '[[:space:]]+', ' '))) NOMBRE,
-                       MAX(FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(FECHA_CALIFICO) FECHA_CALIFICO
-                FROM DNP_IHSS.REPORTE_COINCIDENCIAS
-                WHERE TIPO_CALIFICACION_ID = 1
-                GROUP BY DNI, LISTA_CONCIDENCIA
             ), Coincidencias AS (
-                SELECT R.DNI AS NUMERO_IDENTIFICACION,
-                       CASE
-                           WHEN R.DNI IS NULL
-                                OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
-                                OR UPPER(TRIM(R.DNI)) IN ('NULL', 'VACIO', 'VACÍO', 'SIN IDENTIFICACION', 'SIN IDENTIFICACIÓN')
-                               THEN 'ASOCIACIÓN NO VERIFICADA'
-                           WHEN R.TOTAL_NOMBRES = 1 THEN R.NOMBRE
-                           ELSE 'ASOCIACIÓN NO VERIFICADA'
-                       END AS NOMBRE,
-                       R.LISTA_CONCIDENCIA, R.TOTAL_REPETIDOS, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
-                       p.FECHA_REGISTRO_INTERNO,
-                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO,
-                       NVL(i.REFERENCIAS, 0) AS IDENTIDAD_REFERENCIAS,
-                       NVL(i.SUJETOS, 0) AS IDENTIDADES_DISTINTAS
-                FROM REPORTE_AGG R
-                LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = R.DNI
-                LEFT JOIN IDENTIDAD_AGG i ON i.NUMERO_IDENTIFICACION = R.DNI
+                SELECT R.REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE,
+                       'DNP_COINCIDENCIA' TIPO_FUENTE,
+                       R.DNI NUMERO_IDENTIFICACION,
+                       NVL(R.NOMBRE, 'SIN NOMBRE EN ORIGEN') NOMBRE,
+                       TO_CHAR(R.NUMERO_PATRONO) NUMERO_PATRONAL,
+                       R.LISTA_CONCIDENCIA, 1 TOTAL_REPETIDOS,
+                       R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
+                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                                  AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
+                                  AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN P.FECHA_REGISTRO_INTERNO
+                            ELSE CAST(NULL AS DATE) END FECHA_REGISTRO_INTERNO,
+                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                                  AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
+                                  AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN NVL(P.TIENE_MOTIVO,0) ELSE 0 END TIENE_MOTIVO,
+                       0 ES_MANUAL, NVL(I.REFERENCIAS,0) IDENTIDAD_REFERENCIAS,
+                       NVL(I.SUJETOS,0) IDENTIDADES_DISTINTAS,
+                       CASE WHEN R.DNI IS NULL OR TRIM(R.DNI) IS NULL
+                                  OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
+                                  OR UPPER(TRIM(R.DNI)) IN ('NULL','VACIO','VACÍO',
+                                       'SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN 'SIN_IDENTIFICACION' ELSE 'IDENTIFICADA'
+                       END CATEGORIA_IDENTIDAD
+                FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
+                LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = R.DNI
+                LEFT JOIN IDENTIDAD_AGG I ON I.NUMERO_IDENTIFICACION = R.DNI
+                WHERE R.TIPO_CALIFICACION_ID = 1
             )
-            SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, NUMERO_IDENTIFICACION AS BUSQUEDA FROM Coincidencias
+            SELECT ID_REGISTRO_FUENTE, TIPO_FUENTE, NUMERO_IDENTIFICACION,
+                   NOMBRE, NUMERO_PATRONAL, LISTA_CONCIDENCIA, TOTAL_REPETIDOS,
+                   FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO,
+                   TIENE_MOTIVO, ES_MANUAL, IDENTIDAD_REFERENCIAS,
+                   IDENTIDADES_DISTINTAS, CATEGORIA_IDENTIDAD,
+                   NVL(NUMERO_IDENTIFICACION,'') || ' ' || NVL(NUMERO_PATRONAL,'') BUSQUEDA
+            FROM Coincidencias
             UNION ALL
-            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, 0 AS IDENTIDAD_REFERENCIAS, 0 AS IDENTIDADES_DISTINTAS, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
-            FROM RL_LISTA_POSITIVOS lp LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
-            WHERE lp.LSP_TIPO_POSITIVO_ID = 2 AND lp.LSP_ESTADO_REGISTRO = 1
-              AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMERO_IDENTIFICACION = lp.LSP_NO_DOCUMENTO)";
+            SELECT LP.LSP_POSITIVO_ID, 'MANUAL_CUMPLIMIENTO',
+                   LP.LSP_NO_DOCUMENTO, LP.LSP_NOMBRE_COMPLETO,
+                   CAST(NULL AS VARCHAR2(100)),
+                   NVL(LC.LISTA_CAUTELA_DESCRICPION,'MANUAL'), 0,
+                   CAST(NULL AS DATE), CAST(NULL AS DATE),
+                   LP.LSP_FECHA_CREACION,
+                   CASE WHEN LP.LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END,
+                   1, 0, 0,
+                   CASE WHEN LP.LSP_NO_DOCUMENTO IS NULL OR TRIM(LP.LSP_NO_DOCUMENTO) IS NULL
+                                  OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'
+                                  OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN
+                                       ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN 'SIN_IDENTIFICACION' ELSE 'IDENTIFICADA' END,
+                   LP.LSP_NO_DOCUMENTO
+            FROM RL_LISTA_POSITIVOS LP
+            LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA LC
+              ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
+            WHERE LP.LSP_TIPO_POSITIVO_ID = 2 AND LP.LSP_ESTADO_REGISTRO = 1";
 
+        // M1: coincidencias de empleado desde la fuente clasificada, NO desde
+        // un INNER JOIN multiplicador contra todas las planillas historicas.
         private static string ConstruirConsultaMonitoreoEmpleados() => @"
             WITH POSITIVOS_AGG AS (
-                SELECT LSP_NO_DOCUMENTO,
-                       MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
-                       MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
+                SELECT LSP_NO_DOCUMENTO, MIN(LSP_FECHA_CREACION) FECHA_REGISTRO_INTERNO,
+                       MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END) TIENE_MOTIVO
                 FROM RL_LISTA_POSITIVOS
                 WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 3
                 GROUP BY LSP_NO_DOCUMENTO
             ), IDENTIDAD_AGG AS (
-                SELECT IDENTIDAD,
-                       COUNT(*) AS REFERENCIAS,
-                       COUNT(DISTINCT IDENTIDAD) AS SUJETOS
+                SELECT IDENTIDAD, COUNT(*) REFERENCIAS, COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(NOMBRE_EMPLEADO, '[[:space:]]+', ' ')))) SUJETOS
                 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
                 GROUP BY IDENTIDAD
             ), Coincidencias AS (
-                SELECT D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')) NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
-                       p.FECHA_REGISTRO_INTERNO,
-                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO,
-                       NVL(i.REFERENCIAS, 0) AS IDENTIDAD_REFERENCIAS,
-                       NVL(i.SUJETOS, 0) AS IDENTIDADES_DISTINTAS
-                FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS D
-                JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
-                LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = D.IDENTIDAD
-                LEFT JOIN IDENTIDAD_AGG i ON i.IDENTIDAD = D.IDENTIDAD
-                -- La vista conserva todos los periodos. Las fechas explícitas de
-                -- la consulta de monitoreo se aplican en AppendMonitoringFilters.
-                WHERE 1 = 1
-                GROUP BY D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')), R.LISTA_CONCIDENCIA, p.FECHA_REGISTRO_INTERNO, p.TIENE_MOTIVO, i.REFERENCIAS, i.SUJETOS)
-            SELECT IDENTIDAD, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, IDENTIDAD AS BUSQUEDA FROM Coincidencias
+                SELECT R.REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE,
+                       'DNP_COINCIDENCIA' TIPO_FUENTE,
+                       R.DNI IDENTIDAD,
+                       NVL(R.NOMBRE, 'SIN NOMBRE EN ORIGEN') NOMBRE,
+                       TO_CHAR(R.NUMERO_PATRONO) NUMERO_PATRONO,
+                       R.LISTA_CONCIDENCIA, 1 TOTAL_REPETIDOS,
+                       R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
+                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                                  AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
+                                  AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN P.FECHA_REGISTRO_INTERNO
+                            ELSE CAST(NULL AS DATE) END FECHA_REGISTRO_INTERNO,
+                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                                  AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
+                                  AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN NVL(P.TIENE_MOTIVO,0) ELSE 0 END TIENE_MOTIVO,
+                       0 ES_MANUAL, NVL(I.REFERENCIAS,0) IDENTIDAD_REFERENCIAS,
+                       NVL(I.SUJETOS,0) IDENTIDADES_DISTINTAS,
+                       CASE WHEN R.DNI IS NULL OR TRIM(R.DNI) IS NULL OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
+                                  OR UPPER(TRIM(R.DNI)) IN
+                                       ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN 'SIN_IDENTIFICACION' ELSE 'IDENTIFICADA'
+                       END CATEGORIA_IDENTIDAD
+                FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
+                LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = R.DNI
+                LEFT JOIN IDENTIDAD_AGG I ON I.IDENTIDAD = R.DNI
+                WHERE R.TIPO_CALIFICACION_ID = 1
+                  AND EXISTS (SELECT 1 FROM DNP_IHSS.V_REPORTE_COINCIDENCIA V
+                              WHERE V.REPORTE_COINCIDENCIA_ID = R.REPORTE_COINCIDENCIA_ID
+                                AND V.TIPO_PERSONA LIKE '%IHSS')
+            )
+            SELECT ID_REGISTRO_FUENTE, TIPO_FUENTE, IDENTIDAD, NOMBRE, NUMERO_PATRONO,
+                   LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO,
+                   FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, ES_MANUAL,
+                   IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, CATEGORIA_IDENTIDAD,
+                   NVL(IDENTIDAD,'') || ' ' || NVL(NUMERO_PATRONO,'') BUSQUEDA
+            FROM Coincidencias
             UNION ALL
-            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, 0 AS IDENTIDAD_REFERENCIAS, 0 AS IDENTIDADES_DISTINTAS, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
-            FROM RL_LISTA_POSITIVOS lp LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
-            WHERE lp.LSP_TIPO_POSITIVO_ID = 3 AND lp.LSP_ESTADO_REGISTRO = 1
-              AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.IDENTIDAD = lp.LSP_NO_DOCUMENTO)";
+            SELECT LP.LSP_POSITIVO_ID, 'MANUAL_CUMPLIMIENTO',
+                   LP.LSP_NO_DOCUMENTO, LP.LSP_NOMBRE_COMPLETO,
+                   CAST(NULL AS VARCHAR2(100)),
+                   NVL(LC.LISTA_CAUTELA_DESCRICPION,'MANUAL'), 0,
+                   CAST(NULL AS DATE), CAST(NULL AS DATE),
+                   LP.LSP_FECHA_CREACION,
+                   CASE WHEN LP.LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END,
+                   1, 0, 0,
+                   CASE WHEN LP.LSP_NO_DOCUMENTO IS NULL OR TRIM(LP.LSP_NO_DOCUMENTO) IS NULL
+                                  OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'
+                                  OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN
+                                       ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
+                            THEN 'SIN_IDENTIFICACION' ELSE 'IDENTIFICADA' END,
+                   LP.LSP_NO_DOCUMENTO
+            FROM RL_LISTA_POSITIVOS LP
+            LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA LC
+              ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
+            WHERE LP.LSP_TIPO_POSITIVO_ID = 3 AND LP.LSP_ESTADO_REGISTRO = 1";
 
         private static string Texto(DbDataReader reader, string column) => reader[column] == DBNull.Value ? string.Empty : reader[column]?.ToString() ?? string.Empty;
         private static int Entero(DbDataReader reader, string column) => reader[column] == DBNull.Value ? 0 : Convert.ToInt32(reader[column]);

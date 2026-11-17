@@ -1,0 +1,64 @@
+name: M1 - Regresion focal complementaria (NO reemplaza Quality Gates)
+
+on:
+  push:
+    branches: [desarrollo]
+    paths:
+      - "backend/RL.API/Features/Listas/**"
+      - "backend/RL.API.Tests/Features/Listas/**"
+      - "frontend/rl-app/src/app/features/admin/listas/**"
+      - ".github/workflows/m1-regresion-focal.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-m1:
+    name: Backend M1 - compilacion y pruebas focales
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore completo
+        run: dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config
+      - name: Build Release sin cambio de controles
+        run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore
+      - name: Unitarias M1, Listas y controladores
+        run: >
+          dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
+          --configuration Release --no-build --no-restore
+          --filter "FullyQualifiedName~MonitoreoFuenteM1Tests|FullyQualifiedName~ListasApplicationTests|FullyQualifiedName~ListasControllerTests"
+          --logger "console;verbosity=normal"
+
+  frontend-m1:
+    name: Angular M1 - npm, lint, unitarias, build y auditoria sin excepciones
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: frontend/rl-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: frontend/rl-app/package-lock.json
+      - name: Dependencias reproducibles
+        run: npm ci --ignore-scripts
+      - name: ESLint
+        run: npm run lint
+      - name: Pruebas Angular
+        run: npm test
+      - name: Build Angular
+        run: npm run build
+      - name: Auditoria de seguridad sin omisiones
+        if: always()
+        run: npm audit
+
+# Esta verificacion NO desactiva ni sustituye .github/workflows/quality-gates.yml.
+# Oracle institucional y pruebas E2E autenticadas reales permanecen fuera de este workflow.

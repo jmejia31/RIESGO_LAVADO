@@ -22,6 +22,8 @@ public sealed class ConsultaMonitoreoPaginadaDto
     public string Estado { get; set; } = "todos";
     public DateTime? FechaDesde { get; set; }
     public DateTime? FechaHasta { get; set; }
+    public string? CategoriaIdentidad { get; set; }
+    public DateTime? PeriodoPlanilla { get; set; }
     public string Orden { get; set; } = "id";
     public string Direccion { get; set; } = "asc";
 }

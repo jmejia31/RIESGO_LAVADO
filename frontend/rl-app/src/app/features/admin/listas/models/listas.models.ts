@@ -61,6 +61,10 @@ export interface CoincidenciaNatural {
   nombre: string;
   listaCoincidencia: string;
   totalRepetidos: number;
+  idRegistroFuente?: number;
+  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO';
+  numeroPatronal?: string;
+  categoriaIdentidad?: 'IDENTIFICADA' | 'SIN_IDENTIFICACION';
   fechaEncontro?: string | null;
   fechaCalifico?: string | null;
   fechaRegistroInterno?: string | null;
@@ -75,6 +79,10 @@ export interface CoincidenciaEmpleado {
   nombre: string;
   listaCoincidencia: string;
   totalRepetidos: number;
+  idRegistroFuente?: number;
+  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO';
+  numeroPatrono?: string;
+  categoriaIdentidad?: 'IDENTIFICADA' | 'SIN_IDENTIFICACION';
   fechaEncontro?: string | null;
   fechaCalifico?: string | null;
   fechaRegistroInterno?: string | null;
@@ -98,6 +106,7 @@ export interface DetalleCoincidenciaNatural {
 
 export interface DetalleCoincidenciaEmpleado {
   identidad: string;
+  periodo?: string | null;
   nombre: string;
   tipoCondicionActuaDesc: string;
   numeroPatrono: string;
@@ -159,6 +168,8 @@ export interface ConsultaMonitoreoPaginada {
   estado?: string;
   fechaDesde?: string | null;
   fechaHasta?: string | null;
+  categoriaIdentidad?: 'identificadas' | 'sin_identificacion';
+  periodoPlanilla?: string | null;
   orden?: string;
   direccion?: 'asc' | 'desc';
 }

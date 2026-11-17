@@ -42,7 +42,8 @@ public static class IdentidadMonitoreoPolicy
     public static bool EsMarcadorNoIdentificacion(string? documento)
     {
         var valor = NormalizarDocumento(documento).ToUpperInvariant();
-        return valor is "N/A" or "N/A(3)" or "NULL" or "VACIO" or "VACÍO"
+        return valor.StartsWith("N/A", StringComparison.Ordinal)
+            || valor is "NULL" or "VACIO" or "VACÍO"
             or "SIN IDENTIFICACION" or "SIN IDENTIFICACIÓN";
     }
 

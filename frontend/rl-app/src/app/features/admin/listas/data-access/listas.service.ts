@@ -102,6 +102,8 @@ export class ListasService {
     if (consulta.estado) params = params.set('estado', consulta.estado);
     if (consulta.fechaDesde) params = params.set('fechaDesde', consulta.fechaDesde);
     if (consulta.fechaHasta) params = params.set('fechaHasta', consulta.fechaHasta);
+    if (consulta.categoriaIdentidad) params = params.set('categoriaIdentidad', consulta.categoriaIdentidad);
+    if (consulta.periodoPlanilla) params = params.set('periodoPlanilla', consulta.periodoPlanilla);
     if (consulta.orden) params = params.set('orden', consulta.orden);
     if (consulta.direccion) params = params.set('direccion', consulta.direccion);
     return params;
@@ -117,31 +119,58 @@ export class ListasService {
     return params;
   }
 
-  getDetalleNatural(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaNatural[]> {
+  // M1: el ID de coincidencia/positivo es la referencia de lectura.
+  // Las rutas por DNI se conservan solo como compatibilidad; una identidad
+  // ambigua sin ID es rechazada por el backend.
+  getDetalleNatural(
+    numeroIdentificacion: string,
+    errorScope: HttpErrorScope = 'global',
+    idRegistroFuente?: number,
+    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO'
+  ): Observable<DetalleCoincidenciaNatural[]> {
     const context = createHttpErrorScopeContext(errorScope);
+    if (idRegistroFuente && tipoFuente) {
+      const params = new HttpParams()
+        .set('numeroIdentificacion', numeroIdentificacion)
+        .set('idRegistroFuente', idRegistroFuente)
+        .set('tipoFuente', tipoFuente);
+      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(
+        `${this.apiUrl}/naturales/detalle`, { params, context }).pipe(map(res => res.datos));
+    }
     if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) {
       const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
-      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/detalle`, { params, context })
-        .pipe(map(res => res.datos));
+      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(
+        `${this.apiUrl}/naturales/detalle`, { params, context }).pipe(map(res => res.datos));
     }
-
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/${encodeURIComponent(numeroIdentificacion)}/detalle`, {
-      context
-    })
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(
+      `${this.apiUrl}/naturales/${encodeURIComponent(numeroIdentificacion)}/detalle`, { context })
       .pipe(map(res => res.datos));
   }
 
-  getDetalleEmpleado(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaEmpleado[]> {
+  getDetalleEmpleado(
+    numeroIdentificacion: string,
+    errorScope: HttpErrorScope = 'global',
+    idRegistroFuente?: number,
+    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO',
+    periodoPlanilla?: string
+  ): Observable<DetalleCoincidenciaEmpleado[]> {
     const context = createHttpErrorScopeContext(errorScope);
+    if (idRegistroFuente && tipoFuente) {
+      let params = new HttpParams()
+        .set('numeroIdentificacion', numeroIdentificacion)
+        .set('idRegistroFuente', idRegistroFuente)
+        .set('tipoFuente', tipoFuente);
+      if (periodoPlanilla) params = params.set('periodoPlanilla', periodoPlanilla);
+      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(
+        `${this.apiUrl}/empleados/detalle`, { params, context }).pipe(map(res => res.datos));
+    }
     if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) {
       const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
-      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/detalle`, { params, context })
-        .pipe(map(res => res.datos));
+      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(
+        `${this.apiUrl}/empleados/detalle`, { params, context }).pipe(map(res => res.datos));
     }
-
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/${encodeURIComponent(numeroIdentificacion)}/detalle`, {
-      context
-    })
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(
+      `${this.apiUrl}/empleados/${encodeURIComponent(numeroIdentificacion)}/detalle`, { context })
       .pipe(map(res => res.datos));
   }
 
@@ -260,7 +289,8 @@ export class ListasService {
   }
 
   private esMarcadorSinIdentificacion(value: string | null | undefined): boolean {
-    return this.marcadoresSinIdentificacion.has((value ?? '').trim().toUpperCase());
+    const normalizado = (value ?? '').trim().toUpperCase();
+    return normalizado.startsWith('N/A') || this.marcadoresSinIdentificacion.has(normalizado);
   }
 
   registrarAuditoriaExportacion(tabla: string, registroId: string, modulo: string, detalle: any): Observable<any> {

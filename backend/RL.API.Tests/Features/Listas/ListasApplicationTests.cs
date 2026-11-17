@@ -201,6 +201,36 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
+    public async Task ObtenerDetalleNatural_TransportaClaveFuenteSinResolverDniCompartido()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ObtenerDetalleNaturalAsync),
+            _ => Task.FromResult(new List<DetalleCoincidenciaNaturalDto>
+            {
+                new() { NumeroIdentificacion = "N/A(3)", NombresPersona = "Fuente" }
+            }));
+        var result = await service.ObtenerDetalleNaturalAsync("N/A(3)", 22, "DNP_COINCIDENCIA");
+        Assert.Single(result);
+        var invocacion = Assert.Single(repo.CallsTo(nameof(IListasRepository.ObtenerDetalleNaturalAsync)));
+        Assert.Equal(22L, invocacion.Arguments[1]);
+        Assert.Equal("DNP_COINCIDENCIA", invocacion.Arguments[2]);
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.ResolverIdentidadAsync)));
+    }
+
+    [Fact]
+    public async Task ObtenerDetalleEmpleado_TransportaPeriodoYClaveFuente()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ObtenerDetalleEmpleadoAsync),
+            _ => Task.FromResult(new List<DetalleCoincidenciaEmpleadoDto>()));
+        var periodo = new DateTime(2026, 7, 1);
+        await service.ObtenerDetalleEmpleadoAsync("0801", 33, "DNP_COINCIDENCIA", periodo);
+        var invocacion = Assert.Single(repo.CallsTo(nameof(IListasRepository.ObtenerDetalleEmpleadoAsync)));
+        Assert.Equal(33L, invocacion.Arguments[1]);
+        Assert.Equal(periodo, invocacion.Arguments[3]);
+    }
+
+    [Fact]
     public async Task ExportarDetalle_RegistraAuditoriaConCantidadAntesDeResponder()
     {
         var service = CrearServicio(out var repo, out var auditoria);

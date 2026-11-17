@@ -12,8 +12,8 @@ public interface IListasRepository
     Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta);
     Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default);
     Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta);
-    Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion);
-    Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion);
+    Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion, long? idRegistroFuente = null, string? tipoFuente = null);
+    Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion, long? idRegistroFuente = null, string? tipoFuente = null, DateTime? periodoPlanilla = null);
     Task<ResolucionIdentidadMonitoreo> ResolverIdentidadAsync(string documento, TipoSujetoMonitoreo tipoSujeto);
     Task<int> ContarPositivosActivosAsync(string documento, int tipoPositivoId);
     Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync();
