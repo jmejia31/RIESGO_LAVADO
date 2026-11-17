@@ -194,7 +194,7 @@ describe('ConfiguracionService', () => {
       }
     });
     http.expectOne('http://localhost:5043/api/configuracion/sistema/logo-reportes')
-      .flush('No existe', { status: 404, statusText: 'Not Found' });
+      .flush(new Blob(['No existe'], { type: 'text/plain' }), { status: 404, statusText: 'Not Found' });
     expect(getInstitutionalReportBranding().logoUrl).toBe('');
   });
 });
