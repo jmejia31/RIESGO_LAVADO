@@ -4846,3 +4846,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - No se modificaron Oracle institucional, `DNP_IHSS`, `main`, migración 54, B07 ni Bloque 10. Se preservaron los cambios ajenos preexistentes del workspace. Servicios locales permanecen detenidos para reinicio manual.
 - Limitación real: `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`; falta la comprobación manual del propietario con datos reales y los tres casos de PDF/Excel, incluido `N/A(3)`. `OWNER_ACCEPTANCE=PENDING`; `PHASE_FINAL_STATUS=OPEN_PENDING_OWNER_RUNTIME`.
 - Punto exacto de continuación: levantar manualmente ambos servicios desde este SHA, limpiar caché del navegador, generar PDF y Excel desde jurídica, natural/empleado y natural `N/A(3)`, y registrar el resultado visual/funcional antes de cerrar la fase.
+
+## Estado vigente — B06 P0 recuperación de registros y reportería — 2026-11-17 12:53 -06:00
+
+- `PHASE=B06_P0_REPORTES_IDENTIDAD`; `INITIAL_SHA=a8e6ac8c7979294fb775abca331505939abed47d`; `SOURCE_CODE_SHA=f423b929c6f5303e6302d8361c06434f05d78c62`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- Se corrigieron las causas de ocultamiento de registros: filtro de período de empleados, dependencia de fecha de calificación para detalle y bloqueo de consultas informativas por identidad ambigua. Se preservan las filas y los marcadores `N/A(3)`; solo las mutaciones requieren identidad verificable.
+- Los errores de enriquecimiento ahora se muestran como errores reales y no como reportes vacíos. PDF/Excel de Matrices usan snapshot institucional asíncrono y encaje proporcional común; el login resuelve correctamente `/uploads/...`.
+- Verificado: backend focal `88` + `28` tests PASS; build .NET Release PASS con 0 errores; Angular `96 archivos / 1014 tests PASS`; build Angular PASS; validadores de estructura, base, documentación y Agent Skills PASS.
+- No verificado: Oracle institucional, `DNP_IHSS`, migración 54, Playwright/E2E autenticado real, persistencia visual del propietario y conteos reales 242/7/190. `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `LIVE_AUTHENTICATED_E2E=NOT_VERIFIED`.
+- Servicios locales detenidos por solicitud del propietario. `OWNER_VISUAL_ACCEPTANCE=PENDING`; `B06_TECHNICAL_STATUS=READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS`; `B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`.
+- Expediente `docs/certificaciones/B06_P0_REPORTES_IDENTIDAD_20261117.md`; `EVIDENCE_COMMIT_SHA=DOCUMENT_BUNDLE_COMMIT_PENDING`; `GITHUB_REMOTE_VERIFIED=PENDING_DOCUMENT_BUNDLE_PUSH`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_AND_EVIDENCE_SHA`.
+- Preservación: `B01`–`B06` preservados; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; no se stagearon cambios ajenos.
+- Punto exacto de continuación: verificar el commit documental remoto y el Quality Gate; luego iniciar manualmente backend/frontend, limpiar caché y probar los cuatro casos de reportes PDF/Excel: jurídica, natural, empleado y `N/A(3)`. No cerrar B06 por inferencia automatizada.
