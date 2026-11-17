@@ -33,7 +33,7 @@ public sealed record InstitutionalBrandingSnapshot(
         string source)
     {
         if (bytes.Length == 0) throw new InvalidDataException("El logo institucional está vacío.");
-        var decoded = InstitutionalLogoAsset.DecodePngForBranding(bytes);
+        var decoded = InstitutionalPngDecoder.DecodePngForBranding(bytes);
         if (decoded.Width is < 32 or > 4096 || decoded.Height is < 16 or > 4096)
             throw new InvalidDataException("Las dimensiones del logo institucional no están permitidas.");
         if ((long)decoded.Width * decoded.Height > 16_777_216)

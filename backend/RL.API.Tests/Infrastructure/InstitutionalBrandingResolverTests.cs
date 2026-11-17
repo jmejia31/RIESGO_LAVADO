@@ -18,7 +18,7 @@ public sealed class InstitutionalBrandingResolverTests
         Directory.CreateDirectory(uploads);
         var fileName = "synthetic-logo.png";
         var filePath = Path.Combine(uploads, fileName);
-        File.WriteAllBytes(filePath, InstitutionalLogoAsset.PngBytes);
+        File.WriteAllBytes(filePath, SyntheticReportLogo.PngBytes);
 
         try
         {
@@ -38,7 +38,7 @@ public sealed class InstitutionalBrandingResolverTests
             var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
 
             Assert.Equal("configured-local-file", snapshot.Source);
-            Assert.Equal(Convert.ToHexString(SHA256.HashData(InstitutionalLogoAsset.PngBytes)), snapshot.LogoSha256);
+            Assert.Equal(Convert.ToHexString(SHA256.HashData(SyntheticReportLogo.PngBytes)), snapshot.LogoSha256);
             Assert.Equal(InstitutionalBrandingStorage.BuildPublicUploadUrl(fileName), snapshot.LogoUrl);
         }
         finally

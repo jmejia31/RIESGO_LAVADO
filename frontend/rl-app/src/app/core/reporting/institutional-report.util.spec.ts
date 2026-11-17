@@ -17,8 +17,6 @@ import {
   resolverMargenesTablaInstitucional
 } from './institutional-report.util';
 import {
-  INSTITUTIONAL_LOGO_ASSET_PATH,
-  INSTITUTIONAL_LOGO_ASPECT_RATIO,
   INSTITUTIONAL_REPORT_LAYOUT,
   INSTITUTIONAL_PDF_LOGO_WIDTH_MM
 } from './institutional-report-standard';
@@ -32,9 +30,6 @@ describe('estándar institucional de reportería', () => {
   it('conserva el contrato canónico fuera de un navegador sin intentar I/O de filesystem', () => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
-    expect(INSTITUTIONAL_LOGO_ASSET_PATH).toBe('assets/institutional/ihss-logo.png');
-    expect(dibujarLogoInstitucionalPdf(doc, 210, 4, 48)).toBe(false);
-    expect(INSTITUTIONAL_LOGO_ASPECT_RATIO).toBeCloseTo(2034 / 773, 10);
     expect(INSTITUTIONAL_PDF_LOGO_WIDTH_MM).toBe(72.644);
   });
 

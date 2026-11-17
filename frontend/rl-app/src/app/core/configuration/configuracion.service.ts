@@ -5,7 +5,7 @@ import { catchError, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
 import { bestContrastForeground, createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
 import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
-import { INSTITUTIONAL_LOGO_ASPECT_RATIO, setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
+import { setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
 
 interface ReportLogo {
   dataUrl: string;
@@ -14,7 +14,7 @@ interface ReportLogo {
 
 const NO_REPORT_LOGO: ReportLogo = {
   dataUrl: '',
-  aspectRatio: INSTITUTIONAL_LOGO_ASPECT_RATIO
+  aspectRatio: 1
 };
 
 @Injectable({

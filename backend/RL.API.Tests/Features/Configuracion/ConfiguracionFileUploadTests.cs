@@ -109,7 +109,7 @@ public sealed class ConfiguracionFileUploadTests
         var uploads = Path.Combine(root, "uploads");
         Directory.CreateDirectory(uploads);
         const string fileName = "synthetic.png";
-        File.WriteAllBytes(Path.Combine(uploads, fileName), InstitutionalLogoAsset.PngBytes);
+        File.WriteAllBytes(Path.Combine(uploads, fileName), SyntheticReportLogo.PngBytes);
 
         try
         {

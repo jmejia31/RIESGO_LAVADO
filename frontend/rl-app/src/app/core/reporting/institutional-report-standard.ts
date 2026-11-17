@@ -29,16 +29,12 @@ export const INSTITUTIONAL_REPORT_LAYOUT = {
   pdfHeaderMinimumHeight: 34
 } as const;
 
-/** Fuente canónica servida por Angular; no se obtiene desde una URL externa. */
-export const INSTITUTIONAL_LOGO_ASSET_PATH = 'assets/institutional/ihss-logo.png';
-export const INSTITUTIONAL_LOGO_SHA256 = 'D57799214B441EA834320A1069D46A6930590ED4325F5A5EFAFCC65D115B7543';
-export const INSTITUTIONAL_LOGO_ASPECT_RATIO = 2034 / 773;
+/** Medidas de presentación B06; se utiliza siempre el ratio del logo configurado. */
 /** Ancho físico canónico del logo en todos los encabezados PDF (milímetros). */
 export const INSTITUTIONAL_PDF_LOGO_WIDTH_MM = 72.644;
 export const INSTITUTIONAL_LOGO_POLICY = {
   pdfWidthMm: INSTITUTIONAL_PDF_LOGO_WIDTH_MM,
-  excelWidthPx: 156,
-  excelHeightPx: 156 / INSTITUTIONAL_LOGO_ASPECT_RATIO
+  excelWidthPx: 156
 } as const;
 
 export interface InstitutionalReportBranding {
@@ -54,7 +50,7 @@ const DEFAULT_BRANDING: InstitutionalReportBranding = {
   institutionName: 'INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL',
   systemName: 'SGRLA-IHSS',
   logoUrl: '',
-  logoAspectRatio: INSTITUTIONAL_LOGO_ASPECT_RATIO,
+  logoAspectRatio: 1,
   headerColor: INSTITUTIONAL_REPORT_COLORS.navy,
   headerTextColor: INSTITUTIONAL_REPORT_COLORS.white
 };

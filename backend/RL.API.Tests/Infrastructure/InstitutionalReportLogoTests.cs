@@ -9,17 +9,14 @@ namespace RL.API.Tests.Infrastructure;
 public sealed class InstitutionalReportLogoTests
 {
     [Fact]
-    public void CanonicalLogoSource_IsEmbeddedAndIntegrityChecked()
+    public void ConfiguredLogoSource_UsesOnlySyntheticFixture()
     {
-        var bytes = InstitutionalLogoAsset.PngBytes;
-
-        Assert.Equal(InstitutionalLogoAsset.Sha256, Convert.ToHexString(SHA256.HashData(bytes)));
-        Assert.Equal(2034, InstitutionalLogoAsset.Width);
-        Assert.Equal(773, InstitutionalLogoAsset.Height);
-        Assert.Equal(0x89, bytes[0]);
-        Assert.Equal((byte)'P', bytes[1]);
-        Assert.Equal((byte)'N', bytes[2]);
-        Assert.Equal((byte)'G', bytes[3]);
+        var bytes = SyntheticReportLogo.PngBytes;
+        var snapshot = CreateConfiguredLogo();
+        Assert.Equal(Convert.ToHexString(SHA256.HashData(bytes)), snapshot.LogoSha256);
+        Assert.Equal(SyntheticReportLogo.Width, snapshot.LogoWidth);
+        Assert.Equal(SyntheticReportLogo.Height, snapshot.LogoHeight);
+        Assert.True(snapshot.HasLogo);
     }
 
     [Fact]
@@ -37,8 +34,8 @@ public sealed class InstitutionalReportLogoTests
 
         Assert.StartsWith("%PDF-1.4", pdf, StringComparison.Ordinal);
         Assert.Contains("/Subtype /Image", pdf, StringComparison.Ordinal);
-        Assert.Contains($"/Width {InstitutionalLogoAsset.Width}", pdf, StringComparison.Ordinal);
-        Assert.Contains($"/Height {InstitutionalLogoAsset.Height}", pdf, StringComparison.Ordinal);
+        Assert.Contains($"/Width {SyntheticReportLogo.Width}", pdf, StringComparison.Ordinal);
+        Assert.Contains($"/Height {SyntheticReportLogo.Height}", pdf, StringComparison.Ordinal);
         Assert.Contains("/ImIHSS Do", pdf, StringComparison.Ordinal);
         Assert.Contains("/XObject << /ImIHSS", pdf, StringComparison.Ordinal);
         Assert.True(pdf.Split("/ImIHSS Do", StringSplitOptions.None).Length - 1 > 1, "El logo debe repetirse en un PDF multipágina.");
@@ -57,8 +54,8 @@ public sealed class InstitutionalReportLogoTests
         var pdf = Encoding.ASCII.GetString(document.ToBytes());
 
         Assert.Equal(205.92m, InstitutionalReportStandard.PdfLogoWidthPoints);
-        Assert.Matches(@"q 205\.92 0 0 78\.[0-9]+ [0-9]+\.[0-9]+ [0-9]+\.[0-9]+ cm /ImIHSS Do Q", pdf);
-        Assert.Contains("1 0 0 1 36 784.89 Tm (SGRLA-IHSS", pdf, StringComparison.Ordinal);
+        Assert.Matches(@"q 205\.92 0 0 102\.96 [0-9]+\.[0-9]+ [0-9]+\.[0-9]+ cm /ImIHSS Do Q", pdf);
+        Assert.Contains("(SGRLA-IHSS", pdf, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -79,7 +76,7 @@ public sealed class InstitutionalReportLogoTests
         var drawingRelations = ReadEntryText(archive, "xl/drawings/_rels/drawing1.xml.rels");
         var contentTypes = ReadEntryText(archive, "[Content_Types].xml");
 
-        Assert.Equal(InstitutionalLogoAsset.PngBytes, media);
+        Assert.Equal(SyntheticReportLogo.PngBytes, media);
         Assert.Contains("<drawing r:id=\"rId1\"/>", sheet, StringComparison.Ordinal);
         Assert.Contains("r:embed=\"rId1\"", drawing, StringComparison.Ordinal);
         Assert.Contains("name=\"IHSS logo\"", drawing, StringComparison.Ordinal);
@@ -92,18 +89,12 @@ public sealed class InstitutionalReportLogoTests
     [Fact]
     public void Xlsx_UsesTheResolvedBrandingForHeaderAndMetadata()
     {
-        var (rgb, width, height) = InstitutionalLogoAsset.GetPdfRgb();
-        var branding = new InstitutionalBrandingSnapshot(
-            "INSTITUCIÓN DE PRUEBA",
-            "SISTEMA DE PRUEBA",
-            "uploads/logo-prueba.png",
-            InstitutionalLogoAsset.Sha256,
-            InstitutionalLogoAsset.PngBytes,
-            rgb,
-            width,
-            height,
-            InstitutionalReportStandard.CreatePalette("#FFFFFF"),
-            "test");
+        var branding = CreateConfiguredLogo() with
+        {
+            InstitutionName = "INSTITUCIÓN DE PRUEBA",
+            SystemName = "SISTEMA DE PRUEBA",
+            Palette = InstitutionalReportStandard.CreatePalette("#FFFFFF")
+        };
         var workbook = new InstitutionalXlsxWorkbook(branding);
         workbook.AddSheet(
             "Prueba",
@@ -149,7 +140,7 @@ public sealed class InstitutionalReportLogoTests
 
     private static InstitutionalBrandingSnapshot CreateConfiguredLogo() =>
         InstitutionalBrandingSnapshot.FromImage(
-            InstitutionalLogoAsset.PngBytes,
+            SyntheticReportLogo.PngBytes,
             "INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL",
             "SGRLA-IHSS",
             "/uploads/logo-prueba.png",

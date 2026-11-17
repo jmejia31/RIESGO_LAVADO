@@ -1,3 +1,13 @@
+## Actualización vigente — 17 de noviembre de 2026: activo estático retirado
+
+El propietario ordenó retirar el PNG legado `frontend/rl-app/public/assets/institutional/ihss-logo.png`. Se elimina la referencia `EmbeddedResource` de .NET, la copia en Docker, el cargador de ese archivo y las constantes Angular asociadas a la ruta, SHA y dimensiones históricas. Las pruebas de logo configurado ahora usan una imagen sintética sin emblemas.
+
+**Contrato de reportería vigente:** si `SFS_LOGO_URL` es nulo o la imagen configurada no está disponible, el PDF/Excel no incorpora imagen. Si existe una carga válida en `/uploads/`, el sistema utiliza exclusivamente dicha imagen y calcula su aspecto real. Se conservan los tamaños de presentación y el estándar visual B06.
+
+Los apartados siguientes se mantienen como **registro histórico**, no como instrucciones de cargar el PNG retirado. Oracle institucional, DNP_IHSS, producción y main no se modifican.
+
+---
+
 # B06 — Estándar de reportería institucional PDF/Excel y logo IHSS
 
 ## Actualización vigente — geometría única del logo en PDF — 2026-11-16
