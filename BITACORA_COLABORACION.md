@@ -11489,3 +11489,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Expediente: `docs/certificaciones/B06_P0_REPORTES_IDENTIDAD_20261117.md`; `EVIDENCE_COMMIT_SHA=c64a98cf`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_AND_EVIDENCE_SHA`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`; `REVIEW_READY=YES_WITH_DOCUMENTED_LIMITATIONS`.
 - Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B06_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_TOUCHED=NO`; `DNP_IHSS_WRITES=0`; `MIGRATION_54_TOUCHED=NO`.
 - Punto exacto de continuación: publicar y verificar el expediente documental y el Quality Gate del nuevo SHA; después levantar manualmente ambos servicios y probar PDF/Excel de jurídica, natural, empleado y `N/A(3)`. B06 queda abierto hasta esa revisión y aceptación.
+
+
+## 2026-11-17 — CHAT — Inicio de Microfase 1 (diagnóstico de solo lectura)
+
+- `EVENT_ID=RL-M1-APERTURA-DIAGNOSTICO-20261117`; autor `CHAT / ChatGPT`, cuenta de publicación `jmejia31`, rama `desarrollo`; SHA base `d7d3556958176108ed41bebd045f2de42547ad9e`.
+- Se verificaron consultas y contratos de Monitoreo: natural `GROUP BY DNI, LISTA_CONCIDENCIA`; detalle natural con JOIN por DNI y ruta fuente solo para marcadores; empleado histórico JOIN por DNI y `COUNT(*)` sin `PERIODO` individual.
+- Se añadió `docs/qa/M1_DIAGNOSTICO_SOLO_LECTURA_MONITOREO_20261117.sql` (consultas SQL SELECT de solo lectura, nunca ejecutadas contra Oracle aquí) y `docs/qa/M1_APERTURA_RECUPERACION_MONITOREO_20261117.md` (evidencia y puerta de decisión de M1).
+- No se modificó código funcional; sin escrituras Oracle, datos reales, producción, `main`, B07, Bloque 10 ni migración 54. No se ejecutaron dotnet/npm/Oracle/Playwright locales en este cliente. El Quality Gate previo `44154367078` era `FAILURE` y sigue pendiente una ejecución válida del SHA nuevo.
+- No se atribuyó eliminación física de 52 registros. `M1_STATUS=STARTED_DIAGNOSTIC_ONLY`; pendiente ejecutar Q02-Q12 con lectura autorizada y revisar agregados sanitizados para implementar recuperación sin falsas asociaciones.
+- El SHA de publicación de este registro es el commit que incluye esta entrada; verificar contra `origin/desarrollo` antes de continuar.

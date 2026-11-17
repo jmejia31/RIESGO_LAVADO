@@ -4858,3 +4858,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Expediente `docs/certificaciones/B06_P0_REPORTES_IDENTIDAD_20261117.md`; `EVIDENCE_COMMIT_SHA=c64a98cf`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_AND_EVIDENCE_SHA`.
 - Preservación: `B01`–`B06` preservados; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; no se stagearon cambios ajenos.
 - Punto exacto de continuación: verificar el commit documental remoto y el Quality Gate; luego iniciar manualmente backend/frontend, limpiar caché y probar los cuatro casos de reportes PDF/Excel: jurídica, natural, empleado y `N/A(3)`. No cerrar B06 por inferencia automatizada.
+
+
+## Estado vigente — M1: inicio de conciliación natural/empleados/detalles — 2026-11-17 (CHAT)
+
+- `PHASE=M1_RECUPERACION_REGISTROS_IDENTIDAD`; `BASE_SHA=d7d3556958176108ed41bebd045f2de42547ad9e`; autor `CHAT / ChatGPT`; cuenta `jmejia31`; `BRANCH=desarrollo`.
+- Evidencia de código: natural `GROUP BY DNI, LISTA_CONCIDENCIA` oculta granularidad; detalle natural por DNI puede no recuperar filas sin vínculo en `V_SOCIOS_REPRESENTANTES` o mezclar orígenes; histórico empleado `COUNT(*)` por JOIN entre períodos puede inflar cifras.
+- Se preparó `docs/qa/M1_DIAGNOSTICO_SOLO_LECTURA_MONITOREO_20261117.sql` y `docs/qa/M1_APERTURA_RECUPERACION_MONITOREO_20261117.md` para diagnóstico Oracle autorizado de lectura. No se consultaron datos reales en esta sesión y por ello `242_190_RECONCILIATION=PENDING`, `EMPLOYEE_7_RECONCILIATION=PENDING`, `SOURCE_KEYS=PENDING`.
+- `CODE_FUNCTIONAL_CHANGED=NO`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `MAIN_TOUCHED=NO`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MIGRATION_54_TOUCHED=NO`.
+- `QUALITY_GATE_PREVIOUS=44154367078:FAILURE_NPM_AUDIT`; los tests funcionales y E2E reales de M1 siguen `NOT_EXECUTED`; aceptación pendiente.
+- **Punto exacto de continuación:** ejecutar de manera controlada y lectura Q02–Q12 (agregados sanitizados), identificar claves de origen verdaderas y explicar 242 vs 190, cero vs siete empleados; luego diseñar/parchar SQL/DTO/Angular con pruebas, sin inventar asociaciones ni tocar Oracle.
