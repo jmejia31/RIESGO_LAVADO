@@ -131,6 +131,54 @@ describe('MonitoreoListasComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
+  it('M1: permite consultar por separado marcadores sin identificación y conserva el filtro en exportación', () => {
+    component.cambiarTipo('natural');
+    component.cambiarCategoriaIdentidad('sin_identificacion');
+
+    expect(component.categoriaIdentidad()).toBe('sin_identificacion');
+    expect(service['getNaturalesPaginadas']).toHaveBeenLastCalledWith(
+      expect.objectContaining({ categoriaIdentidad: 'sin_identificacion' })
+    );
+    expect(component.obtenerConsultaMonitoreoActual().categoriaIdentidad).toBe('sin_identificacion');
+
+    component.limpiarFiltrosPrincipales();
+    expect(component.categoriaIdentidad()).toBe('identificadas');
+  });
+
+  it('M1: filtra empleados por planilla sin alterar el período de la coincidencia', () => {
+    component.cambiarTipo('empleado');
+    component.cambiarPeriodoPlanilla('2026-07');
+    expect(component.periodoPlanilla()).toBe('2026-07');
+    expect(service['getEmpleadosPaginadas']).toHaveBeenLastCalledWith(
+      expect.objectContaining({ periodoPlanilla: '2026-07-01' })
+    );
+    expect(component.obtenerConsultaMonitoreoActual().periodoPlanilla).toBe('2026-07-01');
+
+    component.cambiarPeriodoPlanilla('2026-99');
+    expect(component.periodoPlanilla()).toBe('2026-07');
+  });
+
+  it('M1: la ficha manual conserva la referencia real de origen incluso con N/A(3)', () => {
+    component.tipoActivo.set('natural');
+    const fila = {
+      numeroIdentificacion: 'N/A(3)',
+      nombre: 'Registro fuente',
+      idRegistroFuente: 72,
+      tipoFuente: 'MANUAL_CUMPLIMIENTO',
+      esManual: true
+    } as never;
+    service['getDetalleNatural'].mockReturnValue(of([
+      { numeroIdentificacion: 'N/A(3)', nombresPersona: 'Registro fuente' }
+    ]));
+
+    component.abrirDetalle(fila);
+    expect(service['getDetalleNatural']).toHaveBeenCalledWith(
+      'N/A(3)', 'local', 72, 'MANUAL_CUMPLIMIENTO'
+    );
+    expect(component.modalDetalleAbierto()).toBe(true);
+    expect(component.detallesNatural()).toHaveLength(1);
+  });
+
   it('conserva resultados de empleados y expone el error cuando el servicio falla', () => {
     component.tipoActivo.set('empleado');
     component.empleadosRaw.set([{ identidad: '01' }] as never);
