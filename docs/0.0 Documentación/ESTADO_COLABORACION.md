@@ -4779,3 +4779,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - Pendiente por entorno: suite completa con Oracle autorizado, prueba Oracle XE descartable, Playwright autenticado y validación real de los tres tipos de sujetos. `AUDIT_FAILURE_ROLLBACK=NOT_VERIFIED_ORACLE_REQUIRED`; `OWNER_VISUAL_ACCEPTANCE=PENDING`.
 - Expediente `docs/certificaciones/FASE2A_MONITOREO_LISTAS_6493bce6.md`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_AND_EVIDENCE_SHA`; `REVIEW_READY=YES_WITH_DOCUMENTED_LIMITATIONS`.
 - Punto exacto de continuación: commit/push documental selectivo, verificación remota del índice y expediente, observación del Quality Gate del nuevo SHA y ejecución posterior de las pruebas ambientales autorizadas. No stagear los cambios ajenos preexistentes del checkout.
+
+## Estado vigente — Fase 2A Quality Gate remoto verde — 2026-11-16 23:46 -06:00
+
+- `SOURCE_CODE_SHA=6493bce63ae485336c6a232800865a92ebb107a8`; `EVIDENCE_COMMIT_SHA=e821c2d283c226563b28bc1a4c599ee6c3b673bd`; ambos publicados en `origin/desarrollo`.
+- Quality Gate exacto [44026016785](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44026016785) terminó `completed/success`: 44/44 pasos verdes. `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`.
+- El commit funcional implementa la identidad segura y las regresiones defensivas de Monitoreo de Listas. El expediente registra explícitamente que no hubo escrituras en DNP_IHSS ni Oracle institucional.
+- Pendientes reales: ejecución autenticada con datos autorizados de jurídica/natural/empleado, Playwright visual contra el entorno del propietario y prueba de fallo inducido de auditoría en Oracle autorizado. `OWNER_VISUAL_ACCEPTANCE=PENDING`.
+- Estado: `PHASE2A_TECHNICAL_STATUS=PARTIAL_PENDING_AUTHORIZED_RUNTIME_AND_E2E`; `READY_FOR_INDEPENDENT_REVIEW=YES_WITH_DOCUMENTED_LIMITATIONS`; no cerrar Fase 2A por inferencia del Quality Gate.

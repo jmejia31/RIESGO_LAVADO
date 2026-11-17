@@ -11402,3 +11402,11 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Expediente: `docs/certificaciones/FASE2A_MONITOREO_LISTAS_6493bce6.md`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_AND_EVIDENCE_SHA`; `OWNER_VISUAL_ACCEPTANCE=PENDING`.
 - Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B06_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`.
 - Punto exacto de continuación: publicar el expediente documental selectivo, observar el Quality Gate exacto de `6493bce6` y luego validar en un entorno autorizado el flujo de lectura/operación y el E2E autenticado. La Fase 2A permanece abierta con limitaciones documentadas.
+
+## 2026-11-16 23:46 -06:00 — Fase 2A Quality Gate remoto verde (COD)
+
+- El expediente `FASE2A_MONITOREO_LISTAS_6493bce6.md` quedó publicado en `EVIDENCE_COMMIT_SHA=e821c2d283c226563b28bc1a4c599ee6c3b673bd`.
+- Quality Gate exacto [44026016785](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44026016785): ambos jobs terminaron `completed/success`; 44/44 pasos del job principal quedaron verdes, incluyendo analizadores, build, tests, Oracle XE de CI, quality gates internos, E2E y contenedores.
+- `QUALITY_GATE_STATUS=SUCCESS`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`.
+- El gate verde no convierte en verificada la ejecución autenticada del propietario ni la lectura de una base institucional: `PLAYWRIGHT_REAL_AUTHENTICATED=NOT_VERIFIED`, `ORACLE_INSTITUTIONAL_WRITES=0`, `DNP_IHSS_WRITES=0`.
+- `PHASE2A_TECHNICAL_STATUS=PARTIAL_PENDING_AUTHORIZED_RUNTIME_AND_E2E`; `READY_FOR_INDEPENDENT_REVIEW=YES_WITH_DOCUMENTED_LIMITATIONS`; la certificación final de Fase 2A y la aceptación visual permanecen pendientes.
