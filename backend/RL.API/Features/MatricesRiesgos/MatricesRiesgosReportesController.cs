@@ -45,7 +45,7 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
 
         try
         {
-            ArchivoReporteDto archivo = _exportador.CrearExcelMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
+            ArchivoReporteDto archivo = await _exportador.CrearExcelMatrizCompletaAsync(resultado.Data, proyecciones.Data, DescribirFiltros(filtro), cancellationToken);
             return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
         }
         catch (InstitutionalBrandingUnavailableException exception)
@@ -70,7 +70,7 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
 
         try
         {
-            ArchivoReporteDto archivo = _exportador.CrearPdfMatrizCompleta(resultado.Data, proyecciones.Data, DescribirFiltros(filtro));
+            ArchivoReporteDto archivo = await _exportador.CrearPdfMatrizCompletaAsync(resultado.Data, proyecciones.Data, DescribirFiltros(filtro), cancellationToken);
             return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
         }
         catch (InstitutionalBrandingUnavailableException exception)

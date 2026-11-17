@@ -24,17 +24,14 @@ public sealed class ListasService : IListasService
     public Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerNaturalesParaExportarAsync(consulta);
     public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default) => _repo.ObtenerEmpleadosPaginadasAsync(consulta, cancellationToken);
     public Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerEmpleadosParaExportarAsync(consulta);
-    public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
-    {
-        await ExigirIdentidadOperableAsync(numeroIdentificacion, TipoSujetoMonitoreo.Natural);
-        return await _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion);
-    }
+    // La consulta de detalle es informativa. La identidad puede estar pendiente,
+    // ser ambigua o no identificada; solo las operaciones que modifican datos
+    // deben exigir una asociación verificada.
+    public Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
+        => _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion);
 
-    public async Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion)
-    {
-        await ExigirIdentidadOperableAsync(numeroIdentificacion, TipoSujetoMonitoreo.Empleado);
-        return await _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
-    }
+    public Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion)
+        => _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
     public Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync() => _repo.ObtenerTiposDocumentoAsync();
     public Task<List<TipoListaCautelaDto>> ObtenerTiposListasCautelaAsync() => _repo.ObtenerTiposListasCautelaAsync();
     public Task<List<ResumenListaDto>> ObtenerResumenListasAsync() => _repo.ObtenerResumenListasAsync();
@@ -147,15 +144,6 @@ public sealed class ListasService : IListasService
 
         var result = await _repo.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
         return ServiceResult<List<SeguimientoDto>>.Ok(result);
-    }
-
-    private async Task ExigirIdentidadOperableAsync(string documento, TipoSujetoMonitoreo tipoSujeto)
-    {
-        var resolucion = await _repo.ResolverIdentidadAsync(documento, tipoSujeto);
-        if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
-            throw new AmbiguousIdentityException("No es posible identificar inequívocamente este registro. La operación requiere validación.");
-        if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
-            throw new UnverifiedAssociationException("Existen datos relacionados, pero no se ha confirmado su correspondencia individual.");
     }
 
     private static TipoSujetoMonitoreo ConvertirTipoSujeto(int tipoPositivoId)

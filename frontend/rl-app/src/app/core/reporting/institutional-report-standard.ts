@@ -34,7 +34,9 @@ export const INSTITUTIONAL_REPORT_LAYOUT = {
 export const INSTITUTIONAL_PDF_LOGO_WIDTH_MM = 72.644;
 export const INSTITUTIONAL_LOGO_POLICY = {
   pdfWidthMm: INSTITUTIONAL_PDF_LOGO_WIDTH_MM,
-  excelWidthPx: 156
+  pdfMaxHeightMm: 32,
+  excelWidthPx: 156,
+  excelMaxHeightPx: 56
 } as const;
 
 export interface InstitutionalReportBranding {

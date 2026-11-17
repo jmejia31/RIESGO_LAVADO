@@ -13,6 +13,11 @@ public static class InstitutionalReportStandard
     // Incremento uniforme del 30% sobre el estándar base de 2.2 pulgadas.
     // Equivalente a 72.644 mm, usado también por el generador Angular.
     public const decimal PdfLogoWidthPoints = 205.92m;
+    // Caja máxima compartida: el logo conserva su proporción y nunca invade
+    // el texto ni el primer bloque del reporte, aunque sea vertical o cuadrado.
+    public const decimal PdfLogoMaxHeightPoints = 90.72m;
+    public const int ExcelLogoWidthEmu = 1_485_900;
+    public const int ExcelLogoMaxHeightEmu = 540_000;
 
     public static InstitutionalReportPalette Palette { get; } = new(
         Navy: "#123B63",

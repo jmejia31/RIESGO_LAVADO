@@ -100,16 +100,20 @@ describe('ListasService', () => {
     request.flush({ success: true, mensaje: 'Registrado' });
   });
 
-  it('omite consultas de detalle, positivo y seguimientos para marcadores como N/A(3)', () => {
+  it('consulta el detalle fuente de N/A(3), pero mantiene bloqueadas las operaciones sensibles', () => {
     const detalle = vi.fn();
     const positivo = vi.fn();
     const seguimientos = vi.fn();
 
     service.getDetalleNatural('N/A(3)').subscribe(detalle);
+    const detalleRequest = http.expectOne(req => req.url === `${apiUrl}/naturales/detalle`);
+    expect(detalleRequest.request.params.get('numeroIdentificacion')).toBe('N/A(3)');
+    detalleRequest.flush({ success: true, datos: [{ numeroIdentificacion: 'N/A(3)' }] });
+
     service.getPositivoPorDocumento('N/A(3)').subscribe(positivo);
     service.getSeguimientos('N/A(3)').subscribe(seguimientos);
 
-    expect(detalle).toHaveBeenCalledWith([]);
+    expect(detalle).toHaveBeenCalledWith([{ numeroIdentificacion: 'N/A(3)' }]);
     expect(positivo).toHaveBeenCalledWith(null);
     expect(seguimientos).toHaveBeenCalledWith([]);
   });

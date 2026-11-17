@@ -68,5 +68,5 @@ public sealed record InstitutionalBrandingSnapshot(
 
 public interface IInstitutionalBrandingResolver
 {
-    InstitutionalBrandingSnapshot Resolve();
+    Task<InstitutionalBrandingSnapshot> ResolveAsync(CancellationToken cancellationToken = default);
 }

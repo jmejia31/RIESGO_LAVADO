@@ -10,11 +10,23 @@ public interface IMatricesRiesgosReportExportService
     ArchivoReporteDto CrearExcelMatrizCompleta(
         IReadOnlyList<RiesgoReporteFilaDto> filas,
         IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
-        string? filtros = null);
+        string? filtros = null,
+        CancellationToken cancellationToken = default);
+    Task<ArchivoReporteDto> CrearExcelMatrizCompletaAsync(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null,
+        CancellationToken cancellationToken = default);
     ArchivoReporteDto CrearPdfMatrizCompleta(
         IReadOnlyList<RiesgoReporteFilaDto> filas,
         IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
-        string? filtros = null);
+        string? filtros = null,
+        CancellationToken cancellationToken = default);
+    Task<ArchivoReporteDto> CrearPdfMatrizCompletaAsync(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -33,11 +45,31 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
     public ArchivoReporteDto CrearExcelMatrizCompleta(
         IReadOnlyList<RiesgoReporteFilaDto> filas,
         IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
-        string? filtros = null)
+        string? filtros = null,
+        CancellationToken cancellationToken = default)
+        => CrearExcelMatrizCompletaCore(filas, proyecciones, filtros, InstitutionalBrandingSnapshot.Canonical);
+
+    public async Task<ArchivoReporteDto> CrearExcelMatrizCompletaAsync(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null,
+        CancellationToken cancellationToken = default)
+    {
+        var branding = _brandingResolver is null
+            ? InstitutionalBrandingSnapshot.Canonical
+            : await _brandingResolver.ResolveAsync(cancellationToken).ConfigureAwait(false);
+        return CrearExcelMatrizCompletaCore(filas, proyecciones, filtros, branding);
+    }
+
+    private ArchivoReporteDto CrearExcelMatrizCompletaCore(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros,
+        InstitutionalBrandingSnapshot branding)
     {
         IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog = new InstitutionalProjectionMapper().GetFieldCatalog();
         ValidarProyecciones(filas, proyecciones, catalog);
-        var workbook = new InstitutionalXlsxWorkbook(_brandingResolver?.Resolve() ?? InstitutionalBrandingSnapshot.Canonical);
+        var workbook = new InstitutionalXlsxWorkbook(branding);
         var emptyRow = Enumerable.Repeat<object?>(string.Empty, catalog.Count).ToArray();
         emptyRow[0] = "Sin información";
         var rows = filas.Count == 0
@@ -59,7 +91,27 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
     public ArchivoReporteDto CrearPdfMatrizCompleta(
         IReadOnlyList<RiesgoReporteFilaDto> filas,
         IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
-        string? filtros = null)
+        string? filtros = null,
+        CancellationToken cancellationToken = default)
+        => CrearPdfMatrizCompletaCore(filas, proyecciones, filtros, InstitutionalBrandingSnapshot.Canonical);
+
+    public async Task<ArchivoReporteDto> CrearPdfMatrizCompletaAsync(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros = null,
+        CancellationToken cancellationToken = default)
+    {
+        var branding = _brandingResolver is null
+            ? InstitutionalBrandingSnapshot.Canonical
+            : await _brandingResolver.ResolveAsync(cancellationToken).ConfigureAwait(false);
+        return CrearPdfMatrizCompletaCore(filas, proyecciones, filtros, branding);
+    }
+
+    private ArchivoReporteDto CrearPdfMatrizCompletaCore(
+        IReadOnlyList<RiesgoReporteFilaDto> filas,
+        IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto> proyecciones,
+        string? filtros,
+        InstitutionalBrandingSnapshot branding)
     {
         IReadOnlyList<InstitutionalProjectionFieldDefinitionDto> catalog = new InstitutionalProjectionMapper().GetFieldCatalog();
         ValidarProyecciones(filas, proyecciones, catalog);
@@ -69,7 +121,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
             "Matrices de Riesgos",
             orientation,
             DateTime.Now,
-            _brandingResolver?.Resolve() ?? InstitutionalBrandingSnapshot.Canonical);
+            branding);
         document.AddSection("Filtros aplicados");
         document.AddParagraph(DescribirFiltros(filtros));
         if (filas.Count == 0)

@@ -182,11 +182,26 @@ namespace RL.API.Features.Listas.Persistence
             await conn.OpenAsync();
 
             await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
+            cmd.CommandText = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(numeroIdentificacion)
+                ? @"
+                SELECT R.DNI NUMERO_IDENTIFICACION,
+                       NVL(R.NOMBRE, 'REGISTRO DE ORIGEN SIN IDENTIFICACIÓN') NOMBRES_PERSONA,
+                       'IDENTIFICACIÓN NO DISPONIBLE' TIPO_CONDICION_ACTUA_DESC,
+                       CAST(NULL AS VARCHAR2(100)) NUMERO_PATRONAL,
+                       CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
+                       CAST(NULL AS VARCHAR2(20)) ES_PEP,
+                       R.LISTA_CONCIDENCIA,
+                       TRUNC(R.FECHA_CALIFICO) FECHA_CALIFICO,
+                       TRUNC(R.FECHA_ENCONTRO) FECHA_COINCIDENCIA
+                FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
+                WHERE UPPER(TRIM(R.DNI)) = UPPER(TRIM(:numeroIdentificacion))
+                  AND R.TIPO_CALIFICACION_ID = 1
+                ORDER BY R.FECHA_ENCONTRO DESC, R.LISTA_CONCIDENCIA"
+                : @"
                 SELECT S.NUMERO_IDENTIFICACION, S.NOMBRES_PERSONA, S.TIPO_CONDICION_ACTUA_DESC, S.NUMERO_PATRONAL, S.NOMBRE_EMPRESA, S.ES_PEP , R.LISTA_CONCIDENCIA, TRUNC(R.FECHA_CALIFICO) FECHA_CALIFICO,
                 TRUNC(R.FECHA_ENCONTRO) FECHA_COINCIDENCIA
                 FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES S
-                INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON S.NUMERO_IDENTIFICACION = R.DNI AND R.TIPO_CALIFICACION_ID = 1 AND R.FECHA_CALIFICO IS NOT NULL 
+                INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON S.NUMERO_IDENTIFICACION = R.DNI AND R.TIPO_CALIFICACION_ID = 1
                 WHERE S.NUMERO_IDENTIFICACION = :numeroIdentificacion";
             
             cmd.Parameters.Add(new OracleParameter("numeroIdentificacion", numeroIdentificacion));
@@ -220,9 +235,8 @@ namespace RL.API.Features.Listas.Persistence
             cmd.CommandText = @"
                 SELECT DISTINCT R.DNI, R.NOMBRE,  'EMPLEADO IHSS' TIPO_CONDICION_ACTUA_DESC, E.NUMEPATRO, E.NOMBRE NOMBRE_EMPRESA, E.RAZOSOCI, R.LISTA_CONCIDENCIA, R.FECHA_CALIFICO, R.FECHA_ENCONTRO FECHA_COINCIDENCIA
                 FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
-                INNER JOIN  DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS E ON e.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1 AND R.FECHA_CALIFICO IS NOT NULL 
-                WHERE  R.DNI = :numeroIdentificacion
-                  AND E.PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')";
+                INNER JOIN  DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS E ON e.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
+                WHERE  R.DNI = :numeroIdentificacion";
             
             cmd.Parameters.Add(new OracleParameter("numeroIdentificacion", numeroIdentificacion));
 
@@ -277,8 +291,7 @@ namespace RL.API.Features.Listas.Persistence
                 cmd.CommandText = @"
                     SELECT COUNT(*) AS REFERENCIAS, COUNT(DISTINCT IDENTIDAD) AS SUJETOS
                     FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
-                    WHERE IDENTIDAD = :documento
-                      AND PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')";
+                    WHERE IDENTIDAD = :documento";
             }
             else
             {
@@ -1823,7 +1836,7 @@ namespace RL.API.Features.Listas.Persistence
                        MAX(TRIM(REGEXP_REPLACE(NOMBRE, '[[:space:]]+', ' '))) NOMBRE,
                        MAX(FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(FECHA_CALIFICO) FECHA_CALIFICO
                 FROM DNP_IHSS.REPORTE_COINCIDENCIAS
-                WHERE TIPO_CALIFICACION_ID = 1 AND FECHA_CALIFICO IS NOT NULL
+                WHERE TIPO_CALIFICACION_ID = 1
                 GROUP BY DNI, LISTA_CONCIDENCIA
             ), Coincidencias AS (
                 SELECT R.DNI AS NUMERO_IDENTIFICACION,
@@ -1864,7 +1877,6 @@ namespace RL.API.Features.Listas.Persistence
                        COUNT(*) AS REFERENCIAS,
                        COUNT(DISTINCT IDENTIDAD) AS SUJETOS
                 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
-                WHERE PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
                 GROUP BY IDENTIDAD
             ), Coincidencias AS (
                 SELECT D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')) NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
@@ -1876,7 +1888,9 @@ namespace RL.API.Features.Listas.Persistence
                 JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
                 LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = D.IDENTIDAD
                 LEFT JOIN IDENTIDAD_AGG i ON i.IDENTIDAD = D.IDENTIDAD
-                WHERE D.PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
+                -- La vista conserva todos los periodos. Las fechas explícitas de
+                -- la consulta de monitoreo se aplican en AppendMonitoringFilters.
+                WHERE 1 = 1
                 GROUP BY D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')), R.LISTA_CONCIDENCIA, p.FECHA_REGISTRO_INTERNO, p.TIENE_MOTIVO, i.REFERENCIAS, i.SUJETOS)
             SELECT IDENTIDAD, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, IDENTIDAD AS BUSQUEDA FROM Coincidencias
             UNION ALL

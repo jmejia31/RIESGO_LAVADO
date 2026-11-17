@@ -326,7 +326,7 @@ public sealed class MatricesRiesgosControllersContractTests
         IInstitutionalProjectionService projectionService = InterfaceStub.Create<IInstitutionalProjectionService>(out InterfaceStub projectionStub);
         projectionStub.On(nameof(IInstitutionalProjectionService.GetManyAsync), _ => Task.FromResult(ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>.Ok(
             new Dictionary<long, InstitutionalEvaluationProjectionDto> { [101] = new(101, "R-01", Array.Empty<InstitutionalProjectionFieldDto>()) })));
-        exportStub.On(nameof(IMatricesRiesgosReportExportService.CrearExcelMatrizCompleta), _ => archivoEsperado);
+        exportStub.On(nameof(IMatricesRiesgosReportExportService.CrearExcelMatrizCompletaAsync), _ => Task.FromResult(archivoEsperado));
 
         var controller = new MatricesRiesgosReportesController(matricesService, exportService, projectionService);
         ConfigurarContextoHttp(controller);
@@ -370,7 +370,7 @@ public sealed class MatricesRiesgosControllersContractTests
         IInstitutionalProjectionService projectionService = InterfaceStub.Create<IInstitutionalProjectionService>(out InterfaceStub projectionStub);
         projectionStub.On(nameof(IInstitutionalProjectionService.GetManyAsync), _ => Task.FromResult(ServiceResult<IReadOnlyDictionary<long, InstitutionalEvaluationProjectionDto>>.Ok(
             new Dictionary<long, InstitutionalEvaluationProjectionDto> { [101] = new(101, "R-01", Array.Empty<InstitutionalProjectionFieldDto>()) })));
-        exportStub.On(nameof(IMatricesRiesgosReportExportService.CrearPdfMatrizCompleta), _ => archivoEsperado);
+        exportStub.On(nameof(IMatricesRiesgosReportExportService.CrearPdfMatrizCompletaAsync), _ => Task.FromResult(archivoEsperado));
 
         var controller = new MatricesRiesgosReportesController(matricesService, exportService, projectionService);
         ConfigurarContextoHttp(controller);

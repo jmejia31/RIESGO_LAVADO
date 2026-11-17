@@ -55,7 +55,10 @@ public sealed class InstitutionalReportLogoTests
         var pdf = Encoding.ASCII.GetString(document.ToBytes());
 
         Assert.Equal(205.92m, InstitutionalReportStandard.PdfLogoWidthPoints);
-        Assert.Matches(@"q 205\.92 0 0 102\.96 [0-9]+\.[0-9]+ [0-9]+\.[0-9]+ cm /ImIHSS Do Q", pdf);
+        Assert.Equal(90.72m, InstitutionalReportStandard.PdfLogoMaxHeightPoints);
+        // El logo sintético es 2:1. Debe encajar dentro de la caja institucional
+        // sin deformarse: al alcanzar la altura máxima, su ancho efectivo es 181.44.
+        Assert.Matches(@"q 181\.44 0 0 90\.72 [0-9]+\.[0-9]+ [0-9]+\.[0-9]+ cm /ImIHSS Do Q", pdf);
         Assert.Contains("(SGRLA-IHSS", pdf, StringComparison.Ordinal);
     }
 

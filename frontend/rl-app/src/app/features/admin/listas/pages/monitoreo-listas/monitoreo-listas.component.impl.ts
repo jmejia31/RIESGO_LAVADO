@@ -438,7 +438,22 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   private esIdentidadOperable(item: { estadoIdentidad?: string; estadoAsociacion?: string }): boolean {
-    return item.estadoIdentidad !== 'AMBIGUOUS' && item.estadoIdentidad !== 'INVALID' && item.estadoAsociacion !== 'UNVERIFIED_ASSOCIATION';
+    return item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'VERIFIED';
+  }
+
+  obtenerEtiquetaIdentidad(item: { estadoIdentidad?: string; estadoAsociacion?: string }): string {
+    if (item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'VERIFIED') return 'Identidad verificada';
+    if (item.estadoIdentidad === 'AMBIGUOUS' || item.estadoAsociacion === 'AMBIGUOUS') return 'Identidad ambigua';
+    if (item.estadoIdentidad === 'INVALID' || item.estadoAsociacion === 'INVALID') return 'Sin identificación';
+    return 'Identidad no verificada';
+  }
+
+  obtenerClaseIdentidad(item: { estadoIdentidad?: string; estadoAsociacion?: string }): string {
+    if (item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'VERIFIED')
+      return 'mt-1 inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10';
+    if (item.estadoIdentidad === 'AMBIGUOUS' || item.estadoAsociacion === 'AMBIGUOUS')
+      return 'mt-1 inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold bg-orange-50 text-orange-700 ring-1 ring-orange-600/10';
+    return 'mt-1 inline-flex px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-50 text-slate-600 ring-1 ring-slate-300';
   }
 
   private mensajeErrorApi(err: any, fallback: string): string {
@@ -483,7 +498,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   });
 
   abrirDetalle(row: CoincidenciaNatural) {
-    if (this.bloquearIdentidad(row)) return;
     const solicitud = ++this.detalleSolicitud;
     this.personaSeleccionada.set(row);
     this.modalDetalleAbierto.set(true);
@@ -504,7 +518,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   abrirDetalleEmpleado(row: CoincidenciaEmpleado) {
-    if (this.bloquearIdentidad(row)) return;
     const solicitud = ++this.detalleSolicitud;
     this.personaSeleccionadaEmpleado.set(row);
     this.modalDetalleAbierto.set(true);
@@ -623,8 +636,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       };
     }
 
+    // El encabezado institucional puede crecer por el logo configurado y por
+    // títulos multilínea. La tabla debe iniciar después de la identidad, no
+    // en una coordenada fija que pueda invadir el encabezado.
+    const tableStartY = identityStartY + 16;
     autoTableInstitucional(doc, {
-      startY: 50,
+      startY: tableStartY,
       head: tableHead,
       body: tableBody,
       headStyles: {
@@ -638,7 +655,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       },
       columnStyles: colStyles,
       theme: 'striped',
-      margin: { top: 50 },
+      margin: { top: tableStartY },
       didParseCell: (data: any) => {
         if (data.row.section === 'body') {
           if (!isEmpleado) {
@@ -924,8 +941,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        console.error('Error al cargar datos para el reporte:', err);
-        this.cargando.set(false);
+        this.manejarErrorReporte(err, 'generación de reporte PDF');
       }
     });
   }
@@ -934,14 +950,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
-    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion).pipe(
-      catchError(() => of([] as DetalleCoincidenciaNatural[]))
-    );
+    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion);
     const obsPositivo = row.tieneMotivo 
-      ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion).pipe(catchError(() => of(null)))
+      ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
       : of(null);
     const obsSeguimientos = row.tieneMotivo 
-      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta).pipe(catchError(() => of([] as Seguimiento[])))
+      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -969,8 +983,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        console.error('Error al cargar datos para el reporte:', err);
-        this.cargando.set(false);
+        this.manejarErrorReporte(err, 'generación de reporte PDF');
       }
     });
   }
@@ -1117,14 +1130,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
-    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad).pipe(
-      catchError(() => of([] as DetalleCoincidenciaEmpleado[]))
-    );
+    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad);
     const obsPositivo = row.tieneMotivo 
-      ? this.listasService.getPositivoPorDocumento(row.identidad).pipe(catchError(() => of(null)))
+      ? this.listasService.getPositivoPorDocumento(row.identidad)
       : of(null);
     const obsSeguimientos = row.tieneMotivo 
-      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta).pipe(catchError(() => of([] as Seguimiento[])))
+      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1152,8 +1163,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        console.error('Error al cargar datos para el reporte:', err);
-        this.cargando.set(false);
+        this.manejarErrorReporte(err, 'generación de reporte PDF');
       }
     });
   }
@@ -1434,6 +1444,20 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     });
   }
 
+  public manejarErrorReporte(err: unknown, operacion: string): void {
+    console.error(`No se pudo completar la ${operacion}:`, err);
+    this.cargando.set(false);
+    void import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        allowOutsideClick: false,
+        title: 'Reporte no generado',
+        text: this.mensajeErrorApi(err, `No se pudo completar la ${operacion}. No se creó ningún archivo vacío.`),
+        icon: 'error',
+        confirmButtonColor: 'var(--ihss-primary-color)'
+      });
+    });
+  }
+
   private registrarAuditoriaFichaExcel(noDocumento: string, tipo: string, nombre: string, fileName: string, cantidadSeguimientos: number, rangoSeguimiento: RangoSeguimientoReporte) {
     return this.listasService.registrarAuditoriaExportacion(
       'RL_LISTA_POSITIVOS',
@@ -1499,15 +1523,11 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
-      error: (err) => {
-        console.error('Error al exportar ficha Excel de patrono:', err);
-        this.cargando.set(false);
-      }
+      error: (err) => this.manejarErrorReporte(err, 'exportación de ficha Excel')
     });
   }
 
   exportarFichaExcelNatural(row: CoincidenciaNatural) {
-    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
@@ -1562,15 +1582,11 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
-      error: (err) => {
-        console.error('Error al exportar ficha Excel de persona natural:', err);
-        this.cargando.set(false);
-      }
+      error: (err) => this.manejarErrorReporte(err, 'exportación de ficha Excel')
     });
   }
 
   exportarFichaExcelEmpleado(row: CoincidenciaEmpleado) {
-    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
@@ -1625,10 +1641,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
-      error: (err) => {
-        console.error('Error al exportar ficha Excel de empleado:', err);
-        this.cargando.set(false);
-      }
+      error: (err) => this.manejarErrorReporte(err, 'exportación de ficha Excel')
     });
   }
 

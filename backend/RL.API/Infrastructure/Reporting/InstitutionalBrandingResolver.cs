@@ -20,9 +20,10 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
         _logger = logger;
     }
 
-    public InstitutionalBrandingSnapshot Resolve()
+    public async Task<InstitutionalBrandingSnapshot> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        var configuration = _configuration.ObtenerConfigSistemaAsync().GetAwaiter().GetResult();
+        var configuration = await _configuration.ObtenerConfigSistemaAsync().ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
         if (configuration is null) return InstitutionalBrandingSnapshot.Canonical;
 
         var header = string.IsNullOrWhiteSpace(configuration.ColorEncabezadoReportes)
@@ -44,7 +45,7 @@ public sealed class InstitutionalBrandingResolver : IInstitutionalBrandingResolv
         try
         {
             return InstitutionalBrandingSnapshot.FromImage(
-                File.ReadAllBytes(path),
+                await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false),
                 configuration.NombreInstitucion,
                 configuration.NombreSistema,
                 configuration.LogoUrl!,

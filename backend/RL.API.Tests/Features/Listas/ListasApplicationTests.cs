@@ -167,6 +167,40 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
+    public async Task ObtenerDetalleNatural_ConsultaAunqueLaIdentidadNoEsteVerificada()
+    {
+        var service = CrearServicio(out var repo, out _);
+        var detalle = new List<DetalleCoincidenciaNaturalDto>
+        {
+            new() { NumeroIdentificacion = "N/A(3)", NombresPersona = "Registro fuente" }
+        };
+        repo.On(nameof(IListasRepository.ObtenerDetalleNaturalAsync), _ => Task.FromResult(detalle));
+
+        var result = await service.ObtenerDetalleNaturalAsync("N/A(3)");
+
+        Assert.Same(detalle, result);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.ObtenerDetalleNaturalAsync)));
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.ResolverIdentidadAsync)));
+    }
+
+    [Fact]
+    public async Task ObtenerDetalleEmpleado_ConsultaAunqueLaIdentidadEsteAmbigua()
+    {
+        var service = CrearServicio(out var repo, out _);
+        var detalle = new List<DetalleCoincidenciaEmpleadoDto>
+        {
+            new() { Identidad = "0801", Nombre = "Empleado histórico" }
+        };
+        repo.On(nameof(IListasRepository.ObtenerDetalleEmpleadoAsync), _ => Task.FromResult(detalle));
+
+        var result = await service.ObtenerDetalleEmpleadoAsync("0801");
+
+        Assert.Same(detalle, result);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.ObtenerDetalleEmpleadoAsync)));
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.ResolverIdentidadAsync)));
+    }
+
+    [Fact]
     public async Task ExportarDetalle_RegistraAuditoriaConCantidadAntesDeResponder()
     {
         var service = CrearServicio(out var repo, out var auditoria);

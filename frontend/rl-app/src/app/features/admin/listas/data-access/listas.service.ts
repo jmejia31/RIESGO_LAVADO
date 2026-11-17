@@ -118,19 +118,29 @@ export class ListasService {
   }
 
   getDetalleNatural(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaNatural[]> {
-    if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) return of([]);
+    const context = createHttpErrorScopeContext(errorScope);
+    if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) {
+      const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
+      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/detalle`, { params, context })
+        .pipe(map(res => res.datos));
+    }
 
     return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/${encodeURIComponent(numeroIdentificacion)}/detalle`, {
-      context: createHttpErrorScopeContext(errorScope)
+      context
     })
       .pipe(map(res => res.datos));
   }
 
   getDetalleEmpleado(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaEmpleado[]> {
-    if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) return of([]);
+    const context = createHttpErrorScopeContext(errorScope);
+    if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) {
+      const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
+      return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/detalle`, { params, context })
+        .pipe(map(res => res.datos));
+    }
 
     return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/${encodeURIComponent(numeroIdentificacion)}/detalle`, {
-      context: createHttpErrorScopeContext(errorScope)
+      context
     })
       .pipe(map(res => res.datos));
   }

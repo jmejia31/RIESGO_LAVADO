@@ -290,11 +290,14 @@ public sealed class InstitutionalPdfDocument
         var metadataTop = 36m + title.Count * 16m + 5m;
         if (_branding.HasLogo)
         {
-            var logoWidth = InstitutionalReportStandard.PdfLogoWidthPoints;
-            var logoHeight = logoWidth / _branding.LogoAspectRatio;
-            var logoX = _pageWidth - MarginRight - logoWidth;
-            var logoTop = Math.Max(0m, (_headerHeight - logoHeight) / 2m);
-            DrawRect(logoX, logoTop, logoWidth, logoHeight, "#FFFFFF", "#FFFFFF");
+            var boxWidth = InstitutionalReportStandard.PdfLogoWidthPoints;
+            var boxHeight = InstitutionalReportStandard.PdfLogoMaxHeightPoints;
+            var boxX = _pageWidth - MarginRight - boxWidth;
+            var boxTop = Math.Max(0m, (_headerHeight - boxHeight) / 2m);
+            var (logoWidth, logoHeight) = ResolverDimensionesLogo(boxWidth, boxHeight);
+            var logoX = boxX + (boxWidth - logoWidth) / 2m;
+            var logoTop = boxTop + (boxHeight - logoHeight) / 2m;
+            DrawRect(boxX, boxTop, boxWidth, boxHeight, "#FFFFFF", "#FFFFFF");
             DrawImage(logoX, logoTop, logoWidth, logoHeight);
         }
         DrawLines(metadata, MarginLeft, metadataTop, 8m, 11m, _branding.Palette.HeaderMetadataText);
@@ -307,14 +310,18 @@ public sealed class InstitutionalPdfDocument
         var institutionLines = Wrap(_branding.InstitutionName, leftWidth, 10m).Count;
         var titleLines = Wrap(_title, leftWidth, 15m).Count;
         var metadataLines = Wrap($"{_branding.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", leftWidth, 8m).Count;
-        var logoHeight = _branding.HasLogo
-            ? InstitutionalReportStandard.PdfLogoWidthPoints / _branding.LogoAspectRatio
-            : 0m;
+        var logoHeight = _branding.HasLogo ? InstitutionalReportStandard.PdfLogoMaxHeightPoints : 0m;
         var metadataBottom = 36m + titleLines * 16m + 5m + metadataLines * 11m;
         var textHeight = Math.Max(
             20m + institutionLines * 11m + 8m + titleLines * 16m,
             metadataBottom);
         return Math.Max(72m, Math.Max(textHeight + 8m, logoHeight + 20m));
+    }
+
+    private (decimal Width, decimal Height) ResolverDimensionesLogo(decimal boxWidth, decimal boxHeight)
+    {
+        var scale = Math.Min(boxWidth, boxHeight * _branding.LogoAspectRatio);
+        return (scale, scale / _branding.LogoAspectRatio);
     }
 
     private void DibujarPie(PdfPage page, int pageNumber, int totalPages)

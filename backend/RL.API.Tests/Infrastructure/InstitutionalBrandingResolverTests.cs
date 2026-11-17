@@ -11,7 +11,7 @@ namespace RL.API.Tests.Infrastructure;
 public sealed class InstitutionalBrandingResolverTests
 {
     [Fact]
-    public void Resolver_UsaElArchivoLocalPublicadoEnElMismoStorageDeUploads()
+    public async Task Resolver_UsaElArchivoLocalPublicadoEnElMismoStorageDeUploads()
     {
         var root = Path.Combine(Path.GetTempPath(), $"b06-branding-{Guid.NewGuid():N}");
         var uploads = Path.Combine(root, "uploads");
@@ -35,7 +35,7 @@ public sealed class InstitutionalBrandingResolverTests
             environmentStub.On("get_WebRootPath", _ => root);
             environmentStub.On("get_ContentRootPath", _ => root);
 
-            var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
+            var snapshot = await new InstitutionalBrandingResolver(configuration, environment).ResolveAsync();
 
             Assert.Equal("configured-local-file", snapshot.Source);
             Assert.Equal(Convert.ToHexString(SHA256.HashData(SyntheticReportLogo.PngBytes)), snapshot.LogoSha256);
@@ -48,7 +48,7 @@ public sealed class InstitutionalBrandingResolverTests
     }
 
     [Fact]
-    public void Resolver_NoInsertaLogoCuandoLaUrlNoEsUnArchivoLocal()
+    public async Task Resolver_NoInsertaLogoCuandoLaUrlNoEsUnArchivoLocal()
     {
         var configuration = InterfaceStub.Create<IConfiguracionService>(out var configurationStub);
         configurationStub.On(nameof(IConfiguracionService.ObtenerConfigSistemaAsync), _ => Task.FromResult<ConfigSistema?>(new ConfigSistema
@@ -61,7 +61,7 @@ public sealed class InstitutionalBrandingResolverTests
 
         var environment = InterfaceStub.Create<IWebHostEnvironment>(out _);
 
-        var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
+        var snapshot = await new InstitutionalBrandingResolver(configuration, environment).ResolveAsync();
 
         Assert.StartsWith("configured-no-logo-", snapshot.Source);
         Assert.False(snapshot.HasLogo);
@@ -71,7 +71,7 @@ public sealed class InstitutionalBrandingResolverTests
     }
 
     [Fact]
-    public void Resolver_NoInsertaLogoCuandoElArchivoPublicadoNoEsValido()
+    public async Task Resolver_NoInsertaLogoCuandoElArchivoPublicadoNoEsValido()
     {
         var root = Path.Combine(Path.GetTempPath(), $"b06-branding-invalid-{Guid.NewGuid():N}");
         var uploads = Path.Combine(root, "uploads");
@@ -94,7 +94,7 @@ public sealed class InstitutionalBrandingResolverTests
             environmentStub.On("get_WebRootPath", _ => root);
             environmentStub.On("get_ContentRootPath", _ => root);
 
-            var snapshot = new InstitutionalBrandingResolver(configuration, environment).Resolve();
+            var snapshot = await new InstitutionalBrandingResolver(configuration, environment).ResolveAsync();
 
             Assert.Equal("configured-no-logo-configured-logo-invalid", snapshot.Source);
             Assert.False(snapshot.HasLogo);

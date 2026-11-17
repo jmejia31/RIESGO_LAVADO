@@ -100,11 +100,15 @@ async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promis
   if (!/^data:image\/png;base64,/i.test(branding.logoUrl)) return false;
   const imageId = workbook.addImage({ base64: branding.logoUrl, extension: 'png' });
   for (const worksheet of workbook.worksheets) {
+    const boxWidth = INSTITUTIONAL_LOGO_POLICY.excelWidthPx;
+    const boxHeight = INSTITUTIONAL_LOGO_POLICY.excelMaxHeightPx;
+    const imageHeight = Math.min(boxWidth / branding.logoAspectRatio, boxHeight);
+    const imageWidth = imageHeight * branding.logoAspectRatio;
     worksheet.addImage(imageId, {
       tl: { col: Math.max(0, worksheet.columnCount - 3), row: 0 },
       ext: {
-        width: INSTITUTIONAL_LOGO_POLICY.excelWidthPx,
-        height: INSTITUTIONAL_LOGO_POLICY.excelWidthPx / branding.logoAspectRatio
+        width: imageWidth,
+        height: imageHeight
       }
     });
   }

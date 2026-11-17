@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of, Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { ListasService } from '../../data-access/listas.service';
 import {
   CoincidenciaJuridica,
@@ -72,6 +71,7 @@ type InstanciaInternaMonitoreo = {
     rangoSeguimiento: RangoSeguimientoReporte
   ): ReturnType<ListasService['registrarAuditoriaExportacion']>;
   manejarErrorAuditoriaObligatoria(error: unknown, operacion: string): void;
+  manejarErrorReporte(error: unknown, operacion: string): void;
 };
 
 /**
@@ -499,10 +499,7 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
           error: err => instancia.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
-      error: err => {
-        console.error('Error al exportar ficha Excel de patrono:', err);
-        instancia.cargando.set(false);
-      }
+      error: err => instancia.manejarErrorReporte(err, 'exportación de ficha Excel')
     });
   }
 
@@ -510,14 +507,12 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
     const instancia = this.interna();
     instancia.cargando.set(true);
     const rango = instancia.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
-    const detalles$ = instancia.listasService.getDetalleNatural(row.numeroIdentificacion).pipe(
-      catchError(() => of([] as DetalleCoincidenciaNatural[]))
-    );
+    const detalles$ = instancia.listasService.getDetalleNatural(row.numeroIdentificacion);
     const positivo$ = row.tieneMotivo
-      ? instancia.listasService.getPositivoPorDocumento(row.numeroIdentificacion).pipe(catchError(() => of(null)))
+      ? instancia.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
       : of(null);
     const seguimientos$ = row.tieneMotivo
-      ? instancia.listasService.getSeguimientos(row.numeroIdentificacion, rango.desde, rango.hasta).pipe(catchError(() => of([] as Seguimiento[])))
+      ? instancia.listasService.getSeguimientos(row.numeroIdentificacion, rango.desde, rango.hasta)
       : of([]);
 
     forkJoin([detalles$, positivo$, seguimientos$]).subscribe({
@@ -534,10 +529,7 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
           error: err => instancia.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
-      error: err => {
-        console.error('Error al exportar ficha Excel de persona natural:', err);
-        instancia.cargando.set(false);
-      }
+      error: err => instancia.manejarErrorReporte(err, 'exportación de ficha Excel')
     });
   }
 
@@ -545,14 +537,12 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
     const instancia = this.interna();
     instancia.cargando.set(true);
     const rango = instancia.obtenerRangoSeguimientoReporte(row.identidad);
-    const detalles$ = instancia.listasService.getDetalleEmpleado(row.identidad).pipe(
-      catchError(() => of([] as DetalleCoincidenciaEmpleado[]))
-    );
+    const detalles$ = instancia.listasService.getDetalleEmpleado(row.identidad);
     const positivo$ = row.tieneMotivo
-      ? instancia.listasService.getPositivoPorDocumento(row.identidad).pipe(catchError(() => of(null)))
+      ? instancia.listasService.getPositivoPorDocumento(row.identidad)
       : of(null);
     const seguimientos$ = row.tieneMotivo
-      ? instancia.listasService.getSeguimientos(row.identidad, rango.desde, rango.hasta).pipe(catchError(() => of([] as Seguimiento[])))
+      ? instancia.listasService.getSeguimientos(row.identidad, rango.desde, rango.hasta)
       : of([]);
 
     forkJoin([detalles$, positivo$, seguimientos$]).subscribe({
@@ -569,10 +559,7 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
           error: err => instancia.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
-      error: err => {
-        console.error('Error al exportar ficha Excel de empleado:', err);
-        instancia.cargando.set(false);
-      }
+      error: err => instancia.manejarErrorReporte(err, 'exportación de ficha Excel')
     });
   }
 

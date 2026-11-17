@@ -441,8 +441,15 @@ public sealed class InstitutionalXlsxWorkbook
     {
         var columnCount = sheet.Document?.ColumnCount ?? Math.Max(1, sheet.Headers.Count);
         var column = Math.Max(0, columnCount - 3);
-        const int cx = 1_485_900;
+        var boxWidth = InstitutionalReportStandard.ExcelLogoWidthEmu;
+        var boxHeight = InstitutionalReportStandard.ExcelLogoMaxHeightEmu;
+        var cx = boxWidth;
         var cy = (int)Math.Round(cx / (double)_branding.LogoAspectRatio);
+        if (cy > boxHeight)
+        {
+            cy = boxHeight;
+            cx = (int)Math.Round(cy * (double)_branding.LogoAspectRatio);
+        }
         return $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
                "<xdr:oneCellAnchor>" +
