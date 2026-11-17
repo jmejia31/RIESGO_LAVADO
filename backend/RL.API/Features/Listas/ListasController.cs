@@ -101,8 +101,8 @@ namespace RL.API.Features.Listas
 
         [HttpGet("naturales/detalle")]
         [ModuloAuthorize(4)]
-        public Task<IActionResult> ObtenerDetalleNaturalPorConsulta([FromQuery] string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null)
-            => ObtenerDetalleNatural(numeroIdentificacion, idRegistroFuente, tipoFuente);
+        public Task<IActionResult> ObtenerDetalleNaturalPorConsulta([FromQuery] string? numeroIdentificacion = null, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null)
+            => ObtenerDetalleNatural(numeroIdentificacion ?? string.Empty, idRegistroFuente, tipoFuente);
 
         [HttpGet("empleados/{numeroIdentificacion}/detalle")]
         [ModuloAuthorize(4)]
@@ -121,8 +121,8 @@ namespace RL.API.Features.Listas
 
         [HttpGet("empleados/detalle")]
         [ModuloAuthorize(4)]
-        public Task<IActionResult> ObtenerDetalleEmpleadoPorConsulta([FromQuery] string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null, [FromQuery] DateTime? periodoPlanilla = null)
-            => ObtenerDetalleEmpleado(numeroIdentificacion, idRegistroFuente, tipoFuente, periodoPlanilla);
+        public Task<IActionResult> ObtenerDetalleEmpleadoPorConsulta([FromQuery] string? numeroIdentificacion = null, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null, [FromQuery] DateTime? periodoPlanilla = null)
+            => ObtenerDetalleEmpleado(numeroIdentificacion ?? string.Empty, idRegistroFuente, tipoFuente, periodoPlanilla);
 
         [HttpGet("tipos-documento")]
         [ModuloAuthorize(4)]
