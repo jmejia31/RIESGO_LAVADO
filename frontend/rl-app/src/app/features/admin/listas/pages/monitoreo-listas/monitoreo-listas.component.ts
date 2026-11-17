@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of, Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ListasService } from '../../data-access/listas.service';
 import {
   CoincidenciaJuridica,
@@ -509,12 +510,14 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
     const instancia = this.interna();
     instancia.cargando.set(true);
     const rango = instancia.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
-    const detalles$ = instancia.listasService.getDetalleNatural(row.numeroIdentificacion);
+    const detalles$ = instancia.listasService.getDetalleNatural(row.numeroIdentificacion).pipe(
+      catchError(() => of([] as DetalleCoincidenciaNatural[]))
+    );
     const positivo$ = row.tieneMotivo
-      ? instancia.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
+      ? instancia.listasService.getPositivoPorDocumento(row.numeroIdentificacion).pipe(catchError(() => of(null)))
       : of(null);
     const seguimientos$ = row.tieneMotivo
-      ? instancia.listasService.getSeguimientos(row.numeroIdentificacion, rango.desde, rango.hasta)
+      ? instancia.listasService.getSeguimientos(row.numeroIdentificacion, rango.desde, rango.hasta).pipe(catchError(() => of([] as Seguimiento[])))
       : of([]);
 
     forkJoin([detalles$, positivo$, seguimientos$]).subscribe({
@@ -542,12 +545,14 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
     const instancia = this.interna();
     instancia.cargando.set(true);
     const rango = instancia.obtenerRangoSeguimientoReporte(row.identidad);
-    const detalles$ = instancia.listasService.getDetalleEmpleado(row.identidad);
+    const detalles$ = instancia.listasService.getDetalleEmpleado(row.identidad).pipe(
+      catchError(() => of([] as DetalleCoincidenciaEmpleado[]))
+    );
     const positivo$ = row.tieneMotivo
-      ? instancia.listasService.getPositivoPorDocumento(row.identidad)
+      ? instancia.listasService.getPositivoPorDocumento(row.identidad).pipe(catchError(() => of(null)))
       : of(null);
     const seguimientos$ = row.tieneMotivo
-      ? instancia.listasService.getSeguimientos(row.identidad, rango.desde, rango.hasta)
+      ? instancia.listasService.getSeguimientos(row.identidad, rango.desde, rango.hasta).pipe(catchError(() => of([] as Seguimiento[])))
       : of([]);
 
     forkJoin([detalles$, positivo$, seguimientos$]).subscribe({

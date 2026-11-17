@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import {
   CONFIRMACION_BOTON_HEADER,
   CONFIRMACION_CAMBIOS_HEADER,
@@ -37,6 +37,15 @@ export class ListasService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/listas`;
   private readonly sinConfirmacion = { [CONFIRMACION_CAMBIOS_HEADER]: '1' };
+  private readonly marcadoresSinIdentificacion = new Set([
+    'N/A',
+    'N/A(3)',
+    'NULL',
+    'VACIO',
+    'VACÍO',
+    'SIN IDENTIFICACION',
+    'SIN IDENTIFICACIÓN'
+  ]);
 
   // Fachada HTTP del módulo de monitoreo de listas: centraliza consultas, evidencias,
   // seguimientos, exportaciones y auditoría para que los componentes no construyan contratos REST.
@@ -109,18 +118,18 @@ export class ListasService {
   }
 
   getDetalleNatural(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaNatural[]> {
-    const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/detalle`, {
-      params,
+    if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) return of([]);
+
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaNatural[] }>(`${this.apiUrl}/naturales/${encodeURIComponent(numeroIdentificacion)}/detalle`, {
       context: createHttpErrorScopeContext(errorScope)
     })
       .pipe(map(res => res.datos));
   }
 
   getDetalleEmpleado(numeroIdentificacion: string, errorScope: HttpErrorScope = 'global'): Observable<DetalleCoincidenciaEmpleado[]> {
-    const params = new HttpParams().set('numeroIdentificacion', numeroIdentificacion);
-    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/detalle`, {
-      params,
+    if (this.esMarcadorSinIdentificacion(numeroIdentificacion)) return of([]);
+
+    return this.http.get<{ success: boolean; datos: DetalleCoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/${encodeURIComponent(numeroIdentificacion)}/detalle`, {
       context: createHttpErrorScopeContext(errorScope)
     })
       .pipe(map(res => res.datos));
@@ -147,8 +156,9 @@ export class ListasService {
   }
 
   getPositivoPorDocumento(noDocumento: string): Observable<ExistingPositivo | null> {
-    const params = new HttpParams().set('noDocumento', noDocumento);
-    return this.http.get<{ success: boolean; datos: ExistingPositivo | null }>(`${this.apiUrl}/positivos`, { params })
+    if (this.esMarcadorSinIdentificacion(noDocumento)) return of(null);
+
+    return this.http.get<{ success: boolean; datos: ExistingPositivo | null }>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}`)
       .pipe(map(res => res.datos));
   }
 
@@ -158,12 +168,13 @@ export class ListasService {
   }
 
   getSeguimientos(noDocumento: string, desde?: string, hasta?: string): Observable<Seguimiento[]> {
+    if (this.esMarcadorSinIdentificacion(noDocumento)) return of([]);
+
     let params = new HttpParams();
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
 
-    params = params.set('noDocumento', noDocumento);
-    return this.http.get<{ success: boolean; datos: Seguimiento[] }>(`${this.apiUrl}/seguimientos`, { params })
+    return this.http.get<{ success: boolean; datos: Seguimiento[] }>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}/seguimientos`, { params })
       .pipe(map(res => res.datos));
   }
 
@@ -176,9 +187,7 @@ export class ListasService {
         formData.append('archivos', file, file.name);
       });
     }
-    const params = new HttpParams().set('noDocumento', noDocumento);
-    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos`, formData, {
-      params,
+    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}/seguimientos`, formData, {
       headers: {
         [CONFIRMACION_TITULO_HEADER]: 'Confirmar seguimiento',
         [CONFIRMACION_TEXTO_HEADER]: '¿Desea guardar la nota de seguimiento y sus evidencias?',
@@ -228,9 +237,20 @@ export class ListasService {
   }
 
   registrarAuditoriaImpresion(noDocumento: string, data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/positivos/${noDocumento}/reporte-impreso`, data, {
+    const options = {
       headers: this.sinConfirmacion
-    , context: createHttpErrorScopeContext('local')});
+    , context: createHttpErrorScopeContext('local')};
+
+    if (this.esMarcadorSinIdentificacion(noDocumento)) {
+      const params = new HttpParams().set('noDocumento', noDocumento);
+      return this.http.post<any>(`${this.apiUrl}/reporte-impreso`, data, { ...options, params });
+    }
+
+    return this.http.post<any>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}/reporte-impreso`, data, options);
+  }
+
+  private esMarcadorSinIdentificacion(value: string | null | undefined): boolean {
+    return this.marcadoresSinIdentificacion.has((value ?? '').trim().toUpperCase());
   }
 
   registrarAuditoriaExportacion(tabla: string, registroId: string, modulo: string, detalle: any): Observable<any> {

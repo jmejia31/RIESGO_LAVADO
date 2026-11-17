@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -105,6 +106,20 @@ public sealed class ListasControllerTests
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
+    }
+
+    [Fact]
+    public async Task RegistrarReporteImpresoPorConsulta_AuditaMarcadorSinIdentificacion()
+    {
+        var controller = CrearController(out _, out var evidenciasStub, out _);
+        evidenciasStub.On(nameof(IEvidenciasService.RegistrarReporteImpresoAsync), _ => Task.CompletedTask);
+
+        using var json = JsonDocument.Parse("{\"tipoReporte\":\"PDF_PERFIL_FICHA\"}");
+        var result = await controller.RegistrarReporteImpresoPorConsulta("N/A(3)", json.RootElement);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        Assert.Single(evidenciasStub.CallsTo(nameof(IEvidenciasService.RegistrarReporteImpresoAsync)));
     }
 
     [Fact]

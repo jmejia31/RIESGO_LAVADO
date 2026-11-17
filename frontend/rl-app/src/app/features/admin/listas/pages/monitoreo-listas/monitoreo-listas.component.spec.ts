@@ -50,6 +50,7 @@ describe('MonitoreoListasComponent', () => {
       getPositivoPorDocumento: vi.fn(() => of(null)),
       getDetalleNatural: vi.fn(() => of([])),
       getDetalleEmpleado: vi.fn(() => of([])),
+      registrarAuditoriaImpresion: vi.fn(() => of({ success: true })),
       registrarAuditoriaExportacion: vi.fn(() => of({ success: true }))
     };
     fire.mockReset();
@@ -462,6 +463,34 @@ describe('MonitoreoListasComponent', () => {
     await vi.waitFor(() => expect((component as any).reportPreview.state()).not.toBeNull());
     expect((component as any).reportPreview.state().fileName).toBe('Ficha_Patrono_P-200.xlsx');
     expect(click).not.toHaveBeenCalled();
+    expect(component.cargando()).toBe(false);
+  });
+
+  it('genera el reporte de una persona con marcador N/A(3) usando la fila disponible', () => {
+    const generarPdf = vi.spyOn(component, 'generarPdfNatural').mockImplementation(() => undefined);
+    const natural = {
+      numeroIdentificacion: 'N/A(3)',
+      nombre: 'Persona sin identificación',
+      listaCoincidencia: 'PEPS',
+      totalRepetidos: 3,
+      tieneMotivo: false,
+      estadoIdentidad: 'AMBIGUOUS',
+      estadoAsociacion: 'AMBIGUOUS'
+    } as never;
+
+    component.imprimirReporteNatural(natural);
+
+    expect(generarPdf).toHaveBeenCalledWith(
+      natural,
+      [],
+      null,
+      [],
+      expect.objectContaining({ texto: expect.any(String) })
+    );
+    expect(service['registrarAuditoriaImpresion']).toHaveBeenCalledWith(
+      'N/A(3)',
+      expect.objectContaining({ tipoReporte: 'PDF_PERFIL_FICHA' })
+    );
     expect(component.cargando()).toBe(false);
   });
 

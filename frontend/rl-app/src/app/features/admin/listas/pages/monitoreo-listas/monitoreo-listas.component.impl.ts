@@ -931,16 +931,17 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   imprimirReporteNatural(row: CoincidenciaNatural) {
-    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
-    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion);
+    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion).pipe(
+      catchError(() => of([] as DetalleCoincidenciaNatural[]))
+    );
     const obsPositivo = row.tieneMotivo 
-      ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion) 
+      ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion).pipe(catchError(() => of(null)))
       : of(null);
     const obsSeguimientos = row.tieneMotivo 
-      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta).pipe(catchError(() => of([] as Seguimiento[])))
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1113,16 +1114,17 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   imprimirReporteEmpleado(row: CoincidenciaEmpleado) {
-    if (this.bloquearIdentidad(row)) return;
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
-    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad);
+    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad).pipe(
+      catchError(() => of([] as DetalleCoincidenciaEmpleado[]))
+    );
     const obsPositivo = row.tieneMotivo 
-      ? this.listasService.getPositivoPorDocumento(row.identidad) 
+      ? this.listasService.getPositivoPorDocumento(row.identidad).pipe(catchError(() => of(null)))
       : of(null);
     const obsSeguimientos = row.tieneMotivo 
-      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta).pipe(catchError(() => of([] as Seguimiento[])))
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({

@@ -338,6 +338,21 @@ namespace RL.API.Features.Listas
             return Ok(new { success = true, mensaje = "Auditoría de reporte impreso registrada." });
         }
 
+        // Los marcadores de identidad (por ejemplo N/A(3)) no pueden viajar
+        // de forma fiable como segmento de ruta porque contienen caracteres
+        // reservados. La auditoría de reportes de solo lectura conserva el
+        // mismo contrato y autorización usando query string.
+        [HttpPost("reporte-impreso")]
+        [ModuloAuthorize(4)]
+        [AuditRequired("Impresion o generacion de reporte")]
+        public async Task<IActionResult> RegistrarReporteImpresoPorConsulta(
+            [FromQuery] string noDocumento,
+            [FromBody] System.Text.Json.JsonElement data)
+        {
+            await _evidenciasService.RegistrarReporteImpresoAsync(noDocumento, data.ToString(), ObtenerUsuarioId());
+            return Ok(new { success = true, mensaje = "Auditoría de reporte impreso registrada." });
+        }
+
         [HttpGet("coincidencias-patrono/resumen/paginado")]
         [ModuloAuthorize(8)]
         public async Task<IActionResult> ObtenerResumenCoincidenciasPatronoPaginado([FromQuery] ConsultaCoincidenciasPaginadaDto consulta)

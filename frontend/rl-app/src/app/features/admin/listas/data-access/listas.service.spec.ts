@@ -42,8 +42,8 @@ describe('ListasService', () => {
   it('envia el rango opcional al consultar seguimientos', () => {
     service.getSeguimientos('ID 10', '2026-07-01', '2026-07-15').subscribe();
 
-    const request = http.expectOne(req => req.url === `${apiUrl}/seguimientos`);
-    expect(request.request.params.get('noDocumento')).toBe('ID 10');
+    const request = http.expectOne(req => req.url === `${apiUrl}/positivos/ID%2010/seguimientos`);
+    expect(request.request.params.get('noDocumento')).toBeNull();
     expect(request.request.params.get('desde')).toBe('2026-07-01');
     expect(request.request.params.get('hasta')).toBe('2026-07-15');
     request.flush({ success: true, datos: [] });
@@ -51,12 +51,12 @@ describe('ListasService', () => {
 
   it('preserves global default and local overrides for shared detail queries', () => {
     service.getDetalleNatural('0801').subscribe();
-    const globalDetail = http.expectOne(req => req.url === `${apiUrl}/naturales/detalle` && req.params.get('numeroIdentificacion') === '0801');
+    const globalDetail = http.expectOne(req => req.url === `${apiUrl}/naturales/0801/detalle`);
     expect(globalDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('global');
     globalDetail.flush({ success: true, datos: [] });
 
     service.getDetalleNatural('0801', 'local').subscribe();
-    const localDetail = http.expectOne(req => req.url === `${apiUrl}/naturales/detalle` && req.params.get('numeroIdentificacion') === '0801');
+    const localDetail = http.expectOne(req => req.url === `${apiUrl}/naturales/0801/detalle`);
     expect(localDetail.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
     localDetail.flush({ success: true, datos: [] });
 
@@ -89,7 +89,7 @@ describe('ListasService', () => {
     const evidencia = new File(['contenido'], 'evidencia.txt', { type: 'text/plain' });
     service.registrarSeguimiento('0801', 'Revision mensual', [evidencia]).subscribe();
 
-    const request = http.expectOne(req => req.url === `${apiUrl}/seguimientos` && req.params.get('noDocumento') === '0801');
+    const request = http.expectOne(req => req.url === `${apiUrl}/positivos/0801/seguimientos`);
     const formData = request.request.body as FormData;
     expect(request.request.method).toBe('POST');
     expect(request.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
@@ -98,6 +98,36 @@ describe('ListasService', () => {
     expect(request.request.headers.get(CONFIRMACION_TITULO_HEADER)).toBe('Confirmar seguimiento');
     expect(request.request.headers.get(CONFIRMACION_BOTON_HEADER)).toBeTruthy();
     request.flush({ success: true, mensaje: 'Registrado' });
+  });
+
+  it('omite consultas de detalle, positivo y seguimientos para marcadores como N/A(3)', () => {
+    const detalle = vi.fn();
+    const positivo = vi.fn();
+    const seguimientos = vi.fn();
+
+    service.getDetalleNatural('N/A(3)').subscribe(detalle);
+    service.getPositivoPorDocumento('N/A(3)').subscribe(positivo);
+    service.getSeguimientos('N/A(3)').subscribe(seguimientos);
+
+    expect(detalle).toHaveBeenCalledWith([]);
+    expect(positivo).toHaveBeenCalledWith(null);
+    expect(seguimientos).toHaveBeenCalledWith([]);
+  });
+
+  it('usa la ruta canónica para consultar el positivo de un documento real', () => {
+    service.getPositivoPorDocumento('101196100011').subscribe();
+
+    const request = http.expectOne(`${apiUrl}/positivos/101196100011`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: null });
+  });
+
+  it('mantiene la auditoria de reportes para N/A(3) mediante el contrato de consulta', () => {
+    service.registrarAuditoriaImpresion('N/A(3)', { tipoReporte: 'PDF_PERFIL_FICHA' }).subscribe();
+
+    const request = http.expectOne(req => req.url === `${apiUrl}/reporte-impreso`);
+    expect(request.request.params.get('noDocumento')).toBe('N/A(3)');
+    request.flush({ success: true });
   });
 
   it('elimina evidencia con motivo y marca la solicitud como confirmada', () => {
