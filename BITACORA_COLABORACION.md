@@ -11389,3 +11389,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - Quality Gate documental exacto [43978907601](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43978907601) sobre `3635cf5389da68162591f1efe12610884d05c155`: `STATUS=completed`, `CONCLUSION=success`; ambos jobs terminaron correctamente.
 - `SOURCE_CODE_SHA=0ea9df6b62a4aa1da85eb9e320f263518c397310`; `EVIDENCE_COMMIT_SHA=3635cf5389da68162591f1efe12610884d05c155`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`.
 - `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION`: el flujo autenticado real LOGO_A/LOGO_B y la aceptación visual del propietario siguen sin ejecutarse en esta intervención. B06 permanece abierto.
+
+## 2026-11-16 23:32 -06:00 — Fase 2A Monitoreo de Listas: identidad segura (COD)
+
+- `EVENT_ID=RL-FASE2A-MONITOREO-LISTAS-20261116`; rama `desarrollo`; autor `COD / CODEX`; cliente `CLI`.
+- `INITIAL_SHA=97d17366f1566c8c26ddf7c303a79b82b4e708a9`; `SOURCE_CODE_SHA=6493bce63ae485336c6a232800865a92ebb107a8`; publicado en `origin/desarrollo` con stage selectivo.
+- Se implementó el contrato compartido de identidad: identificadores vacíos/marcadores quedan inválidos o ambiguos; asociaciones múltiples se presentan como no verificadas; detalles, positivos, motivos, seguimientos y evidencias bloquean operaciones no atribuibles.
+- Se retiró la selección arbitraria `ROWNUM = 1` de las rutas de positivos y asociaciones. La consulta natural caliente usa la agregación `REPORTE_AGG` sin introducir escrituras ni consultas de enriquecimiento por fila en `DNP_IHSS`.
+- Se corrigió el transporte de documentos especiales mediante query parameters, el colapso de filas repetidas en Angular, la protección contra respuestas fuera de orden y la diferenciación entre error de API y resultado vacío. Los reportes legítimamente vacíos siguen permitidos; los reportes con error no se generan.
+- Pruebas ejecutadas: build backend focalizado `PASS / 0 errores`; tests backend focalizados `49 passed, 0 failed, 0 skipped`; suite Angular `96 archivos / 1009 tests PASS`. Se conservan warnings preexistentes del frontend/backend.
+- No ejecutado: suite .NET completa contra Oracle, pruebas con Oracle XE descartable, Playwright autenticado y flujo real de datos de los tres tipos. No se realizaron escrituras en DNP_IHSS ni en Oracle institucional; no se tocó la migración 54.
+- Expediente: `docs/certificaciones/FASE2A_MONITOREO_LISTAS_6493bce6.md`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_AND_EVIDENCE_SHA`; `OWNER_VISUAL_ACCEPTANCE=PENDING`.
+- Preservación: `B01_PRESERVED=YES`; `B02_PRESERVED=YES`; `B03_PRESERVED=YES`; `B04_PRESERVED=YES`; `B05_PRESERVED=YES`; `B06_PRESERVED=YES`; `B07_AUTHORIZED=NO`; `BLOCK10_AUTHORIZED=NO`; `MAIN_TOUCHED=NO`.
+- Punto exacto de continuación: publicar el expediente documental selectivo, observar el Quality Gate exacto de `6493bce6` y luego validar en un entorno autorizado el flujo de lectura/operación y el E2E autenticado. La Fase 2A permanece abierta con limitaciones documentadas.

@@ -4769,3 +4769,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - Quality Gate exacto [43978907601](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/43978907601) sobre `3635cf5389da68162591f1efe12610884d05c155`: `STATUS=completed`, `CONCLUSION=success`; `GITHUB_REMOTE_VERIFIED=YES_SOURCE_AND_EVIDENCE_SHA`; `SECURITY_SCAN=PASS_GITHUB_ACTIONS`.
 - `SOURCE_CODE_SHA=0ea9df6b62a4aa1da85eb9e320f263518c397310`; `EVIDENCE_COMMIT_SHA=3635cf5389da68162591f1efe12610884d05c155`; `REVIEW_READY=BLOCKED_ENVIRONMENTAL_VERIFICATION` por falta del flujo autenticado real y la aceptación visual del propietario.
+
+## Estado vigente — Fase 2A Monitoreo de Listas — 2026-11-16 23:32 -06:00
+
+- `PHASE=MONITOREO_LISTAS_FASE_2A`; `INITIAL_SHA=97d17366f1566c8c26ddf7c303a79b82b4e708a9`; `SOURCE_CODE_SHA=6493bce63ae485336c6a232800865a92ebb107a8`; rama `desarrollo`; autor `COD / CODEX`.
+- El flujo ahora centraliza la identidad de personas naturales, jurídicas y empleados; bloquea marcadores como `N/A(3)`, asociaciones ambiguas y múltiples positivos activos; y evita que un `ROWNUM = 1` atribuya una operación a un candidato arbitrario.
+- El frontend usa query parameters para identificadores especiales, conserva filas repetidas por identidad de fila, ignora respuestas tardías y separa error de API de vacío legítimo. Las exportaciones PDF/Excel quedan deshabilitadas durante error o carga, pero siguen habilitadas para una consulta realmente vacía.
+- Verificado en esta intervención: backend focalizado `49/49 PASS`; build backend `0 errores`; suite Angular `96 archivos / 1009 PASS`; no hubo escrituras Oracle/DNP_IHSS. El estándar B06 y B01–B06 fueron preservados; Fase 2B, B07 y Bloque 10 no fueron intervenidos.
+- Pendiente por entorno: suite completa con Oracle autorizado, prueba Oracle XE descartable, Playwright autenticado y validación real de los tres tipos de sujetos. `AUDIT_FAILURE_ROLLBACK=NOT_VERIFIED_ORACLE_REQUIRED`; `OWNER_VISUAL_ACCEPTANCE=PENDING`.
+- Expediente `docs/certificaciones/FASE2A_MONITOREO_LISTAS_6493bce6.md`; `EVIDENCE_COMMIT_SHA=PENDING_DOCUMENTAL_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SOURCE_AND_EVIDENCE_SHA`; `REVIEW_READY=YES_WITH_DOCUMENTED_LIMITATIONS`.
+- Punto exacto de continuación: commit/push documental selectivo, verificación remota del índice y expediente, observación del Quality Gate del nuevo SHA y ejecución posterior de las pruebas ambientales autorizadas. No stagear los cambios ajenos preexistentes del checkout.
