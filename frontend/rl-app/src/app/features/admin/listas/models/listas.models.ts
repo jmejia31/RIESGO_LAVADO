@@ -54,6 +54,8 @@ export interface CoincidenciaJuridica {
   esProveedorIhss?: string;
   tieneMotivo?: boolean;
   esManual?: boolean;
+  estadoIdentidad?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID';
+  estadoAsociacion?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID';
 }
 
 export interface CoincidenciaNatural {

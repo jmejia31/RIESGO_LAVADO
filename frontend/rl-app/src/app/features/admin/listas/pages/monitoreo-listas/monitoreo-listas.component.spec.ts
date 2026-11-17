@@ -542,6 +542,24 @@ describe('MonitoreoListasComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
+  it('solo habilita seguimiento juridico con identidad y asociación verificadas', () => {
+    const patrono = {
+      numeroPatrono: '08011999123456', rtn: '08011999123456', nombre: 'Empresa E2E',
+      listaCoincidencia: 'Lista de prueba', tieneMotivo: true, esManual: false
+    };
+
+    expect(component.puedeDarSeguimiento({
+      ...patrono, estadoIdentidad: 'VERIFIED', estadoAsociacion: 'VERIFIED'
+    })).toBe(true);
+    expect(component.puedeDarSeguimiento({
+      ...patrono, estadoIdentidad: 'VERIFIED', estadoAsociacion: 'UNVERIFIED_ASSOCIATION'
+    })).toBe(false);
+    expect(component.puedeDarSeguimiento({
+      ...patrono, estadoIdentidad: 'AMBIGUOUS', estadoAsociacion: 'AMBIGUOUS'
+    })).toBe(false);
+    expect(component.puedeDarSeguimiento(patrono)).toBe(false);
+  });
+
   it('no genera la ficha de patrono cuando falla su auditoria obligatoria', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);

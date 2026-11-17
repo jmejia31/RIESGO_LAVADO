@@ -39,6 +39,31 @@ public sealed class IdentidadMonitoreoPolicyTests
     }
 
     [Theory]
+    [InlineData("08011999123456", false, "VERIFIED")]
+    [InlineData("08011999123456", true, "UNVERIFIED_ASSOCIATION")]
+    [InlineData("N/A(3)", false, "AMBIGUOUS")]
+    [InlineData("N/A", true, "AMBIGUOUS")]
+    [InlineData("", false, "INVALID")]
+    [InlineData(" ", false, "INVALID")]
+    public void Juridicas_ExponenIdentidadOperableSoloConFuenteInstitucional(
+        string numeroPatrono, bool esManual, string esperado)
+    {
+        var coincidencia = new CoincidenciaJuridicaDto
+        {
+            NumeroPatrono = numeroPatrono,
+            EsManual = esManual
+        };
+        Assert.Equal(esperado, coincidencia.EstadoIdentidad);
+        Assert.Equal(esperado, coincidencia.EstadoAsociacion);
+
+        var json = System.Text.Json.JsonSerializer.Serialize(
+            coincidencia, new System.Text.Json.JsonSerializerOptions
+            { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+        Assert.Contains($"\"estadoIdentidad\":\"{esperado}\"", json, StringComparison.Ordinal);
+        Assert.Contains($"\"estadoAsociacion\":\"{esperado}\"", json, StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData(1, 1, "VERIFIED")]
     [InlineData(2, 1, "VERIFIED")]
     [InlineData(2, 2, "AMBIGUOUS")]

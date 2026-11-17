@@ -14,6 +14,15 @@ namespace RL.API.Features.Listas.Contracts
         public string EsProveedorIhss { get; set; } = string.Empty;
         public bool TieneMotivo { get; set; }
         public bool EsManual { get; set; }
+
+        // El listado juridico no manual proviene de la coincidencia enlazada
+        // por NUMEPATRO a PATRONOS y DATOS_EMPRESA. Las fichas manuales
+        // carecen de esa prueba y no reciben estado VERIFIED por su documento.
+        // Propiedades serializadas en JSON para preservar la barrera de
+        // identidad que el frontend exige antes de acciones sensibles.
+        public string EstadoIdentidad => IdentidadMonitoreoPolicy.EstadoParaPresentacion(
+            NumeroPatrono, EsManual ? 0 : 1, EsManual ? 0 : 1);
+        public string EstadoAsociacion => EstadoIdentidad;
     }
 
     public class CoincidenciaNaturalDto

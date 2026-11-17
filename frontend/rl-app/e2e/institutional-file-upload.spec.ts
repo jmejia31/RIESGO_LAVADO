@@ -26,7 +26,7 @@ test('Monitoreo de Listas reutiliza la carga institucional con selector, retiro 
     let datos: unknown = [];
     if (pathname.endsWith('/juridicas/paginado')) {
       datos = {
-        items: [{ rtn: '08011999123456', nombre: 'Empresa E2E', numeroPatrono: '08011999123456', listaCoincidencia: 'Lista de prueba', fechaEncontro: '2026-10-01T12:00:00Z', fechaCalifico: '2026-10-01T12:00:00Z', fechaRegistroInterno: null, esProveedorIhss: 'NO', tieneMotivo: true, esManual: false }],
+        items: [{ rtn: '08011999123456', nombre: 'Empresa E2E', numeroPatrono: '08011999123456', listaCoincidencia: 'Lista de prueba', fechaEncontro: '2026-10-01T12:00:00Z', fechaCalifico: '2026-10-01T12:00:00Z', fechaRegistroInterno: null, esProveedorIhss: 'NO', tieneMotivo: true, esManual: false, estadoIdentidad: 'VERIFIED', estadoAsociacion: 'VERIFIED' }],
         pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1,
         totales: { totalRegistros: 1, pendientes: 0, conMotivo: 1, manuales: 0, cerradosPasivos: 0 },
       };
@@ -40,7 +40,9 @@ test('Monitoreo de Listas reutiliza la carga institucional con selector, retiro 
 
   await page.goto('/monitoreo-listas');
   await expect(page.getByText('Empresa E2E')).toBeVisible();
-  await page.getByRole('button', { name: 'Dar seguimiento' }).click();
+  const seguimiento = page.getByRole('button', { name: 'Dar seguimiento' });
+  await expect(seguimiento).toBeEnabled();
+  await seguimiento.click();
   const uploadButton = page.getByRole('button', { name: 'Archivos de Evidencia' });
   await expect(uploadButton).toBeVisible();
   const descriptionId = await uploadButton.getAttribute('aria-describedby');
