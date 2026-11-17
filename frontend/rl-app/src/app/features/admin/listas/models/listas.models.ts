@@ -62,7 +62,7 @@ export interface CoincidenciaNatural {
   listaCoincidencia: string;
   totalRepetidos: number;
   idRegistroFuente?: number;
-  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO';
+  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP';
   numeroPatronal?: string;
   categoriaIdentidad?: 'IDENTIFICADA' | 'SIN_IDENTIFICACION';
   fechaEncontro?: string | null;
@@ -80,7 +80,7 @@ export interface CoincidenciaEmpleado {
   listaCoincidencia: string;
   totalRepetidos: number;
   idRegistroFuente?: number;
-  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO';
+  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP';
   numeroPatrono?: string;
   categoriaIdentidad?: 'IDENTIFICADA' | 'SIN_IDENTIFICACION';
   fechaEncontro?: string | null;

@@ -126,7 +126,7 @@ export class ListasService {
     numeroIdentificacion: string,
     errorScope: HttpErrorScope = 'global',
     idRegistroFuente?: number,
-    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO'
+    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP'
   ): Observable<DetalleCoincidenciaNatural[]> {
     const context = createHttpErrorScopeContext(errorScope);
     if (idRegistroFuente && tipoFuente) {
@@ -151,7 +151,7 @@ export class ListasService {
     numeroIdentificacion: string,
     errorScope: HttpErrorScope = 'global',
     idRegistroFuente?: number,
-    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO',
+    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP',
     periodoPlanilla?: string
   ): Observable<DetalleCoincidenciaEmpleado[]> {
     const context = createHttpErrorScopeContext(errorScope);

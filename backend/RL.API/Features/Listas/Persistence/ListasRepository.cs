@@ -226,12 +226,14 @@ namespace RL.API.Features.Listas.Persistence
 
             await using var command = conn.CreateCommand();
             command.BindByName = true;
-            if (tipoFuente == "MANUAL_CUMPLIMIENTO")
+            if (tipoFuente is "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP")
             {
                 command.CommandText = @"
                     SELECT P.LSP_NO_DOCUMENTO NUMERO_IDENTIFICACION,
                            P.LSP_NOMBRE_COMPLETO NOMBRES_PERSONA,
-                           'REGISTRO MANUAL' TIPO_CONDICION_ACTUA_DESC,
+                           CASE WHEN UPPER(TRIM(P.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
+                              THEN 'POSITIVO DNP SIN COINCIDENCIA CALIFICADA'
+                              ELSE 'REGISTRO MANUAL DE CUMPLIMIENTO' END TIPO_CONDICION_ACTUA_DESC,
                            CAST(NULL AS VARCHAR2(100)) NUMERO_PATRONAL,
                            CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
                            CAST(NULL AS VARCHAR2(20)) ES_PEP,
@@ -323,11 +325,13 @@ namespace RL.API.Features.Listas.Persistence
 
             await using var command = conn.CreateCommand();
             command.BindByName = true;
-            if (tipoFuente == "MANUAL_CUMPLIMIENTO")
+            if (tipoFuente is "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP")
             {
                 command.CommandText = @"
                     SELECT P.LSP_NO_DOCUMENTO DNI, P.LSP_NOMBRE_COMPLETO NOMBRE,
-                           'REGISTRO MANUAL' TIPO_CONDICION_ACTUA_DESC,
+                           CASE WHEN UPPER(TRIM(P.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
+                              THEN 'POSITIVO DNP SIN COINCIDENCIA CALIFICADA'
+                              ELSE 'REGISTRO MANUAL DE CUMPLIMIENTO' END TIPO_CONDICION_ACTUA_DESC,
                            CAST(NULL AS VARCHAR2(100)) NUMEPATRO,
                            CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
                            CAST(NULL AS VARCHAR2(500)) RAZOSOCI,
@@ -2038,14 +2042,17 @@ namespace RL.API.Features.Listas.Persistence
                    NVL(NUMERO_IDENTIFICACION,'') || ' ' || NVL(NUMERO_PATRONAL,'') BUSQUEDA
             FROM Coincidencias
             UNION ALL
-            SELECT LP.LSP_POSITIVO_ID, 'MANUAL_CUMPLIMIENTO',
+            SELECT LP.LSP_POSITIVO_ID,
+                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
+                        THEN 'POSITIVO_DNP' ELSE 'MANUAL_CUMPLIMIENTO' END,
                    LP.LSP_NO_DOCUMENTO, LP.LSP_NOMBRE_COMPLETO,
                    CAST(NULL AS VARCHAR2(100)),
                    NVL(LC.LISTA_CAUTELA_DESCRICPION,'MANUAL'), 0,
                    CAST(NULL AS DATE), CAST(NULL AS DATE),
                    LP.LSP_FECHA_CREACION,
                    CASE WHEN LP.LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END,
-                   1, 0, 0,
+                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
+                        THEN 0 ELSE 1 END, 0, 0,
                    CASE WHEN LP.LSP_NO_DOCUMENTO IS NULL OR TRIM(LP.LSP_NO_DOCUMENTO) IS NULL
                                   OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'
                                   OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN
@@ -2055,7 +2062,12 @@ namespace RL.API.Features.Listas.Persistence
             FROM RL_LISTA_POSITIVOS LP
             LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA LC
               ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
-            WHERE LP.LSP_TIPO_POSITIVO_ID = 2 AND LP.LSP_ESTADO_REGISTRO = 1";
+            WHERE LP.LSP_TIPO_POSITIVO_ID = 2 AND LP.LSP_ESTADO_REGISTRO = 1
+              AND (
+                 NVL(UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)), 'MANUAL_CUMPLIMIENTO') <> 'DNP_LISTAS'
+                 OR NOT EXISTS (SELECT 1 FROM Coincidencias C
+                                WHERE C.NUMERO_IDENTIFICACION = LP.LSP_NO_DOCUMENTO)
+              )";
 
         // M1: coincidencias de empleado desde la fuente clasificada, NO desde
         // un INNER JOIN multiplicador contra todas las planillas historicas.
@@ -2109,14 +2121,17 @@ namespace RL.API.Features.Listas.Persistence
                    NVL(IDENTIDAD,'') || ' ' || NVL(NUMERO_PATRONO,'') BUSQUEDA
             FROM Coincidencias
             UNION ALL
-            SELECT LP.LSP_POSITIVO_ID, 'MANUAL_CUMPLIMIENTO',
+            SELECT LP.LSP_POSITIVO_ID,
+                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
+                        THEN 'POSITIVO_DNP' ELSE 'MANUAL_CUMPLIMIENTO' END,
                    LP.LSP_NO_DOCUMENTO, LP.LSP_NOMBRE_COMPLETO,
                    CAST(NULL AS VARCHAR2(100)),
                    NVL(LC.LISTA_CAUTELA_DESCRICPION,'MANUAL'), 0,
                    CAST(NULL AS DATE), CAST(NULL AS DATE),
                    LP.LSP_FECHA_CREACION,
                    CASE WHEN LP.LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END,
-                   1, 0, 0,
+                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
+                        THEN 0 ELSE 1 END, 0, 0,
                    CASE WHEN LP.LSP_NO_DOCUMENTO IS NULL OR TRIM(LP.LSP_NO_DOCUMENTO) IS NULL
                                   OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'
                                   OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN
@@ -2126,7 +2141,12 @@ namespace RL.API.Features.Listas.Persistence
             FROM RL_LISTA_POSITIVOS LP
             LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA LC
               ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
-            WHERE LP.LSP_TIPO_POSITIVO_ID = 3 AND LP.LSP_ESTADO_REGISTRO = 1";
+            WHERE LP.LSP_TIPO_POSITIVO_ID = 3 AND LP.LSP_ESTADO_REGISTRO = 1
+              AND (
+                 NVL(UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)), 'MANUAL_CUMPLIMIENTO') <> 'DNP_LISTAS'
+                 OR NOT EXISTS (SELECT 1 FROM Coincidencias C
+                                WHERE C.IDENTIDAD = LP.LSP_NO_DOCUMENTO)
+              )";
 
         private static string Texto(DbDataReader reader, string column) => reader[column] == DBNull.Value ? string.Empty : reader[column]?.ToString() ?? string.Empty;
         private static int Entero(DbDataReader reader, string column) => reader[column] == DBNull.Value ? 0 : Convert.ToInt32(reader[column]);

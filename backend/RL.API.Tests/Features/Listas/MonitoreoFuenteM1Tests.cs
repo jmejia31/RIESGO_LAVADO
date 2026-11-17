@@ -25,6 +25,9 @@ public sealed class MonitoreoFuenteM1Tests
         var sql = Sql("ConstruirConsultaMonitoreoNaturales");
         Assert.Contains("REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE", sql);
         Assert.Contains("LSP_POSITIVO_ID", sql);
+        Assert.Contains("LSP_ORIGEN_REGISTRO", sql);
+        Assert.Contains("POSITIVO_DNP", sql);
+        Assert.Contains("NOT EXISTS (SELECT 1 FROM Coincidencias C", sql);
         Assert.Contains("SIN_IDENTIFICACION", sql);
         Assert.Contains("NUMERO_PATRONAL", sql);
         Assert.DoesNotContain("GROUP BY DNI, LISTA_CONCIDENCIA", sql);
@@ -36,6 +39,9 @@ public sealed class MonitoreoFuenteM1Tests
     {
         var sql = Sql("ConstruirConsultaMonitoreoEmpleados");
         Assert.Contains("V_REPORTE_COINCIDENCIA", sql);
+        Assert.Contains("POSITIVO_DNP", sql);
+        Assert.Contains("LSP_ORIGEN_REGISTRO", sql);
+        Assert.Contains("NOT EXISTS (SELECT 1 FROM Coincidencias C", sql);
         Assert.Contains("TIPO_PERSONA LIKE '%IHSS'", sql);
         Assert.Contains("REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE", sql);
         Assert.Contains("V_EMPLEADOS_IHSS_PLANILLAS", sql);
