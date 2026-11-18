@@ -160,7 +160,7 @@ public sealed class DbPaginationRegressionGuardTests
         Assert.Contains("REPORTE_GRUPOS AS (", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("MIN(R.REPORTE_COINCIDENCIA_ID) ID_REGISTRO_FUENTE", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("FROM DNP_IHSS.REPORTE_COINCIDENCIAS R", naturalesSql, StringComparison.Ordinal);
-        Assert.Contains("'DNI:' || TRIM(R.DNI)", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("'DNI:' || TRIM(TRANSLATE(R.DNI, CHR(9)||CHR(10)||CHR(13), '   '))", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("'SRC:' || TO_CHAR(R.REPORTE_COINCIDENCIA_ID)", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("'DNP_COINCIDENCIA' TIPO_FUENTE", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("NUMERO_PATRONAL", naturalesSql, StringComparison.Ordinal);

@@ -103,15 +103,33 @@ public sealed class MonitoreoListasM1OracleIntegrationTests
 
             Assert.True(natIdent.Totales.TotalCoincidenciasFuente > natIdent.Totales.TotalRegistros);
 
-            // M1-02 & M1-03: "Ver detalle" devuelve TODAS las coincidencias del grupo DNI y sus empresas verificadas
+            // M1-02 & M1-03 / P0-21: "Ver detalle" devuelve TODAS las coincidencias del grupo DNI,
+            // exactamente UNA fila por REPORTE_COINCIDENCIA_ID (sin producto cartesiano por empresas).
+            // Con NUMERO_PATRONO NULL y 2 empresas del mismo sujeto, la empresa NO se atribuye: AMBIGUOUS.
             var swDet = Stopwatch.StartNew();
             var detM102 = await repository.ObtenerDetalleNaturalAsync(m102.NumeroIdentificacion, m102.IdRegistroFuente, m102.TipoFuente);
             swDet.Stop();
+            Assert.Equal(3, detM102.Count);
             Assert.Equal(3, detM102.Select(d => d.IdRegistroFuente).Distinct().Count());
-            Assert.Contains(detM102, d => d.NombreEmpresa == "EMPRESA ALPHA SA");
-            Assert.Contains(detM102, d => d.NombreEmpresa == "EMPRESA BETA SA");
+            Assert.All(detM102, d => Assert.Equal(EstadoIdentidadMonitoreo.Ambiguous, d.EstadoAsociacion));
+            Assert.DoesNotContain(detM102, d => d.NombreEmpresa == "EMPRESA ALPHA SA" || d.NombreEmpresa == "EMPRESA BETA SA");
             Assert.Contains(detM102, d => d.ListaCoincidencia == "OFAC");
             Assert.Contains(detM102, d => d.ListaCoincidencia == "PEPS");
+
+            // P0-21b: sujeto con una sola empresa registrada se enriquece y verifica.
+            var detM101 = await repository.ObtenerDetalleNaturalAsync(m101.NumeroIdentificacion, m101.IdRegistroFuente, m101.TipoFuente);
+            var detM101Row = Assert.Single(detM101);
+            Assert.Equal("EMPRESA UNICA SA", detM101Row.NombreEmpresa);
+            Assert.Equal(EstadoIdentidadMonitoreo.Verified, detM101Row.EstadoAsociacion);
+
+            // P0-05: DNI con TAB/espacio inicial se normaliza (CHR(9)/CHR(10)/CHR(13)) y se fusiona en un unico grupo.
+            var mTab = Assert.Single(natIdent.Items, x => x.NumeroIdentificacion == "0801-1985-00006");
+            Assert.Equal(2, mTab.TotalRepetidos);
+            var detTab = await repository.ObtenerDetalleNaturalAsync("\t0801-1985-00006", mTab.IdRegistroFuente, mTab.TipoFuente);
+            Assert.Equal(2, detTab.Count);
+
+            // P0-09: coincidencia clasificada SOCIO aunque la identidad figure en planilla queda SOLO en Naturales.
+            Assert.Single(natIdent.Items, x => x.NumeroIdentificacion == "0801-1993-00013");
 
             // M1-04: DNI ambiguo mantiene aislamiento por sujeto y bloquea mutaciones
             var detM104 = await repository.ObtenerDetalleNaturalAsync(m104.NumeroIdentificacion, m104.IdRegistroFuente, m104.TipoFuente);
@@ -164,7 +182,11 @@ public sealed class MonitoreoListasM1OracleIntegrationTests
             {
                 Pagina = 3, TamanoPagina = 2, CategoriaIdentidad = "identificadas", Orden = "identidad", Direccion = "asc"
             });
-            var idsPaginados = p1.Items.Concat(p2.Items).Concat(p3.Items).Select(x => x.IdRegistroFuente).ToList();
+            var p4 = await repository.ObtenerNaturalesPaginadasAsync(new ConsultaMonitoreoPaginadaDto
+            {
+                Pagina = 4, TamanoPagina = 2, CategoriaIdentidad = "identificadas", Orden = "identidad", Direccion = "asc"
+            });
+            var idsPaginados = p1.Items.Concat(p2.Items).Concat(p3.Items).Concat(p4.Items).Select(x => x.IdRegistroFuente).ToList();
             Assert.Equal(natIdent.TotalRegistros, idsPaginados.Count);
             Assert.Equal(idsPaginados.Count, idsPaginados.Distinct().Count());
 
@@ -182,14 +204,19 @@ public sealed class MonitoreoListasM1OracleIntegrationTests
             });
             swEmp.Stop();
 
-            // M1-09 & M1-10: Empleado cuya TIPO_PERSONA es 'SOCIO' (NO '%IHSS') y aparece en 3 planillas historicas
+            // M1-09 & M1-10: Empleado clasificado 'EMPLEADO IHSS' con 3 planillas historicas
             var empHist = Assert.Single(empleados.Items, x => x.Identidad == "0801-1990-00010");
             Assert.Equal(2, empHist.TotalRepetidos); // 2 coincidencias, NO multiplicadas por 3 planillas (6)!
 
-            // M1-11: Empleado clasificado 'EMPLEADO IHSS' sin planilla vinculada
+            // P0-09/P0-10: clasificacion complementaria; ninguna coincidencia aparece en ambas pestañas.
+            Assert.DoesNotContain(empleados.Items, x => x.Identidad == "0801-1993-00013");
+            Assert.DoesNotContain(natIdent.Items, x => x.NumeroIdentificacion == "0801-1990-00010");
+
+            // M1-11: Empleado clasificado 'EMPLEADO IHSS' por el ETL sin planilla en la vista actual:
+            // la clasificacion institucional es la evidencia de identidad (ETL bloque EMPLEADOS IHSS).
             var empSinPlanilla = Assert.Single(empleados.Items, x => x.Identidad == "0801-1991-00011");
             Assert.Equal(1, empSinPlanilla.TotalRepetidos);
-            Assert.Equal(EstadoIdentidadMonitoreo.UnverifiedAssociation, empSinPlanilla.EstadoIdentidad);
+            Assert.Equal(EstadoIdentidadMonitoreo.Verified, empSinPlanilla.EstadoIdentidad);
 
             // M1-12: Empleado en planilla SIN coincidencia NO se etiqueta como positivo en Monitoreo
             Assert.DoesNotContain(empleados.Items, x => x.Identidad == "0801-1992-00012");
@@ -273,9 +300,17 @@ public sealed class MonitoreoListasM1OracleIntegrationTests
         await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91009, 'N/A(3)', 'SUJETO MARCADOR B', 'SOCIO', 'PEPS', DATE '2026-03-02', NULL, NULL, 1)");
         await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91010, NULL, 'SUJETO SIN DNI', 'SOCIO', 'ONU', DATE '2026-03-03', NULL, NULL, 1)");
 
-        // Empleado historico cuyo TIPO_PERSONA NO coincide con '%IHSS' (escenario real que causaba EMPLEADOS=0)
-        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91011, '0801-1990-00010', 'PEDRO EMPLEADO HISTORICO', 'SOCIO', 'OFAC', DATE '2025-11-15', DATE '2025-11-16', NULL, 1)");
-        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91012, '0801-1990-00010', 'PEDRO EMPLEADO HISTORICO', 'SOCIO', 'PEPS', DATE '2026-01-20', DATE '2026-01-21', NULL, 1)");
+        // Empleado historico clasificado por el ETL como 'EMPLEADO IHSS' (presente en 3 planillas)
+        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91011, '0801-1990-00010', 'PEDRO EMPLEADO HISTORICO', 'EMPLEADO IHSS', 'OFAC', DATE '2025-11-15', DATE '2025-11-16', NULL, 1)");
+        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91012, '0801-1990-00010', 'PEDRO EMPLEADO HISTORICO', 'EMPLEADO IHSS', 'PEPS', DATE '2026-01-20', DATE '2026-01-21', NULL, 1)");
+
+        // P0-09: coincidencia clasificada SOCIO cuya identidad tambien figura en planilla -> solo Naturales
+        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS_M1 (IDENTIDAD, NUMEPATRO, NOMBRE, RAZOSOCI, NOMBRE_EMPLEADO, PERIODO) VALUES ('0801-1993-00013', '101196100011', 'IHSS', 'INSTITUTO HONDURENO DE SEGURIDAD SOCIAL', 'SOCIO CON PLANILLA', DATE '2026-07-01')");
+        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91014, '0801-1993-00013', 'SOCIO CON PLANILLA', 'SOCIO', 'ONU', DATE '2026-02-11', DATE '2026-02-12', NULL, 1)");
+
+        // P0-05: mismo DNI con y sin TAB inicial (CHR(9)) se agrupa en una sola entrada
+        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91015, '0801-1985-00006', 'TOMAS TAB', 'SOCIO', 'PEPS', DATE '2026-02-15', DATE '2026-02-16', NULL, 1)");
+        await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91016, CHR(9) || '0801-1985-00006', 'TOMAS TAB', 'SOCIO', 'PEPS', DATE '2026-03-15', DATE '2026-03-16', NULL, 1)");
 
         // Empleado clasificado 'EMPLEADO IHSS' sin planilla vinculada (M1-11 & M1-13)
         await ExecuteAsync(connection, "INSERT INTO DNP_IHSS.REPORTE_COINCIDENCIAS (REPORTE_COINCIDENCIA_ID, DNI, NOMBRE, TIPO_PERSONA, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, NUMERO_PATRONO, TIPO_CALIFICACION_ID) VALUES (91013, '0801-1991-00011', 'LAURA SIN PLANILLA', 'EMPLEADO IHSS', 'ONU', DATE '2026-02-10', NULL, NULL, 1)");

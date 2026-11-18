@@ -4950,3 +4950,26 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Pendientes institucionales:** Conciliación solo lectura Q01–Q12 en Oracle institucional (`M1_242_190_52`, desglose `5,742`, confirmación `7` empleados) y aceptación funcional del propietario en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) (`MICROFASE_1_ESTADO=OPEN_READY_FOR_OWNER_AND_ORACLE_RECONCILIATION`).
 - **Expediente:** [`M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md`](../certificaciones/M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md).
 - **Continuación exacta:** Confirmar `Quality Gates` verde sobre el nuevo SHA publicado en `origin/desarrollo`; luego realizar pruebas funcionales manuales del propietario y conciliación institucional Q01–Q12.
+
+
+## Estado vigente — Microfase 1 P0: Auditoría quirúrgica de naturales, empleados y clasificación institucional — 2026-11-18 13:30 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity) | **Rama:** `desarrollo` | **Base SHA:** `c2170fbf5ec7c5e3e8963c141d86a9f1ee5a97ed` (QG previo `44360374287`).
+- **Conciliación Naturales (176 vs 142):**
+  - Desglose matemático: 174 grupos DNP + 2 manuales (`RL_LISTA_POSITIVOS`) = 176.
+  - Normalización universal de DNI (`TRIM(TRANSLATE(col, CHR(9)||CHR(10)||CHR(13), '   '))`): Consolida 2 registros con tabulación inicial (`%09`) en sus DNI limpios correspondientes (172 DNP + 2 manuales = 174 grupos identificados).
+  - Justificación de la diferencia con la cifra histórica 142: La consulta histórica (`6493bce6~1`) utilizaba `INNER JOIN V_SOCIOS_REPRESENTANTES` con `FECHA_CALIFICO IS NOT NULL`. Del universo actual de 174 grupos DNP, 151 poseen coincidencia en `V_SOCIOS_REPRESENTANTES` y 23 no poseen registro patronal (`ESTADO_ASOCIACION = 'UNVERIFIED_ASSOCIATION'`). La consulta histórica descartaba estas 23 coincidencias válidas de listas cautelares. La directriz institucional prohíbe descartar coincidencias de listas cautelares por falta de vínculo patronal; el sistema actual preserva los 23 grupos bajo `UNVERIFIED_ASSOCIATION`.
+- **Causa raíz Empleados = 0:**
+  - Identificado en telemetría local (`rl-20261118.log`) error `ORA-01013` (timeout a los 62.7s) por escaneo remoto de hash aggregate no-pushdownable sobre `PLANILLAS@HPPROD1_PRO` (180.5 millones de filas de `V_EMPLEADOS_IHSS_PLANILLAS`) a lo largo de 407 períodos históricos. La API devolvía HTTP 500 y Angular mostraba `0`.
+  - Resuelto desacoplando el listado principal de la vista remota de planillas y alineándolo a la regla oficial del proceso ETL (`Base de Datos DNP_IHSS.sql`, línea 2704: `REPORTE_COINCIDENCIAS.TIPO_PERSONA LIKE '%IHSS%'` / `'%EMPLEAD%'`), con condición complementaria en Naturales (`CondicionNoEsEmpleadoIhss`) para solapamiento 0.
+  - Telemetría en vivo: Tiempo reducido a **1,274 ms** (HTTP 200), recuperando **13 registros de empleados** (11 grupos DNP + 2 manuales) que totalizan **161 coincidencias individuales**.
+- **Eliminación de producto cartesiano en Detalle Naturales:**
+  - CTEs `SOCIOS_CAND` y `SOCIOS_RESUMEN` con ventana analítica emiten exactamente 1 fila por coincidencia (`ESTADO_ASOCIACION = 'AMBIGUOUS'`). Caso testigo DNI 33724 devuelve 70 filas exactas en 239 ms (eliminadas 630 filas espurias).
+- **Verificación local completa:**
+  - Backend: 1,185 pruebas unitarias/estructurales PASS (0 fallos en Listas).
+  - Telemetría en vivo: Empleados 200 OK (1,274 ms), Naturales identificadas 200 OK (720 ms), Sin identificación 200 OK (567 ms), Detalle 33724 200 OK (239 ms).
+  - Angular: `verify-vendored-picomatch.mjs` PASS (`SECURITY_AUDIT=PASS_FULL_TREE`); `Vitest` 96/96 archivos, 1,032/1,032 pruebas PASS; `ng build` PASS; `ESLint` PASS.
+  - Validadores: Estructura, Scripts BD, Enlaces docs, Agent Skills (14 skills), Text Encoding (`MOJIBAKE=0`), Git diff check (0 errores) todos PASS.
+- **Preservación:** 34 archivos sin seguimiento preservados intactos; 0 escrituras Oracle institucional; 0 mutaciones en `main` o producción; 0 PII en logs.
+- **Expediente:** [`M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md`](../certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md).
+- **Punto de continuación:** Push a `origin/desarrollo`, verificación del nuevo Quality Gate en GitHub Actions y entrega para validación visual del propietario en el navegador.

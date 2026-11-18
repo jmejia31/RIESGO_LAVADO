@@ -25,7 +25,7 @@ public sealed class MonitoreoFuenteM1Tests
         var sql = Sql("ConstruirConsultaMonitoreoNaturales");
         Assert.Contains("REPORTE_GRUPOS AS", sql);
         Assert.Contains("'SRC:' || TO_CHAR(R.REPORTE_COINCIDENCIA_ID)", sql);
-        Assert.Contains("'DNI:' || TRIM(R.DNI)", sql);
+        Assert.Contains("'DNI:' || TRIM(TRANSLATE(R.DNI, CHR(9)||CHR(10)||CHR(13), '   '))", sql);
         Assert.Contains("MIN(R.REPORTE_COINCIDENCIA_ID) ID_REGISTRO_FUENTE", sql);
         Assert.Contains("COUNT(*) TOTAL_REPETIDOS", sql);
         Assert.Contains("LSP_POSITIVO_ID", sql);
@@ -45,12 +45,13 @@ public sealed class MonitoreoFuenteM1Tests
     {
         var sql = Sql("ConstruirConsultaMonitoreoEmpleados");
         Assert.Contains("V_EMPLEADOS_IHSS_PLANILLAS", sql);
-        Assert.Contains("I.IDENTIDAD IS NOT NULL", sql);
+        Assert.DoesNotContain("PLANILLA_ULTIMA", sql);
+        Assert.DoesNotContain("FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS", sql);
         Assert.Contains("UPPER(TRIM(NVL(R.TIPO_PERSONA, ''))) LIKE '%IHSS%'", sql);
         Assert.Contains("UPPER(TRIM(NVL(R.TIPO_PERSONA, ''))) LIKE '%EMPLEAD%'", sql);
         Assert.Contains("REPORTE_GRUPOS AS", sql);
         Assert.Contains("'SRC:' || TO_CHAR(R.REPORTE_COINCIDENCIA_ID)", sql);
-        Assert.Contains("'DNI:' || TRIM(R.DNI)", sql);
+        Assert.Contains("'DNI:' || TRIM(TRANSLATE(R.DNI, CHR(9)||CHR(10)||CHR(13), '   '))", sql);
         Assert.Contains("POSITIVO_DNP", sql);
         Assert.Contains("LSP_ORIGEN_REGISTRO", sql);
         Assert.Contains("NOT EXISTS (SELECT 1 FROM Coincidencias C", sql);
@@ -78,7 +79,7 @@ public sealed class MonitoreoFuenteM1Tests
         method.Invoke(null, args);
         var sql = Assert.IsType<string>(args[0]);
         Assert.Contains("AND EXISTS (SELECT 1 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS M1P", sql);
-        Assert.Contains("TRIM(M1P.IDENTIDAD) = TRIM(f.IDENTIDAD)", sql);
+        Assert.Contains("M1P.IDENTIDAD = TRIM(TRANSLATE(f.IDENTIDAD, CHR(9)||CHR(10)||CHR(13), '   '))", sql);
         Assert.DoesNotContain("TRIM(M1P.NUMEPATRO) = TRIM(f.NUMERO_PATRONO)", sql);
         Assert.Contains("TRUNC(:periodoPlanillaDesde,'MM')", sql);
         Assert.Contains("ADD_MONTHS(TRUNC(:periodoPlanillaHasta,'MM'),1)", sql);
@@ -99,7 +100,7 @@ public sealed class MonitoreoFuenteM1Tests
         method.Invoke(null, args);
         var sql = Assert.IsType<string>(args[0]);
         Assert.Contains("FROM DNP_IHSS.REPORTE_COINCIDENCIAS RB", sql);
-        Assert.Contains("TRIM(RB.DNI) = TRIM(f.NUMERO_IDENTIFICACION)", sql);
+        Assert.Contains("TRIM(TRANSLATE(RB.DNI, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(f.NUMERO_IDENTIFICACION, CHR(9)||CHR(10)||CHR(13), '   '))", sql);
     }
 
     [Fact]
@@ -109,8 +110,8 @@ public sealed class MonitoreoFuenteM1Tests
         {
             var sql = Sql(method);
             Assert.Contains("LP.LSP_NO_DOCUMENTO IS NULL", sql);
-            Assert.Contains("UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) LIKE 'N/A%'", sql);
-            Assert.Contains("UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN ('NULL'", sql);
+            Assert.Contains("UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'N/A%'", sql);
+            Assert.Contains("UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) IN ('NULL'", sql);
             Assert.Contains("NOT EXISTS (SELECT 1 FROM Coincidencias C", sql);
         }
     }
@@ -133,8 +134,56 @@ public sealed class MonitoreoFuenteM1Tests
     public void DetallePorReferenciaManual_AdmiteDocumentoNuloOSinIdentificacion()
     {
         var sql = Sql("CompararDocumentoPositivoFuente");
-        Assert.Contains("NVL(TRIM(P.LSP_NO_DOCUMENTO), '__SIN_IDENTIFICACION__')", sql);
-        Assert.Contains("NVL(TRIM(:numeroIdentificacion), '__SIN_IDENTIFICACION__')", sql);
+        Assert.Contains("NVL(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__')", sql);
+        Assert.Contains("NVL(TRIM(TRANSLATE(:numeroIdentificacion, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__')", sql);
+    }
+
+    [Fact]
+    public void P0_ClasificacionNaturalEmpleado_EsComplementariaYSinVistaRemotaEnListado()
+    {
+        var field = typeof(ListasRepository).GetField("CondicionEsEmpleadoIhss",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(field);
+        var esEmpleado = Assert.IsType<string>(field.GetValue(null));
+        Assert.DoesNotContain("V_EMPLEADOS_IHSS_PLANILLAS", esEmpleado);
+        Assert.Contains("LIKE '%IHSS%'", esEmpleado);
+        Assert.Contains("LIKE '%EMPLEAD%'", esEmpleado);
+
+        var empleados = Sql("ConstruirConsultaMonitoreoEmpleados");
+        Assert.DoesNotContain("FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS", empleados);
+        Assert.DoesNotContain("JOIN DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS", empleados);
+        var naturales = Sql("ConstruirConsultaMonitoreoNaturales");
+        Assert.Contains("NOT LIKE '%IHSS%'", naturales);
+        Assert.Contains("NOT LIKE '%EMPLEAD%'", naturales);
+    }
+
+    [Fact]
+    public void P0_NormalizacionDocumento_EliminaTabulacionesYSaltosDeLinea()
+    {
+        foreach (var method in new[] { "ConstruirConsultaMonitoreoNaturales", "ConstruirConsultaMonitoreoEmpleados" })
+        {
+            var sql = Sql(method);
+            Assert.Contains("TRANSLATE(R.DNI, CHR(9)||CHR(10)||CHR(13), '   ')", sql);
+            Assert.DoesNotContain("'DNI:' || TRIM(R.DNI)", sql);
+        }
+    }
+
+    [Fact]
+    public void P0_DetalleNatural_UnaFilaPorCoincidenciaSinProductoCartesianoPorEmpresas()
+    {
+        var root = AppContext.BaseDirectory;
+        while (!File.Exists(Path.Combine(root, "RIESGO_LAVADO.sln")))
+            root = Directory.GetParent(root)!.FullName;
+        var source = File.ReadAllText(Path.Combine(root, "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+        var start = source.IndexOf("public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync", StringComparison.Ordinal);
+        var end = source.IndexOf("public async Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync", start, StringComparison.Ordinal);
+        Assert.True(start >= 0 && end > start);
+        var detalle = source[start..end];
+        Assert.Contains("SOCIOS_RESUMEN", detalle);
+        Assert.Contains("S.FILAS_DNI = 1 AND S.SUJETOS_DNI = 1", detalle);
+        Assert.Contains("S.CANDIDATOS_NOMBRE = 1", detalle);
+        Assert.Contains("WHEN NVL(SR.TOTAL_VINCULOS, 0) > 1 THEN 'AMBIGUOUS'", detalle);
+        Assert.DoesNotContain("ROWNUM = 1", detalle);
     }
 
     [Theory]

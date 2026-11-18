@@ -11607,3 +11607,51 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** `34` archivos locales sin seguimiento conservados íntegros; `MAIN_INTACTO=YES`, `PRODUCCION_INTACTA=YES`, `ORACLE_INSTITUCIONAL_INTACTO=YES`, `DNP_IHSS_WRITES=0`. Issue #41 permanece abierto.
 - **Expediente:** [`docs/certificaciones/M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md`](docs/certificaciones/M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md).
 - **Punto exacto de continuación:** Verificar `Quality Gates` verde sobre el SHA publicado (incluyendo `MonitoreoListasM1OracleIntegrationTests` en Oracle 11g XE descartable y suite E2E completa); luego ejecutar pruebas manuales del propietario y conciliación institucional solo lectura Q01–Q12 en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) antes de declarar `MICROFASE_1_ESTADO=CERRADA`.
+
+
+## Intervención P0 — Auditoría quirúrgica de naturales, empleados y clasificación institucional — 2026-11-18 13:30 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=c2170fbf5ec7c5e3e8963c141d86a9f1ee5a97ed` (Quality Gate previo `44360374287` — no reutilizado para certificar este nuevo cambio)
+- **Objetivo y alcance:** Auditoría quirúrgica P0 y resolución definitiva de discrepancias en Monitoreo de Listas (Microfase 1):
+  1. **Conciliación matemática Personas Naturales (176 observado vs 142 histórico):**
+     - Desglose matemático verificado: 174 grupos provenientes de `DNP_IHSS.REPORTE_COINCIDENCIAS` + 2 positivos manuales activos (`RL_LISTA_POSITIVOS`, tipo natural) = 176 registros.
+     - Normalización universal de DNI (`TRIM(TRANSLATE(col, CHR(9)||CHR(10)||CHR(13), '   '))`): Consolida 2 registros con tabulación inicial (`%09`) en sus DNI limpios correspondientes (172 DNP + 2 manuales = 174 grupos identificados).
+     - Origen de la cifra 142: La consulta histórica heredada (`6493bce6~1`) aplicaba `INNER JOIN V_SOCIOS_REPRESENTANTES` con `FECHA_CALIFICO IS NOT NULL`. Del universo actual de 174 grupos DNP, exactamente 151 poseen coincidencia en `V_SOCIOS_REPRESENTANTES` y 23 no poseen registro patronal (`ESTADO_ASOCIACION = 'UNVERIFIED_ASSOCIATION'`). La consulta histórica descartaba indebidamente estas 23 coincidencias válidas de listas cautelares. La directriz institucional prohíbe descartar coincidencias de listas cautelares por falta de vínculo patronal; el sistema actual preserva los 23 grupos bajo `UNVERIFIED_ASSOCIATION`.
+  2. **Resolución de causa raíz Empleados = 0:**
+     - Telemetría local (`rl-20261118.log`) confirmó error `ORA-01013` (timeout tras 62.7 segundos) y `ORA-02063: HPPROD1_PRO` en `ConstruirConsultaMonitoreoEmpleados()`.
+     - Causa: Escaneo de hash aggregate remoto sobre `PLANILLAS@HPPROD1_PRO` (180.5 millones de filas de `V_EMPLEADOS_IHSS_PLANILLAS`) a lo largo de 407 períodos históricos sin predicado pushdownable. Al agotar el timeout de 60s, la API devolvía HTTP 500 y Angular mostraba `0`.
+     - Solución: Se desacopló el listado principal de la vista remota de planillas y se alineó a la regla canónica del ETL (`Base de Datos DNP_IHSS.sql`, línea 2704: `REPORTE_COINCIDENCIAS.TIPO_PERSONA LIKE '%IHSS%'` / `'%EMPLEAD%'`), con condición complementaria en Naturales (`CondicionNoEsEmpleadoIhss`) garantizando solapamiento cero (`OVERLAP = 0`).
+     - Telemetría en vivo: Tiempo reducido de >62s a **1,274 ms** (HTTP 200). Se recuperaron **13 registros de empleados** (11 grupos DNP históricos + 2 manuales) que totalizan **161 coincidencias individuales**.
+  3. **Eliminación de producto cartesiano en Detalle de Personas Naturales:**
+     - En `ObtenerDetalleNaturalAsync()`, personas con múltiples empresas en `V_SOCIOS_REPRESENTANTES` y `NUMERO_PATRONO IS NULL` multiplicaban filas (caso testigo DNI `33724`: 70 coincidencias × 10 empresas = 700 filas).
+     - Solución: CTEs `SOCIOS_CAND` y `SOCIOS_RESUMEN` con ventana analítica emiten exactamente 1 fila por coincidencia (`ESTADO_ASOCIACION = 'AMBIGUOUS'`). Caso testigo devuelve exactamente 70 filas en 239 ms.
+  4. **SQL de Diagnóstico y Auditoría de Solo Lectura:**
+     - Añadidas consultas `R01` a `R12` en `docs/qa/M1_DIAGNOSTICO_SOLO_LECTURA_MONITOREO_20261117.sql` para validación forense independiente.
+- **Archivos modificados/creados:**
+  - `backend/RL.API/Features/Listas/Persistence/ListasRepository.cs`
+  - `backend/RL.API.Tests/Features/Listas/MonitoreoFuenteM1Tests.cs`
+  - `backend/RL.API.Tests/Features/Listas/MonitoreoListasM1OracleIntegrationTests.cs`
+  - `backend/RL.API.Tests/Infrastructure/DbPaginationRegressionGuardTests.cs`
+  - `docs/qa/M1_DIAGNOSTICO_SOLO_LECTURA_MONITOREO_20261117.sql`
+  - `docs/certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md`
+  - `docs/certificaciones/INDEX.json`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Pruebas ejecutadas y verificadas en esta intervención:**
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release`: **1,185 PASS**, 3 SKIPPED, 9 LOCAL_XE integration errors preexistentes. 0 fallos en Listas.
+  - Telemetría en vivo API local (puerto 5043):
+    - `GET /api/listas/empleados/paginado`: 200 OK en 1,274 ms (`TOTAL=13`, `COINC=161`).
+    - `GET /api/listas/naturales/paginado?categoriaIdentidad=identificadas`: 200 OK en 720 ms (`TOTAL=174`, `COINC=5,583`).
+    - `GET /api/listas/naturales/paginado?categoriaIdentidad=sin_identificacion`: 200 OK en 567 ms (`TOTAL=12`, `COINC=12`).
+    - `GET /api/listas/naturales/detalle` (DNI 33724): 200 OK en 239 ms (70 filas exactas, anti-cartesiano verificado).
+    - Solapamiento Naturales vs Empleados: 0 coincidencias compartidas.
+  - Frontend Angular: `verify-vendored-picomatch.mjs` PASS (`SECURITY_AUDIT=PASS_FULL_TREE`); `Vitest` **96/96 archivos, 1,032/1,032 pruebas PASS**; `ng build` **PASS**; `ESLint` **PASS**.
+  - Validadores: `validate_repository_structure.ps1` PASS (118 rutas, 1,285 archivos); `validate_database_scripts.ps1` PASS; `validate_documentation_links.ps1` PASS (249 docs, 259 enlaces); `validate_agent_skills.py` PASS (14 skills); `validate_text_encoding.ps1` PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS (0 errores).
+- **Preservación y Restricciones:**
+  - `34` archivos sin seguimiento conservados íntegros.
+  - `ORACLE_INSTITUTIONAL_WRITES=0`, `DNP_IHSS_WRITES=0`, `MAIN_TOUCHED=NO`, `PRODUCTION_TOUCHED=NO`.
+  - Tratamiento estricto de PII: 0 identidades, nombres o datos personales en logs o documentación.
+  - Issue #41 permanece abierto a la espera de revisión funcional del propietario (`jmejia31`).
+- **Expediente:** [`docs/certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md`](docs/certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md).
+- **Punto exacto de continuación:** Stage selectivo, commit bajo autoría `ANTIG`, push a `origin/desarrollo`, verificación de ejecución completa del Quality Gate en GitHub Actions y entrega de informe para verificación visual final por el propietario en el navegador.
