@@ -37,18 +37,13 @@ public sealed class ListasService : IListasService
     public Task<List<ResumenListaDto>> ObtenerResumenListasAsync() => _repo.ObtenerResumenListasAsync();
     public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento)
     {
-        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento))
-            throw new AmbiguousIdentityException("No es posible seleccionar un positivo para una identidad ambigua o no identificada.");
-
-        if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
-            throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
+        if (string.IsNullOrWhiteSpace(noDocumento))
+            return null;
 
         var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
-        if (positivo is not null && string.Equals(positivo.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
+        if (positivo is null && !noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
         {
-            var resolucion = await _repo.ResolverIdentidadAsync(noDocumento, ConvertirTipoSujeto(positivo.TipoPositivoId));
-            if (!resolucion.EsOperable)
-                throw new AmbiguousIdentityException("No se puede atribuir el motivo a una coincidencia única y verificada del documento.");
+            positivo = await _repo.ObtenerPositivoPorDocumentoAsync($"EMP:{noDocumento}");
         }
         return positivo;
     }
@@ -97,27 +92,32 @@ public sealed class ListasService : IListasService
 
     public async Task<ServiceResult> RegistrarPositivoAsync(RegistrarPositivoDto dto, long creadoPorId)
     {
+        if ((string.IsNullOrWhiteSpace(dto.NoDocumento) || IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(dto.NoDocumento))
+            && dto.IdRegistroFuente.HasValue && dto.IdRegistroFuente.Value > 0)
+        {
+            dto.NoDocumento = $"SRC:{dto.IdRegistroFuente.Value}";
+        }
+
         var validationError = ValidarPositivo(dto);
         if (validationError != null)
             return ServiceResult.BadRequest(validationError);
 
         if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(dto.NoDocumento))
-            return ServiceResult.Conflict("No es posible registrar un motivo sobre una identidad ambigua o no identificada.");
+            return ServiceResult.BadRequest("Para registros sin identificación atribuible se requiere el identificador de registro fuente.");
 
-        if (string.Equals(dto.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
+        // Manejo de aislamiento entre Naturales y Empleados si comparten DNI:
+        // Si es Empleado (TipoPositivoId == 3) y existe un registro activo previo con ese documento
+        // pero con un tipo diferente (ej. Natural TipoPositivoId == 2), se aísla con prefijo 'EMP:'.
+        if (dto.TipoPositivoId == 3 && !dto.NoDocumento!.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
         {
-            var resolucion = await _repo.ResolverIdentidadAsync(
-                dto.NoDocumento!,
-                ConvertirTipoSujeto(dto.TipoPositivoId));
-
-            if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
-                return ServiceResult.Conflict("No es posible registrar el positivo: el documento está asociado a múltiples sujetos.");
-
-            if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
-                return ServiceResult.UnprocessableEntity("No es posible registrar el positivo: la asociación del documento no está verificada.");
+            var existenteDoc = await _repo.ObtenerPositivoPorDocumentoAsync(dto.NoDocumento!);
+            if (existenteDoc != null && existenteDoc.TipoPositivoId != 3)
+            {
+                dto.NoDocumento = $"EMP:{dto.NoDocumento}";
+            }
         }
 
-        var activos = await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, 0);
+        var activos = await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, dto.TipoPositivoId);
         if (activos > 1)
             return ServiceResult.Conflict("No es posible actualizar el motivo porque existen múltiples positivos activos para el mismo documento.");
         if (activos == 1)
@@ -145,19 +145,11 @@ public sealed class ListasService : IListasService
         if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
             return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos porque existen múltiples positivos activos para el mismo documento.");
 
-        var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
-        if (positivo is not null && string.Equals(positivo.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
-        {
-            var resolucion = await _repo.ResolverIdentidadAsync(
-                noDocumento,
-                ConvertirTipoSujeto(positivo.TipoPositivoId));
-            if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
-                return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos: el documento está asociado a múltiples sujetos.");
-            if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
-                return ServiceResult<List<SeguimientoDto>>.UnprocessableEntity("No es posible consultar seguimientos: la asociación del documento no está verificada.");
-        }
-
         var result = await _repo.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
+        if (result.Count == 0 && !noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+        {
+            result = await _repo.ObtenerSeguimientosAsync($"EMP:{noDocumento}", desde, hasta);
+        }
         return ServiceResult<List<SeguimientoDto>>.Ok(result);
     }
 

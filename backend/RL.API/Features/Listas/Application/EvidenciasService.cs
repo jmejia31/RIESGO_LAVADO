@@ -115,19 +115,13 @@ public sealed class EvidenciasService : IEvidenciasService
             return ServiceResult.Conflict("No es posible registrar el seguimiento porque existen múltiples positivos activos para el mismo documento.");
 
         var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
+        if (positivo is null && !noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+        {
+            positivo = await _repo.ObtenerPositivoPorDocumentoAsync($"EMP:{noDocumento}");
+        }
+
         if (positivo is null || positivo.PositivoId <= 0)
             return ServiceResult.NotFound("No se encontró un registro positivo activo para este documento.");
-
-        if (string.Equals(positivo.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
-        {
-            var resolucion = await _repo.ResolverIdentidadAsync(
-                noDocumento,
-                ConvertirTipoSujeto(positivo.TipoPositivoId));
-            if (resolucion.Estado == EstadoIdentidadMonitoreo.Ambiguous)
-                return ServiceResult.Conflict("No es posible registrar el seguimiento: el documento está asociado a múltiples sujetos.");
-            if (resolucion.Estado != EstadoIdentidadMonitoreo.Verified)
-                return ServiceResult.UnprocessableEntity("No es posible registrar el seguimiento: la asociación del documento no está verificada.");
-        }
 
         var errorArchivo = ValidarArchivos(archivos);
         if (errorArchivo != null)

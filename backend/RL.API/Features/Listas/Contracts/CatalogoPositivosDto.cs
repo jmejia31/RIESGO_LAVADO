@@ -48,6 +48,8 @@ namespace RL.API.Features.Listas.Contracts
         [MaxLength(50)]
         [RegularExpression("^(DNP_LISTAS|MANUAL_CUMPLIMIENTO|NOTICIA_PRENSA|OTRO)$", ErrorMessage = "El origen del registro no es valido")]
         public string? OrigenRegistro { get; set; }
+
+        public long? IdRegistroFuente { get; set; }
     }
 
     public class ExistingPositivoDto

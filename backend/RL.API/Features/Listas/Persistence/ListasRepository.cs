@@ -1182,7 +1182,13 @@ namespace RL.API.Features.Listas.Persistence
             if (candidateIds.Count > 1)
                 throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
 
-            return candidateIds.Count == 1 ? candidateIds[0] : null;
+            if (candidateIds.Count == 1)
+                return candidateIds[0];
+
+            if (!noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+                return await ObtenerPositivoIdPorDocumentoAsync($"EMP:{noDocumento}");
+
+            return null;
         }
 
         public async Task<(string Nombre, string Ruta, string Mime)?> ObtenerEvidenciaPorIdAsync(long evidenciaId)
@@ -2416,17 +2422,8 @@ namespace RL.API.Features.Listas.Persistence
                        G.TOTAL_REPETIDOS,
                        G.FECHA_ENCONTRO,
                        G.FECHA_CALIFICO,
-                       CASE WHEN G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
-                                 AND I.SUJETOS = 1
-                                 AND G.TOTAL_REPETIDOS = 1
-                                 AND G.NOMBRES_DISTINTOS <= 1
-                            THEN P.FECHA_REGISTRO_INTERNO
-                            ELSE CAST(NULL AS DATE) END FECHA_REGISTRO_INTERNO,
-                       CASE WHEN G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
-                                 AND I.SUJETOS = 1
-                                 AND G.TOTAL_REPETIDOS = 1
-                                 AND G.NOMBRES_DISTINTOS <= 1
-                            THEN NVL(P.TIENE_MOTIVO, 0) ELSE 0 END TIENE_MOTIVO,
+                       NVL(P.FECHA_REGISTRO_INTERNO, PS.FECHA_REGISTRO_INTERNO) FECHA_REGISTRO_INTERNO,
+                       GREATEST(NVL(P.TIENE_MOTIVO, 0), NVL(PS.TIENE_MOTIVO, 0)) TIENE_MOTIVO,
                        0 ES_MANUAL,
                        NVL(I.REFERENCIAS, 0) IDENTIDAD_REFERENCIAS,
                        GREATEST(NVL(I.SUJETOS, 0), CASE WHEN G.NOMBRES_DISTINTOS > 1 THEN G.NOMBRES_DISTINTOS ELSE 0 END) IDENTIDADES_DISTINTAS,
@@ -2434,6 +2431,7 @@ namespace RL.API.Features.Listas.Persistence
                        G.CATEGORIA_IDENTIDAD
                 FROM REPORTE_GRUPOS G
                 LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = G.DNI_NORM AND G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
+                LEFT JOIN POSITIVOS_AGG PS ON PS.LSP_NO_DOCUMENTO = 'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE) AND G.CATEGORIA_IDENTIDAD = 'SIN_IDENTIFICACION'
                 LEFT JOIN IDENTIDAD_AGG I ON I.NUMERO_IDENTIFICACION = G.DNI_NORM AND G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
             )
             SELECT ID_REGISTRO_FUENTE, TIPO_FUENTE, NUMERO_IDENTIFICACION,
@@ -2472,8 +2470,10 @@ namespace RL.API.Features.Listas.Persistence
                  OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'N/A%'
                  OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                  OR NOT EXISTS (SELECT 1 FROM Coincidencias C
-                                WHERE C.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
-                                  AND TRIM(TRANSLATE(C.NUMERO_IDENTIFICACION, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')))
+                                 WHERE ((C.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
+                                         AND TRIM(TRANSLATE(C.NUMERO_IDENTIFICACION, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')))
+                                     OR (C.CATEGORIA_IDENTIDAD = 'SIN_IDENTIFICACION'
+                                         AND 'SRC:' || TO_CHAR(C.ID_REGISTRO_FUENTE) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')))))
               )";
 
         // M1-P0 (auditoria 2026-11-18): el listado de empleados NO consulta la vista remota
@@ -2562,17 +2562,8 @@ namespace RL.API.Features.Listas.Persistence
                        G.TOTAL_REPETIDOS,
                        G.FECHA_ENCONTRO,
                        G.FECHA_CALIFICO,
-                       CASE WHEN G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
-                                 AND G.PLANILLA_SUJETOS = 1
-                                 AND G.TOTAL_REPETIDOS = 1
-                                 AND G.NOMBRES_DISTINTOS <= 1
-                            THEN P.FECHA_REGISTRO_INTERNO
-                            ELSE CAST(NULL AS DATE) END FECHA_REGISTRO_INTERNO,
-                       CASE WHEN G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
-                                 AND G.PLANILLA_SUJETOS = 1
-                                 AND G.TOTAL_REPETIDOS = 1
-                                 AND G.NOMBRES_DISTINTOS <= 1
-                            THEN NVL(P.TIENE_MOTIVO, 0) ELSE 0 END TIENE_MOTIVO,
+                       COALESCE(P.FECHA_REGISTRO_INTERNO, PE.FECHA_REGISTRO_INTERNO, PS.FECHA_REGISTRO_INTERNO) FECHA_REGISTRO_INTERNO,
+                       GREATEST(NVL(P.TIENE_MOTIVO, 0), NVL(PE.TIENE_MOTIVO, 0), NVL(PS.TIENE_MOTIVO, 0)) TIENE_MOTIVO,
                        0 ES_MANUAL,
                        G.IDENTIDAD_REFERENCIAS,
                        GREATEST(G.PLANILLA_SUJETOS, CASE WHEN G.NOMBRES_DISTINTOS > 1 THEN G.NOMBRES_DISTINTOS ELSE 0 END) IDENTIDADES_DISTINTAS,
@@ -2580,6 +2571,8 @@ namespace RL.API.Features.Listas.Persistence
                        G.CATEGORIA_IDENTIDAD
                 FROM REPORTE_GRUPOS G
                 LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = G.IDENTIDAD_NORM AND G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
+                LEFT JOIN POSITIVOS_AGG PE ON PE.LSP_NO_DOCUMENTO = 'EMP:' || G.IDENTIDAD_NORM AND G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
+                LEFT JOIN POSITIVOS_AGG PS ON PS.LSP_NO_DOCUMENTO = 'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE) AND G.CATEGORIA_IDENTIDAD = 'SIN_IDENTIFICACION'
             )
             SELECT ID_REGISTRO_FUENTE, TIPO_FUENTE, IDENTIDAD, NOMBRE, NUMERO_PATRONO,
                    LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO,
@@ -2616,8 +2609,11 @@ namespace RL.API.Features.Listas.Persistence
                  OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'N/A%'
                  OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                  OR NOT EXISTS (SELECT 1 FROM Coincidencias C
-                                WHERE C.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
-                                  AND TRIM(TRANSLATE(C.IDENTIDAD, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')))
+                                 WHERE ((C.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
+                                         AND (TRIM(TRANSLATE(C.IDENTIDAD, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))
+                                              OR 'EMP:' || TRIM(TRANSLATE(C.IDENTIDAD, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))))
+                                     OR (C.CATEGORIA_IDENTIDAD = 'SIN_IDENTIFICACION'
+                                         AND 'SRC:' || TO_CHAR(C.ID_REGISTRO_FUENTE) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')))))
               )";
 
         private static string Texto(DbDataReader reader, string column) => reader[column] == DBNull.Value ? string.Empty : reader[column]?.ToString() ?? string.Empty;

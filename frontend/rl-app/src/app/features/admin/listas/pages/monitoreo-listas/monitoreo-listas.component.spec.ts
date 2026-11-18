@@ -587,11 +587,11 @@ describe('MonitoreoListasComponent', () => {
     })).toBe(true);
     expect(component.puedeDarSeguimiento({
       ...patrono, estadoIdentidad: 'VERIFIED', estadoAsociacion: 'UNVERIFIED_ASSOCIATION'
-    })).toBe(false);
+    })).toBe(true);
     expect(component.puedeDarSeguimiento({
       ...patrono, estadoIdentidad: 'AMBIGUOUS', estadoAsociacion: 'AMBIGUOUS'
-    })).toBe(false);
-    expect(component.puedeDarSeguimiento(patrono)).toBe(false);
+    })).toBe(true);
+    expect(component.puedeDarSeguimiento({ ...patrono, tieneMotivo: false })).toBe(false);
   });
 
   it('no genera la ficha de patrono cuando falla su auditoria obligatoria', async () => {
@@ -611,18 +611,18 @@ describe('MonitoreoListasComponent', () => {
     expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida' }));
     expect(consoleError).toHaveBeenCalled();
   });
-  it('explica el bloqueo de seguimiento sin atribuir un motivo faltante a identidades ambiguas o manuales', () => {
+  it('explica la accion de seguimiento universal segun la presencia de motivo', () => {
     const validado = { tieneMotivo: true, estadoIdentidad: 'VERIFIED', estadoAsociacion: 'VERIFIED' };
     expect(component.obtenerTextoAccionSeguimiento(validado)).toBe('Dar seguimiento');
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, tieneMotivo: false })).toBe('Debe registrar un motivo antes del seguimiento');
-    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoIdentidad: 'AMBIGUOUS' })).toBe('Seguimiento bloqueado: identidad ambigua');
-    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'AMBIGUOUS' })).toBe('Seguimiento bloqueado: asociación ambigua entre coincidencias de origen');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoIdentidad: 'AMBIGUOUS' })).toBe('Dar seguimiento');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'AMBIGUOUS' })).toBe('Dar seguimiento');
     expect(component.obtenerEtiquetaIdentidad({ ...validado, estadoAsociacion: 'AMBIGUOUS' })).toBe('Asociación ambigua');
-    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'UNVERIFIED_ASSOCIATION' })).toBe('Seguimiento bloqueado: identidad o asociación no verificada');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'UNVERIFIED_ASSOCIATION' })).toBe('Dar seguimiento');
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, esManual: true })).toBe('Debe registrar un motivo antes del seguimiento');
   });
 
-  it('permite reporte PDF de un natural no identificado sin solicitar asociaciones por documento', () => {
+  it('permite reporte PDF de un natural no identificado consultando su expediente tecnico SRC:id', () => {
     const row = {
       numeroIdentificacion: 'N/A(3)', nombre: 'Origen N/A', listaCoincidencia: 'LISTA X',
       idRegistroFuente: 501, tipoFuente: 'DNP_COINCIDENCIA', tieneMotivo: true,
@@ -633,14 +633,14 @@ describe('MonitoreoListasComponent', () => {
     component.imprimirReporteNatural(row as never);
 
     expect(service['getDetalleNatural']).toHaveBeenCalledWith('N/A(3)', 'global', 501, 'DNP_COINCIDENCIA');
-    expect(service['getPositivoPorDocumento']).not.toHaveBeenCalled();
-    expect(service['getSeguimientos']).not.toHaveBeenCalled();
+    expect(service['getPositivoPorDocumento']).toHaveBeenCalledWith('SRC:501');
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('SRC:501', undefined, undefined);
     expect(service['registrarAuditoriaImpresion']).toHaveBeenCalledOnce();
     expect(generar).toHaveBeenCalledWith(row, [], null, [], expect.anything());
     expect(component.cargando()).toBe(false);
   });
 
-  it('no incorpora motivo ni seguimiento de un empleado sin asociacion verificada en su PDF', () => {
+  it('incorpora motivo y seguimiento de un empleado universalmente en su PDF aun con asociacion no verificada', () => {
     const row = {
       identidad: '08011999123456', nombre: 'Empleado de origen', listaCoincidencia: 'LISTA Y',
       idRegistroFuente: 502, tipoFuente: 'DNP_COINCIDENCIA', tieneMotivo: true,
@@ -651,8 +651,8 @@ describe('MonitoreoListasComponent', () => {
     component.imprimirReporteEmpleado(row as never);
 
     expect(service['getDetalleEmpleado']).toHaveBeenCalledWith('08011999123456', 'global', 502, 'DNP_COINCIDENCIA', undefined);
-    expect(service['getPositivoPorDocumento']).not.toHaveBeenCalled();
-    expect(service['getSeguimientos']).not.toHaveBeenCalled();
+    expect(service['getPositivoPorDocumento']).toHaveBeenCalledWith('08011999123456');
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('08011999123456', undefined, undefined);
     expect(service['registrarAuditoriaImpresion']).toHaveBeenCalledOnce();
     expect(generar).toHaveBeenCalledWith(row, [], null, [], expect.anything());
     expect(component.cargando()).toBe(false);

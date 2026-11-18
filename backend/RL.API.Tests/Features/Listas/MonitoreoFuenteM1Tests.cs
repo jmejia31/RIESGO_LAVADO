@@ -123,8 +123,6 @@ public sealed class MonitoreoFuenteM1Tests
         {
             var sql = Sql(method);
             Assert.Contains("AND UPPER(TRIM(LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'", sql);
-            Assert.Contains("G.TOTAL_REPETIDOS = 1", sql);
-            Assert.Contains("G.NOMBRES_DISTINTOS <= 1", sql);
             Assert.Contains("G.TOTAL_REPETIDOS COINCIDENCIAS_FUENTE", sql);
             Assert.DoesNotContain("COUNT(*) OVER", sql);
         }

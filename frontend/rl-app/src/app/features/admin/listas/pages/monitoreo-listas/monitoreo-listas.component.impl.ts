@@ -499,17 +499,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   puedeDarSeguimiento(item: { tieneMotivo?: boolean; esManual?: boolean; estadoIdentidad?: string; estadoAsociacion?: string }): boolean {
-    return this.obtenerEstadoMonitoreo(item) === 'Con motivo' && this.esIdentidadOperable(item);
+    return this.obtenerEstadoMonitoreo(item) === 'Con motivo';
   }
 
   obtenerTextoAccionSeguimiento(item: { tieneMotivo?: boolean; esManual?: boolean; estadoIdentidad?: string; estadoAsociacion?: string }): string {
-    if (!this.esIdentidadOperable(item)) {
-      if (item.estadoAsociacion === 'AMBIGUOUS' && item.estadoIdentidad === 'VERIFIED')
-        return 'Seguimiento bloqueado: asociación ambigua entre coincidencias de origen';
-      if (item.estadoIdentidad === 'AMBIGUOUS' || item.estadoAsociacion === 'AMBIGUOUS')
-        return 'Seguimiento bloqueado: identidad ambigua';
-      return 'Seguimiento bloqueado: identidad o asociación no verificada';
-    }
     return this.obtenerEstadoMonitoreo(item) === 'Con motivo'
       ? 'Dar seguimiento'
       : 'Debe registrar un motivo antes del seguimiento';
@@ -994,11 +987,11 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
 
-    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row) 
-      ? this.listasService.getPositivoPorDocumento(row.numeroPatrono) 
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(row.numeroPatrono)
       : of(null);
-      
-    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row) 
+
+    const obsSeguimientos = row.tieneMotivo
       ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
@@ -1035,14 +1028,18 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   imprimirReporteNatural(row: CoincidenciaNatural) {
     this.cargando.set(true);
-    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
+    const esMarcador = !row.numeroIdentificacion || row.numeroIdentificacion.toUpperCase().startsWith('N/A') || row.categoriaIdentidad === 'SIN_IDENTIFICACION';
+    const docNum = (esMarcador && row.idRegistroFuente)
+      ? `SRC:${row.idRegistroFuente}`
+      : row.numeroIdentificacion;
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(docNum);
 
     const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
-    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row) 
-      ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(docNum)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row) 
-      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+    const obsSeguimientos = row.tieneMotivo
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1215,14 +1212,18 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   imprimirReporteEmpleado(row: CoincidenciaEmpleado) {
     this.cargando.set(true);
-    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
+    const esMarcador = !row.identidad || row.identidad.toUpperCase().startsWith('N/A') || row.categoriaIdentidad === 'SIN_IDENTIFICACION';
+    const docNum = (esMarcador && row.idRegistroFuente)
+      ? `SRC:${row.idRegistroFuente}`
+      : row.identidad;
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(docNum);
 
     const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
-    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row) 
-      ? this.listasService.getPositivoPorDocumento(row.identidad)
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(docNum)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row) 
-      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+    const obsSeguimientos = row.tieneMotivo
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1568,10 +1569,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
 
-    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row)
+    const obsPositivo = row.tieneMotivo
       ? this.listasService.getPositivoPorDocumento(row.numeroPatrono)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row)
+    const obsSeguimientos = row.tieneMotivo
       ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
@@ -1616,14 +1617,18 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   exportarFichaExcelNatural(row: CoincidenciaNatural) {
     this.cargando.set(true);
-    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
+    const esMarcador = !row.numeroIdentificacion || row.numeroIdentificacion.toUpperCase().startsWith('N/A') || row.categoriaIdentidad === 'SIN_IDENTIFICACION';
+    const docNum = (esMarcador && row.idRegistroFuente)
+      ? `SRC:${row.idRegistroFuente}`
+      : row.numeroIdentificacion;
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(docNum);
 
     const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
-    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row)
-      ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(docNum)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row)
-      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+    const obsSeguimientos = row.tieneMotivo
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1675,14 +1680,18 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   exportarFichaExcelEmpleado(row: CoincidenciaEmpleado) {
     this.cargando.set(true);
-    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
+    const esMarcador = !row.identidad || row.identidad.toUpperCase().startsWith('N/A') || row.categoriaIdentidad === 'SIN_IDENTIFICACION';
+    const docNum = (esMarcador && row.idRegistroFuente)
+      ? `SRC:${row.idRegistroFuente}`
+      : row.identidad;
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(docNum);
 
     const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
-    const obsPositivo = row.tieneMotivo && this.esIdentidadOperable(row)
-      ? this.listasService.getPositivoPorDocumento(row.identidad)
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(docNum)
       : of(null);
-    const obsSeguimientos = row.tieneMotivo && this.esIdentidadOperable(row)
-      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+    const obsSeguimientos = row.tieneMotivo
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -2206,7 +2215,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   registrarMotivo(row: any) {
-    if (this.bloquearIdentidad(row)) return;
     this.esRegistroManual.set(false);
     this.formManualNombre.set('');
     this.formManualNoDocumento.set('');
@@ -2219,23 +2227,37 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     let tipoPosId = 1; // 1 = JURÍDICO, 2 = NATURAL, 3 = EMPLEADO
     const tipo = this.tipoActivo();
     let docNum = '';
+    let documentoReal = '';
 
     if (tipo === 'juridica') {
       tipoPosId = 1;
       docNum = row.numeroPatrono || row.rtn;
+      documentoReal = docNum;
     } else if (tipo === 'natural') {
       tipoPosId = 2;
-      docNum = row.numeroIdentificacion;
+      documentoReal = row.numeroIdentificacion || 'Sin identificación';
+      docNum = (row.categoriaIdentidad === 'SIN_IDENTIFICACION' && row.idRegistroFuente)
+        ? `SRC:${row.idRegistroFuente}`
+        : (row.numeroIdentificacion || (row.idRegistroFuente ? `SRC:${row.idRegistroFuente}` : ''));
     } else if (tipo === 'empleado') {
       tipoPosId = 3;
-      docNum = row.identidad;
+      documentoReal = row.identidad || 'Sin identificación';
+      docNum = (row.categoriaIdentidad === 'SIN_IDENTIFICACION' && row.idRegistroFuente)
+        ? `SRC:${row.idRegistroFuente}`
+        : (row.identidad || (row.idRegistroFuente ? `SRC:${row.idRegistroFuente}` : ''));
     }
 
     this.entidadSeleccionada.set({
       nombreCompleto: row.nombre,
       noDocumento: docNum,
+      documentoReal: documentoReal,
+      idRegistroFuente: row.idRegistroFuente ?? null,
       tipoPositivoId: tipoPosId,
-      tipoListaText: tipo === 'juridica' ? 'Jurídica' : tipo === 'natural' ? 'Natural' : 'Empleado'
+      tipoListaText: tipo === 'juridica' ? 'Jurídica' : tipo === 'natural' ? 'Natural' : 'Empleado',
+      totalRepetidos: row.totalRepetidos || 1,
+      estadoIdentidad: row.estadoIdentidad,
+      estadoAsociacion: row.estadoAsociacion,
+      categoriaIdentidad: row.categoriaIdentidad
     });
 
     this.listasService.getPositivoPorDocumento(docNum).subscribe({
@@ -2319,6 +2341,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     let noDocumento = '';
     let nombreCompleto = '';
     let tipoPositivoId = 1;
+    let idRegistroFuente: number | null = null;
 
     if (manual) {
       noDocumento = this.formManualNoDocumento().trim();
@@ -2342,6 +2365,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       noDocumento = entidad.noDocumento;
       nombreCompleto = entidad.nombreCompleto;
       tipoPositivoId = entidad.tipoPositivoId;
+      idRegistroFuente = entidad.idRegistroFuente ?? null;
     }
 
     if (!docId || !cautelaId || !origenRegistro || !motivo) {
@@ -2379,7 +2403,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       nombreCompleto: nombreCompleto,
       motivoIngreso: motivo,
       tipoListaCautelaId: Number(cautelaId),
-      origenRegistro: origenRegistro
+      origenRegistro: origenRegistro,
+      ...(idRegistroFuente ? { idRegistroFuente } : {})
     };
 
     import('sweetalert2').then(Swal => {
@@ -2449,27 +2474,40 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   darSeguimiento(row: any) {
-    if (this.bloquearIdentidad(row)) return;
     let tipoPosId = 1;
     const tipo = this.tipoActivo();
     let docNum = '';
+    let documentoReal = '';
 
     if (tipo === 'juridica') {
       tipoPosId = 1;
       docNum = row.numeroPatrono || row.rtn;
+      documentoReal = docNum;
     } else if (tipo === 'natural') {
       tipoPosId = 2;
-      docNum = row.numeroIdentificacion;
+      documentoReal = row.numeroIdentificacion || 'Sin identificación';
+      docNum = (row.categoriaIdentidad === 'SIN_IDENTIFICACION' && row.idRegistroFuente)
+        ? `SRC:${row.idRegistroFuente}`
+        : (row.numeroIdentificacion || (row.idRegistroFuente ? `SRC:${row.idRegistroFuente}` : ''));
     } else if (tipo === 'empleado') {
       tipoPosId = 3;
-      docNum = row.identidad;
+      documentoReal = row.identidad || 'Sin identificación';
+      docNum = (row.categoriaIdentidad === 'SIN_IDENTIFICACION' && row.idRegistroFuente)
+        ? `SRC:${row.idRegistroFuente}`
+        : (row.identidad || (row.idRegistroFuente ? `SRC:${row.idRegistroFuente}` : ''));
     }
 
     this.entidadSeleccionada.set({
       nombreCompleto: row.nombre,
       noDocumento: docNum,
+      documentoReal: documentoReal,
+      idRegistroFuente: row.idRegistroFuente ?? null,
       tipoPositivoId: tipoPosId,
-      tipoListaText: tipo === 'juridica' ? 'Jurídica' : tipo === 'natural' ? 'Natural' : 'Empleado'
+      tipoListaText: tipo === 'juridica' ? 'Jurídica' : tipo === 'natural' ? 'Natural' : 'Empleado',
+      totalRepetidos: row.totalRepetidos || 1,
+      estadoIdentidad: row.estadoIdentidad,
+      estadoAsociacion: row.estadoAsociacion,
+      categoriaIdentidad: row.categoriaIdentidad
     });
 
     this.modoEdicion.set(false);

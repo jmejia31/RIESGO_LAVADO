@@ -26,6 +26,7 @@ export interface RegistrarPositivoDto {
   motivoIngreso: string;
   tipoListaCautelaId?: number | null;
   origenRegistro?: string | null;
+  idRegistroFuente?: number | null;
 }
 
 export interface ExistingPositivo {

@@ -62,34 +62,31 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
-    public async Task RegistrarPositivo_DnpConAsociacionNoVerificada_RechazaSinEscribir()
+    public async Task RegistrarPositivo_DnpConAsociacionNoVerificada_PermiteRegistroDeMotivo()
     {
         var service = CrearServicio(out var repo, out _);
-        repo.On(nameof(IListasRepository.ResolverIdentidadAsync), _ => Task.FromResult(
-            new ResolucionIdentidadMonitoreo("0801", EstadoIdentidadMonitoreo.UnverifiedAssociation, 0, 0, "SOURCE_NOT_FOUND")));
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(0));
+        repo.On(nameof(IListasRepository.RegistrarPositivoAsync), _ => Task.FromResult(true));
         var dto = CrearPositivo("DNP_LISTAS");
 
         var result = await service.RegistrarPositivoAsync(dto, 9);
 
-        Assert.False(result.Success);
-        Assert.Equal(422, result.StatusCode);
-        Assert.Empty(repo.CallsTo(nameof(IListasRepository.ContarPositivosActivosAsync)));
-        Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+        Assert.True(result.Success);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
     }
 
     [Fact]
-    public async Task RegistrarPositivo_DnpConIdentidadAmbigua_RechazaSinEscribir()
+    public async Task RegistrarPositivo_DnpConIdentidadAmbigua_PermiteRegistroDeMotivo()
     {
         var service = CrearServicio(out var repo, out _);
-        repo.On(nameof(IListasRepository.ResolverIdentidadAsync), _ => Task.FromResult(
-            new ResolucionIdentidadMonitoreo("0801", EstadoIdentidadMonitoreo.Ambiguous, 2, 2, "DOCUMENTO_SHARED_OR_MULTIPLE_SUBJECTS")));
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(0));
+        repo.On(nameof(IListasRepository.RegistrarPositivoAsync), _ => Task.FromResult(true));
         var dto = CrearPositivo("DNP_LISTAS");
 
         var result = await service.RegistrarPositivoAsync(dto, 9);
 
-        Assert.False(result.Success);
-        Assert.Equal(409, result.StatusCode);
-        Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+        Assert.True(result.Success);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
     }
 
     [Fact]
@@ -149,9 +146,34 @@ public sealed class ListasApplicationTests
         var result = await service.RegistrarPositivoAsync(dto, 9);
 
         Assert.False(result.Success);
-        Assert.Equal(409, result.StatusCode);
+        Assert.Equal(400, result.StatusCode);
         Assert.Empty(repo.CallsTo(nameof(IListasRepository.ContarPositivosActivosAsync)));
         Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+    }
+
+    [Fact]
+    public async Task RegistrarPositivo_MarcadorConIdRegistroFuente_NormalizaASrcYRegistra()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(0));
+        repo.On(nameof(IListasRepository.RegistrarPositivoAsync), _ => Task.FromResult(true));
+        var dto = new RegistrarPositivoDto
+        {
+            TipoDocumentoId = 1,
+            TipoPositivoId = 2,
+            NoDocumento = "N/A(3)",
+            IdRegistroFuente = 91009,
+            NombreCompleto = "Persona no atribuida",
+            MotivoIngreso = "Revisión técnica",
+            TipoListaCautelaId = 3,
+            OrigenRegistro = "MANUAL_CUMPLIMIENTO"
+        };
+
+        var result = await service.RegistrarPositivoAsync(dto, 9);
+
+        Assert.True(result.Success);
+        Assert.Equal("SRC:91009", dto.NoDocumento);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
     }
 
     [Fact]
@@ -173,20 +195,18 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
-    public async Task ConsultarPositivoDnp_NoAtribuyeMotivoConDniDeOrigenAmbiguo()
+    public async Task ConsultarPositivoDnp_RetornaPositivoAunqueIdentidadNoEsteVerificada()
     {
         var service = CrearServicio(out var repo, out _);
-        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(1));
         repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), _ =>
             Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto
             {
                 PositivoId = 80, TipoPositivoId = 2, OrigenRegistro = "DNP_LISTAS"
             }));
-        repo.On(nameof(IListasRepository.ResolverIdentidadAsync), _ =>
-            Task.FromResult(new ResolucionIdentidadMonitoreo(
-                "0801", EstadoIdentidadMonitoreo.Ambiguous, 1, 1, "MULTIPLE_SOURCE_COINCIDENCES")));
 
-        await Assert.ThrowsAsync<AmbiguousIdentityException>(() => service.ObtenerPositivoPorDocumentoAsync("0801"));
+        var resultado = await service.ObtenerPositivoPorDocumentoAsync("0801");
+        Assert.NotNull(resultado);
+        Assert.Equal(80, resultado.PositivoId);
     }
 
     [Fact]
