@@ -1351,6 +1351,15 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     .digest('hex');
   const preTransitionMatrix = page.locator('[data-matrix-modal="complete"]');
   await expect(preTransitionMatrix.getByText('Cargando la evaluación y su riesgo maestro…')).toHaveCount(0);
+  // The loading label can disappear before Angular completes the asynchronous
+  // Full Matrix field projection. Wait for the REAL 82 distinct fields, rather
+  // than accepting an incomplete (e.g. 72/82) intermediate DOM snapshot.
+  await expect.poll(async () => preTransitionMatrix.locator('[data-matrix-field]').evaluateAll(elements =>
+    [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))].length), {
+    message: 'Full Matrix pre-transition must render all 82 unique fields from the real Oracle projection',
+    timeout: 20_000,
+    intervals: [200, 350, 500, 750],
+  }).toBe(82);
   const preTransitionRenderedNumbers = await preTransitionMatrix.locator('[data-matrix-field]').evaluateAll(elements =>
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   expect(preTransitionRenderedNumbers).toHaveLength(82);
@@ -1460,6 +1469,14 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     ? await postTransitionProjectionResponse.json() as { datos: { evaluationId: number; fields: MatrixProjectionField[] } }
     : null;
   const postTransitionFieldNumbers = postTransitionBody?.datos.fields.map(field => field.fieldNumber) ?? [];
+  // The API may resolve while the observable view is still rendering fields.
+  // Poll the complete 82-field DOM contract; retain all exact-value assertions.
+  await expect.poll(async () => matrixModal.locator('[data-matrix-field]').evaluateAll(elements =>
+    [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))].length), {
+    message: 'Full Matrix post-transition must render all 82 unique Oracle-backed fields',
+    timeout: 20_000,
+    intervals: [200, 350, 500, 750],
+  }).toBe(82);
   const renderedPostTransitionNumbers = await matrixModal.locator('[data-matrix-field]').evaluateAll(elements =>
     [...new Set(elements.map(element => Number(element.getAttribute('data-matrix-field'))).filter(Number.isFinite))]);
   const warningVisible = await matrixModal.getByText(/La evaluación fue modificada por otra sesión o usuario/).count() > 0

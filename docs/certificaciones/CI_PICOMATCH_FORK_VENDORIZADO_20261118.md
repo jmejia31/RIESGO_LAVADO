@@ -56,3 +56,11 @@ ORACLE_INSTITUTIONAL_WRITES=0
 DNP_IHSS_WRITES=0
 OWNER_FINAL_SIGNOFF=PENDING
 ```
+
+
+## Revalidación exacta de la primera distribución vendorizada — 2026-11-18 10:04 -06:00
+
+- [Run 44341059022](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44341059022), SHA `465e90496dbed2a406bf7d8530045a8590b76ed6`: `completed/failure`, **pero las auditorías npm de producción y completa ejecutadas de manera nativa fueron ambas `SUCCESS`** y `SECURITY_AUDIT=PASS_FULL_TREE`. El control independiente de integridad del fork, tests adversariales y el guard CI: `SUCCESS`. Backend global `1190 PASS / 1 SKIP`. La seguridad **NO** es la causa del fallo de este SHA.
+- Nuevo bloqueo independiente, localizado con log primario: `Run repository quality gates` falla por la exigencia institucional de **tres E2E aprobadas sin retries**: `Block 12 Full Matrix UI preserves all 2006 workbook calculation results from Oracle XE` obtuvo una lectura DOM intermedia de **72/82** campos justo después del HTTP 200 / desaparición de carga, y **82/82** en el retry. No es pérdida de datos Oracle: la misma suite completó **2006/2006 valores** en retry, pero el test se clasifica `flaky` y el gate exige `0 flaky`.
+- Corrección P0 subsecuente: en `frontend/rl-app/e2e/block7-oracle-real.spec.ts`, esperar mediante `expect.poll` las **82 referencias técnicas distintas** reales de la matriz pre y post transición antes de tomar snapshot/verificar; `timeout=20s`, sin aumentar retries, sin cambiar resultados esperados, ni omitir cálculos/identidades. Los checks exactos **82/82**, la paridad de datos **2006/2006** y rechazo de concurrencia siguen activos.
+- **Nuevo commit y run deben verificarse por SHA exacto antes del cierre.** No se puede atribuir `Quality Gates=PASS` al SHA `465e90496dbed2a406bf7d8530045a8590b76ed6` porque está en `failure` por E2E. No se modifica `main`, Oracle institucional ni producción.
