@@ -380,10 +380,10 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
   private construirDatosExcelListaPrincipal(reporte: ReporteListaPrincipal, datosFiltrados: RegistroMonitoreo[] = this.interna().datosFiltrados()): string[][] {
     const instancia = this.interna();
     const pendientes = datosFiltrados.filter(item =>
-      !instancia.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)
+      !instancia.esCerradoPasivo(item) && !item.tieneMotivo
     ).length;
     const conMotivo = datosFiltrados.filter(item =>
-      !instancia.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual
+      !instancia.esCerradoPasivo(item) && !!item.tieneMotivo
     ).length;
     const cerradosPasivos = datosFiltrados.filter(item => instancia.esCerradoPasivo(item)).length;
 

@@ -478,7 +478,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   obtenerEstadoMonitoreo(item: { tieneMotivo?: boolean; esManual?: boolean }): string {
     if (this.esCerradoPasivo(item)) return 'Cerrado / Pasivo';
-    if (item.esManual) return 'Pendiente';
     return item.tieneMotivo ? 'Con motivo' : 'Pendiente';
   }
 
@@ -493,7 +492,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     if (this.esCerradoPasivo(item))
       return 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 ring-1 ring-slate-300';
 
-    return item.tieneMotivo && !item.esManual
+    return item.tieneMotivo
       ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10'
       : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-600/10';
   }
@@ -2114,8 +2113,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     const resumen = [
       ['Registros filtrados', String(reporte.rows.length), 'Coincidencias visibles en la vista actual'],
-      ['Pendientes', String(dataFiltrada.filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length), 'Requieren motivo o revisión'],
-      ['Con motivo', String(dataFiltrada.filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length), 'Con sustento registrado'],
+      ['Pendientes', String(dataFiltrada.filter(item => !this.esCerradoPasivo(item) && !item.tieneMotivo).length), 'Requieren motivo o revisión'],
+      ['Con motivo', String(dataFiltrada.filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo).length), 'Con sustento registrado'],
       ['Cerrados / pasivos', String(dataFiltrada.filter(item => this.esCerradoPasivo(item)).length), 'Registros no activos']
     ];
     const resumenTabla = [

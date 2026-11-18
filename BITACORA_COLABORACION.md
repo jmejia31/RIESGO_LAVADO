@@ -11816,3 +11816,27 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Frontend activo en `http://localhost:4200` (200 OK).
   - Validadores de repositorio, enlaces documentales y temas dinámicos: PASS.
 - **Punto exacto de continuación:** Entorno local en ejecución; confirmación de guardado de motivo por el propietario en `http://localhost:4200/admin/listas/monitoreo`.
+
+## Intervención P0 — Habilitación de estado 'Con motivo' y acción de seguimiento para registros y positivos manuales — 2026-11-18 16:00 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=fd5e083c678a1bc7e163cba799ff24660eb947eb`
+- **Diagnóstico y causa raíz:**
+  1. **Bloqueo de estado en frontend (`monitoreo-listas.component.impl.ts`):** En `obtenerEstadoMonitoreo()`, la línea 481 forzaba incondicionalmente `if (item.esManual) return 'Pendiente';`, anulando `item.tieneMotivo`. Igualmente en `obtenerClaseEstado()`, la condición `item.tieneMotivo && !item.esManual` impedía aplicar el badge verde esmeralda.
+  2. **Bloqueo del botón de seguimiento:** La función `puedeDarSeguimiento(item)` evalúa `obtenerEstadoMonitoreo(item) === 'Con motivo'`. Al devolver 'Pendiente', el botón «Dar seguimiento» (icono de reloj) se desactivaba en la fila con el tooltip *«Debe registrar un motivo antes del seguimiento»*, a pesar de que el motivo y primer seguimiento ya habían sido guardados con éxito en la base de datos (con confirmación de SweetAlert y tarjeta KPI «Con motivo registrado» en 1).
+  3. **Inconsistencia en conteo de reportes y exportaciones:** En `monitoreo-listas.component.impl.ts` (líneas 2116-2117) y `monitoreo-listas.component.ts` (líneas 383-386), las métricas de pendientes y con motivo filtraban con `!item.esManual` o `|| !!item.esManual`.
+- **Corrección quirúrgica:**
+  1. En `monitoreo-listas.component.impl.ts`:
+     - Eliminada la cláusula `if (item.esManual) return 'Pendiente';` en `obtenerEstadoMonitoreo()`, retornando de forma universal `item.tieneMotivo ? 'Con motivo' : 'Pendiente'`.
+     - Ajustado `obtenerClaseEstado()` para que todo registro con `tieneMotivo === true` muestre el estilo institucional verde esmeralda (`bg-emerald-50 text-emerald-700 ring-emerald-600/10`).
+     - Alineadas las métricas de exportación en PDF y Excel para evaluar `tieneMotivo` sin exclusión de `esManual`.
+  2. En `monitoreo-listas.component.ts`:
+     - Alineada la función `construirDatosExcelListaPrincipal()` para evaluar `pendientes` y `conMotivo` estrictamente con base en `tieneMotivo`.
+  3. En `monitoreo-listas.component.spec.ts`:
+     - Actualizada la aserción de `obtenerTextoAccionSeguimiento` para verificar que registros manuales con motivo devuelven `'Dar seguimiento'`, y sin motivo devuelven `'Debe registrar un motivo antes del seguimiento'`.
+- **Verificación ejecutada:**
+  - Angular Vitest: 96/96 suites PASS, 1,033/1,033 tests PASS (incluyendo `monitoreo-listas.component.spec.ts` 39/39 PASS).
+  - Angular production build (`npm run build`): PASS (0 errores de compilación).
+  - Backend `dotnet test` (Listas): 102/102 tests PASS, 0 fallos.
+  - Validadores del repositorio: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
+- **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo` confirmando que Javier Ruiz y cualquier positivo manual con motivo reflejan el badge «Con motivo» y permiten abrir el modal de seguimiento.

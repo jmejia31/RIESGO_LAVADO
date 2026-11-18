@@ -619,7 +619,8 @@ describe('MonitoreoListasComponent', () => {
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'AMBIGUOUS' })).toBe('Dar seguimiento');
     expect(component.obtenerEtiquetaIdentidad({ ...validado, estadoAsociacion: 'AMBIGUOUS' })).toBe('Asociación ambigua');
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'UNVERIFIED_ASSOCIATION' })).toBe('Dar seguimiento');
-    expect(component.obtenerTextoAccionSeguimiento({ ...validado, esManual: true })).toBe('Debe registrar un motivo antes del seguimiento');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, esManual: true })).toBe('Dar seguimiento');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, esManual: true, tieneMotivo: false })).toBe('Debe registrar un motivo antes del seguimiento');
   });
 
   it('permite reporte PDF de un natural no identificado consultando su expediente tecnico SRC:id', () => {

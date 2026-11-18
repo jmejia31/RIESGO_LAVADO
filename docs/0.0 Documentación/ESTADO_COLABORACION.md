@@ -1,3 +1,24 @@
+# Estado vigente — Habilitación de estado 'Con motivo' y acción de seguimiento para registros y positivos manuales (ANTIG) — 2026-11-18 16:00 -06:00
+
+## Estado vigente — Desacoplamiento de esManual y habilitación universal de estado 'Con motivo' y acción de seguimiento
+
+- Se corrigió quirúrgicamente el defecto de frontend en Monitoreo de Listas donde los registros manuales o creados con origen de cumplimiento que ya tenían motivo registrado (`tieneMotivo === true`) continuaban mostrando el badge amarillo *«Pendiente»* en lugar de *«Con motivo»* (verde esmeralda) y mantenían deshabilitado el botón de acción *«Dar seguimiento»* con el tooltip *«Debe registrar un motivo antes del seguimiento»*.
+- **Causa raíz identificada y resuelta:**
+  - En `monitoreo-listas.component.impl.ts:481`, `obtenerEstadoMonitoreo()` forzaba `if (item.esManual) return 'Pendiente';`, anulando ciegamente la presencia de `tieneMotivo`.
+  - En `obtenerClaseEstado()`, la condición `item.tieneMotivo && !item.esManual` impedía la aplicación del estilo institucional verde esmeralda.
+  - La función `puedeDarSeguimiento(item)` evalúa `obtenerEstadoMonitoreo(item) === 'Con motivo'`. Al devolver `'Pendiente'`, el botón quedaba deshabilitado.
+  - Se eliminó la cláusula excluyente de `esManual` en `obtenerEstadoMonitoreo()`, `obtenerClaseEstado()` y en las funciones de cálculo de métricas para exportación PDF/Excel (`monitoreo-listas.component.impl.ts` y `monitoreo-listas.component.ts`).
+  - Se actualizó la prueba unitaria en `monitoreo-listas.component.spec.ts:622` para verificar que registros manuales con motivo devuelven `'Dar seguimiento'`, y sin motivo devuelven `'Debe registrar un motivo antes del seguimiento'`.
+- **Verificación técnica integral:**
+  - Angular Vitest: 96/96 suites PASS, 1,033/1,033 tests PASS (incluyendo `monitoreo-listas.component.spec.ts` 39/39 PASS).
+  - Angular production build (`npm run build`): PASS (0 errores de compilación).
+  - Backend `dotnet test` (Listas): 102/102 tests PASS, 0 fallos.
+  - Validadores: Estructura (118 rutas, 1,288 archivos), Scripts de Base de Datos (281 catálogos), Enlaces Documentales (252 docs, 265 links) y Agent Skills (14/14 skills) todos PASS.
+- **Restricciones de gobernanza preservadas:** 34 archivos sin seguimiento locales preservados intactos; 0 escrituras en `main`, producción u Oracle institucional; [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) permanece abierto a la espera de la aceptación visual final del propietario.
+- **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo` para confirmar que Javier Ruiz y cualquier registro con motivo muestran el badge verde «Con motivo» y permiten abrir el modal de seguimiento.
+
+---
+
 # Estado vigente — Corrección de validación de origen en registro de motivos de monitoreo (ANTIG) — 2026-11-18 15:33 -06:00
 
 ## Estado vigente — Desacoplamiento de igualdad rígida de origen y compatibilidad legacy en positivos
