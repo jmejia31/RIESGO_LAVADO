@@ -11794,3 +11794,25 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - ESLint: PASS (0 errores).
   - Validadores: estructura, enlaces documentales y agent skills PASS.
 - **Punto exacto de continuación:** Servidores locales actualizados y en ejecución; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo`.
+
+## Intervención P0 — Corrección quirúrgica de validación de origen y compatibilidad legacy en registro de motivos — 2026-11-18 15:33 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=2bab425a1b32ae38a6a127a92288015ffea902f4`
+- **Diagnóstico y causa raíz reproducida:**
+  1. **Conflicto 409 por validación estricta de origen:** En `ListasService.RegistrarPositivoAsync`, la condición `if (activos == 1)` evaluaba `!string.Equals(existente.OrigenRegistro?.Trim(), dto.OrigenRegistro, StringComparison.OrdinalIgnoreCase)`. En registros preexistentes o históricos que poseían `LSP_ORIGEN_REGISTRO IS NULL` (anteriores a migración 16) o donde el origen operativo cambiaba o difería de la selección inicial, la comparación con `null` fallaba de inmediato, devolviendo el error conflictivo: *«El documento ya tiene un positivo de otro tipo u origen; seleccione una referencia individual verificada.»*
+  2. **Bloqueo en repositorio (`ListasRepository.cs`):** En `RegistrarPositivoCoreAsync`, la cláusula `AND NVL(UPPER(TRIM(LSP_ORIGEN_REGISTRO)), '__LEGACY__') = NVL(:origenRegistro, '__LEGACY__')` en el `UPDATE` impedía actualizar el motivo y asignar el nuevo origen en filas que tenían origen nulo o previo diferente.
+- **Corrección quirúrgica:**
+  1. En `ListasService.cs`:
+     - Se mantiene la guarda estricta para evitar reconversión indebida entre tipos de sujeto incompatibles (`existente.TipoPositivoId != dto.TipoPositivoId`), pero se desacopla la comparación bloqueante de `OrigenRegistro`, permitiendo actualizar el motivo y asignar/actualizar el origen operativo sin conflicto.
+  2. En `ListasRepository.cs`:
+     - Se elimina la restricción de igualdad rígida de origen en la guarda y en la cláusula `WHERE` del `UPDATE`, garantizando que registros con origen nulo o nuevo origen puedan ser actualizados correctamente con `LSP_ORIGEN_REGISTRO = NVL(:origenRegistro, LSP_ORIGEN_REGISTRO)`.
+  3. En `ListasApplicationTests.cs`:
+     - Se agrega la prueba unitaria `RegistrarPositivo_MismoTipoConDiferenteOrigenOConOrigenPrevioNull_PermiteActualizacion` (PASS).
+- **Verificación ejecutada:**
+  - `dotnet build RIESGO_LAVADO.sln`: 0 errores, compilación exitosa.
+  - Pruebas `Listas`: 102 PASS, 0 errores, 1 omitida (Oracle XE).
+  - Backend API reiniciado y activo en `http://localhost:5043` (`/healthz` 200 Healthy).
+  - Frontend activo en `http://localhost:4200` (200 OK).
+  - Validadores de repositorio, enlaces documentales y temas dinámicos: PASS.
+- **Punto exacto de continuación:** Entorno local en ejecución; confirmación de guardado de motivo por el propietario en `http://localhost:4200/admin/listas/monitoreo`.

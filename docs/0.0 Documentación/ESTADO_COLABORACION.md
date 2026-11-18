@@ -1,3 +1,20 @@
+# Estado vigente — Corrección de validación de origen en registro de motivos de monitoreo (ANTIG) — 2026-11-18 15:33 -06:00
+
+## Estado vigente — Desacoplamiento de igualdad rígida de origen y compatibilidad legacy en positivos
+
+- Se corrigió quirúrgicamente el conflicto HTTP 409 (*«El documento ya tiene un positivo de otro tipo u origen; seleccione una referencia individual verificada.»*) que impedía guardar o actualizar motivos en registros que tenían origen nulo (registros preexistentes a migración 16) o cuando difería la selección del origen operativo.
+- Causa raíz resuelta: `ListasService.RegistrarPositivoAsync` y `ListasRepository.RegistrarPositivoCoreAsync` exigían igualdad estricta entre el origen nuevo y el existente (`existente.OrigenRegistro == dto.OrigenRegistro`), fallando de inmediato ante `null`. Se desacopló la validación del origen manteniendo intacta la protección contra reconversión entre tipos de sujeto (`TipoPositivoId`), y se eliminó la cláusula restrictiva de origen en el `WHERE` del `UPDATE` en `ListasRepository.cs`.
+- Se incorporó la prueba unitaria `RegistrarPositivo_MismoTipoConDiferenteOrigenOConOrigenPrevioNull_PermiteActualizacion` (PASS).
+- Verificado en esta intervención:
+  - `dotnet build RIESGO_LAVADO.sln`: PASS (0 errores).
+  - Pruebas `Listas`: 102/102 PASS, 0 errores (1 omitida Oracle XE).
+  - Validadores de repositorio, enlaces documentales y temas dinámicos: PASS.
+  - Servidores locales: Backend activo en puerto `5043` (`/healthz` 200 Healthy); Frontend activo en puerto `4200` (200 OK).
+- Restricciones preservadas: 34 archivos locales untracked preservados; 0 escrituras en `main`, producción u Oracle institucional; [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) permanece abierto hasta la aprobación funcional visual del propietario.
+- Punto exacto de continuación: Entorno local actualizado y en ejecución; comprobación de guardado de motivo por el propietario en `http://localhost:4200/admin/listas/monitoreo`.
+
+---
+
 # Estado vigente — Desacoplamiento de confirmación institucional y tokens dinámicos en Monitoreo de Listas (ANTIG) — 2026-11-18 15:25 -06:00
 
 ## Estado vigente — Resolución de diálogo congelado SweetAlert2 y corrección de temas dinámicos

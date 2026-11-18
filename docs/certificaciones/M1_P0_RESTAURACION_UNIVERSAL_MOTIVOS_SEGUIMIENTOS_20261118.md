@@ -106,6 +106,14 @@ El propietario del sistema estableció el siguiente contrato funcional obligator
   2. En `institutional-confirmation.service.ts` (`didOpen`), se remueve explícitamente cualquier clase `swal2-loading` residual y se fuerza `confirmButton.disabled = false` y `cancelButton.disabled = false`.
   3. Se maneja de forma limpia la cancelación del usuario (HTTP 499) para evitar falsos errores visuales si decide cancelar la confirmación.
 
+### 3.5 Desacoplamiento de Igualdad Rígida de Origen Operativo en Positivos
+- **Diagnóstico del incidente:** Al intentar guardar o actualizar el motivo de un registro (ej. Edgar Ernesto Barahona Flores, Empleado), el sistema devolvía error 409: *«El documento ya tiene un positivo de otro tipo u origen; seleccione una referencia individual verificada.»*
+- **Causa raíz:** `ListasService.RegistrarPositivoAsync` y `ListasRepository.RegistrarPositivoCoreAsync` exigían igualdad estricta entre el nuevo `OrigenRegistro` y el valor persistido (`existente.OrigenRegistro == dto.OrigenRegistro`). En registros preexistentes o históricos donde `LSP_ORIGEN_REGISTRO` era `NULL` (anteriores a migración 16) o cuando el usuario seleccionaba un origen diferente, la comparación con `null` fallaba de inmediato, impidiendo guardar o actualizar el motivo. Asimismo, la cláusula `WHERE` del `UPDATE` en `ListasRepository.cs` bloqueaba la actualización física.
+- **Corrección aplicada:**
+  1. Se desacopló la validación de igualdad estricta de `OrigenRegistro`, permitiendo actualizar el motivo y asignar/actualizar el origen operativo (`LSP_ORIGEN_REGISTRO = NVL(:origenRegistro, LSP_ORIGEN_REGISTRO)`), preservando intacta la guarda de inviolabilidad entre tipos de sujeto (`TipoPositivoId`).
+  2. Se eliminó la cláusula restrictiva de origen en el `WHERE` del `UPDATE` en `ListasRepository.cs`.
+  3. Se incorporó la prueba unitaria `RegistrarPositivo_MismoTipoConDiferenteOrigenOConOrigenPrevioNull_PermiteActualizacion` en `ListasApplicationTests.cs` (PASS).
+
 ---
 
 ## 4. Matriz de Pruebas Funcionales Obligatorias (M1-M01 a M1-M30)

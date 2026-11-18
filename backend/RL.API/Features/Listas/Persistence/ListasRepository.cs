@@ -810,10 +810,9 @@ namespace RL.API.Features.Listas.Persistence
                     }
                 }
 
-                // No se puede reconvertir silenciosamente un positivo a otro tipo/origen.
-                // Esto preserva identidad y auditoría incluso ante clientes antiguos.
-                if (existingId.HasValue && (existingTipoPositivoId != dto.TipoPositivoId
-                    || !string.Equals(NormalizarOrigenRegistro(existingOrigenRegistro), origenRegistro, StringComparison.Ordinal)))
+                // No se puede reconvertir silenciosamente un positivo a otro tipo de sujeto.
+                // Esto preserva identidad y auditoría incluso ante clientes antiguos.
+                if (existingId.HasValue && existingTipoPositivoId != dto.TipoPositivoId)
                 {
                     await transaction.RollbackAsync();
                     return false;
@@ -835,7 +834,6 @@ namespace RL.API.Features.Listas.Persistence
                         LSP_ORIGEN_REGISTRO = NVL(:origenRegistro, LSP_ORIGEN_REGISTRO)
                     WHERE LSP_POSITIVO_ID = :id
                       AND LSP_TIPO_POSITIVO_ID = :tipoPosId
-                      AND NVL(UPPER(TRIM(LSP_ORIGEN_REGISTRO)), '__LEGACY__') = NVL(:origenRegistro, '__LEGACY__')
                       AND LSP_ESTADO_REGISTRO = 1";
 
                     cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));

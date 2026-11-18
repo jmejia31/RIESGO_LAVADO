@@ -195,6 +195,24 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
+    public async Task RegistrarPositivo_MismoTipoConDiferenteOrigenOConOrigenPrevioNull_PermiteActualizacion()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(1));
+        repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), _ =>
+            Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto
+            {
+                PositivoId = 80, TipoPositivoId = 2, OrigenRegistro = null
+            }));
+        repo.On(nameof(IListasRepository.RegistrarPositivoAsync), _ => Task.FromResult(true));
+
+        var result = await service.RegistrarPositivoAsync(CrearPositivo("DNP_LISTAS"), 9);
+
+        Assert.True(result.Success);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+    }
+
+    [Fact]
     public async Task ConsultarPositivoDnp_RetornaPositivoAunqueIdentidadNoEsteVerificada()
     {
         var service = CrearServicio(out var repo, out _);

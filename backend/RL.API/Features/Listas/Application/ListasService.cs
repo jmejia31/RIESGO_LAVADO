@@ -123,9 +123,8 @@ public sealed class ListasService : IListasService
         if (activos == 1)
         {
             var existente = await _repo.ObtenerPositivoPorDocumentoAsync(dto.NoDocumento!);
-            if (existente is null || existente.TipoPositivoId != dto.TipoPositivoId
-                || !string.Equals(existente.OrigenRegistro?.Trim(), dto.OrigenRegistro, StringComparison.OrdinalIgnoreCase))
-                return ServiceResult.Conflict("El documento ya tiene un positivo de otro tipo u origen; seleccione una referencia individual verificada.");
+            if (existente is null || existente.TipoPositivoId != dto.TipoPositivoId)
+                return ServiceResult.Conflict("El documento ya tiene un positivo de otro tipo; seleccione una referencia individual verificada.");
         }
 
         var ok = await _repo.RegistrarPositivoAsync(dto, creadoPorId);
