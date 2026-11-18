@@ -5,6 +5,8 @@ WORKDIR /app
 COPY frontend/rl-app/package.json frontend/rl-app/package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY frontend/rl-app/ ./
+RUN node scripts/security/picomatch-mitigation.mjs --apply \
+    && node --test scripts/security/picomatch-mitigation.test.mjs
 RUN npm run build -- --configuration production
 
 FROM nginx:1.31.3-alpine AS runtime

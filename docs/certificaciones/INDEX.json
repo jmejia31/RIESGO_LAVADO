@@ -239,6 +239,24 @@
       "owner_acceptance": "PENDING",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41",
       "github_remote_verified": "PENDING_POST_PUSH"
+    },
+    {
+      "id": "CI-PICOMATCH-BACKPORT-20261118",
+      "path": "CI_PICOMATCH_BACKPORT_CONTROLADO_20261118.md",
+      "status": "REPRODUCIBLE_SECURITY_MITIGATION_PENDING_EXACT_SHA_CI",
+      "source_code_sha": "RESOLVE_FROM_THIS_COMMIT",
+      "evidence_commit_sha": "RESOLVE_FROM_THIS_COMMIT",
+      "previous_quality_gate": 44324753203,
+      "security_scan": "FULL_NPM_AUDIT_BLOCKING_NO_WAIVER",
+      "upstream_pr": "https://github.com/micromatch/picomatch/pull/238",
+      "original_git_blob": "29207512c60183b4bb9bf5112be3b9b5f4a9a9fd",
+      "mitigated_git_blob": "9f968c0681bc08d7383c1be29f376a2caf6c60e4",
+      "lockfile_modified": false,
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "NOT_GRANTED",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/42"
     }
   ]
 }

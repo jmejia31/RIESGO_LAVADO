@@ -45,6 +45,10 @@ jobs:
           cache-dependency-path: frontend/rl-app/package-lock.json
       - name: Dependencias reproducibles
         run: npm ci --ignore-scripts
+      - name: Apply and test pinned picomatch ReDoS mitigation
+        run: |
+          node scripts/security/picomatch-mitigation.mjs --apply
+          node --test scripts/security/picomatch-mitigation.test.mjs
       - name: ESLint
         run: npm run lint
       - name: Pruebas Angular

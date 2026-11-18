@@ -10,7 +10,17 @@
     "test:coverage": "ng test --watch=false --coverage",
     "e2e": "node scripts/run-e2e.mjs",
     "lint": "eslint src e2e scripts",
-    "validate:native-dialogs": "node ../../tools/validate_no_native_dialogs.js --self-test"
+    "validate:native-dialogs": "node ../../tools/validate_no_native_dialogs.js --self-test",
+    "prebuild": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "prewatch": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "prestart": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "pretest": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "pretest:coverage": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "pree2e": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "prelint": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "preng": "node scripts/security/picomatch-mitigation.mjs --apply",
+    "security:picomatch:verify": "node scripts/security/picomatch-mitigation.mjs --verify && node --test scripts/security/picomatch-mitigation.test.mjs",
+    "security:picomatch:apply": "node scripts/security/picomatch-mitigation.mjs --apply && npm run security:picomatch:verify"
   },
   "packageManager": "npm@11.12.1",
   "engines": {

@@ -62,3 +62,8 @@ PRODUCTION_TOUCHED=NO
 - Backend `1170 PASS / 1 SKIPPED`; Angular `1023 PASS` en `96` archivos; E2E `79 PASS / 15 SKIPPED` (incluye carga institucional de archivos corregida); pruebas Oracle XE, Docker y checks no-root `SUCCESS`.
 - No confundir `npm audit --omit=dev: PASS` con `npm audit: FAIL`. `SECURITY_SCAN=FAIL` y `QUALITY_GATE_GLOBAL=FAIL` hasta parche verificable.
 - Contrato real jurídico recuperado en `d216edf4c581c5724bfb582f5e05bebea9ff8669`, con validación de identidad/relación de fuente. Expediente de detalle: [M1 CI funcional](M1_CI_FUNCIONAL_CORREGIDO_SEGURIDAD_ABIERTA_20261117.md).
+
+
+## 6. Mitigación reproducible provisional — 2026-11-18 09 -06:00
+
+Se preparó un backport **candidato** de alcance limitado, reproducible y fail-closed, basado en el tag oficial picomatch 4.0.7 y en PR #238 sin fusionar: `scripts/security/picomatch-mitigation.mjs`, SHA del archivo original `29207512c60183b4bb9bf5112be3b9b5f4a9a9fd`, SHA del archivo modificado `9f968c0681bc08d7383c1be29f376a2caf6c60e4`. El parche se aplica tras `npm ci` y debe pasar pruebas adversariales ejecutables antes de Angular/Docker. `npm audit` completo **no se altera ni se perdona**: seguirá reportando riesgo en el lockfile de 4.0.7. **No se declara ni promete Quality Gate verde** hasta disponer de remediación oficial y validaciones reales. [Expediente controlado](CI_PICOMATCH_BACKPORT_CONTROLADO_20261118.md) y [seguimiento #42](https://github.com/jmejia31/RIESGO_LAVADO/issues/42).
