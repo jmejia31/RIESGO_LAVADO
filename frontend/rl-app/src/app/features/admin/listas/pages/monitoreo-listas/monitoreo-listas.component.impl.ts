@@ -174,6 +174,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   totalesActuales = computed(() => this.tipoActivo() === 'juridica' ? this.juridicasTotales() : this.tipoActivo() === 'natural' ? this.naturalesTotales() : this.empleadosTotales());
   totalActual = computed(() => this.totalesActuales().totalRegistros);
+  totalCoincidenciasFuente = computed(() => this.totalesActuales().totalCoincidenciasFuente ?? this.totalActual());
   pendientesActual = computed(() => this.totalesActuales().pendientes);
   conMotivoActual = computed(() => this.totalesActuales().conMotivo);
   cerradosPasivosActual = computed(() => this.totalesActuales().cerradosPasivos);
@@ -628,6 +629,13 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   detalleSujetoFecha(): string {
     return this.detalleSujetoActual()?.fechaEncontro || '';
+  }
+
+  mostrarNombreVarianteDetalle(nombreDetalle?: string | null): string | null {
+    const limpio = (nombreDetalle || '').replace(/\s+/g, ' ').trim();
+    if (!limpio) return null;
+    const sujeto = (this.detalleSujetoActual()?.nombre || '').replace(/\s+/g, ' ').trim();
+    return limpio.toUpperCase() !== sujeto.toUpperCase() ? limpio : null;
   }
 
   verPdf() {
@@ -1846,8 +1854,21 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   exportarListaPrincipal() {
     if (this.errorMonitoreo()) return;
+    this.cargando.set(true);
+    this.obtenerDatosMonitoreoParaExportar().subscribe({
+      next: dataFiltrada => {
+        this.cargando.set(false);
+        this.exportarListaPrincipalConDatos(dataFiltrada);
+      },
+      error: err => {
+        this.cargando.set(false);
+        this.manejarErrorAuditoriaObligatoria(err, 'preparación de exportación Excel');
+      }
+    });
+  }
+
+  private exportarListaPrincipalConDatos(dataFiltrada: MonitoreoRegistro[]) {
     const tipo = this.tipoActivo();
-    const dataFiltrada = this.datosFiltrados();
 
     let headers: string[] = [];
     let title = '';
@@ -1867,25 +1888,29 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
       ]);
     } else if (tipo === 'natural') {
-      title = 'Reporte de Coincidencias Naturales';
-      headers = ['Número Identificación', 'Nombre Completo', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'];
+      title = 'Reporte de Coincidencias Naturales (Agrupado por DNI)';
+      headers = ['Número Identificación', 'Nombre Completo', 'Lista Coincidencia', 'Coincidencias', 'Estado', 'Identidad / Asociación', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'];
       rows = (dataFiltrada as CoincidenciaNatural[]).map(item => [
         item.numeroIdentificacion,
         item.nombre,
         item.listaCoincidencia,
+        item.totalRepetidos || (item.esManual ? 0 : 1),
         this.obtenerEstadoMonitoreo(item),
+        this.obtenerEtiquetaIdentidad(item),
         item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
         item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
         item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
       ]);
     } else {
-      title = 'Reporte de Coincidencias Empleados';
-      headers = ['Identidad', 'Nombre Empleado', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'];
+      title = 'Reporte de Coincidencias Empleados (Agrupado por Identidad)';
+      headers = ['Identidad', 'Nombre Empleado', 'Lista Coincidencia', 'Coincidencias', 'Estado', 'Identidad / Asociación', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'];
       rows = (dataFiltrada as CoincidenciaEmpleado[]).map(item => [
         item.identidad,
         item.nombre,
         item.listaCoincidencia,
+        item.totalRepetidos || (item.esManual ? 0 : 1),
         this.obtenerEstadoMonitoreo(item),
+        this.obtenerEtiquetaIdentidad(item),
         item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
         item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
         item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
@@ -2004,13 +2029,15 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     if (tipo === 'natural') {
       return {
-        title: 'Reporte de Coincidencias Naturales',
-        headers: ['Número Identificación', 'Nombre Completo', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
+        title: 'Reporte de Coincidencias Naturales (Agrupado por DNI)',
+        headers: ['Número Identificación', 'Nombre Completo', 'Lista Coincidencia', 'Coincidencias', 'Estado', 'Identidad / Asociación', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
         rows: (dataFiltrada as CoincidenciaNatural[]).map(item => [
           item.numeroIdentificacion || '',
           item.nombre || '',
           item.listaCoincidencia || '',
+          String(item.totalRepetidos || (item.esManual ? 0 : 1)),
           this.obtenerEstadoMonitoreo(item),
+          this.obtenerEtiquetaIdentidad(item),
           item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
           item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
           item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
@@ -2019,13 +2046,15 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     }
 
     return {
-      title: 'Reporte de Coincidencias Empleados',
-      headers: ['Identidad', 'Nombre Empleado', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
+      title: 'Reporte de Coincidencias Empleados (Agrupado por Identidad)',
+      headers: ['Identidad', 'Nombre Empleado', 'Lista Coincidencia', 'Coincidencias', 'Estado', 'Identidad / Asociación', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
       rows: (dataFiltrada as CoincidenciaEmpleado[]).map(item => [
         item.identidad || '',
         item.nombre || '',
         item.listaCoincidencia || '',
+        String(item.totalRepetidos || (item.esManual ? 0 : 1)),
         this.obtenerEstadoMonitoreo(item),
+        this.obtenerEtiquetaIdentidad(item),
         item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
         item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
         item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''

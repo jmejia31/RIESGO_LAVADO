@@ -53,7 +53,11 @@
         <article data-ui-monitoring-kpi="active" class="flex h-full flex-col rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Coincidencias activas</p>
           <p class="mt-2 text-3xl font-bold text-gray-900">{{ totalGeneral() }}</p>
-          <p class="mt-auto pt-2 text-xs text-gray-500">Total de coincidencias del tipo seleccionado</p>
+          @if ((tipoActivo() === 'natural' || tipoActivo() === 'empleado') && totalCoincidenciasFuente() > totalGeneral()) {
+            <p class="mt-auto pt-2 text-xs text-gray-500">Grupos por DNI ({{ totalCoincidenciasFuente() }} coincidencias de origen)</p>
+          } @else {
+            <p class="mt-auto pt-2 text-xs text-gray-500">Total de coincidencias del tipo seleccionado</p>
+          }
         </article>
         <article data-ui-monitoring-kpi="pending" class="flex h-full flex-col rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Pendientes de motivo</p>
@@ -331,9 +335,16 @@
                       </div>
                     </td>
                     <td class="px-6 py-4">
-                      <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10">
-                        {{ row.listaCoincidencia }}
-                      </span>
+                      <div class="flex flex-col items-start gap-1">
+                        <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10">
+                          {{ row.listaCoincidencia }}
+                        </span>
+                        @if (row.totalRepetidos > 1) {
+                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-ihss-50 text-ihss-800 ring-1 ring-ihss-600/20">
+                            {{ row.totalRepetidos }} coincidencias
+                          </span>
+                        }
+                      </div>
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex flex-col items-start">
@@ -347,12 +358,12 @@
                       <div class="flex items-center justify-center gap-2">
                         <!-- Ver Detalle -->
                         <div class="relative group inline-block">
-                          <button (click)="abrirDetalle(row)" title="Ver coincidencia de persona natural en su fuente" aria-label="Consultar la coincidencia seleccionada de persona natural"
+                          <button (click)="abrirDetalle(row)" [attr.title]="row.totalRepetidos > 1 ? 'Ver todas las coincidencias del grupo' : 'Ver coincidencia de persona natural en su fuente'" aria-label="Consultar la coincidencia seleccionada de persona natural"
                             class="inline-flex items-center justify-center p-1.5 text-ihss-900 bg-ihss-50 hover:bg-ihss-100 rounded-lg transition-colors border border-ihss-200">
             <app-action-icon action="view"></app-action-icon>
           </button>
                           <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
-                            Ver detalle de origen
+                            {{ row.totalRepetidos > 1 ? 'Ver ' + row.totalRepetidos + ' coincidencias' : 'Ver detalle de origen' }}
                             <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                           </span>
                         </div>
@@ -424,9 +435,16 @@
                       </div>
                     </td>
                     <td class="px-6 py-4">
-                      <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10">
-                        {{ row.listaCoincidencia }}
-                      </span>
+                      <div class="flex flex-col items-start gap-1">
+                        <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10">
+                          {{ row.listaCoincidencia }}
+                        </span>
+                        @if (row.totalRepetidos > 1) {
+                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-ihss-50 text-ihss-800 ring-1 ring-ihss-600/20">
+                            {{ row.totalRepetidos }} coincidencias
+                          </span>
+                        }
+                      </div>
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex flex-col items-start">
@@ -440,12 +458,12 @@
                       <div class="flex items-center justify-center gap-2">
                         <!-- Ver Detalle -->
                         <div class="relative group inline-block">
-                          <button (click)="abrirDetalleEmpleado(row)" title="Ver coincidencia del empleado en su fuente" aria-label="Consultar la coincidencia seleccionada de empleado"
+                          <button (click)="abrirDetalleEmpleado(row)" [attr.title]="row.totalRepetidos > 1 ? 'Ver todas las coincidencias del empleado' : 'Ver coincidencia del empleado en su fuente'" aria-label="Consultar la coincidencia seleccionada de empleado"
                             class="inline-flex items-center justify-center p-1.5 text-ihss-900 bg-ihss-50 hover:bg-ihss-100 rounded-lg transition-colors border border-ihss-200">
             <app-action-icon action="view"></app-action-icon>
           </button>
                           <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
-                            Ver detalle de origen
+                            {{ row.totalRepetidos > 1 ? 'Ver ' + row.totalRepetidos + ' coincidencias' : 'Ver detalle de origen' }}
                             <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                           </span>
                         </div>
@@ -629,7 +647,15 @@
                     @if (tipoActivo() === 'empleado') {
                       @for (det of detallesEmpleado(); track $index) {
                         <tr class="hover:bg-gray-50/50 transition-colors">
-                          <td class="px-4 py-3 font-medium text-gray-900">{{ det.tipoCondicionActuaDesc }}</td>
+                          <td class="px-4 py-3 font-medium text-gray-900">
+                            <div>{{ det.tipoCondicionActuaDesc }}</div>
+                            @if (det.idRegistroFuente) {
+                              <div class="mt-0.5 text-[10px] font-normal text-gray-500">ID origen: #{{ det.idRegistroFuente }}</div>
+                            }
+                            @if (mostrarNombreVarianteDetalle(det.nombre); as nombreVariante) {
+                              <div class="mt-0.5 text-[10px] font-normal text-amber-800">Nombre fuente: {{ nombreVariante }}</div>
+                            }
+                          </td>
                           <td class="px-4 py-3">{{ det.numeroPatrono }}</td>
                           <td class="px-4 py-3 font-semibold">{{ det.nombreEmpresa }}</td>
                           <td class="px-4 py-3">{{ det.razoSoci }}</td>
@@ -646,7 +672,15 @@
                     } @else {
                       @for (det of detallesNatural(); track $index) {
                         <tr class="hover:bg-gray-50/50 transition-colors">
-                          <td class="px-4 py-3 font-medium text-gray-900">{{ det.tipoCondicionActuaDesc }}</td>
+                          <td class="px-4 py-3 font-medium text-gray-900">
+                            <div>{{ det.tipoCondicionActuaDesc }}</div>
+                            @if (det.idRegistroFuente) {
+                              <div class="mt-0.5 text-[10px] font-normal text-gray-500">ID origen: #{{ det.idRegistroFuente }}</div>
+                            }
+                            @if (mostrarNombreVarianteDetalle(det.nombresPersona); as nombreVariante) {
+                              <div class="mt-0.5 text-[10px] font-normal text-amber-800">Nombre fuente: {{ nombreVariante }}</div>
+                            }
+                          </td>
                           <td class="px-4 py-3">{{ det.numeroPatronal }}</td>
                           <td class="px-4 py-3 font-semibold">{{ det.nombreEmpresa }}</td>
                           <td class="px-4 py-3 text-center">

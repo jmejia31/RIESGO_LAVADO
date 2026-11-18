@@ -658,4 +658,88 @@ describe('MonitoreoListasComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
+  it('M1-02/M1-17/M1-18/M1-25: exportacion general PDF y Excel de naturales agrupados consulta el universo filtrado completo e incluye conteo de coincidencias', async () => {
+    component.tipoActivo.set('natural');
+    const filasAgrupadas = [
+      {
+        numeroIdentificacion: '0801-1981-00002',
+        nombre: 'MARIA MULTI',
+        listaCoincidencia: 'OFAC (+1)',
+        totalRepetidos: 5,
+        idRegistroFuente: 91002,
+        tipoFuente: 'DNP_COINCIDENCIA',
+        categoriaIdentidad: 'IDENTIFICADA',
+        tieneMotivo: false,
+        esManual: false,
+        estadoIdentidad: 'VERIFIED',
+        estadoAsociacion: 'AMBIGUOUS'
+      }
+    ];
+    service['getNaturalesParaExportar'].mockReturnValue(of(filasAgrupadas));
+
+    const pdf = component.construirReporteListaPrincipalPdf(filasAgrupadas as never);
+    expect(pdf?.title).toContain('Agrupado por DNI');
+    expect(pdf?.headers).toContain('Coincidencias');
+    expect(pdf?.headers).toContain('Identidad / Asociación');
+    expect(pdf?.rows[0]).toContain('5');
+    expect(pdf?.rows[0]).toContain('Asociación ambigua');
+
+    component.exportarListaPrincipal();
+    expect(service['getNaturalesParaExportar']).toHaveBeenCalledOnce();
+    expect(service['registrarAuditoriaExportacion']).toHaveBeenCalledWith(
+      'RL_LISTA_POSITIVOS',
+      'natural',
+      'ExportacionMonitoreoListas',
+      expect.objectContaining({ tipo: 'natural', cantidadRegistros: 1 })
+    );
+    await vi.waitFor(() => expect((component as any).reportPreview.state()).not.toBeNull());
+    expect((component as any).reportPreview.state().kind).toBe('excel');
+  });
+
+  it('M1-02/M1-13: abrirDetalle de grupo DNI conserva multiples coincidencias y cambiar a empleados no contamina totales ni filas', () => {
+    const grupoNatural = {
+      numeroIdentificacion: '0801-1981-00002',
+      nombre: 'MARIA MULTI',
+      listaCoincidencia: 'OFAC (+1)',
+      totalRepetidos: 3,
+      idRegistroFuente: 91002,
+      tipoFuente: 'DNP_COINCIDENCIA',
+      estadoIdentidad: 'VERIFIED',
+      estadoAsociacion: 'AMBIGUOUS'
+    };
+    service['getNaturalesPaginadas'].mockReturnValue(of({
+      items: [grupoNatural], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1,
+      totales: { totalRegistros: 1, totalCoincidenciasFuente: 3, pendientes: 1, conMotivo: 0, manuales: 0, cerradosPasivos: 0 }
+    }));
+    service['getEmpleadosPaginadas'].mockReturnValue(of({
+      items: [{
+        identidad: '0801-1990-00010', nombre: 'PEDRO EMPLEADO', listaCoincidencia: 'OFAC (+1)',
+        totalRepetidos: 2, idRegistroFuente: 91011, tipoFuente: 'DNP_COINCIDENCIA',
+        estadoIdentidad: 'VERIFIED', estadoAsociacion: 'AMBIGUOUS'
+      }],
+      pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1,
+      totales: { totalRegistros: 1, totalCoincidenciasFuente: 2, pendientes: 1, conMotivo: 0, manuales: 0, cerradosPasivos: 0 }
+    }));
+    service['getDetalleNatural'].mockReturnValue(of([
+      { idRegistroFuente: 91002, numeroIdentificacion: '0801-1981-00002', nombresPersona: 'MARIA MULTI', listaCoincidencia: 'OFAC', nombreEmpresa: 'EMPRESA ALPHA SA' },
+      { idRegistroFuente: 91003, numeroIdentificacion: '0801-1981-00002', nombresPersona: 'MARIA MULTI', listaCoincidencia: 'PEPS', nombreEmpresa: 'EMPRESA BETA SA' },
+      { idRegistroFuente: 91004, numeroIdentificacion: '0801-1981-00002', nombresPersona: 'MARIA MULTI', listaCoincidencia: 'OFAC', nombreEmpresa: 'EMPRESA ALPHA SA' }
+    ]));
+
+    component.cambiarTipo('natural');
+    expect(component.totalGeneral()).toBe(1);
+    expect(component.totalCoincidenciasFuente()).toBe(3);
+
+    component.abrirDetalle(grupoNatural as never);
+    expect(component.detallesNatural()).toHaveLength(3);
+    expect(component.totalCoincidencias()).toBe(3);
+    expect(component.empresasUnicas()).toBe(2);
+
+    component.cambiarTipo('empleado');
+    expect(component.totalGeneral()).toBe(1);
+    expect(component.totalCoincidenciasFuente()).toBe(2);
+    expect(component.empleadosPaginadas()).toHaveLength(1);
+    expect(component.naturalesPaginadas()).toHaveLength(0);
+  });
+
 });

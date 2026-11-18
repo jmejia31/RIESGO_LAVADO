@@ -274,6 +274,23 @@
       "main_touched": false,
       "owner_acceptance": "PENDING",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/42"
+    },
+    {
+      "id": "M1-P0-AGRUPACION-DNI-EMPLEADOS-20261118",
+      "path": "M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md",
+      "author": "ANTIG",
+      "status": "READY_FOR_OWNER_AND_INSTITUTIONAL_ORACLE_RECONCILIATION",
+      "base_sha": "3ce30913d6801c707de62db27d3a437d20391ca4",
+      "source_code_sha": "VERIFY_FROM_COMMIT_HEAD",
+      "quality_gate_run": "VERIFY_FROM_GITHUB_ACTIONS_FOR_FINAL_SHA",
+      "security_scan": "PASS_FULL_TREE_LOCAL_PENDING_EXACT_SHA_CI",
+      "oracle_xe_synthetic": "INCLUDED_IN_QUALITY_GATES_CI",
+      "oracle_institutional_reads": "NOT_EXECUTED_PENDING_AUTHORIZATION",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "PENDING",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }

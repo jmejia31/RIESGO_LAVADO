@@ -135,4 +135,38 @@ describe('MonitoreoListasComponent — deduplicación de detalle', () => {
     expect(root.querySelector('[data-ui-monitoring-kpi="active"]')?.textContent).toContain('30');
     expect(root.querySelector('[data-ui-monitoring-kpi="closed-passive"]')?.textContent).toContain('3');
   });
+
+  it('M1-P0: muestra badge de coincidencias en filas agrupadas y separa grupos de coincidencias fuente en KPI', () => {
+    fixture.detectChanges();
+    component.tipoActivo.set('natural');
+    component.naturalesTotales.set({
+      totalRegistros: 190,
+      totalCoincidenciasFuente: 5742,
+      pendientes: 180,
+      conMotivo: 8,
+      manuales: 2,
+      cerradosPasivos: 0
+    });
+    component.naturalesRaw.set([
+      {
+        numeroIdentificacion: '0801-1981-00002',
+        nombre: 'MARIA MULTI',
+        listaCoincidencia: 'OFAC (+1)',
+        totalRepetidos: 5,
+        idRegistroFuente: 91002,
+        tipoFuente: 'DNP_COINCIDENCIA',
+        estadoIdentidad: 'VERIFIED',
+        estadoAsociacion: 'AMBIGUOUS'
+      }
+    ]);
+    component.cargando.set(false);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const activeKpi = root.querySelector('[data-ui-monitoring-kpi="active"]');
+    expect(activeKpi?.textContent).toContain('190');
+    expect(activeKpi?.textContent).toContain('Grupos por DNI (5742 coincidencias de origen)');
+    expect(root.textContent).toContain('5 coincidencias');
+    expect(root.textContent).toContain('Asociación ambigua');
+  });
 });

@@ -65,6 +65,8 @@ namespace RL.API.Features.Listas.Contracts
 
     public class DetalleCoincidenciaNaturalDto
     {
+        public long IdRegistroFuente { get; set; }
+        public string TipoFuente { get; set; } = string.Empty;
         public string NumeroIdentificacion { get; set; } = string.Empty;
         public string NombresPersona { get; set; } = string.Empty;
         public string TipoCondicionActuaDesc { get; set; } = string.Empty;
@@ -74,10 +76,13 @@ namespace RL.API.Features.Listas.Contracts
         public string ListaCoincidencia { get; set; } = string.Empty;
         public DateTime? FechaCalifico { get; set; }
         public DateTime? FechaCoincidencia { get; set; }
+        public string EstadoAsociacion { get; set; } = EstadoIdentidadMonitoreo.UnverifiedAssociation;
     }
 
     public class DetalleCoincidenciaEmpleadoDto
     {
+        public long IdRegistroFuente { get; set; }
+        public string TipoFuente { get; set; } = string.Empty;
         public DateTime? Periodo { get; set; }
         public string Identidad { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
@@ -88,5 +93,6 @@ namespace RL.API.Features.Listas.Contracts
         public string ListaCoincidencia { get; set; } = string.Empty;
         public DateTime? FechaCalifico { get; set; }
         public DateTime? FechaCoincidencia { get; set; }
+        public string EstadoAsociacion { get; set; } = EstadoIdentidadMonitoreo.UnverifiedAssociation;
     }
 }

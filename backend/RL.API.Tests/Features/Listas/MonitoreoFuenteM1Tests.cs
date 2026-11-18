@@ -20,33 +20,43 @@ public sealed class MonitoreoFuenteM1Tests
     }
 
     [Fact]
-    public void Naturales_UsaClaveFuentePorFila_YSeparaMarcadores()
+    public void Naturales_AgrupaDniValidoEnSql_YAislaMarcadoresPorClaveFuente()
     {
         var sql = Sql("ConstruirConsultaMonitoreoNaturales");
-        Assert.Contains("REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE", sql);
+        Assert.Contains("REPORTE_GRUPOS AS", sql);
+        Assert.Contains("'SRC:' || TO_CHAR(R.REPORTE_COINCIDENCIA_ID)", sql);
+        Assert.Contains("'DNI:' || TRIM(R.DNI)", sql);
+        Assert.Contains("MIN(R.REPORTE_COINCIDENCIA_ID) ID_REGISTRO_FUENTE", sql);
+        Assert.Contains("COUNT(*) TOTAL_REPETIDOS", sql);
         Assert.Contains("LSP_POSITIVO_ID", sql);
         Assert.Contains("LSP_ORIGEN_REGISTRO", sql);
         Assert.Contains("POSITIVO_DNP", sql);
         Assert.Contains("NOT EXISTS (SELECT 1 FROM Coincidencias C", sql);
         Assert.Contains("SIN_IDENTIFICACION", sql);
         Assert.Contains("NUMERO_PATRONAL", sql);
+        Assert.Contains("UPPER(TRIM(R.TIPO_PERSONA)) NOT LIKE '%IHSS%'", sql);
         Assert.DoesNotContain("GROUP BY DNI, LISTA_CONCIDENCIA", sql);
         Assert.DoesNotContain("ASOCIACIÓN NO VERIFICADA'\n", sql);
+        Assert.DoesNotContain("COUNT(*) OVER", sql);
     }
 
     [Fact]
-    public void Empleados_SeObtienenDesdeReporteClasificado_SinMultiplicarPorPlanillas()
+    public void Empleados_RecuperaHistoricosDesdePlanillasYClasificacion_SinMultiplicarPorPlanillas()
     {
         var sql = Sql("ConstruirConsultaMonitoreoEmpleados");
-        Assert.Contains("V_REPORTE_COINCIDENCIA", sql);
+        Assert.Contains("V_EMPLEADOS_IHSS_PLANILLAS", sql);
+        Assert.Contains("I.IDENTIDAD IS NOT NULL", sql);
+        Assert.Contains("UPPER(TRIM(NVL(R.TIPO_PERSONA, ''))) LIKE '%IHSS%'", sql);
+        Assert.Contains("UPPER(TRIM(NVL(R.TIPO_PERSONA, ''))) LIKE '%EMPLEAD%'", sql);
+        Assert.Contains("REPORTE_GRUPOS AS", sql);
+        Assert.Contains("'SRC:' || TO_CHAR(R.REPORTE_COINCIDENCIA_ID)", sql);
+        Assert.Contains("'DNI:' || TRIM(R.DNI)", sql);
         Assert.Contains("POSITIVO_DNP", sql);
         Assert.Contains("LSP_ORIGEN_REGISTRO", sql);
         Assert.Contains("NOT EXISTS (SELECT 1 FROM Coincidencias C", sql);
-        Assert.Contains("TIPO_PERSONA LIKE '%IHSS'", sql);
-        Assert.Contains("REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE", sql);
-        Assert.Contains("V_EMPLEADOS_IHSS_PLANILLAS", sql);
         Assert.DoesNotContain("JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.IDENTIDAD", sql);
-        Assert.DoesNotContain("COUNT(*) TOTAL_REPETIDOS", sql);
+        Assert.DoesNotContain("COUNT(*) OVER", sql);
+        Assert.DoesNotContain("V.TIPO_PERSONA LIKE '%IHSS'", sql);
     }
 
 
@@ -68,9 +78,28 @@ public sealed class MonitoreoFuenteM1Tests
         method.Invoke(null, args);
         var sql = Assert.IsType<string>(args[0]);
         Assert.Contains("AND EXISTS (SELECT 1 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS M1P", sql);
+        Assert.Contains("TRIM(M1P.IDENTIDAD) = TRIM(f.IDENTIDAD)", sql);
+        Assert.DoesNotContain("TRIM(M1P.NUMEPATRO) = TRIM(f.NUMERO_PATRONO)", sql);
         Assert.Contains("TRUNC(:periodoPlanillaDesde,'MM')", sql);
         Assert.Contains("ADD_MONTHS(TRUNC(:periodoPlanillaHasta,'MM'),1)", sql);
         Assert.DoesNotContain(":periodoPlanilla,'MM'", sql);
+    }
+
+    [Fact]
+    public void BusquedaEnGrupos_BuscaTambienMiembrosSecundariosDelGrupoDni()
+    {
+        var method = typeof(ListasRepository).GetMethod("AppendMonitoringFilters",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        object[] args =
+        {
+            "SELECT f.* FROM (SELECT * FROM REPORTE_GRUPOS) f WHERE 1 = 1",
+            new ConsultaMonitoreoPaginadaDto { Buscar = "PEPS" }
+        };
+        method.Invoke(null, args);
+        var sql = Assert.IsType<string>(args[0]);
+        Assert.Contains("FROM DNP_IHSS.REPORTE_COINCIDENCIAS RB", sql);
+        Assert.Contains("TRIM(RB.DNI) = TRIM(f.NUMERO_IDENTIFICACION)", sql);
     }
 
     [Fact]
@@ -93,18 +122,10 @@ public sealed class MonitoreoFuenteM1Tests
         {
             var sql = Sql(method);
             Assert.Contains("AND UPPER(TRIM(LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'", sql);
-            if (method == "ConstruirConsultaMonitoreoNaturales")
-            {
-                Assert.Contains("REPORTE_DOC_AGG AS", sql);
-                Assert.Contains("LEFT JOIN REPORTE_DOC_AGG C ON C.DNI = R.DNI", sql);
-                Assert.Contains("NVL(C.COINCIDENCIAS_FUENTE,0) COINCIDENCIAS_FUENTE", sql);
-                Assert.DoesNotContain("COUNT(*) OVER", sql);
-            }
-            else
-            {
-                Assert.Contains("COUNT(*) OVER (PARTITION BY R.DNI) COINCIDENCIAS_FUENTE", sql);
-                Assert.Contains("I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1", sql);
-            }
+            Assert.Contains("G.TOTAL_REPETIDOS = 1", sql);
+            Assert.Contains("G.NOMBRES_DISTINTOS <= 1", sql);
+            Assert.Contains("G.TOTAL_REPETIDOS COINCIDENCIAS_FUENTE", sql);
+            Assert.DoesNotContain("COUNT(*) OVER", sql);
         }
     }
 

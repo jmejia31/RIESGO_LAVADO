@@ -95,6 +95,8 @@ export interface CoincidenciaEmpleado {
 }
 
 export interface DetalleCoincidenciaNatural {
+  idRegistroFuente?: number;
+  tipoFuente?: string;
   numeroIdentificacion: string;
   nombresPersona: string;
   tipoCondicionActuaDesc: string;
@@ -104,9 +106,12 @@ export interface DetalleCoincidenciaNatural {
   listaCoincidencia: string;
   fechaCalifico?: string;
   fechaCoincidencia?: string;
+  estadoAsociacion?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID' | string;
 }
 
 export interface DetalleCoincidenciaEmpleado {
+  idRegistroFuente?: number;
+  tipoFuente?: string;
   identidad: string;
   periodo?: string | null;
   nombre: string;
@@ -117,6 +122,7 @@ export interface DetalleCoincidenciaEmpleado {
   listaCoincidencia: string;
   fechaCalifico?: string;
   fechaCoincidencia?: string;
+  estadoAsociacion?: 'VERIFIED' | 'AMBIGUOUS' | 'UNVERIFIED_ASSOCIATION' | 'INVALID' | string;
 }
 
 export interface CoincidenciaPatronoResumen {
@@ -153,6 +159,7 @@ export interface Paginado<T> {
 
 export interface MonitoreoTotales {
   totalRegistros: number;
+  totalCoincidenciasFuente?: number;
   pendientes: number;
   conMotivo: number;
   manuales: number;

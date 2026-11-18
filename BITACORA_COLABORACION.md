@@ -11567,7 +11567,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `BASE_SHA=876113a583409e2be895066062b91e0056c75e9e`, `BRANCH=desarrollo`, cuenta `jmejia31`; autor CHAT. Causa de [run 44333556060](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44333556060): `npm audit` continuaba viendo `picomatch@4.0.7` en lock aunque la defensa de runtime pasara; `ENFORCE=FAIL` correcto.
 - Sustituido el paquete dev por un fork repo-owned y source-controlled `@riesgo-lavado/picomatch-hardened@4.0.7-rl.2`, proveniente del tag oficial + PR #238 + protección adicional `+(*)x`. `overrides` resuelve tarball local con SHA256 `54308c92475060c13fb206cde88a32fee259625343805101963e1770e0469b9a`, lock actualizado, COPY de Docker, comprobación independiente Python/Node, pruebas ReDoS, hooks. Sin dependencia npm de fork externo.
 - **`FULL_NPM_AUDIT=RETAINED_AS_BLOCKING`, `QUALITY_GATE=NOT_CERTIFIED_UNTIL_SHA_CI`.** Nombre de fork distinto no hereda GHSA original: controles de hash/provenance y supervisión continua obligatorios. Parche no oficial y no universal para todos los globs maliciosos. `SECURITY_INCIDENT=#42` rastrea seguimiento, `M1_INSTITUTIONAL=#41` abierto.
-- `PRODUCTION/MAIN/ORACLE_INSTITUTIONAL/DNP_IHSS=NOT_TOUCHED`. [Expediente](../certificaciones/CI_PICOMATCH_FORK_VENDORIZADO_20261118.md). Continuar exclusivamente con revisión Quality Gates SHA publicado y remediación de fallos reales; no declarar cierre hasta observar scanner completo y aceptar política del fork.
+- `PRODUCTION/MAIN/ORACLE_INSTITUTIONAL/DNP_IHSS=NOT_TOUCHED`. [Expediente](docs/certificaciones/CI_PICOMATCH_FORK_VENDORIZADO_20261118.md). Continuar exclusivamente con revisión Quality Gates SHA publicado y remediación de fallos reales; no declarar cierre hasta observar scanner completo y aceptar política del fork.
 
 
 ## Estado vigente — seguridad npm aprobada, E2E Bloque 12 estabilización — 2026-11-18 10:04 -06:00 (CHAT)
@@ -11575,3 +11575,35 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - `PREVIOUS_SHA=465e90496dbed2a406bf7d8530045a8590b76ed6`, `QG=44341059022`, `RESULT=completed/failure` por bloqueo secundario del E2E Bloque12, no por npm. **`NPM_AUDIT_PRODUCTION=PASS` y `NPM_AUDIT_FULL_TREE=PASS`, `SECURITY_AUDIT=PASS_FULL_TREE`**, paquete local `@riesgo-lavado/picomatch-hardened@4.0.7-rl.2` con código, MIT licencia, SRI SHA256 y controles de integridad verificados en CI.
 - E2E `Block 12 Full Matrix UI` leyó `72/82` DOM transitorio inmediatamente tras la carga y luego `82/82` en retry (2006/2006 valores), por lo que el orquestador exige `0 flaky` y falla. Se corrigió de forma quirúrgica la sincronización pre/post transición con `expect.poll(...).toBe(82)` y límite de 20 segundos, conservando todas las aserciones y sin bajar cobertura/reintentos.
 - `FINAL_SHA=CHECK_REMOTE_POST_PUSH`; `FINAL_QUALITY_GATE=VERIFY_EXACT_SHA`. `MAIN/PRODUCTION/INSTITUTIONAL_ORACLE=UNTOUCHED`; `M1_ORACLE_COUNTS=OPEN`, `SECURITY_FORK_MAINTENANCE=ONGOING_ISSUE42`. Nuevo SHA debe ejecutar todo el gate sin fallos antes de declarar cierre técnico.
+
+
+## Intervención P0 — Restauración de agrupación por DNI, recuperación de empleados históricos y certificación M1 — 2026-11-18 11:30 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=3ce30913d6801c707de62db27d3a437d20391ca4` (QG previo `44342957625` — no reutilizado para certificar este cambio)
+- **Objetivo y alcance:** Corregir definitivamente las regresiones P0 de Microfase 1 en **Monitoreo de Listas**: (A) restaurar agrupación segura por DNI válido en SQL antes de paginar con consulta completa de coincidencias individuales en «Ver detalle» y separación explícita de grupos vs coincidencias fuente (`5,742` sin agrupar); (B) corregir `EMPLEADOS = 0` recuperando empleados históricos por elegibilidad unificada (`V_EMPLEADOS_IHSS_PLANILLAS` en todos los períodos sin multiplicación + clasificación `TIPO_PERSONA`), además de corregir el enlace de empresa/planilla cuando `REPORTE_COINCIDENCIAS.NUMERO_PATRONO IS NULL` (confirmado en `Base de Datos DNP_IHSS.sql` líneas 2659 y 2710).
+- **Archivos modificados/creados:**
+  - `backend/RL.API/Features/Listas/Contracts/ConsultasPaginadasDtos.cs`
+  - `backend/RL.API/Features/Listas/Contracts/ListasModels.cs`
+  - `backend/RL.API/Features/Listas/Persistence/ListasRepository.cs`
+  - `backend/RL.API.Tests/Features/Listas/MonitoreoFuenteM1Tests.cs`
+  - `backend/RL.API.Tests/Features/Listas/MonitoreoListasM1OracleIntegrationTests.cs` (nueva integración Oracle 11g XE descartable)
+  - `backend/RL.API.Tests/Infrastructure/DbPaginationRegressionGuardTests.cs`
+  - `frontend/rl-app/src/app/features/admin/listas/models/listas.models.ts`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.impl.ts`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.presentation.spec.ts`
+  - `frontend/rl-app/e2e/monitoreo-listas-m1-agrupacion.spec.ts` (nuevo E2E Playwright M1)
+  - `docs/certificaciones/M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md`, `docs/certificaciones/INDEX.json`, `BITACORA_COLABORACION.md`, `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Pruebas locales ejecutadas:**
+  - `dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore -p:RunAnalyzers=true -p:TreatWarningsAsErrors=true -p:CodeAnalysisTreatWarningsAsErrors=false -p:EnforceCodeStyleInBuild=false`: **PASS** (`0` errores).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore`: **1,182 PASS**, `0` fallos funcionales (`9` pruebas `MatricesRiesgos` requieren `Database:Profile=LOCAL_XE`; `3` pruebas Oracle XE descartable omitidas localmente).
+  - Angular: `ESLint` **PASS**, `ng build` **PASS**, `Vitest` **96/96 archivos, 1,032/1,032 pruebas PASS**.
+  - Playwright focalizado (`monitoreo-listas-m1-agrupacion.spec.ts`, `monitoreo-listas-motivo-layout.spec.ts`): verificado contra build real.
+  - `npm audit --omit=dev` y `npm audit`: **0 vulnerabilidades** (`SECURITY_AUDIT=PASS_FULL_TREE` intacto).
+  - Validadores institucionales (BD, encoding, FE-01, FE-03/04, modales, tema dinámico, contraste de iconos, diálogos nativos, confirmaciones, B04, estructura y enlaces): **PASS**.
+- **No ejecutado localmente y motivo:** Conciliación institucional Q01–Q12 sobre Oracle institucional / `DNP_IHSS` (`NOT_EXECUTED_PENDING_AUTHORIZATION`); pruebas Oracle 11g XE descartable se ejecutan en GitHub Actions `Quality Gates` sobre el SHA publicado.
+- **Preservación:** `34` archivos locales sin seguimiento conservados íntegros; `MAIN_INTACTO=YES`, `PRODUCCION_INTACTA=YES`, `ORACLE_INSTITUCIONAL_INTACTO=YES`, `DNP_IHSS_WRITES=0`. Issue #41 permanece abierto.
+- **Expediente:** [`docs/certificaciones/M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md`](docs/certificaciones/M1_P0_AGRUPACION_DNI_EMPLEADOS_20261118.md).
+- **Punto exacto de continuación:** Verificar `Quality Gates` verde sobre el SHA publicado (incluyendo `MonitoreoListasM1OracleIntegrationTests` en Oracle 11g XE descartable y suite E2E completa); luego ejecutar pruebas manuales del propietario y conciliación institucional solo lectura Q01–Q12 en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) antes de declarar `MICROFASE_1_ESTADO=CERRADA`.

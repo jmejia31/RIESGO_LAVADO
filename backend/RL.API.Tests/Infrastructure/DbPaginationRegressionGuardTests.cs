@@ -153,17 +153,19 @@ public sealed class DbPaginationRegressionGuardTests
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
         var naturalesSql = ExtractSqlBuilder(source, "ConstruirConsultaMonitoreoNaturales");
 
-        // M1 sustituyó REPORTE_AGG (agrupación por DNI/lista que perdía filas)
-        // por una fila por REPORTE_COINCIDENCIA_ID. Este guard conserva la
-        // exigencia histórica: el hot path no puede usar la vista pesada.
+        // M1-P0: agrupacion segura en SQL por DNI valido (aislando marcadores por PK)
+        // en un unico escaneo sobre REPORTE_COINCIDENCIAS, sin vista pesada ni COUNT(*) OVER.
         Assert.DoesNotContain("DNP_IHSS.V_SOCIOS_REPRESENTANTES", naturalesSql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS", naturalesSql, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("R.REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("REPORTE_GRUPOS AS (", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("MIN(R.REPORTE_COINCIDENCIA_ID) ID_REGISTRO_FUENTE", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("FROM DNP_IHSS.REPORTE_COINCIDENCIAS R", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("'DNI:' || TRIM(R.DNI)", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("'SRC:' || TO_CHAR(R.REPORTE_COINCIDENCIA_ID)", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("'DNP_COINCIDENCIA' TIPO_FUENTE", naturalesSql, StringComparison.Ordinal);
-        Assert.Contains("TO_CHAR(R.NUMERO_PATRONO) NUMERO_PATRONAL", naturalesSql, StringComparison.Ordinal);
-        Assert.Contains("LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = R.DNI", naturalesSql, StringComparison.Ordinal);
-        Assert.Contains("LEFT JOIN IDENTIDAD_AGG I ON I.NUMERO_IDENTIFICACION = R.DNI", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("NUMERO_PATRONAL", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = G.DNI_NORM", naturalesSql, StringComparison.Ordinal);
+        Assert.Contains("LEFT JOIN IDENTIDAD_AGG I ON I.NUMERO_IDENTIFICACION = G.DNI_NORM", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("SIN_IDENTIFICACION", naturalesSql, StringComparison.Ordinal);
         Assert.Contains("LP.LSP_POSITIVO_ID", naturalesSql, StringComparison.Ordinal);
