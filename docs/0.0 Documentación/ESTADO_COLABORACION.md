@@ -5001,3 +5001,28 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Preservación:** 34 archivos sin seguimiento conservados íntegros; 0 escrituras Oracle institucional; 0 mutaciones en `main` o producción; 0 PII.
 - **Expediente:** [`M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md`](../certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md).
 - **Punto de continuación:** Servidores locales activos (backend `5043`, frontend `4200`); entrega del expediente técnico para validación visual del propietario en el navegador (`http://localhost:4200/admin/listas/monitoreo`) y posterior cierre funcional de Microfase 1 en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+
+
+## Estado vigente — Microfase 1 P0: Restauración universal del registro de motivos y seguimientos — 2026-11-18 15:10 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity) | **Rama:** `desarrollo` | **Base SHA:** `ab089de8b2629184808d65e5bd5bcbbb02af4a3b` | **Source Code SHA:** `7fa142366846ae618e8ad6d818836f4d10eb4d4b`.
+- **Universalidad de Motivos y Seguimientos:**
+  - Capacidad universal de registrar motivo y dar seguimiento documental en el 100% de los registros de Monitoreo de Listas (Naturales agrupados por DNI, Naturales sin identificación atribuible, Jurídicas y Empleados históricos).
+  - Eliminados todos los bloqueos en frontend y backend por estado de identidad o asociación (`VERIFIED`, `AMBIGUOUS`, `UNVERIFIED_ASSOCIATION`, `SIN_IDENTIFICACION`).
+  - `puedeDarSeguimiento` habilitado si `obtenerEstadoMonitoreo() === 'Con motivo'`.
+- **Aislamiento Técnico de Claves:**
+  - Registros sin DNI atribuible (`SIN_IDENTIFICACION` / marcadores `N/A`, `N/A(3)`): Clave técnica normalizada `SRC:<IdRegistroFuente>`. Cada registro fuente sin DNI posee su propio expediente independiente de motivo y seguimiento sin colisión entre sujetos no relacionados.
+  - Empleados con DNI compartido con natural: Aislamiento con prefijo `EMP:<DNI>` en `RL_LISTA_POSITIVOS` con fallback de lectura transparente.
+- **Corrección de Agregaciones en Oracle:**
+  - Eliminadas las restricciones `G.TOTAL_REPETIDOS = 1` en `TIENE_MOTIVO` y `FECHA_REGISTRO_INTERNO` de `ConstruirConsultaMonitoreoNaturales()` y `ConstruirConsultaMonitoreoEmpleados()`.
+  - Agregado `LEFT JOIN POSITIVOS_AGG PS` sobre `'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE)` para enlazar directamente el motivo en registros sin identificación.
+- **Paridad y Cobertura en Exportaciones:**
+  - Exportaciones PDF y Excel incluyen motivo y seguimientos siempre que `tieneMotivo` sea verdadero, sin excluir filas por `!esIdentidadOperable`.
+- **Verificación Local Completa:**
+  - Backend: 1,194 pruebas unitarias/estructurales PASS (101/101 en Listas, 11/11 en DbPaginationRegressionGuardTests).
+  - Frontend: 96/96 suites, 1,033/1,033 pruebas PASS en Vitest; `ng build` PASS; `ESLint` PASS.
+  - Validadores: Estructura, Scripts BD, Enlaces docs, Agent Skills (14 skills), Text Encoding (`MOJIBAKE=0`), Git diff check (0 errores) todos PASS.
+  - Matriz de 30 pruebas funcionales obligatorias (M1-M01 a M1-M30): 100% PASS.
+- **Preservación:** 34 archivos sin seguimiento conservados íntegros; 0 escrituras Oracle institucional; 0 mutaciones en `main` o producción; 0 PII.
+- **Expediente:** [`M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md`](../certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md).
+- **Punto de continuación:** Servidores locales activos (backend `5043`, frontend `4200`); entrega del expediente técnico al propietario (`jmejia31`) para la aceptación funcional visual del registro universal de motivos y seguimientos en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).

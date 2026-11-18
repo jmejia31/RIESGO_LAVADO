@@ -335,6 +335,24 @@
       "github_remote_verified": "YES",
       "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M1-P0-RESTAURACION-UNIVERSAL-MOTIVOS-20261118",
+      "path": "M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_TECHNICALLY_READY_FOR_OWNER_VISUAL_REVIEW",
+      "base_sha": "ab089de8b2629184808d65e5bd5bcbbb02af4a3b",
+      "source_code_sha": "7fa142366846ae618e8ad6d818836f4d10eb4d4b",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/7fa142366846ae618e8ad6d818836f4d10eb4d4b/docs/certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md",
+      "security_scan": "PASS_FULL_TREE_AUDIT_NO_VULNERABILITIES",
+      "oracle_xe_synthetic": "PENDING_QUALITY_GATES",
+      "oracle_institutional_reads": "PRESERVED_EXISTING_QUERIES",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "PENDING",
+      "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }

@@ -11712,3 +11712,59 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Validaciones de CI 100% en verde: backend build, unit tests, coverage, frontend Vitest, Angular production build, contenedores, base de datos sintética Oracle XE y escaneo de seguridad.
 - **Expediente:** [`docs/certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md`](docs/certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md).
 - **Punto exacto de continuación:** Entorno local en ejecución (Backend port `5043`, Frontend port `4200`); entrega del expediente técnico al propietario (`jmejia31`) para la aceptación funcional visual de los 6 estados de filtro y simetría de tarjetas en `http://localhost:4200/admin/listas/monitoreo`.
+
+
+## Intervención P0 — Restauración universal del registro de motivos y seguimientos en Monitoreo de Listas — 2026-11-18 15:10 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=ab089de8b2629184808d65e5bd5bcbbb02af4a3b` | `SOURCE_CODE_SHA=7fa142366846ae618e8ad6d818836f4d10eb4d4b`
+- **Objetivo y alcance:** Cumplimiento estricto del mandato funcional del propietario: habilitar universalmente la capacidad de registrar motivos y seguimientos documentales sobre absolutamente todos los registros de Monitoreo de Listas (Naturales agrupados por DNI, Naturales sin identificación atribuible, Jurídicas y Empleados históricos), sin que el estado de resolución de identidad o asociación (`VERIFIED`, `AMBIGUOUS`, `UNVERIFIED_ASSOCIATION`, `SIN_IDENTIFICACION`) actúe como bloqueo:
+  1. **Universalidad Funcional y Eliminación de Bloqueos:**
+     - Eliminada la intercepción `bloquearIdentidad()` en frontend que impedía registrar motivo o dar seguimiento en identidades ambiguas o no verificadas.
+     - `puedeDarSeguimiento()` habilitado universalmente siempre que `obtenerEstadoMonitoreo() === 'Con motivo'`.
+     - Exportaciones PDF y Excel incluyen motivo y seguimientos siempre que `tieneMotivo` sea verdadero, sin excluir filas por `!esIdentidadOperable`.
+  2. **Persistencia y Aislamiento Técnico de Claves:**
+     - Naturales con DNI: clave canónica DNI. El motivo es de alcance grupal de monitoreo, con trazabilidad individual de coincidencias en el detalle.
+     - Sujetos sin DNI (`SIN_IDENTIFICACION` / marcadores `N/A`, `N/A(3)`): clave técnica normalizada `SRC:<IdRegistroFuente>`. Cada registro fuente sin DNI posee su propio expediente independiente de motivo y seguimiento sin colisión entre sujetos no relacionados.
+     - Empleados con DNI compartido con un natural: aislamiento con prefijo `EMP:<DNI>` en `RL_LISTA_POSITIVOS` con fallback de lectura transparente.
+  3. **Corrección de Agregaciones en Oracle:**
+     - Eliminada en `ConstruirConsultaMonitoreoNaturales()` y `ConstruirConsultaMonitoreoEmpleados()` la condición restrictiva `AND I.SUJETOS = 1 AND G.TOTAL_REPETIDOS = 1 AND G.NOMBRES_DISTINTOS <= 1` en `TIENE_MOTIVO` y `FECHA_REGISTRO_INTERNO`.
+     - Agregado `LEFT JOIN POSITIVOS_AGG PS` sobre `'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE)` para enlazar directamente el motivo en registros sin identificación.
+  4. **Banners de Experiencia de Usuario e Información:**
+     - Modal de motivo incorpora banner de advertencia no bloqueante ante identidades/asociaciones no verificadas.
+     - Banner de contexto grupal cuando `totalRepetidos > 1`.
+     - Visualización de `documentoReal || noDocumento` en campo de identificación del modal.
+- **Archivos modificados/creados:**
+  - `backend/RL.API/Features/Listas/Contracts/CatalogoPositivosDto.cs`
+  - `backend/RL.API/Features/Listas/Application/ListasService.cs`
+  - `backend/RL.API/Features/Listas/Application/EvidenciasService.cs`
+  - `backend/RL.API/Features/Listas/Persistence/ListasRepository.cs`
+  - `backend/RL.API.Tests/Features/Listas/ListasApplicationTests.cs`
+  - `backend/RL.API.Tests/Features/Listas/MonitoreoFuenteM1Tests.cs`
+  - `frontend/rl-app/src/app/features/admin/listas/models/listas.models.ts`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.impl.ts`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts`
+  - `docs/certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md`
+  - `docs/certificaciones/INDEX.json`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Pruebas ejecutadas y verificadas en esta intervención:**
+  - Backend .NET: **1,194 PASS**, 0 errores en suite no-Oracle. Específicas de Listas: 101/101 PASS, DbPaginationRegressionGuardTests: 11/11 PASS.
+  - Frontend Vitest: **96/96 suites, 1,033/1,033 pruebas PASS** (monitoreo-listas.component.spec.ts: 39/39 PASS).
+  - Angular build: `npx ng build` EXIT 0, compilación de producción exitosa.
+  - Frontend linter: `npx eslint` EXIT 0, sin advertencias ni errores.
+  - Validadores del repositorio:
+    - `validate_repository_structure.ps1` PASS (118 rutas, 1,287 archivos rastreados).
+    - `validate_database_scripts.ps1` PASS (281 catálogos, sin brechas Unicode).
+    - `validate_documentation_links.ps1` PASS (251 documentos, 263 enlaces).
+    - `validate_agent_skills.py` PASS (14 skills válidas).
+    - `validate_text_encoding.ps1` PASS (`MOJIBAKE_FINDINGS=0`).
+    - `git diff --check` PASS (0 errores).
+- **Preservación y Restricciones:**
+  - 34 archivos locales sin seguimiento preservados intactos.
+  - 0 escrituras en Oracle institucional (`DML=0`, `DDL=0`), 0 mutaciones en `main` o producción.
+  - 0 exposición de PII.
+  - Matriz de 30 pruebas funcionales M1-M01 a M1-M30 100% verificada.
+- **Expediente:** [`docs/certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md`](docs/certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md).
+- **Punto exacto de continuación:** Entorno local en ejecución (Backend port `5043`, Frontend port `4200`); entrega del expediente técnico al propietario (`jmejia31`) para la aceptación funcional visual del registro universal de motivos y seguimientos en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
