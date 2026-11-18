@@ -11654,4 +11654,5 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Tratamiento estricto de PII: 0 identidades, nombres o datos personales en logs o documentación.
   - Issue #41 permanece abierto a la espera de revisión funcional del propietario (`jmejia31`).
 - **Expediente:** [`docs/certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md`](docs/certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md).
-- **Punto exacto de continuación:** Stage selectivo, commit bajo autoría `ANTIG`, push a `origin/desarrollo`, verificación de ejecución completa del Quality Gate en GitHub Actions y entrega de informe para verificación visual final por el propietario en el navegador.
+- **Quality Gate certificado:** [44380767197](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44380767197) (`CONCLUSION=success`, `STATUS=completed`, `SHA=dec8c88942530ac2ba6802653ea9d794ab957a6f`).
+- **Punto exacto de continuación:** Servidores locales activos (backend `5043`, frontend `4200`); entrega de informe técnico para validación visual del propietario en el navegador y posterior cierre funcional de Microfase 1 en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
