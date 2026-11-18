@@ -289,8 +289,12 @@ public sealed class MonitoreoListasM1OracleIntegrationTests
         bool createdUser = false;
         if (await ScalarAsync(connection, "SELECT COUNT(*) FROM ALL_USERS WHERE USERNAME = 'DNP_IHSS'") == 0)
         {
-            await ExecuteAsync(connection, "CREATE USER DNP_IHSS IDENTIFIED BY \"M1SynthXe2026\" QUOTA UNLIMITED ON USERS");
+            await ExecuteAsync(connection, "CREATE USER DNP_IHSS IDENTIFIED BY \"M1SynthXe2026\" DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS");
             createdUser = true;
+        }
+        else
+        {
+            await ExecuteAsync(connection, "ALTER USER DNP_IHSS DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS");
         }
 
         bool createdPositivos = false;
