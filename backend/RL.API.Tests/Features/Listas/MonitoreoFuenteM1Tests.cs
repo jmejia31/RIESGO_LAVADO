@@ -64,6 +64,18 @@ public sealed class MonitoreoFuenteM1Tests
     }
 
     [Fact]
+    public void PositivosDnp_SeAsocianSoloConOrigenCompatibleYSinDniDuplicado()
+    {
+        foreach (var method in new[] { "ConstruirConsultaMonitoreoNaturales", "ConstruirConsultaMonitoreoEmpleados" })
+        {
+            var sql = Sql(method);
+            Assert.Contains("AND UPPER(TRIM(LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'", sql);
+            Assert.Contains("COUNT(*) OVER (PARTITION BY R.DNI) COINCIDENCIAS_FUENTE", sql);
+            Assert.Contains("I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1", sql);
+        }
+    }
+
+    [Fact]
     public void DetallePorReferenciaManual_AdmiteDocumentoNuloOSinIdentificacion()
     {
         var sql = Sql("CompararDocumentoPositivoFuente");

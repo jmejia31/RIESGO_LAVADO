@@ -64,6 +64,18 @@ public sealed class IdentidadMonitoreoPolicyTests
     }
 
     [Theory]
+    [InlineData(1, "VERIFIED")]
+    [InlineData(2, "AMBIGUOUS")]
+    [InlineData(0, "UNVERIFIED_ASSOCIATION")]
+    public void Asociacion_DniDeFuenteRepetidoNoHabilitaMotivosPorDocumento(int coincidenciasFuente, string esperado)
+    {
+        Assert.Equal(EstadoIdentidadMonitoreo.Verified,
+            IdentidadMonitoreoPolicy.EstadoParaPresentacion("0801-1234", 1, 1));
+        Assert.Equal(esperado,
+            IdentidadMonitoreoPolicy.EstadoAsociacionParaPresentacion("0801-1234", 1, 1, coincidenciasFuente));
+    }
+
+    [Theory]
     [InlineData(1, 1, "VERIFIED")]
     [InlineData(2, 1, "VERIFIED")]
     [InlineData(2, 2, "AMBIGUOUS")]

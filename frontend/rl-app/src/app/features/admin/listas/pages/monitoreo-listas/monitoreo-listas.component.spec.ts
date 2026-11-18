@@ -582,6 +582,8 @@ describe('MonitoreoListasComponent', () => {
     expect(component.obtenerTextoAccionSeguimiento(validado)).toBe('Dar seguimiento');
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, tieneMotivo: false })).toBe('Debe registrar un motivo antes del seguimiento');
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoIdentidad: 'AMBIGUOUS' })).toBe('Seguimiento bloqueado: identidad ambigua');
+    expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'AMBIGUOUS' })).toBe('Seguimiento bloqueado: asociación ambigua entre coincidencias de origen');
+    expect(component.obtenerEtiquetaIdentidad({ ...validado, estadoAsociacion: 'AMBIGUOUS' })).toBe('Asociación ambigua');
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, estadoAsociacion: 'UNVERIFIED_ASSOCIATION' })).toBe('Seguimiento bloqueado: identidad o asociación no verificada');
     expect(component.obtenerTextoAccionSeguimiento({ ...validado, esManual: true })).toBe('Debe registrar un motivo antes del seguimiento');
   });

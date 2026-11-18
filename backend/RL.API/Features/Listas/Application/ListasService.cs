@@ -43,7 +43,14 @@ public sealed class ListasService : IListasService
         if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
             throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
 
-        return await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
+        var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
+        if (positivo is not null && string.Equals(positivo.OrigenRegistro, "DNP_LISTAS", StringComparison.OrdinalIgnoreCase))
+        {
+            var resolucion = await _repo.ResolverIdentidadAsync(noDocumento, ConvertirTipoSujeto(positivo.TipoPositivoId));
+            if (!resolucion.EsOperable)
+                throw new AmbiguousIdentityException("No se puede atribuir el motivo a una coincidencia única y verificada del documento.");
+        }
+        return positivo;
     }
 
     public async Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerDetalleListaParaExportarAsync(int id, long usuarioId, string? ip)
@@ -110,8 +117,16 @@ public sealed class ListasService : IListasService
                 return ServiceResult.UnprocessableEntity("No es posible registrar el positivo: la asociación del documento no está verificada.");
         }
 
-        if (await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, 0) > 1)
+        var activos = await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, 0);
+        if (activos > 1)
             return ServiceResult.Conflict("No es posible actualizar el motivo porque existen múltiples positivos activos para el mismo documento.");
+        if (activos == 1)
+        {
+            var existente = await _repo.ObtenerPositivoPorDocumentoAsync(dto.NoDocumento!);
+            if (existente is null || existente.TipoPositivoId != dto.TipoPositivoId
+                || !string.Equals(existente.OrigenRegistro?.Trim(), dto.OrigenRegistro, StringComparison.OrdinalIgnoreCase))
+                return ServiceResult.Conflict("El documento ya tiene un positivo de otro tipo u origen; seleccione una referencia individual verificada.");
+        }
 
         var ok = await _repo.RegistrarPositivoAsync(dto, creadoPorId);
         return ok

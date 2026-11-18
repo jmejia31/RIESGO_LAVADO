@@ -127,7 +127,7 @@ namespace RL.API.Features.Listas.Persistence
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1,
                     EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
-                    EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
+                    EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoAsociacionParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"), Entero(reader, "COINCIDENCIAS_FUENTE"))
                 }, cancellationToken);
 
             return ObtenerMonitoreoPaginadoCacheadoAsync(
@@ -141,7 +141,7 @@ namespace RL.API.Features.Listas.Persistence
                 IdRegistroFuente = Convert.ToInt64(reader["ID_REGISTRO_FUENTE"]), TipoFuente = Texto(reader, "TIPO_FUENTE"), NumeroPatronal = Texto(reader, "NUMERO_PATRONAL"), CategoriaIdentidad = Texto(reader, "CATEGORIA_IDENTIDAD"),
                 FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
                 EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
-                EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
+                EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoAsociacionParaPresentacion(Texto(reader, "NUMERO_IDENTIFICACION"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"), Entero(reader, "COINCIDENCIAS_FUENTE"))
             });
 
         public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
@@ -169,7 +169,7 @@ namespace RL.API.Features.Listas.Persistence
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1,
                     EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
-                    EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
+                    EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoAsociacionParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"), Entero(reader, "COINCIDENCIAS_FUENTE"))
                 }, cancellationToken);
 
             return ObtenerMonitoreoPaginadoCacheadoAsync(
@@ -183,7 +183,7 @@ namespace RL.API.Features.Listas.Persistence
                 IdRegistroFuente = Convert.ToInt64(reader["ID_REGISTRO_FUENTE"]), TipoFuente = Texto(reader, "TIPO_FUENTE"), NumeroPatrono = Texto(reader, "NUMERO_PATRONO"), CategoriaIdentidad = Texto(reader, "CATEGORIA_IDENTIDAD"),
                 FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1,
                 EstadoIdentidad = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS")),
-                EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"))
+                EstadoAsociacion = IdentidadMonitoreoPolicy.EstadoAsociacionParaPresentacion(Texto(reader, "IDENTIDAD"), Entero(reader, "IDENTIDAD_REFERENCIAS"), Entero(reader, "IDENTIDADES_DISTINTAS"), Entero(reader, "COINCIDENCIAS_FUENTE"))
             });
 
         // La ruta antigua por documento se admite solo cuando identifica
@@ -427,7 +427,9 @@ namespace RL.API.Features.Listas.Persistence
             {
                 cmd.CommandText = @"
                     SELECT COUNT(*) AS REFERENCIAS,
-                           COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL THEN TIPO_FUENTE || ':' || ID_PERSONA END) AS SUJETOS
+                           COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL THEN TIPO_FUENTE || ':' || ID_PERSONA END) AS SUJETOS,
+                           (SELECT COUNT(*) FROM DNP_IHSS.REPORTE_COINCIDENCIAS C
+                            WHERE C.DNI = :documento AND C.TIPO_CALIFICACION_ID = 1) AS COINCIDENCIAS_FUENTE
                     FROM (
                         SELECT 'SOCIO' AS TIPO_FUENTE, S.SOCIO_ID AS ID_PERSONA
                         FROM DNP_IHSS.SOCIOS S
@@ -442,7 +444,12 @@ namespace RL.API.Features.Listas.Persistence
             {
                 cmd.CommandText = @"
                     SELECT COUNT(*) AS REFERENCIAS,
-                           COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(NOMBRE_EMPLEADO, '[[:space:]]+', ' ')))) AS SUJETOS
+                           COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(NOMBRE_EMPLEADO, '[[:space:]]+', ' ')))) AS SUJETOS,
+                           (SELECT COUNT(*) FROM DNP_IHSS.REPORTE_COINCIDENCIAS C
+                            WHERE C.DNI = :documento AND C.TIPO_CALIFICACION_ID = 1
+                              AND EXISTS (SELECT 1 FROM DNP_IHSS.V_REPORTE_COINCIDENCIA V
+                                          WHERE V.REPORTE_COINCIDENCIA_ID = C.REPORTE_COINCIDENCIA_ID
+                                            AND V.TIPO_PERSONA LIKE '%IHSS')) AS COINCIDENCIAS_FUENTE
                     FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
                     WHERE IDENTIDAD = :documento";
             }
@@ -458,14 +465,18 @@ namespace RL.API.Features.Listas.Persistence
 
             var referencias = Convert.ToInt32(reader["REFERENCIAS"]);
             var sujetos = Convert.ToInt32(reader["SUJETOS"]);
-            var estado = sujetos > 1 || (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado) && referencias > 0)
+            // Dos coincidencias de origen comparten DNI pero no necesariamente motivo/empresa.
+            var coincidenciasFuente = Convert.ToInt32(reader["COINCIDENCIAS_FUENTE"]);
+            var estado = coincidenciasFuente > 1 || sujetos > 1 || (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado) && referencias > 0)
                 ? EstadoIdentidadMonitoreo.Ambiguous
                 : referencias == 0
                     ? EstadoIdentidadMonitoreo.UnverifiedAssociation
                     : EstadoIdentidadMonitoreo.Verified;
 
             return new ResolucionIdentidadMonitoreo(normalizado, estado, referencias, sujetos,
-                estado == EstadoIdentidadMonitoreo.Ambiguous ? "DOCUMENTO_SHARED_OR_MULTIPLE_SUBJECTS" : null);
+                estado == EstadoIdentidadMonitoreo.Ambiguous
+                    ? (coincidenciasFuente > 1 ? "MULTIPLE_SOURCE_COINCIDENCES" : "DOCUMENTO_SHARED_OR_MULTIPLE_SUBJECTS")
+                    : null);
         }
 
         public async Task<int> ContarPositivosActivosAsync(string documento, int tipoPositivoId)
@@ -574,6 +585,7 @@ namespace RL.API.Features.Listas.Persistence
             try
             {
                 long? existingId = null;
+                int? existingTipoPositivoId = null;
                 string? existingDataJson = null;
                 string? existingOrigenRegistro = null;
                 var origenRegistro = NormalizarOrigenRegistro(dto.OrigenRegistro);
@@ -583,7 +595,7 @@ namespace RL.API.Features.Listas.Persistence
                     checkCmd.Transaction = transaction;
                     checkCmd.BindByName = true;
                     checkCmd.CommandText = @"
-                    SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO
+                    SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO
                     FROM RL_LISTA_POSITIVOS 
                     WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
                     checkCmd.Parameters.Add(new OracleParameter("noDoc", (object?)dto.NoDocumento ?? DBNull.Value));
@@ -596,6 +608,7 @@ namespace RL.API.Features.Listas.Persistence
                         if (existingCount != 1) continue;
 
                         existingId = Convert.ToInt64(reader["LSP_POSITIVO_ID"]);
+                        existingTipoPositivoId = Convert.ToInt32(reader["LSP_TIPO_POSITIVO_ID"]);
                         existingOrigenRegistro = reader["LSP_ORIGEN_REGISTRO"] == DBNull.Value ? null : reader["LSP_ORIGEN_REGISTRO"]?.ToString();
                         var existingDto = new RegistrarPositivoDto
                         {
@@ -617,6 +630,15 @@ namespace RL.API.Features.Listas.Persistence
                     }
                 }
 
+                // No se puede reconvertir silenciosamente un positivo a otro tipo/origen.
+                // Esto preserva identidad y auditoría incluso ante clientes antiguos.
+                if (existingId.HasValue && (existingTipoPositivoId != dto.TipoPositivoId
+                    || !string.Equals(NormalizarOrigenRegistro(existingOrigenRegistro), origenRegistro, StringComparison.Ordinal)))
+                {
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+
                 if (existingId.HasValue)
                 {
                     await using var cmd = conn.CreateCommand();
@@ -631,7 +653,10 @@ namespace RL.API.Features.Listas.Persistence
                         LSP_TIPO_LISTA_CAUTELA_ID = :cautelaId,
                         -- Si un cliente viejo no envia origen, se conserva el valor que ya tenia el positivo.
                         LSP_ORIGEN_REGISTRO = NVL(:origenRegistro, LSP_ORIGEN_REGISTRO)
-                    WHERE LSP_POSITIVO_ID = :id";
+                    WHERE LSP_POSITIVO_ID = :id
+                      AND LSP_TIPO_POSITIVO_ID = :tipoPosId
+                      AND NVL(UPPER(TRIM(LSP_ORIGEN_REGISTRO)), '__LEGACY__') = NVL(:origenRegistro, '__LEGACY__')
+                      AND LSP_ESTADO_REGISTRO = 1";
 
                     cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
                 cmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
@@ -1996,6 +2021,7 @@ namespace RL.API.Features.Listas.Persistence
                        MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END) TIENE_MOTIVO
                 FROM RL_LISTA_POSITIVOS
                 WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 2
+                  AND UPPER(TRIM(LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
                 GROUP BY LSP_NO_DOCUMENTO
             ), IDENTIDAD_AGG AS (
                 SELECT NUMERO_IDENTIFICACION, COUNT(*) REFERENCIAS,
@@ -2017,17 +2043,20 @@ namespace RL.API.Features.Listas.Persistence
                        TO_CHAR(R.NUMERO_PATRONO) NUMERO_PATRONAL,
                        R.LISTA_CONCIDENCIA, 1 TOTAL_REPETIDOS,
                        R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
-                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                       CASE WHEN I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1
+                                  AND R.DNI IS NOT NULL
                                   AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
                                   AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN P.FECHA_REGISTRO_INTERNO
                             ELSE CAST(NULL AS DATE) END FECHA_REGISTRO_INTERNO,
-                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                       CASE WHEN I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1
+                                  AND R.DNI IS NOT NULL
                                   AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
                                   AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN NVL(P.TIENE_MOTIVO,0) ELSE 0 END TIENE_MOTIVO,
                        0 ES_MANUAL, NVL(I.REFERENCIAS,0) IDENTIDAD_REFERENCIAS,
                        NVL(I.SUJETOS,0) IDENTIDADES_DISTINTAS,
+                       COUNT(*) OVER (PARTITION BY R.DNI) COINCIDENCIAS_FUENTE,
                        CASE WHEN R.DNI IS NULL OR TRIM(R.DNI) IS NULL
                                   OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
                                   OR UPPER(TRIM(R.DNI)) IN ('NULL','VACIO','VACÍO',
@@ -2043,7 +2072,7 @@ namespace RL.API.Features.Listas.Persistence
                    NOMBRE, NUMERO_PATRONAL, LISTA_CONCIDENCIA, TOTAL_REPETIDOS,
                    FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO,
                    TIENE_MOTIVO, ES_MANUAL, IDENTIDAD_REFERENCIAS,
-                   IDENTIDADES_DISTINTAS, CATEGORIA_IDENTIDAD,
+                   IDENTIDADES_DISTINTAS, CATEGORIA_IDENTIDAD, COINCIDENCIAS_FUENTE,
                    NVL(NUMERO_IDENTIFICACION,'') || ' ' || NVL(NUMERO_PATRONAL,'') BUSQUEDA
             FROM Coincidencias
             UNION ALL
@@ -2063,7 +2092,7 @@ namespace RL.API.Features.Listas.Persistence
                                   OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN
                                        ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN 'SIN_IDENTIFICACION' ELSE 'IDENTIFICADA' END,
-                   LP.LSP_NO_DOCUMENTO
+                   1, LP.LSP_NO_DOCUMENTO
             FROM RL_LISTA_POSITIVOS LP
             LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA LC
               ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
@@ -2086,6 +2115,7 @@ namespace RL.API.Features.Listas.Persistence
                        MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END) TIENE_MOTIVO
                 FROM RL_LISTA_POSITIVOS
                 WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 3
+                  AND UPPER(TRIM(LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
                 GROUP BY LSP_NO_DOCUMENTO
             ), IDENTIDAD_AGG AS (
                 SELECT IDENTIDAD, COUNT(*) REFERENCIAS, COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(NOMBRE_EMPLEADO, '[[:space:]]+', ' ')))) SUJETOS
@@ -2099,17 +2129,20 @@ namespace RL.API.Features.Listas.Persistence
                        TO_CHAR(R.NUMERO_PATRONO) NUMERO_PATRONO,
                        R.LISTA_CONCIDENCIA, 1 TOTAL_REPETIDOS,
                        R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
-                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                       CASE WHEN I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1
+                                  AND R.DNI IS NOT NULL
                                   AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
                                   AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN P.FECHA_REGISTRO_INTERNO
                             ELSE CAST(NULL AS DATE) END FECHA_REGISTRO_INTERNO,
-                       CASE WHEN I.SUJETOS = 1 AND R.DNI IS NOT NULL
+                       CASE WHEN I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1
+                                  AND R.DNI IS NOT NULL
                                   AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
                                   AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN NVL(P.TIENE_MOTIVO,0) ELSE 0 END TIENE_MOTIVO,
                        0 ES_MANUAL, NVL(I.REFERENCIAS,0) IDENTIDAD_REFERENCIAS,
                        NVL(I.SUJETOS,0) IDENTIDADES_DISTINTAS,
+                       COUNT(*) OVER (PARTITION BY R.DNI) COINCIDENCIAS_FUENTE,
                        CASE WHEN R.DNI IS NULL OR TRIM(R.DNI) IS NULL OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
                                   OR UPPER(TRIM(R.DNI)) IN
                                        ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
@@ -2126,7 +2159,7 @@ namespace RL.API.Features.Listas.Persistence
             SELECT ID_REGISTRO_FUENTE, TIPO_FUENTE, IDENTIDAD, NOMBRE, NUMERO_PATRONO,
                    LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO,
                    FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, ES_MANUAL,
-                   IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, CATEGORIA_IDENTIDAD,
+                   IDENTIDAD_REFERENCIAS, IDENTIDADES_DISTINTAS, CATEGORIA_IDENTIDAD, COINCIDENCIAS_FUENTE,
                    NVL(IDENTIDAD,'') || ' ' || NVL(NUMERO_PATRONO,'') BUSQUEDA
             FROM Coincidencias
             UNION ALL
@@ -2146,7 +2179,7 @@ namespace RL.API.Features.Listas.Persistence
                                   OR UPPER(TRIM(LP.LSP_NO_DOCUMENTO)) IN
                                        ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN 'SIN_IDENTIFICACION' ELSE 'IDENTIFICADA' END,
-                   LP.LSP_NO_DOCUMENTO
+                   1, LP.LSP_NO_DOCUMENTO
             FROM RL_LISTA_POSITIVOS LP
             LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA LC
               ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID

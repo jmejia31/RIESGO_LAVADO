@@ -155,6 +155,41 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
+    public async Task RegistrarPositivo_NoPermiteReconvertirTipoUOrigenDeRegistroExistente()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(1));
+        repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), _ =>
+            Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto
+            {
+                PositivoId = 80, TipoPositivoId = 3, OrigenRegistro = "MANUAL_CUMPLIMIENTO"
+            }));
+
+        var result = await service.RegistrarPositivoAsync(CrearPositivo("MANUAL_CUMPLIMIENTO"), 9);
+
+        Assert.False(result.Success);
+        Assert.Equal(409, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync)));
+    }
+
+    [Fact]
+    public async Task ConsultarPositivoDnp_NoAtribuyeMotivoConDniDeOrigenAmbiguo()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(1));
+        repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), _ =>
+            Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto
+            {
+                PositivoId = 80, TipoPositivoId = 2, OrigenRegistro = "DNP_LISTAS"
+            }));
+        repo.On(nameof(IListasRepository.ResolverIdentidadAsync), _ =>
+            Task.FromResult(new ResolucionIdentidadMonitoreo(
+                "0801", EstadoIdentidadMonitoreo.Ambiguous, 1, 1, "MULTIPLE_SOURCE_COINCIDENCES")));
+
+        await Assert.ThrowsAsync<AmbiguousIdentityException>(() => service.ObtenerPositivoPorDocumentoAsync("0801"));
+    }
+
+    [Fact]
     public async Task ObtenerSeguimientos_RangoInvertido_RechazaSinConsultar()
     {
         var service = CrearServicio(out var repo, out _);

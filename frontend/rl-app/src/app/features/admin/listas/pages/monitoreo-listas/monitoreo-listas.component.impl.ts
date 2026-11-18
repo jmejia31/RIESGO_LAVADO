@@ -462,6 +462,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   obtenerTextoAccionSeguimiento(item: { tieneMotivo?: boolean; esManual?: boolean; estadoIdentidad?: string; estadoAsociacion?: string }): string {
     if (!this.esIdentidadOperable(item)) {
+      if (item.estadoAsociacion === 'AMBIGUOUS' && item.estadoIdentidad === 'VERIFIED')
+        return 'Seguimiento bloqueado: asociación ambigua entre coincidencias de origen';
       if (item.estadoIdentidad === 'AMBIGUOUS' || item.estadoAsociacion === 'AMBIGUOUS')
         return 'Seguimiento bloqueado: identidad ambigua';
       return 'Seguimiento bloqueado: identidad o asociación no verificada';
@@ -478,6 +480,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   obtenerEtiquetaIdentidad(item: { estadoIdentidad?: string; estadoAsociacion?: string; categoriaIdentidad?: string }): string {
     if (item.categoriaIdentidad === 'SIN_IDENTIFICACION') return 'Sin identificación atribuible';
     if (item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'VERIFIED') return 'Identidad verificada';
+    if (item.estadoIdentidad === 'VERIFIED' && item.estadoAsociacion === 'AMBIGUOUS') return 'Asociación ambigua';
     if (item.estadoIdentidad === 'AMBIGUOUS' || item.estadoAsociacion === 'AMBIGUOUS') return 'Identidad ambigua';
     if (item.estadoIdentidad === 'INVALID' || item.estadoAsociacion === 'INVALID') return 'Sin identificación';
     return 'Identidad no verificada';

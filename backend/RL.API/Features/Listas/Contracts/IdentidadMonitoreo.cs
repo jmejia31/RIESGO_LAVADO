@@ -47,6 +47,19 @@ public static class IdentidadMonitoreoPolicy
             or "SIN IDENTIFICACION" or "SIN IDENTIFICACIÓN";
     }
 
+    // Estado de la relación documental, no de la persona: con varias coincidencias
+    // fuente para un mismo DNI no es seguro reutilizar motivos/seguimientos por DNI.
+    public static string EstadoAsociacionParaPresentacion(
+        string? documento, int referencias, int sujetosDistintos, int coincidenciasFuente)
+    {
+        var estado = EstadoParaPresentacion(documento, referencias, sujetosDistintos);
+        if (estado != EstadoIdentidadMonitoreo.Verified) return estado;
+        if (coincidenciasFuente > 1) return EstadoIdentidadMonitoreo.Ambiguous;
+        return coincidenciasFuente == 1
+            ? EstadoIdentidadMonitoreo.Verified
+            : EstadoIdentidadMonitoreo.UnverifiedAssociation;
+    }
+
     public static string EstadoParaPresentacion(string? documento)
         => EstadoParaPresentacion(documento, 0, 0);
 
