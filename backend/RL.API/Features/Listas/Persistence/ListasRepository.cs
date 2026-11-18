@@ -1623,6 +1623,7 @@ namespace RL.API.Features.Listas.Persistence
         {
             var requestStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var filteredSql = ConstruirConsultaMonitoreoFiltrada(baseSql, consulta);
+            var contextualSql = ConstruirConsultaMonitoreoContextual(baseSql, consulta);
             var pageSize = Math.Clamp(consulta.TamanoPagina, 1, 200);
             var requestedPage = Math.Max(consulta.Pagina, 1);
 
@@ -1654,22 +1655,55 @@ namespace RL.API.Features.Listas.Persistence
             }
 
             var effectiveOrderBy = ResolverOrdenMonitoreo(baseSql, consulta);
-            var pageResult = await EjecutarPaginaMonitoreoAsync(
-                conn, filteredSql, effectiveOrderBy, requestedPage, pageSize, consulta, map, cancellationToken);
 
             var metadataLookupStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var metadata = await _cache.GetOrCreateAsync(
                 ApplicationCacheScopes.MonitoreoMetadata,
                 CrearClaveMetadataMonitoreo(baseSql, consulta),
                 _cacheSettings.MonitoreoMetadataTtl,
-                () => ObtenerMetadataMonitoreoAsync(filteredSql, consulta, cancellationToken),
+                () => ObtenerMetadataMonitoreoAsync(contextualSql, consulta, cancellationToken),
                 cancellationToken: cancellationToken);
             metadataLookupStopwatch.Stop();
 
-            var totalPages = metadata.TotalRegistros == 0
-                ? 0
-                : (int)Math.Ceiling(metadata.TotalRegistros / (double)pageSize);
-            var effectivePage = totalPages == 0 ? 1 : Math.Clamp(requestedPage, 1, totalPages);
+            var estadoFiltro = consulta.Estado?.Trim().ToLowerInvariant() ?? "todos";
+            var filteredTotal = estadoFiltro switch
+            {
+                "activos" => metadata.CoincidenciasActivas,
+                "pendiente" => metadata.Pendientes,
+                "con_motivo" => metadata.ConMotivo,
+                "manual" => metadata.Manuales,
+                "cerrado_pasivo" => metadata.CerradosPasivos,
+                _ => metadata.TotalRegistros
+            };
+
+            if (filteredTotal == 0)
+            {
+                requestStopwatch.Stop();
+                return new MonitoreoPaginadoDto<T>
+                {
+                    Items = new List<T>(),
+                    Pagina = 1,
+                    TamanoPagina = pageSize,
+                    TotalRegistros = 0,
+                    TotalPaginas = 0,
+                    Totales = new MonitoreoTotalesDto
+                    {
+                        TotalRegistros = metadata.TotalRegistros,
+                        TotalCoincidenciasFuente = metadata.TotalCoincidenciasFuente,
+                        CoincidenciasActivas = metadata.CoincidenciasActivas,
+                        Pendientes = metadata.Pendientes,
+                        ConMotivo = metadata.ConMotivo,
+                        Manuales = metadata.Manuales,
+                        CerradosPasivos = metadata.CerradosPasivos
+                    }
+                };
+            }
+
+            var totalPages = (int)Math.Ceiling(filteredTotal / (double)pageSize);
+            var effectivePage = Math.Clamp(requestedPage, 1, totalPages);
+            var pageResult = await EjecutarPaginaMonitoreoAsync(
+                conn, filteredSql, effectiveOrderBy, effectivePage, pageSize, consulta, map, cancellationToken);
+
             if (pageResult.Items.Count == 0 && effectivePage != requestedPage)
             {
                 // Sólo una página vacía activa la normalización y el único reintento.
@@ -1693,12 +1727,13 @@ namespace RL.API.Features.Listas.Persistence
                 Items = pageResult.Items,
                 Pagina = effectivePage,
                 TamanoPagina = pageSize,
-                TotalRegistros = metadata.TotalRegistros,
+                TotalRegistros = filteredTotal,
                 TotalPaginas = totalPages,
                 Totales = new MonitoreoTotalesDto
                 {
                     TotalRegistros = metadata.TotalRegistros,
                     TotalCoincidenciasFuente = metadata.TotalCoincidenciasFuente,
+                    CoincidenciasActivas = metadata.CoincidenciasActivas,
                     Pendientes = metadata.Pendientes,
                     ConMotivo = metadata.ConMotivo,
                     Manuales = metadata.Manuales,
@@ -1707,7 +1742,7 @@ namespace RL.API.Features.Listas.Persistence
             };
         }
 
-        private sealed record MonitoreoMetadata(int TotalRegistros, int Pendientes, int ConMotivo, int Manuales, int CerradosPasivos, int TotalCoincidenciasFuente = 0);
+        private sealed record MonitoreoMetadata(int TotalRegistros, int CoincidenciasActivas, int Pendientes, int ConMotivo, int Manuales, int CerradosPasivos, int TotalCoincidenciasFuente = 0);
 
         private sealed record MonitoreoPageResult<T>(List<T> Items, long ExecuteMs, long FirstRowMs, long RowsReadMs, long MappingMs);
 
@@ -1740,6 +1775,7 @@ namespace RL.API.Features.Listas.Persistence
                 {
                     TotalRegistros = orderedItems.Count,
                     TotalCoincidenciasFuente = orderedItems.Count,
+                    CoincidenciasActivas = orderedItems.Count,
                     Pendientes = pendientes,
                     ConMotivo = conMotivo,
                     Manuales = manuales,
@@ -1893,7 +1929,7 @@ namespace RL.API.Features.Listas.Persistence
         }
 
         private async Task<MonitoreoMetadata> ObtenerMetadataMonitoreoAsync(
-            string filteredSql,
+            string contextualSql,
             ConsultaMonitoreoPaginadaDto consulta,
             CancellationToken cancellationToken)
         {
@@ -1904,18 +1940,19 @@ namespace RL.API.Features.Listas.Persistence
             connectionStopwatch.Stop();
             await using var command = conn.CreateCommand();
             command.BindByName = true;
-            var tieneTotalRepetidos = filteredSql.Contains("TOTAL_REPETIDOS", StringComparison.OrdinalIgnoreCase);
+            var tieneTotalRepetidos = contextualSql.Contains("TOTAL_REPETIDOS", StringComparison.OrdinalIgnoreCase);
             var exprCoincidenciasFuente = tieneTotalRepetidos
                 ? "NVL(SUM(CASE WHEN TIPO_FUENTE = 'DNP_COINCIDENCIA' THEN GREATEST(NVL(TOTAL_REPETIDOS, 1), 1) ELSE 1 END), 0)"
                 : "COUNT(*)";
             command.CommandText = $@"
                 SELECT COUNT(*) AS TOTAL_REGISTROS,
                        {exprCoincidenciasFuente} AS TOTAL_COINCIDENCIAS_FUENTE,
-                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'pendiente' THEN 1 ELSE 0 END), 0) AS PENDIENTES,
-                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'con_motivo' THEN 1 ELSE 0 END), 0) AS CON_MOTIVO,
-                       NVL(SUM(CASE WHEN ES_MANUAL = 1 THEN 1 ELSE 0 END), 0) AS MANUALES,
-                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'cerrado_pasivo' THEN 1 ELSE 0 END), 0) AS CERRADOS_PASIVOS
-                FROM ({filteredSql}) metadata_query";
+                       NVL(SUM(CASE WHEN NVL(ES_CERRADO_PASIVO, 0) = 0 THEN 1 ELSE 0 END), 0) AS COINCIDENCIAS_ACTIVAS,
+                       NVL(SUM(CASE WHEN TIENE_MOTIVO = 0 AND NVL(ES_CERRADO_PASIVO, 0) = 0 THEN 1 ELSE 0 END), 0) AS PENDIENTES,
+                       NVL(SUM(CASE WHEN TIENE_MOTIVO = 1 AND NVL(ES_CERRADO_PASIVO, 0) = 0 THEN 1 ELSE 0 END), 0) AS CON_MOTIVO,
+                       NVL(SUM(CASE WHEN ES_MANUAL = 1 AND NVL(ES_CERRADO_PASIVO, 0) = 0 THEN 1 ELSE 0 END), 0) AS MANUALES,
+                       NVL(SUM(CASE WHEN NVL(ES_CERRADO_PASIVO, 0) = 1 THEN 1 ELSE 0 END), 0) AS CERRADOS_PASIVOS
+                FROM ({contextualSql}) metadata_query";
             AddMonitoringParameters(command, consulta);
             OracleDataReader reader;
             var executeStopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -1940,11 +1977,15 @@ namespace RL.API.Features.Listas.Persistence
                         "MonitoringMetadata completed: connectionOpenMs={ConnectionOpenMs} executeMs={ExecuteMs} totalMs={TotalMs}",
                         connectionStopwatch.ElapsedMilliseconds, executeStopwatch.ElapsedMilliseconds,
                         metadataStopwatch.ElapsedMilliseconds);
-                    return new MonitoreoMetadata(0, 0, 0, 0, 0, 0);
+                    return new MonitoreoMetadata(0, 0, 0, 0, 0, 0, 0);
                 }
                 var metadata = new MonitoreoMetadata(
-                    Entero(reader, "TOTAL_REGISTROS"), Entero(reader, "PENDIENTES"),
-                    Entero(reader, "CON_MOTIVO"), Entero(reader, "MANUALES"), Entero(reader, "CERRADOS_PASIVOS"),
+                    Entero(reader, "TOTAL_REGISTROS"),
+                    Entero(reader, "COINCIDENCIAS_ACTIVAS"),
+                    Entero(reader, "PENDIENTES"),
+                    Entero(reader, "CON_MOTIVO"),
+                    Entero(reader, "MANUALES"),
+                    Entero(reader, "CERRADOS_PASIVOS"),
                     Entero(reader, "TOTAL_COINCIDENCIAS_FUENTE"));
                 metadataStopwatch.Stop();
                 Serilog.Log.Information(
@@ -1957,18 +1998,37 @@ namespace RL.API.Features.Listas.Persistence
 
         private static string ConstruirConsultaMonitoreoFiltrada(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
         {
-            var filteredSql = $"SELECT f.* FROM (SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q) f WHERE 1 = 1";
+            var filteredSql = $"SELECT f.* FROM (SELECT q.*, 0 AS ES_CERRADO_PASIVO, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q) f WHERE 1 = 1";
             AppendMonitoringFilters(ref filteredSql, consulta);
             return filteredSql;
         }
 
+        private static string ConstruirConsultaMonitoreoContextual(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
+        {
+            var contextualConsulta = new ConsultaMonitoreoPaginadaDto
+            {
+                Buscar = consulta.Buscar,
+                FechaDesde = consulta.FechaDesde,
+                FechaHasta = consulta.FechaHasta,
+                CategoriaIdentidad = consulta.CategoriaIdentidad,
+                PeriodoPlanilla = consulta.PeriodoPlanilla,
+                PeriodoPlanillaDesde = consulta.PeriodoPlanillaDesde,
+                PeriodoPlanillaHasta = consulta.PeriodoPlanillaHasta,
+                Orden = consulta.Orden,
+                Direccion = consulta.Direccion,
+                Estado = "todos"
+            };
+            return ConstruirConsultaMonitoreoFiltrada(baseSql, contextualConsulta);
+        }
+
         private static string CrearClavePaginaMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
             => string.Join("|", "page", CrearClaveMetadataMonitoreo(baseSql, consulta),
+                consulta.Estado?.Trim().ToLowerInvariant(),
                 Math.Max(1, consulta.Pagina), Math.Clamp(consulta.TamanoPagina, 1, 200));
 
         private static string CrearClaveMetadataMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
             => string.Join("|", ResolveMonitoringType(baseSql), consulta.Buscar?.Trim().ToUpperInvariant(),
-                consulta.Estado?.Trim().ToLowerInvariant(), consulta.FechaDesde?.ToString("O"),
+                consulta.FechaDesde?.ToString("O"),
                 consulta.FechaHasta?.ToString("O"), consulta.CategoriaIdentidad?.Trim().ToLowerInvariant(),
                 consulta.PeriodoPlanilla?.ToString("yyyy-MM"),
                 consulta.PeriodoPlanillaDesde?.ToString("yyyy-MM"), consulta.PeriodoPlanillaHasta?.ToString("yyyy-MM"),
@@ -2017,8 +2077,7 @@ namespace RL.API.Features.Listas.Persistence
             string orderBy,
             Func<OracleDataReader, T> map)
         {
-            var filteredSql = $"SELECT f.* FROM (SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q) f WHERE 1 = 1";
-            AppendMonitoringFilters(ref filteredSql, consulta);
+            var filteredSql = ConstruirConsultaMonitoreoFiltrada(baseSql, consulta);
 
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
@@ -2117,7 +2176,30 @@ namespace RL.API.Features.Listas.Persistence
                 }
             }
             if (!string.IsNullOrWhiteSpace(consulta.Estado) && !consulta.Estado.Equals("todos", StringComparison.OrdinalIgnoreCase))
-                sql += " AND ESTADO_MONITOREO = :estado";
+            {
+                var estado = consulta.Estado.Trim().ToLowerInvariant();
+                switch (estado)
+                {
+                    case "activos":
+                        sql += " AND NVL(f.ES_CERRADO_PASIVO, 0) = 0";
+                        break;
+                    case "pendiente":
+                        sql += " AND f.TIENE_MOTIVO = 0 AND NVL(f.ES_CERRADO_PASIVO, 0) = 0";
+                        break;
+                    case "con_motivo":
+                        sql += " AND f.TIENE_MOTIVO = 1 AND NVL(f.ES_CERRADO_PASIVO, 0) = 0";
+                        break;
+                    case "manual":
+                        sql += " AND f.ES_MANUAL = 1 AND NVL(f.ES_CERRADO_PASIVO, 0) = 0";
+                        break;
+                    case "cerrado_pasivo":
+                        sql += " AND NVL(f.ES_CERRADO_PASIVO, 0) = 1";
+                        break;
+                    default:
+                        sql += " AND ESTADO_MONITOREO = :estado";
+                        break;
+                }
+            }
             if (consulta.FechaDesde.HasValue)
                 sql += " AND NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO) >= TRUNC(:fechaDesde)";
             if (consulta.FechaHasta.HasValue)
@@ -2157,7 +2239,12 @@ namespace RL.API.Features.Listas.Persistence
         private static void AddMonitoringParameters(OracleCommand command, ConsultaMonitoreoPaginadaDto consulta)
         {
             if (!string.IsNullOrWhiteSpace(consulta.Buscar)) command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
-            if (!string.IsNullOrWhiteSpace(consulta.Estado) && !consulta.Estado.Equals("todos", StringComparison.OrdinalIgnoreCase)) command.Parameters.Add(new OracleParameter("estado", consulta.Estado));
+            if (!string.IsNullOrWhiteSpace(consulta.Estado)
+                && !consulta.Estado.Equals("todos", StringComparison.OrdinalIgnoreCase)
+                && command.CommandText.Contains(":estado", StringComparison.OrdinalIgnoreCase))
+            {
+                command.Parameters.Add(new OracleParameter("estado", consulta.Estado));
+            }
             if (consulta.FechaDesde.HasValue) command.Parameters.Add(new OracleParameter("fechaDesde", consulta.FechaDesde.Value));
             if (consulta.FechaHasta.HasValue) command.Parameters.Add(new OracleParameter("fechaHasta", consulta.FechaHasta.Value));
             if (consulta.PeriodoPlanilla.HasValue

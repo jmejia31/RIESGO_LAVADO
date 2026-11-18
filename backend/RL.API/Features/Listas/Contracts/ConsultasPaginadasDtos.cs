@@ -35,6 +35,7 @@ public sealed class MonitoreoTotalesDto
 {
     public int TotalRegistros { get; init; }
     public int TotalCoincidenciasFuente { get; init; }
+    public int CoincidenciasActivas { get; init; }
     public int Pendientes { get; init; }
     public int ConMotivo { get; init; }
     public int Manuales { get; init; }

@@ -4974,3 +4974,30 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Expediente:** [`M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md`](../certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md).
 - **Quality Gate certificado:** [44380767197](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44380767197) (`CONCLUSION=success`, `STATUS=completed`, `SHA=dec8c88942530ac2ba6802653ea9d794ab957a6f`).
 - **Punto de continuación:** Servidores locales activos (backend `5043`, frontend `4200`); entrega de informe técnico para validación visual del propietario en el navegador y posterior cierre funcional de Microfase 1 en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+
+
+## Estado vigente — Microfase 1 P0: Corrección definitiva de filtros y tarjetas de Monitoreo de Listas — 2026-11-18 14:15 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity) | **Rama:** `desarrollo` | **Base SHA:** `f1ec7c6241c3e037d320851f54251704bd1ab22d` (QG previo `44380767197`).
+- **Simetría y Correspondencia Matemática de Estados:**
+  - Desplegable de filtros alineado a las 5 tarjetas de estado institucionales + "Todos los registros":
+    - `todos` -> Todos los registros
+    - `activos` -> Coincidencias activas (Tarjeta 1)
+    - `pendiente` -> Pendientes de motivo (Tarjeta 2)
+    - `con_motivo` -> Con motivo registrado (Tarjeta 3)
+    - `manual` -> Positivos manuales (Tarjeta 4)
+    - `cerrado_pasivo` -> Cerrados / Pasivos (Tarjeta 5)
+  - `TOTAL_TARJETA_ESTADO == TOTAL_REGISTROS_FILTRADOS_ESTADO` garantizado al 100%.
+  - `filteredTotal` obtenido directamente de la metadata agregada, sin consultas adicionales `COUNT(*)`. Retorno inmediato en caso de `filteredTotal == 0`.
+- **Desacoplamiento Contextual de Metadatos:**
+  - `ConstruirConsultaMonitoreoContextual` aísla los filtros de estado de los filtros generales (búsqueda, fechas, categoría, planillas). Las tarjetas ya no colapsan a 0 al seleccionar un filtro en el desplegable.
+  - Caché de metadatos optimizada excluyendo `consulta.Estado` de la clave.
+- **Independencia Estado vs Origen:**
+  - Positivos manuales con motivo conservan ambas condiciones y se cuentan en `manual` y `con_motivo` simultáneamente.
+- **Verificación Local Completa:**
+  - Backend: 1,191 pruebas unitarias/estructurales PASS (3 nuevas pruebas de filtros y consultas contextuales).
+  - Frontend: 96/96 suites, 1,033/1,033 pruebas PASS en Vitest; `ng build` PASS; `ESLint` PASS.
+  - Validadores: Estructura, Scripts BD, Enlaces docs, Agent Skills (14 skills) todos PASS.
+- **Preservación:** 34 archivos sin seguimiento conservados íntegros; 0 escrituras Oracle institucional; 0 mutaciones en `main` o producción; 0 PII.
+- **Expediente:** [`M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md`](../certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md).
+- **Punto de continuación:** Publicar cambios en `origin/desarrollo` (`ANTIG`), monitorear el Quality Gate en GitHub Actions y presentar la aceptación funcional al propietario (`jmejia31`) en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).

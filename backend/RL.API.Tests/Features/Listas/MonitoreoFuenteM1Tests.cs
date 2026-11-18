@@ -198,4 +198,62 @@ public sealed class MonitoreoFuenteM1Tests
         Assert.NotEqual(EstadoIdentidadMonitoreo.Verified,
             IdentidadMonitoreoPolicy.EstadoParaPresentacion(documento, 2, 1));
     }
+
+    [Theory]
+    [InlineData("activos", "AND NVL(f.ES_CERRADO_PASIVO, 0) = 0")]
+    [InlineData("pendiente", "AND f.TIENE_MOTIVO = 0 AND NVL(f.ES_CERRADO_PASIVO, 0) = 0")]
+    [InlineData("con_motivo", "AND f.TIENE_MOTIVO = 1 AND NVL(f.ES_CERRADO_PASIVO, 0) = 0")]
+    [InlineData("manual", "AND f.ES_MANUAL = 1 AND NVL(f.ES_CERRADO_PASIVO, 0) = 0")]
+    [InlineData("cerrado_pasivo", "AND NVL(f.ES_CERRADO_PASIVO, 0) = 1")]
+    [InlineData("otro_estado", "AND ESTADO_MONITOREO = :estado")]
+    public void FiltrosEstado_GeneranCondicionesExactasEnSqlYDefaultSeguro(string estado, string condicionEsperada)
+    {
+        var method = typeof(ListasRepository).GetMethod("AppendMonitoringFilters",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        object[] args =
+        {
+            "SELECT f.* FROM (SELECT 1 AS ID) f WHERE 1 = 1",
+            new ConsultaMonitoreoPaginadaDto { Estado = estado }
+        };
+        method.Invoke(null, args);
+        var sql = Assert.IsType<string>(args[0]);
+        Assert.Contains(condicionEsperada, sql, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FiltroEstadoTodos_NoAgregaCondicionDeEstado()
+    {
+        var method = typeof(ListasRepository).GetMethod("AppendMonitoringFilters",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        object[] args =
+        {
+            "SELECT f.* FROM (SELECT 1 AS ID) f WHERE 1 = 1",
+            new ConsultaMonitoreoPaginadaDto { Estado = "todos" }
+        };
+        method.Invoke(null, args);
+        var sql = Assert.IsType<string>(args[0]);
+        Assert.DoesNotContain("ESTADO_MONITOREO", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("ES_CERRADO_PASIVO", sql, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ConstruirConsultaMonitoreoContextual_OmiteFiltroDeEstadoYConservaFiltrosGenerales()
+    {
+        var method = typeof(ListasRepository).GetMethod("ConstruirConsultaMonitoreoContextual",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        var baseSql = "SELECT '0801' AS NUMERO_IDENTIFICACION, 'JUAN' AS NOMBRE, 0 AS TIENE_MOTIVO, 0 AS ES_MANUAL FROM DUAL";
+        var consulta = new ConsultaMonitoreoPaginadaDto
+        {
+            Buscar = "JUAN",
+            Estado = "con_motivo"
+        };
+        var contextualSql = Assert.IsType<string>(method.Invoke(null, new object[] { baseSql, consulta }));
+
+        Assert.Contains("UPPER(NOMBRE) LIKE", contextualSql);
+        Assert.DoesNotContain("AND f.TIENE_MOTIVO = 1", contextualSql);
+        Assert.DoesNotContain("AND ESTADO_MONITOREO = :estado", contextualSql);
+    }
 }

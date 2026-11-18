@@ -19,7 +19,7 @@ import { InstitutionalConfirmationService } from '../../../../../shared/confirma
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
-type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
+type FiltroEstado = 'todos' | 'activos' | 'pendiente' | 'con_motivo' | 'manual' | 'cerrado_pasivo';
 type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string };
 type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | CoincidenciaEmpleado;
 type SolicitudMonitoreo = {
@@ -153,6 +153,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   juridicasPaginas = signal(0);
   naturalesPaginas = signal(0);
   empleadosPaginas = signal(0);
+  juridicasTotalRegistros = signal(0);
+  naturalesTotalRegistros = signal(0);
+  empleadosTotalRegistros = signal(0);
 
   datosConsolidados = computed<MonitoreoRegistro[]>(() => [
     ...this.juridicasRaw(),
@@ -174,16 +177,23 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   totalesActuales = computed(() => this.tipoActivo() === 'juridica' ? this.juridicasTotales() : this.tipoActivo() === 'natural' ? this.naturalesTotales() : this.empleadosTotales());
   totalActual = computed(() => this.totalesActuales().totalRegistros);
+  coincidenciasActivasActual = computed(() => this.totalesActuales().coincidenciasActivas ?? this.totalActual());
   totalCoincidenciasFuente = computed(() => this.totalesActuales().totalCoincidenciasFuente ?? this.totalActual());
   pendientesActual = computed(() => this.totalesActuales().pendientes);
   conMotivoActual = computed(() => this.totalesActuales().conMotivo);
   cerradosPasivosActual = computed(() => this.totalesActuales().cerradosPasivos);
   positivosManualesActual = computed(() => this.totalesActuales().manuales);
   totalGeneral = computed(() => this.totalActual());
+  coincidenciasActivasGeneral = computed(() => this.coincidenciasActivasActual());
   pendientesGeneral = computed(() => this.pendientesActual());
   conMotivoGeneral = computed(() => this.conMotivoActual());
   positivosManualesGeneral = computed(() => this.positivosManualesActual());
   cerradosPasivosGeneral = computed(() => this.cerradosPasivosActual());
+  totalRegistrosTabla = computed(() => {
+    if (this.tipoActivo() === 'juridica') return this.juridicasTotalRegistros();
+    if (this.tipoActivo() === 'natural') return this.naturalesTotalRegistros();
+    return this.empleadosTotalRegistros();
+  });
 
   hayFiltrosPrincipalesActivos = computed(() =>
     !!this.busqueda().trim() ||
@@ -387,14 +397,17 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         this.juridicasRaw.set(respuesta.items as CoincidenciaJuridica[]);
         this.juridicasTotales.set(respuesta.totales);
         this.juridicasPaginas.set(respuesta.totalPaginas);
+        this.juridicasTotalRegistros.set(respuesta.totalRegistros);
       } else if (tipo === 'natural') {
         this.naturalesRaw.set(respuesta.items as CoincidenciaNatural[]);
         this.naturalesTotales.set(respuesta.totales);
         this.naturalesPaginas.set(respuesta.totalPaginas);
+        this.naturalesTotalRegistros.set(respuesta.totalRegistros);
       } else {
         this.empleadosRaw.set(respuesta.items as CoincidenciaEmpleado[]);
         this.empleadosTotales.set(respuesta.totales);
         this.empleadosPaginas.set(respuesta.totalPaginas);
+        this.empleadosTotalRegistros.set(respuesta.totalRegistros);
       }
       this.contextoMonitoreoEnCarga = null;
       this.contextoMonitoreoCargado = contexto;
@@ -419,11 +432,13 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   private coincideEstado(item: { tieneMotivo?: boolean; esManual?: boolean }, estado: FiltroEstado): boolean {
     const cerradoPasivo = this.esCerradoPasivo(item);
-    if (estado === 'todos') return !cerradoPasivo;
+    if (estado === 'todos') return true;
+    if (estado === 'activos') return !cerradoPasivo;
     if (estado === 'cerrado_pasivo') return cerradoPasivo;
     if (cerradoPasivo) return false;
-    if (estado === 'con_motivo') return !!item.tieneMotivo && !item.esManual;
-    if (estado === 'pendiente') return !item.tieneMotivo || !!item.esManual;
+    if (estado === 'con_motivo') return !!item.tieneMotivo;
+    if (estado === 'pendiente') return !item.tieneMotivo;
+    if (estado === 'manual') return !!item.esManual;
     return true;
   }
 
@@ -1978,9 +1993,11 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   private obtenerEtiquetaEstadoFiltro(estado: FiltroEstado): string {
-    if (estado === 'pendiente') return 'Pendiente';
-    if (estado === 'con_motivo') return 'Con motivo';
-    if (estado === 'cerrado_pasivo') return 'Cerrado / Pasivo';
+    if (estado === 'activos') return 'Coincidencias activas';
+    if (estado === 'pendiente') return 'Pendientes de motivo';
+    if (estado === 'con_motivo') return 'Con motivo registrado';
+    if (estado === 'manual') return 'Positivos manuales';
+    if (estado === 'cerrado_pasivo') return 'Cerrados / Pasivos';
     return 'Todos los registros';
   }
 

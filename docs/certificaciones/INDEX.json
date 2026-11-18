@@ -313,6 +313,25 @@
       "github_remote_verified": "YES",
       "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M1-P0-CORRECCION-FILTROS-TARJETAS-20261118",
+      "path": "M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_TECHNICALLY_READY_FOR_OWNER_VISUAL_REVIEW",
+      "base_sha": "f1ec7c6241c3e037d320851f54251704bd1ab22d",
+      "source_code_sha": "PENDING_COMMIT_HEAD",
+      "quality_gate_run": "PENDING_GITHUB_ACTIONS",
+      "security_scan": "PASS_FULL_TREE_AUDIT_NO_VULNERABILITIES",
+      "oracle_xe_synthetic": "PENDING_GITHUB_ACTIONS",
+      "oracle_institutional_reads": "PRESERVED_EXISTING_QUERIES",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "PENDING",
+      "github_remote_verified": "PENDING_PUSH",
+      "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }

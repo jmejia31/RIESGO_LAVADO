@@ -160,6 +160,7 @@ export interface Paginado<T> {
 export interface MonitoreoTotales {
   totalRegistros: number;
   totalCoincidenciasFuente?: number;
+  coincidenciasActivas?: number;
   pendientes: number;
   conMotivo: number;
   manuales: number;

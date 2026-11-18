@@ -11656,3 +11656,55 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Expediente:** [`docs/certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md`](docs/certificaciones/M1_P0_AUDITORIA_CLASIFICACION_NATURALES_EMPLEADOS_20261118.md).
 - **Quality Gate certificado:** [44380767197](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44380767197) (`CONCLUSION=success`, `STATUS=completed`, `SHA=dec8c88942530ac2ba6802653ea9d794ab957a6f`).
 - **Punto exacto de continuación:** Servidores locales activos (backend `5043`, frontend `4200`); entrega de informe técnico para validación visual del propietario en el navegador y posterior cierre funcional de Microfase 1 en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+
+
+## Intervención P0 — Corrección definitiva de filtros y tarjetas de Monitoreo de Listas — 2026-11-18 14:15 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=f1ec7c6241c3e037d320851f54251704bd1ab22d` (Quality Gate previo `44380767197` verificado en CI — no reutilizado para certificar este nuevo cambio)
+- **Objetivo y alcance:** Corrección definitiva de la falta de correspondencia funcional y matemática entre las 5 tarjetas institucionales del módulo Monitoreo de Listas y el menú desplegable de filtros:
+  1. **Simetría Total de Opciones (6 en desplegable <-> 5 tarjetas + todos):**
+     - `Todos los registros` -> `'todos'`
+     - `Coincidencias activas` -> `'activos'` (Tarjeta 1)
+     - `Pendientes de motivo` -> `'pendiente'` (Tarjeta 2)
+     - `Con motivo registrado` -> `'con_motivo'` (Tarjeta 3)
+     - `Positivos manuales` -> `'manual'` (Tarjeta 4)
+     - `Cerrados / Pasivos` -> `'cerrado_pasivo'` (Tarjeta 5)
+  2. **Correspondencia Matemática Estricta:**
+     - `TOTAL_TARJETA_ESTADO == TOTAL_REGISTROS_FILTRADOS_ESTADO`.
+     - `filteredTotal` se extrae directamente del agregado de metadata según el estado seleccionado, garantizando paridad matemática exacta sin consultas adicionales `COUNT(*)`.
+     - Si `filteredTotal == 0` (como ocurre en `cerrado_pasivo`), el repositorio retorna inmediatamente sin consultar Oracle innecesariamente.
+  3. **Desacoplamiento de Metadata Contextual y Listado Paginado:**
+     - `ConstruirConsultaMonitoreoContextual` evalúa los filtros generales (búsqueda, fechas, categoría de identidad, períodos de planilla) con `Estado = "todos"`.
+     - Las tarjetas permanecen estables y no colapsan a 0 al seleccionar un filtro de estado específico en el desplegable.
+     - `CrearClaveMetadataMonitoreo` excluye `consulta.Estado`, permitiendo que el cambio de filtros se sirva instantáneamente desde caché.
+  4. **Independencia de Estado y Origen:**
+     - Se eliminó el acoplamiento rígido de `ES_MANUAL`. Los positivos manuales con motivo conservan ambas condiciones y se cuentan en `manual` y `con_motivo`.
+- **Archivos modificados/creados:**
+  - `backend/RL.API/Features/Listas/Contracts/ConsultasPaginadasDtos.cs`
+  - `backend/RL.API/Features/Listas/Persistence/ListasRepository.cs`
+  - `backend/RL.API.Tests/Features/Listas/MonitoreoFuenteM1Tests.cs`
+  - `frontend/rl-app/src/app/features/admin/listas/models/listas.models.ts`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.impl.ts`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts`
+  - `docs/certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md`
+  - `docs/certificaciones/INDEX.json`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Pruebas ejecutadas y verificadas en esta intervención:**
+  - Backend .NET: `1,191 PASS`, 0 errores, 1 omitida (Oracle XE local). Incluye 3 nuevas pruebas unitarias en `MonitoreoFuenteM1Tests.cs` para los 6 estados y consultas contextuales.
+  - Frontend Vitest: **96/96 suites, 1,033/1,033 pruebas PASS**, 0 errores. Incluye nueva prueba en `monitoreo-listas.component.spec.ts` para filtrado por los 6 estados canónicos y correspondencia de tarjetas.
+  - Angular build: `npx ng build` EXIT 0, compilación de producción exitosa.
+  - Frontend linter: `npx eslint` EXIT 0, sin advertencias ni errores.
+  - Validadores del repositorio:
+    - `validate_repository_structure.ps1` PASS (118 rutas, 1,286 archivos rastreados).
+    - `validate_database_scripts.ps1` PASS (281 catálogos, sin brechas Unicode).
+    - `validate_documentation_links.ps1` PASS (250 documentos, 261 enlaces).
+    - `validate_agent_skills.py` PASS (14 skills válidas).
+- **Preservación y Restricciones:**
+  - 34 archivos locales sin seguimiento preservados intactos.
+  - 0 escrituras en Oracle institucional (`DML=0`, `DDL=0`), 0 mutaciones en `main` o producción.
+  - 0 exposición de PII.
+- **Expediente:** [`docs/certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md`](docs/certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md).
+- **Punto exacto de continuación:** Publicar cambios en `origin/desarrollo` (`ANTIG`), monitorear el Quality Gate en GitHub Actions y presentar la aceptación funcional al propietario (`jmejia31`).

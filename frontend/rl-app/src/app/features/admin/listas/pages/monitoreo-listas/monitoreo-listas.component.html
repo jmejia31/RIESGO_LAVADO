@@ -52,7 +52,7 @@
       <div data-ui-monitoring-kpis class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-stretch">
         <article data-ui-monitoring-kpi="active" class="flex h-full flex-col rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Coincidencias activas</p>
-          <p class="mt-2 text-3xl font-bold text-gray-900">{{ totalGeneral() }}</p>
+          <p class="mt-2 text-3xl font-bold text-gray-900">{{ coincidenciasActivasGeneral() }}</p>
           @if ((tipoActivo() === 'natural' || tipoActivo() === 'empleado') && totalCoincidenciasFuente() > totalGeneral()) {
             <p class="mt-auto pt-2 text-xs text-gray-500">Grupos por DNI ({{ totalCoincidenciasFuente() }} coincidencias de origen)</p>
           } @else {
@@ -118,9 +118,11 @@
       <select [ngModel]="filtroEstado()" (ngModelChange)="cambiarEstado($event)"
         class="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700">
         <option value="todos">Todos los registros</option>
-        <option value="pendiente">Pendiente</option>
-        <option value="con_motivo">Con motivo</option>
-        <option value="cerrado_pasivo">Cerrado / Pasivo</option>
+        <option value="activos">Coincidencias activas</option>
+        <option value="pendiente">Pendientes de motivo</option>
+        <option value="con_motivo">Con motivo registrado</option>
+        <option value="manual">Positivos manuales</option>
+        <option value="cerrado_pasivo">Cerrados / Pasivos</option>
       </select>
 
       <input type="date" [ngModel]="filtroFechaDesde()" (ngModelChange)="cambiarFechaDesde($event)"
@@ -526,7 +528,7 @@
             </tbody>
           </table>
 
-          <app-data-pagination [page]="paginaActual()" [pageSize]="limite()" [totalRecords]="totalActual()" itemLabel="registros" [disabled]="cargando()" (pageChange)="cambiarPagina($event)" />
+          <app-data-pagination [page]="paginaActual()" [pageSize]="limite()" [totalRecords]="totalRegistrosTabla()" itemLabel="registros" [disabled]="cargando()" (pageChange)="cambiarPagina($event)" />
 
         }
 

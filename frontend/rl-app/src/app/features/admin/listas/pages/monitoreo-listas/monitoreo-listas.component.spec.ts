@@ -742,4 +742,40 @@ describe('MonitoreoListasComponent', () => {
     expect(component.naturalesPaginadas()).toHaveLength(0);
   });
 
+  it('permite filtrar por los 6 estados canónicos y preserva simetría entre tarjetas y tabla', () => {
+    service['getNaturalesPaginadas'].mockReturnValue(of({
+      items: [{ numeroIdentificacion: '0801-1980-00001', nombre: 'JUAN PRUEBA' }],
+      pagina: 1,
+      tamanoPagina: 10,
+      totalRegistros: 1,
+      totalPaginas: 1,
+      totales: {
+        totalRegistros: 10,
+        totalCoincidenciasFuente: 15,
+        coincidenciasActivas: 10,
+        pendientes: 4,
+        conMotivo: 5,
+        manuales: 2,
+        cerradosPasivos: 0
+      }
+    }));
+
+    component.cambiarTipo('natural');
+    expect(component.coincidenciasActivasGeneral()).toBe(10);
+    expect(component.pendientesGeneral()).toBe(4);
+    expect(component.conMotivoGeneral()).toBe(5);
+    expect(component.positivosManualesGeneral()).toBe(2);
+    expect(component.cerradosPasivosGeneral()).toBe(0);
+    expect(component.totalRegistrosTabla()).toBe(1);
+
+    const estadosValidos: Array<'todos' | 'activos' | 'pendiente' | 'con_motivo' | 'manual' | 'cerrado_pasivo'> = [
+      'todos', 'activos', 'pendiente', 'con_motivo', 'manual', 'cerrado_pasivo'
+    ];
+
+    estadosValidos.forEach(estado => {
+      component.cambiarEstado(estado);
+      expect(component.filtroEstado()).toBe(estado);
+    });
+  });
+
 });
