@@ -223,6 +223,22 @@
       "owner_acceptance": "PENDING",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41",
       "github_remote_verified": "PENDING_REF_CHECK"
+    },
+    {
+      "id": "M1-ENDURECIMIENTO-20261118",
+      "path": "M1_ENDURECIMIENTO_IDENTIDAD_HISTORICOS_20261118.md",
+      "status": "CODE_PUBLISHED_PENDING_EXACT_SHA_CI_LIVE_ORACLE_OWNER",
+      "source_code_sha": "0f1126b0ae41e5674717ac80441321bf621c3b72",
+      "evidence_commit_sha": "SEE_COMMIT_ON_REMOTE_AFTER_PUSH",
+      "quality_gate_run": "PENDING_NEW_DOCUMENTARY_SHA",
+      "security_scan": "FULL_AUDIT_BLOCKING_PICOMATCH_HIGH",
+      "institutional_counts": "NOT_VERIFIED",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "PENDING",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41",
+      "github_remote_verified": "PENDING_POST_PUSH"
     }
   ]
 }

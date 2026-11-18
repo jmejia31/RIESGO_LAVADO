@@ -65,3 +65,8 @@ ORACLE_INSTITUTIONAL_READS=NOT_EXECUTED
 ORACLE_INSTITUTIONAL_WRITES=0
 DNP_IHSS_WRITES=0
 ```
+
+
+## 8. Segunda intervención de remediación técnica — 2026-11-18 08:28 -06:00 (CHAT)
+
+Correcciones P0 adicionales en `desarrollo`: [expediente M1 18/11](M1_ENDURECIMIENTO_IDENTIDAD_HISTORICOS_20261118.md), código `0f1126b0ae41e5674717ac80441321bf621c3b72`; se impide contaminación de motivos por DNI repetido, reconversión de positivos, se añade rango histórico desde/hasta con cache/paginación/exportación, se repara el guard de rendimiento de naturales con `REPORTE_DOC_AGG` y se elimina posible `ORA-00937` del resolver mediante `CROSS JOIN` de agregados. **CI final exacto y conciliación institucional siguen abiertas al documentar.**

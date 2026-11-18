@@ -11541,3 +11541,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - No se ejecutó Oracle institucional ni se verificaron los conteos 242/190/52 o 7 empleados; la relación fuente–motivo que depende de DNI requiere comprobación y fail-closed. [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) asignado a propietario para Q01-Q12, E2E autenticado y aceptación.
 - Expediente `docs/certificaciones/M1_CORRECCIONES_P0_IDENTIDAD_REPORTES_20261117.md`, entrada nueva en índice. `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_INSTITUTIONAL_WRITES=0`; `DNP_IHSS_WRITES=0`; `B07_TOUCHED=NO`; `BLOCK10_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`.
 - **Continuación exacta:** verificar el Quality Gate del SHA exacto y reparar nuevos fallos sin saltarse el audit; cerrar conciliación institucional y aprobar por propietario antes de poner M1 `CERRADA`.
+
+
+## Estado vigente — M1 endurecimiento identidad e históricos — 2026-11-18 08:28 -06:00 (CHAT)
+
+- `BRANCH=desarrollo`; `BASE_SHA=b378f42224a8b543b4e9e70a8769829a1549f410`; `SOURCE_CODE_SHA=0f1126b0ae41e5674717ac80441321bf621c3b72`; autor CHAT, conexión `jmejia31`.
+- Seguridad de asociaciones: positivos por fuente DNP y tipo; rechazo de cambio de origen/tipo de positivo; identidad operable requiere una única coincidencia fuente y sujeto. SQL de resolución reescrito con `CROSS JOIN` para evitar `ORA-00937` por subquery escalar agregada.
+- Histórico de empleados: filtros de mes exacto o Desde/Hasta, bordes mensuales inclusive, `EXISTS` no multiplicador, exportación y caché por filtros; UI valida rango invertido y ofrece texto accesible.
+- `RUN_44320027918=FAIL_GUARD_PERFORMANCE_PLUS_PICOMATCH`; el fallo de rendimiento fue reparado (sin `COUNT(*) OVER` en naturales) en `e77fdad`. `SOURCE_CODE_SHA` nuevo requiere ejecutar QG propio; `FINAL_QG=NOT_CERTIFIED_AT_DOCUMENTATION`. CI previa 44187356574 de otro SHA: 1172 .NET PASS/1 SKIP, 1026 Angular PASS, 79 E2E PASS/15 SKIP, fallo seguridad npm audit.
+- `M1_242_190_52=NOT_VERIFIED_ORACLE`; `M1_EMPLOYEES_7=NOT_VERIFIED_ORACLE`; `OWNER_ACCEPTANCE=PENDING`. Issue #41 mantiene conciliación y pruebas reales sin PII. `ORACLE_INSTITUTIONAL_WRITES=0`, `MAIN_TOUCHED=NO`, `PRODUCTION_TOUCHED=NO`, `DNP_IHSS_WRITES=0`, `B07/BLOCK10/MIGRATION54=NOT_TOUCHED`.
+- Índice y expediente `docs/certificaciones/M1_ENDURECIMIENTO_IDENTIDAD_HISTORICOS_20261118.md`. **Continuación exacta:** revisar Quality Gate SHA de último commit documental y corregir fallos propios; no cerrar M1 hasta conciliación DBA, revisión visual propietario y seguridad integral PASS.
