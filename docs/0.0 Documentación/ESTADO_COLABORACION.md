@@ -1,3 +1,23 @@
+# Estado vigente — Deducción automática de catálogos y habilitación inmediata de guardado en modal de motivos (ANTIG) — 2026-11-18 16:15 -06:00
+
+## Estado vigente — Autoselección de Tipo de Documento, Lista de Cautela y habilitación reactiva de Guardar
+
+- Se corrigió la experiencia de usuario en el modal «Registrar Motivo en Lista de Positivos» donde los desplegables de Tipo de Documento y Tipo de Lista de Cautela quedaban en estado nulo (*«Seleccione un tipo...»*), bloqueando silenciosamente el botón de guardar motivo en gris.
+- **Causa raíz identificada y resuelta:**
+  - Al abrir el modal desde una fila de coincidencia sin positivo previo (`existing === null`), `formTipoDocId` y `formTipoListaCautelaId` se fijaban en `null`.
+  - El botón de guardar en el template poseía `[disabled]="guardandoMotivo() || !formTipoDocId() || !formOrigenRegistro() || !formMotivo().trim()"`, desactivándose sin feedback al usuario.
+  - Se implementaron las funciones `deducirTipoDocumentoDefault(row, tipo)` y `deducirTipoListaCautelaDefault(row)` en `monitoreo-listas.component.impl.ts` para autoseleccionar de inmediato el Tipo de Documento (DNI para naturales/empleados, RTN para jurídicas) y la Lista de Cautela (a partir de `row.listaCoincidencia` o PEPS por defecto).
+  - El botón de guardar en `monitoreo-listas.component.html:881` ahora se habilita directamente al ingresar el motivo: `[disabled]="guardandoMotivo() || !formMotivo().trim()"`.
+  - El seguimiento y adjuntos se confirman como 100% opcionales. En caso de adjuntar archivos de evidencia sin comentario textual, se suministra automáticamente una nota institucional por defecto sin bloquear al usuario.
+- **Verificación técnica integral:**
+  - Angular Vitest: 96/96 suites PASS, 1,033/1,033 tests PASS.
+  - Angular production build (`npm run build`): PASS (0 errores de compilación).
+  - Validadores: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
+- **Restricciones de gobernanza preservadas:** 34 archivos sin seguimiento locales preservados intactos; 0 escrituras en `main`, producción u Oracle institucional; [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) permanece abierto a la espera de la aceptación visual final del propietario.
+- **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo` al hacer clic en «Registrar motivo» de cualquier fila.
+
+---
+
 # Estado vigente — Habilitación de estado 'Con motivo' y acción de seguimiento para registros y positivos manuales (ANTIG) — 2026-11-18 16:00 -06:00
 
 ## Estado vigente — Desacoplamiento de esManual y habilitación universal de estado 'Con motivo' y acción de seguimiento

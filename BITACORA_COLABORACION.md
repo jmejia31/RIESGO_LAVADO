@@ -11840,3 +11840,23 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Backend `dotnet test` (Listas): 102/102 tests PASS, 0 fallos.
   - Validadores del repositorio: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
 - **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo` confirmando que Javier Ruiz y cualquier positivo manual con motivo reflejan el badge «Con motivo» y permiten abrir el modal de seguimiento.
+
+## Intervención P0 — Deducción automática de catálogos y habilitación inmediata de guardado en modal de motivos — 2026-11-18 16:15 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=561189d0ad1882cf2179bc37f0ae234ff5d9962a`
+- **Diagnóstico y causa raíz:**
+  1. **Selectores no inicializados al abrir modal:** En `registrarMotivo(row)`, cuando una coincidencia no poseía un positivo previo en base de datos (`existing === null`), los estados de los desplegables se inicializaban en `null` (`formTipoDocId.set(null)` y `formTipoListaCautelaId.set(null)`).
+  2. **Bloqueo del botón de guardar:** En `monitoreo-listas.component.html:881`, el botón de guardar poseía `[disabled]="guardandoMotivo() || !formTipoDocId() || !formOrigenRegistro() || !formMotivo().trim()"`. Al quedar `formTipoDocId` en `null`, el botón quedaba deshabilitado / inerte en gris aunque el usuario ya hubiera ingresado el motivo en «Motivo de Ingreso».
+  3. **Seguimiento y adjuntos opcionales:** En `guardarMotivo()`, si se adjuntaban archivos sin redactar nota se bloqueaba con un diálogo modal, y el flujo requería confirmar que el seguimiento es estrictamente opcional.
+- **Corrección quirúrgica:**
+  1. En `monitoreo-listas.component.impl.ts`:
+     - Incorporadas las funciones `deducirTipoDocumentoDefault(row, tipo)` y `deducirTipoListaCautelaDefault(row)` para autoseleccionar de forma inteligente y transparente el Tipo de Documento (DNI para naturales/empleados, RTN para jurídicas) y la Lista de Cautela (por coincidencia de texto con `row.listaCoincidencia` o PEPS por defecto).
+     - Actualizado `guardarMotivo()` para aplicar fallbacks automáticos en caso de valores vacíos y tratar la nota de seguimiento y adjuntos como 100% opcionales (si se adjuntan evidencias sin texto, se asigna nota institucional por defecto sin bloquear al usuario).
+  2. En `monitoreo-listas.component.html`:
+     - El botón de guardar motivo ahora se habilita de inmediato en cuanto se ingresa el texto del motivo: `[disabled]="guardandoMotivo() || !formMotivo().trim()"`, con tooltip descriptivo.
+- **Verificación ejecutada:**
+  - Angular Vitest: 96/96 suites PASS, 1,033/1,033 tests PASS.
+  - Angular production build (`npm run build`): PASS (0 errores).
+  - Validadores: Estructura, Scripts BD, Enlaces y Agent Skills (14/14) todos PASS.
+- **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo`.

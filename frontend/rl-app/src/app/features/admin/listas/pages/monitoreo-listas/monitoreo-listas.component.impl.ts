@@ -2213,6 +2213,46 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     return Math.min(a, b);
   }
 
+  deducirTipoDocumentoDefault(row: any, tipo: FiltroTipo): number | null {
+    const tipos = this.listaTiposDocumento();
+    if (!tipos.length) return 1;
+
+    if (tipo === 'natural' || tipo === 'empleado') {
+      const match = tipos.find(t => {
+        const desc = (t.descripcion || '').toUpperCase();
+        return desc.includes('DNI') || desc.includes('IDENTIDAD') || desc.includes('CEDULA');
+      });
+      return match ? match.tipoDocumentoId : tipos[0].tipoDocumentoId;
+    }
+
+    if (tipo === 'juridica') {
+      const match = tipos.find(t => {
+        const desc = (t.descripcion || '').toUpperCase();
+        return desc.includes('RTN') || desc.includes('PATRONAL') || desc.includes('RUC');
+      });
+      return match ? match.tipoDocumentoId : tipos[0].tipoDocumentoId;
+    }
+
+    return tipos[0].tipoDocumentoId;
+  }
+
+  deducirTipoListaCautelaDefault(row: any): number | null {
+    const cautelas = this.listaTiposListasCautela();
+    if (!cautelas.length) return 1;
+
+    const listaTexto = (row?.listaCoincidencia || '').toUpperCase().trim();
+    if (listaTexto) {
+      const match = cautelas.find(c => {
+        const desc = (c.descripcion || '').toUpperCase().trim();
+        return desc === listaTexto || listaTexto.includes(desc) || desc.includes(listaTexto);
+      });
+      if (match) return match.tipoListaCautelaId;
+    }
+
+    const peps = cautelas.find(c => (c.descripcion || '').toUpperCase().includes('PEP'));
+    return peps ? peps.tipoListaCautelaId : cautelas[0].tipoListaCautelaId;
+  }
+
   registrarMotivo(row: any) {
     this.esRegistroManual.set(false);
     this.formManualNombre.set('');
@@ -2220,8 +2260,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.formManualTipoPositivoId.set(null);
     this.formSeguimientoComentario.set('');
     this.archivosSeguimiento.set([]);
-    this.formTipoListaCautelaId.set(null);
-    this.formOrigenRegistro.set('DNP_LISTAS');
 
     let tipoPosId = 1; // 1 = JURÍDICO, 2 = NATURAL, 3 = EMPLEADO
     const tipo = this.tipoActivo();
@@ -2246,6 +2284,15 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         : (row.identidad || (row.idRegistroFuente ? `SRC:${row.idRegistroFuente}` : ''));
     }
 
+    const defaultTipoDoc = this.deducirTipoDocumentoDefault(row, tipo);
+    const defaultTipoCautela = this.deducirTipoListaCautelaDefault(row);
+    const defaultOrigen = row.esManual ? 'MANUAL_CUMPLIMIENTO' : 'DNP_LISTAS';
+
+    this.formTipoDocId.set(defaultTipoDoc);
+    this.formTipoListaCautelaId.set(defaultTipoCautela);
+    this.formOrigenRegistro.set(defaultOrigen);
+    this.formMotivo.set('');
+
     this.entidadSeleccionada.set({
       nombreCompleto: row.nombre,
       noDocumento: docNum,
@@ -2262,24 +2309,15 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.listasService.getPositivoPorDocumento(docNum).subscribe({
       next: (existing) => {
         if (existing) {
-          this.formTipoDocId.set(existing.tipoDocumentoId);
-          this.formMotivo.set(existing.motivoIngreso);
-          this.formTipoListaCautelaId.set(existing.tipoListaCautelaId || null);
-          this.formOrigenRegistro.set(existing.origenRegistro || 'DNP_LISTAS');
-        } else {
-          this.formTipoDocId.set(null);
-          this.formMotivo.set('');
-          this.formTipoListaCautelaId.set(null);
-          this.formOrigenRegistro.set('DNP_LISTAS');
+          this.formTipoDocId.set(existing.tipoDocumentoId || defaultTipoDoc);
+          this.formMotivo.set(existing.motivoIngreso || '');
+          this.formTipoListaCautelaId.set(existing.tipoListaCautelaId || defaultTipoCautela);
+          this.formOrigenRegistro.set(existing.origenRegistro || defaultOrigen);
         }
         this.modalMotivoAbierto.set(true);
       },
       error: (err) => {
         console.error('Error al obtener datos existentes de la lista de positivos:', err);
-        this.formTipoDocId.set(null);
-        this.formMotivo.set('');
-        this.formTipoListaCautelaId.set(null);
-        this.formOrigenRegistro.set('DNP_LISTAS');
         this.modalMotivoAbierto.set(true);
       }
     });
@@ -2290,9 +2328,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.formManualNombre.set('');
     this.formManualNoDocumento.set('');
     this.formManualTipoPositivoId.set(null);
-    this.formTipoDocId.set(null);
+    this.formTipoDocId.set(this.deducirTipoDocumentoDefault(null, 'natural'));
     this.formMotivo.set('');
-    this.formTipoListaCautelaId.set(null);
+    this.formTipoListaCautelaId.set(this.deducirTipoListaCautelaDefault(null));
     this.formOrigenRegistro.set('MANUAL_CUMPLIMIENTO');
     this.formSeguimientoComentario.set('');
     this.archivosSeguimiento.set([]);
@@ -2330,10 +2368,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
   guardarMotivo() {
     const manual = this.esRegistroManual();
-    const docId = this.formTipoDocId();
+    let docId = this.formTipoDocId();
     const motivo = this.formMotivo().trim();
-    const cautelaId = this.formTipoListaCautelaId();
-    const origenRegistro = this.formOrigenRegistro();
+    let cautelaId = this.formTipoListaCautelaId();
+    let origenRegistro = this.formOrigenRegistro();
     const comentarioSeg = this.formSeguimientoComentario().trim();
     const archivosSeg = this.archivosSeguimiento();
 
@@ -2367,12 +2405,25 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       idRegistroFuente = entidad.idRegistroFuente ?? null;
     }
 
+    if (!docId) {
+      docId = this.deducirTipoDocumentoDefault(this.entidadSeleccionada(), this.tipoActivo());
+      this.formTipoDocId.set(docId);
+    }
+    if (!cautelaId) {
+      cautelaId = this.deducirTipoListaCautelaDefault(this.entidadSeleccionada());
+      this.formTipoListaCautelaId.set(cautelaId);
+    }
+    if (!origenRegistro) {
+      origenRegistro = manual ? 'MANUAL_CUMPLIMIENTO' : 'DNP_LISTAS';
+      this.formOrigenRegistro.set(origenRegistro);
+    }
+
     if (!docId || !cautelaId || !origenRegistro || !motivo) {
       import('sweetalert2').then(Swal => {
         Swal.default.fire({
           allowOutsideClick: false,
           title: 'Campos requeridos',
-          text: 'Por favor seleccione el tipo de documento, el tipo de lista de cautela, el origen del registro e ingrese el motivo.',
+          text: 'Por favor ingrese el motivo de ingreso a la lista de positivos.',
           icon: 'warning',
           confirmButtonColor: 'var(--ihss-primary-color)'
         });
@@ -2380,18 +2431,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (archivosSeg.length > 0 && !comentarioSeg) {
-      import('sweetalert2').then(Swal => {
-        Swal.default.fire({
-          allowOutsideClick: false,
-          title: 'Seguimiento requerido',
-          text: 'Para adjuntar evidencias debe escribir una nota de seguimiento.',
-          icon: 'warning',
-          confirmButtonColor: 'var(--ihss-primary-color)'
-        });
-      });
-      return;
-    }
+    const notaSegFinal = comentarioSeg || (archivosSeg.length > 0 ? 'Evidencia documental adjunta en registro inicial.' : '');
 
     this.guardandoMotivo.set(true);
 
@@ -2409,8 +2449,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     import('sweetalert2').then(Swal => {
       this.listasService.registrarPositivo(dto).subscribe({
         next: (resp) => {
-          if (comentarioSeg) {
-            this.listasService.registrarSeguimiento(noDocumento, comentarioSeg, archivosSeg).subscribe({
+          if (notaSegFinal) {
+            this.listasService.registrarSeguimiento(noDocumento, notaSegFinal, archivosSeg).subscribe({
               next: () => {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();

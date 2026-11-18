@@ -878,7 +878,7 @@
             <button (click)="cerrarModalMotivo()" [disabled]="guardandoMotivo()" title="Cancelar registro de motivo" aria-label="Cancelar registro de motivo" class="modal-action-icon modal-action-icon--neutral">
             <app-action-icon action="cancel"></app-action-icon>
           </button>
-            <button (click)="guardarMotivo()" [disabled]="guardandoMotivo() || !formTipoDocId() || !formOrigenRegistro() || !formMotivo().trim()" title="Guardar motivo" aria-label="Guardar motivo"
+            <button (click)="guardarMotivo()" [disabled]="guardandoMotivo() || !formMotivo().trim()" [attr.title]="!formMotivo().trim() ? 'Ingrese el motivo para guardar' : 'Guardar motivo'" [attr.aria-label]="!formMotivo().trim() ? 'Ingrese el motivo para guardar' : 'Guardar motivo'"
               class="modal-action-icon modal-action-icon--primary">
 <app-action-icon action="save" [loading]="guardandoMotivo()"></app-action-icon>
           </button>
