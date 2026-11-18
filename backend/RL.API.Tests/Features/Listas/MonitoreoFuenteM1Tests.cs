@@ -51,6 +51,29 @@ public sealed class MonitoreoFuenteM1Tests
 
 
     [Fact]
+    public void RangoPlanilla_UsaExistsConBordesMensualesInclusivos()
+    {
+        var method = typeof(ListasRepository).GetMethod("AppendMonitoringFilters",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        object[] args =
+        {
+            "SELECT f.* FROM (SELECT * FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS) f WHERE 1 = 1",
+            new ConsultaMonitoreoPaginadaDto
+            {
+                PeriodoPlanillaDesde = new DateTime(2026, 1, 1),
+                PeriodoPlanillaHasta = new DateTime(2026, 7, 1)
+            }
+        };
+        method.Invoke(null, args);
+        var sql = Assert.IsType<string>(args[0]);
+        Assert.Contains("AND EXISTS (SELECT 1 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS M1P", sql);
+        Assert.Contains("TRUNC(:periodoPlanillaDesde,'MM')", sql);
+        Assert.Contains("ADD_MONTHS(TRUNC(:periodoPlanillaHasta,'MM'),1)", sql);
+        Assert.DoesNotContain(":periodoPlanilla,'MM'", sql);
+    }
+
+    [Fact]
     public void PositivosDnpConMarcadores_NoSeOcultanPorCompartirDocumento()
     {
         foreach (var method in new[] { "ConstruirConsultaMonitoreoNaturales", "ConstruirConsultaMonitoreoEmpleados" })
@@ -70,8 +93,18 @@ public sealed class MonitoreoFuenteM1Tests
         {
             var sql = Sql(method);
             Assert.Contains("AND UPPER(TRIM(LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'", sql);
-            Assert.Contains("COUNT(*) OVER (PARTITION BY R.DNI) COINCIDENCIAS_FUENTE", sql);
-            Assert.Contains("I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1", sql);
+            if (method == "ConstruirConsultaMonitoreoNaturales")
+            {
+                Assert.Contains("REPORTE_DOC_AGG AS", sql);
+                Assert.Contains("LEFT JOIN REPORTE_DOC_AGG C ON C.DNI = R.DNI", sql);
+                Assert.Contains("NVL(C.COINCIDENCIAS_FUENTE,0) COINCIDENCIAS_FUENTE", sql);
+                Assert.DoesNotContain("COUNT(*) OVER", sql);
+            }
+            else
+            {
+                Assert.Contains("COUNT(*) OVER (PARTITION BY R.DNI) COINCIDENCIAS_FUENTE", sql);
+                Assert.Contains("I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1", sql);
+            }
         }
     }
 

@@ -172,6 +172,8 @@ export interface ConsultaMonitoreoPaginada {
   fechaHasta?: string | null;
   categoriaIdentidad?: 'identificadas' | 'sin_identificacion';
   periodoPlanilla?: string | null;
+  periodoPlanillaDesde?: string | null;
+  periodoPlanillaHasta?: string | null;
   orden?: string;
   direccion?: 'asc' | 'desc';
 }

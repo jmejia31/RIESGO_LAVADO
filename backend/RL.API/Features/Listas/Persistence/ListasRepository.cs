@@ -1782,7 +1782,9 @@ namespace RL.API.Features.Listas.Persistence
             => string.Join("|", ResolveMonitoringType(baseSql), consulta.Buscar?.Trim().ToUpperInvariant(),
                 consulta.Estado?.Trim().ToLowerInvariant(), consulta.FechaDesde?.ToString("O"),
                 consulta.FechaHasta?.ToString("O"), consulta.CategoriaIdentidad?.Trim().ToLowerInvariant(),
-                consulta.PeriodoPlanilla?.ToString("yyyy-MM"), consulta.Orden?.Trim().ToLowerInvariant(),
+                consulta.PeriodoPlanilla?.ToString("yyyy-MM"),
+                consulta.PeriodoPlanillaDesde?.ToString("yyyy-MM"), consulta.PeriodoPlanillaHasta?.ToString("yyyy-MM"),
+                consulta.Orden?.Trim().ToLowerInvariant(),
                 consulta.Direccion?.Trim().ToLowerInvariant());
 
         private static string ResolverOrdenMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
@@ -1916,14 +1918,24 @@ namespace RL.API.Features.Listas.Persistence
                 else
                     sql += " AND 1 = 0";
             }
-            if (consulta.PeriodoPlanilla.HasValue
+            // EXISTS evita multiplicar la coincidencia de origen por meses de planilla.
+            if ((consulta.PeriodoPlanilla.HasValue || consulta.PeriodoPlanillaDesde.HasValue ||
+                 consulta.PeriodoPlanillaHasta.HasValue)
                 && sql.Contains("V_EMPLEADOS_IHSS_PLANILLAS", StringComparison.OrdinalIgnoreCase))
+            {
                 sql += @" AND EXISTS (SELECT 1 FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS M1P
                     WHERE M1P.IDENTIDAD = f.IDENTIDAD
                       AND TRIM(M1P.NUMEPATRO) = TRIM(f.NUMERO_PATRONO)
-                      AND UPPER(TRIM(M1P.NOMBRE_EMPLEADO)) = UPPER(TRIM(f.NOMBRE))
-                      AND M1P.PERIODO >= TRUNC(:periodoPlanilla,'MM')
-                      AND M1P.PERIODO < ADD_MONTHS(TRUNC(:periodoPlanilla,'MM'),1))";
+                      AND UPPER(TRIM(M1P.NOMBRE_EMPLEADO)) = UPPER(TRIM(f.NOMBRE))";
+                if (consulta.PeriodoPlanilla.HasValue)
+                    sql += @" AND M1P.PERIODO >= TRUNC(:periodoPlanilla,'MM')
+                              AND M1P.PERIODO < ADD_MONTHS(TRUNC(:periodoPlanilla,'MM'),1)";
+                if (consulta.PeriodoPlanillaDesde.HasValue)
+                    sql += @" AND M1P.PERIODO >= TRUNC(:periodoPlanillaDesde,'MM')";
+                if (consulta.PeriodoPlanillaHasta.HasValue)
+                    sql += @" AND M1P.PERIODO < ADD_MONTHS(TRUNC(:periodoPlanillaHasta,'MM'),1)";
+                sql += ")";
+            }
         }
 
         private static void AddMonitoringParameters(OracleCommand command, ConsultaMonitoreoPaginadaDto consulta)
@@ -1933,9 +1945,17 @@ namespace RL.API.Features.Listas.Persistence
             if (consulta.FechaDesde.HasValue) command.Parameters.Add(new OracleParameter("fechaDesde", consulta.FechaDesde.Value));
             if (consulta.FechaHasta.HasValue) command.Parameters.Add(new OracleParameter("fechaHasta", consulta.FechaHasta.Value));
             if (consulta.PeriodoPlanilla.HasValue
-                && command.CommandText.Contains(":periodoPlanilla", StringComparison.OrdinalIgnoreCase))
+                && command.CommandText.Contains(":periodoPlanilla,", StringComparison.OrdinalIgnoreCase))
                 command.Parameters.Add(new OracleParameter("periodoPlanilla", OracleDbType.Date)
                     { Value = consulta.PeriodoPlanilla.Value });
+            if (consulta.PeriodoPlanillaDesde.HasValue
+                && command.CommandText.Contains(":periodoPlanillaDesde", StringComparison.OrdinalIgnoreCase))
+                command.Parameters.Add(new OracleParameter("periodoPlanillaDesde", OracleDbType.Date)
+                    { Value = consulta.PeriodoPlanillaDesde.Value });
+            if (consulta.PeriodoPlanillaHasta.HasValue
+                && command.CommandText.Contains(":periodoPlanillaHasta", StringComparison.OrdinalIgnoreCase))
+                command.Parameters.Add(new OracleParameter("periodoPlanillaHasta", OracleDbType.Date)
+                    { Value = consulta.PeriodoPlanillaHasta.Value });
         }
 
         private static string ConstruirConsultaMonitoreoJuridicas() => @"
@@ -2035,6 +2055,12 @@ namespace RL.API.Features.Listas.Persistence
                     FROM DNP_IHSS.REPRESENTANTES
                 ) FUENTE
                 GROUP BY NUMERO_IDENTIFICACION
+            ), REPORTE_DOC_AGG AS (
+                -- Agregacion ligera por DNI (no por DNI/lista); nunca reduce filas fuente.
+                SELECT DNI, COUNT(*) COINCIDENCIAS_FUENTE
+                FROM DNP_IHSS.REPORTE_COINCIDENCIAS
+                WHERE TIPO_CALIFICACION_ID = 1 AND DNI IS NOT NULL
+                GROUP BY DNI
             ), Coincidencias AS (
                 SELECT R.REPORTE_COINCIDENCIA_ID ID_REGISTRO_FUENTE,
                        'DNP_COINCIDENCIA' TIPO_FUENTE,
@@ -2043,20 +2069,20 @@ namespace RL.API.Features.Listas.Persistence
                        TO_CHAR(R.NUMERO_PATRONO) NUMERO_PATRONAL,
                        R.LISTA_CONCIDENCIA, 1 TOTAL_REPETIDOS,
                        R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
-                       CASE WHEN I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1
+                       CASE WHEN I.SUJETOS = 1 AND NVL(C.COINCIDENCIAS_FUENTE,0) = 1
                                   AND R.DNI IS NOT NULL
                                   AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
                                   AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN P.FECHA_REGISTRO_INTERNO
                             ELSE CAST(NULL AS DATE) END FECHA_REGISTRO_INTERNO,
-                       CASE WHEN I.SUJETOS = 1 AND COUNT(*) OVER (PARTITION BY R.DNI) = 1
+                       CASE WHEN I.SUJETOS = 1 AND NVL(C.COINCIDENCIAS_FUENTE,0) = 1
                                   AND R.DNI IS NOT NULL
                                   AND UPPER(TRIM(R.DNI)) NOT LIKE 'N/A%'
                                   AND UPPER(TRIM(R.DNI)) NOT IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN NVL(P.TIENE_MOTIVO,0) ELSE 0 END TIENE_MOTIVO,
                        0 ES_MANUAL, NVL(I.REFERENCIAS,0) IDENTIDAD_REFERENCIAS,
                        NVL(I.SUJETOS,0) IDENTIDADES_DISTINTAS,
-                       COUNT(*) OVER (PARTITION BY R.DNI) COINCIDENCIAS_FUENTE,
+                       NVL(C.COINCIDENCIAS_FUENTE,0) COINCIDENCIAS_FUENTE,
                        CASE WHEN R.DNI IS NULL OR TRIM(R.DNI) IS NULL
                                   OR UPPER(TRIM(R.DNI)) LIKE 'N/A%'
                                   OR UPPER(TRIM(R.DNI)) IN ('NULL','VACIO','VACÍO',
@@ -2066,6 +2092,7 @@ namespace RL.API.Features.Listas.Persistence
                 FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
                 LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = R.DNI
                 LEFT JOIN IDENTIDAD_AGG I ON I.NUMERO_IDENTIFICACION = R.DNI
+                LEFT JOIN REPORTE_DOC_AGG C ON C.DNI = R.DNI
                 WHERE R.TIPO_CALIFICACION_ID = 1
             )
             SELECT ID_REGISTRO_FUENTE, TIPO_FUENTE, NUMERO_IDENTIFICACION,

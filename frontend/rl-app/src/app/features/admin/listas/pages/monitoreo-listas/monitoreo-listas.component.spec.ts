@@ -158,6 +158,40 @@ describe('MonitoreoListasComponent', () => {
     expect(component.periodoPlanilla()).toBe('2026-07');
   });
 
+  it('M1: rango historico inclusivo aplica a listado y exportacion sin multiplicar coincidencias', () => {
+    component.cambiarTipo('empleado');
+    component.cambiarRangoPlanilla('desde', '2026-01');
+    component.cambiarRangoPlanilla('hasta', '2026-07');
+    expect(component.rangoPlanillaInvalido()).toBe(false);
+    expect(component.periodoPlanilla()).toBe('');
+    expect(service['getEmpleadosPaginadas']).toHaveBeenLastCalledWith(
+      expect.objectContaining({ periodoPlanilla: null, periodoPlanillaDesde: '2026-01-01', periodoPlanillaHasta: '2026-07-01' })
+    );
+    expect(component.obtenerConsultaMonitoreoActual()).toEqual(
+      expect.objectContaining({ periodoPlanillaDesde: '2026-01-01', periodoPlanillaHasta: '2026-07-01' })
+    );
+    component.cambiarPeriodoPlanilla('2026-03');
+    expect(component.periodoPlanillaDesde()).toBe('');
+    expect(component.periodoPlanillaHasta()).toBe('');
+    expect(component.obtenerConsultaMonitoreoActual().periodoPlanilla).toBe('2026-03-01');
+  });
+
+  it('M1: rango invertido no envia consulta ni devuelve lista vacia falsa', () => {
+    component.cambiarTipo('empleado');
+    component.cambiarRangoPlanilla('desde', '2026-09');
+    const consultas = service['getEmpleadosPaginadas'].mock.calls.length;
+    component.cambiarRangoPlanilla('hasta', '2026-07');
+    expect(component.rangoPlanillaInvalido()).toBe(true);
+    expect(component.errorMonitoreo()).toContain('mes inicial');
+    expect(service['getEmpleadosPaginadas']).toHaveBeenCalledTimes(consultas);
+    component.cambiarRangoPlanilla('hasta', '2026-10');
+    expect(component.rangoPlanillaInvalido()).toBe(false);
+    expect(component.errorMonitoreo()).toBeNull();
+    expect(service['getEmpleadosPaginadas']).toHaveBeenLastCalledWith(
+      expect.objectContaining({ periodoPlanillaDesde: '2026-09-01', periodoPlanillaHasta: '2026-10-01' })
+    );
+  });
+
   it('M1: la ficha manual conserva la referencia real de origen incluso con N/A(3)', () => {
     component.tipoActivo.set('natural');
     const fila = {

@@ -104,6 +104,8 @@ export class ListasService {
     if (consulta.fechaHasta) params = params.set('fechaHasta', consulta.fechaHasta);
     if (consulta.categoriaIdentidad) params = params.set('categoriaIdentidad', consulta.categoriaIdentidad);
     if (consulta.periodoPlanilla) params = params.set('periodoPlanilla', consulta.periodoPlanilla);
+    if (consulta.periodoPlanillaDesde) params = params.set('periodoPlanillaDesde', consulta.periodoPlanillaDesde);
+    if (consulta.periodoPlanillaHasta) params = params.set('periodoPlanillaHasta', consulta.periodoPlanillaHasta);
     if (consulta.orden) params = params.set('orden', consulta.orden);
     if (consulta.direccion) params = params.set('direccion', consulta.direccion);
     return params;

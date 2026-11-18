@@ -24,6 +24,9 @@ public sealed class ConsultaMonitoreoPaginadaDto
     public DateTime? FechaHasta { get; set; }
     public string? CategoriaIdentidad { get; set; }
     public DateTime? PeriodoPlanilla { get; set; }
+    // Rango mensual inclusivo; preserva la fecha de la coincidencia.
+    public DateTime? PeriodoPlanillaDesde { get; set; }
+    public DateTime? PeriodoPlanillaHasta { get; set; }
     public string Orden { get; set; } = "id";
     public string Direccion { get; set; } = "asc";
 }

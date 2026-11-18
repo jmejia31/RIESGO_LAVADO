@@ -126,6 +126,34 @@ public sealed class ListasControllerTests
     }
 
     [Fact]
+    public async Task Empleados_RangoInvertido_RechazaListadoYExportacion()
+    {
+        var controller = CrearController(out var stub, out _, out _);
+        var consulta = new ConsultaMonitoreoPaginadaDto
+        {
+            PeriodoPlanillaDesde = new DateTime(2026, 9, 1),
+            PeriodoPlanillaHasta = new DateTime(2026, 7, 1)
+        };
+        Assert.IsType<BadRequestObjectResult>(await controller.ObtenerEmpleadosPaginadas(consulta));
+        Assert.IsType<BadRequestObjectResult>(await controller.ObtenerEmpleadosParaExportar(consulta));
+        Assert.Empty(stub.CallsTo(nameof(IListasService.ObtenerEmpleadosPaginadasAsync)));
+        Assert.Empty(stub.CallsTo(nameof(IListasService.ObtenerEmpleadosParaExportarAsync)));
+    }
+
+    [Fact]
+    public async Task Empleados_NoCombinaMesExactoConRango()
+    {
+        var controller = CrearController(out var stub, out _, out _);
+        var consulta = new ConsultaMonitoreoPaginadaDto
+        {
+            PeriodoPlanilla = new DateTime(2026, 7, 1),
+            PeriodoPlanillaDesde = new DateTime(2026, 6, 1)
+        };
+        Assert.IsType<BadRequestObjectResult>(await controller.ObtenerEmpleadosPaginadas(consulta));
+        Assert.Empty(stub.CallsTo(nameof(IListasService.ObtenerEmpleadosPaginadasAsync)));
+    }
+
+    [Fact]
     public async Task ObtenerDetalleEmpleado_RetornaOk()
     {
         var controller = CrearController(out var listasStub, out _, out _);

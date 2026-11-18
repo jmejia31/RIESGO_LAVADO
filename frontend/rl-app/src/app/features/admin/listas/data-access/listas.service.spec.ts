@@ -159,6 +159,22 @@ describe('ListasService', () => {
     empleados.flush({ success: true, datos: { items: [], pagina: 1, totalRegistros: 0, totalPaginas: 0 } });
   });
 
+  it('transmite el rango histórico tanto en paginación como en exportación de empleados', () => {
+    const consulta = { pagina: 1, tamanoPagina: 10, periodoPlanillaDesde: '2026-01-01', periodoPlanillaHasta: '2026-07-01' };
+    service.getEmpleadosPaginadas(consulta).subscribe();
+    const lista = http.expectOne(req => req.url === `${apiUrl}/empleados/paginado`);
+    expect(lista.request.params.get('periodoPlanillaDesde')).toBe('2026-01-01');
+    expect(lista.request.params.get('periodoPlanillaHasta')).toBe('2026-07-01');
+    expect(lista.request.params.has('periodoPlanilla')).toBe(false);
+    lista.flush({ success: true, datos: { items: [], pagina: 1, totalRegistros: 0, totalPaginas: 0 } });
+
+    service.getEmpleadosParaExportar(consulta).subscribe();
+    const exportacion = http.expectOne(req => req.url === `${apiUrl}/empleados/exportar`);
+    expect(exportacion.request.params.get('periodoPlanillaDesde')).toBe('2026-01-01');
+    expect(exportacion.request.params.get('periodoPlanillaHasta')).toBe('2026-07-01');
+    exportacion.flush({ success: true, datos: [] });
+  });
+
   it('usa la ruta canónica para consultar el positivo de un documento real', () => {
     service.getPositivoPorDocumento('101196100011').subscribe();
 

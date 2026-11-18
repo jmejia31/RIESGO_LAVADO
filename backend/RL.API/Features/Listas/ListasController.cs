@@ -74,15 +74,35 @@ namespace RL.API.Features.Listas
         public async Task<IActionResult> ObtenerNaturalesParaExportar([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
             => Ok(new { success = true, datos = await _listasService.ObtenerNaturalesParaExportarAsync(consulta) });
 
+        private static bool PeriodoPlanillaEsValido(ConsultaMonitoreoPaginadaDto consulta)
+        {
+            if (consulta.PeriodoPlanilla.HasValue &&
+                (consulta.PeriodoPlanillaDesde.HasValue || consulta.PeriodoPlanillaHasta.HasValue))
+                return false;
+            if (!consulta.PeriodoPlanillaDesde.HasValue || !consulta.PeriodoPlanillaHasta.HasValue)
+                return true;
+            var desde = consulta.PeriodoPlanillaDesde.Value;
+            var hasta = consulta.PeriodoPlanillaHasta.Value;
+            return desde.Year < hasta.Year || (desde.Year == hasta.Year && desde.Month <= hasta.Month);
+        }
+
         [HttpGet("empleados/paginado")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerEmpleadosPaginadas([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
-            => Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosPaginadasAsync(consulta, HttpContext.RequestAborted) });
+        {
+            if (!PeriodoPlanillaEsValido(consulta))
+                return BadRequest(new { success = false, mensaje = "El rango de planilla es inválido: el mes inicial no puede ser posterior al final ni combinarse con mes exacto." });
+            return Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosPaginadasAsync(consulta, HttpContext.RequestAborted) });
+        }
 
         [HttpGet("empleados/exportar")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerEmpleadosParaExportar([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
-            => Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosParaExportarAsync(consulta) });
+        {
+            if (!PeriodoPlanillaEsValido(consulta))
+                return BadRequest(new { success = false, mensaje = "El rango de planilla es inválido: el mes inicial no puede ser posterior al final ni combinarse con mes exacto." });
+            return Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosParaExportarAsync(consulta) });
+        }
 
         [HttpGet("naturales/{numeroIdentificacion}/detalle")]
         [ModuloAuthorize(4)]

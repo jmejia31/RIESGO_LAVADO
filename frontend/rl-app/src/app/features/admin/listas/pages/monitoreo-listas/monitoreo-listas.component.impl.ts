@@ -64,6 +64,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   filtroFechaHasta = signal<string>('');
   categoriaIdentidad = signal<'identificadas' | 'sin_identificacion'>('identificadas');
   periodoPlanilla = signal<string>('');
+  periodoPlanillaDesde = signal<string>('');
+  periodoPlanillaHasta = signal<string>('');
+  rangoPlanillaInvalido = computed(() => !!this.periodoPlanillaDesde() && !!this.periodoPlanillaHasta()
+    && this.periodoPlanillaDesde() > this.periodoPlanillaHasta());
 
   // Modal Detalle
   modalDetalleAbierto = signal(false);
@@ -186,7 +190,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     !!this.filtroFechaDesde() ||
     !!this.filtroFechaHasta() ||
     (this.tipoActivo() === 'natural' && this.categoriaIdentidad() === 'sin_identificacion') ||
-    (this.tipoActivo() === 'empleado' && !!this.periodoPlanilla())
+    (this.tipoActivo() === 'empleado' && (!!this.periodoPlanilla() || !!this.periodoPlanillaDesde() || !!this.periodoPlanillaHasta()))
   );
 
   // Paginación
@@ -266,6 +270,17 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // input[type=month]; el backend recibe una fecha dia 1 valida.
     if (valor && !/^\d{4}-(0[1-9]|1[0-2])$/.test(valor)) return;
     this.periodoPlanilla.set(valor);
+    this.periodoPlanillaDesde.set('');
+    this.periodoPlanillaHasta.set('');
+    this.paginaActual.set(1);
+    this.cargarDatos({ force: true });
+  }
+
+  cambiarRangoPlanilla(extremo: 'desde' | 'hasta', valor: string): void {
+    if (valor && !/^\d{4}-(0[1-9]|1[0-2])$/.test(valor)) return;
+    if (extremo === 'desde') this.periodoPlanillaDesde.set(valor);
+    else this.periodoPlanillaHasta.set(valor);
+    this.periodoPlanilla.set('');
     this.paginaActual.set(1);
     this.cargarDatos({ force: true });
   }
@@ -298,6 +313,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.filtroFechaHasta.set('');
     this.categoriaIdentidad.set('identificadas');
     this.periodoPlanilla.set('');
+    this.periodoPlanillaDesde.set('');
+    this.periodoPlanillaHasta.set('');
     this.paginaActual.set(1);
     this.cargarDatos();
   }
@@ -321,11 +338,20 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   cargarDatos(options: { tipo?: FiltroTipo; force?: boolean; mostrarLoader?: boolean } = {}) {
     this.iniciarPipelineMonitoreo();
     const tipo = options.tipo ?? this.tipoActivo();
+    if (tipo === 'empleado' && this.rangoPlanillaInvalido()) {
+      this.errorMonitoreo.set('El mes inicial de planilla no puede ser posterior al mes final.');
+      this.cargando.set(false);
+      this.contextoMonitoreoCargado = null;
+      this.contextoMonitoreoEnCarga = null;
+      return;
+    }
     const forzar = options.force ?? false;
     const mostrarLoader = options.mostrarLoader ?? true;
     const consulta: ConsultaMonitoreoPaginada = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null, orden: this.orden(), direccion: this.direccion(),
       categoriaIdentidad: tipo === 'natural' ? this.categoriaIdentidad() : undefined,
-      periodoPlanilla: tipo === 'empleado' && this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : null };
+      periodoPlanilla: tipo === 'empleado' && this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : null,
+      periodoPlanillaDesde: tipo === 'empleado' && this.periodoPlanillaDesde() ? `${this.periodoPlanillaDesde()}-01` : null,
+      periodoPlanillaHasta: tipo === 'empleado' && this.periodoPlanillaHasta() ? `${this.periodoPlanillaHasta()}-01` : null };
     const contexto = JSON.stringify([tipo, consulta]);
     if (!forzar && (contexto === this.contextoMonitoreoCargado || contexto === this.contextoMonitoreoEnCarga)) return;
 
@@ -1916,7 +1942,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       `Estado: ${this.obtenerEtiquetaEstadoFiltro(this.filtroEstado())}`,
       this.busqueda().trim() ? `Búsqueda: ${this.busqueda().trim()}` : 'Búsqueda: Sin texto',
       this.filtroFechaDesde() ? `Desde: ${this.formatDate(this.filtroFechaDesde())}` : 'Desde: Sin fecha',
-      this.filtroFechaHasta() ? `Hasta: ${this.formatDate(this.filtroFechaHasta())}` : 'Hasta: Sin fecha'
+      this.filtroFechaHasta() ? `Hasta: ${this.formatDate(this.filtroFechaHasta())}` : 'Hasta: Sin fecha',
+      ...(this.tipoActivo() === 'empleado'
+        ? [this.periodoPlanilla() ? `Planilla: ${this.periodoPlanilla()}` : 'Planilla: Todos los meses',
+           this.periodoPlanillaDesde() ? `Planilla desde: ${this.periodoPlanillaDesde()}` : 'Planilla desde: Sin límite',
+           this.periodoPlanillaHasta() ? `Planilla hasta: ${this.periodoPlanillaHasta()}` : 'Planilla hasta: Sin límite']
+        : [])
     ];
     return filtros.join(' | ');
   }
@@ -1937,7 +1968,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       fechaDesde: this.filtroFechaDesde() || null,
       fechaHasta: this.filtroFechaHasta() || null,
       categoriaIdentidad: this.tipoActivo() === 'natural' ? this.categoriaIdentidad() : undefined,
-      periodoPlanilla: this.tipoActivo() === 'empleado' && this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : null
+      periodoPlanilla: this.tipoActivo() === 'empleado' && this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : null,
+      periodoPlanillaDesde: this.tipoActivo() === 'empleado' && this.periodoPlanillaDesde() ? `${this.periodoPlanillaDesde()}-01` : null,
+      periodoPlanillaHasta: this.tipoActivo() === 'empleado' && this.periodoPlanillaHasta() ? `${this.periodoPlanillaHasta()}-01` : null
     };
   }
 
