@@ -4978,7 +4978,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 ## Estado vigente — Microfase 1 P0: Corrección definitiva de filtros y tarjetas de Monitoreo de Listas — 2026-11-18 14:15 -06:00 (ANTIG)
 
-- **Autor:** `ANTIG` (Antigravity) | **Rama:** `desarrollo` | **Base SHA:** `f1ec7c6241c3e037d320851f54251704bd1ab22d` (QG previo `44380767197`).
+- **Autor:** `ANTIG` (Antigravity) | **Rama:** `desarrollo` | **Base SHA:** `f1ec7c6241c3e037d320851f54251704bd1ab22d` | **Source Code SHA:** `109b40c1d2cb79529183285060a908bbd6cb2677` | **Quality Gate certificado:** [44387854878](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44387854878) (`CONCLUSION=success`, `STATUS=completed`).
 - **Simetría y Correspondencia Matemática de Estados:**
   - Desplegable de filtros alineado a las 5 tarjetas de estado institucionales + "Todos los registros":
     - `todos` -> Todos los registros
@@ -5000,4 +5000,4 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
   - Validadores: Estructura, Scripts BD, Enlaces docs, Agent Skills (14 skills) todos PASS.
 - **Preservación:** 34 archivos sin seguimiento conservados íntegros; 0 escrituras Oracle institucional; 0 mutaciones en `main` o producción; 0 PII.
 - **Expediente:** [`M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md`](../certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md).
-- **Punto de continuación:** Publicar cambios en `origin/desarrollo` (`ANTIG`), monitorear el Quality Gate en GitHub Actions y presentar la aceptación funcional al propietario (`jmejia31`) en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+- **Punto de continuación:** Servidores locales activos (backend `5043`, frontend `4200`); entrega del expediente técnico para validación visual del propietario en el navegador (`http://localhost:4200/admin/listas/monitoreo`) y posterior cierre funcional de Microfase 1 en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).

@@ -6,6 +6,8 @@
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
 - **Rama autorizada:** `desarrollo`
 - **Base SHA de referencia:** `f1ec7c6241c3e037d320851f54251704bd1ab22d`
+- **Source Code SHA:** `109b40c1d2cb79529183285060a908bbd6cb2677`
+- **Quality Gate certificado:** [44387854878](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44387854878) (`CONCLUSION=success`, `STATUS=completed`)
 - **Issue institucional:** [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) (permanece **ABIERTO**)
 - **Aprobación funcional final:** Exclusiva del propietario (`jmejia31`)
 - **Escrituras en Oracle institucional / `DNP_IHSS` / `main` / producción:** `0` (`NO_TOUCHED`)

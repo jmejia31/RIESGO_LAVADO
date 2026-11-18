@@ -11661,7 +11661,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 ## Intervención P0 — Corrección definitiva de filtros y tarjetas de Monitoreo de Listas — 2026-11-18 14:15 -06:00 (ANTIG)
 
 - **Autor:** `ANTIG` (Antigravity)
-- **Rama y base:** `desarrollo`, `BASE_SHA=f1ec7c6241c3e037d320851f54251704bd1ab22d` (Quality Gate previo `44380767197` verificado en CI — no reutilizado para certificar este nuevo cambio)
+- **Rama y base:** `desarrollo`, `BASE_SHA=f1ec7c6241c3e037d320851f54251704bd1ab22d` | `SOURCE_CODE_SHA=109b40c1d2cb79529183285060a908bbd6cb2677` | Quality Gate certificado [44387854878](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44387854878) (`CONCLUSION=success`, `STATUS=completed`)
 - **Objetivo y alcance:** Corrección definitiva de la falta de correspondencia funcional y matemática entre las 5 tarjetas institucionales del módulo Monitoreo de Listas y el menú desplegable de filtros:
   1. **Simetría Total de Opciones (6 en desplegable <-> 5 tarjetas + todos):**
      - `Todos los registros` -> `'todos'`
@@ -11706,5 +11706,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - 34 archivos locales sin seguimiento preservados intactos.
   - 0 escrituras en Oracle institucional (`DML=0`, `DDL=0`), 0 mutaciones en `main` o producción.
   - 0 exposición de PII.
+- **Quality Gate y Publicación en GitHub:**
+  - Código fuente publicado en `origin/desarrollo`: `109b40c1d2cb79529183285060a908bbd6cb2677`.
+  - Quality Gate certificado: [44387854878](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44387854878) (`STATUS=completed`, `CONCLUSION=success`).
+  - Validaciones de CI 100% en verde: backend build, unit tests, coverage, frontend Vitest, Angular production build, contenedores, base de datos sintética Oracle XE y escaneo de seguridad.
 - **Expediente:** [`docs/certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md`](docs/certificaciones/M1_P0_CORRECCION_FILTROS_TARJETAS_20261118.md).
-- **Punto exacto de continuación:** Publicar cambios en `origin/desarrollo` (`ANTIG`), monitorear el Quality Gate en GitHub Actions y presentar la aceptación funcional al propietario (`jmejia31`).
+- **Punto exacto de continuación:** Entorno local en ejecución (Backend port `5043`, Frontend port `4200`); entrega del expediente técnico al propietario (`jmejia31`) para la aceptación funcional visual de los 6 estados de filtro y simetría de tarjetas en `http://localhost:4200/admin/listas/monitoreo`.
