@@ -64,6 +64,24 @@ public sealed class IdentidadMonitoreoPolicyTests
     }
 
     [Theory]
+    [InlineData("0801-1234", 1, 1, 1, "VERIFIED")]
+    [InlineData("0801-1234", 2, 1, 1, "VERIFIED")]
+    [InlineData("0801-1234", 1, 1, 2, "AMBIGUOUS")]
+    [InlineData("0801-1234", 2, 2, 1, "AMBIGUOUS")]
+    [InlineData("0801-1234", 1, 1, 0, "UNVERIFIED_ASSOCIATION")]
+    [InlineData("0801-1234", 1, 0, 1, "UNVERIFIED_ASSOCIATION")]
+    [InlineData("0801-1234", 0, 0, 1, "UNVERIFIED_ASSOCIATION")]
+    [InlineData("N/A(3)", 1, 1, 1, "AMBIGUOUS")]
+    [InlineData("", 1, 1, 1, "INVALID")]
+    public void FuenteOperativa_SoloPermiteSujetoYCoincidenciaUnicos(
+        string documento, int referencias, int sujetos, int coincidenciasFuente, string esperado)
+    {
+        Assert.Equal(esperado,
+            IdentidadMonitoreoPolicy.EstadoFuenteParaOperacion(
+                documento, referencias, sujetos, coincidenciasFuente));
+    }
+
+    [Theory]
     [InlineData(1, "VERIFIED")]
     [InlineData(2, "AMBIGUOUS")]
     [InlineData(0, "UNVERIFIED_ASSOCIATION")]

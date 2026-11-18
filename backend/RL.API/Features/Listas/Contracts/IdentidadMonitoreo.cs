@@ -47,6 +47,22 @@ public static class IdentidadMonitoreoPolicy
             or "SIN IDENTIFICACION" or "SIN IDENTIFICACIÓN";
     }
 
+    // Para mutaciones y seguimientos DNP, tanto la persona como la coincidencia
+    // fuente deben ser unicas. Sin fila fuente no hay asociacion verificable.
+    public static string EstadoFuenteParaOperacion(
+        string? documento, int referencias, int sujetosDistintos, int coincidenciasFuente)
+    {
+        if (string.IsNullOrWhiteSpace(documento))
+            return EstadoIdentidadMonitoreo.Invalid;
+        if (EsMarcadorNoIdentificacion(documento))
+            return EstadoIdentidadMonitoreo.Ambiguous;
+        if (sujetosDistintos > 1 || coincidenciasFuente > 1)
+            return EstadoIdentidadMonitoreo.Ambiguous;
+        if (referencias <= 0 || sujetosDistintos != 1 || coincidenciasFuente != 1)
+            return EstadoIdentidadMonitoreo.UnverifiedAssociation;
+        return EstadoIdentidadMonitoreo.Verified;
+    }
+
     // Estado de la relación documental, no de la persona: con varias coincidencias
     // fuente para un mismo DNI no es seguro reutilizar motivos/seguimientos por DNI.
     public static string EstadoAsociacionParaPresentacion(

@@ -426,32 +426,44 @@ namespace RL.API.Features.Listas.Persistence
             if (tipoSujeto == TipoSujetoMonitoreo.Natural)
             {
                 cmd.CommandText = @"
-                    SELECT COUNT(*) AS REFERENCIAS,
-                           COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL THEN TIPO_FUENTE || ':' || ID_PERSONA END) AS SUJETOS,
-                           (SELECT COUNT(*) FROM DNP_IHSS.REPORTE_COINCIDENCIAS C
-                            WHERE C.DNI = :documento AND C.TIPO_CALIFICACION_ID = 1) AS COINCIDENCIAS_FUENTE
+                    SELECT I.REFERENCIAS, I.SUJETOS, F.COINCIDENCIAS_FUENTE
                     FROM (
-                        SELECT 'SOCIO' AS TIPO_FUENTE, S.SOCIO_ID AS ID_PERSONA
-                        FROM DNP_IHSS.SOCIOS S
-                        WHERE S.NUMERO_IDENTIFICACION = :documento
-                        UNION ALL
-                        SELECT 'REPRESENTANTE' AS TIPO_FUENTE, R.REPRESENTANTE_ID AS ID_PERSONA
-                        FROM DNP_IHSS.REPRESENTANTES R
-                        WHERE R.NUMERO_IDENTIFICACION = :documento
-                    )";
+                        SELECT COUNT(*) AS REFERENCIAS,
+                               COUNT(DISTINCT CASE WHEN ID_PERSONA IS NOT NULL THEN TIPO_FUENTE || ':' || ID_PERSONA END) AS SUJETOS
+                        FROM (
+                            SELECT 'SOCIO' AS TIPO_FUENTE, S.SOCIO_ID AS ID_PERSONA
+                            FROM DNP_IHSS.SOCIOS S
+                            WHERE S.NUMERO_IDENTIFICACION = :documento
+                            UNION ALL
+                            SELECT 'REPRESENTANTE' AS TIPO_FUENTE, R.REPRESENTANTE_ID AS ID_PERSONA
+                            FROM DNP_IHSS.REPRESENTANTES R
+                            WHERE R.NUMERO_IDENTIFICACION = :documento
+                        )
+                    ) I
+                    CROSS JOIN (
+                        SELECT COUNT(*) AS COINCIDENCIAS_FUENTE
+                        FROM DNP_IHSS.REPORTE_COINCIDENCIAS C
+                        WHERE C.DNI = :documento AND C.TIPO_CALIFICACION_ID = 1
+                    ) F";
             }
             else if (tipoSujeto == TipoSujetoMonitoreo.Empleado)
             {
                 cmd.CommandText = @"
-                    SELECT COUNT(*) AS REFERENCIAS,
-                           COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(NOMBRE_EMPLEADO, '[[:space:]]+', ' ')))) AS SUJETOS,
-                           (SELECT COUNT(*) FROM DNP_IHSS.REPORTE_COINCIDENCIAS C
-                            WHERE C.DNI = :documento AND C.TIPO_CALIFICACION_ID = 1
-                              AND EXISTS (SELECT 1 FROM DNP_IHSS.V_REPORTE_COINCIDENCIA V
-                                          WHERE V.REPORTE_COINCIDENCIA_ID = C.REPORTE_COINCIDENCIA_ID
-                                            AND V.TIPO_PERSONA LIKE '%IHSS')) AS COINCIDENCIAS_FUENTE
-                    FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
-                    WHERE IDENTIDAD = :documento";
+                    SELECT E.REFERENCIAS, E.SUJETOS, F.COINCIDENCIAS_FUENTE
+                    FROM (
+                        SELECT COUNT(*) AS REFERENCIAS,
+                               COUNT(DISTINCT UPPER(TRIM(REGEXP_REPLACE(NOMBRE_EMPLEADO, '[[:space:]]+', ' ')))) AS SUJETOS
+                        FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS
+                        WHERE IDENTIDAD = :documento
+                    ) E
+                    CROSS JOIN (
+                        SELECT COUNT(*) AS COINCIDENCIAS_FUENTE
+                        FROM DNP_IHSS.REPORTE_COINCIDENCIAS C
+                        WHERE C.DNI = :documento AND C.TIPO_CALIFICACION_ID = 1
+                          AND EXISTS (SELECT 1 FROM DNP_IHSS.V_REPORTE_COINCIDENCIA V
+                                      WHERE V.REPORTE_COINCIDENCIA_ID = C.REPORTE_COINCIDENCIA_ID
+                                        AND V.TIPO_PERSONA LIKE '%IHSS')
+                    ) F";
             }
             else
             {
@@ -467,11 +479,8 @@ namespace RL.API.Features.Listas.Persistence
             var sujetos = Convert.ToInt32(reader["SUJETOS"]);
             // Dos coincidencias de origen comparten DNI pero no necesariamente motivo/empresa.
             var coincidenciasFuente = Convert.ToInt32(reader["COINCIDENCIAS_FUENTE"]);
-            var estado = coincidenciasFuente > 1 || sujetos > 1 || (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado) && referencias > 0)
-                ? EstadoIdentidadMonitoreo.Ambiguous
-                : referencias == 0
-                    ? EstadoIdentidadMonitoreo.UnverifiedAssociation
-                    : EstadoIdentidadMonitoreo.Verified;
+            var estado = IdentidadMonitoreoPolicy.EstadoFuenteParaOperacion(
+                normalizado, referencias, sujetos, coincidenciasFuente);
 
             return new ResolucionIdentidadMonitoreo(normalizado, estado, referencias, sujetos,
                 estado == EstadoIdentidadMonitoreo.Ambiguous
