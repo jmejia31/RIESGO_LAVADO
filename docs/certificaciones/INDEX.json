@@ -257,6 +257,23 @@
       "main_touched": false,
       "owner_acceptance": "NOT_GRANTED",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/42"
+    },
+    {
+      "id": "SEC-PICOMATCH-VENDORED-RL2-20261118",
+      "path": "CI_PICOMATCH_FORK_VENDORIZADO_20261118.md",
+      "status": "PATCHED_DEPENDENCY_FORK_PENDING_EXACT_SHA_CI",
+      "base_sha": "876113a583409e2be895066062b91e0056c75e9e",
+      "source_code_sha": "SEE_FINAL_DOCUMENTARY_COMMIT",
+      "quality_gate_run": "PENDING_NEW_SHA",
+      "provenance": "UPSTREAM_4.0.7_PLUS_PR238_PLUS_LOCAL_STAR_SUFFIX_HARDENING",
+      "archive_sha256": "54308c92475060c13fb206cde88a32fee259625343805101963e1770e0469b9a",
+      "native_npm_audit": "ENFORCED_UNCHANGED",
+      "advisory_name_mapping": "FORK_DIFFERENT_NAME_REQUIRES_EXTRA_SOURCE_ATTESTATION",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "PENDING",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/42"
     }
   ]
 }

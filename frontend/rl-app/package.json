@@ -11,16 +11,15 @@
     "e2e": "node scripts/run-e2e.mjs",
     "lint": "eslint src e2e scripts",
     "validate:native-dialogs": "node ../../tools/validate_no_native_dialogs.js --self-test",
-    "prebuild": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "prewatch": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "prestart": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "pretest": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "pretest:coverage": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "pree2e": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "prelint": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "preng": "node scripts/security/picomatch-mitigation.mjs --apply",
-    "security:picomatch:verify": "node scripts/security/picomatch-mitigation.mjs --verify && node --test scripts/security/picomatch-mitigation.test.mjs",
-    "security:picomatch:apply": "node scripts/security/picomatch-mitigation.mjs --apply && npm run security:picomatch:verify"
+    "prebuild": "node scripts/security/verify-vendored-picomatch.mjs",
+    "prewatch": "node scripts/security/verify-vendored-picomatch.mjs",
+    "prestart": "node scripts/security/verify-vendored-picomatch.mjs",
+    "pretest": "node scripts/security/verify-vendored-picomatch.mjs",
+    "pretest:coverage": "node scripts/security/verify-vendored-picomatch.mjs",
+    "pree2e": "node scripts/security/verify-vendored-picomatch.mjs",
+    "prelint": "node scripts/security/verify-vendored-picomatch.mjs",
+    "preng": "node scripts/security/verify-vendored-picomatch.mjs",
+    "security:picomatch:verify": "node scripts/security/verify-vendored-picomatch.mjs && node --test scripts/security/picomatch-mitigation.test.mjs"
   },
   "packageManager": "npm@11.12.1",
   "engines": {
@@ -64,7 +63,8 @@
     "exceljs": {
       "uuid": "11.1.1"
     },
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "picomatch": "file:vendor/picomatch-hardened-4.0.7-rl.2.tgz"
   },
   "devDependencies": {
     "@angular/build": "22.2.3",

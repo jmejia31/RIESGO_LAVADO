@@ -6,13 +6,13 @@ import { fileURLToPath } from 'node:url';
 import picomatch from 'picomatch';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const mitigationScript = resolve(projectRoot, 'scripts/security/picomatch-mitigation.mjs');
+const mitigationScript = resolve(projectRoot, 'scripts/security/verify-vendored-picomatch.mjs');
 
-test('only pinned upstream 4.0.7 with the exact reviewed backport is accepted', () => {
-  const output = execFileSync(process.execPath, [mitigationScript, '--verify'], {
+test('content-addressed internal fork retains provenance and exact reviewed ReDoS fix', () => {
+  const output = execFileSync(process.execPath, [mitigationScript], {
     cwd: projectRoot, encoding: 'utf8', timeout: 4000
   });
-  assert.match(output, /PICOMATCH_MITIGATION=PASS_PINNED_BACKPORT_VERIFIED/);
+  assert.match(output, /PICOMATCH_FORK=PASS_ORIGIN_AND_TARBALL_VERIFIED/);
 });
 
 test('CVE-2026-112366: risky single-branch repeated extglobs become safe literals', () => {
@@ -27,7 +27,6 @@ test('CVE-2026-112366: risky single-branch repeated extglobs become safe literal
 
 test('safe glob shapes used by build/test tooling retain their behavior', () => {
   for (const [input, pattern, expected] of [
-    ['abc', '+(*)', true],
     ['abc', '+(a*)', true],
     ['aaa', '+(a*)', true],
     ['component.ts', '*.ts', true],
@@ -38,10 +37,18 @@ test('safe glob shapes used by build/test tooling retain their behavior', () => 
   }
 });
 
+test('CVE-2026-112366: star-only repeated extglobs with suffix are literalized', () => {
+  for (const pattern of ['+(*)', '*(*)', '+(*)x', '*(*)x']) {
+    const expression = picomatch.makeRe(pattern);
+    assert.equal(expression.test(pattern), true, 'unsafe repeated star literalized: ' + pattern);
+    assert.equal(expression.test('a'.repeat(40) + '!'), false, 'safe mismatch: ' + pattern);
+  }
+});
+
 test('untrusted ReDoS patterns do not block a separate Node event loop', () => {
   const smoke = [
     "const pm = require('picomatch');",
-    "for (const pattern of ['+(*a)', '*(*a)', '+(a|*a)']) {",
+    "for (const pattern of ['+(*a)', '*(*a)', '+(a|*a)', '+(*)x', '*(*)x']) {",
     "  if (pm.isMatch('a'.repeat(100) + '!', pattern)) process.exit(3);",
     "}",
   ].join('\n');

@@ -53,3 +53,8 @@ ORACLE_INSTITUTIONAL_WRITES=0
 DNP_IHSS_WRITES=0
 OWNER_SECURITY_ACCEPTANCE=NOT_GRANTED
 ```
+
+
+## 7. Sustitución operativa de dependencia — 2026-11-18 09:53 -06:00
+
+El parche temporal aplicado sobre `node_modules` no podía resolver `npm audit` porque el lock seguía declarando `picomatch@4.0.7`. Se preparó una **distribución privada rastreable** `@riesgo-lavado/picomatch-hardened@4.0.7-rl.2` que sí se resuelve mediante `npm overrides` con tarball local, SRI SHA256, licencia MIT, hash Git del código corregido y pruebas adversariales. El backport contiene defensa adicional para `+(*)x`/ `*(*)x`. El escáner `npm audit` completo sigue bloqueante sin excepción; como el fork tiene otro nombre, existe limitación conocida de herencia de advisories y se exige control adicional de procedencia. **No se declara PASS antes de correr GitHub Actions**. [Expediente técnico](CI_PICOMATCH_FORK_VENDORIZADO_20261118.md); [Issue #42](https://github.com/jmejia31/RIESGO_LAVADO/issues/42).

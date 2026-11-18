@@ -98,11 +98,11 @@ jobs:
         shell: bash
         run: npm ci --ignore-scripts
 
-      - name: Apply and test pinned picomatch ReDoS mitigation (blocking)
+      - name: Verify source-pinned vendored picomatch security fork (blocking)
         working-directory: frontend/rl-app
         shell: bash
         run: |
-          node scripts/security/picomatch-mitigation.mjs --apply
+          node scripts/security/verify-vendored-picomatch.mjs
           node --test scripts/security/picomatch-mitigation.test.mjs
 
       - name: Audit production npm dependencies (blocking)

@@ -3,9 +3,11 @@
 FROM node:24.18.0-alpine3.24 AS build
 WORKDIR /app
 COPY frontend/rl-app/package.json frontend/rl-app/package-lock.json ./
+# The content-addressed local fork must exist before npm ci resolves file: overrides.
+COPY frontend/rl-app/vendor/picomatch-hardened-4.0.7-rl.2.tgz ./vendor/picomatch-hardened-4.0.7-rl.2.tgz
 RUN npm ci --ignore-scripts
 COPY frontend/rl-app/ ./
-RUN node scripts/security/picomatch-mitigation.mjs --apply \
+RUN node scripts/security/verify-vendored-picomatch.mjs \
     && node --test scripts/security/picomatch-mitigation.test.mjs
 RUN npm run build -- --configuration production
 
