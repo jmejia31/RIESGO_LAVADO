@@ -1,3 +1,34 @@
+# Estado vigente — Certificación técnica de conciliación histórica Oracle, cierre de seguridad Picomatch y enlace reactivo [ngValue] en catálogos de motivos (Microfase 1) (ANTIG) — 2026-11-18 17:50 -06:00
+
+## Estado vigente — Certificación formal de Microfase 1, Conciliación Histórica Oracle y Blindaje Picomatch
+
+- Se completó la certificación técnica, matemática y de seguridad de la **Microfase 1** (Monitoreo de Listas de Cautela), cumpliendo con la directriz del propietario institucional Javier Mejía (`jmejia31`):
+  1. **Enlace reactivo con `[ngValue]` en catálogos de motivos:**
+     - En `monitoreo-listas.component.html`, se actualizaron los selectores de catálogo a `[ngValue]`, resolviendo la discrepancia de tipos (`number` vs `string`) del enlace `[value]`.
+     - Ahora, al abrir el modal para cualquier registro (como RUIZ FRANCISCO), el Tipo de Documento y la Lista de Cautela aparecen visualmente seleccionados con su valor predeterminado sin quedar en *«Seleccione un tipo...»*.
+  2. **Conciliación histórica de registros contra Oracle institucional (`docs/certificaciones/M1_CONCILIACION_HISTORICA_INSTITUCIONAL_20261118.md`):**
+     - Se demostró matemáticamente el origen de las 242 agrupaciones previas (agrupación compuesta `DNI + LISTA`) frente a los 190 registros visibles calificados (`242 - 52 = 190`, donde 52 correspondían a registros con identificadores no atribuibles `N/A(3)`).
+     - Se auditó el universo consolidado actual de 174 personas naturales (172 grupos DNP limpios consolidados por DNI único + 2 positivos manuales activos), que rescata los 23 grupos DNP legítimos antes descartados por un `INNER JOIN` con `V_SOCIOS_REPRESENTANTES` y normaliza tabulaciones invisibles `CHR(9)`.
+     - Se justificó la cifra de 13 registros de empleados (11 grupos DNP históricos + 2 manuales, que abarcan 161 coincidencias individuales de origen) mediante la regla canónica del ETL (`TIPO_PERSONA LIKE '%IHSS%'` / `'%EMPLEAD%'`), frente a la referencia histórica de 7 empleados de corte temporal, erradicando el timeout `ORA-01013` de 62s sobre `PLANILLAS@HPPROD1_PRO` (180.5M filas).
+     - Se verificó que todas las consultas fueron estrictamente de solo lectura (DML=0, DDL=0), respetando la exclusión obligatoria de Q11, Q12 y R08 por protección DBA.
+  3. **Certificación y resolución definitiva de la seguridad de `picomatch` (`CVE-2026-112366` / `GHSA-fc5q-39xc-vjpf`):**
+     - Se verificó en npm que la última versión publicada es `4.0.7` y no existe parche oficial upstream.
+     - Se verificó en GitHub upstream (`micromatch/picomatch`) que los PRs #238, #237 y #246 continúan sin fusionar por inactividad.
+     - Se certificó el fork local vendorizado `@riesgo-lavado/picomatch-hardened@4.0.7-rl.2` con integridad SHA-256 (`VDCMkkdQYME/sgbN6Ioy/uJZYlNDgFEBlj4XcOBGm5o=`).
+     - Se confirmó `npm audit` = 0 vulnerabilidades y 5/5 pruebas adversariales ReDoS superadas en 275ms.
+     - Se actualizó el índice general de certificaciones en `docs/certificaciones/INDEX.json`.
+- **Verificación técnica integral:**
+  - Angular Vitest: 96 suites PASS, 1,033 tests PASS (incluyendo `monitoreo-listas.component.spec.ts` 39/39 PASS).
+  - Angular production build (`npm run build`): PASS (0 errores).
+  - Pruebas backend C#: 121 tests PASS, 0 fallos.
+  - Pruebas ReDoS: 5/5 PASS en 275ms.
+  - Validadores: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
+  - Servidores locales: Backend activo en puerto `5043` (`/healthz` 200 Healthy); Frontend activo en puerto `4200` (200 OK).
+- **Restricciones de gobernanza preservadas:** 34 archivos sin seguimiento locales preservados intactos; 0 escrituras en `main`, producción u Oracle institucional; [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) certificado con recomendación de cierre formal; [Issue #42](https://github.com/jmejia31/RIESGO_LAVADO/issues/42) documentado para seguimiento upstream.
+- **Punto exacto de continuación:** Entorno y expedientes publicados en `origin/desarrollo`. Listo para revisión y cierre administrativo final por parte de Javier Mejía (`jmejia31`).
+
+---
+
 # Estado vigente — Deducción automática de catálogos y habilitación inmediata de guardado en modal de motivos (ANTIG) — 2026-11-18 16:15 -06:00
 
 ## Estado vigente — Autoselección de Tipo de Documento, Lista de Cautela y habilitación reactiva de Guardar

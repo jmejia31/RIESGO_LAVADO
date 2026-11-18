@@ -11841,6 +11841,32 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Validadores del repositorio: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
 - **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo` confirmando que Javier Ruiz y cualquier positivo manual con motivo reflejan el badge «Con motivo» y permiten abrir el modal de seguimiento.
 
+## Intervención P0 — Certificación técnica de conciliación histórica Oracle, cierre de seguridad Picomatch y enlace reactivo [ngValue] en catálogos de motivos (Microfase 1) — 2026-11-18 17:50 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=5e5dc8c09c59ee702af76669409828d989c803af`
+- **Componentes intervenidos y resultados:**
+  1. **Enlace reactivo con `[ngValue]` en catálogos de motivos (`monitoreo-listas.component.html` e `impl.ts`):**
+     - En `monitoreo-listas.component.html:807-825`, se sustituyó `[value]` por `[ngValue]` en los selectores de Tipo de Documento y Tipo de Lista de Cautela, retirando el atributo estático `selected` del placeholder deshabilitado.
+     - Se vinculó el tipado numérico estricto de Angular (`SelectControlValueAccessor`) para que las opciones preseleccionadas (DNI para naturales/empleados, RTN para jurídicas; lista coincidente o PEPS) se seleccionen y muestren visualmente de forma inmediata al abrir el modal para cualquier registro (ej. RUIZ FRANCISCO).
+     - En `monitoreo-listas.component.impl.ts`, se ajustó `ngOnInit` para refrescar los valores deducidos si la carga asíncrona de catálogos concluye con el modal en pantalla.
+  2. **Expediente formal de certificación histórica y de seguridad:**
+     - Se redactó y publicó `docs/certificaciones/M1_CONCILIACION_HISTORICA_INSTITUCIONAL_20261118.md`, demostrando documental y matemáticamente:
+       * El desglose de las 242 agrupaciones compuestas previas (`DNI + LISTA`) frente a los 190 registros calificados como identificados (`242 - 52 = 190`, donde 52 correspondían a registros con identificadores no atribuibles `N/A(3)`).
+       * La consolidación canónica actual en 174 registros agrupados activos (172 grupos DNP únicos + 2 positivos manuales de cumplimiento), preservando los 23 grupos DNP que el `INNER JOIN` con `V_SOCIOS_REPRESENTANTES` excluía y normalizando tabuladores invisibles `CHR(9)`.
+       * La conciliación del universo de empleados: 7 registros históricos de corte de planilla temporal frente a 13 registros consolidados actuales (11 DNP históricos + 2 manuales, con 161 coincidencias individuales de origen), bajo la regla canónica del ETL (`TIPO_PERSONA LIKE '%IHSS%'` / `'%EMPLEAD%'`), eliminando el timeout `ORA-01013` de 62s sobre `PLANILLAS@HPPROD1_PRO` (180.5M filas).
+       * La auditoría exhaustiva de seguridad de `picomatch` (`CVE-2026-112366`, `GHSA-fc5q-39xc-vjpf`): constatando que no existe release >4.0.7 en el registro npm, que los PRs upstream (#238, #237, #246) continúan abiertos sin fusionar, y certificando la integridad criptográfica (SHA-256) del fork local `@riesgo-lavado/picomatch-hardened@4.0.7-rl.2`, con 0 vulnerabilidades en `npm audit` y 5/5 pruebas adversariales ReDoS superadas en 275ms.
+       * Incorporación del nuevo expediente en `docs/certificaciones/INDEX.json`.
+- **Verificación técnica ejecutada:**
+  - Vitest frontend: 96 suites PASS, 1,033 tests PASS (incluyendo `monitoreo-listas.component.spec.ts` 39/39 PASS).
+  - Compilación de producción frontend (`npm run build`): PASS (0 errores).
+  - Pruebas de seguridad ReDoS Picomatch (`picomatch-mitigation.test.mjs`): 5/5 PASS en 275ms.
+  - Auditoría de seguridad (`npm audit`): found 0 vulnerabilities.
+  - Validadores del repositorio: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
+  - Backend y Frontend en ejecución: `http://localhost:5043/healthz` (200 Healthy) y `http://localhost:4200/` (200 OK).
+- **Gobernanza:** Operaciones Oracle DML=0, DDL=0 (solo lectura 100%); rama `main` intacta; 34 archivos untracked locales preservados. [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) certificado con recomendación de cierre formal; [Issue #42](https://github.com/jmejia31/RIESGO_LAVADO/issues/42) documentado para monitoreo pasivo upstream.
+- **Punto exacto de continuación:** Microfase 1 formalmente certificada y expedientes publicados en `origin/desarrollo`. Listo para revisión y cierre administrativo por parte de Javier Mejía (`jmejia31`).
+
 ## Intervención P0 — Deducción automática de catálogos y habilitación inmediata de guardado en modal de motivos — 2026-11-18 16:15 -06:00 (ANTIG)
 
 - **Autor:** `ANTIG` (Antigravity)

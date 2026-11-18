@@ -216,11 +216,21 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.iniciarPipelineMonitoreo();
     this.cargarDatos();
     this.listasService.getTiposDocumento().subscribe({
-      next: (res) => this.listaTiposDocumento.set(res),
+      next: (res) => {
+        this.listaTiposDocumento.set(res);
+        if (this.modalMotivoAbierto() && !this.formTipoDocId()) {
+          this.formTipoDocId.set(this.deducirTipoDocumentoDefault(this.entidadSeleccionada(), this.tipoActivo()));
+        }
+      },
       error: (err) => console.error('Error al cargar tipos de documento:', err)
     });
     this.listasService.getTiposListasCautela().subscribe({
-      next: (res) => this.listaTiposListasCautela.set(res),
+      next: (res) => {
+        this.listaTiposListasCautela.set(res);
+        if (this.modalMotivoAbierto() && !this.formTipoListaCautelaId()) {
+          this.formTipoListaCautelaId.set(this.deducirTipoListaCautelaDefault(this.entidadSeleccionada()));
+        }
+      },
       error: (err) => console.error('Error al cargar tipos de listas de cautela:', err)
     });
     this.listasService.getPoliticaEvidencias().subscribe({
@@ -2303,7 +2313,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       totalRepetidos: row.totalRepetidos || 1,
       estadoIdentidad: row.estadoIdentidad,
       estadoAsociacion: row.estadoAsociacion,
-      categoriaIdentidad: row.categoriaIdentidad
+      categoriaIdentidad: row.categoriaIdentidad,
+      listaCoincidencia: row.listaCoincidencia || ''
     });
 
     this.listasService.getPositivoPorDocumento(docNum).subscribe({
@@ -2313,11 +2324,18 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           this.formMotivo.set(existing.motivoIngreso || '');
           this.formTipoListaCautelaId.set(existing.tipoListaCautelaId || defaultTipoCautela);
           this.formOrigenRegistro.set(existing.origenRegistro || defaultOrigen);
+        } else {
+          this.formTipoDocId.set(defaultTipoDoc);
+          this.formTipoListaCautelaId.set(defaultTipoCautela);
+          this.formOrigenRegistro.set(defaultOrigen);
         }
         this.modalMotivoAbierto.set(true);
       },
       error: (err) => {
         console.error('Error al obtener datos existentes de la lista de positivos:', err);
+        this.formTipoDocId.set(defaultTipoDoc);
+        this.formTipoListaCautelaId.set(defaultTipoCautela);
+        this.formOrigenRegistro.set(defaultOrigen);
         this.modalMotivoAbierto.set(true);
       }
     });

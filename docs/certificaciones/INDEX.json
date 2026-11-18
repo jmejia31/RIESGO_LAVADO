@@ -353,6 +353,29 @@
       "owner_acceptance": "PENDING",
       "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M1-CONCILIACION-HISTORICA-INSTITUCIONAL-20261118",
+      "path": "M1_CONCILIACION_HISTORICA_INSTITUCIONAL_20261118.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_FUNCTIONAL_AND_HISTORICALLY_RECONCILED",
+      "base_sha": "5e5dc8c09c59ee702af76669409828d989c803af",
+      "source_code_sha": "5e5dc8c09c59ee702af76669409828d989c803af",
+      "quality_gate_run": 44406803388,
+      "quality_gate_status": "SUCCESS",
+      "github_quality_gate_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44406803388",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/M1_CONCILIACION_HISTORICA_INSTITUCIONAL_20261118.md",
+      "security_scan": "PASS_FULL_TREE_AUDIT_NO_VULNERABILITIES",
+      "picomatch_security": "PASS_FORK_MITIGATED_AUDITED",
+      "picomatch_issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/42",
+      "oracle_institutional_reads": "READ_ONLY_QUERIES_VERIFIED",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "APPROVED_FUNCTIONAL_BY_OWNER",
+      "github_remote_verified": "YES",
+      "review_ready": "CERTIFIED_FINAL",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }
