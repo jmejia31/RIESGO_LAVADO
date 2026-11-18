@@ -93,14 +93,17 @@ export class InstitutionalConfirmationService {
         cancelButton: 'modal-action-icon modal-action-icon--neutral'
       },
       didOpen: popup => {
+        popup.querySelector('.swal2-actions')?.classList.remove('swal2-loading');
         const confirmButton = popup.querySelector<HTMLButtonElement>('.swal2-confirm');
         const cancelButton = popup.querySelector<HTMLButtonElement>('.swal2-cancel');
         if (confirmButton) {
           confirmButton.type = 'button';
+          confirmButton.disabled = false;
           confirmButton.title = options.confirmLabel;
         }
         if (cancelButton) {
           cancelButton.type = 'button';
+          cancelButton.disabled = false;
           cancelButton.title = options.cancelLabel;
         }
       }

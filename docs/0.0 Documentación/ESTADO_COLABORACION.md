@@ -1,3 +1,23 @@
+# Estado vigente — Desacoplamiento de confirmación institucional y tokens dinámicos en Monitoreo de Listas (ANTIG) — 2026-11-18 15:25 -06:00
+
+## Estado vigente — Resolución de diálogo congelado SweetAlert2 y corrección de temas dinámicos
+
+- Se corrigió quirúrgicamente el conflicto de SweetAlert2 donde el modal institucional *«Confirmación institucional — Confirmar registro en monitoreo»* quedaba bloqueado sin responder al clic del usuario (`swal2-loading` retenido y botón deshabilitado).
+- Causa raíz resuelta: `guardarMotivo()` y `guardarSeguimiento()` abrían preventivamente un diálogo de carga previo a la invocación HTTP interceptada por `confirmacionCambiosInterceptor`. Se eliminaron las llamadas preventivas a `Swal.showLoading()` en `monitoreo-listas.component.impl.ts` y en `institutional-confirmation.service.ts` se forzó la eliminación de la clase `swal2-loading` y `disabled = false` en los botones.
+- Se corrigió el uso de colores estáticos Tailwind `blue-*` por tokens institucionales `ihss-*` en `monitoreo-listas.component.html:753`, aprobando `tools/validate_dynamic_system_theme.js`.
+- Verificado en esta intervención:
+  - `tools/validate_dynamic_system_theme.js`: `PASS` (`HARDCODED_BRAND_BLUE=0`).
+  - Suite de modales y temas institucionales: `6/6 + 8/8 tests PASS`.
+  - Vitest `monitoreo-listas.component.spec.ts`: `39/39 PASS`.
+  - Vitest `institutional-confirmation.service.spec.ts`: `5/5 PASS`.
+  - Angular production build: `EXIT 0` (0 errores).
+  - ESLint: `EXIT 0` (0 errores).
+  - Validadores: estructura (118 rutas, 1,288 archivos), base de datos (281 catálogos), enlaces documentales (252 docs, 265 links) y Agent Skills (14 skills) todos `PASS`.
+- Restricciones preservadas: 34 archivos locales untracked preservados; 0 escrituras en `main`, producción u Oracle institucional; [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) permanece abierto hasta la aprobación funcional visual del propietario.
+- Punto exacto de continuación: Servidores locales activos (Backend port `5043`, Frontend port `4200`); revisión visual directa del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo`.
+
+---
+
 # Estado vigente — Ciclo de vida seguro de familias de formularios (COD) — 2026-10-27 09:10 -06:00
 
 ## Estado vigente — B06 logo ampliado y encabezado sin solapamiento — 2026-11-16 08:25:47 -06:00

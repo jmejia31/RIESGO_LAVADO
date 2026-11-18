@@ -2408,19 +2408,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     };
 
     import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: 'Procesando...',
-        text: 'Registrando motivo en lista de positivos.',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.default.showLoading();
-        }
-      });
-
       this.listasService.registrarPositivo(dto).subscribe({
         next: (resp) => {
           if (comentarioSeg) {
-    this.listasService.registrarSeguimiento(noDocumento, comentarioSeg, archivosSeg).subscribe({
+            this.listasService.registrarSeguimiento(noDocumento, comentarioSeg, archivosSeg).subscribe({
               next: () => {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();
@@ -2461,6 +2452,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.guardandoMotivo.set(false);
+          if (err?.status === 499) {
+            return;
+          }
           Swal.default.fire({
             allowOutsideClick: false,
             title: 'Error',
@@ -2710,15 +2704,6 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.guardandoSeguimiento.set(true);
 
     import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: 'Guardando...',
-        text: this.modoEdicion() ? 'Actualizando nota de seguimiento...' : 'Registrando nota de seguimiento y evidencia...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.default.showLoading();
-        }
-      });
-
       const request$ = this.modoEdicion()
         ? this.listasService.actualizarSeguimiento(this.seguimientoEditandoId()!, motivo, archivos)
         : this.listasService.registrarSeguimiento(entidad.noDocumento, motivo, archivos);
@@ -2742,6 +2727,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.guardandoSeguimiento.set(false);
+          if (err?.status === 499) {
+            return;
+          }
           Swal.default.fire({
             allowOutsideClick: false,
             title: 'Error',

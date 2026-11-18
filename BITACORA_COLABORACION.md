@@ -11768,3 +11768,29 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Matriz de 30 pruebas funcionales M1-M01 a M1-M30 100% verificada.
 - **Expediente:** [`docs/certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md`](docs/certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md).
 - **Punto exacto de continuación:** Entorno local en ejecución (Backend port `5043`, Frontend port `4200`); entrega del expediente técnico al propietario (`jmejia31`) para la aceptación funcional visual del registro universal de motivos y seguimientos en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+
+
+## Intervención P0 — Corrección quirúrgica de concurrencia SweetAlert2 y tokens dinámicos en confirmación de motivos — 2026-11-18 15:22 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=62dee74204481682823c28a2a0ebfc51d0879555`
+- **Diagnóstico y causa raíz reproducida:**
+  1. **Conflicto SweetAlert2:** `guardarMotivo()` y `guardarSeguimiento()` abrían preventivamente un diálogo de carga `Swal.default.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() })`. Inmediatamente después, el interceptor `confirmacionCambiosInterceptor` solicitaba confirmación con `confirmation.confirm()`. Al invocarse sobre una instancia con `showLoading()`, SweetAlert2 retenía el estado de carga y deshabilitaba el botón de confirmación (`confirmButton.disabled = true; class swal2-loading`), impidiendo que el clic del usuario enviara el request HTTP y dejando el modal congelado.
+  2. **Tokens de color fijo:** El banner de grupo en `monitoreo-listas.component.html` contenía clases Tailwind `blue-*` (`border-blue-200 bg-blue-50 text-blue-800 text-blue-600`), detectadas por `tools/validate_dynamic_system_theme.js`.
+- **Corrección quirúrgica:**
+  1. En `monitoreo-listas.component.impl.ts`:
+     - Se eliminó el diálogo de carga preventivo en `guardarMotivo()` y `guardarSeguimiento()`, permitiendo que el interceptor institucional presente el diálogo de confirmación limpio con botones 100% interactivos y habilitados.
+     - Manejo de cancelación de usuario (HTTP 499): restablece el flag de guardado sin emitir falso error.
+  2. En `institutional-confirmation.service.ts`:
+     - En `didOpen`: remueve explícitamente cualquier clase `swal2-loading` residual y fuerza `confirmButton.disabled = false` y `cancelButton.disabled = false`.
+  3. En `monitoreo-listas.component.html`:
+     - Reemplazados los colores fijos por tokens dinámicos institucionales `ihss-*` (`border-ihss-200 bg-ihss-50 text-ihss-800 text-ihss-600`).
+- **Verificación ejecutada:**
+  - `tools/validate_dynamic_system_theme.js`: PASS (`HARDCODED_BRAND_BLUE=0`, `DYNAMIC_THEME_VALIDATOR=PASS`).
+  - Suite de modales y temas institucionales: 6/6 + 8/8 tests PASS.
+  - Vitest `monitoreo-listas.component.spec.ts`: 39/39 PASS.
+  - Vitest `institutional-confirmation.service.spec.ts`: 5/5 PASS.
+  - Angular build de producción: PASS (0 errores en 8.6s).
+  - ESLint: PASS (0 errores).
+  - Validadores: estructura, enlaces documentales y agent skills PASS.
+- **Punto exacto de continuación:** Servidores locales actualizados y en ejecución; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo`.

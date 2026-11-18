@@ -96,6 +96,15 @@ El propietario del sistema estableció el siguiente contrato funcional obligator
     > *«Este registro presenta información de identidad o asociación pendiente de verificación. Puede documentar motivos y seguimientos; las asociaciones definitivas requieren validación.»*
   - Banner contextual del grupo cuando `totalRepetidos > 1`.
   - Campo de identificación deshabilitado muestra `documentoReal || noDocumento`.
+  - Uso estricto de tokens dinámicos institucionales `border-ihss-200 bg-ihss-50 text-ihss-800 text-ihss-600` (validado por `tools/validate_dynamic_system_theme.js`).
+
+### 3.4 Desacoplamiento de SweetAlert2 en Diálogos de Confirmación Institucional
+- **Diagnóstico del incidente:** El usuario reportó un bloqueo visual donde el diálogo *«Confirmación institucional — Confirmar registro en monitoreo»* quedaba congelado sin respuesta al clic con el botón deshabilitado/spinner.
+- **Causa raíz:** En `guardarMotivo()` y `guardarSeguimiento()`, se abría preventivamente un diálogo `Swal.default.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() })`. Cuando `confirmacionCambiosInterceptor` interceptaba la petición HTTP y llamaba a `InstitutionalConfirmationService.confirm()`, SweetAlert2 reusaba el DOM del modal activo reteniendo la clase `.swal2-loading` y `disabled = true` en los botones.
+- **Corrección aplicada:**
+  1. Se eliminaron los diálogos preventivos `Swal.showLoading()` en `guardarMotivo()` y `guardarSeguimiento()` de `monitoreo-listas.component.impl.ts`.
+  2. En `institutional-confirmation.service.ts` (`didOpen`), se remueve explícitamente cualquier clase `swal2-loading` residual y se fuerza `confirmButton.disabled = false` y `cancelButton.disabled = false`.
+  3. Se maneja de forma limpia la cancelación del usuario (HTTP 499) para evitar falsos errores visuales si decide cancelar la confirmación.
 
 ---
 
@@ -145,14 +154,16 @@ El propietario del sistema estableció el siguiente contrato funcional obligator
   - 3 pruebas de integración Oracle XE omitidas/descartables localmente.
 - **Frontend Angular (`rl-app`):**
   - **96/96 suites de pruebas PASS**.
-  - **1,033/1,033 pruebas unitarias PASS** en Vitest (`monitoreo-listas.component.spec.ts`: 39/39 PASS).
-  - Compilación de producción: `npx ng build` EXIT 0 sin errores.
+  - **1,033/1,033 pruebas unitarias PASS** en Vitest (`monitoreo-listas.component.spec.ts`: 39/39 PASS, `institutional-confirmation.service.spec.ts`: 5/5 PASS).
+  - Compilación de producción: `npx ng build` EXIT 0 sin errores en 8.6s.
   - Linter: `npx eslint src/app/features/admin/listas` EXIT 0 sin advertencias ni errores.
   - Seguridad picomatch: `SECURITY_AUDIT=PASS_FULL_TREE` (0 vulnerabilidades).
-- **Validadores de Repositorio:**
-  - `validate_repository_structure.ps1`: **PASS** (118 rutas obligatorias, 1,287 archivos).
+- **Validadores de Repositorio y Temas Dinámicos:**
+  - `tools/validate_dynamic_system_theme.js`: **PASS** (`HARDCODED_BRAND_BLUE=0`, `DYNAMIC_THEME_VALIDATOR=PASS`).
+  - Suite de modales y temas institucionales (`validate_institutional_modal_standard.test.js`, etc.): **6/6 + 8/8 tests PASS**.
+  - `validate_repository_structure.ps1`: **PASS** (118 rutas obligatorias, 1,288 archivos).
   - `validate_database_scripts.ps1`: **PASS** (281 catálogos, sin brechas).
-  - `validate_documentation_links.ps1`: **PASS** (251 documentos, 263 enlaces).
+  - `validate_documentation_links.ps1`: **PASS** (252 documentos, 265 enlaces).
   - `validate_agent_skills.py`: **PASS** (14 skills validadas).
   - `validate_text_encoding.ps1`: **PASS** (`MOJIBAKE_FINDINGS=0`).
   - `git diff --check`: **PASS** (0 errores de espacios en blanco).
