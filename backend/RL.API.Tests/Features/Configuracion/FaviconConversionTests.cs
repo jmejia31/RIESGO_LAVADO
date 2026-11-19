@@ -125,27 +125,23 @@ public class FaviconConversionTests
     }
 
     [Fact]
-    public void FC_04_JpgValido_GeneraFaviconIcoValido()
+    public void FC_04_JpgDirectoSinDecodificador_RechazaEnLugarDeCrearColorFalso()
     {
         var input = FaviconEndpointTests.CrearJpegValido(64, 64);
-        var result = InstitutionalFaviconConverter.Convert(input, ".jpg");
-
-        Assert.NotNull(result);
-        var validation = InstitutionalFaviconValidator.Validate(result.IcoBytes, ".ico");
-        Assert.True(validation.IsValid);
-        Assert.Equal("image/x-icon", validation.MimeType);
+        // Una imagen no decodificada no puede convertirse en un cuadrado azul ficticio.
+        // El flujo Angular normaliza estos archivos a PNG RGBA auténtico.
+        Assert.Throws<InvalidOperationException>(() =>
+            InstitutionalFaviconConverter.Convert(input, ".jpg"));
     }
 
     [Fact]
-    public void FC_05_JpegValido_GeneraFaviconIcoValido()
+    public void FC_05_JpegDirectoSinDecodificador_RechazaEnLugarDeCrearColorFalso()
     {
         var input = FaviconEndpointTests.CrearJpegValido(80, 80);
-        var result = InstitutionalFaviconConverter.Convert(input, ".jpeg");
-
-        Assert.NotNull(result);
-        var validation = InstitutionalFaviconValidator.Validate(result.IcoBytes, ".ico");
-        Assert.True(validation.IsValid);
-        Assert.Equal("image/x-icon", validation.MimeType);
+        // Una imagen no decodificada no puede convertirse en un cuadrado azul ficticio.
+        // El flujo Angular normaliza estos archivos a PNG RGBA auténtico.
+        Assert.Throws<InvalidOperationException>(() =>
+            InstitutionalFaviconConverter.Convert(input, ".jpeg"));
     }
 
     [Fact]
@@ -161,15 +157,13 @@ public class FaviconConversionTests
     }
 
     [Fact]
-    public void FC_07_WebpValido_GeneraFaviconIcoValido()
+    public void FC_07_WebpDirectoSinDecodificador_RechazaEnLugarDeCrearColorFalso()
     {
         var input = FaviconEndpointTests.CrearWebpValido(64, 64);
-        var result = InstitutionalFaviconConverter.Convert(input, ".webp");
-
-        Assert.NotNull(result);
-        var validation = InstitutionalFaviconValidator.Validate(result.IcoBytes, ".ico");
-        Assert.True(validation.IsValid);
-        Assert.Equal("image/x-icon", validation.MimeType);
+        // Una imagen no decodificada no puede convertirse en un cuadrado azul ficticio.
+        // El flujo Angular normaliza estos archivos a PNG RGBA auténtico.
+        Assert.Throws<InvalidOperationException>(() =>
+            InstitutionalFaviconConverter.Convert(input, ".webp"));
     }
 
     [Fact]
@@ -231,4 +225,16 @@ public class FaviconConversionTests
         Assert.Throws<InvalidOperationException>(() =>
             InstitutionalFaviconConverter.Convert(htmlBytes, ".png"));
     }
+    [Fact]
+    public void FC_15_PngConTransparencia_GeneraBytesDistintosDePngOpaco()
+    {
+        var opaco = InstitutionalFaviconConverter.Convert(CrearPngRgba(48, 48), ".png");
+        var transparente = InstitutionalFaviconConverter.Convert(CrearPngRgba(48, 48, conTransparencia: true), ".png");
+
+        // Ambas entradas tienen la misma forma y color; difieren solamente en alfa.
+        // El convertidor debe respetar esos píxeles, no reemplazarlos por colores fijos.
+        Assert.NotEqual(Convert.ToHexString(opaco.IcoBytes), Convert.ToHexString(transparente.IcoBytes));
+        Assert.True(InstitutionalFaviconValidator.Validate(transparente.IcoBytes, ".ico").IsValid);
+    }
+
 }

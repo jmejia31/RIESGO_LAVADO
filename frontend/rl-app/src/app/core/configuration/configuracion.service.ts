@@ -100,6 +100,13 @@ export class ConfiguracionService {
       );
   }
 
+  obtenerUrlFaviconPublicado(): string {
+    const icono = this.configSistema()?.iconoUrl?.trim();
+    return icono
+      ? `${this.apiUrl}/sistema/favicon?v=${this.generarHuellaFavicon(icono)}`
+      : 'favicon.ico';
+  }
+
   private aplicarMetadatosNavegador(config: ConfigSistema): void {
     this.aplicarTituloInstitucional(config);
     this.aplicarFaviconInstitucional(config);

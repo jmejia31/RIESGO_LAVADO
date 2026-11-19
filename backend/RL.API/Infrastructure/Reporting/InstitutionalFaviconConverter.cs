@@ -78,34 +78,22 @@ public static class InstitutionalFaviconConverter
 
     private static (byte[] Rgba, int Width, int Height) ExtractRgba(byte[] bytes, string mimeType, int validatedWidth, int validatedHeight)
     {
-        if (mimeType == "image/png")
-        {
-            try
-            {
-                return InstitutionalPngDecoder.DecodePngRgba(bytes);
-            }
-            catch
-            {
-                // Fallback con dimensiones validadas si la variante de PNG no es decodificable por el decoder interno
-                return CreateSyntheticRgba(validatedWidth, validatedHeight, 0, 80, 180, 255);
-            }
-        }
+        // Nunca sustituir la imagen del usuario por un rectángulo de color fijo.
+        // La interfaz convierte JPEG/WebP a PNG RGBA real antes de subirlos.
+        if (mimeType != "image/png")
+            throw new InvalidOperationException("Este formato necesita normalización real a PNG antes de la conversión. No se generan iconos sintéticos.");
 
-        // Para JPEG, WebP, GIF: generar buffer RGBA con dimensiones validadas
-        return CreateSyntheticRgba(validatedWidth, validatedHeight, 18, 59, 99, 255);
-    }
-
-    private static (byte[] Rgba, int Width, int Height) CreateSyntheticRgba(int width, int height, byte r, byte g, byte b, byte a)
-    {
-        var rgba = new byte[width * height * 4];
-        for (int i = 0; i < rgba.Length; i += 4)
+        try
         {
-            rgba[i] = r;
-            rgba[i + 1] = g;
-            rgba[i + 2] = b;
-            rgba[i + 3] = a;
+            var decoded = InstitutionalPngDecoder.DecodePngRgba(bytes);
+            if (decoded.Width != validatedWidth || decoded.Height != validatedHeight)
+                throw new InvalidOperationException("Las dimensiones decodificadas no coinciden con el archivo validado.");
+            return decoded;
         }
-        return (rgba, width, height);
+        catch (Exception exception) when (exception is InvalidOperationException or InvalidDataException or IOException or OverflowException or ArgumentOutOfRangeException)
+        {
+            throw new InvalidOperationException("No se pudo decodificar el PNG de forma íntegra; se rechaza sin sustituir sus píxeles.", exception);
+        }
     }
 
     private static (byte[] Rgba, int Size) ContainInSquare(byte[] srcRgba, int width, int height)

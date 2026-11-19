@@ -136,6 +136,8 @@ export class ConfiguracionComponent implements OnInit {
         this.configService.CargarConfiguracion('local').subscribe({
           next: persisted => {
             this.form.patchValue(persisted);
+            // La vista previa debe resolver el favicon efectivamente publicado.
+            this.faviconVistaPreviaUrl.set(null);
             this.estadoLogo.set('LOGO_PUBLISHED');
             this.estadoFavicon.set('FAVICON_PUBLISHED');
             this.guardando.set(false);
@@ -359,9 +361,9 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   urlFaviconVistaPrevia(): string {
-    return this.faviconVistaPreviaUrl()
-      || this.configService.resolverUrlImagen(this.form.get('iconoUrl')?.value)
-      || 'favicon.ico';
+    // Un path /uploads/... pertenece al backend, no al servidor Angular (:4200).
+    // El favicon publicado siempre se recupera desde su endpoint validado.
+    return this.faviconVistaPreviaUrl() ?? this.configService.obtenerUrlFaviconPublicado();
   }
 
   onFaviconSeleccionado(files: File[]) {
@@ -371,30 +373,94 @@ export class ConfiguracionComponent implements OnInit {
     this.archivosFaviconPendientes.set([file]);
     this.estadoFavicon.set('FAVICON_SELECTED');
     this.subiendoFavicon.set(true);
-    this.estadoFavicon.set('FAVICON_UPLOADING');
+    this.estadoFavicon.set('FAVICON_VALIDATING');
+    this.faviconVistaPreviaUrl.set(null);
 
-    try {
-      const localPreview = URL.createObjectURL(file);
-      this.faviconVistaPreviaUrl.set(localPreview);
-    } catch {
-      // Ignorar fallo de preview local si createObjectURL no está disponible
-    }
+    // El servidor solo decodifica píxeles PNG/ICO de forma real. JPEG y WebP
+    // se decodifican con el navegador y se envían como PNG RGBA canónico.
+    const normalized = file.name.toLowerCase().endsWith('.ico')
+      ? Promise.resolve(file)
+      : this.normalizarFaviconPng(file);
 
-    this.configService.subirFavicon(file).subscribe({
-      next: response => {
-        this.subiendoFavicon.set(false);
-        this.archivosFaviconPendientes.set([]);
-        this.form.patchValue({ iconoUrl: response.url });
-        this.faviconVistaPreviaUrl.set(response.url);
-        this.estadoFavicon.set('FAVICON_READY_TO_SAVE');
-        this.mostrarExito('Favicon convertido correctamente. Guarde la configuración para publicarlo.');
-      },
-      error: error => {
-        this.subiendoFavicon.set(false);
-        this.estadoFavicon.set('FAVICON_SAVE_FAILED');
-        this.archivosFaviconPendientes.set([]);
-        this.mostrarError(error?.error?.mensaje || 'No se pudo cargar el favicon institucional.');
-      }
+    void normalized.then(uploadFile => {
+      this.estadoFavicon.set('FAVICON_UPLOADING');
+      this.configService.subirFavicon(uploadFile).subscribe({
+        next: response => {
+          this.subiendoFavicon.set(false);
+          this.archivosFaviconPendientes.set([]);
+          if (!response.success || !/^\/uploads\/[A-Za-z0-9._-]+\.ico$/i.test(response.url)) {
+            this.estadoFavicon.set('FAVICON_SAVE_FAILED');
+            this.mostrarError('El servidor no devolvió una referencia de favicon válida.');
+            return;
+          }
+          // URL absoluta del backend; /uploads/... relativo apunta erróneamente a Angular.
+          this.faviconVistaPreviaUrl.set(this.configService.resolverUrlImagen(response.url));
+          this.form.patchValue({ iconoUrl: response.url });
+          this.estadoFavicon.set('FAVICON_READY_TO_SAVE');
+          this.mostrarExito('Favicon convertido correctamente. Guarde la configuración para publicarlo.');
+        },
+        error: error => {
+          this.subiendoFavicon.set(false);
+          this.estadoFavicon.set('FAVICON_SAVE_FAILED');
+          this.archivosFaviconPendientes.set([]);
+          this.faviconVistaPreviaUrl.set(null);
+          this.mostrarError(error?.error?.mensaje || 'No se pudo cargar el favicon institucional.');
+        }
+      });
+    }).catch(() => {
+      this.subiendoFavicon.set(false);
+      this.estadoFavicon.set('FAVICON_SAVE_FAILED');
+      this.archivosFaviconPendientes.set([]);
+      this.faviconVistaPreviaUrl.set(null);
+      this.mostrarError('No se pudo decodificar la imagen original. Use un PNG, JPG, JPEG o WebP válido.');
     });
+  }
+
+  private async normalizarFaviconPng(file: File): Promise<File> {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error('invalid-favicon-image'));
+        element.src = objectUrl;
+      });
+      const { naturalWidth: width, naturalHeight: height } = image;
+      if (width < 16 || height < 16 || width > 2048 || height > 2048 || width * height > 4194304) {
+        throw new Error('invalid-favicon-dimensions');
+      }
+
+      // PNG RGBA estandarizado; siempre cuadrado y transparente, sin deformación.
+      // No modifica ni utiliza la normalización del logo documental.
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('canvas-not-supported');
+      context.clearRect(0, 0, size, size);
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
+      const scale = Math.min(size / width, size / height);
+      const targetWidth = width * scale;
+      const targetHeight = height * scale;
+      context.drawImage(
+        image,
+        (size - targetWidth) / 2,
+        (size - targetHeight) / 2,
+        targetWidth,
+        targetHeight
+      );
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(value => value ? resolve(value) : reject(new Error('png-encode-failed')), 'image/png');
+      });
+      if (blob.size === 0 || blob.size > 2 * 1024 * 1024) throw new Error('favicon-size-limit');
+      return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.png`, {
+        type: 'image/png',
+        lastModified: file.lastModified
+      });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   }
 }

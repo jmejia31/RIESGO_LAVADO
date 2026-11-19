@@ -383,8 +383,12 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     });
 
     let uploadLlamado = false;
+    let uploadNormalizadoAPng = false;
     await page.route(/\/api\/configuracion\/sistema\/favicon\/upload/, async route => {
       uploadLlamado = true;
+      const body = route.request().postData() || '';
+      uploadNormalizadoAPng = body.includes('filename="nuevo-favicon-institucional.png"')
+        && body.includes('Content-Type: image/png');
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -408,24 +412,39 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     const uploadBtn = faviconUploaderSection.locator('button').first();
     await expect(uploadBtn).toBeEnabled();
 
-    // 2. Cargar archivo local (simulado con buffer PNG) y esperar respuesta del endpoint de subida
+    // 2. Generar JPEG auténtico en Chromium y comprobar que se envía como PNG RGBA.
+    const jpegBase64 = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#f97316';
+      ctx.fillRect(0, 0, 32, 64);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(32, 0, 32, 64);
+      return canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+    });
     const uploadPromise = page.waitForResponse(
       resp => resp.url().includes('/api/configuracion/sistema/favicon/upload') && resp.status() === 200
     );
     await fileInput.setInputFiles({
-      name: 'nuevo-favicon-institucional.png',
-      mimeType: 'image/png',
-      buffer: PNG_ICON_B,
+      name: 'nuevo-favicon-institucional.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from(jpegBase64, 'base64'),
     });
     await uploadPromise;
 
-    // 3. Verificar que se activó la subida y conversión automática
+    // 3. No basta con aceptar JPEG: el archivo multipart debe contener PNG real.
     await expect.poll(() => uploadLlamado).toBe(true);
+    expect(uploadNormalizadoAPng).toBe(true);
 
     // 4. Verificar indicador de estado "Listo para guardar"
     await expect(page.locator('text=Listo para guardar')).toBeVisible();
 
-    // 5. Verificar vistas previas en tamaños reales 16x16, 32x32, 48x48
+    // 5. La miniatura debe ir al backend y no a localhost:4200/uploads (Angular).
+    await expect(page.locator('img[alt="Favicon 16x16"]')).toHaveAttribute(
+      'src', 'http://localhost:5043/uploads/favicon-autocreated.ico'
+    );
     await expect(page.locator('img[alt="Favicon 16x16"]')).toBeVisible();
     await expect(page.locator('img[alt="Favicon 32x32"]')).toBeVisible();
     await expect(page.locator('img[alt="Favicon 48x48"]')).toBeVisible();
