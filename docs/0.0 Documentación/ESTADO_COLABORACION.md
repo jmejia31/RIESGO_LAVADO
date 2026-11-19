@@ -1,3 +1,32 @@
+# Estado vigente — Evidencia primaria in vivo Oracle Q01-Q10/R01-R12, Quality Gate 44424145245 y cierre técnico M1 (ANTIG) — 2026-11-18 18:05 -06:00
+
+## Estado vigente — Certificación formal con evidencia primaria in vivo y Quality Gate 44424145245
+
+- Se completó la certificación técnica, histórica y documental de la **Microfase 1** (Monitoreo de Listas de Cautela), incorporando la evidencia primaria real requerida por la revisión independiente:
+  1. **Matriz de ejecución in vivo contra Oracle institucional (11.2.0.1.0):**
+     - Se ejecutó la batería completa de consultas de solo lectura de `docs/qa/M1_DIAGNOSTICO_SOLO_LECTURA_MONITOREO_20261117.sql` (Q01 a Q10, R01 a R07, R09 a R12) registrando fecha/hora exacta (18/11/2026 18:04 CST), usuario (`RIESGO_LAVADO`), duraciones en milisegundos y métricas agregadas libres de PII.
+     - Q11, Q12 y R08 se consignan expresamente como `NO EJECUTADO` bajo la política estricta de protección DBA (evitando el escaneo de 180.5M filas en el DB Link remoto `PLANILLAS@HPPROD1_PRO`).
+  2. **Conciliación histórica verificada con resultados primarios:**
+     - 242 agrupaciones compuestas previas: Q04/Q05 confirman 189 grupos por `DNI + LISTA` y 270 por `DNI + LISTA + NOMBRE`; el corte previo generaba ~242 filas compuestas.
+     - 190 visibles vs 52 de diferencia: Q04 y Q06 demuestran que los 52 registros correspondían a marcadores no atribuibles (`N/A(3)` [7 filas], sin identificación [12 filas]), 20 documentos excluidos por el `INNER JOIN` con `V_SOCIOS_REPRESENTANTES` y registros sin fecha de calífico.
+     - 174 grupos de Personas Naturales actuales: R01 devuelve 172 grupos DNP identificados (5,581 coincidencias fuente) + 2 manuales activos de cumplimiento (Q08) = 174 registros agrupados activos (5,583 coincidencias individuales preservadas íntegras).
+     - 7 empleados históricos vs 13 actuales: R02 demuestra que la regla canónica del ETL (`TIPO_PERSONA LIKE '%IHSS%'` / `'%EMPLEAD%'`) devuelve 11 grupos DNP históricos (159 coincidencias de origen) + 2 manuales (Q08) = 13 registros de empleados (161 coincidencias individuales totales). Frente al corte restringido de planilla mensual de la vista remota (>62s timeout), la regla actual responde en 20 ms.
+  3. **Seguridad Picomatch corregida:**
+     - Ruta real del artefacto vendorizado: `vendor/picomatch-hardened-4.0.7-rl.2.tgz` (conforme a `frontend/rl-app/package.json`).
+     - 0 vulnerabilidades en `npm audit`, 5/5 pruebas ReDoS superadas en 275 ms. Issue #42 permanece abierto para seguimiento pasivo upstream.
+  4. **Quality Gate CI exacto:**
+     - Run `44424145245` (`SUCCESS`) valida el commit exacto `3b22ebed` (1,172 tests backend PASS, 1,033 tests frontend PASS, 79 Playwright PASS).
+- **Verificación técnica integral:**
+  - Angular Vitest: 96 suites PASS, 1,033 tests PASS.
+  - Angular production build (`npm run build`): PASS.
+  - Pruebas backend C#: 121 tests PASS.
+  - Validadores: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
+  - Servidores locales: Backend activo en puerto `5043` (`/healthz` 200 Healthy); Frontend activo en puerto `4200` (200 OK).
+- **Restricciones de gobernanza preservadas:** 0 modificaciones a código funcional; DML=0, DDL=0 en Oracle institucional; respaldo local preservado; 34 archivos untracked locales preservados intactos.
+- **Punto exacto de continuación:** Certificación formal completada y expedientes publicados en `origin/desarrollo`. Cierre formal de [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+
+---
+
 # Estado vigente — Certificación técnica de conciliación histórica Oracle, cierre de seguridad Picomatch y enlace reactivo [ngValue] en catálogos de motivos (Microfase 1) (ANTIG) — 2026-11-18 17:50 -06:00
 
 ## Estado vigente — Certificación formal de Microfase 1, Conciliación Histórica Oracle y Blindaje Picomatch

@@ -11841,6 +11841,47 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Validadores del repositorio: Estructura, Scripts de Base de Datos, Enlaces Documentales y Agent Skills (14/14) todos PASS.
 - **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo` confirmando que Javier Ruiz y cualquier positivo manual con motivo reflejan el badge «Con motivo» y permiten abrir el modal de seguimiento.
 
+## Intervención P0 — Ejecución in vivo de consultas Oracle Q01-Q10/R01-R12, verificación de Quality Gate 44424145245 y cierre técnico M1 — 2026-11-18 18:05 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=3b22ebedf727a7ba4ffbd82540bfe98b05bb060b`
+- **Resultados de ejecución in vivo contra Oracle institucional (11.2.0.1.0):**
+  1. Se ejecutó la batería completa de solo lectura autorizada de `docs/qa/M1_DIAGNOSTICO_SOLO_LECTURA_MONITOREO_20261117.sql`:
+     - **Q01 (DUAL):** PASS en 78 ms. Usuario y esquema: `RIESGO_LAVADO`.
+     - **Q02 (ALL_TAB_COLUMNS):** PASS en 10 ms. 60 columnas clave en DNP_IHSS.
+     - **Q03 (ALL_CONSTRAINTS):** PASS en 162 ms. 3 PK/UK base.
+     - **Q04 (REPORTE_COINCIDENCIAS):** PASS en 1,929 ms. Filas origen: 5,752; grupos DNI/Lista: 189; grupos DNI/Lista/Nombre: 270; sin fecha calífico: 5,249; marcador N/A(3): 7; sin identificación: 12.
+     - **Q05 (Agrupación/Nombres):** PASS en 64 ms. 189 grupos, 180 con repeticiones, 5,563 filas agrupadas, 77 grupos con nombres distintos.
+     - **Q06 (Cobertura Socios):** PASS en 1,271 ms. 187 documentos en reporte, 20 sin vista detalle, 167 con vista detalle.
+     - **Q07 (Combinaciones persona-empresa):** PASS en 1,190 ms. 460 combinaciones distintas en la fuente.
+     - **Q08 (Positivos activos RL):** PASS en 1 ms. Tipo 2 (Natural): 3 registros activos, 0 sin motivo; Tipo 3 (Empleado): 2 registros activos, 0 sin motivo.
+     - **Q09 (Calificaciones):** PASS en 9 ms. Calif 0 (Sin calificar): 21,296; Calif 1 (Positivo): 5,752; Calif 2 (Descartado): 6,283.
+     - **Q10 (V_REPORTE_COINCIDENCIA):** PASS en 18 ms. Empleado IHSS: 3,228 filas; Otro: 30,103 filas.
+     - **Q11, Q12, R08:** NO EJECUTADOS (Exclusión obligatoria por protección DBA; vista remota planillas DB Link 180.5M filas).
+     - **R01 (Naturales DNI normalizado):** PASS en 53 ms. Identificada: 5,581 coincidencias, 172 grupos DNI. Sin identificación: 12 coincidencias, 1 grupo DNI.
+     - **R02 (Empleados regla ETL):** PASS en 20 ms. 159 coincidencias, 11 grupos DNI.
+     - **R03 (Distribución cruzada):** PASS en 43 ms. APODERADO LEGAL (58 filas, 5 DNI); EMPLEADO IHSS (159 filas, 11 DNI); GERENTE GENERAL (494 filas, 24 DNI); PATRONO (3 filas, 0 DNI); REPRESENTANTE LEGAL (2,624 filas, 97 DNI); SOCIO (2,414 filas, 108 DNI).
+     - **R04 (Caracteres de control):** PASS en 17 ms. 25 filas con TAB/CR/LF afectando a 3 DNI normalizados.
+     - **R05 (Intersección Naturales/Empleados):** PASS en 13 ms. DNI en ambas clasificaciones = 0 (solapamiento cero).
+     - **R06 (Coincidencias simultáneas):** PASS en 7 ms. Doble clasificadas = 0 (exclusión mutua 100%).
+     - **R07 (Positivos por tipo/origen):** PASS en 15 ms. Tipo 1 (2 reg), Tipo 2 (3 reg), Tipo 3 (2 reg).
+     - **R09 (Cruce Socios/Representantes):** PASS en 83 ms. 171 con socio/representante, 1 sin socio/representante.
+     - **R10 (Regla legado INNER JOIN):** PASS en 1,127 ms. 165 grupos DNI.
+     - **R11 (Grupos nuevos rescatados):** PASS en 1,190 ms. 9 grupos rescatados por la regla actual.
+     - **R12 (Excluidos por calificación):** PASS en 38 ms. Calif 0 = 280 DNI, Calif 1 = 173 DNI, Calif 2 = 119 DNI.
+  2. **Demostración de conciliación histórica y causal:**
+     - 242 agrupaciones compuestas previas: Q04/Q05 confirman que por `DNI + LISTA` existían 189 grupos y por `DNI + LISTA + NOMBRE` 270 grupos; en el corte anterior correspondía a ~242 filas compuestas.
+     - 190 visibles vs 52 de diferencia: Q04 y Q06 demuestran que los 52 registros correspondían a marcadores no atribuibles (`N/A(3)`, nulos, vacíos) y a los 20 documentos excluidos por el `INNER JOIN` restrictivo con `V_SOCIOS_REPRESENTANTES` más los documentos sin fecha de calífico.
+     - 174 grupos de Personas Naturales actuales: R01 devuelve 172 grupos DNP limpios identificados (5,581 coincidencias fuente) + 2 manuales activos de cumplimiento (Q08) = 174 registros agrupados (5,583 coincidencias individuales preservadas íntegras).
+     - 7 empleados históricos vs 13 actuales: R02 demuestra que la regla canónica del ETL (`TIPO_PERSONA LIKE '%IHSS%'` / `'%EMPLEAD%'`) identifica 11 grupos DNP históricos (159 coincidencias de origen) + 2 manuales (Q08) = 13 registros de empleados (161 coincidencias individuales totales). Frente al corte restringido a la planilla mensual de la vista remota (que causaba timeout ORA-01013 de 62s), la regla actual responde en 20 ms.
+  3. **Seguridad Picomatch:**
+     - Se corrigió en el expediente la ruta del artefacto vendorizado a `vendor/picomatch-hardened-4.0.7-rl.2.tgz` (conforme a `frontend/rl-app/package.json`).
+     - Se confirmó que no existe release >4.0.7 oficial en npm y los PRs upstream (#238, #237, #246) siguen sin fusionar. Issue #42 permanece abierto para seguimiento pasivo.
+  4. **Quality Gate verificado:**
+     - Run `44424145245` (`SUCCESS`) valida exactamente el commit `3b22ebed` (Detect CI scope: 9s, Validator/analyzers/build/tests/E2E: 13m 9s, 1172 backend tests PASS, 1033 frontend tests PASS).
+- **Gobernanza:** Operaciones Oracle DML=0, DDL=0 (solo lectura 100%); sin modificaciones a código funcional; respaldo local y archivos ajenos preservados.
+- **Punto exacto de continuación:** Certificación técnica e histórica con evidencia primaria in vivo completa. Se procede al cierre formal de [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+
 ## Intervención P0 — Certificación técnica de conciliación histórica Oracle, cierre de seguridad Picomatch y enlace reactivo [ngValue] en catálogos de motivos (Microfase 1) — 2026-11-18 17:50 -06:00 (ANTIG)
 
 - **Autor:** `ANTIG` (Antigravity)
