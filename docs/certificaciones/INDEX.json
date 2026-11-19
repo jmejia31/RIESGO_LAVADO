@@ -515,6 +515,35 @@
       "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
       "review_ready": "YES_FOR_OWNER_FINAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M3-P0-CARGA-CONVERSION-FAVICON-INSTITUCIONAL-20261119",
+      "path": "M3_P0_CARGA_CONVERSION_FAVICON_INSTITUCIONAL_20261119.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_TECHNICALLY_READY_FOR_OWNER_FINAL_REVIEW",
+      "base_sha": "0f455dc0743a1d89c8a3eb6c74498f75a42098b7",
+      "source_code_sha": "6bc50edc8939f089cb059a3a13549e6d0a14835f",
+      "quality_gate_run": 44582188616,
+      "quality_gate_status": "SUCCESS",
+      "github_quality_gate_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44582188616",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/M3_P0_CARGA_CONVERSION_FAVICON_INSTITUCIONAL_20261119.md",
+      "security_scan": "PASS_ZERO_VULNERABILITIES",
+      "favicon_upload_converter": "PASS_MULTI_RESOLUTION_16_32_48_ALPHA_PRESERVED",
+      "favicon_preview_simulation": "PASS_TRUE_SIZES_AND_CHROME_TAB_SIMULATION",
+      "backend_unit_tests": "1293_PASS_0_FAIL_44_FAVICON_SPECIFIC",
+      "frontend_lint": "0_ERRORS_0_WARNINGS",
+      "frontend_unit_tests": "1057_PASS_96_SUITES_25_CONFIGURACION",
+      "playwright_e2e_ui": "6_PASS_0_FAIL_0_FLAKY",
+      "hot_swap_e2e": "PASS_TITULO_ICONO_HOT_SWAP_AND_RELOAD_PERSISTENCE",
+      "decoupling_web_metadata": "PASS_INDEPENDENT_SYNCHRONOUS_APPLICATION",
+      "repository_validators": "6/6_PASS",
+      "regressions_m1_m2": "0_REGRESSIONS_PRESERVED_100_PERCENT",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
+      "review_ready": "YES_FOR_OWNER_FINAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }

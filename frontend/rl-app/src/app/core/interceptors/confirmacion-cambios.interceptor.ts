@@ -14,7 +14,8 @@ const metodosConCambio = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const rutasExcluidas = [
   '/auth/login',
   '/auth/refresh',
-  '/auth/logout'
+  '/auth/logout',
+  '/upload'
 ];
 
 function requiereConfirmacion(url: string, method: string): boolean {

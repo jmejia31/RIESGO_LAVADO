@@ -15,6 +15,88 @@ internal static class InstitutionalPngDecoder
         return (decoded.Rgb.ToArray(), decoded.Width, decoded.Height);
     }
 
+    internal static (byte[] Rgba, int Width, int Height) DecodePngRgba(byte[] bytes)
+    {
+        ReadOnlySpan<byte> signature = stackalloc byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };
+        if (bytes.Length < signature.Length || !bytes.AsSpan(0, signature.Length).SequenceEqual(signature))
+            throw new InvalidOperationException("La imagen configurada no es un PNG válido.");
+
+        var offset = signature.Length;
+        var idat = new MemoryStream();
+        int width = 0;
+        int height = 0;
+        byte bitDepth = 0;
+        byte colorType = 0;
+        byte interlace = 0;
+
+        while (offset + 12 <= bytes.Length)
+        {
+            var length = checked((int)BinaryPrimitives.ReadUInt32BigEndian(bytes.AsSpan(offset, 4)));
+            var type = System.Text.Encoding.ASCII.GetString(bytes, offset + 4, 4);
+            var dataStart = offset + 8;
+            var dataEnd = checked(dataStart + length);
+            if (dataEnd + 4 > bytes.Length)
+                throw new InvalidOperationException("El PNG configurado contiene un chunk truncado.");
+
+            if (type == "IHDR")
+            {
+                width = checked((int)BinaryPrimitives.ReadUInt32BigEndian(bytes.AsSpan(dataStart, 4)));
+                height = checked((int)BinaryPrimitives.ReadUInt32BigEndian(bytes.AsSpan(dataStart + 4, 4)));
+                bitDepth = bytes[dataStart + 8];
+                colorType = bytes[dataStart + 9];
+                interlace = bytes[dataStart + 12];
+            }
+            else if (type == "IDAT")
+            {
+                idat.Write(bytes, dataStart, length);
+            }
+            else if (type == "IEND")
+            {
+                break;
+            }
+
+            offset = dataEnd + 4;
+        }
+
+        if (width <= 0 || height <= 0 || bitDepth != 8 || (colorType != 2 && colorType != 6) || interlace != 0)
+            throw new InvalidOperationException("El PNG configurado usa una variante no soportada para el procesamiento de favicon.");
+
+        idat.Position = 0;
+        using var decoded = new MemoryStream();
+        using (var zlib = new ZLibStream(idat, CompressionMode.Decompress, leaveOpen: true))
+            zlib.CopyTo(decoded);
+
+        var bytesPerPixel = colorType == 6 ? 4 : 3;
+        var scanlineLength = checked(width * bytesPerPixel);
+        var expectedLength = checked(height * (scanlineLength + 1));
+        var scanlines = decoded.ToArray();
+        if (scanlines.Length != expectedLength)
+            throw new InvalidOperationException("El PNG configurado no pudo decodificarse con sus dimensiones declaradas.");
+
+        var previous = new byte[scanlineLength];
+        var current = new byte[scanlineLength];
+        var rgba = new byte[checked(width * height * 4)];
+        var rgbaOffset = 0;
+        for (var row = 0; row < height; row++)
+        {
+            var filter = scanlines[row * (scanlineLength + 1)];
+            scanlines.AsSpan(row * (scanlineLength + 1) + 1, scanlineLength).CopyTo(current);
+            Unfilter(current, previous, filter, bytesPerPixel);
+            for (var pixel = 0; pixel < width; pixel++)
+            {
+                var source = pixel * bytesPerPixel;
+                rgba[rgbaOffset++] = current[source];
+                rgba[rgbaOffset++] = current[source + 1];
+                rgba[rgbaOffset++] = current[source + 2];
+                rgba[rgbaOffset++] = colorType == 6 ? current[source + 3] : (byte)255;
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return (rgba, width, height);
+    }
+
     private static InstitutionalPng Decode(byte[] bytes)
     {
         ReadOnlySpan<byte> signature = stackalloc byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };

@@ -12208,3 +12208,50 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Archivos locales sin seguimiento: 34 archivos preservados intactos fuera del stage de Git.
   - Cero regresiones en Microfase 1, Microfase 2 y Matrices de Riesgos (82 campos canónicos).
 - **Punto exacto de continuación:** Intervención concluida y certificada técnicamente al 100%. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.
+
+---
+
+### Registro 2026-11-19 — ANTIG (Antigravity) — Microfase 3 P0: Carga Local, Conversión Automática a Favicon Multirresolución (.ico) y Previsualización Dinámica
+
+- **Fecha:** 2026-11-19.
+- **Autor:** ANTIG (Antigravity).
+- **Rama:** `desarrollo`.
+- **SHA base certificado:** `0f455dc0743a1d89c8a3eb6c74498f75a42098b7`.
+- **Quality Gate base:** `44582188616` (`completed / success`).
+- **Respaldo creado y verificado:** `respaldo/desarrollo-pre-m3-favicon-upload-20261119-0f455dc0` (confirmado en `origin`).
+- **Objetivo:** Implementar la carga local de imágenes, conversión automática a favicon real `.ico` multirresolución (16x16, 32x32, 48x48 px) y previsualización institucional con simulación de pestaña en el SGRLA-IHSS:
+  1. Backend ASP.NET Core: Implementación de decodificador RGBA de 32 bits (`InstitutionalPngDecoder.cs`), convertidor de imágenes multirresolución `.ico` con interpolación bilineal y preservación alfa (`InstitutionalFaviconConverter.cs`), y endpoint auditado `POST /api/configuracion/sistema/favicon/upload` con autorización de rol Administrador y módulo 3 (`ConfiguracionController.cs`).
+  2. Frontend Angular: Integración del componente de carga institucional `app-institutional-file-upload` con política de favicon (`INSTITUTIONAL_FAVICON_FILE_POLICY`), vistas previas en tamaños reales 1:1 (16x16, 32x32, 48x48) y simulación de pestaña de Chrome `[ICONO] SGRLA-IHSS ×` en `configuracion.component.html`/`.ts`.
+  3. Desacoplamiento y Coexistencia: Desacoplamiento de la subida técnica en `confirmacion-cambios.interceptor.ts` (exclusión de `/upload` y cabecera `X-RL-Confirmado`), coexistencia total con URL HTTPS directa en `SFS_ICONO_URL`, e independencia absoluta de `SFS_LOGO_URL`.
+  4. Cobertura de Pruebas: 14 pruebas unitarias de conversión en `FaviconConversionTests.cs` (14/14 PASS), suite de endpoints con 44 pruebas de favicon (44/44 PASS), 1,293 pruebas de backend PASS, 1,057 pruebas de frontend PASS, 6 pruebas Playwright E2E PASS (incluyendo carga, conversión, vistas previas, hot-swap sin recarga y persistencia tras reload).
+- **Archivos creados o modificados:**
+  - `backend/RL.API/Infrastructure/Reporting/InstitutionalPngDecoder.cs` (método `DecodePngRgba` con decodificación de filtros y desempaquetado de canales RGB/RGBA).
+  - `backend/RL.API/Infrastructure/Reporting/InstitutionalFaviconConverter.cs` (conversión a .ico multirresolución 16, 32, 48 px con contención cuadrada y remuestreo bilineal).
+  - `backend/RL.API/Features/Configuracion/ConfiguracionController.cs` (endpoint `POST /api/configuracion/sistema/favicon/upload`).
+  - `backend/RL.API.Tests/Features/Configuracion/FaviconConversionTests.cs` (14 pruebas unitarias FC-01 a FC-14).
+  - `backend/RL.API.Tests/Features/Configuracion/FaviconEndpointTests.cs` (pruebas del endpoint de subida de favicon).
+  - `frontend/rl-app/src/app/shared/components/institutional-file-upload/institutional-file-upload-policy.ts` (`INSTITUTIONAL_FAVICON_FILE_POLICY`).
+  - `frontend/rl-app/src/app/core/configuration/configuracion.service.ts` (`subirFavicon` con cabecera de confirmación).
+  - `frontend/rl-app/src/app/core/configuration/configuracion.service.spec.ts` (prueba unitaria de `subirFavicon`).
+  - `frontend/rl-app/src/app/core/interceptors/confirmacion-cambios.interceptor.ts` (exclusión de `/upload`).
+  - `frontend/rl-app/src/app/features/admin/configuracion/pages/configuracion/configuracion.component.html` (uploader, preview 16/32/48 px y tab preview).
+  - `frontend/rl-app/src/app/features/admin/configuracion/pages/configuracion/configuracion.component.ts` (señales reactivas y controlador de favicon).
+  - `frontend/rl-app/e2e/institutional-title-favicon.spec.ts` (escenarios E2E de carga, conversión, preview y coexistencia HTTPS).
+  - `docs/certificaciones/M3_P0_CARGA_CONVERSION_FAVICON_INSTITUCIONAL_20261119.md` (expediente de certificación técnica).
+  - `docs/certificaciones/INDEX.json` (registro `M3-P0-CARGA-CONVERSION-FAVICON-INSTITUCIONAL-20261119`).
+  - `BITACORA_COLABORACION.md` (actualizado).
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (actualizado).
+- **Pruebas ejecutadas y conteos reales:**
+  - Backend unitario/contrato: 1,293 pruebas superadas en `RL.API.Tests` (1,293/1,293 PASS, 0 fallidas, 0 omitidas).
+  - Favicon backend específico: 44 pruebas superadas (14 conversión + 30 endpoints/validadores).
+  - Frontend Vitest: 96 suites pasadas, 1,057 pruebas unitarias pasadas (1,057/1,057 PASS, 100%).
+  - Playwright E2E: 6 pruebas pasadas en `institutional-title-favicon.spec.ts` (6/6 PASS, 100%).
+  - Frontend Lint: ESLint con 0 errores y 0 advertencias.
+  - Frontend Build: Compilación de producción con código de salida 0.
+  - Validadores del repositorio: 6/6 PASS (`validate_repository_structure.ps1`, `validate_database_scripts.ps1`, `validate_documentation_links.ps1`, `validate_agent_skills.py`, `validate_dynamic_system_theme.js`, `validate_no_native_dialogs.js`).
+- **Gobernanza y restricciones:**
+  - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+  - Rama `main`: Intacta (0 modificaciones).
+  - Archivos locales sin seguimiento: 34 archivos preservados intactos fuera del stage de Git.
+  - Cero regresiones en Microfase 1, Microfase 2 y Matrices de Riesgos (82 campos canónicos).
+- **Punto exacto de continuación:** Intervención concluida y certificada técnicamente al 100%. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.

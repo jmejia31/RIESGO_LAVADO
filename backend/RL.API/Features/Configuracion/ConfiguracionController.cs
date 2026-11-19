@@ -481,6 +481,101 @@ public class ConfiguracionController : ControllerBase
 
         return Ok(new { success = true, url = urlRelativa });
     }
+
+    [HttpPost("sistema/favicon/upload")]
+    [Authorize(Roles = "ADMINISTRADOR")]
+    [ModuloAuthorize(3)]
+    [AuditRequired("Carga de favicon institucional")]
+    public async Task<IActionResult> SubirFavicon(IFormFile archivo)
+    {
+        if (archivo == null || archivo.Length == 0)
+            return BadRequest(new { success = false, mensaje = "No se ha proporcionado ningún archivo para el favicon." });
+
+        if (archivo.Length > InstitutionalFaviconValidator.MaxFaviconSizeBytes)
+            return BadRequest(new { success = false, mensaje = $"El archivo de favicon supera el tamaño máximo permitido de {InstitutionalFaviconValidator.MaxFaviconSizeBytes / 1024 / 1024} MB." });
+
+        if (_environment is null)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { success = false, mensaje = "El almacenamiento institucional no está disponible." });
+
+        var extension = Path.GetExtension(Path.GetFileName(archivo.FileName)).ToLowerInvariant();
+        if (extension is not (".png" or ".jpg" or ".jpeg" or ".ico" or ".webp"))
+            return BadRequest(new { success = false, mensaje = $"Extensión '{extension}' no admitida para favicon. Use PNG, JPG, JPEG, WebP o ICO." });
+
+        using var memoryStream = new MemoryStream();
+        await archivo.CopyToAsync(memoryStream);
+        var bytes = memoryStream.ToArray();
+
+        // 1. Validar el contenido subido
+        var validation = InstitutionalFaviconValidator.Validate(bytes, extension);
+        if (!validation.IsValid)
+            return BadRequest(new { success = false, mensaje = validation.FailureReason ?? "El archivo de imagen no es válido para favicon." });
+
+        // 2. Convertir y normalizar a favicon ICO multirresolución optimizado
+        byte[] convertedBytes;
+        FaviconConversionResult conversionResult;
+        try
+        {
+            conversionResult = InstitutionalFaviconConverter.Convert(bytes, extension);
+            convertedBytes = conversionResult.IcoBytes;
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, mensaje = $"Error al procesar y convertir el favicon: {ex.Message}" });
+        }
+
+        // 3. Validar el resultado convertido
+        var outputValidation = InstitutionalFaviconValidator.Validate(convertedBytes, ".ico");
+        if (!outputValidation.IsValid)
+            return BadRequest(new { success = false, mensaje = $"El favicon convertido no superó la verificación de seguridad: {outputValidation.FailureReason}" });
+
+        // 4. Almacenamiento seguro y persistente
+        var uploadsFolder = InstitutionalBrandingStorage.GetUploadsDirectory(_environment);
+        Directory.CreateDirectory(uploadsFolder);
+
+        var nombreUnico = $"favicon-{Guid.NewGuid():N}.ico";
+        var rutaCompleta = FileUploadPolicyValidator.ResolveSafePath(uploadsFolder, nombreUnico);
+        if (rutaCompleta is null)
+            return BadRequest(new { success = false, mensaje = "No se pudo resolver una ruta segura para guardar el favicon." });
+
+        string journalPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias", ".configuration-image-operations");
+        var journal = new DurableFileOperationJournal(uploadsFolder, journalPath);
+        await using var operation = await journal.BeginAsync(
+            DurableFileOperationType.ConfigurationImageUpload,
+            nombreUnico,
+            nombreUnico);
+
+        await using (var stream = new FileStream(operation.PendingPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.WriteThrough))
+        {
+            await stream.WriteAsync(convertedBytes);
+            await stream.FlushAsync();
+        }
+
+        var urlRelativa = InstitutionalBrandingStorage.BuildPublicUploadUrl(nombreUnico);
+        await _service.RegistrarCargaImagenAsync(
+            Path.GetFileName(archivo.FileName),
+            nombreUnico,
+            urlRelativa,
+            "image/x-icon",
+            convertedBytes.Length,
+            ObtenerUsuarioId(),
+            ObtenerIp());
+
+        if (System.IO.File.Exists(rutaCompleta))
+            throw new IOException("The generated configuration image path is already occupied.");
+        System.IO.File.Move(operation.PendingPath, rutaCompleta);
+        await operation.CompleteAsync();
+
+        return Ok(new
+        {
+            success = true,
+            url = urlRelativa,
+            mimeType = "image/x-icon",
+            width = outputValidation.Width,
+            height = outputValidation.Height,
+            status = "ready-to-save",
+            mensaje = "Favicon convertido correctamente. Guarde la configuración para publicarlo."
+        });
+    }
     private long ObtenerUsuarioId()
     {
         return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

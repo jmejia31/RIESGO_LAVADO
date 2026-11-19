@@ -118,6 +118,17 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
       localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
     }, token());
 
+    await page.route('https://cdn.ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/x-icon',
+      body: PNG_ICON_A,
+    }));
+    await page.route('https://ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: PNG_ICON_A,
+    }));
+
     await page.route(/\/api\/configuracion\/sistema\/favicon/, route => {
       const url = route.request().url();
       const body = url.includes('icono-b') || currentConfig.iconoUrl.includes('icono-b') ? PNG_ICON_B : PNG_ICON_A;
@@ -202,6 +213,17 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
       localStorage.setItem('refresh_token', 'e2e-only');
       localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
     }, token());
+
+    await page.route('https://cdn.ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/x-icon',
+      body: PNG_ICON_A,
+    }));
+    await page.route('https://ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: PNG_ICON_A,
+    }));
 
     await page.route(/\/api\/configuracion\/sistema\/favicon/, route => {
       if (!currentConfig.iconoUrl) {
@@ -303,5 +325,201 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     await expect(faviconLink).toHaveCount(1);
     const elapsed = Date.now() - startTime;
     expect(elapsed).toBeLessThan(10000);
+  });
+
+  test('Carga local de imagen, conversión automática a .ico, vista previa multirresolución (16x16, 32x32, 48x48), simulación de pestaña y guardado dinámico', async ({ page }) => {
+    let currentConfig = {
+      nombreSistema: 'SGRLA-IHSS',
+      nombreInstitucion: 'Instituto Hondureño de Seguridad Social',
+      iconoUrl: '/uploads/favicon-original.png',
+      logoUrl: '/uploads/logo-institucional.png',
+      colorPrimario: '#1e3a8a',
+      colorSecundario: '#1d4ed8',
+      colorEncabezadoReportes: '#123B63',
+      timeoutSesion: 30,
+    };
+
+    await page.addInitScript(accessToken => {
+      localStorage.setItem('access_token', accessToken);
+      localStorage.setItem('refresh_token', 'e2e-only');
+      localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
+    }, token());
+
+    await page.route('https://cdn.ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/x-icon',
+      body: PNG_ICON_A,
+    }));
+    await page.route('https://ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: PNG_ICON_A,
+    }));
+
+    await page.route(/\/api\/configuracion\/sistema(?:\?|$)/, async route => {
+      const req = route.request();
+      if (req.method() === 'PUT' || req.method() === 'POST') {
+        const body = req.postDataJSON();
+        currentConfig = { ...currentConfig, ...body };
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, mensaje: 'Configuración guardada' }),
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, datos: currentConfig }),
+      });
+    });
+
+    await page.route(/\/api\/configuracion\/sistema\/favicon(?:\?|$)/, route => {
+      return route.fulfill({
+        status: 200,
+        contentType: 'image/x-icon',
+        body: PNG_ICON_B,
+      });
+    });
+
+    let uploadLlamado = false;
+    await page.route(/\/api\/configuracion\/sistema\/favicon\/upload/, async route => {
+      uploadLlamado = true;
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          url: '/uploads/favicon-autocreated.ico',
+          mensaje: 'Favicon procesado y convertido a formato multirresolución .ico exitosamente',
+        }),
+      });
+    });
+
+    await page.goto('/configuracion');
+
+    // 1. Localizar el selector de archivo de carga de favicon institucional
+    const faviconUploaderSection = page.locator('section').filter({ hasText: 'Cargar favicon institucional' });
+    await expect(faviconUploaderSection).toBeVisible();
+    const fileInput = faviconUploaderSection.locator('input[type="file"]');
+
+    // 2. Cargar archivo local (simulado con buffer PNG)
+    await fileInput.setInputFiles({
+      name: 'nuevo-favicon-institucional.png',
+      mimeType: 'image/png',
+      buffer: PNG_ICON_B,
+    });
+
+    // 3. Verificar que se activó la subida y conversión automática
+    await expect.poll(() => uploadLlamado).toBe(true);
+
+    // 4. Verificar indicador de estado "Listo para guardar"
+    await expect(page.locator('text=Listo para guardar')).toBeVisible();
+
+    // 5. Verificar vistas previas en tamaños reales 16x16, 32x32, 48x48
+    await expect(page.locator('img[alt="Favicon 16x16"]')).toBeVisible();
+    await expect(page.locator('img[alt="Favicon 32x32"]')).toBeVisible();
+    await expect(page.locator('img[alt="Favicon 48x48"]')).toBeVisible();
+
+    // 6. Verificar simulación de pestaña de Chrome
+    await expect(page.locator('img[alt="Favicon Tab"]')).toBeVisible();
+    await expect(page.locator('text=Simulación en pestaña de Chrome:')).toBeVisible();
+
+    // 7. Guardar cambios en el formulario
+    const btnGuardar = page.locator('button[aria-label="Guardar cambios del sistema"]');
+    await btnGuardar.click();
+
+    // Confirmar en el modal SweetAlert institucional
+    const btnConfirmar = page.getByRole('button', { name: 'Sí, guardar' });
+    await expect(btnConfirmar).toBeVisible();
+    await btnConfirmar.click();
+
+    // 8. Verificar que el favicon del navegador cambió en caliente (ANGULAR_RESTART_REQUIRED=NO)
+    const hotSwappedFavicon = page.locator('link[rel="icon"]');
+    await expect(hotSwappedFavicon).toHaveCount(1);
+    const hotHref = await hotSwappedFavicon.getAttribute('href');
+    expect(hotHref).toContain('/api/configuracion/sistema/favicon?v=');
+
+    // 9. Verificar persistencia tras recarga
+    await page.reload();
+    const reloadedFavicon = page.locator('link[rel="icon"]');
+    await expect(reloadedFavicon).toHaveCount(1);
+    const reloadedHref = await reloadedFavicon.getAttribute('href');
+    expect(reloadedHref).toContain('/api/configuracion/sistema/favicon?v=');
+  });
+
+  test('Coexistencia y desacoplamiento: URL directa HTTPS no altera logo institucional ni flujo de carga', async ({ page }) => {
+    let currentConfig = {
+      nombreSistema: 'SGRLA-IHSS',
+      nombreInstitucion: 'Instituto Hondureño de Seguridad Social',
+      iconoUrl: '/uploads/favicon.png',
+      logoUrl: 'https://ihss.hn/wp-content/uploads/logo-ihss-oficial.png',
+      colorPrimario: '#1e3a8a',
+      colorSecundario: '#1d4ed8',
+      colorEncabezadoReportes: '#123B63',
+      timeoutSesion: 30,
+    };
+
+    await page.addInitScript(accessToken => {
+      localStorage.setItem('access_token', accessToken);
+      localStorage.setItem('refresh_token', 'e2e-only');
+      localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
+    }, token());
+
+    await page.route('https://cdn.ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/x-icon',
+      body: PNG_ICON_A,
+    }));
+    await page.route('https://ihss.hn/**', route => route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: PNG_ICON_A,
+    }));
+
+    await page.route(/\/api\/configuracion\/sistema\/favicon/, route => {
+      return route.fulfill({
+        status: 200,
+        contentType: 'image/x-icon',
+        body: PNG_ICON_A,
+      });
+    });
+
+    let configPersistida: any = null;
+    await page.route('**/api/configuracion/sistema', async route => {
+      const req = route.request();
+      if (req.method() === 'PUT' || req.method() === 'POST') {
+        configPersistida = req.postDataJSON();
+        currentConfig = { ...currentConfig, ...configPersistida };
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, mensaje: 'Configuración guardada' }),
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, datos: currentConfig }),
+      });
+    });
+
+    await page.goto('/configuracion');
+
+    // Ingresar URL directa HTTPS en iconoUrl
+    const inputIcono = page.locator('input[formcontrolname="iconoUrl"]');
+    await inputIcono.fill('https://cdn.ihss.hn/assets/favicon-direct.ico');
+
+    // Guardar
+    const btnGuardar = page.locator('button[aria-label="Guardar cambios del sistema"]');
+    await btnGuardar.click();
+
+    const btnConfirmar = page.getByRole('button', { name: 'Sí, guardar' });
+    await expect(btnConfirmar).toBeVisible();
+    await btnConfirmar.click();
+
+    // Verificar que se guardó iconoUrl sin tocar logoUrl
+    await expect.poll(() => configPersistida?.iconoUrl).toBe('https://cdn.ihss.hn/assets/favicon-direct.ico');
+    expect(configPersistida?.logoUrl).toBe('https://ihss.hn/wp-content/uploads/logo-ihss-oficial.png');
   });
 });

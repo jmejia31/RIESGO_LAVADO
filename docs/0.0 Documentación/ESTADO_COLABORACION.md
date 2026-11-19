@@ -1,4 +1,38 @@
-# Estado vigente — Microfase 3 (M3): Endurecimiento de Favicon, Desacoplamiento de Metadatos y QA Real (ANTIG) — 2026-11-19 11:30 -06:00
+# Estado vigente — Microfase 3 (M3): Carga Local, Conversión Automática a Favicon Multirresolución (.ico) y Previsualización Dinámica (ANTIG) — 2026-11-19 13:00 -06:00
+
+## Estado vigente — Certificación Técnica Microfase 3 (M3): Carga Local, Conversión a Favicon .ico y Previsualización Dinámica P0
+
+- Se completó la intervención quirúrgica P0 de **Microfase 3 (M3)**, implementando de forma completa la carga local de imágenes, conversión automática a favicon real multirresolución `.ico` (16×16, 32×32, 48×48 px) y previsualización institucional en el SGRLA-IHSS:
+  1. **Backend ASP.NET Core (`RL.API`):**
+     - `InstitutionalPngDecoder.cs`: Decodificación nativa completa `DecodePngRgba` soportando reconstrucción de filtros PNG (None, Sub, Up, Average, Paeth) y desempaquetado de canales RGB y RGBA (8 bits/canal) para preservar el canal alfa de transparencia.
+     - `InstitutionalFaviconConverter.cs`: Convertidor multiformato (PNG, JPEG, WebP, ICO) con normalización en lienzo cuadrado manteniendo proporción (`contain` centrado con padding transparente), remuestreo bilineal de alta precisión a 16×16, 32×32 y 48×48 píxeles, codificación de cada capa en subflujo PNG optimizado y ensamblado del contenedor canónico `.ico` (ICONDIR / ICONDIRENTRY).
+     - `ConfiguracionController.cs`: Endpoint `POST /api/configuracion/sistema/favicon/upload` con autorización de rol `ADMINISTRADOR` y módulo 3 (`ModuloAuthorize(3)`), auditoría obligatoria (`AuditRequired`), diario de operaciones transaccional (`DurableFileOperationJournal`) y almacenamiento persistente en `uploads/favicons/favicon-[guid].ico`.
+  2. **Frontend Angular (`rl-app`):**
+     - `institutional-file-upload-policy.ts`: Política institucional `INSTITUTIONAL_FAVICON_FILE_POLICY` (PNG, JPG, JPEG, WebP, ICO; máx 2 MB; 1 archivo).
+     - `configuracion.service.ts`: Método `subirFavicon(file)` con cabecera `X-RL-Confirmado: '1'` para desacoplar la carga técnica de los modales de confirmación de formulario.
+     - `confirmacion-cambios.interceptor.ts`: Inclusión de `/upload` en rutas excluidas de confirmación anticipada.
+     - `configuracion.component.html`/`.ts`: Integración de `app-institutional-file-upload`, señales reactivas de estado, previsualizaciones en tamaños reales 1:1 (16×16, 32×32, 48×48 px) y simulación de pestaña de Chrome `[ICONO] SGRLA-IHSS ×` con hot-swap reactivo sin recarga (`ANGULAR_RESTART_REQUIRED=NO`).
+  3. **Suites y Verificación Ejecutada:**
+     - Backend: 14 pruebas unitarias de conversión en `FaviconConversionTests.cs` (14/14 PASS), suite de endpoints con 44 pruebas de favicon (44/44 PASS), 1,293 pruebas de backend PASS (0 fallidas, 0 omitidas).
+     - Frontend Vitest: 96 suites pasadas, 1,057 pruebas unitarias pasadas (1,057/1,057 PASS, 100%).
+     - Playwright E2E UI: 6 pruebas pasadas en `e2e/institutional-title-favicon.spec.ts` (6/6 PASS, 100%).
+     - Frontend Lint: ESLint con 0 errores y 0 advertencias.
+     - Frontend Build: Compilación de producción en `dist/rl-app` finalizada con código de salida 0.
+     - Validadores del repositorio: 6/6 PASS (`validate_repository_structure.ps1`, `validate_database_scripts.ps1`, `validate_documentation_links.ps1`, `validate_agent_skills.py`, `validate_dynamic_system_theme.js`, `validate_no_native_dialogs.js`).
+  4. **Preservación Integral:**
+     - Cero regresiones en Microfase 1 (DNI agrupado, 5 tarjetas métricas, guardas de motivo, seguimientos).
+     - Cero regresiones en Microfase 2 (18 puntos de exportación, texto negro institucional `#000000`, geometría B06).
+     - Matrices de Riesgos (82 campos canónicos) intactas.
+     - Coexistencia total con URL HTTPS directa en `SFS_ICONO_URL`.
+     - Desacoplamiento total respecto a `SFS_LOGO_URL`.
+     - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+     - Rama `main` y producción intactas.
+     - Respaldo verificado: `respaldo/desarrollo-pre-m3-favicon-upload-20261119-0f455dc0` en `origin` en `0f455dc0743a1d89c8a3eb6c74498f75a42098b7`.
+- **Punto exacto de continuación:** Intervención concluida y certificada técnicamente al 100%. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.
+
+---
+
+# Estado previo — Microfase 3 (M3): Endurecimiento de Favicon, Desacoplamiento de Metadatos y QA Real (ANTIG) — 2026-11-19 11:30 -06:00
 
 ## Estado vigente — Certificación Técnica Microfase 3 (M3): Endurecimiento de Favicon, Desacoplamiento y Pruebas Reales E2E
 

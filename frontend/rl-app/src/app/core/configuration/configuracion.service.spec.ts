@@ -405,4 +405,27 @@ describe('ConfiguracionService', () => {
     expect(links[0].href).toContain('/api/configuracion/sistema/favicon?v=');
     expect(resultado?.nombreSistema).toBe('Sistema Resiliente');
   });
+
+  it('sube favicon a /api/configuracion/sistema/favicon/upload y devuelve url y estado', () => {
+    const file = new File(['synthetic-favicon'], 'favicon.png', { type: 'image/png' });
+    let response: any;
+    service.subirFavicon(file).subscribe(res => response = res);
+
+    const req = http.expectOne('http://localhost:5043/api/configuracion/sistema/favicon/upload');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    expect(req.request.body instanceof FormData).toBe(true);
+
+    req.flush({
+      success: true,
+      url: '/uploads/favicon-test.ico',
+      mimeType: 'image/x-icon',
+      status: 'ready-to-save',
+      mensaje: 'Favicon convertido correctamente.'
+    });
+
+    expect(response?.success).toBe(true);
+    expect(response?.url).toBe('/uploads/favicon-test.ico');
+    expect(response?.status).toBe('ready-to-save');
+  });
 });

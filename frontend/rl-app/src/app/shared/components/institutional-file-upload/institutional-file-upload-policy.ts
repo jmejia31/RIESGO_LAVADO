@@ -27,3 +27,10 @@ export const INSTITUTIONAL_LOGO_FILE_POLICY: InstitutionalFileUploadPolicy = {
   maxFileSizeBytes: 5 * 1024 * 1024,
   maxFiles: 1
 };
+
+export const INSTITUTIONAL_FAVICON_FILE_POLICY: InstitutionalFileUploadPolicy = {
+  allowedExtensions: ['png', 'jpg', 'jpeg', 'webp', 'ico'],
+  allowedTypesText: 'Favicon (PNG, JPG, JPEG, WebP, ICO)',
+  maxFileSizeBytes: 2 * 1024 * 1024,
+  maxFiles: 1
+};

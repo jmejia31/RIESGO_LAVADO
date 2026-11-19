@@ -7,7 +7,7 @@ import { DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY } from '../../../../../co
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
-import { INSTITUTIONAL_LOGO_FILE_POLICY, LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
+import { INSTITUTIONAL_FAVICON_FILE_POLICY, INSTITUTIONAL_LOGO_FILE_POLICY, LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
@@ -44,6 +44,11 @@ export class ConfiguracionComponent implements OnInit {
   readonly politicaLogoInstitucional = INSTITUTIONAL_LOGO_FILE_POLICY;
   archivosLogoPendientes = signal<File[]>([]);
   subiendoLogo = signal(false);
+  readonly politicaFaviconInstitucional = INSTITUTIONAL_FAVICON_FILE_POLICY;
+  archivosFaviconPendientes = signal<File[]>([]);
+  subiendoFavicon = signal(false);
+  readonly estadoFavicon = signal<'IDLE' | 'FAVICON_SELECTED' | 'FAVICON_VALIDATING' | 'FAVICON_CONVERTING' | 'FAVICON_UPLOADING' | 'FAVICON_READY_TO_SAVE' | 'FAVICON_SAVING' | 'FAVICON_PUBLISHED' | 'FAVICON_SAVE_FAILED'>('IDLE');
+  faviconVistaPreviaUrl = signal<string | null>(null);
   readonly estadoLogo = signal<'IDLE' | 'LOGO_SELECTED' | 'LOGO_VALIDATING' | 'LOGO_UPLOADING' | 'LOGO_UPLOADED_PENDING_SAVE' | 'LOGO_SAVING' | 'LOGO_PUBLISHED' | 'LOGO_SAVE_FAILED'>('IDLE');
   archivosImagenPendientes = signal<File[]>([]);
 
@@ -119,9 +124,10 @@ export class ConfiguracionComponent implements OnInit {
 
     this.mensajeExito.set(null);
     this.mensajeError.set(null);
-    if (this.subiendoLogo()) return;
+    if (this.subiendoLogo() || this.subiendoFavicon()) return;
     this.guardando.set(true);
     this.estadoLogo.set('LOGO_SAVING');
+    this.estadoFavicon.set('FAVICON_SAVING');
 
     const data: ConfigSistema = this.form.value;
 
@@ -131,12 +137,14 @@ export class ConfiguracionComponent implements OnInit {
           next: persisted => {
             this.form.patchValue(persisted);
             this.estadoLogo.set('LOGO_PUBLISHED');
+            this.estadoFavicon.set('FAVICON_PUBLISHED');
             this.guardando.set(false);
             this.mostrarExito('¡Configuración guardada y aplicada exitosamente!');
           },
           error: () => {
             this.guardando.set(false);
             this.estadoLogo.set('LOGO_SAVE_FAILED');
+            this.estadoFavicon.set('FAVICON_SAVE_FAILED');
             this.mostrarError('No se pudo verificar la configuracion persistida en el servidor.');
           }
         });
@@ -144,6 +152,7 @@ export class ConfiguracionComponent implements OnInit {
       error: (err) => {
         this.guardando.set(false);
         this.estadoLogo.set('LOGO_SAVE_FAILED');
+        this.estadoFavicon.set('FAVICON_SAVE_FAILED');
         const msg = err?.error?.mensaje || 'Error al guardar los cambios en la base de datos.';
         this.mostrarError(msg);
       }
@@ -314,6 +323,7 @@ export class ConfiguracionComponent implements OnInit {
         error: error => {
           this.subiendoLogo.set(false);
           this.estadoLogo.set('LOGO_SAVE_FAILED');
+
           this.archivosLogoPendientes.set([]);
           this.mostrarError(error?.error?.mensaje || 'No se pudo cargar el logo institucional.');
         }
@@ -346,5 +356,45 @@ export class ConfiguracionComponent implements OnInit {
     } finally {
       URL.revokeObjectURL(objectUrl);
     }
+  }
+
+  urlFaviconVistaPrevia(): string {
+    return this.faviconVistaPreviaUrl()
+      || this.configService.resolverUrlImagen(this.form.get('iconoUrl')?.value)
+      || 'favicon.ico';
+  }
+
+  onFaviconSeleccionado(files: File[]) {
+    const file = files[0];
+    if (!file) return;
+
+    this.archivosFaviconPendientes.set([file]);
+    this.estadoFavicon.set('FAVICON_SELECTED');
+    this.subiendoFavicon.set(true);
+    this.estadoFavicon.set('FAVICON_UPLOADING');
+
+    try {
+      const localPreview = URL.createObjectURL(file);
+      this.faviconVistaPreviaUrl.set(localPreview);
+    } catch {
+      // Ignorar fallo de preview local si createObjectURL no está disponible
+    }
+
+    this.configService.subirFavicon(file).subscribe({
+      next: response => {
+        this.subiendoFavicon.set(false);
+        this.archivosFaviconPendientes.set([]);
+        this.form.patchValue({ iconoUrl: response.url });
+        this.faviconVistaPreviaUrl.set(response.url);
+        this.estadoFavicon.set('FAVICON_READY_TO_SAVE');
+        this.mostrarExito('Favicon convertido correctamente. Guarde la configuración para publicarlo.');
+      },
+      error: error => {
+        this.subiendoFavicon.set(false);
+        this.estadoFavicon.set('FAVICON_SAVE_FAILED');
+        this.archivosFaviconPendientes.set([]);
+        this.mostrarError(error?.error?.mensaje || 'No se pudo cargar el favicon institucional.');
+      }
+    });
   }
 }

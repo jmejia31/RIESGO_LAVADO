@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
+using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -494,6 +495,75 @@ public sealed class FaviconEndpointTests : IDisposable
         Assert.True(doc.RootElement.GetProperty("configurado").GetBoolean());
         Assert.False(doc.RootElement.GetProperty("disponible").GetBoolean());
         Assert.Contains("truncado", doc.RootElement.GetProperty("estado").GetString()?.ToLowerInvariant());
+    }
+
+    [Fact]
+    public async Task SubirFavicon_PngValido_Retorna200OkConUrlYArchivoIcoPersistido()
+    {
+        var service = new FakeConfiguracionService(new ConfigSistema());
+        var controller = new ConfiguracionController(service, _fakeEnv);
+        var httpContext = new DefaultHttpContext();
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim(ClaimTypes.NameIdentifier, "1"),
+            new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+        ], "TestAuth"));
+        controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+        var pngBytes = CrearPngValido(64, 64);
+        var stream = new MemoryStream(pngBytes);
+        var formFile = new FormFile(stream, 0, pngBytes.Length, "archivo", "mi_favicon.png")
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "image/png"
+        };
+
+        var result = await controller.SubirFavicon(formFile);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var json = JsonSerializer.Serialize(okResult.Value);
+        using var doc = JsonDocument.Parse(json);
+        Assert.True(doc.RootElement.GetProperty("success").GetBoolean());
+        var url = doc.RootElement.GetProperty("url").GetString();
+        Assert.NotNull(url);
+        Assert.StartsWith("/uploads/favicon-", url);
+        Assert.EndsWith(".ico", url);
+        Assert.Equal("ready-to-save", doc.RootElement.GetProperty("status").GetString());
+
+        var physicalPath = Path.Combine(_tempWebRoot, url.TrimStart('/'));
+        Assert.True(File.Exists(physicalPath));
+        var savedBytes = await File.ReadAllBytesAsync(physicalPath);
+        var validation = InstitutionalFaviconValidator.Validate(savedBytes, ".ico");
+        Assert.True(validation.IsValid);
+    }
+
+    [Fact]
+    public async Task SubirFavicon_SinArchivo_Retorna400BadRequest()
+    {
+        var service = new FakeConfiguracionService(new ConfigSistema());
+        var controller = new ConfiguracionController(service, _fakeEnv);
+
+        var result = await controller.SubirFavicon(null!);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task SubirFavicon_ExtensionNoPermitida_Retorna400BadRequest()
+    {
+        var service = new FakeConfiguracionService(new ConfigSistema());
+        var controller = new ConfiguracionController(service, _fakeEnv);
+
+        var bytes = "payload"u8.ToArray();
+        var formFile = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "archivo", "virus.exe")
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "application/x-msdownload"
+        };
+
+        var result = await controller.SubirFavicon(formFile);
+
+        Assert.IsType<BadRequestObjectResult>(result);
     }
 }
 

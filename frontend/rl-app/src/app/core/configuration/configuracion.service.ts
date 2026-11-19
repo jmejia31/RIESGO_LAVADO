@@ -6,6 +6,7 @@ import { catchError, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { ConfigSistema, LoginSlide } from './configuracion.models';
 import { bestContrastForeground, createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAULT_SYSTEM_PRIMARY, parseHexColor } from './system-theme.util';
 import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
+import { CONFIRMACION_CAMBIOS_HEADER } from '../interceptors/confirmacion-cambios.interceptor';
 import { setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
 
 export interface ReportLogo {
@@ -214,8 +215,22 @@ export class ConfiguracionService {
     const formData = new FormData();
     formData.append('archivo', file);
     return this.http.post<{ success: boolean, url: string }>(`${this.apiUrl}/slides/upload`, formData, {
+      headers: { [CONFIRMACION_CAMBIOS_HEADER]: '1' },
       context: createHttpErrorScopeContext('local')
     });
+  }
+
+  subirFavicon(file: File) {
+    const formData = new FormData();
+    formData.append('archivo', file);
+    return this.http.post<{ success: boolean; url: string; mimeType?: string; status?: string; mensaje?: string }>(
+      `${this.apiUrl}/sistema/favicon/upload`,
+      formData,
+      {
+        headers: { [CONFIRMACION_CAMBIOS_HEADER]: '1' },
+        context: createHttpErrorScopeContext('local')
+      }
+    );
   }
 
   resolverUrlImagen(url?: string): string {
