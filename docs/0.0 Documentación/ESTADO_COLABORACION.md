@@ -1,4 +1,44 @@
-# Estado vigente — Microfase 3 (M3): Auditoría Integral de Seguridad, QA Real, Regresiones Operativas y Certificación Definitiva B06 (ANTIG) — 2026-11-19 09:00 -06:00
+# Estado vigente — Microfase 3 (M3): Parametrización Dinámica del Título del Navegador y Favicon Institucional (ANTIG) — 2026-11-19 10:00 -06:00
+
+## Estado vigente — Certificación Técnica Microfase 3 (M3): Título y Favicon Dinámicos Institucionales P0
+
+- Se completó la intervención quirúrgica P0 de **Microfase 3 (M3)**, cumpliendo la orden de Javier Mejía (`jmejia31`) para parametrizar dinámicamente el título del navegador y el favicon institucional a partir de los registros de configuración en Oracle (`SFS_NOMBRE_SISTEMA` y `SFS_ICONO_URL`), sin necesidad de recargar la aplicación (`ANGULAR_RESTART_REQUIRED=NO`) y preservando la arquitectura y seguridad del sistema.
+  1. **Título dinámico del navegador:**
+     - Proyecta `${nombreSistema} | Gestión de Riesgos LA/FT` usando el servicio Angular `Title`.
+     - Normalización con `.trim()` y fallback seguro a `SGRLA-IHSS | Gestión de Riesgos LA/FT` cuando el valor es nulo, vacío o consta de solo espacios en blanco.
+     - Actualización atómica en el DOM únicamente cuando el valor formateado cambia.
+  2. **Favicon dinámico desacoplado y protegido:**
+     - Endpoint público en backend: `GET /api/configuracion/sistema/favicon` con cabeceras `Cache-Control: no-cache, no-store, must-revalidate` y cabeceras de telemetría `X-Favicon-Status` y `X-Favicon-Source`.
+     - Endpoint de telemetría: `GET /api/configuracion/sistema/favicon/estado`.
+     - Desacoplamiento total entre el favicon institucional y el logotipo de reportería (`SFS_LOGO_URL`).
+     - Validación estricta con `InstitutionalFaviconValidator` para firmas binarias (magic bytes) y dimensiones de formatos ICO, PNG, JPEG, GIF y WebP (16..2048 px, <= 2MB).
+     - Descarga remota segura con `InstitutionalLogoDownloader.DownloadFaviconAsync` aplicando filtrado HTTPS, lista blanca de dominios, bloqueo de IPs privadas/loopback (RFC 1918 / RFC 4193), timeout de 5 segundos y DNS pinning.
+  3. **Invalidación de caché y actualización en caliente en navegador:**
+     - Inyección y reemplazo del elemento `<link rel="icon">` en el DOM utilizando un token de versión dinámico `?v=${hash}_${version}` para vencer la agresiva caché de Google Chrome sin recargar la página.
+     - Restablecimiento limpio a `favicon.ico` al eliminar el icono (`ICONO_B -> SIN_ICONO`) o ante ausencia de icono.
+  4. **Persistencia en cold start, recarga y navegación:**
+     - Inyección de `ConfiguracionService` en el constructor raíz de `app.ts` (`AppComponent`).
+     - Preservación del título y favicon en recargas de página y navegación entre rutas públicas (`/login`) y autenticadas.
+     - Protección contra condiciones de carrera mediante secuencia numérica monótona (`secuenciaOperacion`).
+  5. **Verificación y Suites Ejecutadas:**
+     - Backend: 19 pruebas de favicon en `FaviconEndpointTests.cs` (19/19 PASS), suite completa `RL.API.Tests` (1,269/1,269 PASS sin integración Oracle XE local).
+     - Frontend Vitest: 23 pruebas en `configuracion.service.spec.ts` (23/23 PASS), suite completa frontend (96/96 suites, 1,055/1,055 PASS).
+     - Frontend Lint: ESLint con 0 errores y 0 advertencias.
+     - Frontend Build: Compilación de producción en `dist/rl-app` finalizada con código de salida 0.
+     - Playwright E2E UI: 3 pruebas en `e2e/institutional-title-favicon.spec.ts` (3/3 PASS).
+     - Validadores del repositorio: Estructura (118 rutas, 1,300 archivos PASS), scripts BD (PASS), enlaces Markdown (PASS), Agent Skills (14/14 PASS), tema dinámico (PASS), diálogos nativos (PASS).
+  6. **Preservación Integral:**
+     - Cero regresiones en Microfase 1 (DNI agrupado, 5 tarjetas métricas, guardas de motivo, seguimientos).
+     - Cero regresiones en Microfase 2 (18 puntos de exportación, texto negro institucional `#000000`, geometría B06).
+     - Matrices de Riesgos (82 campos canónicos) intactas.
+     - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+     - Rama `main` y producción intactas.
+     - Respaldo verificado: `respaldo/desarrollo-pre-m3-favicon-20261119-d0c8cf85` en `d0c8cf85`.
+- **Punto exacto de continuación:** Intervención concluida y certificada. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.
+
+---
+
+# Estado previo — Microfase 3 (M3): Auditoría Integral de Seguridad, QA Real, Regresiones Operativas y Certificación Definitiva B06 (ANTIG) — 2026-11-19 09:00 -06:00
 
 ## Estado vigente — Certificación Técnica Microfase 3 (M3): Seguridad, QA Real y Cierre Integral B06
 

@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { catchError, from, map, Observable, of, switchMap, tap } from 'rxjs';
@@ -25,14 +26,18 @@ export const NO_REPORT_LOGO: ReportLogo = {
 })
 export class ConfiguracionService {
   private http = inject(HttpClient);
+  private titleService = inject(Title);
   private apiUrl = `${environment.apiUrl}/configuracion`;
 
   // Signal global para la identidad del sistema
   configSistema = signal<ConfigSistema | null>(null);
   private ultimoColorPrimarioValido = DEFAULT_SYSTEM_PRIMARY;
   private ultimoColorSecundarioValido = DEFAULT_SYSTEM_ACCENT;
+  private secuenciaOperacion = 0;
+  private versionFavicon = 0;
 
   CargarConfiguracion(errorScope: HttpErrorScope = 'global') {
+    const operacionActual = ++this.secuenciaOperacion;
     return this.http.get<{ success: boolean, datos: ConfigSistema }>(`${this.apiUrl}/sistema`, {
       context: createHttpErrorScopeContext(errorScope)
     })
@@ -47,9 +52,11 @@ export class ConfiguracionService {
         }),
         switchMap(cfg => this.prepararLogoReporte(cfg).pipe(
           tap(logo => {
+            if (operacionActual < this.secuenciaOperacion) return;
             this.configSistema.set(cfg);
             this.aplicarTemaSistema(cfg);
             this.aplicarBrandingReportes(cfg, logo);
+            this.aplicarMetadatosNavegador(cfg);
           }),
           map(() => cfg)
         ))
@@ -65,19 +72,98 @@ export class ConfiguracionService {
   }
 
   GuardarConfiguracion(config: ConfigSistema) {
+    const operacionActual = ++this.secuenciaOperacion;
+    this.versionFavicon++;
     return this.http.put<{ success: boolean, mensaje: string }>(`${this.apiUrl}/sistema`, config, {
       context: createHttpErrorScopeContext('local')
     })
       .pipe(
         switchMap(response => this.prepararLogoReporte(config).pipe(
           tap(logo => {
+            if (operacionActual < this.secuenciaOperacion) return;
             this.configSistema.set(config);
             this.aplicarTemaSistema(config);
             this.aplicarBrandingReportes(config, logo);
+            this.aplicarMetadatosNavegador(config);
           }),
           map(() => response)
         ))
       );
+  }
+
+  private aplicarMetadatosNavegador(config: ConfigSistema): void {
+    this.aplicarTituloInstitucional(config);
+    this.aplicarFaviconInstitucional(config);
+  }
+
+  private aplicarTituloInstitucional(config: ConfigSistema): void {
+    const SUFIJO_TITULO = 'Gestión de Riesgos LA/FT';
+    const NOMBRE_DEFECTO = 'SGRLA-IHSS';
+    const nombre = config?.nombreSistema?.trim();
+    const nombreLimpio = nombre && nombre.length > 0 ? nombre : NOMBRE_DEFECTO;
+    const tituloFinal = `${nombreLimpio} | ${SUFIJO_TITULO}`;
+
+    if (this.titleService.getTitle() !== tituloFinal) {
+      this.titleService.setTitle(tituloFinal);
+    }
+  }
+
+  private aplicarFaviconInstitucional(config: ConfigSistema): void {
+    if (typeof document === 'undefined') return;
+
+    const icono = config?.iconoUrl?.trim();
+    const doc = document;
+    const links = Array.from(doc.head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]'));
+
+    if (!icono) {
+      const faviconDefecto = 'favicon.ico';
+      const linkActual = links[0];
+      if (linkActual && linkActual.getAttribute('href') === faviconDefecto && linkActual.type === 'image/x-icon' && links.length === 1) {
+        return;
+      }
+      links.forEach(l => l.remove());
+      const defaultLink = doc.createElement('link');
+      defaultLink.rel = 'icon';
+      defaultLink.type = 'image/x-icon';
+      defaultLink.href = faviconDefecto;
+      doc.head.appendChild(defaultLink);
+      return;
+    }
+
+    const mimeType = this.obtenerMimeFavicon(icono);
+    const v = this.generarHuellaFavicon(icono);
+    const targetHref = `${this.apiUrl}/sistema/favicon?v=${v}`;
+
+    const primerLink = links[0];
+    if (primerLink && primerLink.getAttribute('href') === targetHref && primerLink.type === mimeType && links.length === 1) {
+      return;
+    }
+
+    const nuevoLink = doc.createElement('link');
+    nuevoLink.rel = 'icon';
+    nuevoLink.type = mimeType;
+    nuevoLink.href = targetHref;
+
+    links.forEach(l => l.remove());
+    doc.head.appendChild(nuevoLink);
+  }
+
+  private obtenerMimeFavicon(url: string): string {
+    const lower = url.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    return 'image/x-icon';
+  }
+
+  private generarHuellaFavicon(url: string): string {
+    let hash = 0;
+    for (let i = 0; i < url.length; i++) {
+      hash = ((hash << 5) - hash) + url.charCodeAt(i);
+      hash |= 0;
+    }
+    return `${Math.abs(hash)}_${this.versionFavicon}`;
   }
 
   ObtenerSlides() {

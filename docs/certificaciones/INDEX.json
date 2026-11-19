@@ -460,6 +460,29 @@
       "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
       "review_ready": "YES_FOR_OWNER_FINAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M3-P0-TITULO-FAVICON-DINAMICOS-20261119",
+      "path": "M3_P0_TITULO_FAVICON_DINAMICOS_20261119.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_TECHNICALLY_READY_FOR_OWNER_FINAL_REVIEW",
+      "base_sha": "d0c8cf85abebd59005c8ea65ed7e0a0661d89680",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/M3_P0_TITULO_FAVICON_DINAMICOS_20261119.md",
+      "security_scan": "PASS_ZERO_VULNERABILITIES",
+      "dynamic_title": "PASS_NOMBRE_SISTEMA_ORACLE_WITH_FALLBACK",
+      "dynamic_favicon": "PASS_DEDICATED_ENDPOINT_STREAM_AND_CACHE_BUSTING",
+      "backend_unit_tests": "1269_PASS_0_FAIL_19_FAVICON_SPECIFIC",
+      "frontend_lint": "0_ERRORS_0_WARNINGS",
+      "frontend_unit_tests": "1055_PASS_96_SUITES_23_CONFIGURACION",
+      "playwright_e2e_ui": "3_PASS_0_FAIL_0_FLAKY",
+      "repository_validators": "6/6_PASS",
+      "regressions_m1_m2": "0_REGRESSIONS_PRESERVED_100_PERCENT",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
+      "review_ready": "YES_FOR_OWNER_FINAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }

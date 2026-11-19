@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ReportPreviewComponent } from './shared/report-preview/report-preview.component';
+import { ConfiguracionService } from './core/configuration/configuracion.service';
 
 @Component({
   selector: 'app-root',
@@ -13,8 +14,10 @@ import { ReportPreviewComponent } from './shared/report-preview/report-preview.c
 export class App {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly configService = inject(ConfiguracionService, { optional: true });
 
   constructor() {
+    this.configService?.CargarConfiguracion().subscribe();
     // Política global de modales institucionales: Escape nunca cierra un diálogo.
     // El cierre queda exclusivamente en manos de los botones/acciones explícitas del modal.
     const bloquearEscape = (event: KeyboardEvent) => {

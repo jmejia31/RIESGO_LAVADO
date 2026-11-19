@@ -17,6 +17,7 @@ public sealed record InstitutionalDownloadedLogoResult(
 public interface IInstitutionalLogoDownloader
 {
     Task<InstitutionalDownloadedLogoResult> DownloadLogoAsync(string url, CancellationToken cancellationToken = default);
+    Task<InstitutionalDownloadedLogoResult> DownloadFaviconAsync(string url, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -208,6 +209,136 @@ public sealed class InstitutionalLogoDownloader : IInstitutionalLogoDownloader
         {
             _logger?.LogWarning(ex, "Fallo al descargar logotipo HTTPS desde {Url}", url);
             return Fail("No fue posible descargar o verificar el logotipo institucional remoto.");
+        }
+    }
+
+    public async Task<InstitutionalDownloadedLogoResult> DownloadFaviconAsync(string url, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return Fail("URL vacía o no proporcionada.");
+
+        if (!Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri))
+            return Fail("URL con formato inválido.");
+
+        // 1. Esquema obligatorio HTTPS (prohibido HTTP plano, file, ftp, data, etc.)
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            return Fail($"Esquema no permitido '{uri.Scheme}'. Se requiere HTTPS obligatorio.");
+
+        // 2. Prohibido credenciales embebidas en URL (user:pass@host)
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+            return Fail("No se permiten credenciales embebidas en la URL.");
+
+        // 3. Prohibido puertos no estándar (solo 443 o puerto por defecto)
+        if (!uri.IsDefaultPort && uri.Port != 443)
+            return Fail($"Puerto no permitido '{uri.Port}'. Solo se admite el puerto estándar HTTPS (443).");
+
+        // 4. Prohibido direcciones IP literales en el hostname
+        if (IPAddress.TryParse(uri.Host, out _))
+            return Fail("No se permiten direcciones IP literales como destino de favicon.");
+
+        // 5. Validación contra lista blanca de dominios autorizados
+        var host = uri.Host.Trim().ToLowerInvariant();
+        if (!IsDomainAllowed(host, _allowedDomains))
+            return Fail($"El dominio '{host}' no se encuentra en la lista blanca institucional de dominios permitidos.");
+
+        // 6. Resolución DNS previa y validación de direcciones IP (protección SSRF)
+        IPAddress[] ipAddresses;
+        try
+        {
+            using var dnsCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            dnsCts.CancelAfter(ConnectTimeout);
+            ipAddresses = await Dns.GetHostAddressesAsync(uri.DnsSafeHost, dnsCts.Token).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "SSRF: Fallo en la resolución DNS para el host {Host}", host);
+            return Fail("No fue posible resolver la dirección IP del host institucional.");
+        }
+
+        if (ipAddresses.Length == 0)
+            return Fail("La resolución DNS no retornó direcciones IP.");
+
+        foreach (var ip in ipAddresses)
+        {
+            if (IsDisallowedIp(ip))
+            {
+                _logger?.LogWarning("SSRF: Se denegó la conexión al host {Host} porque resuelve a una IP restringida: {Ip}", host, ip);
+                return Fail("La dirección IP del host institucional está restringida por políticas de seguridad (red interna, loopback o enlace local).");
+            }
+        }
+
+        var targetIp = ipAddresses[0];
+
+        // 7. Descarga segura fijando la IP validada (previene ataques de DNS rebinding) y desactivando redirecciones
+        try
+        {
+            using var handler = new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                ConnectTimeout = ConnectTimeout,
+                ConnectCallback = async (context, ct) =>
+                {
+                    var socket = new Socket(targetIp.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    try
+                    {
+                        await socket.ConnectAsync(new IPEndPoint(targetIp, uri.Port), ct).ConfigureAwait(false);
+                        return new NetworkStream(socket, ownsSocket: true);
+                    }
+                    catch
+                    {
+                        socket.Dispose();
+                        throw;
+                    }
+                }
+            };
+
+            using var httpClient = new HttpClient(handler)
+            {
+                Timeout = RequestTimeout
+            };
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.UserAgent.ParseAdd("SGRLA-IHSS/FaviconDownloader");
+
+            using var responseCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            responseCts.CancelAfter(RequestTimeout);
+
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, responseCts.Token).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+                return Fail($"El servidor remoto retornó código HTTP {response.StatusCode}.");
+
+            if (response.Content.Headers.ContentLength.HasValue && response.Content.Headers.ContentLength.Value > InstitutionalFaviconValidator.MaxFaviconSizeBytes)
+                return Fail($"El tamaño del archivo ({response.Content.Headers.ContentLength.Value} bytes) excede el límite permitido para favicon.");
+
+            await using var stream = await response.Content.ReadAsStreamAsync(responseCts.Token).ConfigureAwait(false);
+            using var memory = new MemoryStream();
+            var buffer = new byte[8192];
+            int read;
+            long totalBytes = 0;
+            while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, responseCts.Token).ConfigureAwait(false)) > 0)
+            {
+                totalBytes += read;
+                if (totalBytes > InstitutionalFaviconValidator.MaxFaviconSizeBytes)
+                    return Fail($"La descarga excedió el límite máximo permitido para favicon.");
+                memory.Write(buffer, 0, read);
+            }
+
+            var downloadedBytes = memory.ToArray();
+            var validation = InstitutionalFaviconValidator.Validate(downloadedBytes, Path.GetExtension(uri.AbsolutePath));
+            if (!validation.IsValid)
+                return Fail(validation.FailureReason ?? "El archivo descargado no es un favicon válido.");
+
+            return new InstitutionalDownloadedLogoResult(true, downloadedBytes, validation.MimeType, null, validation.Width, validation.Height);
+        }
+        catch (OperationCanceledException)
+        {
+            return Fail("Tiempo de espera agotado al descargar el favicon remoto.");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Fallo al descargar favicon HTTPS desde {Url}", url);
+            return Fail("No fue posible descargar o verificar el favicon institucional remoto.");
         }
     }
 

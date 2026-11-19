@@ -241,4 +241,139 @@ describe('ConfiguracionService', () => {
       .flush(new Blob(['No existe'], { type: 'text/plain' }), { status: 404, statusText: 'Not Found' });
     expect(getInstitutionalReportBranding().logoUrl).toBe('');
   });
+
+  it('aplica el titulo del navegador dinamico con nombreSistema configurado', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'Sistema Institucional LA/FT',
+        timeoutSesion: 30
+      }
+    });
+
+    expect(document.title).toBe('Sistema Institucional LA/FT | Gestión de Riesgos LA/FT');
+  });
+
+  it('normaliza espacios en blanco en nombreSistema y aplica el titulo seguro', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: '   SGRLA-IHSS Personalizado   ',
+        timeoutSesion: 30
+      }
+    });
+
+    expect(document.title).toBe('SGRLA-IHSS Personalizado | Gestión de Riesgos LA/FT');
+  });
+
+  it('aplica titulo por defecto cuando nombreSistema esta vacio o no existe', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: '   ',
+        timeoutSesion: 30
+      }
+    });
+
+    expect(document.title).toBe('SGRLA-IHSS | Gestión de Riesgos LA/FT');
+  });
+
+  it('actualiza el titulo inmediatamente al guardar configuracion exitosamente', () => {
+    const config: ConfigSistema = {
+      nombreInstitucion: 'IHSS',
+      nombreSistema: 'Nuevo Nombre Sistema',
+      timeoutSesion: 45
+    };
+
+    service.GuardarConfiguracion(config).subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      mensaje: 'Configuración actualizada'
+    });
+
+    expect(document.title).toBe('Nuevo Nombre Sistema | Gestión de Riesgos LA/FT');
+  });
+
+  it('no altera el titulo ni favicon si el guardado falla', () => {
+    document.title = 'Titulo Previo | Gestión de Riesgos LA/FT';
+    const config: ConfigSistema = {
+      nombreInstitucion: 'IHSS',
+      nombreSistema: 'Nombre Invalido No Guardado',
+      timeoutSesion: 45
+    };
+
+    let errorOcurrido = false;
+    service.GuardarConfiguracion(config).subscribe({
+      error: () => errorOcurrido = true
+    });
+
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush(
+      { success: false, mensaje: 'Error al persistir' },
+      { status: 500, statusText: 'Server Error' }
+    );
+
+    expect(errorOcurrido).toBe(true);
+    expect(document.title).toBe('Titulo Previo | Gestión de Riesgos LA/FT');
+  });
+
+  it('aplica favicon seguro apuntando al endpoint institucional cuando iconoUrl esta configurado', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'SGRLA',
+        iconoUrl: '/uploads/favicon-nuevo.png',
+        timeoutSesion: 30
+      }
+    });
+
+    const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]');
+    expect(links.length).toBe(1);
+    expect(links[0].href).toContain('/api/configuracion/sistema/favicon?v=');
+    expect(links[0].type).toBe('image/png');
+  });
+
+  it('restaura favicon.ico por defecto cuando iconoUrl esta vacio o se elimina', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'SGRLA',
+        iconoUrl: '',
+        timeoutSesion: 30
+      }
+    });
+
+    const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]');
+    expect(links.length).toBe(1);
+    expect(links[0].getAttribute('href')).toBe('favicon.ico');
+    expect(links[0].type).toBe('image/x-icon');
+  });
+
+  it('elimina etiquetas link duplicadas conservando un unico favicon en DOM', () => {
+    const extra1 = document.createElement('link'); extra1.rel = 'icon'; document.head.appendChild(extra1);
+    const extra2 = document.createElement('link'); extra2.rel = 'shortcut icon'; document.head.appendChild(extra2);
+
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'SGRLA',
+        iconoUrl: '/uploads/icono.png',
+        timeoutSesion: 30
+      }
+    });
+
+    const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]');
+    expect(links.length).toBe(1);
+  });
 });

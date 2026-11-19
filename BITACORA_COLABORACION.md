@@ -12126,3 +12126,42 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - `BITACORA_COLABORACION.md` (actualizado)
   - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (actualizado)
 - **Punto exacto de continuación:** Microfase 3 concluida y certificada técnicamente al 100%. Sistema listo para dictamen final y signoff por parte del propietario Javier Mejía (`jmejia31`).
+
+
+---
+
+### Registro 2026-11-19 — ANTIG (Antigravity) — Microfase 3 P0: Parametrización Dinámica de Título del Navegador y Favicon Institucional
+
+- **Fecha:** 2026-11-19.
+- **Autor:** ANTIG (Antigravity).
+- **Rama:** `desarrollo`.
+- **SHA base certificado:** `d0c8cf85abebd59005c8ea65ed7e0a0661d89680`.
+- **Quality Gate base:** `44549713141` (`completed / success`).
+- **Respaldo creado:** `respaldo/desarrollo-pre-m3-favicon-20261119-d0c8cf85` (confirmado en `origin`).
+- **Objetivo:** Resolver la desconexión funcional de los parámetros institucionales `SFS_NOMBRE_SISTEMA` (`config.nombreSistema`) y `SFS_ICONO_URL` (`config.iconoUrl`), proyectando dinámicamente el título y favicon en las pestañas del navegador en caliente, de forma desacoplada, segura (protección SSRF, magic bytes, DNS pinning) y sin necesidad de recargar la aplicación Angular (`ANGULAR_RESTART_REQUIRED=NO`).
+- **Archivos creados o modificados:**
+  - `backend/RL.API/Infrastructure/Reporting/InstitutionalFaviconValidator.cs` (nuevo validador de firmas binarias magic bytes y dimensiones para ICO, PNG, JPEG, GIF, WebP, <= 2MB).
+  - `backend/RL.API/Infrastructure/Reporting/InstitutionalLogoDownloader.cs` (método `DownloadFaviconAsync` con SSRF hardening, DNS pinning y aislamiento de red).
+  - `backend/RL.API/Features/Configuracion/ConfiguracionController.cs` (endpoints públicos `GET /api/configuracion/sistema/favicon` y `GET /api/configuracion/sistema/favicon/estado`).
+  - `backend/RL.API.Tests/Features/Configuracion/FaviconEndpointTests.cs` (19 pruebas unitarias backend con fakes desacoplados).
+  - `frontend/rl-app/src/app/core/configuration/configuracion.service.ts` (métodos `aplicarTituloInstitucional` y `aplicarFaviconInstitucional`, guarda de secuencia monótona `secuenciaOperacion` contra race conditions).
+  - `frontend/rl-app/src/app/core/configuration/configuracion.service.spec.ts` (8 pruebas unitarias nuevas para título y favicon, 23 en total).
+  - `frontend/rl-app/src/app/app.ts` (inyección de `ConfiguracionService` en constructor raíz para inicialización en arranque en frío y recarga).
+  - `frontend/rl-app/e2e/institutional-title-favicon.spec.ts` (3 pruebas Playwright E2E UI completas).
+  - `docs/certificaciones/M3_P0_TITULO_FAVICON_DINAMICOS_20261119.md` (expediente de certificación técnica).
+  - `docs/certificaciones/INDEX.json` (registro `M3-P0-TITULO-FAVICON-DINAMICOS-20261119`).
+- **Pruebas ejecutadas y conteos reales:**
+  - Backend unitario: 19 pruebas de favicon en `FaviconEndpointTests.cs` superadas (19/19 PASS, 100%).
+  - Backend completo: 1,269 pruebas en `RL.API.Tests` superadas (1,269/1,269 PASS, 0 fallidas, 0 omitidas).
+  - Frontend Vitest: 96 archivos de prueba superados (96/96), 1,055 pruebas unitarias superadas (1,055/1,055 PASS, 100%).
+  - Frontend Lint: ESLint con 0 errores y 0 advertencias.
+  - Frontend Build: Compilación de producción en `dist/rl-app` finalizada con código de salida 0.
+  - Playwright E2E: 3 pruebas en `e2e/institutional-title-favicon.spec.ts` superadas (3/3 PASS, 100%).
+  - Validadores: `validate_dynamic_system_theme.js` (PASS), `validate_no_native_dialogs.js` (PASS), `validate_repository_structure.ps1` (PASS), `validate_database_scripts.ps1` (PASS), `validate_documentation_links.ps1` (PASS), `validate_agent_skills.py` (PASS).
+- **Gobernanza y restricciones:**
+  - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+  - Rama `main`: Intacta (0 modificaciones).
+  - Archivos locales sin seguimiento: 34 archivos preservados intactos fuera del stage de Git.
+  - `index.html`: Preservado limpio como fallback de arranque.
+  - Cero regresiones en Microfase 1, Microfase 2 y Matrices de Riesgos (82 campos canónicos).
+- **Punto exacto de continuación:** Intervención concluida y certificada. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.

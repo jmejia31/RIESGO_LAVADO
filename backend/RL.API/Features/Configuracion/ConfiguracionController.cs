@@ -169,6 +169,174 @@ public class ConfiguracionController : ControllerBase
         return Ok(new { configurado = true, disponible = false, tipo, estado = "resolver-unavailable", mensaje = "Resolver no disponible." });
     }
 
+    [HttpGet("sistema/favicon")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Favicon(
+        [FromServices] IInstitutionalLogoDownloader? logoDownloader = null,
+        CancellationToken cancellationToken = default)
+    {
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
+
+        var configuration = await _service.ObtenerConfigSistemaAsync().ConfigureAwait(false);
+        var iconoUrl = configuration?.IconoUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(iconoUrl))
+        {
+            Response.Headers["X-Favicon-Status"] = "not-configured";
+            return NoContent();
+        }
+
+        if (iconoUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            iconoUrl.StartsWith("file://", StringComparison.OrdinalIgnoreCase) ||
+            iconoUrl.StartsWith("ftp://", StringComparison.OrdinalIgnoreCase) ||
+            iconoUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
+            iconoUrl.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+        {
+            Response.Headers["X-Favicon-Status"] = "invalid-scheme";
+            return NoContent();
+        }
+
+        // Caso 1: URL HTTPS remota
+        if (iconoUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            if (logoDownloader is null)
+            {
+                Response.Headers["X-Favicon-Status"] = "downloader-unavailable";
+                return NoContent();
+            }
+
+            var downloadResult = await logoDownloader.DownloadFaviconAsync(iconoUrl, cancellationToken).ConfigureAwait(false);
+            if (!downloadResult.Success || downloadResult.Bytes is null || downloadResult.Bytes.Length == 0)
+            {
+                Response.Headers["X-Favicon-Status"] = downloadResult.FailureReason ?? "download-failed";
+                return NoContent();
+            }
+
+            Response.Headers["X-Favicon-Status"] = "available";
+            Response.Headers["X-Favicon-Source"] = "configured-https-url";
+            return File(downloadResult.Bytes, downloadResult.MimeType ?? "image/x-icon");
+        }
+
+        // Caso 2: Archivo local
+        if (iconoUrl.Contains("..") || iconoUrl.Contains(':') || iconoUrl.Contains('\\'))
+        {
+            Response.Headers["X-Favicon-Status"] = "invalid-path";
+            return NoContent();
+        }
+
+        if (_environment is null)
+        {
+            Response.Headers["X-Favicon-Status"] = "storage-unavailable";
+            return NoContent();
+        }
+
+        var path = InstitutionalBrandingStorage.ResolveLocalAsset(_environment, iconoUrl);
+        if (path is null || !System.IO.File.Exists(path))
+        {
+            Response.Headers["X-Favicon-Status"] = "not-found";
+            return NoContent();
+        }
+
+        var fileInfo = new FileInfo(path);
+        if (fileInfo.Length <= 0 || fileInfo.Length > InstitutionalFaviconValidator.MaxFaviconSizeBytes)
+        {
+            Response.Headers["X-Favicon-Status"] = "invalid-file-size";
+            return NoContent();
+        }
+
+        var bytes = await System.IO.File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+        var validation = InstitutionalFaviconValidator.Validate(bytes, Path.GetExtension(path));
+        if (!validation.IsValid)
+        {
+            Response.Headers["X-Favicon-Status"] = validation.FailureReason ?? "invalid-content";
+            return NoContent();
+        }
+
+        Response.Headers["X-Favicon-Status"] = "available";
+        Response.Headers["X-Favicon-Source"] = "configured-local-file";
+        return File(bytes, validation.MimeType!);
+    }
+
+    [HttpGet("sistema/favicon/estado")]
+    [AllowAnonymous]
+    public async Task<IActionResult> EstadoFavicon(
+        [FromServices] IInstitutionalLogoDownloader? logoDownloader = null,
+        CancellationToken cancellationToken = default)
+    {
+        var configuration = await _service.ObtenerConfigSistemaAsync().ConfigureAwait(false);
+        var iconoUrl = configuration?.IconoUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(iconoUrl))
+        {
+            return Ok(new
+            {
+                configurado = false,
+                disponible = false,
+                tipo = "SIN_FAVICON",
+                estado = "not-configured",
+                mensaje = "No hay favicon configurado en el sistema."
+            });
+        }
+
+        var esLocal = iconoUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) ||
+                      iconoUrl.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase) ||
+                      (!iconoUrl.Contains("://") && !iconoUrl.StartsWith("//"));
+        var esHttps = iconoUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        var tipo = esLocal ? "FAVICON_LOCAL" : (esHttps ? "FAVICON_HTTPS" : "FAVICON_INVALIDO");
+
+        if (!esLocal && !esHttps)
+        {
+            return Ok(new
+            {
+                configurado = true,
+                disponible = false,
+                tipo,
+                estado = "invalid-scheme",
+                mensaje = "El favicon configurado tiene un esquema no permitido."
+            });
+        }
+
+        if (esHttps)
+        {
+            if (logoDownloader is null)
+                return Ok(new { configurado = true, disponible = false, tipo, estado = "downloader-unavailable", mensaje = "Downloader no disponible." });
+
+            var res = await logoDownloader.DownloadFaviconAsync(iconoUrl, cancellationToken).ConfigureAwait(false);
+            return Ok(new
+            {
+                configurado = true,
+                disponible = res.Success,
+                tipo,
+                estado = res.Success ? "configured-https-url" : (res.FailureReason ?? "download-failed"),
+                mimeType = res.Success ? res.MimeType : null,
+                ancho = res.Width,
+                alto = res.Height,
+                mensaje = res.Success ? "Favicon HTTPS validado y disponible." : res.FailureReason
+            });
+        }
+
+        if (_environment is null)
+            return Ok(new { configurado = true, disponible = false, tipo, estado = "storage-unavailable", mensaje = "Almacenamiento no disponible." });
+
+        var path = InstitutionalBrandingStorage.ResolveLocalAsset(_environment, iconoUrl);
+        if (path is null || !System.IO.File.Exists(path))
+            return Ok(new { configurado = true, disponible = false, tipo, estado = "not-found", mensaje = "Archivo de favicon local no encontrado." });
+
+        var bytes = await System.IO.File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+        var val = InstitutionalFaviconValidator.Validate(bytes, Path.GetExtension(path));
+        return Ok(new
+        {
+            configurado = true,
+            disponible = val.IsValid,
+            tipo,
+            estado = val.IsValid ? "configured-local-file" : (val.FailureReason ?? "invalid-content"),
+            mimeType = val.IsValid ? val.MimeType : null,
+            ancho = val.Width,
+            alto = val.Height,
+            mensaje = val.IsValid ? "Favicon local validado y disponible." : val.FailureReason
+        });
+    }
+
     [HttpPut("sistema")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
