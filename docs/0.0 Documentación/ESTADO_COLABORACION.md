@@ -1,3 +1,15 @@
+# Estado vigente — M3 P0 favicon: corrección de pixeles sintéticos y vistas previas rotas (CHAT) — 2026-11-19 13:55 -06:00
+
+- La revisión visual del propietario **rechazó** el cierre funcional previo del favicon subido por archivo: la pestaña mostraba un bloque azul y las miniaturas mostraban imágenes rotas, aunque el sistema afirmaba «Publicado».
+- **Causa raíz confirmada en fuente:** `InstitutionalFaviconConverter.ExtractRgba` sustituía los píxeles reales de JPEG/WebP y PNG que no podía decodificar por colores sintéticos; `configuracion.component.ts` usaba `/uploads/...` como recurso relativo al origen Angular, no el backend.
+- **Remediación directa en `desarrollo`:** commits de código `ee62dacee7658a62a12ae429cee9e52b36894b21` y `bd866d88ff1090d5122eee411e56a313f54224d2`. Angular normaliza imágenes JPG/JPEG/WebP/PNG reales a PNG RGBA antes de la generación ICO; backend rechaza entradas sin decodificación real y no vuelve a fabricar el cuadro azul; miniaturas consultan el backend correcto y se verifica que el navegador decodifique el recurso antes de marcar «Listo para guardar».
+- **Respaldo:** `respaldo/desarrollo-pre-m3-favicon-fix-imagen-20261119-e0d1f94e` = `e0d1f94ec6c8ce3550ebdb8109b3afd2cc5260f5`.
+- **Estado objetivo:** `M3_P0_FAVICON_CODE_PUBLISHED=YES`; `M3_P0_FAVICON_QG_FINAL=PENDING_VERIFICATION`; `M3_P0_FAVICON_REAL_CHROME_QA=PENDING`; `M3_P0_FAVICON_OWNER_ACCEPTANCE=PENDING`. No equiparar pruebas con mocks a validación real.
+- **Acción indispensable para probar:** sincronizar la rama local sin perder cambios de terceros, reiniciar los servidores locales y **volver a cargar la imagen fuente original**; los ICO sintéticos ya almacenados no pueden reconstruirse a partir de su color uniforme.
+- **Alcance preservado:** no se modificó `main`, producción, Oracle, Matrices, Monitoreo, PDF, Excel, ni `SFS_LOGO_URL`. El cliente de carga sigue admitiendo JPG/JPEG/WebP mediante normalización; las llamadas directas al API con estos formatos sin normalizar reciben rechazo seguro, no iconos falsificados.
+
+---
+
 # Estado vigente — Microfase 3 (M3): Carga Local, Conversión Automática a Favicon Multirresolución (.ico) y Previsualización Dinámica (ANTIG) — 2026-11-19 13:00 -06:00
 
 ## Estado vigente — Certificación Técnica Microfase 3 (M3): Carga Local, Conversión a Favicon .ico y Previsualización Dinámica P0

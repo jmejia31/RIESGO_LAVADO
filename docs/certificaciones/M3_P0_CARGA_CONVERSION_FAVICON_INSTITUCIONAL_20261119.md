@@ -103,3 +103,38 @@ En cumplimiento estricto de las directrices institucionales del propietario, se 
 Se certifica técnicamente que la funcionalidad de carga local de favicon, su conversión automática a formato multirresolución `.ico` y su previsualización institucional cumplen al 100% con los requerimientos de la Microfase 3 y los estándares de seguridad y calidad del IHSS.
 
 Queda a disposición de Javier Mejía (`jmejia31`) para la revisión visual y funcional definitiva.
+
+---
+
+## Adenda correctiva posterior (CHAT) — 2026-11-19, 13:55 -06:00
+
+**Advertencia de aceptación:** Las capturas y la prueba visual del propietario contradicen el estado de cierre visual anterior. La funcionalidad de carga local del favicon **NO estaba aprobada visualmente**: tras cargar una imagen, las miniaturas 16/32/48 mostraban iconos rotos y la pestaña presentaba un rectángulo azul en lugar de la imagen original. La aceptación final permanece pendiente.
+
+### Defectos hallados por inspección directa de código
+
+1. `InstitutionalFaviconConverter.ExtractRgba` creaba imágenes sintéticas de color constante para JPEG/WebP/GIF o cuando la decodificación PNG fallaba. El archivo ICO podía ser formalmente válido pero representar un rectángulo y **no los píxeles de la imagen subida**.
+2. `onFaviconSeleccionado` usaba directamente `response.url` (`/uploads/favicon-...ico`) como `<img src>` en la aplicación Angular de `localhost:4200`, cuando el recurso estático reside en el backend; este error produce vistas previas rotas.
+3. Las pruebas previas solo exigían `toBeVisible()` para las miniaturas y firmas de formato, sin verificar la decodificación real de la imagen ni su contenido.
+
+### Subsanación publicada
+
+- Base `e0d1f94ec6c8ce3550ebdb8109b3afd2cc5260f5`, protegida por `respaldo/desarrollo-pre-m3-favicon-fix-imagen-20261119-e0d1f94e`.
+- Código: `ee62dacee7658a62a12ae429cee9e52b36894b21` + `bd866d88ff1090d5122eee411e56a313f54224d2`.
+- Normalización a PNG RGBA real mediante Canvas en Angular para fuentes PNG/JPG/JPEG/WebP, respetando proporciones y transparencia, antes del convertidor ICO multirresolución existente.
+- Rechazo seguro en backend de formatos sin decodificador real (en lugar de generar un color ficticio). **Compatibilidad:** los clientes que llamen al endpoint directamente con JPEG/WebP deben suministrar PNG normalizado; la interfaz Angular realiza esa transformación automáticamente.
+- URL de miniaturas resuelta contra backend, y URL de favicon publicado obtenida mediante el endpoint institucional controlado. La imagen pendiente solo puede pasar a «Listo para guardar» cuando `Image.onload` confirma una imagen decodificable.
+- Pruebas reforzadas: PNG con transparencia debe producir bytes diferentes del opaco; Playwright genera un JPEG real en Chromium, confirma que el multipart envía PNG, verifica `src` del backend y `naturalWidth > 0`.
+
+**Validaciones ejecutadas directamente por CHAT:** inspección de fuente, creación/verificación de respaldo, commits atómicos y publicación remota. **Validaciones no ejecutadas:** tests .NET/Angular/Playwright locales y navegador en `localhost:4200` (sin acceso al checkout/Chrome de la máquina del propietario). No se puede declarar SUCCESS hasta verificar el CI del SHA final y QA visual real. Es obligatorio volver a cargar la imagen original: los archivos ICO antiguos que solo contienen el color sintético no se pueden reparar sin ella.
+
+```text
+M3_P0_FAVICON_SOURCE_PIXELS_ROOT_CAUSE=VERIFIED
+M3_P0_FAVICON_PREVIEW_PATH_ROOT_CAUSE=VERIFIED
+M3_P0_FAVICON_CODE_PUBLISHED=YES
+M3_P0_FAVICON_QUALITY_GATE=PENDING_VERIFICATION
+M3_P0_FAVICON_REAL_BROWSER_QA=PENDING
+M3_P0_FAVICON_OWNER_ACCEPTANCE=PENDING
+MAIN_MODIFIED=NO
+ORACLE_INSTITUTIONAL_WRITES=0
+```
+
