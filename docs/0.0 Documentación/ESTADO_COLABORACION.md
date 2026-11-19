@@ -1,3 +1,14 @@
+# Estado vigente — Inventario diferido M1 y apertura documental de M2 (CHAT) — 2026-11-18
+
+- **M1 aprobada y certificada:** aceptación funcional del propietario; código `3b22ebed` (QG [44424145245](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44424145245) SUCCESS); documentación `efb6a892` (QG [44426253435](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44426253435) SUCCESS); [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) cerrado. Ninguna funcionalidad M1 se modifica en esta intervención.
+- **Pendientes post-M1 preservados:** [`docs/pendientes/M1_OBSERVACIONES_DIFERIDAS_Y_HANDOFF_M2_20261118.md`](../pendientes/M1_OBSERVACIONES_DIFERIDAS_Y_HANDOFF_M2_20261118.md) consolida 10 controles, su evidencia, criterios de futuro cierre y límites DBA. Son reservas de interpretación histórica y mantenimiento de `picomatch`, no defectos nuevos certificados ni bloqueo automático de M2.
+- **Seguridad:** fork con Quality Gate verde; upstream oficial aún pendiente; [Issue #42](https://github.com/jmejia31/RIESGO_LAVADO/issues/42) abierto.
+- **Microfase 2:** apertura de alcance [`docs/qa/M2_APERTURA_ALCANCE_20261118.md`](../qa/M2_APERTURA_ALCANCE_20261118.md), `M2_SCOPING=STARTED`, `M2_IMPLEMENTATION=NOT_STARTED` hasta corroborar alcance funcional y criterios específicos.
+- **Publicación:** esta intervención es **documental**, sin ejecución de pruebas locales ni acceso a Oracle; no tocar `main`, producción ni respaldo `respaldo/desarrollo-20261118-5e5dc8c0`. El SHA de este commit y su nuevo CI se verificarán después de publicar, sin heredar evidencia de otros SHAs.
+- **Punto exacto de continuación:** definir el alcance oficial de Microfase 2 sobre el roadmap y planificar su matriz técnica, conservando pendientes M1 en un registro único.
+
+---
+
 # Estado vigente — Evidencia primaria in vivo Oracle Q01-Q10/R01-R12, Quality Gate 44424145245 y cierre técnico M1 (ANTIG) — 2026-11-18 18:05 -06:00
 
 ## Estado vigente — Certificación formal con evidencia primaria in vivo y Quality Gate 44424145245

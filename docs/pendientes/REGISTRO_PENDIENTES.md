@@ -54,3 +54,11 @@ Este registro concentra pendientes que deberán evaluarse en un próximo plan de
 5. Preservar `main`, producción, Oracle institucional y todas las restricciones vigentes. `BLOCK10_AUTHORIZED=NO`.
 
 **Última acción registrada:** únicamente alta documental de estos dos pendientes; sin cambios funcionales, sin ejecución real de autenticación, sin conexión a Oracle y sin habilitar el watcher.
+
+## 2026-11-18 — Observaciones diferidas M1 y transferencia a Microfase 2 (CHAT)
+
+La Microfase 1 de Monitoreo de Listas conserva la **aprobación funcional del propietario**, el código certificado `3b22ebed` (QG `44424145245` SUCCESS), expediente `efb6a892` (QG `44426253435` SUCCESS) y [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) cerrado. **No se reabre M1 por registrar observaciones retrospectivas.**
+
+Se archivan en el inventario específico [`M1_OBSERVACIONES_DIFERIDAS_Y_HANDOFF_M2_20261118.md`](M1_OBSERVACIONES_DIFERIDAS_Y_HANDOFF_M2_20261118.md) los controles `M1-HIST-01..07`, `M1-QA-01`, `SEC-PICO-01..02`: equivalencia histórica 242/190/52 con mismo corte, empleados 7/13, clasificación de cifras fuente vs positivas, orígenes NULL, denominadores de empresas, semántica de fechas, consultas DBA no ejecutadas, aislamiento, parche oficial y mantenimiento del fork `picomatch`. El [Issue #42](https://github.com/jmejia31/RIESGO_LAVADO/issues/42) permanece abierto por upstream. Este registro **no crea una orden automática** ni autoriza cambios.
+
+**Continuación nueva:** [`docs/qa/M2_APERTURA_ALCANCE_20261118.md`](../qa/M2_APERTURA_ALCANCE_20261118.md) inicia el análisis controlado de Microfase 2 sin inventar su alcance ni tocar código o bases de datos.

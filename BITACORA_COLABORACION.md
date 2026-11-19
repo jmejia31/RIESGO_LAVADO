@@ -11927,3 +11927,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Angular production build (`npm run build`): PASS (0 errores).
   - Validadores: Estructura, Scripts BD, Enlaces y Agent Skills (14/14) todos PASS.
 - **Punto exacto de continuación:** Entorno listo; comprobación visual directa por parte del propietario (`jmejia31`) en `http://localhost:4200/admin/listas/monitoreo`.
+
+## 2026-11-18 — Archivo de observaciones M1 diferidas y apertura controlada de M2 (CHAT)
+
+- **Rama:** `desarrollo`; **SHA inicial:** `efb6a892e6f2e9891c4d45667bfa3b8dc7363b5f`; **SHA final:** commit documental de la presente entrada (ver `git log` remoto). **Autor:** CHAT.
+- **Alcance solicitado por propietario:** conservar todos los pendientes post-M1 en un archivo GitHub y habilitar la apertura de Microfase 2 sin reabrir lo aprobado.
+- **Documentos:** `docs/pendientes/M1_OBSERVACIONES_DIFERIDAS_Y_HANDOFF_M2_20261118.md` (nueva bitácora única y handoff), `docs/qa/M2_APERTURA_ALCANCE_20261118.md` (apertura M2 sin código), `docs/pendientes/REGISTRO_PENDIENTES.md` (índice central), este archivo y `docs/0.0 Documentación/ESTADO_COLABORACION.md` (estado vivo).
+- **Línea base M1 comprobada en GitHub:** `3b22ebed`, QG `44424145245` SUCCESS; cierre documental `efb6a892`, QG `44426253435` SUCCESS. Issue #41 CLOSED; Issue #42 OPEN por mantenimiento oficial `picomatch`; rama respaldo `respaldo/desarrollo-20261118-5e5dc8c0` preservada.
+- **Observaciones diferidas:** 242/190/52 comparables bajo mismo corte, 7/13 empleados, clasificación fuentes vs manuales, NULL de origen, 23/20/1/9 relaciones, FECHA_CALIFICO, DBA Q11/Q12/R08, aislamiento/casos especiales, parche oficial de picomatch y revisión de cadena de suministro. Ninguna se declara resuelta por crear el registro.
+- **Validaciones en esta intervención:** lectura remota GitHub de fuentes, SHAs, Quality Gates e Issues; **no** tests ejecutados localmente y **no** conexión Oracle; Quality Gate del **nuevo commit documental** pendiente de verificación tras publicarse.
+- **Seguridad:** `main` intacta; producción intacta; Oracle/DNP escrituras 0; no modificación funcional; los archivos locales ajenos no se tocaron desde esta conexión GitHub.
+- **Punto siguiente:** determinar alcance y criterios de Microfase 2; no confundir con Fase 2A histórica, B07 o Bloque 10.
+
