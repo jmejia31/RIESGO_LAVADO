@@ -12137,6 +12137,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Rama:** `desarrollo`.
 - **SHA base certificado:** `d0c8cf85abebd59005c8ea65ed7e0a0661d89680`.
 - **Quality Gate base:** `44549713141` (`completed / success`).
+- **Commit publicado y certificado:** `2d01a673662b476ee520746445baebb9c0779f34`.
+- **Quality Gate certificado:** `44564237935` (`completed / success`).
 - **Respaldo creado:** `respaldo/desarrollo-pre-m3-favicon-20261119-d0c8cf85` (confirmado en `origin`).
 - **Objetivo:** Resolver la desconexión funcional de los parámetros institucionales `SFS_NOMBRE_SISTEMA` (`config.nombreSistema`) y `SFS_ICONO_URL` (`config.iconoUrl`), proyectando dinámicamente el título y favicon en las pestañas del navegador en caliente, de forma desacoplada, segura (protección SSRF, magic bytes, DNS pinning) y sin necesidad de recargar la aplicación Angular (`ANGULAR_RESTART_REQUIRED=NO`).
 - **Archivos creados o modificados:**
