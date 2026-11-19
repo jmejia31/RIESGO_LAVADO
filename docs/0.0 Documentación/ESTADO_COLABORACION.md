@@ -1,4 +1,34 @@
-# Estado vigente — Microfase 2 (M2): Corrección Global Transversal del Estándar Institucional de Reportería PDF y Excel (ANTIG) — 2026-11-18 21:00 -06:00
+# Estado vigente — Microfase 2 (M2): Recuperación Definitiva del Logotipo Institucional en Todos los Reportes PDF, Excel y Vistas Previas (ANTIG) — 2026-11-18 23:25 -06:00
+
+## Estado vigente — Certificación Técnica Microfase 2 (M2): Logotipos Seguros en PDF, Excel y Eliminación de Imagen Rota en Vista Previa
+
+- Se completó la intervención correctiva P0 de **Microfase 2 (M2)**, cumpliendo la orden obligatoria de Javier Mejía (`jmejia31`) para recuperar la visibilidad del logotipo institucional configurado en `SFS_LOGO_URL` en todos los reportes PDF, libros Excel y vistas previas, y eliminar definitivamente el icono de imagen rota reportado en la vista previa de Excel.
+  1. **Diagnóstico y causa raíz resuelta:**
+     - En `configuracion.service.ts`, el método `prepararLogoReporte` descartaba preventivamente cualquier URL no local que no coincidiera con `/^\/uploads\/.../`. La URL institucional HTTPS configurada (`https://www.ihss.hn/wp-content/uploads/2020/06/logo-del-IHSS.jpg`) era rechazada en el frontend, seteando `branding.logoUrl = ""` a pesar de que el backend resolvía y descargaba la imagen correctamente (200 OK, 54,989 bytes, JPEG baseline DCT 942×334 px).
+     - En `report-preview.component.html`, la vista previa Excel evaluaba `state.logoEmbedded`, pero al estar `institutionalLogoUrl()` vacío, el navegador generaba `<img src="" alt="Logotipo institucional">`, produciendo el icono de imagen rota.
+     - En `excel-export.util.ts` e `institutional-report.util.ts`, los generadores requerían soporte explícito para datos JPEG y desacoplamiento de entornos de renderizado sin aceleración 2D.
+  2. **Correcciones implementadas:**
+     - **Frontend Configuration (`configuracion.service.ts`):** `clasificarOrigenLogo` distingue `SIN_LOGO`, `LOGO_LOCAL`, `LOGO_HTTPS` y `LOGO_INVALIDO`. Tanto las URLs locales como HTTPS se solicitan al endpoint seguro `/api/configuracion/sistema/logo-reportes`. Se añadió soporte de fallback con `FileReader` / ArrayBuffer para decodificar data URLs sin requerir Canvas 2D.
+     - **Vista Previa Excel (`report-preview.service.ts` & `report-preview.component.*`):** Al cargar un blob Excel, `report-preview.service.ts` extrae la imagen directamente de OpenXML media (`workbook.getImage(Number(firstImage.imageId))`), asegurando que `PREVIEW_LOGO_HASH = DOCUMENT_LOGO_HASH`. Si la imagen no está disponible o falla, la etiqueta `<img>` no se renderiza (evitando el icono roto) y se despliega una alerta institucional accesible cuando el estado es `inaccesible` o `invalido`.
+     - **Generación Excel (`excel-export.util.ts`):** `construirLibroInstitucional` embebe de forma automática y transparente el logotipo institucional (PNG o JPEG) en `xl/media/` preservando la relación de aspecto y dimensiones canónicas B06.
+     - **Backend Telemetría (`ConfiguracionController.cs`):** Agregada cabecera `Cache-Control: no-store` y `X-Logo-Status` en `/api/configuracion/sistema/logo-reportes`, y nuevo endpoint de salud institucional `GET /api/configuracion/sistema/logo-reportes/estado`.
+  3. **Pruebas y Verificación:**
+     - Backend Build: Release PASS (0 errores).
+     - Pruebas Backend Reporting (`InstitutionalReportStandardTests`): 21/21 PASS (incluyendo pruebas con PNG y JPEG para PDF `/ImIHSS` y Excel OpenXML drawings).
+     - Pruebas Frontend Reporting: `configuracion.service.spec.ts` 15/15 PASS, `excel-export.util.spec.ts` 15/15 PASS, `report-preview.service.spec.ts` 5/5 PASS, `institutional-report-standard.spec.ts` 13/13 PASS, `institutional-report.util.spec.ts` 10/10 PASS, `monitoreo-listas/*.spec.ts` 48/48 PASS, `export-preview.regression.spec.ts` 5/5 PASS.
+     - Angular Production Build (`npm run build`): PASS (0 errores).
+     - Validadores del repositorio: Estructura, Scripts BD, Enlaces Documentales y Agent Skills (14/14) todos PASS.
+  4. **Gobernanza:**
+     - Rama `main` intacta (0 commits).
+     - Producción intacta.
+     - Oracle institucional: DML=0, DDL=0 (solo lectura 100%).
+     - 34 archivos locales sin seguimiento preservados intactos.
+     - Expediente publicado: `docs/certificaciones/M2_P0_RECUPERACION_GLOBAL_LOGOTIPOS_20261118.md` e indexado en `docs/certificaciones/INDEX.json`.
+- **Punto exacto de continuación:** Microfase 2 corregida integralmente con logotipos institucionales visibles en todos los reportes PDF, Excel y vistas previas sin icono de imagen rota. Lista para revisión visual y dictamen final por parte de Javier Mejía (`jmejia31`).
+
+---
+
+# Estado previo — Microfase 2 (M2): Corrección Global Transversal del Estándar Institucional de Reportería PDF y Excel (ANTIG) — 2026-11-18 21:00 -06:00
 
 ## Estado vigente — Certificación Técnica Microfase 2 (M2): Corrección Global Transversal de Todos los Reportes del Sistema
 

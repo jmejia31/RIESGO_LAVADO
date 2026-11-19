@@ -53,33 +53,54 @@ public class ConfiguracionController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> LogoReportes([FromServices] IInstitutionalBrandingResolver? brandingResolver = null)
     {
+        Response.Headers["Cache-Control"] = "no-store";
+
         if (brandingResolver is not null)
         {
             var snapshot = await brandingResolver.ResolveAsync(HttpContext.RequestAborted).ConfigureAwait(false);
             if (!snapshot.HasLogo || snapshot.LogoEffectiveBytes.Length == 0)
+            {
+                Response.Headers["X-Logo-Status"] = snapshot.Source;
                 return NoContent();
+            }
 
-            Response.Headers["Cache-Control"] = "no-store";
+            Response.Headers["X-Logo-Status"] = "available";
+            Response.Headers["X-Logo-Source"] = snapshot.Source;
             return File(snapshot.LogoEffectiveBytes, snapshot.LogoMimeType);
         }
 
         if (_environment is null) return NoContent();
 
-        var configuration = await _service.ObtenerConfigSistemaAsync();
+        var configuration = await _service.ObtenerConfigSistemaAsync().ConfigureAwait(false);
         var logoUrl = configuration?.LogoUrl?.Trim();
-        if (string.IsNullOrWhiteSpace(logoUrl)
-            || !logoUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(logoUrl))
+        {
+            Response.Headers["X-Logo-Status"] = "not-configured";
             return NoContent();
+        }
+
+        if (!logoUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            Response.Headers["X-Logo-Status"] = "resolver-required-for-non-local";
+            return NoContent();
+        }
 
         var fileName = logoUrl["/uploads/".Length..];
         if (string.IsNullOrWhiteSpace(fileName)
             || fileName.Contains('/')
             || fileName.Contains('\\')
             || !string.Equals(fileName, Path.GetFileName(fileName), StringComparison.Ordinal))
+        {
+            Response.Headers["X-Logo-Status"] = "invalid-file-name";
             return NoContent();
+        }
 
         var path = InstitutionalBrandingStorage.ResolveLocalAsset(_environment, logoUrl);
-        if (path is null) return NoContent();
+        if (path is null)
+        {
+            Response.Headers["X-Logo-Status"] = "configured-logo-not-local";
+            return NoContent();
+        }
 
         var mime = Path.GetExtension(path).ToLowerInvariant() switch
         {
@@ -89,13 +110,63 @@ public class ConfiguracionController : ControllerBase
             ".webp" => "image/webp",
             _ => null
         };
-        if (mime is null) return NoContent();
+        if (mime is null)
+        {
+            Response.Headers["X-Logo-Status"] = "unsupported-media-type";
+            return NoContent();
+        }
 
         var file = new FileInfo(path);
-        if (file.Length <= 0 || file.Length > 10L * 1024 * 1024) return NoContent();
+        if (file.Length <= 0 || file.Length > 10L * 1024 * 1024)
+        {
+            Response.Headers["X-Logo-Status"] = "invalid-file-size";
+            return NoContent();
+        }
 
-        Response.Headers["Cache-Control"] = "no-store";
+        Response.Headers["X-Logo-Status"] = "available";
         return PhysicalFile(path, mime);
+    }
+
+    [HttpGet("sistema/logo-reportes/estado")]
+    [AllowAnonymous]
+    public async Task<IActionResult> EstadoLogoReportes([FromServices] IInstitutionalBrandingResolver? brandingResolver = null)
+    {
+        var configuration = await _service.ObtenerConfigSistemaAsync().ConfigureAwait(false);
+        var logoUrl = configuration?.LogoUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(logoUrl))
+        {
+            return Ok(new
+            {
+                configurado = false,
+                disponible = false,
+                tipo = "SIN_LOGO",
+                estado = "not-configured",
+                mensaje = "No hay logotipo configurado en el sistema."
+            });
+        }
+
+        var esLocal = logoUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) || logoUrl.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase);
+        var esHttps = logoUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        var tipo = esLocal ? "LOGO_LOCAL" : (esHttps ? "LOGO_HTTPS" : "LOGO_INVALIDO");
+
+        if (brandingResolver is not null)
+        {
+            var snapshot = await brandingResolver.ResolveAsync(HttpContext.RequestAborted).ConfigureAwait(false);
+            return Ok(new
+            {
+                configurado = true,
+                disponible = snapshot.HasLogo,
+                tipo,
+                estado = snapshot.Source,
+                mimeType = snapshot.HasLogo ? snapshot.LogoMimeType : null,
+                ancho = snapshot.HasLogo ? snapshot.LogoWidth : 0,
+                alto = snapshot.HasLogo ? snapshot.LogoHeight : 0,
+                relacionAspecto = snapshot.HasLogo ? snapshot.LogoAspectRatio : 1m,
+                mensaje = snapshot.HasLogo ? "Logotipo disponible y validado." : "El logotipo configurado no se pudo recuperar o no es válido."
+            });
+        }
+
+        return Ok(new { configurado = true, disponible = false, tipo, estado = "resolver-unavailable", mensaje = "Resolver no disponible." });
     }
 
     [HttpPut("sistema")]

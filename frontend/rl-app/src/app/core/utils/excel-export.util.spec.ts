@@ -286,4 +286,32 @@ describe('generador Excel institucional', () => {
     expect(ws.getCell('C3').font.color?.argb).toBe('FF000000');
     expect(ws.getCell('C3').font.bold).toBe(true);
   });
+
+  it('incrusta logotipo institucional en el libro Excel tanto en formato PNG como JPEG', async () => {
+    const pngLogo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const jpegLogo = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=';
+
+    // Prueba con PNG
+    setInstitutionalReportBranding({ logoUrl: pngLogo, logoAspectRatio: 2.82 });
+    const bookPng = utils.book_new();
+    utils.book_append_sheet(bookPng, utils.aoa_to_sheet([['Reporte'], ['Datos']]), 'Hoja1');
+    const workbookPng = construirLibroInstitucional(bookPng);
+    expect(workbookPng.worksheets[0].getImages().length).toBe(1);
+    expect((workbookPng as any).model?.media?.length).toBe(1);
+
+    // Prueba con JPEG
+    setInstitutionalReportBranding({ logoUrl: jpegLogo, logoAspectRatio: 2.82 });
+    const bookJpeg = utils.book_new();
+    utils.book_append_sheet(bookJpeg, utils.aoa_to_sheet([['Reporte'], ['Datos']]), 'Hoja1');
+    const workbookJpeg = construirLibroInstitucional(bookJpeg);
+    expect(workbookJpeg.worksheets[0].getImages().length).toBe(1);
+    expect((workbookJpeg as any).model?.media?.length).toBe(1);
+
+    // Prueba sin logo
+    setInstitutionalReportBranding({ logoUrl: '' });
+    const bookSinLogo = utils.book_new();
+    utils.book_append_sheet(bookSinLogo, utils.aoa_to_sheet([['Reporte'], ['Datos']]), 'Hoja1');
+    const workbookSinLogo = construirLibroInstitucional(bookSinLogo);
+    expect(workbookSinLogo.worksheets[0].getImages().length).toBe(0);
+  });
 });

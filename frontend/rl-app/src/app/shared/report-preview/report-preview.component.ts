@@ -21,6 +21,16 @@ export class ReportPreviewComponent implements AfterViewInit, OnDestroy {
     this.configService.configSistema();
     return getInstitutionalReportBranding().logoUrl;
   });
+  readonly previewLogoUrl = computed(() => {
+    const s = this.preview.state();
+    if (!s || s.kind !== 'excel') return '';
+    return s.logoUrl || this.institutionalLogoUrl() || '';
+  });
+  readonly logoFailed = signal(false);
+
+  onLogoError(): void {
+    this.logoFailed.set(true);
+  }
   readonly preview = inject(ReportPreviewService);
   readonly selectedSheet = signal(0);
   readonly page = signal(0);
@@ -53,6 +63,7 @@ export class ReportPreviewComponent implements AfterViewInit, OnDestroy {
       this.preview.state();
       this.selectedSheet.set(0);
       this.page.set(0);
+      this.logoFailed.set(false);
       this.scheduleHorizontalScrollSync();
     });
     effect(() => {

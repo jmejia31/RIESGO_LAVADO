@@ -76,6 +76,8 @@ export function construirLibroInstitucional(workbook: WorkBook): ExcelJS.Workboo
     crearHojaInstitucional(excel, name, sheet);
   }
 
+  workbook.logoEmbedded = agregarLogoInstitucionalExcel(excel);
+
   return excel;
 }
 
@@ -86,26 +88,31 @@ export async function writeFile(workbook: WorkBook, fileName: string): Promise<v
 /** Genera el mismo binario que se presenta en el visor, sin iniciar una descarga. */
 export async function workbookToBlob(workbook: WorkBook): Promise<Blob> {
   const excel = construirLibroInstitucional(workbook);
-  workbook.logoEmbedded = await agregarLogoInstitucionalExcel(excel);
   const buffer = await excel.xlsx.writeBuffer();
   return new Blob([buffer as BlobPart], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
 }
 
-async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promise<boolean> {
-  if (!esNavegadorReal()) return false;
+function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): boolean {
   const branding = getInstitutionalReportBranding();
-  // Never request the original static URL or resurrect the old embedded default.
-  if (!/^data:image\/png;base64,/i.test(branding.logoUrl)) return false;
-  const imageId = workbook.addImage({ base64: branding.logoUrl, extension: 'png' });
+  if (!branding.logoUrl) return false;
+  const isDataPng = /^data:image\/png/i.test(branding.logoUrl);
+  const isDataJpeg = /^data:image\/(jpeg|jpg)/i.test(branding.logoUrl);
+  if (!isDataPng && !isDataJpeg) return false;
+
+  const extension = isDataPng ? 'png' : 'jpeg';
+  const imageId = workbook.addImage({ base64: branding.logoUrl, extension });
   for (const worksheet of workbook.worksheets) {
     const boxWidth = INSTITUTIONAL_LOGO_POLICY.excelWidthPx;
     const boxHeight = INSTITUTIONAL_LOGO_POLICY.excelMaxHeightPx;
-    const imageHeight = Math.min(boxWidth / branding.logoAspectRatio, boxHeight);
-    const imageWidth = imageHeight * branding.logoAspectRatio;
+    const ratio = branding.logoAspectRatio > 0 ? branding.logoAspectRatio : 1;
+    const imageHeight = Math.min(boxWidth / ratio, boxHeight);
+    const imageWidth = imageHeight * ratio;
+    const colCount = Math.max(1, worksheet.columnCount || worksheet.actualColumnCount || 4);
+    const targetCol = Math.max(0, colCount - 3);
     worksheet.addImage(imageId, {
-      tl: { col: Math.max(0, worksheet.columnCount - 3), row: 0 },
+      tl: { col: targetCol, row: 0 },
       ext: {
         width: imageWidth,
         height: imageHeight
@@ -113,13 +120,6 @@ async function agregarLogoInstitucionalExcel(workbook: ExcelJS.Workbook): Promis
     });
   }
   return true;
-}
-
-function esNavegadorReal(): boolean {
-  if (typeof window === 'undefined') return false;
-  const browserWindow = window as Window & { document?: Document };
-  const userAgent = browserWindow.navigator?.userAgent ?? '';
-  return typeof browserWindow.document?.createElement === 'function' && !/jsdom/i.test(userAgent);
 }
 
 

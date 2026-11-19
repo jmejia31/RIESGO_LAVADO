@@ -22,8 +22,13 @@
                 <p class="text-sm font-semibold text-slate-800">Vista previa del libro Excel</p>
                 <p class="text-xs text-slate-500">{{ currentSheet()?.totalRows ?? 0 }} filas de datos en la hoja seleccionada</p>
               </div>
-              @if (state.logoEmbedded) {
-                <img [src]="institutionalLogoUrl()" alt="Logotipo institucional" class="h-10 max-w-[10rem] object-contain" data-institutional-logo-preview />
+              @if (previewLogoUrl() && !logoFailed()) {
+                <img [src]="previewLogoUrl()" alt="Logotipo institucional" class="h-10 max-w-[10rem] object-contain" (error)="onLogoError()" data-institutional-logo-preview />
+              } @else if (state.logoStatus === 'inaccesible' || state.logoStatus === 'invalido') {
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium" role="status">
+                  <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>No fue posible recuperar el logotipo institucional configurado.</span>
+                </div>
               }
               <nav class="institutional-selection institutional-selection--compact flex max-w-full flex-wrap" aria-label="Hojas del libro Excel" role="tablist">
                 @for (sheet of sheets; track sheet.name; let i = $index) {

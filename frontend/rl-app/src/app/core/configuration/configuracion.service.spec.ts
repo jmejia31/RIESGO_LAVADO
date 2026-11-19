@@ -142,7 +142,32 @@ describe('ConfiguracionService', () => {
     expect(service.resolverUrlImagen(entrada)).toBe(esperada);
   });
 
-  it('no usa URLs externas en la identidad de reportería del navegador', () => {
+  it('solicita la imagen validada al backend institucional cuando la configuración contiene una URL HTTPS válida', async () => {
+    const expected = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ';
+    vi.spyOn(service as any, 'convertirLogoEnPng').mockResolvedValue({ dataUrl: expected, aspectRatio: 2.5, status: 'disponible' });
+
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'SGRLA',
+        logoUrl: 'https://www.ihss.hn/wp-content/uploads/2020/06/logo-del-IHSS.jpg',
+        timeoutSesion: 30
+      }
+    });
+
+    // Demuestra que Angular no descarga directamente la URL remota sino que solicita la imagen validada al backend
+    const logoReq = http.expectOne('http://localhost:5043/api/configuracion/sistema/logo-reportes');
+    expect(logoReq.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    logoReq.flush(new Blob(['synthetic-jpeg-data'], { type: 'image/jpeg' }));
+
+    await vi.waitFor(() => expect(getInstitutionalReportBranding().logoUrl).toBe(expected));
+    expect(getInstitutionalReportBranding().logoAspectRatio).toBe(2.5);
+    expect(getInstitutionalReportBranding().logoStatus).toBe('disponible');
+  });
+
+  it('si la URL HTTPS remota es inaccesible o falla en backend, conserva reportes sin logo y marca estado inaccesible', () => {
     service.CargarConfiguracion().subscribe();
     http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
       success: true,
@@ -154,9 +179,28 @@ describe('ConfiguracionService', () => {
       }
     });
 
-    expect(service.configSistema()).toEqual(expect.objectContaining({ logoUrl: 'https://example.invalid/logo.png' }));
-    expect(getInstitutionalReportBranding().logoUrl)
-      .toBe('');
+    const logoReq = http.expectOne('http://localhost:5043/api/configuracion/sistema/logo-reportes');
+    logoReq.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(getInstitutionalReportBranding().logoUrl).toBe('');
+    expect(getInstitutionalReportBranding().logoStatus).toBe('inaccesible');
+  });
+
+  it('marca estado invalido sin consultar backend si el formato del logo no es local ni HTTPS', () => {
+    service.CargarConfiguracion().subscribe();
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'SGRLA',
+        logoUrl: 'javascript:alert(1)',
+        timeoutSesion: 30
+      }
+    });
+
+    http.expectNone('http://localhost:5043/api/configuracion/sistema/logo-reportes');
+    expect(getInstitutionalReportBranding().logoUrl).toBe('');
+    expect(getInstitutionalReportBranding().logoStatus).toBe('invalido');
   });
 
   it('carga el logo de /uploads mediante la API autenticada y conserva la imagen preparada', async () => {

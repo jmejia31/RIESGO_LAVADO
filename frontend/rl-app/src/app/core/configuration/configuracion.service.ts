@@ -7,14 +7,17 @@ import { bestContrastForeground, createSystemTheme, DEFAULT_SYSTEM_ACCENT, DEFAU
 import { createHttpErrorScopeContext, HttpErrorScope } from '../http/http-error-scope';
 import { setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
 
-interface ReportLogo {
+export interface ReportLogo {
   dataUrl: string;
   aspectRatio: number;
+  status: 'sin-logo' | 'disponible' | 'invalido' | 'inaccesible';
+  errorMessage?: string;
 }
 
-const NO_REPORT_LOGO: ReportLogo = {
+export const NO_REPORT_LOGO: ReportLogo = {
   dataUrl: '',
-  aspectRatio: 1
+  aspectRatio: 1,
+  status: 'sin-logo'
 };
 
 @Injectable({
@@ -137,56 +140,149 @@ export class ConfiguracionService {
       systemName: config.nombreSistema || 'SGRLA-IHSS',
       logoUrl: logo.dataUrl,
       logoAspectRatio: logo.aspectRatio,
+      logoStatus: logo.status,
+      logoErrorMessage: logo.errorMessage,
       headerColor: [header.r, header.g, header.b],
       headerTextColor: [foreground.r, foreground.g, foreground.b]
     });
   }
 
-  private prepararLogoReporte(config: ConfigSistema): Observable<ReportLogo> {
-    const url = config.logoUrl?.trim();
-    if (!url || !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)$/i.test(url))
-      return of(NO_REPORT_LOGO);
+  private clasificarOrigenLogo(rawUrl?: string): 'SIN_LOGO' | 'LOGO_LOCAL' | 'LOGO_HTTPS' | 'LOGO_INVALIDO' {
+    if (!rawUrl || !rawUrl.trim()) return 'SIN_LOGO';
+    const url = rawUrl.trim();
+    if (/^\/?uploads\/[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)$/i.test(url)) return 'LOGO_LOCAL';
+    if (/^https:\/\/[A-Za-z0-9.-]+(:\d+)?(\/.*)?$/i.test(url)) return 'LOGO_HTTPS';
+    return 'LOGO_INVALIDO';
+  }
 
+  private prepararLogoReporte(config: ConfigSistema): Observable<ReportLogo> {
+    const origen = this.clasificarOrigenLogo(config.logoUrl);
+    if (origen === 'SIN_LOGO') {
+      return of(NO_REPORT_LOGO);
+    }
+    if (origen === 'LOGO_INVALIDO') {
+      return of({
+        dataUrl: '',
+        aspectRatio: 1,
+        status: 'invalido',
+        errorMessage: 'El formato de la URL o ruta del logotipo configurado no es válido.'
+      });
+    }
+
+    // Tanto LOGO_LOCAL como LOGO_HTTPS se recuperan de forma segura a través del endpoint backend institucional
     return this.http.get(`${this.apiUrl}/sistema/logo-reportes`, {
       responseType: 'blob',
+      observe: 'response',
       context: createHttpErrorScopeContext('local')
     }).pipe(
-      switchMap(blob => from(this.convertirLogoEnPng(blob))),
-      catchError(() => of(NO_REPORT_LOGO))
+      switchMap(response => {
+        if (response.status === 204 || !response.body || response.body.size === 0) {
+          return of({
+            dataUrl: '',
+            aspectRatio: 1,
+            status: 'inaccesible' as const,
+            errorMessage: 'No fue posible recuperar el logotipo institucional configurado.'
+          });
+        }
+        return from(this.convertirLogoEnPng(response.body));
+      }),
+      catchError(() => of({
+        dataUrl: '',
+        aspectRatio: 1,
+        status: 'inaccesible' as const,
+        errorMessage: 'No fue posible recuperar el logotipo institucional configurado.'
+      }))
     );
   }
 
   private async convertirLogoEnPng(blob: Blob | null): Promise<ReportLogo> {
-    if (!blob || !/^image\/(png|jpeg|gif|webp)$/i.test(blob.type) || blob.size === 0 ||
-        blob.size > 10 * 1024 * 1024 || typeof Image === 'undefined' ||
-        typeof document === 'undefined' || typeof URL.createObjectURL !== 'function')
-      return NO_REPORT_LOGO;
+    if (!blob || blob.size === 0 || blob.size > 10 * 1024 * 1024)
+      return {
+        dataUrl: '',
+        aspectRatio: 1,
+        status: 'inaccesible',
+        errorMessage: 'El contenido del logotipo está vacío o supera el límite permitido.'
+      };
 
-    const objectUrl = URL.createObjectURL(blob);
-    try {
-      const img = new Image();
-      const loaded = new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error('No se pudo decodificar el logo configurado.'));
-      });
-      img.src = objectUrl;
-      await loaded;
+    if (!/^image\/(png|jpeg|jpg|gif|webp)$/i.test(blob.type))
+      return {
+        dataUrl: '',
+        aspectRatio: 1,
+        status: 'invalido',
+        errorMessage: 'El tipo de contenido del logotipo no es una imagen válida.'
+      };
 
-      const width = img.naturalWidth;
-      const height = img.naturalHeight;
-      if (width < 1 || height < 1 || width > 4096 || height > 4096 || width * height > 16_777_216)
-        return NO_REPORT_LOGO;
+    if (typeof Image !== 'undefined' && typeof document !== 'undefined' && typeof URL.createObjectURL === 'function') {
+      const objectUrl = URL.createObjectURL(blob);
+      try {
+        const img = new Image();
+        const loaded = new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('No se pudo decodificar el logo configurado.'));
+        });
+        img.src = objectUrl;
+        await loaded;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const context = canvas.getContext('2d');
-      if (!context) return NO_REPORT_LOGO;
-      context.drawImage(img, 0, 0);
-      return { dataUrl: canvas.toDataURL('image/png'), aspectRatio: width / height };
-    } finally {
-      URL.revokeObjectURL(objectUrl);
+        const width = img.naturalWidth;
+        const height = img.naturalHeight;
+        if (width < 1 || height < 1 || width > 4096 || height > 4096 || width * height > 16_777_216)
+          return {
+            dataUrl: '',
+            aspectRatio: 1,
+            status: 'invalido',
+            errorMessage: 'Las dimensiones del logotipo no están permitidas.'
+          };
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        if (context) {
+          context.drawImage(img, 0, 0);
+          return {
+            dataUrl: canvas.toDataURL('image/png'),
+            aspectRatio: width / height,
+            status: 'disponible'
+          };
+        }
+      } catch {
+        // Fallback a lectura directa de dataUrl si canvas 2D no está disponible en el entorno
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
     }
+
+    const dataUrl = await this.blobToDataUrl(blob);
+    return {
+      dataUrl,
+      aspectRatio: 1,
+      status: dataUrl ? 'disponible' : 'inaccesible'
+    };
+  }
+
+  private blobToDataUrl(blob: Blob): Promise<string> {
+    return new Promise<string>((resolve) => {
+      if (typeof FileReader !== 'undefined') {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(blob);
+        return;
+      }
+      if (typeof (blob as any).arrayBuffer === 'function') {
+        (blob as any).arrayBuffer().then((buf: ArrayBuffer) => {
+          const bytes = new Uint8Array(buf);
+          let binary = '';
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const b64 = typeof btoa === 'function' ? btoa(binary) : '';
+          resolve(`data:${blob.type || 'image/png'};base64,${b64}`);
+        }).catch(() => resolve(''));
+        return;
+      }
+      resolve('');
+    });
   }
 
 }

@@ -9,6 +9,7 @@ import {
   WorkBook,
   workbookToBlob
 } from '../../core/utils/excel-export.util';
+import { getInstitutionalReportBranding } from '../../core/reporting/institutional-report-standard';
 
 export type ReportPreviewKind = 'pdf' | 'excel';
 
@@ -22,6 +23,9 @@ export interface ReportPreviewState {
   workbook?: WorkBook;
   sheets?: ExcelPreviewSheet[];
   logoEmbedded?: boolean;
+  logoUrl?: string;
+  logoStatus?: 'sin-logo' | 'disponible' | 'invalido' | 'inaccesible';
+  logoErrorMessage?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -50,6 +54,8 @@ export class ReportPreviewService {
     const sequence = this.previewSequence;
     const blob = await workbookToBlob(workbook);
     if (sequence !== this.previewSequence) return;
+    const branding = getInstitutionalReportBranding();
+    const hasLogo = workbook.logoEmbedded === true && !!branding.logoUrl;
     this.state.set({
       kind: 'excel',
       title,
@@ -58,7 +64,10 @@ export class ReportPreviewService {
       blob,
       workbook,
       sheets: createExcelPreview(workbook),
-      logoEmbedded: workbook.logoEmbedded === true
+      logoEmbedded: workbook.logoEmbedded === true,
+      logoUrl: hasLogo ? branding.logoUrl : undefined,
+      logoStatus: branding.logoStatus ?? (hasLogo ? 'disponible' : 'sin-logo'),
+      logoErrorMessage: branding.logoErrorMessage
     });
   }
 
@@ -67,12 +76,30 @@ export class ReportPreviewService {
     const sequence = this.previewSequence;
     let sheets: ExcelPreviewSheet[] = [];
     let logoEmbedded = false;
+    let extractedLogoUrl: string | undefined;
     try {
       if (typeof blob.arrayBuffer !== 'function') throw new Error('El archivo Excel no expone un buffer legible.');
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await blob.arrayBuffer());
-      sheets = workbook.worksheets.map(worksheet => {
-        logoEmbedded ||= worksheet.getImages().length > 0;
+      for (const worksheet of workbook.worksheets) {
+        const images = worksheet.getImages();
+        if (images.length > 0) {
+          logoEmbedded = true;
+          if (!extractedLogoUrl) {
+            const firstImage = images[0];
+            const media = workbook.getImage(Number(firstImage.imageId));
+            if (media && media.buffer) {
+              const mime = media.extension === 'png' ? 'image/png' : 'image/jpeg';
+              const bytes = new Uint8Array(media.buffer);
+              let binary = '';
+              for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+              }
+              const b64 = typeof btoa === 'function' ? btoa(binary) : '';
+              extractedLogoUrl = `data:${mime};base64,${b64}`;
+            }
+          }
+        }
         const rows: unknown[][] = [];
         worksheet.eachRow({ includeEmpty: true }, row => {
           const values: unknown[] = [];
@@ -81,13 +108,26 @@ export class ReportPreviewService {
           }
           rows.push(values);
         });
-        return createExcelPreviewFromRows(worksheet.name, rows);
-      });
+        sheets.push(createExcelPreviewFromRows(worksheet.name, rows));
+      }
     } catch {
       sheets = [createExcelPreviewFromRows('Reporte', [])];
     }
     if (sequence === this.previewSequence) {
-      this.state.set({ kind: 'excel', title, description, fileName, blob, sheets, logoEmbedded });
+      const branding = getInstitutionalReportBranding();
+      const finalLogoUrl = extractedLogoUrl || (logoEmbedded ? branding.logoUrl : undefined);
+      this.state.set({
+        kind: 'excel',
+        title,
+        description,
+        fileName,
+        blob,
+        sheets,
+        logoEmbedded,
+        logoUrl: finalLogoUrl || undefined,
+        logoStatus: finalLogoUrl ? 'disponible' : (branding.logoStatus ?? (logoEmbedded ? 'inaccesible' : 'sin-logo')),
+        logoErrorMessage: branding.logoErrorMessage
+      });
     }
   }
 

@@ -52,6 +52,8 @@ export interface InstitutionalReportBranding {
   systemName: string;
   logoUrl: string;
   logoAspectRatio: number;
+  logoStatus?: 'sin-logo' | 'disponible' | 'invalido' | 'inaccesible';
+  logoErrorMessage?: string;
   headerColor: [number, number, number];
   headerTextColor: [number, number, number];
 }
@@ -61,6 +63,7 @@ const DEFAULT_BRANDING: InstitutionalReportBranding = {
   systemName: 'SGRLA-IHSS',
   logoUrl: '',
   logoAspectRatio: 1,
+  logoStatus: 'sin-logo',
   headerColor: INSTITUTIONAL_REPORT_COLORS.navy,
   headerTextColor: INSTITUTIONAL_REPORT_COLORS.white
 };

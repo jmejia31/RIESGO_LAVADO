@@ -63,7 +63,7 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   doc.setFont('helvetica', 'normal');
 }
 
-/** Inserta el PNG canónico en el documento real; no agrega una capa HTML de marca. */
+/** Inserta el logotipo en el documento real; soporta PNG y JPEG normalizados. */
 export function dibujarLogoInstitucionalPdf(
   doc: jsPDF,
   pageWidth: number,
@@ -72,28 +72,29 @@ export function dibujarLogoInstitucionalPdf(
   requestedHeight?: number,
   branding: InstitutionalReportBranding = getInstitutionalReportBranding()
 ): boolean {
-  // jsPDF carga la ruta same-origin de forma síncrona; en las pruebas Node no
-  // existe un navegador y se verifica el contrato de la utilidad sin I/O web.
-  if (!esNavegadorReal() || !/^data:image\/png;base64,/i.test(branding.logoUrl)) return false;
+  if (!branding.logoUrl) return false;
+  const isDataPng = /^data:image\/png/i.test(branding.logoUrl);
+  const isDataJpeg = /^data:image\/(jpeg|jpg)/i.test(branding.logoUrl);
+  if (!isDataPng && !isDataJpeg) return false;
+
+  const ratio = branding.logoAspectRatio > 0 ? branding.logoAspectRatio : 1;
   const boxWidth = requestedWidth;
-  const boxHeight = requestedHeight ?? boxWidth / branding.logoAspectRatio;
-  const scale = Math.min(boxWidth, boxHeight * branding.logoAspectRatio);
+  const boxHeight = requestedHeight ?? boxWidth / ratio;
+  const scale = Math.min(boxWidth, boxHeight * ratio);
   const width = scale;
-  const height = scale / branding.logoAspectRatio;
+  const height = scale / ratio;
   const x = pageWidth - INSTITUTIONAL_REPORT_LAYOUT.pdfMargin - boxWidth;
   const imageX = x + (boxWidth - width) / 2;
   const imageTop = top + (boxHeight - height) / 2;
   doc.setFillColor(...INSTITUTIONAL_REPORT_COLORS.white);
   doc.rect(x, top, boxWidth, boxHeight, 'F');
-  doc.addImage(branding.logoUrl, 'PNG', imageX, imageTop, width, height, 'CONFIGURED_REPORT_LOGO', 'FAST');
-  return true;
-}
-
-function esNavegadorReal(): boolean {
-  if (typeof window === 'undefined') return false;
-  const browserWindow = window as Window & { document?: Document };
-  const userAgent = browserWindow.navigator?.userAgent ?? '';
-  return typeof browserWindow.document?.createElement === 'function' && !/jsdom/i.test(userAgent);
+  const format = isDataJpeg ? 'JPEG' : 'PNG';
+  try {
+    doc.addImage(branding.logoUrl, format, imageX, imageTop, width, height, 'CONFIGURED_REPORT_LOGO', 'FAST');
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function agregarEncabezadoInstitucionalPdf(

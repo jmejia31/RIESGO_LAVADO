@@ -64,4 +64,64 @@ public sealed class InstitutionalReportStandardTests
         var metadata = new InstitutionalReportMetadata("", "Matrices de Riesgos", DateTime.UtcNow);
         Assert.Throws<ArgumentException>(() => InstitutionalReportStandard.ValidateMetadata(metadata));
     }
+
+    [Theory]
+    [InlineData("image/png")]
+    [InlineData("image/jpeg")]
+    public void InstitutionalPdfDocument_EmbedsLogo_WhenBrandingHasLogo(string mimeType)
+    {
+        var sampleBytes = mimeType == "image/png"
+            ? new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }
+            : new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+
+        var branding = InstitutionalBrandingSnapshot.Canonical with
+        {
+            LogoMimeType = mimeType,
+            LogoRawBytes = sampleBytes,
+            LogoWidth = 100,
+            LogoHeight = 50,
+            LogoRgb = sampleBytes
+        };
+
+        var doc = new InstitutionalPdfDocument(
+            "Reporte Prueba",
+            "Módulo Prueba",
+            InstitutionalReportOrientation.Portrait,
+            DateTime.UtcNow,
+            branding);
+
+        var bytes = doc.ToBytes();
+        var pdfText = System.Text.Encoding.ASCII.GetString(bytes);
+
+        Assert.Contains("/ImIHSS", pdfText);
+        Assert.Contains("/XObject << /ImIHSS", pdfText);
+    }
+
+    [Theory]
+    [InlineData("image/png")]
+    [InlineData("image/jpeg")]
+    public void InstitutionalXlsxWorkbook_EmbedsLogoAndDrawings_WhenBrandingHasLogo(string mimeType)
+    {
+        var sampleBytes = mimeType == "image/png"
+            ? new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }
+            : new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+
+        var branding = InstitutionalBrandingSnapshot.Canonical with
+        {
+            LogoMimeType = mimeType,
+            LogoRawBytes = sampleBytes,
+            LogoWidth = 100,
+            LogoHeight = 50,
+            LogoRgb = sampleBytes
+        };
+
+        var workbook = new InstitutionalXlsxWorkbook(branding);
+        var bytes = workbook.ToBytes();
+
+        using var zip = new System.IO.Compression.ZipArchive(new System.IO.MemoryStream(bytes));
+        Assert.NotNull(zip.GetEntry("xl/drawings/drawing1.xml"));
+        Assert.NotNull(zip.GetEntry("xl/drawings/_rels/drawing1.xml.rels"));
+        var imageExt = mimeType == "image/png" ? "png" : "jpeg";
+        Assert.NotNull(zip.GetEntry($"xl/media/image1.{imageExt}"));
+    }
 }

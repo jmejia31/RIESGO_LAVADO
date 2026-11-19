@@ -416,6 +416,26 @@
       "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
       "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M2-P0-RECUPERACION-GLOBAL-LOGOTIPOS-20261118",
+      "path": "M2_P0_RECUPERACION_GLOBAL_LOGOTIPOS_20261118.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_TECHNICALLY_READY_FOR_OWNER_VISUAL_REVIEW",
+      "base_sha": "a791cbee2a47300e58379e49dc17f2ca47437dc9",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/M2_P0_RECUPERACION_GLOBAL_LOGOTIPOS_20261118.md",
+      "logo_recovery": "UNIFIED_BACKEND_RESOLVER_HTTPS_AND_LOCAL_PASS",
+      "preview_broken_image_fix": "OPENXML_MEDIA_EXTRACTION_AND_FALLBACK_PASS",
+      "formats_supported": "PNG_AND_JPEG_DATA_URLS_PASS",
+      "color_independence": "PRESERVED_ABSOLUTE_BLACK_CONTENT_PASS",
+      "geometry_b06": "PRESERVED_72_644MM_205_92PT_PASS",
+      "security_scan": "PASS_FULL_TREE_AUDIT_NO_VULNERABILITIES",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "PENDING_OWNER_VISUAL_REVIEW",
+      "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }
