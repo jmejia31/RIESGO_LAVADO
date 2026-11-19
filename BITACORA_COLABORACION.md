@@ -12177,6 +12177,8 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Rama:** `desarrollo`.
 - **SHA base certificado:** `dc945d58a0f99db4a9f700f1467b969b5f88b122`.
 - **Quality Gate base:** `44567146527` (`completed / success`).
+- **Commit publicado y certificado:** `50eaa109a9415c44f3f1e9c20a40d5885c4bf46d`.
+- **Quality Gate certificado:** `44578777405` (`completed / success`).
 - **Respaldo creado y verificado:** `respaldo/desarrollo-pre-m3-favicon-hardening-20261119-dc945d58` (confirmado en `origin`).
 - **Objetivo:** Resolver los tres hallazgos de auditoría sobre la Microfase 3 (M3):
   1. HALLAZGO P0-01: Endurecimiento estructural de `InstitutionalFaviconValidator.cs` con cálculo CRC-32 (IEEE 802.3), parsers binarios estrictos para PNG, JPEG, ICO, GIF, WebP y fixtures reales con 12 casos negativos en `FaviconEndpointTests.cs`.

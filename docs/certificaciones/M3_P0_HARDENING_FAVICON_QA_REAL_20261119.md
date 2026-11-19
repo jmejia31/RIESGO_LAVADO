@@ -9,6 +9,8 @@
 **FECHA:** 19 de noviembre de 2026  
 **BASE CERTIFICADA:** `dc945d58a0f99db4a9f700f1467b969b5f88b122`  
 **QUALITY GATE BASE:** `44567146527` — `completed / success`  
+**COMMIT CERTIFICADO:** `50eaa109a9415c44f3f1e9c20a40d5885c4bf46d`  
+**QUALITY GATE CERTIFICADO:** `44578777405` — `completed / success`  
 **RAMA DE RESPALDO:** `respaldo/desarrollo-pre-m3-favicon-hardening-20261119-dc945d58`  
 **ESTADO:** `CERTIFIED_TECHNICALLY_READY_FOR_OWNER_FINAL_REVIEW`  
 
