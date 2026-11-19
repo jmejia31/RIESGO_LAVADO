@@ -1,4 +1,4 @@
-import { expect, expectHttpStatuses, Page, test } from './support/telemetry-test';
+import { expect, expectHttpResponse, Page, test } from './support/telemetry-test';
 
 function token(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -250,21 +250,19 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     // Comprobar que el favicon se restableció inmediatamente a favicon.ico
     const fallbackFavicon = page.locator('link[rel="icon"]');
     await expect(fallbackFavicon).toHaveCount(1);
-    const href = await fallbackFavicon.getAttribute('href');
-    expect(href).toBe('favicon.ico');
-    const type = await fallbackFavicon.getAttribute('type');
-    expect(type).toBe('image/x-icon');
+    await expect(fallbackFavicon).toHaveAttribute('href', 'favicon.ico');
+    await expect(fallbackFavicon).toHaveAttribute('type', 'image/x-icon');
 
     // Persistencia tras recarga
     await page.reload();
     const persistedFavicon = page.locator('link[rel="icon"]');
     await expect(persistedFavicon).toHaveCount(1);
-    expect(await persistedFavicon.getAttribute('href')).toBe('favicon.ico');
+    await expect(persistedFavicon).toHaveAttribute('href', 'favicon.ico');
   });
 
   test('Desacoplamiento total: Retardo o fallo en logo de reportería no bloquea ni retrasa el título ni el favicon', async ({ page }) => {
-    // Declaramos 500 como respuesta HTTP esperada en la telemetría
-    expectHttpStatuses(500);
+    // Declaramos 500 como respuesta HTTP esperada en la telemetría para logo-reportes
+    expectHttpResponse({ status: 500, pathIncludes: 'logo-reportes', minCount: 1, maxCount: 10, reason: 'Logo failure simulation' });
 
     // Simulamos fallo 500 en endpoint de logo de reportes
     await page.unroute('**/api/configuracion/sistema/logo-reportes');
