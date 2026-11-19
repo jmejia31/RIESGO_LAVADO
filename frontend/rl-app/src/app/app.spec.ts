@@ -1,10 +1,20 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { App } from './app';
+import { ConfiguracionService } from './core/configuration/configuracion.service';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [
+        {
+          provide: ConfiguracionService,
+          useValue: {
+            CargarConfiguracion: () => of(undefined),
+          },
+        },
+      ],
     }).compileComponents();
   });
 
