@@ -59,6 +59,8 @@ function dibujarEncabezadoCompacto(doc: jsPDF): void {
   dibujarLogoInstitucionalPdf(doc, width, Math.max(0, (headerHeight - logoBoxHeight) / 2), logoWidth, logoBoxHeight, branding);
   doc.setTextColor(...branding.headerTextColor);
   doc.text(meta.sistema, INSTITUTIONAL_REPORT_LAYOUT.pdfMargin, metadataTop);
+  doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
+  doc.setFont('helvetica', 'normal');
 }
 
 /** Inserta el PNG canónico en el documento real; no agrega una capa HTML de marca. */
@@ -148,7 +150,11 @@ export function agregarEncabezadoInstitucionalPdf(
   dibujarLogoInstitucionalPdf(doc, width, logoTop, logoWidth, logoBoxHeight, branding);
   doc.text(metadataLines, margin, metadataTop, { align: 'left' });
 
-  if (!filtros) return headerHeight + 10;
+  if (!filtros) {
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
+    doc.setFont('helvetica', 'normal');
+    return headerHeight + 10;
+  }
 
   const filterLines = doc.splitTextToSize(`Filtros aplicados: ${filtros}`, width - 38);
   const filterHeight = Math.max(14, 7 + filterLines.length * 4.2);
@@ -158,6 +164,8 @@ export function agregarEncabezadoInstitucionalPdf(
   doc.setFontSize(8.5);
   doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.filterText);
   doc.text(filterLines, margin + 5, headerHeight + 7 + 7);
+  doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
+  doc.setFont('helvetica', 'normal');
   return headerHeight + filterHeight + 17;
 }
 

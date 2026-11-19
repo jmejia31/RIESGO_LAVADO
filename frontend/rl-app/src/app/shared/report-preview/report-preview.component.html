@@ -42,14 +42,14 @@
                       </h3>
                     }
                     @case ('SECTION') {
-                      <h4 class="border-b border-slate-100 py-2 font-semibold text-ihss-700" [attr.data-excel-context-role]="contextRowRoles()[contextIndex]">
+                      <h4 class="border-b border-slate-100 py-2 font-bold text-slate-900" [attr.data-excel-context-role]="contextRowRoles()[contextIndex]">
                         @for (cell of row; track $index) { <span class="block break-words">{{ cell }}</span> }
                       </h4>
                     }
                     @case ('KEY_VALUE') {
                       <dl class="grid grid-cols-1 gap-x-4 gap-y-1 border-b border-slate-100 py-2 sm:grid-cols-2" [attr.data-excel-context-role]="contextRowRoles()[contextIndex]">
                         @for (cell of row; track $index; let cellIndex = $index) {
-                          <div class="min-w-0" [class.font-semibold]="cellIndex % 2 === 0" [class.text-slate-500]="cellIndex % 2 === 0">
+                          <div class="min-w-0" [class.font-bold]="cellIndex % 2 === 0" [class.text-slate-900]="cellIndex % 2 === 0" [class.text-slate-700]="cellIndex % 2 !== 0">
                             <dt class="break-words">{{ cell }}</dt>
                           </div>
                         }

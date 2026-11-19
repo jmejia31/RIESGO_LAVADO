@@ -1,6 +1,43 @@
-# Estado vigente — Microfase 2 (M2): Reportería Institucional, Independencia de Color, Logotipos Seguros SSRF y Paridad PDF/Excel (ANTIG) — 2026-11-18 19:40 -06:00
+# Estado vigente — Microfase 2 (M2): Corrección Global Transversal del Estándar Institucional de Reportería PDF y Excel (ANTIG) — 2026-11-18 21:00 -06:00
 
-## Estado vigente — Certificación Técnica Microfase 2 (M2): Reportería Institucional Compartida y Corrección de Color
+## Estado vigente — Certificación Técnica Microfase 2 (M2): Corrección Global Transversal de Todos los Reportes del Sistema
+
+- Se completó la certificación global y transversal de la **Microfase 2 (M2)**, cumpliendo la orden obligatoria P0 de Javier Mejía (`jmejia31`) que exigió auditar y corregir **la totalidad de generadores y consumidores de reportes PDF y Excel en todos los módulos de RIESGO_LAVADO**, garantizando que la solución no quedara limitada a Matrices de Riesgos.
+  1. **Auditoría e inventario exhaustivo de 18 puntos de exportación:**
+     - Se elaboró y publicó la [`M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md`](../certificaciones/M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md), cubriendo los 18 generadores y consumidores de reportes del sistema (Matrices de Riesgos, Monitoreo de Listas, Coincidencias de Patrono, Coincidencias de Empleado, Cargar Listas, utilidades compartidas `excel-export.util.ts`, `institutional-report.util.ts` y preview `report-preview.component.html`).
+     - Se demostró documentalmente que ningún otro módulo del sistema produce exportaciones PDF o Excel.
+  2. **Desacoplamiento total de color en contenido sobre fondo blanco:**
+     - **Excel (`excel-export.util.ts`):** Corregido el defecto donde `sectionRows` y `keyValueRows` heredaban `headerArgb`. Se forzó `color: { argb: BODY }` (`FF000000`) y negrita en títulos de sección y etiquetas clave/valor, evitando contaminación por fondos claros o pasteles.
+     - **jsPDF (`institutional-report.util.ts`):** Corregida la fuga de estado gráfico en `dibujarEncabezadoCompacto` y `agregarEncabezadoInstitucionalPdf` asegurando el restablecimiento de `doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body)` (`[0, 0, 0]`) y tipografía normal antes de retornar.
+     - **Monitoreo de Listas (`monitoreo-listas.component.impl.ts`):** Sustituidos más de 20 colores rígidos por `COLORES_REPORTE_INSTITUCIONAL.body` (`[0, 0, 0]`) y `getInstitutionalReportBranding().headerColor` para cabeceras tabulares y pie institucional (`agregarPiesInstitucionalesPdf`).
+     - **Vista previa Excel (`report-preview.component.html`):** Clases CSS de roles `SECTION` y `KEY_VALUE` actualizadas a `font-bold text-slate-900`.
+  3. **Comprobación automatizada ante los 5 temas obligatorios:**
+     - Blanco (`#FFFFFF`), Azul Institucional (`#123B63`), Rosa (`#F9A8D4`), Turquesa/Menta (`#A7F3D0`) y Negro (`#000000`).
+     - En todos los casos los títulos de sección, etiquetas y tablas permanecen estrictamente en negro puro (`#000000` / `FF000000`) sobre fondo blanco, con contraste AA verificado.
+  4. **Preservación B06, SSRF y mitigación picomatch:**
+     - Geometría B06 (72.644 mm / 205.92 pt / 156 px) preservada sin regresiones.
+     - Descarga con blindaje SSRF (`InstitutionalLogoDownloader`) e inspector administrado JPEG (`InstitutionalJpegInspector`) intactos.
+     - Mitigación `picomatch` intacta.
+     - 82 campos oficiales de Matrices de Riesgos y reglas de identidad de Microfase 1 preservadas al 100%.
+- **Verificación técnica integral:**
+  - Backend Build: Release PASS (0 errores, 1,161 advertencias preexistentes).
+  - Pruebas Backend Reportería (`FullyQualifiedName~Institutional`): 154/154 PASS (1 omitida por requerir Oracle XE local).
+  - Angular Vitest: 96/96 suites PASS, 1,044/1,044 tests PASS.
+  - Angular Production Build (`npm run build`): PASS (0 errores).
+  - Validadores: Estructura, Scripts BD, Enlaces Documentales y Agent Skills (14/14) todos PASS.
+- **Gobernanza:**
+  - Rama `main` intacta (0 commits, 0 merge).
+  - Producción intacta.
+  - Base de datos institucional: DML=0, DDL=0 (solo lectura 100%).
+  - 34 archivos locales sin seguimiento preservados intactos.
+  - Expedientes publicados: `docs/certificaciones/M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md` y `docs/certificaciones/M2_P0_REPORTERIA_INSTITUCIONAL_LOGOS_COLORES_20261118.md`, indexados en `docs/certificaciones/INDEX.json`.
+- **Punto exacto de continuación:** Microfase 2 completamente implementada y certificada a nivel global en todos los módulos de RIESGO_LAVADO. Lista para revisión visual y dictamen final por parte de Javier Mejía (`jmejia31`).
+
+---
+
+# Estado previo — Microfase 2 (M2): Reportería Institucional, Independencia de Color, Logotipos Seguros SSRF y Paridad PDF/Excel (ANTIG) — 2026-11-18 19:40 -06:00
+
+## Estado previo — Certificación Técnica Microfase 2 (M2): Reportería Institucional Compartida y Corrección de Color
 
 - Se implementó y certificó técnicamente la **Microfase 2 (M2)** (Reportería institucional, logotipos, colores, legibilidad y paridad PDF/Excel), cumpliendo integralmente la orden P0 del propietario Javier Mejía (`jmejia31`):
   1. **Independencia absoluta de color de contenido:**

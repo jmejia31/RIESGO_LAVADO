@@ -6,7 +6,8 @@ import { CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, Detall
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { jsPDF } from 'jspdf';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
-import { agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
+import { COLORES_REPORTE_INSTITUCIONAL, agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
+import { getInstitutionalReportBranding } from '../../../../../core/reporting/institutional-report-standard';
 import { EMPTY, of, forkJoin, Observable, Subject, Subscription } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
@@ -678,7 +679,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Información de la persona
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
-    doc.setTextColor(55, 65, 81); // Gray 700
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     const identityStartY = headerStartY;
     doc.text('Nombre:', 14, identityStartY);
     doc.setFont('helvetica', 'normal');
@@ -734,13 +735,14 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       head: tableHead,
       body: tableBody,
       headStyles: {
-        fillColor: [15, 23, 42],
-        textColor: [255, 255, 255],
+        fillColor: getInstitutionalReportBranding().headerColor,
+        textColor: getInstitutionalReportBranding().headerTextColor,
         fontSize: 8,
         fontStyle: 'bold'
       },
       bodyStyles: {
-        fontSize: 8
+        fontSize: 8,
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body
       },
       columnStyles: colStyles,
       theme: 'striped',
@@ -788,7 +790,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     doc.text('Resumen del Reporte:', 14, finalY + 8);
     
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(55, 65, 81);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text(`Total de Coincidencias: ${this.totalCoincidencias()}`, 14, finalY + 14);
     
     if (!isEmpleado) {
@@ -797,7 +799,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         doc.setTextColor(185, 28, 28); // red-700
         doc.text(`Coincidencias PEP: ${this.coincidenciasPep()}`, 14, finalY + 20);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(55, 65, 81);
+        doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
       } else {
         doc.text(`Coincidencias PEP: ${this.coincidenciasPep()}`, 14, finalY + 20);
       }
@@ -873,7 +875,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     y = asegurarEspacioSeccionPdf(doc, y, 30);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text(titulo, 14, y);
     y += 4;
     doc.setDrawColor(226, 232, 240);
@@ -887,12 +889,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       styles: {
         fontSize: 9,
         cellPadding: 2,
-        textColor: [51, 65, 85]
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body
       },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 40, textColor: [30, 41, 59] },
+        0: { fontStyle: 'bold', cellWidth: 40, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 45, textColor: [30, 41, 59] },
+        2: { fontStyle: 'bold', cellWidth: 45, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         3: { cellWidth: 50 }
       },
       margin: { left: 14, right: 14 }
@@ -905,7 +907,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     y = asegurarEspacioSeccionPdf(doc, y, 30);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text(titulo, 14, y);
     y += 4;
     doc.line(14, y, 196, y);
@@ -913,7 +915,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(71, 85, 105);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
 
     const splitMotivo = doc.splitTextToSize(motivoTexto, 180);
     doc.text(splitMotivo, 14, y);
@@ -924,7 +926,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     y = asegurarEspacioSeccionPdf(doc, y, 30);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text(titulo, 14, y);
     y += 4;
     doc.line(14, y, 196, y);
@@ -932,7 +934,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
-    doc.setTextColor(71, 85, 105);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text(`Rango de seguimientos: ${rango.texto}`, 14, y);
     y += 6;
 
@@ -954,14 +956,14 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         head: [['Fecha', 'Usuario', 'Comentario / Acción', 'Evidencias']],
         body: seguimientosRows,
         headStyles: {
-          fillColor: [15, 23, 42],
-          textColor: [255, 255, 255],
+          fillColor: getInstitutionalReportBranding().headerColor,
+          textColor: getInstitutionalReportBranding().headerTextColor,
           fontSize: 8.5,
           fontStyle: 'bold'
         },
         bodyStyles: {
           fontSize: 8,
-          textColor: [71, 85, 105]
+          textColor: COLORES_REPORTE_INSTITUCIONAL.body
         },
         columnStyles: {
           0: { cellWidth: 25 },
@@ -977,7 +979,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9.5);
-    doc.setTextColor(100, 116, 139);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.muted);
     doc.text(mensajeVacio, 14, y);
     return y + 8;
   }
@@ -1093,7 +1095,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Información General
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('1. INFORMACIÓN GENERAL DE LA PERSONA', 14, y);
     y += 4;
     doc.setDrawColor(226, 232, 240);
@@ -1114,12 +1116,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       styles: {
         fontSize: 9,
         cellPadding: 2,
-        textColor: [51, 65, 85]
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body
       },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 40, textColor: [30, 41, 59] },
+        0: { fontStyle: 'bold', cellWidth: 40, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 45, textColor: [30, 41, 59] },
+        2: { fontStyle: 'bold', cellWidth: 45, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         3: { cellWidth: 50 }
       },
       margin: { left: 14, right: 14 }
@@ -1130,7 +1132,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Sección 2: Motivo de ingreso a la lista
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('2. MOTIVO DE INGRESO A LISTA DE MONITOREO', 14, y);
     y += 4;
     doc.line(14, y, 196, y);
@@ -1139,7 +1141,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const motivoTexto = positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para esta persona.';
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(71, 85, 105);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     
     const splitMotivo = doc.splitTextToSize(motivoTexto, 180);
     doc.text(splitMotivo, 14, y);
@@ -1148,7 +1150,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Sección 3: Detalle de Coincidencias
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('3. DETALLE DE COINCIDENCIAS ENCONTRADAS', 14, y);
     y += 4;
     doc.line(14, y, 196, y);
@@ -1170,13 +1172,14 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       head: tableHead,
       body: tableBody,
       headStyles: {
-        fillColor: [15, 23, 42],
-        textColor: [255, 255, 255],
+        fillColor: getInstitutionalReportBranding().headerColor,
+        textColor: getInstitutionalReportBranding().headerTextColor,
         fontSize: 8,
         fontStyle: 'bold'
       },
       bodyStyles: {
-        fontSize: 8
+        fontSize: 8,
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body
       },
       columnStyles: {
         2: { cellWidth: 50 }
@@ -1277,7 +1280,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Información General
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('1. INFORMACIÓN GENERAL DEL EMPLEADO', 14, y);
     y += 4;
     doc.setDrawColor(226, 232, 240);
@@ -1298,12 +1301,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       styles: {
         fontSize: 9,
         cellPadding: 2,
-        textColor: [51, 65, 85]
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body
       },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 40, textColor: [30, 41, 59] },
+        0: { fontStyle: 'bold', cellWidth: 40, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 45, textColor: [30, 41, 59] },
+        2: { fontStyle: 'bold', cellWidth: 45, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         3: { cellWidth: 50 }
       },
       margin: { left: 14, right: 14 }
@@ -1314,7 +1317,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Sección 2: Motivo de ingreso a la lista
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('2. MOTIVO DE INGRESO A LISTA DE MONITOREO', 14, y);
     y += 4;
     doc.line(14, y, 196, y);
@@ -1323,7 +1326,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const motivoTexto = positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este empleado.';
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(71, 85, 105);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     
     const splitMotivo = doc.splitTextToSize(motivoTexto, 180);
     doc.text(splitMotivo, 14, y);
@@ -1332,7 +1335,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Sección 3: Detalle de Coincidencias
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('3. DETALLE DE COINCIDENCIAS ENCONTRADAS', 14, y);
     y += 4;
     doc.line(14, y, 196, y);
@@ -1354,13 +1357,14 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       head: tableHead,
       body: tableBody,
       headStyles: {
-        fillColor: [15, 23, 42],
-        textColor: [255, 255, 255],
+        fillColor: getInstitutionalReportBranding().headerColor,
+        textColor: getInstitutionalReportBranding().headerTextColor,
         fontSize: 8,
         fontStyle: 'bold'
       },
       bodyStyles: {
-        fontSize: 8
+        fontSize: 8,
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body
       },
       columnStyles: {
         2: { cellWidth: 35 },
@@ -1405,7 +1409,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Grid de Información General del Patrono
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59); // Slate 800
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('1. INFORMACIÓN GENERAL DEL PATRONO', 14, y);
     y += 4;
     doc.setDrawColor(226, 232, 240); // Slate 200
@@ -1427,12 +1431,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       styles: {
         fontSize: 9,
         cellPadding: 2,
-        textColor: [51, 65, 85]
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body
       },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 40, textColor: [30, 41, 59] },
+        0: { fontStyle: 'bold', cellWidth: 40, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 35, textColor: [30, 41, 59] },
+        2: { fontStyle: 'bold', cellWidth: 35, textColor: COLORES_REPORTE_INSTITUCIONAL.body },
         3: { cellWidth: 60 }
       },
       margin: { left: 14, right: 14 }
@@ -1443,7 +1447,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     // Sección 2: Clasificación y Motivo Inicial de Monitoreo
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('2. MOTIVO DE INGRESO A LISTA DE MONITOREO', 14, y);
     y += 4;
     doc.line(14, y, 196, y);
@@ -1452,7 +1456,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const motivoTexto = positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este patrono.';
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(71, 85, 105);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     
     const splitMotivo = doc.splitTextToSize(motivoTexto, 180);
     doc.text(splitMotivo, 14, y);
@@ -2144,12 +2148,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         lineWidth: 0.1
       },
       columnStyles: {
-        0: { cellWidth: 66, fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
-        1: { cellWidth: 14, fillColor: [248, 250, 252], textColor: [30, 64, 175], fontStyle: 'bold', halign: 'center' },
-        2: { cellWidth: 58, fillColor: [248, 250, 252], textColor: [71, 85, 105] },
-        3: { cellWidth: 66, fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
-        4: { cellWidth: 14, fillColor: [248, 250, 252], textColor: [30, 64, 175], fontStyle: 'bold', halign: 'center' },
-        5: { cellWidth: 58, fillColor: [248, 250, 252], textColor: [71, 85, 105] }
+        0: { cellWidth: 66, fillColor: [248, 250, 252], textColor: COLORES_REPORTE_INSTITUCIONAL.body, fontStyle: 'bold' },
+        1: { cellWidth: 14, fillColor: [248, 250, 252], textColor: COLORES_REPORTE_INSTITUCIONAL.body, fontStyle: 'bold', halign: 'center' },
+        2: { cellWidth: 58, fillColor: [248, 250, 252], textColor: COLORES_REPORTE_INSTITUCIONAL.body },
+        3: { cellWidth: 66, fillColor: [248, 250, 252], textColor: COLORES_REPORTE_INSTITUCIONAL.body, fontStyle: 'bold' },
+        4: { cellWidth: 14, fillColor: [248, 250, 252], textColor: COLORES_REPORTE_INSTITUCIONAL.body, fontStyle: 'bold', halign: 'center' },
+        5: { cellWidth: 58, fillColor: [248, 250, 252], textColor: COLORES_REPORTE_INSTITUCIONAL.body }
       },
       margin: { left: 14, right: 14 }
     });
@@ -2158,7 +2162,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(15, 23, 42);
+    doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body);
     doc.text('Detalle de coincidencias filtradas', 14, tableStartY - 3);
 
     autoTableInstitucional(doc, {
@@ -2167,8 +2171,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       body: reporte.rows,
       theme: 'striped',
       headStyles: {
-        fillColor: [30, 64, 175],
-        textColor: [255, 255, 255],
+        fillColor: getInstitutionalReportBranding().headerColor,
+        textColor: getInstitutionalReportBranding().headerTextColor,
         fontStyle: 'bold',
         fontSize: 7.4,
         halign: 'left',
@@ -2179,21 +2183,15 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
         cellPadding: 2.2,
         overflow: 'linebreak',
         valign: 'middle',
-        textColor: [30, 41, 59],
+        textColor: COLORES_REPORTE_INSTITUCIONAL.body,
         lineColor: [226, 232, 240],
         lineWidth: 0.1
       },
       alternateRowStyles: { fillColor: [248, 250, 252] },
       margin: { left: 14, right: 14 },
-      tableWidth: pageWidth - 28,
-      didDrawPage: () => {
-        const page = doc.getNumberOfPages();
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.setTextColor(100, 116, 139);
-        doc.text(`Página ${page}`, pageWidth - 14, pageHeight - 10, { align: 'right' });
-      }
+      tableWidth: pageWidth - 28
     });
+    agregarPiesInstitucionalesPdf(doc);
 
     const fileName = `Reporte_Monitoreo_Listas_${this.tipoActivo()}_${new Date().toISOString().split('T')[0]}.pdf`;
     this.listasService.registrarAuditoriaExportacion(

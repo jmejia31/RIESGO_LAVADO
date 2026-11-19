@@ -11982,4 +11982,44 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - 34 archivos sin seguimiento locales preservados intactos.
   - Expediente publicado: `docs/certificaciones/M2_P0_REPORTERIA_INSTITUCIONAL_LOGOS_COLORES_20261118.md` e indexado en `docs/certificaciones/INDEX.json`.
 - **Punto exacto de continuación:** Microfase 2 implementada y certificada técnicamente. Lista para revisión visual y aceptación final por parte de Javier Mejía (`jmejia31`).
->>>>>>> d9d4e9d4 (feat(reporting): reporteria institucional logotipos seguros ssrf independencia de color y paridad pdf excel M2 (ANTIG))
+
+## Intervención P0 — Microfase 2: Corrección Global del Estándar Institucional de Reportería PDF y Excel en Todos los Módulos — 2026-11-18 21:00 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=597dd22280d7d27cc434690deec3672ba0b57d2b` (Quality Gate `44439032394` = SUCCESS).
+- **Orden del propietario cumplida:** Corrección global y transversal del estándar de reportería institucional en **todos los generadores y consumidores de PDF y Excel de RIESGO_LAVADO**, superando el alcance acotado a Matrices de Riesgos y auditando los 18 puntos de exportación del sistema.
+- **Causas raíz y correcciones transversales ejecutadas:**
+  1. **Motor Excel compartido (`excel-export.util.ts`):**
+     - En `construirLibroInstitucional`, las filas de sección (`sectionRows`) y las etiquetas clave/valor (`keyValueRows`) utilizaban erróneamente `color: { argb: headerArgb }`. Ante temas de encabezado claros o pasteles (menta `#A7F3D0`, rosa `#F9A8D4`, blanco `#FFFFFF`), los títulos y etiquetas sobre fondo blanco adoptaban tonalidades pasteles o se volvían ilegibles.
+     - Se corrigió forzando `color: { argb: BODY }` (`FF000000`) y `bold: true` para todas las filas de contexto de sección y clave/valor, logrando desacoplamiento total del color de cabecera.
+  2. **Motor jsPDF compartido (`institutional-report.util.ts`):**
+     - En `dibujarEncabezadoCompacto` y `agregarEncabezadoInstitucionalPdf`, el estado gráfico de jsPDF quedaba seteado con `headerTextColor` (blanco) al terminar el trazado del banner.
+     - Se agregó reseteo explícito de `doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.body)` (`[0, 0, 0]`) y `doc.setFont('helvetica', 'normal')` antes de retornar, evitando cualquier fuga de color de texto hacia las tablas o párrafos siguientes.
+  3. **Contrato de colores institucionales (`institutional-report-standard.ts`):**
+     - Se crearon los tokens explícitos `black`, `sectionTitle`, `label` y `tableBodyForeground` tanto en `INSTITUTIONAL_REPORT_COLORS` (`[0, 0, 0]`) como en `INSTITUTIONAL_REPORT_EXCEL_COLORS` (`FF000000`).
+     - Se verificó mediante prueba unitaria la invariabilidad de estos colores frente a los 5 temas obligatorios (Blanco, Navy, Rosa, Menta/Turquesa, Negro).
+  4. **Consumidores en Monitoreo de Listas (`monitoreo-listas.component.impl.ts`):**
+     - Se reemplazaron más de 20 ocurrencias de colores rígidos (`[30, 41, 59]`, `[55, 65, 81]`, `[71, 85, 105]`, `[15, 23, 42]`, `[30, 64, 175]`) por `COLORES_REPORTE_INSTITUCIONAL.body` (`[0, 0, 0]`) y `getInstitutionalReportBranding().headerColor`.
+     - Ahora las fichas de Persona Natural, Empleado, Patrono, Detalle de Coincidencias y el Listado Principal Landscape utilizan la paleta dinámica para el encabezado y negro puro para todo el contenido sobre fondo blanco, incorporando `agregarPiesInstitucionalesPdf(doc)`.
+  5. **Modal de Vista Previa (`report-preview.component.html`):**
+     - En el renderizado de vista previa de Excel, los roles `SECTION` y `KEY_VALUE` se actualizaron de `text-ihss-700` y `text-slate-500` a `font-bold text-slate-900`.
+- **Matriz de Cobertura Transversal (18 puntos de exportación):**
+  - Publicado el expediente completo en [`docs/certificaciones/M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md`](docs/certificaciones/M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md) e indexado en `INDEX.json`.
+  - Se confirmó que no existen otros módulos exportadores de PDF o Excel en el sistema.
+- **Verificación técnica integral:**
+  - Backend Build: Release PASS (0 errores, 1,161 advertencias de compilación preexistentes).
+  - Pruebas Backend Reportería: `dotnet test ... --filter "FullyQualifiedName~Institutional"`: 154/154 PASS (0 fallos, 1 omitida por requerir Oracle XE descartable).
+  - Angular Vitest: 96/96 suites PASS, 1,044/1,044 tests PASS.
+  - Angular Production Build (`npm run build`): PASS (0 errores).
+  - Validadores del repositorio:
+    - Estructura (`validate_repository_structure.ps1`): PASS (118 rutas, 1,296 archivos, 3 maestros SQL).
+    - Scripts BD (`validate_database_scripts.ps1`): PASS (esquema y paridad Unicode).
+    - Enlaces Documentales (`validate_documentation_links.ps1`): PASS.
+    - Agent Skills (`validate_agent_skills.py`): PASS (14/14 skills).
+- **Gobernanza:**
+  - Rama `main` intacta (0 commits, 0 merge).
+  - Producción intacta.
+  - Base de datos institucional: DML=0, DDL=0.
+  - 34 archivos locales sin seguimiento preservados intactos.
+  - Funcionalidades aprobadas de Microfase 1 y 82 campos de Matrices de Riesgos preservados sin regresiones.
+- **Punto exacto de continuación:** Microfase 2 completamente implementada, verificada y certificada a nivel global para todos los reportes del sistema. Expediente listo para revisión final y signoff por parte de Javier Mejía (`jmejia31`).

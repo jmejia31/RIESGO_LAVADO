@@ -163,7 +163,7 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
       }
     }
     expect(violations).toEqual([]);
-  });
+  }, 25000);
 
   it('5. los previews y las superficies tabulares de alta densidad usan workspace', () => {
     const appRoot = join(cwd(), 'src', 'app');

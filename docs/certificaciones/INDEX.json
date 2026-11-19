@@ -396,6 +396,26 @@
       "owner_acceptance": "PENDING_OWNER_VISUAL_REVIEW",
       "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M2-MATRIZ-COBERTURA-REPORTERIA-GLOBAL-20261118",
+      "path": "M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_GLOBAL_REPORTING_INDEPENDENCE_PASS",
+      "base_sha": "597dd22280d7d27cc434690deec3672ba0b57d2b",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md",
+      "global_coverage_points": "18/18_EXPORT_POINTS_PASS",
+      "color_independence": "ABSOLUTE_BLACK_CONTENT_ALL_MODULES_PASS",
+      "theme_independence_5_colors": "PASS_WHITE_NAVY_PINK_TURQUOISE_BLACK",
+      "ssrf_protection": "STRICT_HTTPS_ALLOWLIST_DNS_PINNING_PASS",
+      "geometry_b06": "PRESERVED_72_644MM_205_92PT_PASS",
+      "security_scan": "PASS_FULL_TREE_AUDIT_NO_VULNERABILITIES",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
+      "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }

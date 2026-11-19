@@ -16,6 +16,7 @@ import {
   writeFile,
   WorkBook
 } from './excel-export.util';
+import { setInstitutionalReportBranding } from '../reporting/institutional-report-standard';
 
 function fillColor(cell: any): string | undefined {
   return cell.fill?.type === 'pattern' ? cell.fill.fgColor?.argb : undefined;
@@ -252,4 +253,37 @@ describe('generador Excel institucional', () => {
     expect(roles.filter(role => role === 'KEY_VALUE')).toHaveLength(1);
   });
 
+  it.each([
+    { nombre: 'Blanco', rgb: [255, 255, 255] as [number, number, number] },
+    { nombre: 'Azul', rgb: [18, 59, 99] as [number, number, number] },
+    { nombre: 'Rosa', rgb: [249, 168, 212] as [number, number, number] },
+    { nombre: 'Turquesa', rgb: [167, 243, 208] as [number, number, number] },
+    { nombre: 'Negro', rgb: [0, 0, 0] as [number, number, number] }
+  ])('mantiene títulos de sección y etiquetas en negro puro (FF000000) para tema $nombre', ({ rgb }) => {
+    setInstitutionalReportBranding({ headerColor: rgb });
+    const data = [
+      ['Título del Reporte'],
+      ['SECCIÓN DE PRUEBA'],
+      ['Etiqueta Uno:', 'Valor Uno', 'Etiqueta Dos:', 'Valor Dos'],
+      ['Col A', 'Col B'],
+      ['Dato A', 'Dato B']
+    ];
+    const sheet = utils.aoa_to_sheet(data);
+    sheet['!sectionRows'] = [2];
+    sheet['!keyValueRows'] = [3];
+    sheet['!headerRows'] = [4];
+    const book = utils.book_new();
+    utils.book_append_sheet(book, sheet, 'Prueba');
+
+    const ws = construirLibroInstitucional(book).worksheets[0];
+    expect(ws.getCell('A2').font.color?.argb).toBe('FF000000');
+    expect(ws.getCell('A2').font.bold).toBe(true);
+
+    expect(ws.getCell('A3').font.color?.argb).toBe('FF000000');
+    expect(ws.getCell('A3').font.bold).toBe(true);
+    expect(ws.getCell('B3').font.color?.argb).toBe('FF000000');
+    expect(ws.getCell('B3').font.bold ?? false).toBe(false);
+    expect(ws.getCell('C3').font.color?.argb).toBe('FF000000');
+    expect(ws.getCell('C3').font.bold).toBe(true);
+  });
 });

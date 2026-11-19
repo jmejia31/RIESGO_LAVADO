@@ -218,7 +218,7 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
     const usedColumns = Math.max(1, data[rowIndex - 1]?.length ?? 1);
     for (let column = 1; column <= usedColumns; column++) {
       const cell = row.getCell(column);
-      cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: headerArgb } };
+      cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: BODY } };
       cell.alignment = { vertical: 'middle', wrapText: true };
       cell.border = {
         bottom: { style: 'thin', color: { argb: BORDER } }
@@ -239,7 +239,7 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
         name: 'Arial',
         size: 10,
         bold: esEtiqueta,
-        color: { argb: esEtiqueta ? headerArgb : BODY }
+        color: { argb: BODY }
       };
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
       cell.border = bordeInstitucional();

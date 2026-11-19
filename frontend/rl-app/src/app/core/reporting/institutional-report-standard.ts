@@ -2,7 +2,11 @@ export const INSTITUTIONAL_REPORT_COLORS = {
   navy: [18, 59, 99] as [number, number, number],
   navyDark: [11, 46, 79] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
+  black: [0, 0, 0] as [number, number, number],
   body: [0, 0, 0] as [number, number, number],
+  sectionTitle: [0, 0, 0] as [number, number, number],
+  label: [0, 0, 0] as [number, number, number],
+  tableBodyForeground: [0, 0, 0] as [number, number, number],
   muted: [100, 116, 139] as [number, number, number],
   alternate: [243, 246, 249] as [number, number, number],
   border: [216, 224, 232] as [number, number, number],
@@ -13,7 +17,11 @@ export const INSTITUTIONAL_REPORT_COLORS = {
 export const INSTITUTIONAL_REPORT_EXCEL_COLORS = {
   navy: 'FF123B63',
   white: 'FFFFFFFF',
+  black: 'FF000000',
   body: 'FF000000',
+  sectionTitle: 'FF000000',
+  label: 'FF000000',
+  tableBodyForeground: 'FF000000',
   alternate: 'FFF3F6F9',
   border: 'FFD8E0E8'
 } as const;

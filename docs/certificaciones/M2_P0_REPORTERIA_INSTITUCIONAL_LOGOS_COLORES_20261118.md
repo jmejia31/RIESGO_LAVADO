@@ -95,12 +95,13 @@ Todas las verificaciones fueron ejecutadas en esta intervención con resultados 
 | **Pruebas de Independencia de Color y SSRF** | `dotnet test --filter "InstitutionalColorIndependenceTests|InstitutionalLogoDownloaderTests"` | **61/61 PASS (0 errores)** |
 | **Pruebas de Reportería Institucional** | `dotnet test --filter "FullyQualifiedName~Institutional"` | **154/154 PASS (0 errores, 1 skip XE)** |
 | **Pruebas Unitarias de Backend** | `dotnet test --filter "FullyQualifiedName!~OracleIntegration&FullyQualifiedName!~RepositoryIntegrationTests&FullyQualifiedName!~SyntheticPurge"` | **1,246/1,246 PASS (0 errores)** |
-| **Frontend Tests** | `npm test -- --watch=false` | **1,033/1,033 PASS (96 suites)** |
+| **Frontend Tests** | `npm test -- --watch=false` | **1,044/1,044 PASS (96 suites)** |
 | **Frontend Build (Producción)** | `npm run build` | **PASS (0 errores)** |
-| **Estructura del Repositorio** | `validate_repository_structure.ps1` | **PASS (118 rutas, 1,289 archivos, 3 maestros SQL)** |
+| **Estructura del Repositorio** | `validate_repository_structure.ps1` | **PASS (118 rutas, 1,296 archivos, 3 maestros SQL)** |
 | **Scripts de Base de Datos** | `validate_database_scripts.ps1` | **PASS (Paridad de esquemas y Unicode)** |
-| **Enlaces de Documentación** | `validate_documentation_links.ps1` | **PASS (253 docs Markdown, 266 enlaces)** |
+| **Enlaces de Documentación** | `validate_documentation_links.ps1` | **PASS (256 docs Markdown, 275 enlaces)** |
 | **Agent Skills** | `python tools/validate_agent_skills.py` | **PASS (14 skills válidas)** |
+| **Matriz Global Transversal M2** | [`M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md`](M2_MATRIZ_COBERTURA_REPORTERIA_GLOBAL_20261118.md) | **PASS (18/18 puntos de exportación)** |
 
 ---
 
