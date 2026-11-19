@@ -378,6 +378,24 @@
       "github_remote_verified": "YES",
       "review_ready": "CERTIFIED_FINAL",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M2-P0-REPORTERIA-INSTITUCIONAL-LOGOS-COLORES-20261118",
+      "path": "M2_P0_REPORTERIA_INSTITUCIONAL_LOGOS_COLORES_20261118.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_TECHNICALLY_READY_FOR_OWNER_VISUAL_REVIEW",
+      "base_sha": "a16a21ad358bf4f4e5ee3caaa3a15ecbb7aac6c2",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/M2_P0_REPORTERIA_INSTITUCIONAL_LOGOS_COLORES_20261118.md",
+      "security_scan": "PASS_FULL_TREE_AUDIT_NO_VULNERABILITIES",
+      "ssrf_protection": "STRICT_HTTPS_ALLOWLIST_DNS_PINNING_PASS",
+      "color_independence": "ABSOLUTE_BLACK_CONTENT_PASS",
+      "oracle_institutional_reads": "PRESERVED_EXISTING_QUERIES",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "owner_acceptance": "PENDING_OWNER_VISUAL_REVIEW",
+      "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }

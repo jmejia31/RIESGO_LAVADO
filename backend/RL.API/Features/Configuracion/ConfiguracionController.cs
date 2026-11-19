@@ -47,13 +47,22 @@ public class ConfiguracionController : ControllerBase
         }});
     }
 
-    // Only the configured image from our uploads directory can be embedded by reports.
-    // The configured image is already public; the API endpoint provides CORS-safe bytes
-    // even when branding is loaded before user login.
+    // Endpoint institucional para resolver el logotipo configurado del sistema (archivo local o URL HTTPS validada).
+    // Proporciona los bytes de imagen normalizados y seguros contra CORS para los generadores de reportes.
     [HttpGet("sistema/logo-reportes")]
     [AllowAnonymous]
-    public async Task<IActionResult> LogoReportes()
+    public async Task<IActionResult> LogoReportes([FromServices] IInstitutionalBrandingResolver? brandingResolver = null)
     {
+        if (brandingResolver is not null)
+        {
+            var snapshot = await brandingResolver.ResolveAsync(HttpContext.RequestAborted).ConfigureAwait(false);
+            if (!snapshot.HasLogo || snapshot.LogoEffectiveBytes.Length == 0)
+                return NoContent();
+
+            Response.Headers["Cache-Control"] = "no-store";
+            return File(snapshot.LogoEffectiveBytes, snapshot.LogoMimeType);
+        }
+
         if (_environment is null) return NoContent();
 
         var configuration = await _service.ObtenerConfigSistemaAsync();
@@ -114,6 +123,7 @@ public class ConfiguracionController : ControllerBase
         }
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo actualizar la configuración" });
 
+        InstitutionalBrandingResolver.ClearCache();
         return Ok(new { success = true, mensaje = "Configuración actualizada exitosamente" });
     }
 

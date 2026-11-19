@@ -19,11 +19,17 @@ public static class InstitutionalReportStandard
     public const int ExcelLogoWidthEmu = 1_485_900;
     public const int ExcelLogoMaxHeightEmu = 540_000;
 
+    public const string SectionTitleColor = "#000000";
+    public const string FilterTitleColor = "#000000";
+    public const string EvaluationTitleColor = "#000000";
+    public const string BodyTextColor = "#000000";
+    public const string KpiValueColor = "#000000";
+
     public static InstitutionalReportPalette Palette { get; } = new(
         Navy: "#123B63",
         NavyDark: "#0B2E4F",
         HeaderText: "#FFFFFF",
-        BodyText: "#1F2937",
+        BodyText: "#000000",
         AlternateRow: "#F3F6F9",
         Border: "#D8E0E8",
         Success: "#0F766E",
@@ -104,6 +110,9 @@ public sealed record InstitutionalReportPalette(
     string Muted)
 {
     public string HeaderMetadataText { get; init; } = "#DCE6F0";
+    public string SectionTitle { get; init; } = "#000000";
+    public string FilterTitle { get; init; } = "#000000";
+    public string KpiValue { get; init; } = "#000000";
 }
 
 public sealed record InstitutionalReportMetadata(

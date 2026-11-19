@@ -86,7 +86,10 @@ public sealed class InstitutionalXlsxWorkbook
             WriteEntry(archive, "xl/_rels/workbook.xml.rels", WorkbookRelationships());
             WriteEntry(archive, "xl/styles.xml", StylesXml());
             if (_branding.HasLogo)
-                WriteBinaryEntry(archive, "xl/media/image1.png", _branding.LogoPngBytes);
+            {
+                var mediaName = _branding.IsJpeg ? "image1.jpeg" : "image1.png";
+                WriteBinaryEntry(archive, $"xl/media/{mediaName}", _branding.LogoEffectiveBytes);
+            }
 
             for (var index = 0; index < _sheets.Count; index++)
             {
@@ -113,6 +116,8 @@ public sealed class InstitutionalXlsxWorkbook
                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
                "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
                "<Default Extension=\"png\" ContentType=\"image/png\"/>" +
+               "<Default Extension=\"jpeg\" ContentType=\"image/jpeg\"/>" +
+               "<Default Extension=\"jpg\" ContentType=\"image/jpeg\"/>" +
                "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>" +
                "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>" +
                "<Override PartName=\"/docProps/core.xml\" ContentType=\"application/vnd.openxmlformats-package.core-properties+xml\"/>" +
@@ -173,12 +178,12 @@ public sealed class InstitutionalXlsxWorkbook
         "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
         "<numFmts count=\"1\"><numFmt numFmtId=\"165\" formatCode=\"dd/mm/yyyy hh:mm\"/></numFmts>" +
         "<fonts count=\"8\">" +
-        $"<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.BodyText)}\"/></font>" +
+        "<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FF000000\"/></font>" +
         $"<font><b/><sz val=\"14\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderText)}\"/></font>" +
         $"<font><b/><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderText)}\"/></font>" +
-        $"<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.Navy)}\"/></font>" +
-        "<font><b/><sz val=\"8\"/><name val=\"Arial\"/><color rgb=\"FF64748B\"/></font>" +
-        $"<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.Navy)}\"/></font>" +
+        "<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"FF000000\"/></font>" +
+        "<font><b/><sz val=\"8\"/><name val=\"Arial\"/><color rgb=\"FF000000\"/></font>" +
+        "<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"FF000000\"/></font>" +
         $"<font><sz val=\"9\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderMetadataText)}\"/></font>" +
         $"<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"{Argb(_branding.Palette.HeaderText)}\"/></font>" +
         "</fonts>" +
@@ -431,11 +436,14 @@ public sealed class InstitutionalXlsxWorkbook
         $"<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing\" Target=\"../drawings/drawing{sheetNumber}.xml\"/>" +
         "</Relationships>";
 
-    private static string DrawingRelationships() =>
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
-        "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\" Target=\"../media/image1.png\"/>" +
-        "</Relationships>";
+    private string DrawingRelationships()
+    {
+        var mediaName = _branding.IsJpeg ? "image1.jpeg" : "image1.png";
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+               "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+               $"<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\" Target=\"../media/{mediaName}\"/>" +
+               "</Relationships>";
+    }
 
     private string DrawingXml(InstitutionalXlsxSheet sheet, int sheetNumber)
     {

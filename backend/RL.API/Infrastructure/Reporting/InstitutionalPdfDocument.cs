@@ -64,7 +64,7 @@ public sealed class InstitutionalPdfDocument
             _current.CursorY += topSpacing;
 
         DrawText(Sanitizar(title).ToUpperInvariant(), MarginLeft, _current.CursorY, 11m, bold: true,
-            _branding.Palette.Navy);
+            "#000000");
         _current.CursorY += 15m;
         DrawLine(MarginLeft, _current.CursorY, _pageWidth - MarginRight, _current.CursorY,
             _branding.Palette.Border, 0.7m);
@@ -78,7 +78,7 @@ public sealed class InstitutionalPdfDocument
         var height = Math.Max(DefaultLineHeight, lines.Count * DefaultLineHeight) + 4m;
         AsegurarEspacio(height);
         DrawLines(lines, MarginLeft, _current.CursorY, 9m, DefaultLineHeight,
-            _branding.Palette.BodyText);
+            "#000000");
         _current.CursorY += height;
     }
 
@@ -104,7 +104,7 @@ public sealed class InstitutionalPdfDocument
             DrawText(Sanitizar(data[index].Label).ToUpperInvariant(), x + 8m, y + 16m, 7.5m, true,
                 _branding.Palette.Muted);
             DrawText(Sanitizar(data[index].Value), x + 8m, y + 37m, 16m, true,
-                _branding.Palette.Navy);
+                "#000000");
         }
 
         _current.CursorY += totalHeight + 8m;
@@ -140,9 +140,9 @@ public sealed class InstitutionalPdfDocument
                 if (col >= rowItems.Count) continue;
                 var labels = wrappedLabels[col].Select(label => preserveLabelCase ? label : label.ToUpperInvariant()).ToArray();
                 DrawLines(labels, x + 7m, _current.CursorY + 10m, 7m, 8m,
-                    _branding.Palette.Muted, bold: true);
+                    "#000000", bold: true);
                 DrawLines(wrappedValues[col], x + 7m, _current.CursorY + 10m + labels.Length * 8m, 8.5m, 10m,
-                    _branding.Palette.BodyText);
+                    "#000000");
             }
 
             _current.CursorY += rowHeight;
@@ -209,7 +209,7 @@ public sealed class InstitutionalPdfDocument
                     _branding.Palette.Border);
                 var lines = Wrap(normalized[col], widths[col] - padding * 2, fontSize);
                 DrawLines(lines, x + padding, _current.CursorY + padding + fontSize, fontSize,
-                    fontSize + 2m, _branding.Palette.BodyText);
+                    fontSize + 2m, "#000000");
                 x += widths[col];
             }
             _current.CursorY += rowHeight;
@@ -310,7 +310,7 @@ public sealed class InstitutionalPdfDocument
         var institutionLines = Wrap(_branding.InstitutionName, leftWidth, 10m).Count;
         var titleLines = Wrap(_title, leftWidth, 15m).Count;
         var metadataLines = Wrap($"{_branding.SystemName} · {_module}\nGenerado: {_generatedAt.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", leftWidth, 8m).Count;
-        var logoHeight = _branding.HasLogo ? InstitutionalReportStandard.PdfLogoMaxHeightPoints : 0m;
+        var logoHeight = InstitutionalReportStandard.PdfLogoMaxHeightPoints;
         var metadataBottom = 36m + titleLines * 16m + 5m + metadataLines * 11m;
         var textHeight = Math.Max(
             20m + institutionLines * 11m + 8m + titleLines * 16m,
@@ -469,19 +469,32 @@ public sealed class InstitutionalPdfDocument
 
     private byte[] BuildPdfLogoObject()
     {
+        if (_branding.IsJpeg)
+        {
+            var jpegBytes = _branding.LogoEffectiveBytes;
+            var header = Encoding.ASCII.GetBytes(FormattableString.Invariant(
+                $"<< /Type /XObject /Subtype /Image /Width {_branding.LogoWidth} /Height {_branding.LogoHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length {jpegBytes.Length} >>\nstream\n"));
+            var footer = Encoding.ASCII.GetBytes("\nendstream");
+            using var outStream = new MemoryStream(header.Length + jpegBytes.Length + footer.Length);
+            outStream.Write(header, 0, header.Length);
+            outStream.Write(jpegBytes, 0, jpegBytes.Length);
+            outStream.Write(footer, 0, footer.Length);
+            return outStream.ToArray();
+        }
+
         var logo = (_branding.LogoRgb, _branding.LogoWidth, _branding.LogoHeight);
         using var compressed = new MemoryStream();
         using (var deflate = new ZLibStream(compressed, CompressionLevel.Optimal, leaveOpen: true))
             deflate.Write(logo.LogoRgb, 0, logo.LogoRgb.Length);
 
-        var header = Encoding.ASCII.GetBytes(FormattableString.Invariant(
+        var headerBytes = Encoding.ASCII.GetBytes(FormattableString.Invariant(
             $"<< /Type /XObject /Subtype /Image /Width {logo.LogoWidth} /Height {logo.LogoHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length {compressed.Length} >>\nstream\n"));
-        var footer = Encoding.ASCII.GetBytes("\nendstream");
-        using var output = new MemoryStream(header.Length + (int)compressed.Length + footer.Length);
-        output.Write(header, 0, header.Length);
+        var footerBytes = Encoding.ASCII.GetBytes("\nendstream");
+        using var output = new MemoryStream(headerBytes.Length + (int)compressed.Length + footerBytes.Length);
+        output.Write(headerBytes, 0, headerBytes.Length);
         compressed.Position = 0;
         compressed.CopyTo(output);
-        output.Write(footer, 0, footer.Length);
+        output.Write(footerBytes, 0, footerBytes.Length);
         return output.ToArray();
     }
 

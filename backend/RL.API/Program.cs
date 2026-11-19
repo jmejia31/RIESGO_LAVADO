@@ -228,6 +228,7 @@ builder.Services.AddScoped<IMatricesRiesgosGestionService, MatricesRiesgosGestio
 builder.Services.AddScoped<IMatricesRiesgosMitigacionService, MatricesRiesgosMitigacionService>();
 builder.Services.AddScoped<IMatricesRiesgosMonitoreoService, MatricesRiesgosMonitoreoService>();
 builder.Services.AddScoped<ICalculoConfiguracionService, CalculoConfiguracionService>();
+builder.Services.AddScoped<IInstitutionalLogoDownloader, InstitutionalLogoDownloader>();
 builder.Services.AddScoped<IInstitutionalBrandingResolver, InstitutionalBrandingResolver>();
 builder.Services.AddScoped<IMatricesRiesgosReportExportService, MatricesRiesgosReportExportService>();
 

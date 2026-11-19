@@ -17,27 +17,60 @@ public sealed record InstitutionalBrandingSnapshot(
     int LogoWidth,
     int LogoHeight,
     InstitutionalReportPalette Palette,
-    string Source)
+    string Source,
+    string LogoMimeType = "image/png",
+    byte[]? LogoRawBytes = null)
 {
-    public bool HasLogo => LogoPngBytes.Length > 0 && LogoRgb.Length > 0 && LogoWidth > 0 && LogoHeight > 0;
+    public bool HasLogo => LogoWidth > 0 && LogoHeight > 0 && (LogoRgb.Length > 0 || IsJpeg);
     public decimal LogoAspectRatio => HasLogo ? LogoWidth / (decimal)LogoHeight : 1m;
+    public bool IsJpeg => string.Equals(LogoMimeType, "image/jpeg", StringComparison.OrdinalIgnoreCase);
+    public bool IsPng => !IsJpeg && HasLogo;
+    public byte[] LogoEffectiveBytes => (LogoRawBytes != null && LogoRawBytes.Length > 0) ? LogoRawBytes : LogoPngBytes;
 
     public static InstitutionalBrandingSnapshot Canonical { get; } = CreateCanonical();
 
     public static InstitutionalBrandingSnapshot FromImage(
         byte[] bytes,
-        string institutionName,
-        string systemName,
+        string? institutionName,
+        string? systemName,
         string logoUrl,
         string headerColor,
         string source)
     {
-        if (bytes.Length == 0) throw new InvalidDataException("El logo institucional está vacío.");
-        var decoded = InstitutionalPngDecoder.DecodePngForBranding(bytes);
-        if (decoded.Width is < 32 or > 4096 || decoded.Height is < 16 or > 4096)
+        if (bytes == null || bytes.Length == 0) throw new InvalidDataException("El logo institucional está vacío.");
+
+        var isPng = bytes.Length >= 8 && bytes[0] == 137 && bytes[1] == 80 && bytes[2] == 78 && bytes[3] == 71;
+        var isJpeg = bytes.Length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
+
+        if (!isPng && !isJpeg)
+            throw new InvalidOperationException("La imagen configurada no es un PNG ni un JPEG válido.");
+
+        int width, height;
+        byte[] rgb;
+        string mimeType;
+
+        if (isPng)
+        {
+            var decoded = InstitutionalPngDecoder.DecodePngForBranding(bytes);
+            width = decoded.Width;
+            height = decoded.Height;
+            rgb = decoded.Rgb;
+            mimeType = "image/png";
+        }
+        else
+        {
+            var dims = InstitutionalJpegInspector.InspectJpeg(bytes);
+            width = dims.Width;
+            height = dims.Height;
+            rgb = Array.Empty<byte>();
+            mimeType = "image/jpeg";
+        }
+
+        if (width is < 32 or > 4096 || height is < 16 or > 4096)
             throw new InvalidDataException("Las dimensiones del logo institucional no están permitidas.");
-        if ((long)decoded.Width * decoded.Height > 16_777_216)
+        if ((long)width * height > 16_777_216)
             throw new InvalidDataException("El logo institucional supera el límite de píxeles permitido.");
+
         var palette = InstitutionalReportStandard.CreatePalette(headerColor);
         return new InstitutionalBrandingSnapshot(
             string.IsNullOrWhiteSpace(institutionName) ? InstitutionalReportStandard.InstitutionName : institutionName.Trim(),
@@ -45,11 +78,13 @@ public sealed record InstitutionalBrandingSnapshot(
             logoUrl,
             Convert.ToHexString(SHA256.HashData(bytes)),
             bytes.ToArray(),
-            decoded.Rgb,
-            decoded.Width,
-            decoded.Height,
+            rgb,
+            width,
+            height,
             palette,
-            source);
+            source,
+            mimeType,
+            bytes.ToArray());
     }
 
     private static InstitutionalBrandingSnapshot CreateCanonical() => new(
@@ -62,8 +97,9 @@ public sealed record InstitutionalBrandingSnapshot(
         0,
         0,
         InstitutionalReportStandard.Palette,
-        "not-configured");
-
+        "not-configured",
+        "image/png",
+        Array.Empty<byte>());
 }
 
 public interface IInstitutionalBrandingResolver

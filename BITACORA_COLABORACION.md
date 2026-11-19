@@ -11939,3 +11939,47 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Seguridad:** `main` intacta; producción intacta; Oracle/DNP escrituras 0; no modificación funcional; los archivos locales ajenos no se tocaron desde esta conexión GitHub.
 - **Punto siguiente:** determinar alcance y criterios de Microfase 2; no confundir con Fase 2A histórica, B07 o Bloque 10.
 
+## Intervención P0 — Microfase 2: Reportería institucional, logotipos seguros SSRF, independencia de color y paridad PDF/Excel — 2026-11-18 19:40 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=a16a21ad358bf4f4e5ee3caaa3a15ecbb7aac6c2`
+- **Objetivos obligatorios cumplidos:**
+  1. **Independencia absoluta de color de contenido:**
+     - Corregido de raíz el defecto visual reportado en la captura de Vista previa del reporte consolidado de matrices de riesgo (`media_1795050915559_b310c573.jpg`), donde `FILTROS APLICADOS` y `ROTR-AFIL-1 — EVALUACIÓN 29` se renderizaban en turquesa claro sobre fondo blanco al heredar `_branding.Palette.Navy`.
+     - Todo texto de contenido sobre fondo blanco en `InstitutionalPdfDocument.cs` (`AddSection`, `AddParagraph`, `AddKeyValueGrid`, `AddKpis`, `AddTable`) se forzó a negro institucional `#000000` con `font-weight: bold` en títulos y etiquetas.
+     - En `InstitutionalXlsxWorkbook.cs`, las fuentes de sección y KPI en `xl/styles.xml` (Font 0, Font 3, Font 4, Font 5) se configuraron con `rgb="FF000000"`.
+     - En frontend (`institutional-report-standard.ts` y `institutional-report.util.ts`), colores de cuerpo y filtros fijados en negro `[0, 0, 0]` y `FF000000`.
+  2. **Descarga segura de logotipos HTTPS con blindaje SSRF:**
+     - Implementado `InstitutionalLogoDownloader.cs` con esquema estricto HTTPS (puerto 443), prohibición de credenciales de usuario y de direcciones IP literales.
+     - Validación contra lista blanca institucional (`Reporting:AllowedLogoDomains` = `ihss.hn`, `sgrla.ihss.hn`, `www.ihss.hn`).
+     - Resolución DNS con exclusión estricta de loopback, redes privadas RFC 1918 (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), enlace local / metadatos cloud (`169.254.169.254`, `fe80::/10`), CGNAT (`100.64.0.0/10`), ULA (`fc00::/7`) y multicast.
+     - Protección contra DNS Rebinding fijando la IP validada en el socket (`SocketsHttpHandler.ConnectCallback`) y desactivando redirecciones automáticas (`AllowAutoRedirect = false`).
+     - Límite de payload de 2 MB y timeout estricto de 5 segundos.
+  3. **Inspector nativo de imágenes JPEG:**
+     - Implementado `InstitutionalJpegInspector.cs` (100% C# administrado, compatible Linux CI), inspeccionando marcadores SOI, APP0 y SOF0/SOF1/SOF2 para validar dimensiones y relación de aspecto B06 sin dependencias de plataforma.
+     - Soporte en PDF nativo (`/Filter /DCTDecode` para JPEG, `/Filter /FlateDecode` para PNG).
+     - Soporte en Excel OpenXML (`image1.jpeg` o `image1.png`, ContentTypes y drawing relationships actualizados).
+  4. **Geometría B06 preservada:**
+     - Ancho canónico del logo de 72.644 mm (205.92 pt).
+     - Altura fija de encabezado calculada con la constante estándar compartida (90.72 pt en PDF), inmune a la presencia o ausencia de logotipo.
+  5. **Invalidación reactiva de caché:**
+     - Método `ClearCache()` en `InstitutionalBrandingResolver`, invocado automáticamente en `GuardarSistema()` de `ConfiguracionController`.
+  6. **Paridad e integridad documental:**
+     - Matriz Consolidada de Riesgos conserva sus 82 campos oficiales intactos y ordenados.
+     - Monitoreo de Listas preserva su clasificación, tarjetas y filtros certificados en Microfase 1.
+- **Verificación técnica integral:**
+  - Backend Build: Release PASS (0 errores).
+  - Pruebas de Independencia de Color y SSRF (`InstitutionalColorIndependenceTests` + `InstitutionalLogoDownloaderTests`): 61/61 PASS.
+  - Pruebas de Reportería Institucional (`FullyQualifiedName~Institutional`): 154/154 PASS.
+  - Pruebas Unitarias de Backend: 1,246/1,246 PASS.
+  - Angular Vitest: 96 suites PASS, 1,033 tests PASS.
+  - Angular Production Build (`npm run build`): PASS (0 errores).
+  - Validadores: Estructura (118 rutas, 1289 archivos, 3 maestros SQL), Scripts BD, Enlaces Documentales (253 docs, 266 links) y Agent Skills (14/14 skills) todos PASS.
+- **Gobernanza:**
+  - Rama `main` intacta (0 commits, 0 merge).
+  - Producción intacta.
+  - Oracle institucional: DML=0, DDL=0 (solo lectura 100%).
+  - 34 archivos sin seguimiento locales preservados intactos.
+  - Expediente publicado: `docs/certificaciones/M2_P0_REPORTERIA_INSTITUCIONAL_LOGOS_COLORES_20261118.md` e indexado en `docs/certificaciones/INDEX.json`.
+- **Punto exacto de continuación:** Microfase 2 implementada y certificada técnicamente. Lista para revisión visual y aceptación final por parte de Javier Mejía (`jmejia31`).
+>>>>>>> d9d4e9d4 (feat(reporting): reporteria institucional logotipos seguros ssrf independencia de color y paridad pdf excel M2 (ANTIG))

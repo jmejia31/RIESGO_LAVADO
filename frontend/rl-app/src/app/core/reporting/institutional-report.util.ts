@@ -154,7 +154,7 @@ export function agregarEncabezadoInstitucionalPdf(
   const filterHeight = Math.max(14, 7 + filterLines.length * 4.2);
   doc.setFillColor(...COLORES_REPORTE_INSTITUCIONAL.filterBackground);
   doc.roundedRect(margin, headerHeight + 7, width - margin * 2, filterHeight, 2, 2, 'F');
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(...COLORES_REPORTE_INSTITUCIONAL.filterText);
   doc.text(filterLines, margin + 5, headerHeight + 7 + 7);
