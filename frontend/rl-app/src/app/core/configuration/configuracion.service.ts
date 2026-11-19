@@ -50,15 +50,19 @@ export class ConfiguracionService {
           if (!cfg.timeoutSesion || cfg.timeoutSesion <= 0) cfg.timeoutSesion = 30;
           return cfg;
         }),
+        tap(cfg => {
+          if (operacionActual < this.secuenciaOperacion) return;
+          this.configSistema.set(cfg);
+          this.aplicarTemaSistema(cfg);
+          this.aplicarMetadatosNavegador(cfg);
+        }),
         switchMap(cfg => this.prepararLogoReporte(cfg).pipe(
           tap(logo => {
             if (operacionActual < this.secuenciaOperacion) return;
-            this.configSistema.set(cfg);
-            this.aplicarTemaSistema(cfg);
             this.aplicarBrandingReportes(cfg, logo);
-            this.aplicarMetadatosNavegador(cfg);
           }),
-          map(() => cfg)
+          map(() => cfg),
+          catchError(() => of(cfg))
         ))
       );
   }
@@ -78,15 +82,19 @@ export class ConfiguracionService {
       context: createHttpErrorScopeContext('local')
     })
       .pipe(
+        tap(() => {
+          if (operacionActual < this.secuenciaOperacion) return;
+          this.configSistema.set(config);
+          this.aplicarTemaSistema(config);
+          this.aplicarMetadatosNavegador(config);
+        }),
         switchMap(response => this.prepararLogoReporte(config).pipe(
           tap(logo => {
             if (operacionActual < this.secuenciaOperacion) return;
-            this.configSistema.set(config);
-            this.aplicarTemaSistema(config);
             this.aplicarBrandingReportes(config, logo);
-            this.aplicarMetadatosNavegador(config);
           }),
-          map(() => response)
+          map(() => response),
+          catchError(() => of(response))
         ))
       );
   }

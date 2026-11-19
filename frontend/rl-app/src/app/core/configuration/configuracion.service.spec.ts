@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { vi } from 'vitest';
+import { throwError } from 'rxjs';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
@@ -375,5 +376,33 @@ describe('ConfiguracionService', () => {
 
     const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]');
     expect(links.length).toBe(1);
+  });
+
+  it('desacopla metadatos web (titulo y favicon) del logo de reporteria ante fallo o retardo en el logo', () => {
+    // Simulamos fallo en prepararLogoReporte
+    vi.spyOn(service as any, 'prepararLogoReporte').mockReturnValue(
+      throwError(() => new Error('Fallo de red en logo'))
+    );
+
+    let resultado: ConfigSistema | undefined;
+    service.CargarConfiguracion().subscribe(val => resultado = val);
+
+    http.expectOne('http://localhost:5043/api/configuracion/sistema').flush({
+      success: true,
+      datos: {
+        nombreInstitucion: 'IHSS',
+        nombreSistema: 'Sistema Resiliente',
+        iconoUrl: '/uploads/icono-desacoplado.png',
+        logoUrl: '/uploads/logo-falla.png',
+        timeoutSesion: 30
+      }
+    });
+
+    // Verificamos que el título y favicon se aplicaron inmediatamente a pesar del fallo en el logo
+    expect(document.title).toBe('Sistema Resiliente | Gestión de Riesgos LA/FT');
+    const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]');
+    expect(links.length).toBe(1);
+    expect(links[0].href).toContain('/api/configuracion/sistema/favicon?v=');
+    expect(resultado?.nombreSistema).toBe('Sistema Resiliente');
   });
 });

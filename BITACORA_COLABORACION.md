@@ -12167,3 +12167,42 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - `index.html`: Preservado limpio como fallback de arranque.
   - Cero regresiones en Microfase 1, Microfase 2 y Matrices de Riesgos (82 campos canónicos).
 - **Punto exacto de continuación:** Intervención concluida y certificada. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.
+
+---
+
+### Registro 2026-11-19 — ANTIG (Antigravity) — Microfase 3 P0: Endurecimiento de Favicon, Desacoplamiento de Metadatos y Pruebas Reales QA
+
+- **Fecha:** 2026-11-19.
+- **Autor:** ANTIG (Antigravity).
+- **Rama:** `desarrollo`.
+- **SHA base certificado:** `dc945d58a0f99db4a9f700f1467b969b5f88b122`.
+- **Quality Gate base:** `44567146527` (`completed / success`).
+- **Respaldo creado y verificado:** `respaldo/desarrollo-pre-m3-favicon-hardening-20261119-dc945d58` (confirmado en `origin`).
+- **Objetivo:** Resolver los tres hallazgos de auditoría sobre la Microfase 3 (M3):
+  1. HALLAZGO P0-01: Endurecimiento estructural de `InstitutionalFaviconValidator.cs` con cálculo CRC-32 (IEEE 802.3), parsers binarios estrictos para PNG, JPEG, ICO, GIF, WebP y fixtures reales con 12 casos negativos en `FaviconEndpointTests.cs`.
+  2. HALLAZGO P0-02: Cobertura Playwright integral en `e2e/institutional-title-favicon.spec.ts` con cambio real en caliente sin recarga (`TITULO_A -> TITULO_B`, `ICONO_A -> ICONO_B`), persistencia tras `page.reload()`, restablecimiento a `favicon.ico` al eliminar el icono y resiliencia ante fallo de logo.
+  3. HALLAZGO P0-03: Desacoplamiento temporal en `configuracion.service.ts` para aplicar inmediatamente de forma síncrona los metadatos web (título y favicon) sin esperar la preparación asíncrona del logo de reportes ni ser bloqueado ante fallo en el mismo.
+- **Archivos creados o modificados:**
+  - `backend/RL.API/Infrastructure/Reporting/InstitutionalFaviconValidator.cs` (reescritura con CRC32 y parsers estructurales estrictos sin truncamientos).
+  - `backend/RL.API.Tests/Features/Configuracion/FaviconEndpointTests.cs` (fixtures binarios reales, fakes desacoplados y 12 casos negativos de seguridad).
+  - `frontend/rl-app/src/app/core/configuration/configuracion.service.ts` (desacoplamiento síncrono de metadatos web y manejo resiliente de errores en logo de reportería).
+  - `frontend/rl-app/src/app/core/configuration/configuracion.service.spec.ts` (prueba unitaria de desacoplamiento e independencia ante fallos en logo).
+  - `frontend/rl-app/e2e/institutional-title-favicon.spec.ts` (4 pruebas E2E completas con hot swap, confirmación institucional y persistencia).
+  - `docs/certificaciones/M3_P0_HARDENING_FAVICON_QA_REAL_20261119.md` (expediente de certificación técnica).
+  - `docs/certificaciones/INDEX.json` (registro `M3-P0-HARDENING-FAVICON-QA-REAL-20261119`).
+  - `BITACORA_COLABORACION.md` (actualizado).
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (actualizado).
+- **Pruebas ejecutadas y conteos reales:**
+  - Backend unitario: 27 pruebas de favicon en `FaviconEndpointTests.cs` superadas (27/27 PASS, 100%).
+  - Backend completo: 1,277 pruebas en `RL.API.Tests` superadas (1,277/1,277 PASS, 0 fallidas, 0 omitidas).
+  - Frontend Vitest: 96 archivos de prueba superados (96/96), 1,056 pruebas unitarias superadas (1,056/1,056 PASS, 100%).
+  - Frontend Lint: ESLint con 0 errores y 0 advertencias.
+  - Frontend Build: Compilación de producción en `dist/rl-app` finalizada con código de salida 0.
+  - Playwright E2E: 4 pruebas en `e2e/institutional-title-favicon.spec.ts` superadas (4/4 PASS, 100%).
+  - Validadores: `validate_dynamic_system_theme.js` (PASS), `validate_no_native_dialogs.js` (PASS), `validate_repository_structure.ps1` (PASS), `validate_database_scripts.ps1` (PASS), `validate_documentation_links.ps1` (PASS), `validate_agent_skills.py` (PASS).
+- **Gobernanza y restricciones:**
+  - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+  - Rama `main`: Intacta (0 modificaciones).
+  - Archivos locales sin seguimiento: 34 archivos preservados intactos fuera del stage de Git.
+  - Cero regresiones en Microfase 1, Microfase 2 y Matrices de Riesgos (82 campos canónicos).
+- **Punto exacto de continuación:** Intervención concluida y certificada técnicamente al 100%. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.

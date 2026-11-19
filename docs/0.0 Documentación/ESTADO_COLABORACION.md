@@ -1,4 +1,48 @@
-# Estado vigente — Microfase 3 (M3): Parametrización Dinámica del Título del Navegador y Favicon Institucional (ANTIG) — 2026-11-19 10:00 -06:00
+# Estado vigente — Microfase 3 (M3): Endurecimiento de Favicon, Desacoplamiento de Metadatos y QA Real (ANTIG) — 2026-11-19 11:30 -06:00
+
+## Estado vigente — Certificación Técnica Microfase 3 (M3): Endurecimiento de Favicon, Desacoplamiento y Pruebas Reales E2E
+
+- Se completó la intervención correctiva P0 de **Microfase 3 (M3)**, resolviendo de forma integral los tres hallazgos auditados en la identidad institucional del navegador:
+  1. **HALLAZGO P0-01 (Endurecimiento binario y validación estructural de imágenes):**
+     - Reescribe `InstitutionalFaviconValidator.cs` con cálculo CRC-32 (IEEE 802.3 precalculado de 256 entradas).
+     - Validación estructural completa para PNG (firma canónica, recorrido estricto chunk por chunk con verificación matemática de CRC, IHDR obligatorio de 13 bytes en primer chunk, IDAT no vacío, IEND con longitud 0, rechazo de streams truncados o corruptos).
+     - Validación estructural completa para JPEG (SOI `FF D8`, segmentos SOF0/1/2 para dimensiones 16..2048 px y precisión 8 bits, SOS y marcador final obligatorio EOI `FF D9`).
+     - Validación estructural completa para ICO (ICONDIR, conteo 1..256, límites y ausencia de traslape malicioso en `imageOffset` y `bytesInRes`, payload verificado como PNG completo o DIB/BITMAPINFOHEADER canónico).
+     - Validación estructural completa para GIF (GIF87a/89a, Logical Screen Descriptor 16..2048 px, Image Descriptor `0x2C`, terminador Trailer `0x3B`).
+     - Validación estructural completa para WebP (RIFF, longitud coincidente, WEBP, decodificación real sin inventar dimensiones para VP8, VP8L y VP8X).
+     - Límites perimetrales: tamaño máximo 2 MB, dimensiones 16..2048 px, área máxima 4,194,304 px.
+     - En `FaviconEndpointTests.cs`, fakes desacoplados, generadores de fixtures reales decodificables y 12 casos negativos (`FV-01` a `FV-12`) cubriendo todos los vectores de corrupción y desborde (27/27 PASS).
+  2. **HALLAZGO P0-02 (Cobertura Playwright E2E con hot swap real y persistencia):**
+     - Suite Playwright en `frontend/rl-app/e2e/institutional-title-favicon.spec.ts` con 4 pruebas completas (100% PASS, 0 fallos, 0 flaky).
+     - Valida ruta pública `/login` aplicando título y favicon del backend.
+     - Valida cambio en caliente interactivo (`TITULO_A -> TITULO_B` e `ICONO_A -> ICONO_B`) sin recarga de página (`ANGULAR_RESTART_REQUIRED=NO`) confirmando en el modal institucional.
+     - Valida persistencia de título y favicon tras recarga del navegador (`page.reload()`).
+     - Valida restablecimiento inmediato a `favicon.ico` (con tipo `image/x-icon`) al eliminar el icono y persistencia tras recarga.
+     - Valida fallback seguro de título `SGRLA-IHSS | Gestión de Riesgos LA/FT` cuando el nombre contiene solo espacios en blanco.
+  3. **HALLAZGO P0-03 (Desacoplamiento temporal de metadatos web respecto al logo de reportería):**
+     - En `configuracion.service.ts`, `CargarConfiguracion` y `GuardarConfiguracion` aplican de forma inmediata y síncrona en `tap` el título (`aplicarTituloInstitucional`) y el favicon (`aplicarFaviconInstitucional`) tan pronto como el backend responde.
+     - La preparación del logo de reportería (`prepararLogoReporte`) se ejecuta asíncronamente en `switchMap` protegido con `catchError(() => of(...))`, garantizando que retrasos o fallos HTTP 500 en el logo nunca demoren ni bloqueen el título o favicon.
+     - Conserva exactamente 2 llamadas a `this.aplicarTemaSistema(` cumpliendo la regla institucional de `tools/validate_dynamic_system_theme.js`.
+     - Prueba unitaria en `configuracion.service.spec.ts` y prueba E2E en Playwright validando independencia total ante fallos de reportería.
+  4. **Verificación y Suites Ejecutadas:**
+     - Backend: 27 pruebas de favicon en `FaviconEndpointTests.cs` (27/27 PASS), suite completa `RL.API.Tests` (1,277/1,277 PASS sin integración Oracle XE local).
+     - Frontend Vitest: 24 pruebas en `configuracion.service.spec.ts` (24/24 PASS), suite completa frontend (96/96 suites, 1,056/1,056 PASS).
+     - Frontend Lint: ESLint con 0 errores y 0 advertencias.
+     - Frontend Build: Compilación de producción en `dist/rl-app` finalizada con código de salida 0.
+     - Playwright E2E UI: 4 pruebas en `e2e/institutional-title-favicon.spec.ts` (4/4 PASS).
+     - Validadores del repositorio: Estructura (118 rutas, 1,304 archivos PASS), scripts BD (PASS), enlaces Markdown (PASS), Agent Skills (14/14 PASS), tema dinámico (PASS), diálogos nativos (PASS).
+  5. **Preservación Integral:**
+     - Cero regresiones en Microfase 1 (DNI agrupado, 5 tarjetas métricas, guardas de motivo, seguimientos).
+     - Cero regresiones en Microfase 2 (18 puntos de exportación, texto negro institucional `#000000`, geometría B06).
+     - Matrices de Riesgos (82 campos canónicos) intactas.
+     - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+     - Rama `main` y producción intactas.
+     - Respaldo verificado: `respaldo/desarrollo-pre-m3-favicon-hardening-20261119-dc945d58` en `dc945d58a0f99db4a9f700f1467b969b5f88b122`.
+- **Punto exacto de continuación:** Intervención concluida y certificada técnicamente al 100%. Publicar cambios en `origin/desarrollo` y verificar Quality Gate en GitHub Actions.
+
+---
+
+# Estado previo — Microfase 3 (M3): Parametrización Dinámica del Título del Navegador y Favicon Institucional (ANTIG) — 2026-11-19 10:00 -06:00
 
 ## Estado vigente — Certificación Técnica Microfase 3 (M3): Título y Favicon Dinámicos Institucionales P0
 
