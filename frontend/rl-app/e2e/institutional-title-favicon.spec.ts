@@ -398,17 +398,26 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
 
     await page.goto('/configuracion');
 
+    // Esperar a que la configuración inicial esté cargada
+    await expect(page.locator('input[formcontrolname="nombreSistema"]')).toHaveValue('SGRLA-IHSS');
+
     // 1. Localizar el selector de archivo de carga de favicon institucional
     const faviconUploaderSection = page.locator('section').filter({ hasText: 'Cargar favicon institucional' });
     await expect(faviconUploaderSection).toBeVisible();
     const fileInput = faviconUploaderSection.locator('input[type="file"]');
+    const uploadBtn = faviconUploaderSection.locator('button').first();
+    await expect(uploadBtn).toBeEnabled();
 
-    // 2. Cargar archivo local (simulado con buffer PNG)
+    // 2. Cargar archivo local (simulado con buffer PNG) y esperar respuesta del endpoint de subida
+    const uploadPromise = page.waitForResponse(
+      resp => resp.url().includes('/api/configuracion/sistema/favicon/upload') && resp.status() === 200
+    );
     await fileInput.setInputFiles({
       name: 'nuevo-favicon-institucional.png',
       mimeType: 'image/png',
       buffer: PNG_ICON_B,
     });
+    await uploadPromise;
 
     // 3. Verificar que se activó la subida y conversión automática
     await expect.poll(() => uploadLlamado).toBe(true);
@@ -425,7 +434,10 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     await expect(page.locator('img[alt="Favicon Tab"]')).toBeVisible();
     await expect(page.locator('text=Simulación en pestaña de Chrome:')).toBeVisible();
 
-    // 7. Guardar cambios en el formulario
+    // 7. Guardar cambios en el formulario y esperar confirmación del backend
+    const savePromise = page.waitForResponse(
+      resp => resp.url().includes('/api/configuracion/sistema') && resp.request().method() === 'PUT' && resp.status() === 200
+    );
     const btnGuardar = page.locator('button[aria-label="Guardar cambios del sistema"]');
     await btnGuardar.click();
 
@@ -433,6 +445,10 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     const btnConfirmar = page.getByRole('button', { name: 'Sí, guardar' });
     await expect(btnConfirmar).toBeVisible();
     await btnConfirmar.click();
+    await savePromise;
+
+    // Verificar indicador de estado "Publicado" tras persistencia
+    await expect(page.locator('text=Publicado')).toBeVisible();
 
     // 8. Verificar que el favicon del navegador cambió en caliente (ANGULAR_RESTART_REQUIRED=NO)
     const hotSwappedFavicon = page.locator('link[rel="icon"]');
@@ -442,6 +458,7 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
 
     // 9. Verificar persistencia tras recarga
     await page.reload();
+    await expect(page.locator('input[formcontrolname="iconoUrl"]')).toHaveValue('/uploads/favicon-autocreated.ico');
     const reloadedFavicon = page.locator('link[rel="icon"]');
     await expect(reloadedFavicon).toHaveCount(1);
     const reloadedHref = await reloadedFavicon.getAttribute('href');
@@ -511,12 +528,16 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     await inputIcono.fill('https://cdn.ihss.hn/assets/favicon-direct.ico');
 
     // Guardar
+    const savePromise = page.waitForResponse(
+      resp => resp.url().includes('/api/configuracion/sistema') && resp.request().method() === 'PUT' && resp.status() === 200
+    );
     const btnGuardar = page.locator('button[aria-label="Guardar cambios del sistema"]');
     await btnGuardar.click();
 
     const btnConfirmar = page.getByRole('button', { name: 'Sí, guardar' });
     await expect(btnConfirmar).toBeVisible();
     await btnConfirmar.click();
+    await savePromise;
 
     // Verificar que se guardó iconoUrl sin tocar logoUrl
     await expect.poll(() => configPersistida?.iconoUrl).toBe('https://cdn.ihss.hn/assets/favicon-direct.ico');
