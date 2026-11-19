@@ -544,6 +544,26 @@
       "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
       "review_ready": "YES_FOR_OWNER_FINAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "B06-ACTA-CIERRE-FUNCIONAL-M1-M2-M3-20261119",
+      "path": "B06_ACTA_CIERRE_FUNCIONAL_M1_M2_M3_20261119.md",
+      "author": "CHAT",
+      "status": "CLOSED_BY_OWNER_WITH_EXPLICIT_LIMITATIONS",
+      "source_code_sha": "6e658f20a1866aa6725b2e9ff0afd93443e739ee",
+      "quality_gate_run": 44603836071,
+      "quality_gate_status": "SUCCESS",
+      "github_signoff_url": "https://github.com/jmejia31/RIESGO_LAVADO/issues/44",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/B06_ACTA_CIERRE_FUNCIONAL_M1_M2_M3_20261119.md",
+      "owner_acceptance": "APPROVED_M1_M2_M3_FAVICON_2026-11-19",
+      "oracle_9_local": "NOT_EXECUTED",
+      "oracle_xe_ci": "PASS",
+      "real_authenticated_institutional_e2e": "NOT_DEMONSTRATED",
+      "m3_new_real_pdf_excel_parity": "NOT_FULLY_DEMONSTRATED",
+      "upstream_picomatch": "OPEN_ISSUE_42",
+      "main_modified": false,
+      "production_modified": false,
+      "oracle_institutional_writes_by_signoff": 0
     }
   ]
 }

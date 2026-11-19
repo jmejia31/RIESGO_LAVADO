@@ -1,3 +1,14 @@
+# ESTADO VIGENTE — Cierre B06/M1–M3, aceptación expresa del propietario (CHAT, 2026-11-19)
+
+- **Decisión:** M1, M2, M3 y el favicon cargado por imagen **APROBADOS** por el propietario; conformidad registrada en [Acta #44](https://github.com/jmejia31/RIESGO_LAVADO/issues/44) cerrada `completed`. El propietario acepta la apariencia actual sin nuevos cambios. **B06: `CLOSED_FUNCTIONALLY_WITH_EXPLICIT_ACCEPTED_LIMITATIONS`.**
+- **CI del código actual al instante de la firma:** `desarrollo` SHA `6e658f20a1866aa6725b2e9ff0afd93443e739ee`, [Quality Gate 44603836071](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44603836071) `completed/success`, ambos jobs aprobados. Si esta documentación crea nuevo SHA, su propio Gate debe verificarse por separado.
+- **Límites que NO se convierten en PASS:** nueve pruebas Oracle XE M3 no ejecutadas localmente (sí hay pasos de QA con Oracle XE descartable en CI); E2E auténtica integral institucional **NOT_DEMONSTRATED**; nueva paridad global PDF/Excel con Oracle institucional real en M3 **NOT_FULLY_DEMONSTRATED**. Estos riesgos son **aceptados para cierre funcional**; no se declara certificación integral de despliegue.
+- **Fe de erratas M3:** 2,367 contabilizadas = 2,355 PASS + 12 SKIP/GATED + 0 FAIL; categorías frontend detallan 999 de 1,047 (48 no desglosadas), tarball picomatch correcto `frontend/rl-app/vendor/picomatch-hardened-4.0.7-rl.2.tgz`. Cambios posteriores al expediente M3 original incluyeron el favicon.
+- **Expediente formal:** `docs/certificaciones/B06_ACTA_CIERRE_FUNCIONAL_M1_M2_M3_20261119.md` (fuente documental de este dictamen), M1 [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41) y M2 [#43](https://github.com/jmejia31/RIESGO_LAVADO/issues/43) cerradas; mantenimiento upstream picomatch [Issue #42](https://github.com/jmejia31/RIESGO_LAVADO/issues/42) abierto.
+- **Operación actual:** solo certificación y documentación; `main`, producción, Oracle institucional, reglas Monitoreo, fórmulas Matrices, reportería B06 y configuración funcional se preservan. **Continuación:** verificar Quality Gate del SHA documental y no declarar PASS de una prueba no ejecutada.
+
+---
+
 # Estado vigente — M3 P0 favicon: corrección de pixeles sintéticos y vistas previas rotas (CHAT) — 2026-11-19 13:55 -06:00
 
 - La revisión visual del propietario **rechazó** el cierre funcional previo del favicon subido por archivo: la pestaña mostraba un bloque azul y las miniaturas mostraban imágenes rotas, aunque el sistema afirmaba «Publicado».

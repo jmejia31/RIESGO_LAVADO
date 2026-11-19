@@ -208,3 +208,12 @@ M3_FUNCTIONAL_CODE_CHANGES=0
 B06_TECHNICAL_STATUS=CERTIFIED_TECHNICALLY_READY_FOR_OWNER_FINAL_REVIEW
 OWNER_FINAL_ACCEPTANCE=READY_FOR_OWNER_FINAL_REVIEW
 ```
+
+
+---
+
+## ADENDA VIGENTE — aprobación y fe de erratas M3, 19/11/2026 (CHAT)
+
+El propietario **APROBÓ** expresamente M1, M2, M3 y la imagen final del favicon. Consta en [acta #44](https://github.com/jmejia31/RIESGO_LAVADO/issues/44) y [acta documental B06](B06_ACTA_CIERRE_FUNCIONAL_M1_M2_M3_20261119.md). Estado: `M3_OWNER_ACCEPTANCE=APPROVED`, `B06_FUNCTIONAL_SCOPE=CLOSED_WITH_ACCEPTED_LIMITATIONS`. La fuente de código `6e658f20a1866aa6725b2e9ff0afd93443e739ee` tiene [Quality Gate 44603836071](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44603836071) `completed/success` (2/2 jobs); el gate del nuevo commit documental será independiente.
+
+**Fe de erratas:** 2,367 controles programados = 2,355 PASS, 12 SKIP/GATED, 0 FAIL; 100% solo de los controles concluidos PASS/FAIL. En el desglose frontend se enumeran 999 de 1,047 pruebas (48 sin desglose). Tarball real: `frontend/rl-app/vendor/picomatch-hardened-4.0.7-rl.2.tgz`. Las nueve pruebas Oracle XE locales quedaron gated/no ejecutadas localmente; hay pasos de Oracle XE descartable exitosos en CI. E2E autenticada institucional integral y nueva paridad completa PDF/Excel con Oracle real en M3: **NO DEMOSTRADAS**. `FUNCTIONAL_CODE_CHANGES=0` correspondía a la intervención documental original; el SHA actual integra correcciones focalizadas posteriores de favicon. El propietario acepta estas salvedades para cierre funcional, sin que se vuelvan PASS técnicos falsos. Sustitución upstream `picomatch` continúa en Issue #42.

@@ -142,3 +142,12 @@
 
 `DICTAMEN_OPERATIVO_M3=APROBADO_TECNICAMENTE_PASS`<br/>
 `LISTO_PARA_REVISION_FINAL_PROPIETARIO=SI`
+
+
+---
+
+## ADENDA DE PRECISIÓN DE PRUEBAS — 19/11/2026 (CHAT)
+
+Los números de la matriz histórica se interpretan así: **2,367 programados/contabilizados; 2,355 PASS; 3 SKIP; 9 GATED_LOCAL_XE sin ejecución local; 0 FAIL**. Los 12 omitidos/gated **no son PASS**. Las categorías frontend detalladas suman **999** de **1,047** pruebas reportadas, por lo que **48 no tienen categoría desglosada**. No se distribuyen sin evidencia. La certificación de Oracle XE descartable en [run 44603836071](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44603836071) no implica que las nueve pruebas concretas se ejecutaran localmente.
+
+E2E autenticada **institucional integral** no demostrada; paridad PDF/Excel real completa no revalidada en M3. Estas observaciones fueron expresamente aceptadas como límites del cierre funcional por el propietario; no se marcan PASS de pruebas inexistentes. Fuente vigente: [ACTA #44](https://github.com/jmejia31/RIESGO_LAVADO/issues/44) y [acta B06](../certificaciones/B06_ACTA_CIERRE_FUNCIONAL_M1_M2_M3_20261119.md).

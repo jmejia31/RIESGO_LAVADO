@@ -68,3 +68,12 @@ Intervención limitada a B06 y a la dependencia compartida de Monitoreo de Lista
 `B06_FINAL_STATUS=READY_FOR_OWNER_FINAL_REVIEW`
 
 La evidencia técnica integral, resolución de logotipos, colores institucionales y validación operativa completa se certifican en `M2_P0_RECUPERACION_GLOBAL_LOGOTIPOS_20261118.md` y `M3_CERTIFICACION_INTEGRAL_B06_20261119.md`.
+
+
+---
+
+## ADENDA DE CIERRE VIGENTE — 19/11/2026 (CHAT)
+
+La referencia histórica `OWNER_VISUAL_ACCEPTANCE=PENDING` fue válida en la fecha inicial del 17/11, pero quedó **sustituida por aprobación expresa** del propietario el 19/11 para M1/M2/M3, el favicon y el estándar de reportes tal como se entregaron. Ver [ACTA #44](https://github.com/jmejia31/RIESGO_LAVADO/issues/44) y [acta documental B06](B06_ACTA_CIERRE_FUNCIONAL_M1_M2_M3_20261119.md).
+
+`B06_OWNER_ACCEPTANCE=APPROVED`; `B06_FUNCTIONAL_STATUS=CLOSED_WITH_EXPLICIT_ACCEPTED_LIMITATIONS`; `SOURCE_CODE_SHA=6e658f20a1866aa6725b2e9ff0afd93443e739ee`; `QUALITY_GATE=44603836071_SUCCESS`. QA institucional autenticada integral y paridad documental Oracle PDF/Excel revalidada en M3 **no demostradas**; nueve pruebas Oracle XE **no ejecutadas localmente**, pero pasos de Oracle XE descartable **PASS en CI**. No declarar `B06_FULL_INTEGRATION_QA=PASS` por esta aceptación. Sin despliegue a `main` ni producción; seguimiento `picomatch` en Issue #42.

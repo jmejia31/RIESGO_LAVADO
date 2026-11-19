@@ -138,3 +138,10 @@ MAIN_MODIFIED=NO
 ORACLE_INSTITUTIONAL_WRITES=0
 ```
 
+
+
+---
+
+## ACEPTACIÓN VISUAL FINAL DEL FAVICON — 19/11/2026 (CHAT)
+
+El propietario aportó capturas del favicon cargado y de sus vistas previas 16×16, 32×32 y 48×48 con imagen visible, junto al logo institucional en un PDF de Matrices. Aunque no coincide exactamente con su expectativa gráfica original, **aprueba expresamente el resultado tal como quedó** y solicita cerrar M3/B06. `OWNER_VISUAL_ACCEPTANCE=APPROVED_AS_DELIVERED`; `QUALITY_GATE_SOURCE_SHA=6e658f20a1866aa6725b2e9ff0afd93443e739ee`; [run 44603836071](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44603836071) `SUCCESS`. Esta aceptación no afirma ejecución de QA institucional integral; ver [ACTA #44](https://github.com/jmejia31/RIESGO_LAVADO/issues/44).
