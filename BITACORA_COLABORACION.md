@@ -12070,3 +12070,59 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - 34 archivos locales sin seguimiento preservados intactos.
   - Expediente publicado: `docs/certificaciones/M2_P0_RECUPERACION_GLOBAL_LOGOTIPOS_20261118.md` e indexado en `docs/certificaciones/INDEX.json`.
 - **Punto exacto de continuación:** Microfase 2 corregida integralmente con logotipos institucionales visibles en todos los reportes PDF, Excel y vistas previas sin icono de imagen rota. Lista para revisión visual y dictamen final por parte de Javier Mejía (`jmejia31`).
+
+## Intervención P0 — Microfase 3: Auditoría Integral de Seguridad, QA Real, Regresiones Operativas y Certificación Definitiva B06 — 2026-11-19 09:00 -06:00 (ANTIG)
+
+- **Autor:** `ANTIG` (Antigravity)
+- **Rama y base:** `desarrollo`, `BASE_SHA=a57b7639f48405b950ad84f24d07a2111ea0c21d` (Quality Gate `44464627828` = SUCCESS).
+- **Respaldo verificado:** `respaldo/desarrollo-pre-m3-certificacion-20261119-a57b7639` en `a57b7639`.
+- **Estado de aprobaciones previas:**
+  - Microfase 1: Aprobada funcionalmente por el propietario (`APPROVED`).
+  - Microfase 2: Aprobada funcional y visualmente por el propietario (`APPROVED`).
+  - Microfase 3: Certificada técnicamente al 100%, lista para dictamen final (`READY_FOR_OWNER_FINAL_REVIEW`).
+- **Objetivos y ejecuciones certificadas:**
+  1. **Auditoría de Seguridad y Cadena de Suministro (picomatch):**
+     - Análisis del fallo histórico CI `44154367078` por vulnerabilidad ReDoS (`GHSA-fc5q-39xc-vjpf`).
+     - Resolución verificada mediante el paquete endurecido `@riesgo-lavado/picomatch-hardened@4.0.7-rl.2` (`vendor/riesgo-lavado-picomatch-hardened-4.0.7-rl.2.tgz`), con hash `SHA256=54308c924750...` y SRI `sha256-VDCMkkdQYME/sgbN6Ioy/uJZYlNDgFEBlj4XcOBGm5o=`.
+     - `npm audit --omit=dev` y `npm audit`: `0 vulnerabilities` encontradas.
+     - Pruebas de ReDoS (`npm run security:picomatch:verify`): 5/5 superadas con tiempo de evaluación de 1.4 ms (< 50 ms).
+     - Mitigación confirmada contra inyección POSIX (`CVE-2026-33672`) y polución de prototipos usando mapas con `Object.create(null)`.
+  2. **Suite Backend Completa (`RL.API.Tests`):**
+     - `dotnet build`: Release PASS (0 errores, 1,161 advertencias preexistentes).
+     - `dotnet test`: 1,272 pruebas ejecutadas; 1,260 superadas (`PASS`), 3 omitidas (`SKIP`), 9 de integración Oracle XE gated (validadas en GitHub Actions CI `44464627828`). Cero fallos de código o regresiones.
+     - Pruebas de reportería (`Institutional`): 154/154 PASS.
+  3. **Suite Frontend Completa (`rl-app`):**
+     - ESLint (`npm run lint`): PASS (0 errores, 0 advertencias).
+     - Vitest (`npm test -- --watch=false`): 96 archivos de prueba superados (96/96), 1,047 pruebas unitarias superadas (1,047/1,047), duración 21.31 s.
+     - Compilación de producción (`npm run build`): PASS (0 errores).
+  4. **Verificación Operativa en Vivo (Runtime) y Endpoints Reales:**
+     - Servidores activos: Backend ASP.NET Core en `http://127.0.0.1:5043` y frontend Angular en `http://127.0.0.1:4200`.
+     - Endpoints validados con HTTP 200 OK:
+       - `/healthz` (Healthy)
+       - `/api/configuracion/sistema`
+       - `/api/configuracion/sistema/logo-reportes` (54,989 bytes, Content-Type: `image/jpeg`, headers de streaming y caché)
+       - `/api/configuracion/sistema/logo-reportes/estado` (telemetría JSON institucional, 942x334 px, ratio 2.82)
+  5. **Pruebas Automatizadas Playwright E2E UI:**
+     - 32 pruebas operativas ejecutadas contra el navegador y los servicios en vivo: 32 superadas (100% PASS, 0 fallos, 0 flaky).
+     - Cobertura: `monitoreo-listas-motivo-layout.spec.ts` (1), `institutional-file-upload.spec.ts` (5), `modal-footer-icon-actions.spec.ts` (4), `login-and-routing.spec.ts` (6), `modal-shell-lock.spec.ts` (16).
+  6. **Validadores del Repositorio:**
+     - Estructura (`validate_repository_structure.ps1`): PASS (118 rutas, 1,298 archivos, 3 maestros SQL).
+     - Scripts BD (`validate_database_scripts.ps1`): PASS (19 scripts activos, 4/4 scripts B06).
+     - Enlaces Documentales (`validate_documentation_links.ps1`): PASS (258 docs, 278 enlaces).
+     - Agent Skills (`validate_agent_skills.py`): PASS (14/14 skills).
+  7. **Preservación Integral:**
+     - Cambios en código funcional: 0 (`FUNCTIONAL_CODE_CHANGES=0`).
+     - Cero regresiones en Microfase 1 (DNI agrupado, 5 tarjetas métricas, guardas de motivo, seguimientos universales).
+     - Cero regresiones en Microfase 2 (18 puntos globales de reportería, texto negro institucional `#000000`, geometría B06 72.644 mm, extracción OpenXML).
+     - 82 campos oficiales de Matrices de Riesgos intactos.
+     - Oracle institucional: DML=0, DDL=0 (solo lectura 100%).
+     - Rama `main` y producción intactas (0 commits).
+     - 34 archivos locales sin seguimiento preservados intactos.
+- **Expedientes creados / actualizados:**
+  - `docs/certificaciones/M3_CERTIFICACION_INTEGRAL_B06_20261119.md` (nuevo)
+  - `docs/qa/M3_MATRIZ_PRUEBAS_INTEGRALES_B06_20261119.md` (nuevo)
+  - `docs/certificaciones/INDEX.json` (actualizado)
+  - `docs/certificaciones/B06_P0_REPORTES_IDENTIDAD_20261117.md` (actualizado)
+  - `BITACORA_COLABORACION.md` (actualizado)
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (actualizado)
+- **Punto exacto de continuación:** Microfase 3 concluida y certificada técnicamente al 100%. Sistema listo para dictamen final y signoff por parte del propietario Javier Mejía (`jmejia31`).

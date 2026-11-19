@@ -63,8 +63,8 @@ Intervención limitada a B06 y a la dependencia compartida de Monitoreo de Lista
 
 ## Dictamen
 
-`B06_TECHNICAL_STATUS=READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS`  
-`B06_OWNER_VISUAL_ACCEPTANCE=PENDING`  
-`B06_FINAL_STATUS=PENDING_OWNER_ACCEPTANCE`
+`B06_TECHNICAL_STATUS=CERTIFIED_TECHNICALLY_READY_FOR_OWNER_FINAL_REVIEW`<br/>
+`B06_OWNER_VISUAL_ACCEPTANCE=APPROVED_M1_AND_M2_PENDING_FINAL_M3_SIGNOFF`<br/>
+`B06_FINAL_STATUS=READY_FOR_OWNER_FINAL_REVIEW`
 
-La evidencia local demuestra compilación y regresiones automatizadas, pero no sustituye la prueba del propietario contra el runtime y la base autorizados.
+La evidencia técnica integral, resolución de logotipos, colores institucionales y validación operativa completa se certifican en `M2_P0_RECUPERACION_GLOBAL_LOGOTIPOS_20261118.md` y `M3_CERTIFICACION_INTEGRAL_B06_20261119.md`.

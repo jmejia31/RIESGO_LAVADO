@@ -436,6 +436,30 @@
       "owner_acceptance": "PENDING_OWNER_VISUAL_REVIEW",
       "review_ready": "YES_FOR_OWNER_VISUAL_REVIEW",
       "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
+    },
+    {
+      "id": "M3-CERTIFICACION-INTEGRAL-B06-20261119",
+      "path": "M3_CERTIFICACION_INTEGRAL_B06_20261119.md",
+      "author": "ANTIG",
+      "status": "CERTIFIED_TECHNICALLY_READY_FOR_OWNER_FINAL_REVIEW",
+      "base_sha": "a57b7639f48405b950ad84f24d07a2111ea0c21d",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/M3_CERTIFICACION_INTEGRAL_B06_20261119.md",
+      "security_scan": "PASS_ZERO_VULNERABILITIES",
+      "picomatch_mitigation": "HARDENED_FORK_SUB_2MS_PASS",
+      "backend_unit_tests": "1260_PASS_3_SKIP_0_REGRESSIONS",
+      "frontend_lint": "0_ERRORS_0_WARNINGS",
+      "frontend_unit_tests": "1047_PASS_96_SUITES",
+      "runtime_endpoints_real": "PASS_HEALTHZ_SYSTEM_CONFIG_LOGO_STREAM_LOGO_STATE_200_OK",
+      "playwright_e2e_ui": "32_PASS_0_FAIL_0_FLAKY",
+      "repository_validators": "4/4_PASS",
+      "regressions_m1_m2": "0_REGRESSIONS_PRESERVED_100_PERCENT",
+      "oracle_institutional_writes": 0,
+      "dnp_ihss_writes": 0,
+      "main_touched": false,
+      "functional_code_changes": 0,
+      "owner_acceptance": "READY_FOR_OWNER_FINAL_REVIEW",
+      "review_ready": "YES_FOR_OWNER_FINAL_REVIEW",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/41"
     }
   ]
 }
