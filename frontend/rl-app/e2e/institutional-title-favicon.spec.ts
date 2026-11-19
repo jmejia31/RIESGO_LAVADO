@@ -400,6 +400,25 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
       });
     });
 
+    // La vista previa de /uploads corresponde al origen del backend; usar una
+    // imagen auténticamente decodificable para que onload sea un control real.
+    const previewPngBase64 = await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#f97316';
+      ctx.fillRect(0, 0, 16, 32);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(16, 0, 16, 32);
+      return canvas.toDataURL('image/png').split(',')[1];
+    });
+    await page.route('**/uploads/favicon-autocreated.ico', route => route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(previewPngBase64, 'base64'),
+    }));
+
     await page.goto('/configuracion');
 
     // Esperar a que la configuración inicial esté cargada
@@ -446,6 +465,9 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
       'src', 'http://localhost:5043/uploads/favicon-autocreated.ico'
     );
     await expect(page.locator('img[alt="Favicon 16x16"]')).toBeVisible();
+    await expect.poll(() => page.locator('img[alt="Favicon 16x16"]').evaluate(
+      el => (el as HTMLImageElement).naturalWidth
+    )).toBeGreaterThan(0);
     await expect(page.locator('img[alt="Favicon 32x32"]')).toBeVisible();
     await expect(page.locator('img[alt="Favicon 48x48"]')).toBeVisible();
 

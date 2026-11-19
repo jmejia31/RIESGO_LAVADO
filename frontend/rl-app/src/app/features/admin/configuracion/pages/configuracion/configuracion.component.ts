@@ -386,18 +386,40 @@ export class ConfiguracionComponent implements OnInit {
       this.estadoFavicon.set('FAVICON_UPLOADING');
       this.configService.subirFavicon(uploadFile).subscribe({
         next: response => {
-          this.subiendoFavicon.set(false);
-          this.archivosFaviconPendientes.set([]);
           if (!response.success || !/^\/uploads\/[A-Za-z0-9._-]+\.ico$/i.test(response.url)) {
+            this.subiendoFavicon.set(false);
+            this.archivosFaviconPendientes.set([]);
             this.estadoFavicon.set('FAVICON_SAVE_FAILED');
             this.mostrarError('El servidor no devolvió una referencia de favicon válida.');
             return;
           }
-          // URL absoluta del backend; /uploads/... relativo apunta erróneamente a Angular.
-          this.faviconVistaPreviaUrl.set(this.configService.resolverUrlImagen(response.url));
-          this.form.patchValue({ iconoUrl: response.url });
-          this.estadoFavicon.set('FAVICON_READY_TO_SAVE');
-          this.mostrarExito('Favicon convertido correctamente. Guarde la configuración para publicarlo.');
+          // Un HTTP 200 del upload no garantiza que Chrome pueda cargar el ICO.
+          // Verificamos el archivo desde el origen real antes de ofrecer Guardar.
+          const previewUrl = this.configService.resolverUrlImagen(response.url);
+          const probe = new Image();
+          probe.onload = () => {
+            if (probe.naturalWidth <= 0 || probe.naturalHeight <= 0) {
+              this.subiendoFavicon.set(false);
+              this.archivosFaviconPendientes.set([]);
+              this.estadoFavicon.set('FAVICON_SAVE_FAILED');
+              this.mostrarError('El recurso de favicon no contiene dimensiones de imagen válidas.');
+              return;
+            }
+            this.subiendoFavicon.set(false);
+            this.archivosFaviconPendientes.set([]);
+            this.faviconVistaPreviaUrl.set(previewUrl);
+            this.form.patchValue({ iconoUrl: response.url });
+            this.estadoFavicon.set('FAVICON_READY_TO_SAVE');
+            this.mostrarExito('Favicon convertido y verificado en el navegador. Guarde la configuración para publicarlo.');
+          };
+          probe.onerror = () => {
+            this.subiendoFavicon.set(false);
+            this.archivosFaviconPendientes.set([]);
+            this.faviconVistaPreviaUrl.set(null);
+            this.estadoFavicon.set('FAVICON_SAVE_FAILED');
+            this.mostrarError('El favicon convertido no puede recuperarse o decodificarse desde el navegador. No se modificó la configuración publicada.');
+          };
+          probe.src = previewUrl;
         },
         error: error => {
           this.subiendoFavicon.set(false);
