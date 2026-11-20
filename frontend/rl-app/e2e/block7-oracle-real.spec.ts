@@ -2,7 +2,7 @@ import { expect, test, expectHttpResponse, expectRequestFailure } from './suppor
 import type { Locator, Page, Response } from '@playwright/test';
 import { createHash } from 'node:crypto';
 
-type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
+type Fixture = { riskId: number; riskCode: string; versionId: number; familyId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
 type MatrixProjectionField = { fieldNumber: number; fieldLabel: string; value: unknown; state: string };
 
 function expectedProjectionDisplay(field: MatrixProjectionField): string {
@@ -266,10 +266,10 @@ async function installNonCriticalFixtures(
       return;
     }
 
-    const family = { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LA/FT', famDescripcion: 'Fixture de prueba', famActivo: true, tieneVersionVigente: true };
+    const family = { famId: fixture.familyId, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LA/FT', famDescripcion: 'Fixture de prueba', famActivo: true, tieneVersionVigente: true };
     const version = {
       verId: fixture.versionId,
-      verFamiliaId: 1,
+      verFamiliaId: fixture.familyId,
       verCodigo: fixture.versionCode,
       verVersion: 1,
       verJson: JSON.stringify(fixture.definition),
@@ -290,7 +290,7 @@ async function installNonCriticalFixtures(
     ];
     else if (path.endsWith('/formulario/version-vigente')) datos = version;
     else if (path.endsWith('/metodologia/vigente')) datos = methodology;
-    else if (path.endsWith('/familias/predeterminada')) datos = { configurada: true, familiaId: 1, familiaCodigo: family.famCodigo, familiaNombre: family.famNombre };
+    else if (path.endsWith('/familias/predeterminada')) datos = { configurada: true, familiaId: fixture.familyId, familiaCodigo: family.famCodigo, familiaNombre: family.famNombre };
     else if (path.endsWith('/familias/paginado')) datos = { items: [family], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } };
     else if (path.endsWith('/familias')) datos = [family];
     else if (path.endsWith('/riesgos/paginado')) datos = { items: [{ rieId: fixture.riskId, rieCodigo: fixture.riskCode, rieNombre: 'Riesgo E2E de prueba', rieDescripcion: 'Riesgo desechable Oracle', rieActivo: true }], pagina: 1, tamanoPagina: 200, totalRegistros: 1, totalPaginas: 1 };
