@@ -14,7 +14,8 @@
 | **Base SHA** | `e246c6f45a10f0c147b5c947642acb9619c66769` |
 | **Código Certificado SHA** | `966d0ec825e70089da983d02644b2acb0306fab6` |
 | **Quality Gate Verificado (Código)** | [44660135562](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44660135562) — `completed / success` (12m48s) |
-| **Quality Gate Verificado (Documental)** | [44662356256](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44662356256) — `completed / success` |
+| **Quality Gate Verificado (Paquete B)** | [44679516628](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44679516628) — `completed / success` (13m15s) |
+| **Quality Gate Previo (Documental)** | [44662356256](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44662356256) — `completed / success` |
 | **Respaldos Remotos Verificados** | `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`)<br>`origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`)<br>`origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`) |
 | **Estado de Certificación** | `READY_FOR_INDEPENDENT_REVIEW` |
 | **Cumplimiento DNP_IHSS** | `NO_NEW_EXTERNAL_WRITES=PASS` / `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED` |
