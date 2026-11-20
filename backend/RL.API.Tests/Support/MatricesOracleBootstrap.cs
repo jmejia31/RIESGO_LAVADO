@@ -241,11 +241,11 @@ public static class MatricesOracleBootstrap
                 RIE_USR_CREACION NUMBER(10) DEFAULT 1 NOT NULL,
                 RIE_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,
                 CONSTRAINT PK_RL_MR_RIESGOS PRIMARY KEY (RIE_ID),
-                CONSTRAINT UQ_RL_MR_RIE_COD UNIQUE (RIE_CODIGO),
                 CONSTRAINT CK_RL_MR_RIE_ACT CHECK (RIE_ACTIVO IN (0,1))
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_RIESGOS MODIFY (RIE_USR_CREACION DEFAULT 1)");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_RIESGOS DROP CONSTRAINT FK_RL_MR_RIE_USR");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_RIESGOS DROP CONSTRAINT UQ_RL_MR_RIE_COD");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_EVALUACIONES_RIESGO (
