@@ -318,9 +318,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
         try
         {
+            IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
+            auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
             var repository = new MatricesRiesgosRepository(
                 new OracleDbContext(_connectionString!),
-                InterfaceStub.Create<IAuditoriaRepository>(out _));
+                auditoria);
 
             Assert.True(await repository.CambiarEstadoVigenciaFormularioAsync(versionId, false, 1));
             await using OracleConnection verify = CrearConexion();
@@ -450,9 +452,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             await using OracleTransaction blockerTransaction = blocker.BeginTransaction();
             await BloquearFamiliaAsync(blocker, blockerTransaction, deleteFixture.FamiliaId);
 
+            IAuditoriaRepository auditoriaDelete = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub stubDelete);
+            stubDelete.On("RegistrarAsync", _ => Task.CompletedTask);
             var repository = new MatricesRiesgosRepository(
                 new OracleDbContext(_connectionString!),
-                InterfaceStub.Create<IAuditoriaRepository>(out _));
+                auditoriaDelete);
             Task<bool> deleteTask = repository.EliminarVersionFormularioAsync(deleteFixture.VersionId);
             await Task.Delay(250);
             await EjecutarAsync(blocker, blockerTransaction,
@@ -478,9 +482,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             await using OracleTransaction blockerTransaction = blocker.BeginTransaction();
             await BloquearFamiliaAsync(blocker, blockerTransaction, updateFixture.FamiliaId);
 
+            IAuditoriaRepository auditoriaDelete = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub stubDelete);
+            stubDelete.On("RegistrarAsync", _ => Task.CompletedTask);
             var repository = new MatricesRiesgosRepository(
                 new OracleDbContext(_connectionString!),
-                InterfaceStub.Create<IAuditoriaRepository>(out _));
+                auditoriaDelete);
             Task<bool> updateTask = repository.ActualizarBorradorFormularioAsync(
                 updateFixture.VersionId,
                 "{\"sections\":[{\"id\":\"should-not-commit\"}]}",
