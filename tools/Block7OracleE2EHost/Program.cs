@@ -636,12 +636,25 @@ finally
     var ownedEvaluations = new HashSet<long>();
     var ownedControls = new HashSet<long>();
     var ownedPlans = new HashSet<long>();
+    var ownedEvidenceIds = new HashSet<long>();
     await TrackOwnedIdsAsync(ownedEvaluations,
         "SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:id", canonicalRiskIds);
     await TrackOwnedIdsAsync(ownedControls,
         "SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID=:id", ownedEvaluations);
     await TrackOwnedIdsAsync(ownedPlans,
         "SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID=:id", ownedEvaluations);
+
+    // Evidence is attributable to this exact browser run, not just to the shared test user.
+    await using (var evidenceQuery = new OracleCommand(
+        "SELECT EVI_ID FROM RL_MR_EVIDENCIAS WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix",
+        cleanup) { BindByName = true })
+    {
+        evidenceQuery.Parameters.Add(new OracleParameter("userId", userId));
+        evidenceQuery.Parameters.Add(new OracleParameter("filePrefix", $"block9-{riskId}-%"));
+        await using var evidenceReader = await evidenceQuery.ExecuteReaderAsync();
+        while (await evidenceReader.ReadAsync()) ownedEvidenceIds.Add(evidenceReader.GetInt64(0));
+    }
+
 
     await using var tableQuery = new OracleCommand(
         "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME='RL_MR_EVALUACIONES_CONTROL'", cleanup);
@@ -664,9 +677,9 @@ finally
           AND EVV_TIPO_ENTIDAD='control')
            OR EVV_EVIDENCIA_ID IN (
             SELECT EVI_ID FROM RL_MR_EVIDENCIAS
-             WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE 'block9-%')",
-        ("riskId", riskId), ("userId", userId));
-    await CleanupStepAsync("RL_MR_EVIDENCIAS", "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE 'block9-%'", ("userId", userId));
+             WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix)",
+        ("riskId", riskId), ("userId", userId), ("filePrefix", $"block9-{riskId}-%"));
+    await CleanupStepAsync("RL_MR_EVIDENCIAS", "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix", ("userId", userId), ("filePrefix", $"block9-{riskId}-%"));
     await CleanupStepAsync("RL_MR_ACTIVIDADES", @"DELETE FROM RL_MR_ACTIVIDADES
         WHERE ACT_PLAN_ID IN (
             SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (
@@ -744,7 +757,9 @@ finally
         await CountOwnedRowsAsync("RL_MR_PLANES", "PLA_EVALUACION_ID", ownedEvaluations) +
         await CountOwnedRowsAsync("RL_MR_ACTIVIDADES", "ACT_PLAN_ID", ownedPlans) +
         await CountOwnedRowsAsync("RL_MR_SENALES_ALERTA", "ALE_EVALUACION_ID", ownedEvaluations) +
-        await CountOwnedRowsAsync("RL_MR_AUTOMONITOREO", "MON_EVALUACION_ID", ownedEvaluations);
+        await CountOwnedRowsAsync("RL_MR_AUTOMONITOREO", "MON_EVALUACION_ID", ownedEvaluations) +
+        await CountOwnedRowsAsync("RL_MR_EVIDENCIAS", "EVI_ID", ownedEvidenceIds) +
+        await CountOwnedRowsAsync("RL_MR_EVIDENCIAS_VINCULOS", "EVV_EVIDENCIA_ID", ownedEvidenceIds);
     if (hasControlEffectivenessTable)
         dependenciesRemaining += await CountOwnedRowsAsync("RL_MR_EVALUACIONES_CONTROL", "ECO_CONTROL_ID", ownedControls);
 
