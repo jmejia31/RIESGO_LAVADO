@@ -12677,3 +12677,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocaron `main`, producción, Oracle, backend ni archivos protegidos. Los archivos sin seguimiento ajenos permanecen sin stage y sin modificación por esta intervención.
 - **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; publicación selectiva pendiente en `origin/desarrollo` y aceptación visual del propietario pendiente.
 - **Punto exacto de continuación:** publicar el commit funcional y el commit documental; luego validar visualmente scroll, botones deshabilitados, confirmación institucional y persistencia en las interfaces administrativas.
+
+## 2026-11-20 15:34 -06:00 — Ajuste visual del registro de efectividad (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `f7581d3d` (documentación previa); commit funcional local `898635b2` (`fix(frontend): mejora accion de efectividad`).
+- **Objetivo:** atender la revisión visual del propietario sobre el acceso a “Registrar efectividad” dentro del editor de controles.
+- **Cambios funcionales:** el modal conserva la variante institucional `modal-size-md` (36rem / 576 px); el botón de agregar/registrar efectividad utiliza el icono canónico `create` (+), con área de interacción 44×44 px, icono 24×24 px, contraste institucional, tooltip y foco accesible.
+- **Prueba agregada:** la regresión del componente verifica el icono (+), sus dimensiones visibles, el modal mediano y el área ampliada del comentario.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.html` y `.spec.ts`.
+- **Pruebas ejecutadas:** prueba enfocada `1` archivo / `23` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias no bloqueantes preexistentes de SCSS/CommonJS; validador institucional `31` modales PASS; `git diff --check` sin errores.
+- **Restricciones:** no se modificaron backend, Oracle, migraciones, contratos REST, `main`, producción ni archivos globales protegidos. No se iniciaron ni detuvieron servicios; permanecen según el levantamiento manual previo.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; la aceptación visual del propietario y la publicación remota quedan pendientes hasta ejecutar el cierre de esta intervención.
+- **Punto exacto de continuación:** publicar los commits locales pendientes en `origin/desarrollo`, verificar paridad remota y revisar en navegador el modal mediano y el botón (+).

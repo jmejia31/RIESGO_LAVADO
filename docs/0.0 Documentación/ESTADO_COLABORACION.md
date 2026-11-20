@@ -5740,3 +5740,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Servicios:** listeners manuales activos al cierre: backend `localhost:5043` PID `37648`; frontend `localhost:4200` PID `68896`. `COD` no inició ni detuvo esos procesos.
 - **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`, condicionado a publicación en `origin/desarrollo` y revisión visual del propietario. No se modifica la aceptación del propietario por inferencia.
 - **Pendientes:** publicar los commits selectivos, verificar paridad remota y ejecutar la revisión visual de scroll, habilitación de guardado y confirmaciones institucionales en las interfaces afectadas.
+
+## Estado vigente — Ajuste visual del registro de efectividad — 2026-11-20 15:34 -06:00 (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`.
+- **Base documental:** `f7581d3d`; **Source Code SHA local:** `898635b2` (`fix(frontend): mejora accion de efectividad`); publicación remota pendiente.
+- **Cambio:** el modal de “Registrar efectividad” utiliza `modal-size-md` institucional (36rem / 576 px). El disparador de agregar/registrar usa el icono canónico `create` (+), botón de 44×44 px e icono de 24×24 px, con foco y tooltip accesibles.
+- **Verificación:** prueba focalizada `1/1` archivo y `23/23` pruebas PASS; lint PASS; build PASS con advertencias no bloqueantes existentes; modal validator PASS (`31`); `git diff --check` PASS.
+- **Restricciones:** solo se modificaron el HTML y la prueba del componente de Mitigación. Backend, Oracle, migraciones, contratos REST, `main`, producción y archivos protegidos permanecen sin cambios.
+- **Servicios:** no iniciados ni detenidos por `COD`; se conserva el estado manual previo de backend `5043` y frontend `4200`.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente publicar en `origin/desarrollo` y realizar validación visual manual del propietario.
+- **Punto exacto de continuación:** publicar `898635b2` y la documentación, verificar `origin/desarrollo`, y comprobar en navegador el modal mediano y el icono (+).
