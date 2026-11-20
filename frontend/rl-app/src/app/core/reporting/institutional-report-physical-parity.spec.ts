@@ -1,6 +1,9 @@
 import { describe, expect, it, afterAll } from 'vitest';
+// @ts-ignore: Vitest ejecuta este archivo en Node.js.
 import { createHash } from 'node:crypto';
+// @ts-ignore: Vitest ejecuta este archivo en Node.js.
 import { writeFileSync, mkdirSync } from 'node:fs';
+// @ts-ignore: Vitest ejecuta este archivo en Node.js.
 import { resolve } from 'node:path';
 import { jsPDF } from 'jspdf';
 import {
