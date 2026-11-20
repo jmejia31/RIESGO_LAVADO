@@ -127,6 +127,15 @@ await using (var userCollisionCheck = new OracleCommand(
 }
 
 var insertedCanonicalRiskIds = new List<long>(canonicalRiskIds.Length);
+// This shared synthetic identity must never be reactivated if another fixture owns it.
+await using (var sharedUserCheck = new OracleCommand(
+    "SELECT COUNT(*) FROM RL_USUARIOS WHERE USR_ID=:id AND USR_ACTIVO<>1",
+    oracle) { BindByName = true })
+{
+    sharedUserCheck.Parameters.Add(new OracleParameter("id", userId));
+    if (Convert.ToInt64(await sharedUserCheck.ExecuteScalarAsync()) > 0)
+        throw new InvalidOperationException("Shared E2E user is inactive; refusing to overwrite another fixture's account.");
+}
 // Include fixture seeding in the teardown scope: partial initialization must be cleaned up.
 try
 {
@@ -150,8 +159,6 @@ foreach (long id in new[] { userId, areaOnlyUserId, ugrOnlyUserId, bothUserId, n
         MERGE INTO RL_USUARIOS destino
         USING (SELECT :id USR_ID FROM DUAL) origen
         ON (destino.USR_ID = origen.USR_ID)
-        WHEN MATCHED THEN
-            UPDATE SET USR_ACTIVO = 1
         WHEN NOT MATCHED THEN
             INSERT (USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL, USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID, USR_ACTIVO)
             VALUES (:id, 'USER_' || :id, 'FIXTURE', 'user' || :id || '@ihss.local', 'HASH', 'SALT', 1, 1)", ("id", id));
@@ -160,7 +167,12 @@ await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_C
 foreach (string capability in new[] { "MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR", "MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR" })
 {
     await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,:capability,1)", ("id", bothUserId), ("capability", capability));
-    await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,:capability,1)", ("id", userId), ("capability", capability));
+    await ExecuteAsync(oracle, @"INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO)
+        SELECT :id,:capability,1 FROM DUAL
+        WHERE NOT EXISTS (
+            SELECT 1 FROM RL_USUARIO_CAPACIDADES
+            WHERE UCP_USR_ID=:id AND UCP_CAPACIDAD=:capability AND UCP_ACTIVO=1)",
+        ("id", userId), ("capability", capability));
 }
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'H08 ciclo de vida','Fixture desechable H08',1,0,0,SYSDATE)", ("id", lifecycleFamilyId), ("code", lifecycleFamilyCode));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,:code,1,:json,:hash,'DRAFT',0,SYSDATE,:usr)", ("id", lifecycleVersionId), ("family", lifecycleFamilyId), ("code", lifecycleFamilyCode), ("json", lifecycleDefinition), ("hash", lifecycleDefinitionHash), ("usr", userId));
