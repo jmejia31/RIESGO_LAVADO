@@ -410,6 +410,25 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.modalControlAbierto()).toBe(false);
   });
 
+  it('usa el modal mediano y un icono de validación para registrar efectividad', () => {
+    component.seleccionarEvaluacion(20);
+    component.editarControl(control);
+    fixture.detectChanges();
+
+    const opener = fixture.nativeElement.querySelector('button[data-ui-action="register-effectiveness"]') as HTMLButtonElement;
+    expect(opener.className).toContain('h-11');
+    expect(opener.className).toContain('w-11');
+    expect(opener.querySelector('app-action-icon')?.className).toContain('!h-6');
+    expect(opener.querySelector('svg path')?.getAttribute('d')).toBe('M12 4v16m8-8H4');
+
+    component.abrirModalEfectividad();
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('dialog[aria-labelledby="titulo-modal-efectividad"]') as HTMLElement;
+    expect(dialog.querySelector('.modal-container-card')?.className).toContain('modal-size-md');
+    expect(dialog.querySelector('#control-comentario')?.className).toContain('min-h-24');
+  });
+
   it('renderiza secciones de mitigación en el DOM al seleccionar una evaluación', () => {
     component.seleccionarEvaluacion(20);
     fixture.detectChanges();
