@@ -223,4 +223,34 @@ describe('ListasService', () => {
 
     expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 503 }));
   });
+
+  it('Paquete A: getPositivoPorDocumento y getSeguimientos transportan tipoPositivoId e idRegistroFuente para aislar Natural y Empleado', () => {
+    service.getPositivoPorDocumento('0801199012345', 3, 401).subscribe();
+    const reqPos = http.expectOne(req => req.url === `${apiUrl}/positivos/0801199012345`);
+    expect(reqPos.request.params.get('tipoPositivoId')).toBe('3');
+    expect(reqPos.request.params.get('idRegistroFuente')).toBe('401');
+    reqPos.flush({ success: true, datos: null });
+
+    service.getSeguimientos('0801199012345', '2026-01-01', '2026-11-19', 2, 402).subscribe();
+    const reqSeg = http.expectOne(req => req.url === `${apiUrl}/positivos/0801199012345/seguimientos`);
+    expect(reqSeg.request.params.get('desde')).toBe('2026-01-01');
+    expect(reqSeg.request.params.get('hasta')).toBe('2026-11-19');
+    expect(reqSeg.request.params.get('tipoPositivoId')).toBe('2');
+    expect(reqSeg.request.params.get('idRegistroFuente')).toBe('402');
+    reqSeg.flush({ success: true, datos: [] });
+  });
+
+  it('Paquete A: registrarSeguimiento incluye tipoPositivoId e idRegistroFuente en FormData y params', () => {
+    const file = new File(['evidencia'], 'evidencia.pdf', { type: 'application/pdf' });
+    service.registrarSeguimiento('0801199012345', 'Comentario prueba', [file], 3, 403).subscribe();
+    const req = http.expectOne(req => req.url === `${apiUrl}/positivos/0801199012345/seguimientos`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.params.get('tipoPositivoId')).toBe('3');
+    expect(req.request.params.get('idRegistroFuente')).toBe('403');
+    const formData = req.request.body as FormData;
+    expect(formData.get('motivoIngreso')).toBe('Comentario prueba');
+    expect(formData.get('tipoPositivoId')).toBe('3');
+    expect(formData.get('idRegistroFuente')).toBe('403');
+    req.flush({ success: true, mensaje: 'Registrado' });
+  });
 });

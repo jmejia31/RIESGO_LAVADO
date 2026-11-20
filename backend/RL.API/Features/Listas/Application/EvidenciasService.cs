@@ -100,7 +100,7 @@ public sealed class EvidenciasService : IEvidenciasService
         }
     }
 
-    public async Task<ServiceResult> RegistrarSeguimientoAsync(string noDocumento, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId)
+    public async Task<ServiceResult> RegistrarSeguimientoAsync(string noDocumento, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId, int? tipoPositivoId = null, long? idRegistroFuente = null)
     {
         motivoIngreso = motivoIngreso?.Trim();
         if (string.IsNullOrWhiteSpace(motivoIngreso))
@@ -108,18 +108,24 @@ public sealed class EvidenciasService : IEvidenciasService
         if (motivoIngreso.Length > MaxTextoSeguimiento)
             return ServiceResult.BadRequest("El comentario de seguimiento no debe superar los 1000 caracteres.");
 
-        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento))
-            return ServiceResult.Conflict("No es posible registrar un seguimiento sobre una identidad ambigua o no identificada.");
+        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento) && (!idRegistroFuente.HasValue || idRegistroFuente.Value <= 0))
+            return ServiceResult.Conflict("No es posible registrar un seguimiento sobre una identidad ambigua o no identificada sin registro fuente.");
 
-        if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
-            return ServiceResult.Conflict("No es posible registrar el seguimiento porque existen múltiples positivos activos para el mismo documento.");
-
-        var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
-        if (positivo is null && !noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+        var effectiveTipo = tipoPositivoId ?? 0;
+        if (effectiveTipo == 0)
         {
-            positivo = await _repo.ObtenerPositivoPorDocumentoAsync($"EMP:{noDocumento}");
+            var totalActivos = await _repo.ContarPositivosActivosAsync(noDocumento, 0, idRegistroFuente);
+            if (totalActivos > 1)
+                throw new AmbiguousIdentityException("No es posible registrar el seguimiento porque existen múltiples positivos activos para el mismo documento. Especifique el tipo de sujeto.");
+        }
+        else
+        {
+            var activosMismoTipo = await _repo.ContarPositivosActivosAsync(noDocumento, effectiveTipo, idRegistroFuente);
+            if (activosMismoTipo > 1)
+                return ServiceResult.Conflict("No es posible registrar el seguimiento porque existen múltiples positivos activos para el mismo documento y tipo.");
         }
 
+        var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento, tipoPositivoId, idRegistroFuente);
         if (positivo is null || positivo.PositivoId <= 0)
             return ServiceResult.NotFound("No se encontró un registro positivo activo para este documento.");
 

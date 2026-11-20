@@ -22,7 +22,7 @@ public interface IListasService
     Task<ServiceResult> ActualizarTipoListaCautelaAsync(int id, TipoListaCautelaDto dto, long usuarioId);
     Task<ServiceResult> EliminarTipoListaCautelaAsync(int id, long usuarioId);
     Task<ServiceResult> RegistrarPositivoAsync(RegistrarPositivoDto dto, long creadoPorId);
-    Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento);
-    Task<ServiceResult<List<SeguimientoDto>>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde, DateTime? hasta);
+    Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento, int? tipoPositivoId = null, long? idRegistroFuente = null);
+    Task<ServiceResult<List<SeguimientoDto>>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde = null, DateTime? hasta = null, int? tipoPositivoId = null, long? idRegistroFuente = null);
     Task<ServiceResult> ProcesarCargaCautelaAsync(IFormFile? archivo, int tipoListaCautelaId, long usuarioId);
 }

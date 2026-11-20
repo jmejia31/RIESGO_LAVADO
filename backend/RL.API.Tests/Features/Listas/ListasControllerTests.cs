@@ -246,7 +246,81 @@ public sealed class ListasControllerTests
         Assert.NotNull(okResult.Value);
     }
 
+    [Fact]
+    public async Task ObtenerPositivoPorDocumento_TransportaTipoPositivoIdEIdRegistroFuente()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerPositivoPorDocumentoAsync), args =>
+            Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto { PositivoId = 123, TipoPositivoId = 3 }));
 
+        var result = await controller.ObtenerPositivoPorDocumento("0801199012345", 3, 999);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+
+        var call = Assert.Single(listasStub.CallsTo(nameof(IListasService.ObtenerPositivoPorDocumentoAsync)));
+        Assert.Equal("0801199012345", call.Arguments[0]);
+        Assert.Equal(3, call.Arguments[1]);
+        Assert.Equal(999L, call.Arguments[2]);
+    }
+
+    [Fact]
+    public async Task ObtenerPositivoPorDocumento_Ambiguedad_Retorna409Conflict()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerPositivoPorDocumentoAsync), _ =>
+            throw new AmbiguousIdentityException("Existen múltiples registros activos para el documento indicado."));
+
+        var result = await controller.ObtenerPositivoPorDocumento("0801199012345");
+        var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+        Assert.Equal(409, conflictResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task ObtenerSeguimientos_TransportaTipoPositivoIdEIdRegistroFuente()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerSeguimientosAsync), _ =>
+            Task.FromResult(ServiceResult<List<SeguimientoDto>>.Ok(new List<SeguimientoDto>())));
+
+        var result = await controller.ObtenerSeguimientos("0801199012345", null, null, 2, 888);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+
+        var call = Assert.Single(listasStub.CallsTo(nameof(IListasService.ObtenerSeguimientosAsync)));
+        Assert.Equal("0801199012345", call.Arguments[0]);
+        Assert.Equal(2, call.Arguments[3]);
+        Assert.Equal(888L, call.Arguments[4]);
+    }
+
+    [Fact]
+    public async Task ObtenerSeguimientos_Ambiguedad_Retorna409Conflict()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerSeguimientosAsync), _ =>
+            throw new AmbiguousIdentityException("Ambigüedad de positivos para el documento."));
+
+        var result = await controller.ObtenerSeguimientos("0801199012345", null, null);
+        var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+        Assert.Equal(409, conflictResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegistrarSeguimiento_TransportaTipoPositivoIdEIdRegistroFuente()
+    {
+        var controller = CrearController(out _, out var evidenciasStub, out _);
+        evidenciasStub.On(nameof(IEvidenciasService.RegistrarSeguimientoAsync), _ =>
+            Task.FromResult(ServiceResult.Ok("Registrado")));
+
+        var result = await controller.RegistrarSeguimiento("0801199012345", "Motivo nota", null, 3, 777);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+
+        var call = Assert.Single(evidenciasStub.CallsTo(nameof(IEvidenciasService.RegistrarSeguimientoAsync)));
+        Assert.Equal("0801199012345", call.Arguments[0]);
+        Assert.Equal("Motivo nota", call.Arguments[1]);
+        Assert.Equal(3, call.Arguments[4]);
+        Assert.Equal(777L, call.Arguments[5]);
+    }
 
     private static ListasController CrearController(
         out InterfaceStub listasStub,

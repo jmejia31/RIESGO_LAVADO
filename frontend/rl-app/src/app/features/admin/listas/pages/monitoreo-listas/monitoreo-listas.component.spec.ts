@@ -313,8 +313,8 @@ describe('MonitoreoListasComponent', () => {
     component.guardarSeguimiento();
 
     await vi.waitFor(() => expect(service['registrarSeguimiento']).toHaveBeenCalledOnce());
-    expect(service['registrarSeguimiento']).toHaveBeenCalledWith('0801', 'Seguimiento mensual', [evidencia]);
-    expect(service['getSeguimientos']).toHaveBeenCalledWith('0801', '', '');
+    expect(service['registrarSeguimiento']).toHaveBeenCalledWith('0801', 'Seguimiento mensual', [evidencia], 2, undefined);
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('0801', '', '', 2, undefined);
     expect(component.guardandoSeguimiento()).toBe(false);
     expect(component.modoEdicion()).toBe(false);
   });
@@ -406,7 +406,7 @@ describe('MonitoreoListasComponent', () => {
     expect(service['eliminarSeguimiento']).toHaveBeenCalledWith(44, 'Registro sustituido');
     expect(component.modoEdicion()).toBe(false);
     expect(component.seguimientoEditandoId()).toBeNull();
-    expect(service['getSeguimientos']).toHaveBeenCalledWith('0801', '', '');
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('0801', '', '', 2, undefined);
   });
 
   it('conserva el seguimiento si la eliminacion logica es rechazada', async () => {
@@ -634,8 +634,8 @@ describe('MonitoreoListasComponent', () => {
     component.imprimirReporteNatural(row as never);
 
     expect(service['getDetalleNatural']).toHaveBeenCalledWith('N/A(3)', 'global', 501, 'DNP_COINCIDENCIA');
-    expect(service['getPositivoPorDocumento']).toHaveBeenCalledWith('SRC:501');
-    expect(service['getSeguimientos']).toHaveBeenCalledWith('SRC:501', undefined, undefined);
+    expect(service['getPositivoPorDocumento']).toHaveBeenCalledWith('SRC:501', 2, 501);
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('SRC:501', undefined, undefined, 2, 501);
     expect(service['registrarAuditoriaImpresion']).toHaveBeenCalledOnce();
     expect(generar).toHaveBeenCalledWith(row, [], null, [], expect.anything());
     expect(component.cargando()).toBe(false);
@@ -652,8 +652,8 @@ describe('MonitoreoListasComponent', () => {
     component.imprimirReporteEmpleado(row as never);
 
     expect(service['getDetalleEmpleado']).toHaveBeenCalledWith('08011999123456', 'global', 502, 'DNP_COINCIDENCIA', undefined);
-    expect(service['getPositivoPorDocumento']).toHaveBeenCalledWith('08011999123456');
-    expect(service['getSeguimientos']).toHaveBeenCalledWith('08011999123456', undefined, undefined);
+    expect(service['getPositivoPorDocumento']).toHaveBeenCalledWith('08011999123456', 3, 502);
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('08011999123456', undefined, undefined, 3, 502);
     expect(service['registrarAuditoriaImpresion']).toHaveBeenCalledOnce();
     expect(generar).toHaveBeenCalledWith(row, [], null, [], expect.anything());
     expect(component.cargando()).toBe(false);

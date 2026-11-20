@@ -659,22 +659,59 @@ namespace RL.API.Features.Listas.Persistence
                     : null);
         }
 
-        public async Task<int> ContarPositivosActivosAsync(string documento, int tipoPositivoId)
+        public async Task<int> ContarPositivosActivosAsync(string documento, int tipoPositivoId, long? idRegistroFuente = null)
         {
             var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(documento);
-            if (string.IsNullOrWhiteSpace(normalizado)) return 0;
+            if (string.IsNullOrWhiteSpace(normalizado))
+            {
+                if (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
+                    normalizado = $"SRC:{idRegistroFuente.Value}";
+                else
+                    return 0;
+            }
+
+            var rawDoc = normalizado;
+            string? altDoc = null;
+            if (tipoPositivoId == 3)
+            {
+                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
+                    ? rawDoc.Substring(4).Trim()
+                    : $"EMP:{rawDoc}";
+            }
+            else if (tipoPositivoId == 2)
+            {
+                altDoc = rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
+                    ? rawDoc.Substring(4).Trim()
+                    : $"DNI:{rawDoc}";
+            }
+            else if (tipoPositivoId == 0)
+            {
+                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
+                    ? rawDoc.Substring(4).Trim()
+                    : rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
+                        ? rawDoc.Substring(4).Trim()
+                        : $"EMP:{rawDoc}";
+            }
+
+            string? srcDoc = (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
+                ? $"SRC:{idRegistroFuente.Value}"
+                : null;
 
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
             await using var cmd = conn.CreateCommand();
             cmd.BindByName = true;
             cmd.CommandText = @"
-                SELECT COUNT(*)
+                SELECT COUNT(DISTINCT LSP_POSITIVO_ID)
                 FROM RL_LISTA_POSITIVOS
-                WHERE LSP_NO_DOCUMENTO = :documento
+                WHERE (LSP_NO_DOCUMENTO = :documento
+                    OR (:altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc)
+                    OR (:srcDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :srcDoc))
                   AND (:tipoPositivoId = 0 OR LSP_TIPO_POSITIVO_ID = :tipoPositivoId)
                   AND LSP_ESTADO_REGISTRO = 1";
-            cmd.Parameters.Add(new OracleParameter("documento", normalizado));
+            cmd.Parameters.Add(new OracleParameter("documento", rawDoc));
+            cmd.Parameters.Add(new OracleParameter("altDoc", (object?)altDoc ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("srcDoc", (object?)srcDoc ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("tipoPositivoId", tipoPositivoId));
             return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
@@ -770,15 +807,40 @@ namespace RL.API.Features.Listas.Persistence
                 string? existingOrigenRegistro = null;
                 var origenRegistro = NormalizarOrigenRegistro(dto.OrigenRegistro);
 
+                string? altDoc = null;
+                if (dto.TipoPositivoId == 3)
+                {
+                    altDoc = dto.NoDocumento!.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
+                        ? dto.NoDocumento.Substring(4).Trim()
+                        : $"EMP:{dto.NoDocumento}";
+                }
+                else if (dto.TipoPositivoId == 2)
+                {
+                    altDoc = dto.NoDocumento!.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
+                        ? dto.NoDocumento.Substring(4).Trim()
+                        : $"DNI:{dto.NoDocumento}";
+                }
+
+                string? srcDoc = (dto.IdRegistroFuente.HasValue && dto.IdRegistroFuente.Value > 0)
+                    ? $"SRC:{dto.IdRegistroFuente.Value}"
+                    : null;
+
                 await using (var checkCmd = conn.CreateCommand())
                 {
                     checkCmd.Transaction = transaction;
                     checkCmd.BindByName = true;
                     checkCmd.CommandText = @"
                     SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO
-                    FROM RL_LISTA_POSITIVOS 
-                    WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
+                    FROM RL_LISTA_POSITIVOS
+                    WHERE (LSP_NO_DOCUMENTO = :noDoc
+                        OR (:altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc)
+                        OR (:srcDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :srcDoc))
+                      AND LSP_TIPO_POSITIVO_ID = :tipoPosId
+                      AND LSP_ESTADO_REGISTRO = 1";
                     checkCmd.Parameters.Add(new OracleParameter("noDoc", (object?)dto.NoDocumento ?? DBNull.Value));
+                    checkCmd.Parameters.Add(new OracleParameter("altDoc", (object?)altDoc ?? DBNull.Value));
+                    checkCmd.Parameters.Add(new OracleParameter("srcDoc", (object?)srcDoc ?? DBNull.Value));
+                    checkCmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
 
                     var existingCount = 0;
                     await using var reader = await checkCmd.ExecuteReaderAsync();
@@ -936,72 +998,113 @@ namespace RL.API.Features.Listas.Persistence
             }
         }
 
-        public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento)
+        public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento, int? tipoPositivoId = null, long? idRegistroFuente = null)
         {
+            var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(noDocumento);
+            if (string.IsNullOrWhiteSpace(normalizado))
+            {
+                if (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
+                    normalizado = $"SRC:{idRegistroFuente.Value}";
+                else
+                    return null;
+            }
+
+            var rawDoc = normalizado;
+            int effectiveTipo = tipoPositivoId ?? 0;
+            if (effectiveTipo == 0)
+            {
+                if (rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+                    effectiveTipo = 3;
+                else if (rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase))
+                    effectiveTipo = 2;
+            }
+
+            string? altDoc = null;
+            if (effectiveTipo == 3)
+            {
+                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
+                    ? rawDoc.Substring(4).Trim()
+                    : $"EMP:{rawDoc}";
+            }
+            else if (effectiveTipo == 2)
+            {
+                altDoc = rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
+                    ? rawDoc.Substring(4).Trim()
+                    : $"DNI:{rawDoc}";
+            }
+            else if (effectiveTipo == 0)
+            {
+                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
+                    ? rawDoc.Substring(4).Trim()
+                    : rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
+                        ? rawDoc.Substring(4).Trim()
+                        : $"EMP:{rawDoc}";
+            }
+
+            string? srcDoc = (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
+                ? $"SRC:{idRegistroFuente.Value}"
+                : null;
+
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
 
             await using var cmd = conn.CreateCommand();
             cmd.BindByName = true;
             cmd.CommandText = @"
-                SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
-                FROM RL_LISTA_POSITIVOS 
-                WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
-            cmd.Parameters.Add(new OracleParameter("noDoc", noDocumento));
+                SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO,
+                       LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
+                FROM RL_LISTA_POSITIVOS
+                WHERE (LSP_NO_DOCUMENTO = :noDoc
+                    OR (:altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc)
+                    OR (:srcDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :srcDoc))
+                  AND (:tipoPosId = 0 OR LSP_TIPO_POSITIVO_ID = :tipoPosId)
+                  AND LSP_ESTADO_REGISTRO = 1
+                ORDER BY CASE
+                    WHEN LSP_NO_DOCUMENTO = :noDoc THEN 1
+                    WHEN :altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc THEN 2
+                    ELSE 3 END";
+            cmd.Parameters.Add(new OracleParameter("noDoc", rawDoc));
+            cmd.Parameters.Add(new OracleParameter("altDoc", (object?)altDoc ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("srcDoc", (object?)srcDoc ?? DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("tipoPosId", effectiveTipo));
 
-            ExistingPositivoDto? result = null;
-            var candidateCount = 0;
+            var candidateIds = new List<long>(capacity: 2);
+            var candidateList = new List<ExistingPositivoDto>();
             await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            while (candidateIds.Count < 2 && await reader.ReadAsync())
             {
-                candidateCount++;
-                if (candidateCount > 1)
-                    throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
-
-                result = new ExistingPositivoDto
+                var posId = Convert.ToInt64(reader["LSP_POSITIVO_ID"]);
+                candidateIds.Add(posId);
+                candidateList.Add(new ExistingPositivoDto
                 {
-                    PositivoId = Convert.ToInt64(reader["LSP_POSITIVO_ID"]),
+                    PositivoId = posId,
                     TipoDocumentoId = Convert.ToInt32(reader["LSP_TIPO_DOCUMENTO_ID"]),
                     TipoPositivoId = Convert.ToInt32(reader["LSP_TIPO_POSITIVO_ID"]),
                     MotivoIngreso = reader["LSP_MOTIVO_INGRESO"]?.ToString() ?? string.Empty,
                     TipoListaCautelaId = reader["LSP_TIPO_LISTA_CAUTELA_ID"] == DBNull.Value ? null : Convert.ToInt32(reader["LSP_TIPO_LISTA_CAUTELA_ID"]),
                     OrigenRegistro = reader["LSP_ORIGEN_REGISTRO"] == DBNull.Value ? null : reader["LSP_ORIGEN_REGISTRO"]?.ToString(),
                     FechaRegistroInterno = reader["LSP_FECHA_CREACION"] == DBNull.Value ? null : Convert.ToDateTime(reader["LSP_FECHA_CREACION"])
-                };
+                });
             }
-            return result;
+
+            if (candidateIds.Count > 1)
+            {
+                throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
+            }
+
+            return candidateList.Count == 1 ? candidateList[0] : null;
         }
 
-        public async Task<List<SeguimientoDto>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde = null, DateTime? hasta = null)
+        public async Task<List<SeguimientoDto>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde = null, DateTime? hasta = null, int? tipoPositivoId = null, long? idRegistroFuente = null)
         {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            long? positivoId = null;
-            await using (var findCmd = conn.CreateCommand())
-            {
-                findCmd.BindByName = true;
-                findCmd.CommandText = "SELECT LSP_POSITIVO_ID FROM RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
-                findCmd.Parameters.Add(new OracleParameter("noDoc", noDocumento));
-
-                var candidateIds = new List<long>(capacity: 2);
-                await using var reader = await findCmd.ExecuteReaderAsync();
-                while (candidateIds.Count < 2 && await reader.ReadAsync())
-                {
-                    candidateIds.Add(Convert.ToInt64(reader["LSP_POSITIVO_ID"]));
-                }
-
-                if (candidateIds.Count > 1)
-                    throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
-
-                if (candidateIds.Count == 1)
-                    positivoId = candidateIds[0];
-            }
-
+            var positivoId = await ObtenerPositivoIdPorDocumentoAsync(noDocumento, tipoPositivoId, idRegistroFuente);
             if (!positivoId.HasValue)
             {
                 return new List<SeguimientoDto>();
             }
+
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
 
             var list = new List<SeguimientoDto>();
             await using (var cmd = conn.CreateCommand())
@@ -1160,33 +1263,10 @@ namespace RL.API.Features.Listas.Persistence
             }
         }
 
-        public async Task<long?> ObtenerPositivoIdPorDocumentoAsync(string noDocumento)
+        public async Task<long?> ObtenerPositivoIdPorDocumentoAsync(string noDocumento, int? tipoPositivoId = null, long? idRegistroFuente = null)
         {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.BindByName = true;
-            cmd.CommandText = "SELECT LSP_POSITIVO_ID FROM RL_LISTA_POSITIVOS WHERE LSP_NO_DOCUMENTO = :noDoc AND LSP_ESTADO_REGISTRO = 1";
-            cmd.Parameters.Add(new OracleParameter("noDoc", noDocumento));
-
-            var candidateIds = new List<long>(capacity: 2);
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (candidateIds.Count < 2 && await reader.ReadAsync())
-            {
-                candidateIds.Add(Convert.ToInt64(reader["LSP_POSITIVO_ID"]));
-            }
-
-            if (candidateIds.Count > 1)
-                throw new AmbiguousIdentityException("No es posible seleccionar un positivo: existen múltiples registros activos para el documento indicado.");
-
-            if (candidateIds.Count == 1)
-                return candidateIds[0];
-
-            if (!noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
-                return await ObtenerPositivoIdPorDocumentoAsync($"EMP:{noDocumento}");
-
-            return null;
+            var positivo = await ObtenerPositivoPorDocumentoAsync(noDocumento, tipoPositivoId, idRegistroFuente);
+            return positivo?.PositivoId;
         }
 
         public async Task<(string Nombre, string Ruta, string Mime)?> ObtenerEvidenciaPorIdAsync(long evidenciaId)

@@ -1,3 +1,37 @@
+# ESTADO VIGENTE — Paquete A: Integridad de Expedientes y Seguridad de Fuentes Externas (ANTIG, 2026-11-19 18:15 -06:00)
+
+- **Identificación y Referencia:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`. Quality Gate Base: `44613258648` (SUCCESS).
+  - Respaldo remoto íntegro verificado: `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` en `ef72356f4996b47dbbc29097df30deafbbfed641`.
+  - Estado: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Expediente formal: `docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md`.
+- **Alcance Implementado y Aislamiento de Expedientes:**
+  - Aislamiento completo de expedientes entre Persona Natural (`TipoPositivoId = 2`) y Empleado IHSS (`TipoPositivoId = 3`) que comparten el mismo DNI en `RL_LISTA_POSITIVOS` y `RL_DETALLE_LISTA`.
+  - Convivencia nativa en base de datos sin colisión ni sobreescritura (`LSP_TIPO_POSITIVO_ID = dto.TipoPositivoId`).
+  - Eliminación de fallback inseguro a prefijo `EMP:`.
+  - Soporte de claves heredadas y fuentes externas (`DNI:<DOC>`, `EMP:<DOC>`, `SRC:<ID_REGISTRO_FUENTE>`).
+  - Escenario A-11: Rechazo explícito con HTTP 409 Conflict y código `AMBIGUOUS_IDENTITY` cuando coexisten múltiples positivos activos sin tipo especificado.
+  - Sincronización en frontend Angular (`listas.service.ts` y `monitoreo-listas.component.impl.ts`): consultas, seguimientos, notas y descargas PDF/Excel envían `tipoPositivoId` e `idRegistroFuente`.
+- **Auditoría Exhaustiva de Fuentes Externas (DNP_IHSS):**
+  - Cero escrituras nuevas introducidas: `NO_NEW_EXTERNAL_WRITES=PASS`.
+  - Declaración formal: `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED` debido a las 6 rutas de escritura heredadas preexistentes en `ListasRepository.cs`: `TIPO_LISTAS_CAUTELA` (INSERT/UPDATE/DELETE), `REPORTE_COINCIDENCIAS` (UPDATE), `LISTA_CAUTELA` (DELETE/INSERT).
+  - Validador preventivo permanente: `tools/validate_external_writes.ps1` activo y pasando.
+- **Métricas de Pruebas y Conteos Reales:**
+  - Backend unitario: 1,306 superadas en `RL.API.Tests` (1,306/1,306 PASS, 0 fallidas, 0 omitidas).
+  - Frontend Vitest: 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
+  - Validadores del repositorio: 5/5 PASS (`validate_repository_structure.ps1`, `validate_database_scripts.ps1`, `validate_documentation_links.ps1`, `validate_agent_skills.py`, `validate_external_writes.ps1`).
+  - Pruebas de integración Oracle XE: 8 omitidas localmente por requerir contenedor `Database:Profile=LOCAL_XE`, delegadas a verificación en GitHub Actions CI.
+- **Gobernanza y Preservación:**
+  - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+  - Rama `main` y producción: 0 modificaciones.
+  - 38 archivos locales sin seguimiento preservados intactos fuera del stage de Git.
+  - Cero regresiones en Monitoreo de Listas (M1), Reportería PDF/Excel (M2 - B06), Favicon dinámico (M3) y Matrices de Riesgos (82 campos canónicos).
+- **Punto de continuación:** Commit y push selectivo a `origin/desarrollo` y verificación del run de GitHub Actions CI.
+
+---
+
 # ESTADO VIGENTE — Cierre B06/M1–M3, aceptación expresa del propietario (CHAT, 2026-11-19)
 
 - **Decisión:** M1, M2, M3 y el favicon cargado por imagen **APROBADOS** por el propietario; conformidad registrada en [Acta #44](https://github.com/jmejia31/RIESGO_LAVADO/issues/44) cerrada `completed`. El propietario acepta la apariencia actual sin nuevos cambios. **B06: `CLOSED_FUNCTIONALLY_WITH_EXPLICIT_ACCEPTED_LIMITATIONS`.**

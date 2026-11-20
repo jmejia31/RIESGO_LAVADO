@@ -564,6 +564,25 @@
       "main_modified": false,
       "production_modified": false,
       "oracle_institutional_writes_by_signoff": 0
+    },
+    {
+      "id": "PAQUETE-A-INTEGRIDAD-SEGURIDAD-20261119",
+      "path": "PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md",
+      "author": "ANTIG",
+      "status": "READY_FOR_INDEPENDENT_REVIEW",
+      "source_code_sha": "ef72356f4996b47dbbc29097df30deafbbfed641",
+      "quality_gate_run": 44613258648,
+      "quality_gate_status": "SUCCESS",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md",
+      "no_new_external_writes": "PASS",
+      "dnp_global_read_only_compliance": "NOT_YET_DEMONSTRATED",
+      "legacy_writes_audited": 6,
+      "backend_unit_tests": "1306_PASS_0_FAIL",
+      "frontend_unit_tests": "1059_PASS_96_SUITES_0_FAIL",
+      "repository_validators": "5/5_PASS",
+      "main_modified": false,
+      "production_modified": false,
+      "oracle_institutional_writes": 0
     }
   ]
 }

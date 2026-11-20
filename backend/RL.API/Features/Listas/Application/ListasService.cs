@@ -35,17 +35,12 @@ public sealed class ListasService : IListasService
     public Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync() => _repo.ObtenerTiposDocumentoAsync();
     public Task<List<TipoListaCautelaDto>> ObtenerTiposListasCautelaAsync() => _repo.ObtenerTiposListasCautelaAsync();
     public Task<List<ResumenListaDto>> ObtenerResumenListasAsync() => _repo.ObtenerResumenListasAsync();
-    public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento)
+    public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento, int? tipoPositivoId = null, long? idRegistroFuente = null)
     {
-        if (string.IsNullOrWhiteSpace(noDocumento))
+        if (string.IsNullOrWhiteSpace(noDocumento) && (!idRegistroFuente.HasValue || idRegistroFuente.Value <= 0))
             return null;
 
-        var positivo = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
-        if (positivo is null && !noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
-        {
-            positivo = await _repo.ObtenerPositivoPorDocumentoAsync($"EMP:{noDocumento}");
-        }
-        return positivo;
+        return await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento, tipoPositivoId, idRegistroFuente);
     }
 
     public async Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerDetalleListaParaExportarAsync(int id, long usuarioId, string? ip)
@@ -105,24 +100,12 @@ public sealed class ListasService : IListasService
         if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(dto.NoDocumento))
             return ServiceResult.BadRequest("Para registros sin identificación atribuible se requiere el identificador de registro fuente.");
 
-        // Manejo de aislamiento entre Naturales y Empleados si comparten DNI:
-        // Si es Empleado (TipoPositivoId == 3) y existe un registro activo previo con ese documento
-        // pero con un tipo diferente (ej. Natural TipoPositivoId == 2), se aísla con prefijo 'EMP:'.
-        if (dto.TipoPositivoId == 3 && !dto.NoDocumento!.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
-        {
-            var existenteDoc = await _repo.ObtenerPositivoPorDocumentoAsync(dto.NoDocumento!);
-            if (existenteDoc != null && existenteDoc.TipoPositivoId != 3)
-            {
-                dto.NoDocumento = $"EMP:{dto.NoDocumento}";
-            }
-        }
-
-        var activos = await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, dto.TipoPositivoId);
+        var activos = await _repo.ContarPositivosActivosAsync(dto.NoDocumento!, dto.TipoPositivoId, dto.IdRegistroFuente);
         if (activos > 1)
-            return ServiceResult.Conflict("No es posible actualizar el motivo porque existen múltiples positivos activos para el mismo documento.");
+            return ServiceResult.Conflict("No es posible actualizar el motivo porque existen múltiples positivos activos para el mismo documento y tipo.");
         if (activos == 1)
         {
-            var existente = await _repo.ObtenerPositivoPorDocumentoAsync(dto.NoDocumento!);
+            var existente = await _repo.ObtenerPositivoPorDocumentoAsync(dto.NoDocumento!, dto.TipoPositivoId, dto.IdRegistroFuente);
             if (existente is null || existente.TipoPositivoId != dto.TipoPositivoId)
                 return ServiceResult.Conflict("El documento ya tiene un positivo de otro tipo; seleccione una referencia individual verificada.");
         }
@@ -133,22 +116,29 @@ public sealed class ListasService : IListasService
             : ServiceResult.BadRequest("No se pudo registrar el motivo.");
     }
 
-    public async Task<ServiceResult<List<SeguimientoDto>>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde, DateTime? hasta)
+    public async Task<ServiceResult<List<SeguimientoDto>>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde = null, DateTime? hasta = null, int? tipoPositivoId = null, long? idRegistroFuente = null)
     {
         if (desde.HasValue && hasta.HasValue && desde.Value.Date > hasta.Value.Date)
             return ServiceResult<List<SeguimientoDto>>.BadRequest("La fecha desde no puede ser mayor que la fecha hasta.");
 
-        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento))
-            return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos sobre una identidad ambigua o no identificada.");
+        if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento) && (!idRegistroFuente.HasValue || idRegistroFuente.Value <= 0))
+            return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos sobre una identidad ambigua o no identificada sin registro fuente.");
 
-        if (await _repo.ContarPositivosActivosAsync(noDocumento, 0) > 1)
-            return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos porque existen múltiples positivos activos para el mismo documento.");
-
-        var result = await _repo.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
-        if (result.Count == 0 && !noDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+        var effectiveTipo = tipoPositivoId ?? 0;
+        if (effectiveTipo == 0)
         {
-            result = await _repo.ObtenerSeguimientosAsync($"EMP:{noDocumento}", desde, hasta);
+            var totalActivos = await _repo.ContarPositivosActivosAsync(noDocumento, 0, idRegistroFuente);
+            if (totalActivos > 1)
+                throw new AmbiguousIdentityException("No es posible consultar seguimientos porque existen múltiples positivos activos para el mismo documento. Especifique el tipo de sujeto.");
         }
+        else
+        {
+            var activosMismoTipo = await _repo.ContarPositivosActivosAsync(noDocumento, effectiveTipo, idRegistroFuente);
+            if (activosMismoTipo > 1)
+                return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos porque existen múltiples positivos activos para el mismo documento y tipo.");
+        }
+
+        var result = await _repo.ObtenerSeguimientosAsync(noDocumento, desde, hasta, tipoPositivoId, idRegistroFuente);
         return ServiceResult<List<SeguimientoDto>>.Ok(result);
     }
 

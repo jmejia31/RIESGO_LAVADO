@@ -196,10 +196,18 @@ export class ListasService {
     , context: createHttpErrorScopeContext('local')});
   }
 
-  getPositivoPorDocumento(noDocumento: string): Observable<ExistingPositivo | null> {
-    if (this.esMarcadorSinIdentificacion(noDocumento)) return of(null);
+  getPositivoPorDocumento(noDocumento: string, tipoPositivoId?: number, idRegistroFuente?: number): Observable<ExistingPositivo | null> {
+    if (this.esMarcadorSinIdentificacion(noDocumento) && (!idRegistroFuente || idRegistroFuente <= 0)) return of(null);
 
-    return this.http.get<{ success: boolean; datos: ExistingPositivo | null }>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}`)
+    let params = new HttpParams();
+    if (tipoPositivoId !== undefined && tipoPositivoId !== null) {
+      params = params.set('tipoPositivoId', tipoPositivoId.toString());
+    }
+    if (idRegistroFuente !== undefined && idRegistroFuente !== null) {
+      params = params.set('idRegistroFuente', idRegistroFuente.toString());
+    }
+
+    return this.http.get<{ success: boolean; datos: ExistingPositivo | null }>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}`, { params })
       .pipe(map(res => res.datos));
   }
 
@@ -208,27 +216,49 @@ export class ListasService {
       .pipe(map(res => res.datos));
   }
 
-  getSeguimientos(noDocumento: string, desde?: string, hasta?: string): Observable<Seguimiento[]> {
-    if (this.esMarcadorSinIdentificacion(noDocumento)) return of([]);
+  getSeguimientos(noDocumento: string, desde?: string, hasta?: string, tipoPositivoId?: number, idRegistroFuente?: number): Observable<Seguimiento[]> {
+    if (this.esMarcadorSinIdentificacion(noDocumento) && (!idRegistroFuente || idRegistroFuente <= 0)) return of([]);
 
     let params = new HttpParams();
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
+    if (tipoPositivoId !== undefined && tipoPositivoId !== null) {
+      params = params.set('tipoPositivoId', tipoPositivoId.toString());
+    }
+    if (idRegistroFuente !== undefined && idRegistroFuente !== null) {
+      params = params.set('idRegistroFuente', idRegistroFuente.toString());
+    }
 
     return this.http.get<{ success: boolean; datos: Seguimiento[] }>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}/seguimientos`, { params })
       .pipe(map(res => res.datos));
   }
 
-  registrarSeguimiento(noDocumento: string, motivoIngreso: string, archivos: File[]): Observable<any> {
+  registrarSeguimiento(noDocumento: string, motivoIngreso: string, archivos: File[], tipoPositivoId?: number, idRegistroFuente?: number): Observable<any> {
     // Envío documental: usa FormData para conservar archivos y campos validados por backend.
     const formData = new FormData();
     formData.append('motivoIngreso', motivoIngreso);
+    if (tipoPositivoId !== undefined && tipoPositivoId !== null) {
+      formData.append('tipoPositivoId', tipoPositivoId.toString());
+    }
+    if (idRegistroFuente !== undefined && idRegistroFuente !== null) {
+      formData.append('idRegistroFuente', idRegistroFuente.toString());
+    }
     if (archivos && archivos.length > 0) {
       archivos.forEach(file => {
         formData.append('archivos', file, file.name);
       });
     }
+
+    let params = new HttpParams();
+    if (tipoPositivoId !== undefined && tipoPositivoId !== null) {
+      params = params.set('tipoPositivoId', tipoPositivoId.toString());
+    }
+    if (idRegistroFuente !== undefined && idRegistroFuente !== null) {
+      params = params.set('idRegistroFuente', idRegistroFuente.toString());
+    }
+
     return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos/${encodeURIComponent(noDocumento)}/seguimientos`, formData, {
+      params,
       headers: {
         [CONFIRMACION_TITULO_HEADER]: 'Confirmar seguimiento',
         [CONFIRMACION_TEXTO_HEADER]: '¿Desea guardar la nota de seguimiento y sus evidencias?',

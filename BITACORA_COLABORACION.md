@@ -12276,3 +12276,67 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Pruebas realizadas directamente por CHAT en esta intervención:** lectura de referencias GitHub, run/job del SHA exacto, expedientes e Issues #41, #42, #43, #44. **No ejecutadas por CHAT:** .NET/Angular locales, Oracle institucional, Oracle XE local, E2E autenticada real, comparaciones Excel/PDF con datos Oracle.
 - **Preservación:** no modificar `main`, producción ni Oracle; la mitigación de `picomatch` se mantiene y su relevo upstream continúa en Issue #42. La comparación exacta de agrupaciones históricas, donde difiere la unidad de conteo, no puede convertirse artificialmente en un PASS.
 - **Handoff y punto siguiente:** comprobar CI del nuevo SHA documental una vez publicado; el Gate 44603836071 es exclusivo de `6e658f20a1866aa6725b2e9ff0afd93443e739ee`. `B06_FUNCTIONAL_SCOPE=CLOSED_WITH_EXPLICIT_ACCEPTED_LIMITATIONS`. No reabrir funcionalidades M1/M2/M3 aceptadas sin defecto nuevo verificable. Las pruebas E2E institucionales no acreditadas siguen siendo requisito cuando se pretenda una futura certificación de despliegue.
+
+## 2026-11-19 18:15 -06:00 — ANTIG — Paquete A: Integridad de Expedientes y Seguridad de Fuentes Externas (Monitoreo de Listas & DNP_IHSS)
+
+- **Identificación:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - BASE_SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`.
+  - QUALITY_GATE_BASE: `44613258648` (SUCCESS).
+  - Respaldo remoto íntegro verificado: `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` en `ef72356f4996b47dbbc29097df30deafbbfed641`.
+- **Objetivo y Alcance:**
+  - Aislar completamente los expedientes de Persona Natural (`TipoPositivoId = 2`) y Empleado IHSS (`TipoPositivoId = 3`) que comparten el mismo DNI en `RL_LISTA_POSITIVOS` y `RL_DETALLE_LISTA`.
+  - Prevenir contaminación cruzada en consultas, calificaciones, seguimientos y carga de evidencias.
+  - Soportar retrocompatibilidad con claves heredadas (`DNI:<DOC>`, `EMP:<DOC>`, `SRC:<ID_REGISTRO_FUENTE>`).
+  - Implementar rechazo explícito por ambigüedad (HTTP 409 Conflict, `AMBIGUOUS_IDENTITY`) cuando coexisten múltiples positivos activos sin tipo especificado (Escenario A-11).
+  - Realizar auditoría estática exhaustiva de escrituras contra el esquema externo `DNP_IHSS`, catalogando las 6 rutas heredadas y garantizando cero escrituras nuevas.
+- **Archivos modificados:**
+  - Backend:
+    - `backend/RL.API/Features/Listas/Persistence/IListasRepository.cs`
+    - `backend/RL.API/Features/Listas/Persistence/ListasRepository.cs`
+    - `backend/RL.API/Features/Listas/Application/IListasService.cs`
+    - `backend/RL.API/Features/Listas/Application/ListasService.cs`
+    - `backend/RL.API/Features/Listas/Application/IEvidenciasService.cs`
+    - `backend/RL.API/Features/Listas/Application/EvidenciasService.cs`
+    - `backend/RL.API/Features/Listas/ListasController.cs`
+    - `backend/RL.API.Tests/Features/Listas/ListasApplicationTests.cs`
+    - `backend/RL.API.Tests/Features/Listas/ListasControllerTests.cs`
+  - Frontend:
+    - `frontend/rl-app/src/app/features/admin/listas/data-access/listas.service.ts`
+    - `frontend/rl-app/src/app/features/admin/listas/data-access/listas.service.spec.ts`
+    - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.impl.ts`
+    - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts`
+- **Archivos creados:**
+  - `backend/RL.API.Tests/Features/Listas/EvidenciasServiceIsolationTests.cs` (nuevas pruebas unitarias de aislamiento de seguimientos y ambigüedad A-11).
+  - `tools/validate_external_writes.ps1` (validador preventivo automatizado de escrituras a `DNP_IHSS`).
+  - `docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md` (expediente de certificación técnica).
+- **Archivos de control y handoff actualizados:**
+  - `docs/certificaciones/INDEX.json`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Resultados de verificación y conteos reales:**
+  - Backend unitario (`RL.API.Tests`): 1,306 pruebas ejecutadas y superadas (1,306/1,306 PASS, 0 fallidas).
+  - Frontend Vitest (`frontend/rl-app`): 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
+  - `tools/validate_repository_structure.ps1`: PASS (118 rutas obligatorias, 1309 archivos revisados, 3 maestros).
+  - `tools/validate_database_scripts.ps1`: PASS (Esquema base e integridad de scripts).
+  - `tools/validate_documentation_links.ps1`: PASS (264 documentos Markdown, 284 enlaces revisados).
+  - `python tools/validate_agent_skills.py`: PASS (14 Agent Skills validadas).
+  - `tools/validate_external_writes.ps1`: PASS (`NO_NEW_EXTERNAL_WRITES=PASS`, `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`, 6 rutas heredadas catalogadas).
+- **Pruebas no ejecutadas y motivo exacto:**
+  - Pruebas de integración Oracle XE (8 pruebas) omitidas localmente por requerir contenedor activo `Database:Profile=LOCAL_XE`; se delegan a la verificación en GitHub Actions CI.
+  - Pruebas E2E de inicio de sesión real en navegador institucional no ejecutadas por falta de host con AD/Oracle real.
+- **Auditoría de Fuentes Externas (DNP_IHSS):**
+  - Se verificó que cero escrituras nuevas fueron introducidas (`NO_NEW_EXTERNAL_WRITES=PASS`).
+  - Se documentaron las 6 operaciones heredadas en `ListasRepository.cs`: `TIPO_LISTAS_CAUTELA` (INSERT/UPDATE/DELETE), `REPORTE_COINCIDENCIAS` (UPDATE) y `LISTA_CAUTELA` (DELETE/INSERT).
+  - Declaración formal: `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`.
+- **Gobernanza y restricciones cumplidas:**
+  - Cero mutaciones a Oracle institucional (DDL=0, DML=0).
+  - Cero modificaciones a producción.
+  - Rama `main` no tocada (0 modificaciones).
+  - 38 archivos locales sin seguimiento preservados intactos fuera del stage de Git.
+  - Cero regresiones en M1, M2 (PDF/Excel B06), M3 (Branding dinámico) y Matrices de Riesgos (82 campos canónicos).
+- **Punto exacto de continuación:**
+  - Commit y push selectivo a `origin/desarrollo`.
+  - Verificación del run de GitHub Actions CI para el commit generado.
+  - Queda en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / propietario.

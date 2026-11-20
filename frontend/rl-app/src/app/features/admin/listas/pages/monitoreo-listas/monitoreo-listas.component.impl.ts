@@ -999,11 +999,11 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
 
     const obsPositivo = row.tieneMotivo
-      ? this.listasService.getPositivoPorDocumento(row.numeroPatrono)
+      ? this.listasService.getPositivoPorDocumento(row.numeroPatrono, 1)
       : of(null);
 
     const obsSeguimientos = row.tieneMotivo
-      ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta, 1)
       : of([]);
 
     forkJoin([obsPositivo, obsSeguimientos]).subscribe({
@@ -1047,10 +1047,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
     const obsPositivo = row.tieneMotivo
-      ? this.listasService.getPositivoPorDocumento(docNum)
+      ? this.listasService.getPositivoPorDocumento(docNum, 2, row.idRegistroFuente)
       : of(null);
     const obsSeguimientos = row.tieneMotivo
-      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta, 2, row.idRegistroFuente)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1232,10 +1232,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
     const obsPositivo = row.tieneMotivo
-      ? this.listasService.getPositivoPorDocumento(docNum)
+      ? this.listasService.getPositivoPorDocumento(docNum, 3, row.idRegistroFuente)
       : of(null);
     const obsSeguimientos = row.tieneMotivo
-      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta, 3, row.idRegistroFuente)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1583,10 +1583,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
 
     const obsPositivo = row.tieneMotivo
-      ? this.listasService.getPositivoPorDocumento(row.numeroPatrono)
+      ? this.listasService.getPositivoPorDocumento(row.numeroPatrono, 1)
       : of(null);
     const obsSeguimientos = row.tieneMotivo
-      ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta, 1)
       : of([]);
 
     forkJoin([obsPositivo, obsSeguimientos]).subscribe({
@@ -1638,10 +1638,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion, 'global', row.idRegistroFuente, row.tipoFuente);
     const obsPositivo = row.tieneMotivo
-      ? this.listasService.getPositivoPorDocumento(docNum)
+      ? this.listasService.getPositivoPorDocumento(docNum, 2, row.idRegistroFuente)
       : of(null);
     const obsSeguimientos = row.tieneMotivo
-      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta, 2, row.idRegistroFuente)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1701,10 +1701,10 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad, 'global', row.idRegistroFuente, row.tipoFuente, this.periodoPlanilla() ? `${this.periodoPlanilla()}-01` : undefined);
     const obsPositivo = row.tieneMotivo
-      ? this.listasService.getPositivoPorDocumento(docNum)
+      ? this.listasService.getPositivoPorDocumento(docNum, 3, row.idRegistroFuente)
       : of(null);
     const obsSeguimientos = row.tieneMotivo
-      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      ? this.listasService.getSeguimientos(docNum, rangoSeguimiento.desde, rangoSeguimiento.hasta, 3, row.idRegistroFuente)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -2315,7 +2315,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       listaCoincidencia: row.listaCoincidencia || ''
     });
 
-    this.listasService.getPositivoPorDocumento(docNum).subscribe({
+    this.listasService.getPositivoPorDocumento(docNum, tipoPosId, row.idRegistroFuente).subscribe({
       next: (existing) => {
         if (existing) {
           this.formTipoDocId.set(existing.tipoDocumentoId || defaultTipoDoc);
@@ -2466,7 +2466,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       this.listasService.registrarPositivo(dto).subscribe({
         next: (resp) => {
           if (notaSegFinal) {
-            this.listasService.registrarSeguimiento(noDocumento, notaSegFinal, archivosSeg).subscribe({
+            this.listasService.registrarSeguimiento(noDocumento, notaSegFinal, archivosSeg, tipoPositivoId, idRegistroFuente ?? undefined).subscribe({
               next: () => {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();
@@ -2573,14 +2573,19 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.archivosSeleccionados.set([]);
     this.modalSeguimientoAbierto.set(true);
 
-    this.cargarSeguimientos(docNum);
+    this.cargarSeguimientos(docNum, tipoPosId, row.idRegistroFuente);
   }
 
-  cargarSeguimientos(noDocumento: string) {
+  cargarSeguimientos(noDocumento: string, tipoPositivoId?: number, idRegistroFuente?: number) {
     const solicitud = ++this.seguimientoSolicitud;
     this.cargandoSeguimiento.set(true);
     this.seguimientoError.set(null);
-    this.listasService.getSeguimientos(noDocumento, this.filtroSeguimientoDesde(), this.filtroSeguimientoHasta()).subscribe({
+    const effectiveTipo = tipoPositivoId ?? this.entidadSeleccionada()?.tipoPositivoId;
+    const effectiveFuente = idRegistroFuente ?? this.entidadSeleccionada()?.idRegistroFuente;
+    const request$ = (effectiveTipo !== undefined && effectiveTipo !== null)
+      ? this.listasService.getSeguimientos(noDocumento, this.filtroSeguimientoDesde(), this.filtroSeguimientoHasta(), effectiveTipo, effectiveFuente ?? undefined)
+      : this.listasService.getSeguimientos(noDocumento, this.filtroSeguimientoDesde(), this.filtroSeguimientoHasta());
+    request$.subscribe({
       next: (res) => {
         if (solicitud !== this.seguimientoSolicitud) return;
         this.listaSeguimientos.set(res);
@@ -2761,7 +2766,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     import('sweetalert2').then(Swal => {
       const request$ = this.modoEdicion()
         ? this.listasService.actualizarSeguimiento(this.seguimientoEditandoId()!, motivo, archivos)
-        : this.listasService.registrarSeguimiento(entidad.noDocumento, motivo, archivos);
+        : this.listasService.registrarSeguimiento(entidad.noDocumento, motivo, archivos, entidad.tipoPositivoId, entidad.idRegistroFuente);
 
       request$.subscribe({
         next: (resp) => {
@@ -2778,7 +2783,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
             confirmButtonColor: 'var(--ihss-primary-color)'
           });
 
-          this.cargarSeguimientos(entidad.noDocumento);
+          this.cargarSeguimientos(entidad.noDocumento, entidad.tipoPositivoId, entidad.idRegistroFuente);
         },
         error: (err) => {
           this.guardandoSeguimiento.set(false);

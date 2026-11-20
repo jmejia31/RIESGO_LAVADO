@@ -240,6 +240,110 @@ public sealed class ListasApplicationTests
     }
 
     [Fact]
+    public async Task ObtenerPositivoPorDocumento_Natural_NoCaeEnFallbackDeEmpleado()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), args =>
+        {
+            var doc = args[0]?.ToString();
+            var tipo = args.Length > 1 ? (int?)args[1] : null;
+            if (tipo == 2)
+            {
+                // Para natural devuelve null (no existe aún)
+                return Task.FromResult<ExistingPositivoDto?>(null);
+            }
+            if (tipo == 3 || doc == "EMP:0801199012345")
+            {
+                // Empleado existe
+                return Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto { PositivoId = 99, TipoPositivoId = 3 });
+            }
+            return Task.FromResult<ExistingPositivoDto?>(null);
+        });
+
+        // Consulta de persona natural (tipoPositivoId = 2)
+        var resultNatural = await service.ObtenerPositivoPorDocumentoAsync("0801199012345", 2);
+        Assert.Null(resultNatural);
+
+        // Consulta de empleado (tipoPositivoId = 3)
+        var resultEmpleado = await service.ObtenerPositivoPorDocumentoAsync("0801199012345", 3);
+        Assert.NotNull(resultEmpleado);
+        Assert.Equal(99, resultEmpleado.PositivoId);
+        Assert.Equal(3, resultEmpleado.TipoPositivoId);
+    }
+
+    [Fact]
+    public async Task ObtenerSeguimientos_AmbiguedadSinTipo_LanzaAmbiguousIdentityException()
+    {
+        var service = CrearServicio(out var repo, out _);
+        // Cuando no se especifica tipo (0), hay 2 positivos (uno natural y uno empleado con mismo DNI)
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), args =>
+        {
+            var tipo = (int)args[1]!;
+            return Task.FromResult(tipo == 0 ? 2 : 1);
+        });
+
+        await Assert.ThrowsAsync<AmbiguousIdentityException>(async () =>
+        {
+            await service.ObtenerSeguimientosAsync("0801199012345", null, null, null);
+        });
+    }
+
+    [Fact]
+    public async Task ObtenerSeguimientos_ConTipoPositivoId_AislaYNoLanzaAmbiguedad()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), args => Task.FromResult(1));
+        repo.On(nameof(IListasRepository.ObtenerSeguimientosAsync), args =>
+        {
+            var tipo = (int?)args[3];
+            return Task.FromResult(new List<SeguimientoDto>
+            {
+                new() { DetalleListaId = tipo == 2 ? 101 : 202, PositivoId = tipo == 2 ? 10 : 20, MotivoIngreso = tipo == 2 ? "Nota Natural" : "Nota Empleado" }
+            });
+        });
+
+        var segNatural = await service.ObtenerSeguimientosAsync("0801199012345", null, null, 2);
+        Assert.True(segNatural.Success);
+        Assert.NotNull(segNatural.Data);
+        Assert.Single(segNatural.Data);
+        Assert.Equal(101, segNatural.Data[0].DetalleListaId);
+        Assert.Equal("Nota Natural", segNatural.Data[0].MotivoIngreso);
+
+        var segEmpleado = await service.ObtenerSeguimientosAsync("0801199012345", null, null, 3);
+        Assert.True(segEmpleado.Success);
+        Assert.NotNull(segEmpleado.Data);
+        Assert.Single(segEmpleado.Data);
+        Assert.Equal(202, segEmpleado.Data[0].DetalleListaId);
+        Assert.Equal("Nota Empleado", segEmpleado.Data[0].MotivoIngreso);
+    }
+
+    [Fact]
+    public async Task RegistrarPositivo_ClaveFuenteSrc_PreservaReferencia()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(0));
+        repo.On(nameof(IListasRepository.RegistrarPositivoAsync), _ => Task.FromResult(true));
+
+        var dto = new RegistrarPositivoDto
+        {
+            TipoDocumentoId = 1,
+            TipoPositivoId = 2,
+            NoDocumento = "N/A(3)",
+            IdRegistroFuente = 777,
+            NombreCompleto = "Sin Identificacion",
+            MotivoIngreso = "Investigación preliminar",
+            TipoListaCautelaId = 1,
+            OrigenRegistro = "DNP_LISTAS"
+        };
+
+        var result = await service.RegistrarPositivoAsync(dto, 5);
+        Assert.True(result.Success);
+        Assert.Equal("SRC:777", dto.NoDocumento);
+        var calls = repo.CallsTo(nameof(IListasRepository.RegistrarPositivoAsync));
+        Assert.Single(calls);
+    }
+
+    [Fact]
     public async Task ObtenerDetalleNatural_ConsultaAunqueLaIdentidadNoEsteVerificada()
     {
         var service = CrearServicio(out var repo, out _);

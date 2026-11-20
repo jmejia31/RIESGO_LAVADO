@@ -252,11 +252,14 @@ namespace RL.API.Features.Listas
 
         [HttpGet("positivos/{noDocumento}")]
         [ModuloAuthorize(4)]
-        public async Task<IActionResult> ObtenerPositivoPorDocumento(string noDocumento)
+        public async Task<IActionResult> ObtenerPositivoPorDocumento(
+            string noDocumento,
+            [FromQuery] int? tipoPositivoId = null,
+            [FromQuery] long? idRegistroFuente = null)
         {
             try
             {
-                var result = await _listasService.ObtenerPositivoPorDocumentoAsync(noDocumento);
+                var result = await _listasService.ObtenerPositivoPorDocumentoAsync(noDocumento, tipoPositivoId, idRegistroFuente);
                 return Ok(new { success = true, datos = result });
             }
             catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
@@ -264,16 +267,24 @@ namespace RL.API.Features.Listas
 
         [HttpGet("positivos")]
         [ModuloAuthorize(4)]
-        public Task<IActionResult> ObtenerPositivoPorConsulta([FromQuery] string noDocumento)
-            => ObtenerPositivoPorDocumento(noDocumento);
+        public Task<IActionResult> ObtenerPositivoPorConsulta(
+            [FromQuery] string noDocumento,
+            [FromQuery] int? tipoPositivoId = null,
+            [FromQuery] long? idRegistroFuente = null)
+            => ObtenerPositivoPorDocumento(noDocumento, tipoPositivoId, idRegistroFuente);
 
         [HttpGet("positivos/{noDocumento}/seguimientos")]
         [ModuloAuthorize(4)]
-        public async Task<IActionResult> ObtenerSeguimientos(string noDocumento, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
+        public async Task<IActionResult> ObtenerSeguimientos(
+            string noDocumento,
+            [FromQuery] DateTime? desde,
+            [FromQuery] DateTime? hasta,
+            [FromQuery] int? tipoPositivoId = null,
+            [FromQuery] long? idRegistroFuente = null)
         {
             try
             {
-                var result = await _listasService.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
+                var result = await _listasService.ObtenerSeguimientosAsync(noDocumento, desde, hasta, tipoPositivoId, idRegistroFuente);
                 return result.Success
                     ? Ok(new { success = true, datos = result.Data })
                     : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
@@ -283,8 +294,13 @@ namespace RL.API.Features.Listas
 
         [HttpGet("seguimientos")]
         [ModuloAuthorize(4)]
-        public Task<IActionResult> ObtenerSeguimientosPorConsulta([FromQuery] string noDocumento, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
-            => ObtenerSeguimientos(noDocumento, desde, hasta);
+        public Task<IActionResult> ObtenerSeguimientosPorConsulta(
+            [FromQuery] string noDocumento,
+            [FromQuery] DateTime? desde,
+            [FromQuery] DateTime? hasta,
+            [FromQuery] int? tipoPositivoId = null,
+            [FromQuery] long? idRegistroFuente = null)
+            => ObtenerSeguimientos(noDocumento, desde, hasta, tipoPositivoId, idRegistroFuente);
 
         [HttpPost("positivos/{noDocumento}/seguimientos")]
         [ModuloAuthorize(4)]
@@ -292,11 +308,17 @@ namespace RL.API.Features.Listas
         public async Task<IActionResult> RegistrarSeguimiento(
             string noDocumento,
             [FromForm] string motivoIngreso,
-            [FromForm] List<IFormFile>? archivos)
+            [FromForm] List<IFormFile>? archivos,
+            [FromQuery] int? tipoPositivoId = null,
+            [FromQuery] long? idRegistroFuente = null,
+            [FromForm] int? tipoPositivoIdForm = null,
+            [FromForm] long? idRegistroFuenteForm = null)
         {
             try
             {
-                var result = await _evidenciasService.RegistrarSeguimientoAsync(noDocumento, motivoIngreso, archivos, ObtenerUsuarioId());
+                var effectiveTipoPositivoId = tipoPositivoId ?? tipoPositivoIdForm;
+                var effectiveIdRegistroFuente = idRegistroFuente ?? idRegistroFuenteForm;
+                var result = await _evidenciasService.RegistrarSeguimientoAsync(noDocumento, motivoIngreso, archivos, ObtenerUsuarioId(), effectiveTipoPositivoId, effectiveIdRegistroFuente);
                 return Responder(result);
             }
             catch (AmbiguousIdentityException ex) { return Conflict(new { success = false, codigo = "AMBIGUOUS_IDENTITY", mensaje = ex.Message }); }
@@ -308,8 +330,12 @@ namespace RL.API.Features.Listas
         public Task<IActionResult> RegistrarSeguimientoPorConsulta(
             [FromQuery] string noDocumento,
             [FromForm] string motivoIngreso,
-            [FromForm] List<IFormFile>? archivos)
-            => RegistrarSeguimiento(noDocumento, motivoIngreso, archivos);
+            [FromForm] List<IFormFile>? archivos,
+            [FromQuery] int? tipoPositivoId = null,
+            [FromQuery] long? idRegistroFuente = null,
+            [FromForm] int? tipoPositivoIdForm = null,
+            [FromForm] long? idRegistroFuenteForm = null)
+            => RegistrarSeguimiento(noDocumento, motivoIngreso, archivos, tipoPositivoId, idRegistroFuente, tipoPositivoIdForm, idRegistroFuenteForm);
 
         [HttpGet("evidencias/{evidenciaId}")]
         [ModuloAuthorize(4)]
