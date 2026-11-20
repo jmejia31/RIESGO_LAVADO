@@ -2,17 +2,19 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Subject, of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { FamiliaCrearModalComponent } from './familia-crear-modal.component';
 
 describe('FamiliaCrearModalComponent — UI-FAM.3 + UI-FAM.QA', () => {
   let fixture: ComponentFixture<FamiliaCrearModalComponent>;
   let component: FamiliaCrearModalComponent;
   let service: MatricesRiesgosService;
+  const confirmation = { confirm: vi.fn(() => Promise.resolve(true)) };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FamiliaCrearModalComponent, HttpClientTestingModule],
-      providers: [MatricesRiesgosService]
+      providers: [MatricesRiesgosService, { provide: InstitutionalConfirmationService, useValue: confirmation }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FamiliaCrearModalComponent);
@@ -63,14 +65,14 @@ describe('FamiliaCrearModalComponent — UI-FAM.3 + UI-FAM.QA', () => {
     expect(component.error()).toBe('El código de la familia es obligatorio.');
   });
 
-  it('5. normaliza con trim y envía únicamente FamCodigo, FamNombre y FamDescripcion', () => {
+  it('5. normaliza con trim y envía únicamente FamCodigo, FamNombre y FamDescripcion', async () => {
     const spyCrear = vi.spyOn(service, 'crearFamiliaFormulario').mockReturnValue(of(25));
     const spyCreada = vi.spyOn(component.creada, 'emit');
     component.codigo = '  PRUEBA_FORMULARIO  ';
     component.nombre = '  Prueba de Formulario  ';
     component.descripcion = '  Familia institucional de prueba.  ';
 
-    component.guardar();
+    await component.guardar();
 
     expect(spyCrear).toHaveBeenCalledWith({
       famCodigo: 'PRUEBA_FORMULARIO',
@@ -80,13 +82,14 @@ describe('FamiliaCrearModalComponent — UI-FAM.3 + UI-FAM.QA', () => {
     expect(spyCreada).toHaveBeenCalledWith({ id: 25, nombre: 'Prueba de Formulario' });
   });
 
-  it('6. evita doble submit mientras la creación está pendiente', () => {
+  it('6. evita doble submit mientras la creación está pendiente', async () => {
     const pendiente = new Subject<number>();
     const spyCrear = vi.spyOn(service, 'crearFamiliaFormulario').mockReturnValue(pendiente);
     component.codigo = 'FAMILIA_UNICA';
     component.nombre = 'Familia única';
 
-    component.guardar();
+    const primeraSolicitud = component.guardar();
+    await primeraSolicitud;
     component.guardar();
 
     expect(component.guardando()).toBe(true);
@@ -96,14 +99,14 @@ describe('FamiliaCrearModalComponent — UI-FAM.3 + UI-FAM.QA', () => {
     expect(component.guardando()).toBe(false);
   });
 
-  it('7. conserva el modal y presenta el detalle cuando backend rechaza la creación', () => {
+  it('7. conserva el modal y presenta el detalle cuando backend rechaza la creación', async () => {
     vi.spyOn(service, 'crearFamiliaFormulario').mockReturnValue(throwError(() => ({
       error: { detail: 'Ya existe una familia con ese código.' }
     })));
     component.codigo = 'DUPLICADA';
     component.nombre = 'Familia duplicada';
 
-    component.guardar();
+    await component.guardar();
     fixture.detectChanges();
 
     expect(component.guardando()).toBe(false);

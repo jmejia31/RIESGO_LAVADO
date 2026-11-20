@@ -259,12 +259,25 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.estadoAd.set('idle');
   }
 
-  guardar() {
+  async guardar(): Promise<void> {
     if (this.esDominio && (this.estadoAd() === 'verificando' || this.estadoAd() === 'no-existe' || this.estadoAd() === 'bloqueado' || this.estadoAd() === 'inactivo')) {
       return;
     }
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.errorGuardar.set(null);
+
+    const confirmado = await this.confirmation.confirm({
+      title: this.editando() ? 'Guardar cambios del usuario' : 'Registrar usuario',
+      message: this.editando()
+        ? 'Se actualizarán los datos, rol y permisos del usuario seleccionado.'
+        : 'Se registrará el nuevo usuario con los permisos diligenciados.',
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
+
     this.guardando.set(true);
 
     const obs = this.editando() 

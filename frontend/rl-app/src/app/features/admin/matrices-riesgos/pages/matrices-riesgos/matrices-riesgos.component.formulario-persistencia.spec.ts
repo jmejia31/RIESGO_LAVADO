@@ -5,6 +5,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (F6.3)', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -94,7 +95,8 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
       providers: [
         { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
         { provide: MatricesRiesgosService, useValue: service },
-        { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } }
+        { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } },
+        { provide: InstitutionalConfirmationService, useValue: { confirm: vi.fn().mockResolvedValue(true) } }
       ]
     }).compileComponents();
 
@@ -129,7 +131,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     expect(component.error()).toContain('No se pudo cargar la versión autoritativa');
   });
 
-  it('3. Flujo completo PUT -> GET mismo verId -> Equivalencia semántica -> Éxito y cierre normal', () => {
+  it('3. Flujo completo PUT -> GET mismo verId -> Equivalencia semántica -> Éxito y cierre normal', async () => {
     component.abrirDefinicion(versionMock);
     expect(component.versionEditando()).not.toBeNull();
 
@@ -194,7 +196,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
       verJson: jsonPersistidoConClavesEnOtroOrden
     }));
 
-    component.guardarDefinicion();
+    await component.guardarDefinicion();
 
     expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(100, jsonModificado);
     expect(service.obtenerVersionFormulario).toHaveBeenCalledWith(100);
@@ -206,7 +208,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     expect(component.mensajeFormBuilder()).toContain('Definición guardada correctamente');
   });
 
-  it('4. Discrepancia semántica post-save: bloquea el cierre (fail-closed), no muestra éxito y preserva el contexto de edición', () => {
+  it('4. Discrepancia semántica post-save: bloquea el cierre (fail-closed), no muestra éxito y preserva el contexto de edición', async () => {
     component.abrirDefinicion(versionMock);
     expect(component.versionEditando()).not.toBeNull();
 
@@ -230,7 +232,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
       verJson: jsonPersistidoDiscrepante
     }));
 
-    component.guardarDefinicion();
+    await component.guardarDefinicion();
 
     expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(100, jsonEnviado);
     // No debe haber cerrado el modal
@@ -240,7 +242,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     expect(component.mensaje()).toBeFalsy();
   });
 
-  it('5. Discrepancia de orden en array: detecta que ["001", "G-IVM"] !== ["G-IVM", "001"] y bloquea cierre', () => {
+  it('5. Discrepancia de orden en array: detecta que ["001", "G-IVM"] !== ["G-IVM", "001"] y bloquea cierre', async () => {
     component.abrirDefinicion(versionMock);
 
     const jsonEnviado = JSON.stringify({
@@ -260,13 +262,13 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
       verJson: jsonPersistidoInvertido
     }));
 
-    component.guardarDefinicion();
+    await component.guardarDefinicion();
 
     expect(component.versionEditando()).not.toBeNull();
     expect(component.errorFormBuilder()).toContain('no coincide semánticamente');
   });
 
-  it('6. Error en GET post-save: falla de forma segura (fail-closed) sin cerrar el editor', () => {
+  it('6. Error en GET post-save: falla de forma segura (fail-closed) sin cerrar el editor', async () => {
     component.abrirDefinicion(versionMock);
 
     component.definicionTecnica = JSON.stringify({ codigoFormulario: 'FORM_TEST', secciones: [] });
@@ -275,7 +277,7 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     service.actualizarBorradorFormulario.mockReturnValue(of({ success: true }));
     service.obtenerVersionFormulario.mockReturnValue(throwError(() => ({ status: 500, message: 'Server error' })));
 
-    component.guardarDefinicion();
+    await component.guardarDefinicion();
 
     expect(component.versionEditando()).not.toBeNull();
     expect(component.errorFormBuilder()).toContain('No se pudo verificar la persistencia');

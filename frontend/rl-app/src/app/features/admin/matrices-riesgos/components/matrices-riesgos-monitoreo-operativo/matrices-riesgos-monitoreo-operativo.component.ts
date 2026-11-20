@@ -21,6 +21,7 @@ import { INSTITUTIONAL_EVIDENCE_FILE_POLICY } from '../../../../../shared/compon
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
@@ -32,6 +33,7 @@ import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions 
 export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   private readonly service = inject(MatricesRiesgosService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
   @Input() evaluacionIdInicial: number | null = null;
@@ -46,6 +48,9 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>([]);
+  readonly modalAlertaAbierto = signal(false);
+  readonly modalAutomonitoreoAbierto = signal(false);
+  readonly confirmando = signal(false);
 
   evaluacionId = 0;
   readonly estadosRiesgo = canonicalCatalogSelectOptions('MONITORING_RISK_STATUS');
@@ -90,6 +95,8 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   readonly estadoMonitoreoDrafts: Record<number, string> = {};
   readonly efectividadMonitoreoDrafts: Record<number, number | null> = {};
   readonly archivosPendientesPorControl = signal<Record<number, File[]>>({});
+  private alertaSnapshot = '';
+  private automonitoreoSnapshot = '';
 
   ngOnInit(): void {
     const cargarCatalogo = this.service.obtenerCatalogoEstadosEvaluacion;
@@ -117,6 +124,8 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
 
   seleccionarEvaluacion(valor: number | string): void {
     this.evaluacionId = Number(valor) || 0;
+    this.modalAlertaAbierto.set(false);
+    this.modalAutomonitoreoAbierto.set(false);
     this.alertas.set([]);
     this.automonitoreos.set([]);
     this.bloque6.set(null);
@@ -166,12 +175,19 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     return controles.filter(control => control.tipo === tipo);
   }
 
-  guardarMonitoreoControl(control: ControlMonitoreoMatrizDto): void {
+  async guardarMonitoreoControl(control: ControlMonitoreoMatrizDto): Promise<void> {
+    if (this.operacionEnCurso()) return;
     const dto: ControlMonitoreoActualizarDto = {
       evaluacionId: this.evaluacionId,
       estadoMonitoreo: this.estadoMonitoreoDrafts[control.controlId]?.trim() || null,
       efectividadMonitoreo: this.efectividadMonitoreoDrafts[control.controlId]
     };
+    const confirmado = await this.confirmarGuardado(
+      'Guardar seguimiento del control',
+      `¿Desea guardar el estado y la efectividad del control #${control.controlId}?`,
+      'Guardar seguimiento'
+    );
+    if (!confirmado) return;
     this.guardando.set(true);
     this.service.actualizarMonitoreoControl(control.controlId, dto).subscribe({
       next: () => {
@@ -184,13 +200,21 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     });
   }
 
-  guardarObservacion(tipo: 'area' | 'ugr'): void {
+  async guardarObservacion(tipo: 'area' | 'ugr'): Promise<void> {
+    if (this.operacionEnCurso()) return;
     const data = this.bloque6();
     const permitido = tipo === 'area' ? data?.puedeEditarObservacionesArea : data?.puedeEditarObservacionesUgr;
     if (!permitido) {
       this.error.set(`No tiene permiso para editar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
       return;
     }
+    const etiqueta = tipo === 'area' ? 'del Área' : 'UGR';
+    const confirmado = await this.confirmarGuardado(
+      `Guardar Observaciones ${etiqueta}`,
+      `¿Desea guardar las Observaciones ${etiqueta}?`,
+      'Guardar observaciones'
+    );
+    if (!confirmado) return;
     this.guardando.set(true);
     const request = tipo === 'area'
       ? this.service.actualizarObservacionArea(this.evaluacionId, this.observacionesArea)
@@ -237,7 +261,16 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     return INSTITUTIONAL_EVIDENCE_FILE_POLICY;
   }
 
-  desvincularEvidencia(control: ControlMonitoreoMatrizDto, evidenciaId: number): void {
+  async desvincularEvidencia(control: ControlMonitoreoMatrizDto, evidenciaId: number): Promise<void> {
+    if (this.operacionEnCurso()) return;
+    const evidencia = control.evidencias.find(item => item.id === evidenciaId);
+    const nombreArchivo = evidencia?.nombreArchivo || `evidencia #${evidenciaId}`;
+    const confirmado = await this.confirmarGuardado(
+      'Desvincular evidencia',
+      `¿Desea desvincular “${nombreArchivo}” del control #${control.controlId}? El archivo no será eliminado.`,
+      'Desvincular'
+    );
+    if (!confirmado) return;
     this.guardando.set(true);
     this.service.desvincularEvidencia({ evidenciaId, tipoEntidad: 'control', entidadId: control.controlId }).subscribe({
       next: () => {
@@ -254,7 +287,16 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     return { ...resumen };
   }
 
-  crearAlerta(): void {
+  nuevoAlerta(): void {
+    this.alertaCodigo = '';
+    this.alertaIndicador = '';
+    this.alertaEstado = 'ACTIVO';
+    this.alertaSnapshot = this.estadoAlertaFormulario();
+    this.modalAlertaAbierto.set(true);
+  }
+
+  async crearAlerta(): Promise<void> {
+    if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.alertaCodigo.trim() || !this.alertaIndicador.trim()) {
       this.error.set('Seleccione una evaluación y complete código e indicador de la alerta.');
       return;
@@ -263,6 +305,13 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
       this.error.set('Revise las longitudes máximas permitidas de la alerta.');
       return;
     }
+
+    const confirmado = await this.confirmarGuardado(
+      'Registrar señal de alerta',
+      '¿Desea registrar esta señal de alerta para la evaluación seleccionada?',
+      'Registrar alerta'
+    );
+    if (!confirmado) return;
 
     const dto: SenalAlertaGuardarDto = {
       aleEvaluacionId: this.evaluacionId,
@@ -278,6 +327,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.alertaIndicador = '';
         this.alertaEstado = 'ACTIVO';
         this.mensaje.set('Señal de alerta registrada correctamente.');
+        this.cerrarModalAlertaForzado();
         this.cargarSeguimiento();
         this.cargarResumen();
         this.persisted.emit();
@@ -286,8 +336,15 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     });
   }
 
-  cambiarEstado(alerta: SenalAlertaDto): void {
+  async cambiarEstado(alerta: SenalAlertaDto): Promise<void> {
+    if (this.operacionEnCurso()) return;
     const nuevoEstado: 'ACTIVO' | 'INACTIVO' = alerta.aleEstado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+    const confirmado = await this.confirmarGuardado(
+      `${nuevoEstado === 'ACTIVO' ? 'Activar' : 'Inactivar'} alerta`,
+      `¿Desea ${nuevoEstado === 'ACTIVO' ? 'activar' : 'inactivar'} la alerta ${alerta.aleCodigo}?`,
+      nuevoEstado === 'ACTIVO' ? 'Activar alerta' : 'Inactivar alerta'
+    );
+    if (!confirmado) return;
     this.guardando.set(true);
     this.service.cambiarEstadoAlerta(alerta.aleId, nuevoEstado).subscribe({
       next: () => {
@@ -301,11 +358,27 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     });
   }
 
-  registrarAutomonitoreo(): void {
+  nuevoAutomonitoreo(): void {
+    this.monEstadoRiesgo = '';
+    this.monEstadoControles = '';
+    this.monResultado = '';
+    this.automonitoreoSnapshot = this.estadoAutomonitoreoFormulario();
+    this.modalAutomonitoreoAbierto.set(true);
+  }
+
+  async registrarAutomonitoreo(): Promise<void> {
+    if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.monEstadoRiesgo.trim() || !this.monEstadoControles.trim() || !this.monResultado.trim()) {
       this.error.set('Seleccione una evaluación y complete todos los campos del automonitoreo.');
       return;
     }
+
+    const confirmado = await this.confirmarGuardado(
+      'Registrar automonitoreo',
+      '¿Desea registrar este resultado de automonitoreo?',
+      'Registrar automonitoreo'
+    );
+    if (!confirmado) return;
 
     const dto: AutomonitoreoGuardarDto = {
       monEvaluacionId: this.evaluacionId,
@@ -321,6 +394,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.monEstadoControles = '';
         this.monResultado = '';
         this.mensaje.set('Automonitoreo registrado correctamente.');
+        this.cerrarModalAutomonitoreoForzado();
         this.cargarSeguimiento();
         this.cargarResumen();
         this.persisted.emit();
@@ -342,5 +416,103 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   private mensajeError(error: unknown, mensaje: string): string {
     const respuesta = error as { error?: { mensaje?: string }; message?: string };
     return respuesta?.error?.mensaje || respuesta?.message || mensaje;
+  }
+
+  operacionEnCurso(): boolean {
+    return this.guardando() || this.confirmando();
+  }
+
+  alertaFormularioValido(): boolean {
+    return this.evaluacionId > 0
+      && this.alertaCodigo.trim().length > 0
+      && this.alertaCodigo.trim().length <= 50
+      && this.alertaIndicador.trim().length > 0
+      && this.alertaIndicador.trim().length <= 150;
+  }
+
+  automonitoreoFormularioValido(): boolean {
+    return this.evaluacionId > 0
+      && this.monEstadoRiesgo.trim().length > 0
+      && this.monEstadoControles.trim().length > 0
+      && this.monResultado.trim().length > 0;
+  }
+
+  observacionValida(tipo: 'area' | 'ugr'): boolean {
+    return (tipo === 'area' ? this.observacionesArea : this.observacionesUgr).trim().length > 0;
+  }
+
+  async solicitarCierreAlerta(): Promise<void> {
+    if (this.operacionEnCurso()) return;
+    if (this.estadoAlertaFormulario() !== this.alertaSnapshot) {
+      const confirmado = await this.confirmation.confirm({
+        title: 'Descartar señal de alerta',
+        message: '¿Desea descartar los datos de la señal de alerta?',
+        confirmLabel: 'Descartar cambios',
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'delete',
+        confirmVariant: 'danger',
+        icon: 'warning'
+      });
+      if (!confirmado) return;
+    }
+    this.cerrarModalAlertaForzado();
+  }
+
+  async solicitarCierreAutomonitoreo(): Promise<void> {
+    if (this.operacionEnCurso()) return;
+    if (this.estadoAutomonitoreoFormulario() !== this.automonitoreoSnapshot) {
+      const confirmado = await this.confirmation.confirm({
+        title: 'Descartar automonitoreo',
+        message: '¿Desea descartar los datos del automonitoreo?',
+        confirmLabel: 'Descartar cambios',
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'delete',
+        confirmVariant: 'danger',
+        icon: 'warning'
+      });
+      if (!confirmado) return;
+    }
+    this.cerrarModalAutomonitoreoForzado();
+  }
+
+  private async confirmarGuardado(title: string, message: string, confirmLabel: string): Promise<boolean> {
+    if (this.confirmando()) return false;
+    this.confirmando.set(true);
+    try {
+      return await this.confirmation.confirm({
+        title,
+        message,
+        confirmLabel,
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'save',
+        confirmVariant: 'primary'
+      });
+    } finally {
+      this.confirmando.set(false);
+    }
+  }
+
+  private estadoAlertaFormulario(): string {
+    return JSON.stringify([this.evaluacionId, this.alertaCodigo, this.alertaIndicador, this.alertaEstado]);
+  }
+
+  private estadoAutomonitoreoFormulario(): string {
+    return JSON.stringify([this.evaluacionId, this.monEstadoRiesgo, this.monEstadoControles, this.monResultado]);
+  }
+
+  cerrarModalAlertaForzado(): void {
+    this.modalAlertaAbierto.set(false);
+    this.alertaCodigo = '';
+    this.alertaIndicador = '';
+    this.alertaEstado = 'ACTIVO';
+    this.alertaSnapshot = this.estadoAlertaFormulario();
+  }
+
+  cerrarModalAutomonitoreoForzado(): void {
+    this.modalAutomonitoreoAbierto.set(false);
+    this.monEstadoRiesgo = '';
+    this.monEstadoControles = '';
+    this.monResultado = '';
+    this.automonitoreoSnapshot = this.estadoAutomonitoreoFormulario();
   }
 }

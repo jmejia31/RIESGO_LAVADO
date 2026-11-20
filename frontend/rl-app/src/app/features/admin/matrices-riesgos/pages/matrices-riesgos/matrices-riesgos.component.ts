@@ -985,9 +985,27 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.globalState.limpiarError();
   }
 
-  guardarFamilia(): void {
+  async guardarFamilia(): Promise<void> {
+    if (this.guardando()) return;
     this.errorModal.set(null);
     this.globalState.limpiarError();
+
+    if (!this.nuevaFamiliaNombre.trim() || (!this.modoEdicionFamilia() && !this.nuevaFamiliaCodigo.trim())) {
+      this.errorModal.set('Complete los campos obligatorios antes de guardar la familia.');
+      return;
+    }
+
+    const confirmado = await this.confirmation.confirm({
+      title: this.modoEdicionFamilia() ? 'Guardar cambios de la familia' : 'Guardar nueva familia',
+      message: this.modoEdicionFamilia()
+        ? 'Se actualizará la familia seleccionada y se conservará su historial.'
+        : `Se registrará la familia ${this.nuevaFamiliaCodigo.trim()} - ${this.nuevaFamiliaNombre.trim()}.`,
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     if (this.modoEdicionFamilia()) {
       this.guardando.set(true);
@@ -1720,13 +1738,23 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       .includes(this.normalizarClaveContrato(clave));
   }
 
-  guardarBorradorEvaluacion(): void {
+  async guardarBorradorEvaluacion(): Promise<void> {
     const actual = this.evaluacionSeleccionada();
     const versionId = actual?.evaVersionId ?? this.versionVigente()?.verId ?? 0;
     if (this.riesgoId() <= 0 || versionId <= 0 || this.guardando()) {
       this.mostrarError('Seleccione un riesgo y una versión vigente antes de guardar el borrador.');
       return;
     }
+
+    const confirmado = await this.confirmation.confirm({
+      title: 'Guardar borrador de evaluación',
+      message: 'Se guardarán las respuestas actuales como borrador y se conservará el contexto de la evaluación.',
+      confirmLabel: 'Sí, guardar borrador',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     this.guardando.set(true);
     this.limpiarAlertas();
@@ -2757,7 +2785,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  guardarEvaluacion(): void {
+  async guardarEvaluacion(): Promise<void> {
     const esEdicion = this.modalEditarAbierto();
     const actual = this.evaluacionSeleccionada();
 
@@ -2769,6 +2797,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       this.mostrarError('Complete el riesgo y todos los campos obligatorios antes de guardar.');
       return;
     }
+
+    if (this.guardando()) return;
+    const confirmado = await this.confirmation.confirm({
+      title: esEdicion ? 'Guardar cambios de la evaluación' : 'Guardar evaluación',
+      message: 'Se guardarán las respuestas diligenciadas y se verificará la información persistida antes de cerrar el proceso.',
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     this.guardando.set(true);
     this.limpiarAlertas();
@@ -3003,10 +3042,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  guardarDefinicion(): void {
+  async guardarDefinicion(): Promise<void> {
     if (!this.esAdministrador() || this.soloLecturaDefinicion()) return;
     const version = this.versionEditando();
     if (!version) return;
+    if (this.guardando()) return;
 
     const jsonEnviado = this.definicionTecnica;
     try {
@@ -3017,6 +3057,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       this.mostrarError(`La definición JSON no es válida${sufijo}`);
       return;
     }
+
+    const confirmado = await this.confirmation.confirm({
+      title: 'Guardar definición del formulario',
+      message: `Se guardará el borrador de la versión ${version.verCodigo} v${version.verVersion} y se verificará su persistencia.`,
+      confirmLabel: 'Sí, guardar definición',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     this.guardando.set(true);
     this.operacionBuilderEnCurso.set('guardar');

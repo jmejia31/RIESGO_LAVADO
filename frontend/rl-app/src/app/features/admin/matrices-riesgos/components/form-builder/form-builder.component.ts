@@ -374,6 +374,20 @@ export class FormBuilderComponent implements OnInit {
     return this.camposQueUsanCatalogo(codigoCatalogo).length > 0;
   }
 
+  catalogoEdicionValida(): boolean {
+    const edicion = this.catalogoEnEdicion();
+    return !!edicion && edicion.codigo.trim().length > 0 && edicion.nombre.trim().length > 0;
+  }
+
+  elementoEdicionValido(): boolean {
+    const edicion = this.elementoEnEdicion();
+    return !!edicion
+      && String(edicion.codigo).trim().length > 0
+      && String(edicion.valor).trim().length > 0
+      && Number.isInteger(Number(edicion.orden))
+      && Number(edicion.orden) >= 1;
+  }
+
   iniciarNuevoCatalogo(): void {
     if (this.bloqueadoParaMutacion) return;
     this.feedbackCatalogo.set(null);

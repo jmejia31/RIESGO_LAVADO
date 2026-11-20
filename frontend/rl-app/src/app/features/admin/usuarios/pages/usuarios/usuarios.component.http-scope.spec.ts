@@ -2,15 +2,22 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { HTTP_ERROR_SCOPE } from '../../../../../core/http/http-error-scope';
 import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { UsuariosComponent } from './usuarios.component';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('UsuariosComponent HTTP error scope', () => {
   let http: HttpTestingController;
+  const confirmation = { confirm: vi.fn(() => Promise.resolve(true)) };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [UsuariosComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: InstitutionalConfirmationService, useValue: confirmation }
+      ]
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -20,7 +27,7 @@ describe('UsuariosComponent HTTP error scope', () => {
     TestBed.resetTestingModule();
   });
 
-  it('keeps list, save, domains and modules in their contextual scope', () => {
+  it('keeps list, save, domains and modules in their contextual scope', async () => {
     const fixture = TestBed.createComponent(UsuariosComponent);
     fixture.detectChanges();
 
@@ -45,7 +52,7 @@ describe('UsuariosComponent HTTP error scope', () => {
     const component = fixture.componentInstance;
     component.prepararNuevo();
     component.form.patchValue({ nombre: 'Ana', apellido: 'Pérez', email: 'ana@example.test', rolId: 1, modulosIds: [10] });
-    component.guardar();
+    await component.guardar();
 
     const save = http.expectOne('http://localhost:5043/api/auth/usuarios');
     expect(save.request.method).toBe('POST');

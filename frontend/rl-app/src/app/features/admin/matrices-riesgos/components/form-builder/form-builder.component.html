@@ -188,7 +188,7 @@
             </div>
             <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" (click)="cancelarEdicionCatalogo()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" title="Cancelar edición de catálogo" aria-label="Cancelar edición de catálogo">
             <app-action-icon action="cancel"></app-action-icon>
-          </button><button type="button" id="btn-guardar-catalogo" (click)="guardarEdicionCatalogo()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ihss-600 text-white hover:bg-ihss-700 shadow-xs" title="Guardar catálogo" aria-label="Guardar catálogo">
+          </button><button type="button" id="btn-guardar-catalogo" (click)="guardarEdicionCatalogo()" [disabled]="bloqueadoParaMutacion || !catalogoEdicionValida()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ihss-600 text-white hover:bg-ihss-700 shadow-xs disabled:cursor-not-allowed disabled:opacity-50" title="Guardar catálogo" aria-label="Guardar catálogo">
             <app-action-icon action="save"></app-action-icon>
           </button></div>
           </div>
@@ -224,7 +224,7 @@
               </div>
               <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" (click)="cancelarEdicionElemento()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" title="Cancelar edición del elemento" aria-label="Cancelar edición del elemento">
             <app-action-icon action="cancel"></app-action-icon>
-          </button><button type="button" id="btn-guardar-elemento" (click)="guardarElementoCatalogo()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs" title="Guardar elemento" aria-label="Guardar elemento">
+          </button><button type="button" id="btn-guardar-elemento" (click)="guardarElementoCatalogo()" [disabled]="bloqueadoParaMutacion || !elementoEdicionValido()" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs disabled:cursor-not-allowed disabled:opacity-50" title="Guardar elemento" aria-label="Guardar elemento">
             <app-action-icon action="save"></app-action-icon>
           </button></div>
             </div>

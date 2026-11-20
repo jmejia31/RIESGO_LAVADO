@@ -1,150 +1,59 @@
 <section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-monitoreo">
-  <div>
-    <h2 id="titulo-monitoreo" class="text-lg font-bold text-slate-900">Monitoreo operativo</h2>
-    <p class="text-sm text-slate-600">Supervise señales de alerta, automonitoreo y efectividad continua de matrices.</p>
-  </div>
+  <div><h2 id="titulo-monitoreo" class="text-lg font-bold text-slate-900">Monitoreo operativo</h2><p class="text-sm text-slate-600">Supervise señales de alerta, automonitoreo y efectividad continua de matrices.</p></div>
 
   @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
   @if (mensaje()) { <output class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" aria-live="polite">{{ mensaje() }}</output> }
 
   @if (resumen(); as datos) {
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <dl class="rounded-xl bg-slate-50 p-3">
-        <dt class="text-xs font-semibold text-slate-500">Riesgos activos</dt>
-        <dd class="mt-1 text-xl font-bold">{{ datos.riesgosActivos }}</dd>
-      </dl>
-      <dl class="rounded-xl bg-slate-50 p-3">
-        <dt class="text-xs font-semibold text-slate-500">Alertas activas</dt>
-        <dd class="mt-1 text-xl font-bold">{{ datos.alertasActivas }}</dd>
-      </dl>
-      <dl class="rounded-xl bg-slate-50 p-3">
-        <dt class="text-xs font-semibold text-slate-500">Actividades vencidas</dt>
-        <dd class="mt-1 text-xl font-bold">{{ datos.actividadesVencidas }}</dd>
-      </dl>
-      <dl class="rounded-xl bg-slate-50 p-3">
-        <dt class="text-xs font-semibold text-slate-500">Monitoreos 30 días</dt>
-        <dd class="mt-1 text-xl font-bold">{{ datos.automonitoreosUltimos30Dias }}</dd>
-      </dl>
-    </div>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><dl class="rounded-xl bg-slate-50 p-3"><dt class="text-xs font-semibold text-slate-500">Riesgos activos</dt><dd class="mt-1 text-xl font-bold">{{ datos.riesgosActivos }}</dd></dl><dl class="rounded-xl bg-slate-50 p-3"><dt class="text-xs font-semibold text-slate-500">Alertas activas</dt><dd class="mt-1 text-xl font-bold">{{ datos.alertasActivas }}</dd></dl><dl class="rounded-xl bg-slate-50 p-3"><dt class="text-xs font-semibold text-slate-500">Actividades vencidas</dt><dd class="mt-1 text-xl font-bold">{{ datos.actividadesVencidas }}</dd></dl><dl class="rounded-xl bg-slate-50 p-3"><dt class="text-xs font-semibold text-slate-500">Monitoreos 30 días</dt><dd class="mt-1 text-xl font-bold">{{ datos.automonitoreosUltimos30Dias }}</dd></dl></div>
   }
 
   @if (!evaluacionIdInicial) {
-  <div class="max-w-xl">
-    <label for="evaluacion-monitoreo" class="block text-sm font-semibold text-slate-700">Evaluación</label>
-    <div class="mt-1">
-      <app-bounded-select
-        inputId="evaluacion-monitoreo"
-        ariaLabel="Evaluación"
-        placeholder="Seleccione una evaluación"
-        searchPlaceholder="Buscar por evaluación, riesgo o estado"
-        [emptyValue]="0"
-        [value]="evaluacionId"
-        [options]="opcionesEvaluacion"
-        (valueChange)="seleccionarEvaluacion($event ?? 0)" />
-    </div>
-  </div>
+    <div class="max-w-xl"><label for="evaluacion-monitoreo" class="block text-sm font-semibold text-slate-700">Evaluación</label><div class="mt-1"><app-bounded-select inputId="evaluacion-monitoreo" ariaLabel="Evaluación" placeholder="Seleccione una evaluación" searchPlaceholder="Buscar por evaluación, riesgo o estado" [emptyValue]="0" [value]="evaluacionId" [options]="opcionesEvaluacion" (valueChange)="seleccionarEvaluacion($event ?? 0)" /></div></div>
   }
 
   @if (evaluacionId > 0) {
     <div class="grid gap-5 xl:grid-cols-2">
-      <section class="space-y-4 rounded-xl border border-slate-200 p-4">
-        <h3 class="font-bold">Señales de alerta</h3>
-        <div class="grid gap-3 md:grid-cols-2">
-          <div><label for="alerta-codigo" class="block text-sm font-medium">Código</label><input id="alerta-codigo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaCodigo" maxlength="50"></div>
-          <div><label for="alerta-estado" class="block text-sm font-medium">Estado</label><select id="alerta-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaEstado"><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option></select></div>
-          <div class="md:col-span-2"><label for="alerta-indicador" class="block text-sm font-medium">Indicador</label><input id="alerta-indicador" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaIndicador" maxlength="150"></div>
-        </div>
-        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" title="Registrar alerta" aria-label="Registrar alerta" [disabled]="guardando()" (click)="crearAlerta()">
-            <app-action-icon action="save"></app-action-icon>
-          </button>
-        <div class="space-y-2">@for (alerta of alertas(); track alerta.aleId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex items-center justify-between gap-3"><div><strong>{{ alerta.aleCodigo }}</strong> · {{ alerta.aleEstado }}<p class="mt-1 text-slate-600">{{ alerta.aleIndicador }}</p></div><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-ihss-700" [disabled]="guardando()" [attr.title]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" [attr.aria-label]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" (click)="cambiarEstado(alerta)">
-            <app-action-icon action="activate"></app-action-icon>
-          </button></div></article> } @empty { <p class="text-sm text-slate-500">Sin señales de alerta.</p> }</div>
+      <section class="space-y-4 rounded-xl border border-slate-200 p-4" aria-labelledby="titulo-alertas">
+        <div class="flex items-center justify-between gap-3"><div><h3 id="titulo-alertas" class="font-bold">Señales de alerta</h3><p class="text-sm text-slate-600">Registros históricos y estados operativos de la evaluación.</p></div><button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-ihss-200 bg-ihss-50 text-ihss-700 disabled:opacity-50" title="Nueva señal de alerta" aria-label="Nueva señal de alerta" data-ui-action="new-alert" [disabled]="operacionEnCurso()" (click)="nuevoAlerta()"><app-action-icon action="create"></app-action-icon></button></div>
+        <div class="max-h-[32rem] space-y-2 overflow-y-auto overscroll-contain pr-2">@for (alerta of alertas(); track alerta.aleId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex items-center justify-between gap-3"><div><strong>{{ alerta.aleCodigo }}</strong> · {{ alerta.aleEstado }}<p class="mt-1 text-slate-600">{{ alerta.aleIndicador }}</p></div><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-ihss-700 disabled:opacity-50" [disabled]="operacionEnCurso()" [attr.title]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" [attr.aria-label]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" (click)="cambiarEstado(alerta)"><app-action-icon action="activate"></app-action-icon></button></div></article> } @empty { <p class="text-sm text-slate-500">Sin señales de alerta.</p> }</div>
       </section>
 
-      <section class="space-y-4 rounded-xl border border-slate-200 p-4">
-        <h3 class="font-bold">Automonitoreo</h3>
-        <div class="grid gap-3 md:grid-cols-2">
-          <div><label for="mon-estado-riesgo" class="block text-sm font-medium">Estado del riesgo</label><select id="mon-estado-riesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"><option value="">Seleccione un estado</option>@for (estado of estadosRiesgo; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }</select></div>
-          <div><label for="mon-estado-controles" class="block text-sm font-medium">Estado de controles</label><select id="mon-estado-controles" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"><option value="">Seleccione un estado</option>@for (estado of estadosControl; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }</select></div>
-          <div class="md:col-span-2"><label for="mon-resultado" class="block text-sm font-medium">Resultado</label><textarea id="mon-resultado" class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado" maxlength="500"></textarea></div>
-        </div>
-        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" title="Guardar monitoreo" aria-label="Guardar monitoreo" [disabled]="guardando()" (click)="registrarAutomonitoreo()">
-            <app-action-icon action="save"></app-action-icon>
-          </button>
-        <div class="space-y-2">@for (item of automonitoreos(); track item.monId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><strong>{{ item.monFecha | date:'short' }}</strong><p class="text-slate-600">{{ item.monResultado }}</p></article> } @empty { <p class="text-sm text-slate-500">Sin registros de automonitoreo.</p> }</div>
+      <section class="space-y-4 rounded-xl border border-slate-200 p-4" aria-labelledby="titulo-automonitoreo">
+        <div class="flex items-center justify-between gap-3"><div><h3 id="titulo-automonitoreo" class="font-bold">Automonitoreo</h3><p class="text-sm text-slate-600">Conserve cada resultado como registro de seguimiento.</p></div><button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-ihss-200 bg-ihss-50 text-ihss-700 disabled:opacity-50" title="Nuevo automonitoreo" aria-label="Nuevo automonitoreo" data-ui-action="new-automonitoreo" [disabled]="operacionEnCurso()" (click)="nuevoAutomonitoreo()"><app-action-icon action="create"></app-action-icon></button></div>
+        <div class="max-h-[32rem] space-y-2 overflow-y-auto overscroll-contain pr-2">@for (item of automonitoreos(); track item.monId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><strong>{{ item.monFecha | date:'short' }}</strong><p class="text-slate-600">{{ item.monResultado }}</p></article> } @empty { <p class="text-sm text-slate-500">Sin registros de automonitoreo.</p> }</div>
       </section>
     </div>
+
     @if (bloque6(); as snapshot) {
       <section class="space-y-4 rounded-xl border border-slate-200 p-4" aria-labelledby="controles-monitoreados">
-        <div>
-          <h3 id="controles-monitoreados" class="font-bold">Controles monitoreados y evidencias</h3>
-          <p class="text-sm text-slate-600">El estado y la efectividad corresponden al seguimiento posterior del control.</p>
-        </div>
-        @for (tipo of ['PREVENTIVO', 'DETECTIVO', 'CORRECTIVO']; track tipo) {
-          <section class="space-y-3" [attr.aria-label]="'Controles ' + tipo.toLowerCase()">
-            <h4 class="font-semibold">{{ tipo === 'PREVENTIVO' ? 'Preventivos' : tipo === 'DETECTIVO' ? 'Detectivos' : 'Correctivos' }}</h4>
-            @for (control of controlesDeTipo(snapshot.controles, tipo); track control.controlId) {
-                <article class="space-y-3 rounded-lg border border-slate-200 p-3">
-                  <div><strong>Control #{{ control.controlId }}</strong><p class="text-sm text-slate-600">{{ control.descripcion }}</p></div>
-                  <div class="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label [for]="'mon-control-estado-' + control.controlId" class="block text-sm font-medium">Estado de monitoreo</label>
-                      <select [id]="'mon-control-estado-' + control.controlId" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="estadoMonitoreoDrafts[control.controlId] ?? ''" (ngModelChange)="estadoMonitoreoDrafts[control.controlId] = $event">
-                        <option value="">Sin evaluar</option>
-                        @for (estado of estadosControl; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }
-                      </select>
-                    </div>
-                    <div>
-                      <label [for]="'mon-control-efectividad-' + control.controlId" class="block text-sm font-medium">Efectividad de monitoreo</label>
-                      <select [id]="'mon-control-efectividad-' + control.controlId" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="efectividadMonitoreoDrafts[control.controlId]" (ngModelChange)="efectividadMonitoreoDrafts[control.controlId] = $event">
-                        <option [ngValue]="null">Sin evaluar</option>
-                        @for (item of efectividadesMonitoreoCatalogo; track item.value) { <option [ngValue]="item.value">{{ item.label }} ({{ item.value }}%)</option> }
-                      </select>
-                    </div>
-                  </div>
-                  <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="guardando()" [attr.aria-label]="'Guardar seguimiento del control ' + control.controlId" [attr.title]="'Guardar seguimiento del control ' + control.controlId" (click)="guardarMonitoreoControl(control)"><app-action-icon action="save"></app-action-icon></button>
-                  <div>
-                    <h5 class="text-sm font-semibold">Evidencias</h5>
-                    <ul class="mt-1 list-inside list-disc text-sm">
-                      @for (evidencia of control.evidencias; track evidencia.id) { <li class="flex items-center justify-between gap-3"><span class="break-all">{{ evidencia.nombreArchivo }}</span><button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded text-red-700" [disabled]="guardando()" [attr.aria-label]="'Desvincular ' + evidencia.nombreArchivo + ' del control ' + control.controlId" [attr.title]="'Desvincular ' + evidencia.nombreArchivo + ' del control ' + control.controlId" (click)="desvincularEvidencia(control, evidencia.id)"><app-action-icon action="delete"></app-action-icon></button></li> }
-                      @empty { <li class="list-none text-slate-500">Sin evidencias vinculadas.</li> }
-                    </ul>
-                    <app-institutional-file-upload
-                      [label]="'Evidencias del Control #' + control.controlId"
-                      [policy]="politicaEvidencias"
-                      [multiple]="false"
-                      [disabled]="guardando()"
-                      [uploading]="guardando() && archivosPendientesPorControl()[control.controlId]?.length > 0"
-                      [selectedFiles]="archivosPendientesPorControl()[control.controlId] ?? []"
-                      (filesChange)="cargarEvidencia(control, $event)" />
-                  </div>
-                </article>
-            } @empty {
-              <p class="text-sm text-slate-500">No hay controles de este tipo.</p>
-            }
-          </section>
-        }
+        <div><h3 id="controles-monitoreados" class="font-bold">Controles monitoreados y evidencias</h3><p class="text-sm text-slate-600">El estado y la efectividad corresponden al seguimiento posterior del control.</p></div>
+        <div class="max-h-[42rem] overflow-y-auto overscroll-contain pr-2"><div class="grid gap-4 md:grid-cols-2" aria-label="Controles monitoreados en dos columnas">
+          @for (control of snapshot.controles; track control.controlId) {
+            <article class="space-y-3 rounded-lg border border-slate-200 p-3">
+              <div><p class="text-xs font-semibold uppercase tracking-wide text-ihss-700">{{ control.tipo === 'PREVENTIVO' ? 'Preventivo' : control.tipo === 'DETECTIVO' ? 'Detectivo' : 'Correctivo' }}</p><strong>Control #{{ control.controlId }}</strong><p class="text-sm text-slate-600">{{ control.descripcion }}</p></div>
+              <div class="grid gap-3 sm:grid-cols-2"><div><label [for]="'mon-control-estado-' + control.controlId" class="block text-sm font-medium">Estado de monitoreo</label><select [id]="'mon-control-estado-' + control.controlId" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="estadoMonitoreoDrafts[control.controlId] ?? ''" (ngModelChange)="estadoMonitoreoDrafts[control.controlId] = $event"><option value="">Sin evaluar</option>@for (estado of estadosControl; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }</select></div><div><label [for]="'mon-control-efectividad-' + control.controlId" class="block text-sm font-medium">Efectividad de monitoreo</label><select [id]="'mon-control-efectividad-' + control.controlId" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="efectividadMonitoreoDrafts[control.controlId]" (ngModelChange)="efectividadMonitoreoDrafts[control.controlId] = $event"><option [ngValue]="null">Sin evaluar</option>@for (item of efectividadesMonitoreoCatalogo; track item.value) { <option [ngValue]="item.value">{{ item.label }} ({{ item.value }}%)</option> }</select></div></div>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="operacionEnCurso()" [attr.aria-label]="'Guardar seguimiento del control ' + control.controlId" [attr.title]="'Guardar seguimiento del control ' + control.controlId" (click)="guardarMonitoreoControl(control)"><app-action-icon action="save" [loading]="operacionEnCurso()"></app-action-icon></button>
+              <div><h5 class="text-sm font-semibold">Evidencias</h5><ul class="mt-1 list-inside list-disc text-sm">@for (evidencia of control.evidencias; track evidencia.id) { <li class="flex items-center justify-between gap-3"><span class="break-all">{{ evidencia.nombreArchivo }}</span><button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded text-red-700 disabled:opacity-50" [disabled]="operacionEnCurso()" [attr.aria-label]="'Desvincular ' + evidencia.nombreArchivo + ' del control ' + control.controlId" [attr.title]="'Desvincular ' + evidencia.nombreArchivo + ' del control ' + control.controlId" (click)="desvincularEvidencia(control, evidencia.id)"><app-action-icon action="delete"></app-action-icon></button></li> } @empty { <li class="list-none text-slate-500">Sin evidencias vinculadas.</li> }</ul><app-institutional-file-upload [label]="'Evidencias del Control #' + control.controlId" [policy]="politicaEvidencias" [multiple]="false" [disabled]="operacionEnCurso()" [uploading]="guardando() && archivosPendientesPorControl()[control.controlId]?.length > 0" [selectedFiles]="archivosPendientesPorControl()[control.controlId] ?? []" (filesChange)="cargarEvidencia(control, $event)" /></div>
+            </article>
+          } @empty { <p class="text-sm text-slate-500 md:col-span-2">No hay controles monitoreados.</p> }
+        </div></div>
       </section>
 
       <section class="grid gap-4 xl:grid-cols-2" aria-label="Observaciones de seguimiento">
-        <article class="space-y-3 rounded-xl border border-slate-200 p-4">
-          <h3 class="font-bold">Observaciones del Área</h3>
-          <label for="observaciones-area" class="sr-only">Observaciones del Área</label>
-          <textarea id="observaciones-area" class="min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100" maxlength="2000" [(ngModel)]="observacionesArea" [disabled]="!snapshot.puedeEditarObservacionesArea" aria-describedby="observaciones-area-ayuda"></textarea>
-          <p id="observaciones-area-ayuda" class="text-xs text-slate-600">{{ snapshot.puedeEditarObservacionesArea ? 'Puede editar este campo.' : 'Solo lectura: no tiene permiso de edición.' }}</p>
-          @if (snapshot.puedeEditarObservacionesArea) { <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="guardando()" title="Guardar Observaciones del Área" aria-label="Guardar Observaciones del Área" (click)="guardarObservacion('area')"><app-action-icon action="save"></app-action-icon></button> }
-        </article>
-        <article class="space-y-3 rounded-xl border border-slate-200 p-4">
-          <h3 class="font-bold">Observaciones UGR</h3>
-          <label for="observaciones-ugr" class="sr-only">Observaciones UGR</label>
-          <textarea id="observaciones-ugr" class="min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100" maxlength="2000" [(ngModel)]="observacionesUgr" [disabled]="!snapshot.puedeEditarObservacionesUgr" aria-describedby="observaciones-ugr-ayuda"></textarea>
-          <p id="observaciones-ugr-ayuda" class="text-xs text-slate-600">{{ snapshot.puedeEditarObservacionesUgr ? 'Puede editar este campo.' : 'Solo lectura: no tiene permiso de edición.' }}</p>
-          @if (snapshot.puedeEditarObservacionesUgr) { <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="guardando()" title="Guardar Observaciones UGR" aria-label="Guardar Observaciones UGR" (click)="guardarObservacion('ugr')"><app-action-icon action="save"></app-action-icon></button> }
-        </article>
+        <article class="space-y-3 rounded-xl border border-slate-200 p-4"><h3 class="font-bold">Observaciones del Área</h3><label for="observaciones-area" class="sr-only">Observaciones del Área</label><textarea id="observaciones-area" class="min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100" maxlength="2000" [(ngModel)]="observacionesArea" [disabled]="!snapshot.puedeEditarObservacionesArea" aria-describedby="observaciones-area-ayuda"></textarea><p id="observaciones-area-ayuda" class="text-xs text-slate-600">{{ snapshot.puedeEditarObservacionesArea ? 'Puede editar este campo.' : 'Solo lectura: no tiene permiso de edición.' }}</p>@if (snapshot.puedeEditarObservacionesArea) { <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="operacionEnCurso()" title="Guardar Observaciones del Área" aria-label="Guardar Observaciones del Área" (click)="guardarObservacion('area')"><app-action-icon action="save" [loading]="operacionEnCurso()"></app-action-icon></button> }</article>
+        <article class="space-y-3 rounded-xl border border-slate-200 p-4"><h3 class="font-bold">Observaciones UGR</h3><label for="observaciones-ugr" class="sr-only">Observaciones UGR</label><textarea id="observaciones-ugr" class="min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100" maxlength="2000" [(ngModel)]="observacionesUgr" [disabled]="!snapshot.puedeEditarObservacionesUgr" aria-describedby="observaciones-ugr-ayuda"></textarea><p id="observaciones-ugr-ayuda" class="text-xs text-slate-600">{{ snapshot.puedeEditarObservacionesUgr ? 'Puede editar este campo.' : 'Solo lectura: no tiene permiso de edición.' }}</p>@if (snapshot.puedeEditarObservacionesUgr) { <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="operacionEnCurso()" title="Guardar Observaciones UGR" aria-label="Guardar Observaciones UGR" (click)="guardarObservacion('ugr')"><app-action-icon action="save" [loading]="operacionEnCurso()"></app-action-icon></button> }</article>
       </section>
     }
   } @else {
     <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Seleccione una evaluación para consultar y registrar seguimiento operativo.</div>
+  }
+
+  @if (modalAlertaAbierto()) {
+    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-alerta" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()"><div class="modal-container-card modal-size-lg"><div class="modal-header-institutional"><div><h3 id="titulo-modal-alerta">Nueva señal de alerta</h3><p>Registre la alerta dentro del contexto de la evaluación seleccionada.</p></div><button type="button" class="modal-close-button" title="Cerrar señal de alerta" aria-label="Cerrar señal de alerta" [disabled]="operacionEnCurso()" (click)="solicitarCierreAlerta()"><app-action-icon action="close"></app-action-icon></button></div><div class="modal-body-scrollable space-y-4"><div class="grid gap-3 md:grid-cols-2"><div><label for="alerta-codigo" class="block text-sm font-medium">Código</label><input id="alerta-codigo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaCodigo" maxlength="50"></div><div><label for="alerta-estado" class="block text-sm font-medium">Estado</label><select id="alerta-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaEstado"><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option></select></div><div class="md:col-span-2"><label for="alerta-indicador" class="block text-sm font-medium">Indicador</label><textarea id="alerta-indicador" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaIndicador" maxlength="150"></textarea></div></div></div><div class="modal-footer-institutional"><button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar señal de alerta" aria-label="Cancelar señal de alerta" [disabled]="operacionEnCurso()" (click)="solicitarCierreAlerta()"><app-action-icon action="cancel"></app-action-icon></button><button type="button" class="modal-action-icon modal-action-icon--primary" title="Registrar alerta" aria-label="Registrar alerta" data-ui-action="save-alert" [disabled]="operacionEnCurso() || !alertaFormularioValido()" (click)="crearAlerta()"><app-action-icon action="save" [loading]="operacionEnCurso()"></app-action-icon></button></div></div></dialog>
+  }
+
+  @if (modalAutomonitoreoAbierto()) {
+    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-automonitoreo" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()"><div class="modal-container-card modal-size-lg"><div class="modal-header-institutional"><div><h3 id="titulo-modal-automonitoreo">Nuevo automonitoreo</h3><p>Registre el resultado sin reemplazar los seguimientos anteriores.</p></div><button type="button" class="modal-close-button" title="Cerrar automonitoreo" aria-label="Cerrar automonitoreo" [disabled]="operacionEnCurso()" (click)="solicitarCierreAutomonitoreo()"><app-action-icon action="close"></app-action-icon></button></div><div class="modal-body-scrollable space-y-4"><div class="grid gap-3 md:grid-cols-2"><div><label for="mon-estado-riesgo" class="block text-sm font-medium">Estado del riesgo</label><select id="mon-estado-riesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"><option value="">Seleccione un estado</option>@for (estado of estadosRiesgo; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }</select></div><div><label for="mon-estado-controles" class="block text-sm font-medium">Estado de controles</label><select id="mon-estado-controles" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"><option value="">Seleccione un estado</option>@for (estado of estadosControl; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }</select></div><div class="md:col-span-2"><label for="mon-resultado" class="block text-sm font-medium">Resultado</label><textarea id="mon-resultado" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado" maxlength="500"></textarea></div></div></div><div class="modal-footer-institutional"><button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar automonitoreo" aria-label="Cancelar automonitoreo" [disabled]="operacionEnCurso()" (click)="solicitarCierreAutomonitoreo()"><app-action-icon action="cancel"></app-action-icon></button><button type="button" class="modal-action-icon modal-action-icon--primary" title="Registrar automonitoreo" aria-label="Registrar automonitoreo" data-ui-action="save-automonitoreo" [disabled]="operacionEnCurso() || !automonitoreoFormularioValido()" (click)="registrarAutomonitoreo()"><app-action-icon action="save" [loading]="operacionEnCurso()"></app-action-icon></button></div></div></dialog>
   }
 </section>

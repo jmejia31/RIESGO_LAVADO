@@ -12,6 +12,7 @@ import { PageSizeSelectorComponent } from '../../../../../shared/components/page
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 @Component({
   selector: 'app-matrices-riesgos-gestion',
@@ -23,6 +24,7 @@ import { InstitutionalConfirmationService } from '../../../../../shared/confirma
 export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
   private readonly confirmation = inject(InstitutionalConfirmationService);
+  private readonly notification = inject(InstitutionalNotificationService);
   private readonly codigoInput = viewChild<ElementRef<HTMLInputElement>>('codigoInput');
 
   readonly riesgos = signal<RiesgoDto[]>([]);
@@ -30,9 +32,12 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   readonly errorFormulario = signal<string | null>(null);
-  readonly mensaje = signal<string | null>(null);
   readonly editandoId = signal(0);
   readonly Math = Math;
+
+  formularioValido(): boolean {
+    return this.codigo.trim().length > 0 && this.nombre.trim().length > 0;
+  }
   readonly pagina = signal(1);
   readonly tamanoPagina = signal(10);
   readonly totalRegistros = signal(0);
@@ -158,7 +163,6 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
     this.descripcion = '';
     this.activo = true;
     this.errorFormulario.set(null);
-    this.mensaje.set(null);
     this.valoresIniciales = this.serializarValores();
     this.modalRiesgoAbierto.set(true);
     this.programarFocoInicial();
@@ -172,7 +176,6 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
     this.descripcion = riesgo.rieDescripcion ?? '';
     this.activo = riesgo.rieActivo;
     this.errorFormulario.set(null);
-    this.mensaje.set(null);
     this.valoresIniciales = this.serializarValores();
     this.modalRiesgoAbierto.set(true);
     this.programarFocoInicial();
@@ -223,7 +226,8 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
     });
   }
 
-  guardar(): void {
+  async guardar(): Promise<void> {
+    if (this.guardando()) return;
     const codigo = this.codigo.trim();
     const nombre = this.nombre.trim();
     if (!codigo || !nombre) {
@@ -243,22 +247,51 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
       rieActivo: this.activo
     };
 
+    const id = this.editandoId();
+    const confirmado = await this.confirmation.confirm({
+      title: id > 0 ? `¿Guardar cambios del riesgo ${codigo}?` : `¿Crear el riesgo ${codigo}?`,
+      message: id > 0
+        ? 'Se actualizará la identidad del riesgo. La información histórica de sus evaluaciones se conservará.'
+        : 'Se registrará el riesgo para que pueda utilizarse en nuevas evaluaciones.',
+      icon: 'question',
+      confirmLabel: id > 0 ? 'Guardar cambios' : 'Crear riesgo',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
+
     this.guardando.set(true);
     this.errorFormulario.set(null);
-    const id = this.editandoId();
     const solicitud: Observable<unknown> = id > 0
       ? this.service.actualizarRiesgo(id, dto)
       : this.service.crearRiesgo(dto);
     solicitud.subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set(id > 0 ? 'Riesgo actualizado correctamente.' : 'Riesgo creado correctamente.');
+        void this.notification.notify({
+          title: id > 0 ? 'Riesgo actualizado' : 'Riesgo creado',
+          icon: 'success',
+          message: id > 0 ? `El riesgo ${codigo} fue actualizado correctamente.` : `El riesgo ${codigo} fue creado correctamente.`,
+          confirmIcon: 'confirm',
+          confirmLabel: 'Aceptar',
+          confirmVariant: 'success'
+        });
         this.cerrarFormulario();
         this.cargar();
       },
       error: (error: unknown) => {
         this.guardando.set(false);
-        this.errorFormulario.set(this.mensajeError(error, 'No se pudo guardar el riesgo.'));
+        const mensaje = this.mensajeError(error, 'No se pudo guardar el riesgo.');
+        this.errorFormulario.set(mensaje);
+        void this.notification.notify({
+          title: 'No se pudo guardar el riesgo',
+          message: mensaje,
+          icon: 'error',
+          confirmIcon: 'cancel',
+          confirmLabel: 'Aceptar',
+          confirmVariant: 'danger'
+        });
       }
     });
   }

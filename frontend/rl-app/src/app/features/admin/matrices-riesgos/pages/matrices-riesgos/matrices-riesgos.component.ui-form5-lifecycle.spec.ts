@@ -150,12 +150,12 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       expect(component.soloLecturaDefinicion()).toBe(true);
     });
 
-    it('usuario no-admin no puede ejecutar mutaciones administrativas (guardas defensivas)', () => {
+    it('usuario no-admin no puede ejecutar mutaciones administrativas (guardas defensivas)', async () => {
       authServiceMock.tieneRol.mockReturnValue(false);
       component.versionEditando.set(baseVersion);
       component.soloLecturaDefinicion.set(false);
 
-      component.guardarDefinicion();
+      await component.guardarDefinicion();
       expect(service.actualizarBorradorFormulario).not.toHaveBeenCalled();
 
       component.publicarVersion(baseVersion);
@@ -181,7 +181,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
   });
 
   describe('3. Guardar Borrador (Persistencia y Verificación Semántica)', () => {
-    it('guarda definición llamando a actualizarBorradorFormulario, verifica semánticamente y limpia operacionBuilderEnCurso', () => {
+    it('guarda definición llamando a actualizarBorradorFormulario, verifica semánticamente y limpia operacionBuilderEnCurso', async () => {
       service.obtenerVersionFormulario.mockReturnValue(of(baseVersion));
       component.abrirDefinicion(baseVersion);
 
@@ -199,7 +199,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
         verJson: jsonModificado
       }));
 
-      component.guardarDefinicion();
+      await component.guardarDefinicion();
 
       expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(200, jsonModificado);
       expect(service.publicarVersionFormulario).not.toHaveBeenCalled();
@@ -211,7 +211,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       expect(component.operacionBuilderEnCurso()).toBeNull();
     });
 
-    it('bloquea cierre del builder si falla la verificación semántica post-save y resetea operacionBuilderEnCurso', () => {
+    it('bloquea cierre del builder si falla la verificación semántica post-save y resetea operacionBuilderEnCurso', async () => {
       service.obtenerVersionFormulario.mockReturnValue(of(baseVersion));
       component.abrirDefinicion(baseVersion);
 
@@ -227,7 +227,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
         verJson: JSON.stringify({ codigoFormulario: 'OTRO', secciones: [] })
       }));
 
-      component.guardarDefinicion();
+      await component.guardarDefinicion();
 
       expect(component.versionEditando()).not.toBeNull();
       expect(component.errorFormBuilder()).toContain('no coincide semánticamente');
@@ -236,13 +236,13 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     });
   });
 
-    it('conserva el borrador abierto y no publica si falla la sincronizacion de formulas', () => {
+    it('conserva el borrador abierto y no publica si falla la sincronizacion de formulas', async () => {
       component.abrirDefinicion(baseVersion);
       const jsonModificado = JSON.stringify({ ...JSON.parse(baseVersion.verJson), nombreFormulario: 'Sync failure' });
       component.definicionTecnica = jsonModificado;
       calculoConfigMock.reemplazarFormulaUsos.mockReturnValue(throwError(() => ({ status: 500, error: { detail: 'sync failed' } })));
 
-      component.guardarDefinicion();
+      await component.guardarDefinicion();
 
       expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(200, jsonModificado);
       expect(component.versionEditando()?.verId).toBe(200);

@@ -15,7 +15,7 @@ describe('MonitoreoListasComponent', () => {
   let fixture: ComponentFixture<MonitoreoListasComponent>;
   let component: MonitoreoListasComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
-  let confirmation: { confirmWithInput: ReturnType<typeof vi.fn> };
+  let confirmation: { confirm: ReturnType<typeof vi.fn>; confirmWithInput: ReturnType<typeof vi.fn> };
   const fire = vi.mocked(Swal.fire);
   const close = vi.mocked(Swal.close);
   let createObjectUrl: ReturnType<typeof vi.fn>;
@@ -55,7 +55,7 @@ describe('MonitoreoListasComponent', () => {
     };
     fire.mockReset();
     close.mockReset();
-    confirmation = { confirmWithInput: vi.fn().mockResolvedValue(null) };
+    confirmation = { confirm: vi.fn().mockResolvedValue(true), confirmWithInput: vi.fn().mockResolvedValue(null) };
     createObjectUrl = vi.fn(() => 'blob:evidencia-prueba');
     revokeObjectUrl = vi.fn();
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectUrl });

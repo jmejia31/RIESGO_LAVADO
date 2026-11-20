@@ -116,7 +116,7 @@ export class ConfiguracionComponent implements OnInit {
     });
   }
 
-  guardar() {
+  async guardar(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -125,6 +125,17 @@ export class ConfiguracionComponent implements OnInit {
     this.mensajeExito.set(null);
     this.mensajeError.set(null);
     if (this.subiendoLogo() || this.subiendoFavicon()) return;
+
+    const confirmado = await this.confirmation.confirm({
+      title: 'Guardar configuración del sistema',
+      message: 'Se publicarán los cambios de identidad institucional, colores y parámetros administrativos actualmente diligenciados.',
+      confirmLabel: 'Sí, guardar cambios',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
+
     this.guardando.set(true);
     this.estadoLogo.set('LOGO_SAVING');
     this.estadoFavicon.set('FAVICON_SAVING');
@@ -191,8 +202,20 @@ export class ConfiguracionComponent implements OnInit {
     this.slideForm.reset();
   }
 
-  guardarSlide() {
+  async guardarSlide(): Promise<void> {
     if (this.slideForm.invalid) return;
+
+    const confirmado = await this.confirmation.confirm({
+      title: this.slideEditando() ? 'Guardar cambios del slide' : 'Guardar nuevo slide',
+      message: this.slideEditando()
+        ? 'Se actualizará el slide seleccionado del carrusel de login.'
+        : 'Se agregará el nuevo slide al carrusel de login.',
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     this.guardandoSlide.set(true);
     const body: LoginSlide = {

@@ -2,6 +2,7 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, EventEmi
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 export interface FamiliaCreadaEvent {
   id: number;
@@ -20,6 +21,7 @@ import { InstitutionalTooltipDirective } from '../../../../../shared/components/
 })
 export class FamiliaCrearModalComponent implements AfterViewInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private focoAnterior: HTMLElement | null = null;
 
@@ -88,7 +90,7 @@ export class FamiliaCrearModalComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  guardar(): void {
+  async guardar(): Promise<void> {
     if (this.guardando()) return;
 
     this.normalizarCampos();
@@ -114,6 +116,16 @@ export class FamiliaCrearModalComponent implements AfterViewInit, OnDestroy {
       this.error.set('La descripción no puede superar los 500 caracteres.');
       return;
     }
+
+    const confirmado = await this.confirmation.confirm({
+      title: 'Guardar nueva familia',
+      message: `Se registrará la familia ${this.codigo} - ${this.nombre}.`,
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     this.guardando.set(true);
     const nombreCreado = this.nombre;

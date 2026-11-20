@@ -7,6 +7,7 @@ import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MetodologiaFormulario, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 const versionDinamica = (verJson: string): VersionFormularioDto => ({
   verId: 15,
@@ -92,7 +93,10 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
 
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent, HttpClientTestingModule, FormsModule],
-      providers: [{ provide: MatricesRiesgosService, useValue: serviceMock }]
+      providers: [
+        { provide: MatricesRiesgosService, useValue: serviceMock },
+        { provide: InstitutionalConfirmationService, useValue: { confirm: vi.fn().mockResolvedValue(true) } }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MatricesRiesgosComponent);
@@ -182,7 +186,7 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
     expect(component.puedeGuardar()).toBe(false);
   });
 
-  it('serializa string[] sin convertir la selección múltiple a texto', () => {
+  it('serializa string[] sin convertir la selección múltiple a texto', async () => {
     component.riesgoId.set(44);
     component.respuestas.set({
       texto: 'valor',
@@ -191,7 +195,7 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
       check: false
     });
 
-    component.guardarEvaluacion();
+    await component.guardarEvaluacion();
 
     expect(serviceMock['crearEvaluacion']).toHaveBeenCalledTimes(1);
     const dto = serviceMock['crearEvaluacion'].mock.calls[0][0];

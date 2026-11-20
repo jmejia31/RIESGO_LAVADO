@@ -109,13 +109,26 @@ export class TipoListasComponent implements OnInit {
     this.form.reset();
   }
 
-  guardar() {
+  async guardar(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.errorGuardar.set(null);
+
+    const confirmado = await this.confirmation.confirm({
+      title: this.editando() ? 'Guardar cambios del tipo de lista' : 'Guardar tipo de lista',
+      message: this.editando()
+        ? 'Se actualizarán los datos del tipo de lista seleccionado.'
+        : 'Se registrará el nuevo tipo de lista de cautela.',
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
+
     this.guardando.set(true);
     const rawVal = this.form.getRawValue();
     const descripcion = rawVal.descripcion;

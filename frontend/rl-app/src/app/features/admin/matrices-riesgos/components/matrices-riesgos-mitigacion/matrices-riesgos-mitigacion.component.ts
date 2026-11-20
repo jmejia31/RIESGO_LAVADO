@@ -20,6 +20,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 @Component({
   selector: 'app-matrices-riesgos-mitigacion',
@@ -31,6 +32,7 @@ import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-cata
 export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   private readonly service = inject(MatricesRiesgosService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly confirmation = inject(InstitutionalConfirmationService);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
   @Input() evaluacionIdInicial: number | null = null;
@@ -46,6 +48,11 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly catalogoEstadosEvaluacion = signal<EstadoEvaluacionCatalogoDto[]>([]);
+  readonly modalControlAbierto = signal(false);
+  readonly modalEfectividadAbierto = signal(false);
+  readonly modalPlanAbierto = signal(false);
+  readonly modalActividadAbierto = signal(false);
+  readonly confirmando = signal(false);
 
   evaluacionId = 0;
   readonly tiposControlCatalogo = canonicalCatalogSelectOptions('CONTROL_TYPE');
@@ -136,6 +143,11 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   actividadFechaFin = this.hoy();
   actividadEstado = 'PENDIENTE';
 
+  private controlSnapshot = '';
+  private efectividadSnapshot = '';
+  private planSnapshot = '';
+  private actividadSnapshot = '';
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['evaluacionIdInicial'] && this.evaluacionIdInicial && this.evaluacionIdInicial > 0
       && this.evaluacionId !== this.evaluacionIdInicial) {
@@ -183,22 +195,32 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     this.controlDescripcion = control.conDescripcion;
     this.controlAutomatizacion = control.conAutomatizacion;
     this.controlEstado = control.conEstado;
+    this.controlSnapshot = this.estadoControlFormulario();
+    this.modalControlAbierto.set(true);
     this.cargarEvaluacionesControl(control.conId);
   }
 
   nuevoControl(): void {
-    this.controlEditandoId = 0;
-    this.controlTipo = 'PREVENTIVO';
-    this.controlDescripcion = '';
-    this.controlAutomatizacion = 'MANUAL';
-    this.controlEstado = 'ACTIVO';
+    this.resetControlForm();
+    this.controlSnapshot = this.estadoControlFormulario();
+    this.modalControlAbierto.set(true);
   }
 
-  guardarControl(): void {
+  async guardarControl(): Promise<void> {
+    if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.controlDescripcion.trim()) {
       this.error.set('Seleccione una evaluación y describa el control.');
       return;
     }
+
+    const confirmado = await this.confirmarGuardado(
+      this.controlEditandoId > 0 ? 'Editar Control' : 'Crear Control',
+      this.controlEditandoId > 0
+        ? '¿Desea guardar los cambios del control seleccionado?'
+        : '¿Desea guardar este nuevo control?',
+      this.controlEditandoId > 0 ? 'Guardar cambios' : 'Confirmar guardado'
+    );
+    if (!confirmado) return;
 
     const dto: ControlRiesgoGuardarDto = {
       conEvaluacionId: this.evaluacionId,
@@ -217,7 +239,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
       next: () => {
         this.guardando.set(false);
         this.mensaje.set(this.controlEditandoId > 0 ? 'Control actualizado correctamente.' : 'Control creado correctamente.');
-        this.nuevoControl();
+        this.cerrarModalControlForzado();
         this.cargarMitigacion();
         this.persisted.emit();
       },
@@ -236,11 +258,22 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     });
   }
 
-  evaluarControl(): void {
+  async evaluarControl(): Promise<void> {
+    await this.guardarEfectividad();
+  }
+
+  async guardarEfectividad(): Promise<void> {
+    if (this.operacionEnCurso()) return;
     if (this.controlSeleccionadoId <= 0 || this.efectividad < 0 || this.efectividad > 100) {
       this.error.set('Seleccione un control y registre una efectividad entre 0 y 100.');
       return;
     }
+    const confirmado = await this.confirmarGuardado(
+      'Registrar efectividad',
+      '¿Desea registrar la efectividad del control seleccionado?',
+      'Registrar efectividad'
+    );
+    if (!confirmado) return;
     const dto: EvaluacionControlGuardarDto = {
       ecoEfectividad: Number(this.efectividad),
       ecoComentario: this.comentarioEfectividad.trim() || null
@@ -253,6 +286,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
         this.comentarioEfectividad = '';
         this.mensaje.set('Efectividad del control registrada correctamente.');
         this.cargarEvaluacionesControl(this.controlSeleccionadoId);
+        this.modalEfectividadAbierto.set(false);
       },
       error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo registrar la efectividad del control.')
     });
@@ -270,23 +304,19 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     this.planMonitoreoSeguimiento = plan.plaMonitoreoSeguimiento ?? '';
     this.planResponsables = plan.plaResponsables ?? '';
     this.planRecursos = plan.plaRecursos ?? '';
+    this.planSnapshot = this.estadoPlanFormulario();
+    this.modalPlanAbierto.set(true);
     this.cargarActividades(plan.plaId);
   }
 
   nuevoPlan(): void {
-    this.planEditandoId = 0;
-    this.planDescripcion = '';
-    this.planAvance = 0;
-    this.planPresupuesto = 0;
-    this.planFechaInicio = this.hoy();
-    this.planFechaFin = this.hoy();
-    this.planEstado = 'PENDIENTE';
-    this.planMonitoreoSeguimiento = '';
-    this.planResponsables = '';
-    this.planRecursos = '';
+    this.resetPlanForm();
+    this.planSnapshot = this.estadoPlanFormulario();
+    this.modalPlanAbierto.set(true);
   }
 
-  guardarPlan(): void {
+  async guardarPlan(): Promise<void> {
+    if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.planDescripcion.trim()) {
       this.error.set('Seleccione una evaluación y describa el plan.');
       return;
@@ -295,6 +325,14 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
       this.error.set('Revise avance, presupuesto y rango de fechas del plan.');
       return;
     }
+    const confirmado = await this.confirmarGuardado(
+      this.planEditandoId > 0 ? 'Editar Plan de Mitigación' : 'Crear Plan de Mitigación',
+      this.planEditandoId > 0
+        ? '¿Desea guardar los cambios del plan seleccionado?'
+        : '¿Desea guardar este nuevo plan de mitigación?',
+      this.planEditandoId > 0 ? 'Guardar cambios' : 'Confirmar guardado'
+    );
+    if (!confirmado) return;
     const dto: PlanMitigacionGuardarDto = {
       plaEvaluacionId: this.evaluacionId,
       plaDescripcion: this.planDescripcion.trim(),
@@ -315,7 +353,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
       next: () => {
         this.guardando.set(false);
         this.mensaje.set(this.planEditandoId > 0 ? 'Plan actualizado correctamente.' : 'Plan creado correctamente.');
-        this.nuevoPlan();
+        this.cerrarModalPlanForzado();
         this.cargarMitigacion();
         this.persisted.emit();
       },
@@ -340,19 +378,22 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     this.actividadFechaInicio = this.fechaInput(actividad.actFechaInicio);
     this.actividadFechaFin = this.fechaInput(actividad.actFechaFin);
     this.actividadEstado = actividad.actEstado;
+    this.actividadSnapshot = this.estadoActividadFormulario();
+    this.modalActividadAbierto.set(true);
   }
 
   nuevaActividad(): void {
-    this.actividadEditandoId = 0;
-    this.actividadDescripcion = '';
-    this.actividadResponsable = '';
-    this.actividadAvance = 0;
-    this.actividadFechaInicio = this.hoy();
-    this.actividadFechaFin = this.hoy();
-    this.actividadEstado = 'PENDIENTE';
+    if (this.planSeleccionadoId <= 0) {
+      this.error.set('Seleccione un plan antes de crear una actividad.');
+      return;
+    }
+    this.resetActividadForm();
+    this.actividadSnapshot = this.estadoActividadFormulario();
+    this.modalActividadAbierto.set(true);
   }
 
-  guardarActividad(): void {
+  async guardarActividad(): Promise<void> {
+    if (this.operacionEnCurso()) return;
     if (this.planSeleccionadoId <= 0 || !this.actividadDescripcion.trim() || !this.actividadResponsable.trim()) {
       this.error.set('Seleccione un plan y complete descripción y responsable de la actividad.');
       return;
@@ -361,6 +402,14 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
       this.error.set('Revise avance y rango de fechas de la actividad.');
       return;
     }
+    const confirmado = await this.confirmarGuardado(
+      this.actividadEditandoId > 0 ? 'Editar Actividad' : 'Crear Actividad',
+      this.actividadEditandoId > 0
+        ? '¿Desea guardar los cambios de la actividad seleccionada?'
+        : '¿Desea guardar esta nueva actividad?',
+      this.actividadEditandoId > 0 ? 'Guardar cambios' : 'Confirmar guardado'
+    );
+    if (!confirmado) return;
     const dto: ActividadPlanGuardarDto = {
       actPlanId: this.planSeleccionadoId,
       actDescripcion: this.actividadDescripcion.trim(),
@@ -378,7 +427,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
       next: () => {
         this.guardando.set(false);
         this.mensaje.set(this.actividadEditandoId > 0 ? 'Actividad actualizada correctamente.' : 'Actividad creada correctamente.');
-        this.nuevaActividad();
+        this.cerrarModalActividadForzado();
         this.cargarActividades(this.planSeleccionadoId);
         this.persisted.emit();
       },
@@ -411,5 +460,195 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   private mensajeError(error: unknown, mensaje: string): string {
     const respuesta = error as { error?: { mensaje?: string }; message?: string };
     return respuesta?.error?.mensaje || respuesta?.message || mensaje;
+  }
+
+  operacionEnCurso(): boolean {
+    return this.guardando() || this.confirmando();
+  }
+
+  controlFormularioValido(): boolean {
+    return this.evaluacionId > 0 && this.controlDescripcion.trim().length > 0;
+  }
+
+  efectividadFormularioValida(): boolean {
+    return this.controlSeleccionadoId > 0 && Number.isFinite(Number(this.efectividad))
+      && this.efectividad >= 0 && this.efectividad <= 100;
+  }
+
+  planFormularioValido(): boolean {
+    return this.evaluacionId > 0
+      && this.planDescripcion.trim().length > 0
+      && this.planAvance >= 0 && this.planAvance <= 100
+      && this.planPresupuesto >= 0
+      && !!this.planFechaInicio && !!this.planFechaFin
+      && this.planFechaFin >= this.planFechaInicio;
+  }
+
+  actividadFormularioValida(): boolean {
+    return this.planSeleccionadoId > 0
+      && this.actividadDescripcion.trim().length > 0
+      && this.actividadResponsable.trim().length > 0
+      && this.actividadAvance >= 0 && this.actividadAvance <= 100
+      && !!this.actividadFechaInicio && !!this.actividadFechaFin
+      && this.actividadFechaFin >= this.actividadFechaInicio;
+  }
+
+  abrirModalEfectividad(): void {
+    if (this.controlSeleccionadoId <= 0) return;
+    this.efectividadSnapshot = this.estadoEfectividadFormulario();
+    this.modalEfectividadAbierto.set(true);
+  }
+
+  async solicitarCierreControl(): Promise<void> {
+    if (this.operacionEnCurso()) return;
+    if (this.estadoControlFormulario() !== this.controlSnapshot) {
+      const confirmado = await this.confirmation.confirm({
+        title: 'Descartar cambios del control',
+        message: '¿Desea descartar los cambios realizados?',
+        confirmLabel: 'Descartar cambios',
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'delete',
+        confirmVariant: 'danger',
+        icon: 'warning'
+      });
+      if (!confirmado) return;
+    }
+    this.cerrarModalControlForzado();
+  }
+
+  async solicitarCierreEfectividad(): Promise<void> {
+    if (this.operacionEnCurso()) return;
+    if (this.estadoEfectividadFormulario() !== this.efectividadSnapshot) {
+      const confirmado = await this.confirmation.confirm({
+        title: 'Descartar efectividad',
+        message: '¿Desea descartar la efectividad introducida?',
+        confirmLabel: 'Descartar',
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'delete',
+        confirmVariant: 'danger',
+        icon: 'warning'
+      });
+      if (!confirmado) return;
+    }
+    this.modalEfectividadAbierto.set(false);
+  }
+
+  async solicitarCierrePlan(): Promise<void> {
+    if (this.operacionEnCurso()) return;
+    if (this.estadoPlanFormulario() !== this.planSnapshot) {
+      const confirmado = await this.confirmation.confirm({
+        title: 'Descartar cambios del plan',
+        message: '¿Desea descartar los cambios realizados?',
+        confirmLabel: 'Descartar cambios',
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'delete',
+        confirmVariant: 'danger',
+        icon: 'warning'
+      });
+      if (!confirmado) return;
+    }
+    this.cerrarModalPlanForzado();
+  }
+
+  async solicitarCierreActividad(): Promise<void> {
+    if (this.operacionEnCurso()) return;
+    if (this.estadoActividadFormulario() !== this.actividadSnapshot) {
+      const confirmado = await this.confirmation.confirm({
+        title: 'Descartar cambios de la actividad',
+        message: '¿Desea descartar los cambios realizados?',
+        confirmLabel: 'Descartar cambios',
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'delete',
+        confirmVariant: 'danger',
+        icon: 'warning'
+      });
+      if (!confirmado) return;
+    }
+    this.cerrarModalActividadForzado();
+  }
+
+  private async confirmarGuardado(title: string, message: string, confirmLabel: string): Promise<boolean> {
+    if (this.confirmando()) return false;
+    this.confirmando.set(true);
+    try {
+      return await this.confirmation.confirm({
+        title,
+        message,
+        confirmLabel,
+        cancelLabel: 'Continuar editando',
+        confirmIcon: 'save',
+        confirmVariant: 'primary'
+      });
+    } finally {
+      this.confirmando.set(false);
+    }
+  }
+
+  private estadoControlFormulario(): string {
+    return JSON.stringify([this.evaluacionId, this.controlEditandoId, this.controlTipo, this.controlDescripcion, this.controlAutomatizacion, this.controlEstado]);
+  }
+
+  private estadoEfectividadFormulario(): string {
+    return JSON.stringify([this.controlSeleccionadoId, this.efectividad, this.comentarioEfectividad]);
+  }
+
+  private estadoPlanFormulario(): string {
+    return JSON.stringify([this.evaluacionId, this.planEditandoId, this.planDescripcion, this.planAvance, this.planPresupuesto, this.planFechaInicio, this.planFechaFin, this.planEstado, this.planMonitoreoSeguimiento, this.planResponsables, this.planRecursos]);
+  }
+
+  private estadoActividadFormulario(): string {
+    return JSON.stringify([this.planSeleccionadoId, this.actividadEditandoId, this.actividadDescripcion, this.actividadResponsable, this.actividadAvance, this.actividadFechaInicio, this.actividadFechaFin, this.actividadEstado]);
+  }
+
+  private resetControlForm(): void {
+    this.controlEditandoId = 0;
+    this.controlSeleccionadoId = 0;
+    this.controlTipo = 'PREVENTIVO';
+    this.controlDescripcion = '';
+    this.controlAutomatizacion = 'MANUAL';
+    this.controlEstado = 'ACTIVO';
+    this.efectividad = 0;
+    this.comentarioEfectividad = '';
+    this.evaluacionesControl.set([]);
+  }
+
+  private resetPlanForm(): void {
+    this.planEditandoId = 0;
+    this.planSeleccionadoId = 0;
+    this.planDescripcion = '';
+    this.planAvance = 0;
+    this.planPresupuesto = 0;
+    this.planFechaInicio = this.hoy();
+    this.planFechaFin = this.hoy();
+    this.planEstado = 'PENDIENTE';
+    this.planMonitoreoSeguimiento = '';
+    this.planResponsables = '';
+    this.planRecursos = '';
+    this.actividades.set([]);
+  }
+
+  private resetActividadForm(): void {
+    this.actividadEditandoId = 0;
+    this.actividadDescripcion = '';
+    this.actividadResponsable = '';
+    this.actividadAvance = 0;
+    this.actividadFechaInicio = this.hoy();
+    this.actividadFechaFin = this.hoy();
+    this.actividadEstado = 'PENDIENTE';
+  }
+
+  cerrarModalControlForzado(): void {
+    this.modalControlAbierto.set(false);
+    this.resetControlForm();
+  }
+
+  cerrarModalPlanForzado(): void {
+    this.modalPlanAbierto.set(false);
+    this.resetPlanForm();
+  }
+
+  cerrarModalActividadForzado(): void {
+    this.modalActividadAbierto.set(false);
+    this.resetActividadForm();
   }
 }

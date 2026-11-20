@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 import { MatricesRiesgosGestionComponent } from './matrices-riesgos-gestion.component';
 
 describe('MatricesRiesgosGestionComponent', () => {
@@ -14,6 +15,7 @@ describe('MatricesRiesgosGestionComponent', () => {
     actualizarRiesgo: ReturnType<typeof vi.fn>;
   };
   let confirmation: { confirm: ReturnType<typeof vi.fn> };
+  let notification: { notify: ReturnType<typeof vi.fn> };
 
   const riesgoActivo = {
     rieId: 7,
@@ -42,12 +44,14 @@ describe('MatricesRiesgosGestionComponent', () => {
       crearRiesgo: vi.fn().mockReturnValue(of(8)),
       actualizarRiesgo: vi.fn().mockReturnValue(of({ success: true }))
     };
-    confirmation = { confirm: vi.fn().mockResolvedValue(false) };
+    confirmation = { confirm: vi.fn().mockResolvedValue(true) };
+    notification = { notify: vi.fn().mockResolvedValue(undefined) };
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosGestionComponent],
       providers: [
         { provide: MatricesRiesgosService, useValue: service },
-        { provide: InstitutionalConfirmationService, useValue: confirmation }
+        { provide: InstitutionalConfirmationService, useValue: confirmation },
+        { provide: InstitutionalNotificationService, useValue: notification }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(MatricesRiesgosGestionComponent);
@@ -123,24 +127,28 @@ describe('MatricesRiesgosGestionComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
-  it('crea un riesgo válido con descripción nula si está vacía', () => {
+  it('confirma institucionalmente y crea un riesgo válido con descripción nula si está vacía', async () => {
     component.codigo = 'R-010';
     component.nombre = 'Riesgo sin descripción';
     component.descripcion = '   ';
     component.activo = false;
-    component.guardar();
+    await component.guardar();
 
+    expect(confirmation.confirm).toHaveBeenCalledWith(expect.objectContaining({
+      title: '¿Crear el riesgo R-010?',
+      confirmLabel: 'Crear riesgo',
+      confirmIcon: 'save'
+    }));
     expect(service.crearRiesgo).toHaveBeenCalledWith({
       rieCodigo: 'R-010',
       rieNombre: 'Riesgo sin descripción',
       rieDescripcion: null,
       rieActivo: false
     });
-    expect(component.mensaje()).toBe('Riesgo creado correctamente.');
     expect(component.guardando()).toBe(false);
   });
 
-  it('edita y actualiza un riesgo existente', () => {
+  it('confirma institucionalmente y actualiza un riesgo existente', async () => {
     const root = fixture.nativeElement as HTMLElement;
     component.editar(riesgoActivo);
     expect(component.editandoId()).toBe(7);
@@ -153,12 +161,23 @@ describe('MatricesRiesgosGestionComponent', () => {
     expect(component.activo).toBe(true);
 
     component.nombre = 'Riesgo modificado';
-    component.guardar();
+    await component.guardar();
 
+    expect(confirmation.confirm).toHaveBeenCalledWith(expect.objectContaining({
+      title: '¿Guardar cambios del riesgo R-007?',
+      confirmLabel: 'Guardar cambios',
+      confirmIcon: 'save'
+    }));
     expect(service.actualizarRiesgo).toHaveBeenCalledWith(7, expect.objectContaining({
       rieNombre: 'Riesgo modificado'
     }));
-    expect(component.mensaje()).toBe('Riesgo actualizado correctamente.');
+    expect(notification.notify).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Riesgo actualizado',
+      icon: 'success',
+      confirmLabel: 'Aceptar',
+      confirmIcon: 'confirm',
+      confirmVariant: 'success'
+    }));
   });
 
   it('edita un riesgo con descripción null inicializando string vacío', () => {
@@ -178,62 +197,80 @@ describe('MatricesRiesgosGestionComponent', () => {
     expect(component.descripcion).toBe('');
     expect(component.activo).toBe(true);
     expect(component.error()).toBeNull();
-    expect(component.mensaje()).toBeNull();
   });
 
-  it('valida campos obligatorios sin invocar el servicio si código o nombre están vacíos', () => {
+  it('valida campos obligatorios sin invocar el servicio si código o nombre están vacíos', async () => {
     component.codigo = '   ';
     component.nombre = '   ';
-    component.guardar();
+    await component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
     expect(component.errorFormulario()).toBe('Código y nombre son obligatorios.');
   });
 
-  it('valida longitud máxima de código (>30)', () => {
+  it('valida longitud máxima de código (>30)', async () => {
     component.codigo = 'C'.repeat(31);
     component.nombre = 'Nombre válido';
-    component.guardar();
+    await component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
     expect(component.errorFormulario()).toBe('Revise las longitudes máximas permitidas del riesgo.');
   });
 
-  it('valida longitud máxima de nombre (>250)', () => {
+  it('valida longitud máxima de nombre (>250)', async () => {
     component.codigo = 'R-001';
     component.nombre = 'N'.repeat(251);
-    component.guardar();
+    await component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
     expect(component.errorFormulario()).toBe('Revise las longitudes máximas permitidas del riesgo.');
   });
 
-  it('valida longitud máxima de descripción (>2000)', () => {
+  it('valida longitud máxima de descripción (>2000)', async () => {
     component.codigo = 'R-001';
     component.nombre = 'Nombre válido';
     component.descripcion = 'D'.repeat(2001);
-    component.guardar();
+    await component.guardar();
 
     expect(service.crearRiesgo).not.toHaveBeenCalled();
     expect(component.errorFormulario()).toBe('Revise las longitudes máximas permitidas del riesgo.');
   });
 
-  it('maneja error con mensaje fallback cuando falla el guardado', () => {
+  it('maneja error con mensaje fallback cuando falla el guardado', async () => {
     service.crearRiesgo.mockReturnValue(throwError(() => ({})));
     component.codigo = 'R-008';
     component.nombre = 'Riesgo 8';
-    component.guardar();
+    await component.guardar();
 
     expect(component.errorFormulario()).toBe('No se pudo guardar el riesgo.');
     expect(component.guardando()).toBe(false);
+    expect(notification.notify).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'No se pudo guardar el riesgo',
+      icon: 'error',
+      confirmLabel: 'Aceptar',
+      confirmIcon: 'cancel',
+      confirmVariant: 'danger'
+    }));
   });
 
-  it('maneja error con propiedad message en objeto cuando falla la actualización', () => {
+  it('maneja error con propiedad message en objeto cuando falla la actualización', async () => {
     service.actualizarRiesgo.mockReturnValue(throwError(() => ({ message: 'Error de red en servidor' })));
     component.editar(riesgoActivo);
-    component.guardar();
+    await component.guardar();
 
     expect(component.errorFormulario()).toBe('Error de red en servidor');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('no llama al API si el usuario cancela la confirmación institucional', async () => {
+    confirmation.confirm.mockResolvedValue(false);
+    component.codigo = 'R-011';
+    component.nombre = 'Riesgo cancelado';
+
+    await component.guardar();
+
+    expect(confirmation.confirm).toHaveBeenCalled();
+    expect(service.crearRiesgo).not.toHaveBeenCalled();
     expect(component.guardando()).toBe(false);
   });
 
@@ -282,6 +319,7 @@ describe('MatricesRiesgosGestionComponent', () => {
 
   it('keeps a dirty risk modal open when discard confirmation is cancelled', async () => {
     const root = fixture.nativeElement as HTMLElement;
+    confirmation.confirm.mockResolvedValue(false);
     component.editar(riesgoActivo);
     component.nombre = 'Unsaved change';
 

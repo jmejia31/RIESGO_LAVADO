@@ -181,7 +181,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     }
   }
 
-  guardarCambios(): void {
+  async guardarCambios(): Promise<void> {
     const familia = this.detalle();
     if (!familia || this.guardando() || this.operando() || !this.puedeGestionarFamilia()) return;
 
@@ -203,6 +203,16 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
       return;
     }
     if (!this.hayCambios()) return;
+
+    const confirmado = await this.confirmation.confirm({
+      title: 'Guardar cambios de la familia',
+      message: `Se actualizará la familia ${familia.famCodigo} y se conservará su historial.`,
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     const nombreEnviado = this.nombre;
     const descripcionEnviada = this.descripcion;

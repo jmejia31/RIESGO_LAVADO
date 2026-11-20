@@ -2,11 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosMonitoreoOperativoComponent } from './matrices-riesgos-monitoreo-operativo.component';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosMonitoreoOperativoComponent>;
   let component: MatricesRiesgosMonitoreoOperativoComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
+  let confirmation: { confirm: ReturnType<typeof vi.fn> };
 
   const resumen = {
     fechaGeneracion: '2026-08-07T12:00:00Z',
@@ -49,6 +51,7 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
   };
 
   beforeEach(async () => {
+    confirmation = { confirm: vi.fn().mockResolvedValue(true) };
     service = {
       obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
         { codigo: 'APROBADA', etiqueta: 'Aprobada' }, { codigo: 'BORRADOR', etiqueta: 'Borrador' },
@@ -72,7 +75,10 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     };
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosMonitoreoOperativoComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: InstitutionalConfirmationService, useValue: confirmation }
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(MatricesRiesgosMonitoreoOperativoComponent);
     component = fixture.componentInstance;
@@ -119,7 +125,7 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(component.etiquetaEstadoEvaluacion('EN_REVISION')).toBe('En revisión');
   });
 
-  it('lee el snapshot F70-F82 y persiste el seguimiento posterior por control', () => {
+  it('lee el snapshot F70-F82 y persiste el seguimiento posterior por control', async () => {
     const control = { controlId: 31, tipo: 'PREVENTIVO' as const, descripcion: 'Control test', estadoMonitoreo: null, efectividadMonitoreo: null, evidencias: [] };
     service['obtenerBloque6'].mockReturnValue(of({
       senalesAlerta: [alertaActiva], estadoRiesgo: 'MITIGADO', controles: [control],
@@ -134,22 +140,22 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
 
     component.estadoMonitoreoDrafts[31] = 'SE_MANTIENE';
     component.efectividadMonitoreoDrafts[31] = 85;
-    component.guardarMonitoreoControl(control);
+    await component.guardarMonitoreoControl(control);
     expect(service['actualizarMonitoreoControl']).toHaveBeenCalledWith(31, {
       evaluacionId: 20, estadoMonitoreo: 'SE_MANTIENE', efectividadMonitoreo: 85
     });
     expect(service['obtenerProyeccionInstitucional']).toHaveBeenCalledWith(20);
   });
 
-  it('muestra la observación sin permiso como solo lectura y comunica 403 por separado', () => {
+  it('muestra la observación sin permiso como solo lectura y comunica 403 por separado', async () => {
     component.seleccionarEvaluacion(20);
     component.observacionesUgr = 'intentado';
-    component.guardarObservacion('ugr');
+    await component.guardarObservacion('ugr');
     expect(service['actualizarObservacionUgr']).not.toHaveBeenCalled();
     expect(component.error()).toContain('No tiene permiso para editar Observaciones UGR');
 
     service['actualizarObservacionArea'].mockReturnValue(throwError(() => ({ status: 403 })));
-    component.guardarObservacion('area');
+    await component.guardarObservacion('area');
     expect(component.error()).toContain('No tiene permiso para editar Observaciones del Área');
   });
 
@@ -190,12 +196,12 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
-  it('registra una alerta válida y limpia campos', () => {
+  it('registra una alerta válida y limpia campos', async () => {
     component.evaluacionId = 20;
     component.alertaCodigo = 'ALE-03';
     component.alertaIndicador = 'Umbral crítico alcanzado';
     component.alertaEstado = 'ACTIVO';
-    component.crearAlerta();
+    await component.crearAlerta();
 
     expect(service['crearAlerta']).toHaveBeenCalledWith({
       aleEvaluacionId: 20,
@@ -228,31 +234,31 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(component.error()).toBe('Revise las longitudes máximas permitidas de la alerta.');
   });
 
-  it('alterna el estado de una alerta activa e inactiva', () => {
+  it('alterna el estado de una alerta activa e inactiva', async () => {
     component.evaluacionId = 20;
 
-    component.cambiarEstado(alertaActiva);
+    await component.cambiarEstado(alertaActiva);
     expect(service['cambiarEstadoAlerta']).toHaveBeenCalledWith(9, 'INACTIVO');
     expect(component.mensaje()).toBe('Alerta inactivada correctamente.');
 
-    component.cambiarEstado(alertaInactiva);
+    await component.cambiarEstado(alertaInactiva);
     expect(service['cambiarEstadoAlerta']).toHaveBeenCalledWith(10, 'ACTIVO');
     expect(component.mensaje()).toBe('Alerta activada correctamente.');
   });
 
-  it('maneja error al cambiar estado de una alerta', () => {
+  it('maneja error al cambiar estado de una alerta', async () => {
     service['cambiarEstadoAlerta'].mockReturnValue(throwError(() => ({ message: 'Fallo al cambiar estado' })));
-    component.cambiarEstado(alertaActiva);
+    await component.cambiarEstado(alertaActiva);
     expect(component.error()).toBe('Fallo al cambiar estado');
     expect(component.guardando()).toBe(false);
   });
 
-  it('registra automonitoreo completo y valida campos requeridos', () => {
+  it('registra automonitoreo completo y valida campos requeridos', async () => {
     component.evaluacionId = 0;
     component.monEstadoRiesgo = '';
     component.monEstadoControles = '';
     component.monResultado = '';
-    component.registrarAutomonitoreo();
+    await component.registrarAutomonitoreo();
     expect(service['registrarAutomonitoreo']).not.toHaveBeenCalled();
     expect(component.error()).toBe('Seleccione una evaluación y complete todos los campos del automonitoreo.');
 
@@ -260,7 +266,7 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     component.monEstadoRiesgo = 'CONTROLADO';
     component.monEstadoControles = 'EFECTIVO';
     component.monResultado = 'Seguimiento mensual completado sin incidencias';
-    component.registrarAutomonitoreo();
+    await component.registrarAutomonitoreo();
 
     expect(service['registrarAutomonitoreo']).toHaveBeenCalledWith({
       monEvaluacionId: 20,
@@ -274,18 +280,53 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(component.monResultado).toBe('');
   });
 
-  it('maneja error al registrar automonitoreo', () => {
+  it('maneja error al registrar automonitoreo', async () => {
     service['registrarAutomonitoreo'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Error base de datos' } })));
     component.evaluacionId = 20;
     component.monEstadoRiesgo = 'RIESGO';
     component.monEstadoControles = 'CONTROLES';
     component.monResultado = 'RESULTADO';
-    component.registrarAutomonitoreo();
+    await component.registrarAutomonitoreo();
     expect(component.error()).toBe('Error base de datos');
     expect(component.guardando()).toBe(false);
   });
 
-  it('renderiza tarjetas de resumen KPI y secciones de alerta/automonitoreo en el DOM', () => {
+  it('no registra una alerta cuando el usuario rechaza la confirmación', async () => {
+    confirmation.confirm.mockResolvedValue(false);
+    component.evaluacionId = 20;
+    component.alertaCodigo = 'ALE-NO-GUARDAR';
+    component.alertaIndicador = 'Indicador no persistente';
+
+    await component.crearAlerta();
+
+    expect(confirmation.confirm).toHaveBeenCalled();
+    expect(service['crearAlerta']).not.toHaveBeenCalled();
+  });
+
+  it('mantiene las altas de alerta y automonitoreo fuera del flujo inline', () => {
+    component.seleccionarEvaluacion(20);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('#alerta-codigo')).toBeNull();
+    expect(root.querySelector('#mon-resultado')).toBeNull();
+
+    component.nuevoAlerta();
+    fixture.detectChanges();
+    expect(root.querySelector('dialog[aria-labelledby="titulo-modal-alerta"] .modal-size-lg')).not.toBeNull();
+    expect(root.querySelector('#alerta-codigo')).not.toBeNull();
+    expect(root.querySelector('#alerta-estado')).not.toBeNull();
+    expect(root.querySelector('#alerta-indicador')).not.toBeNull();
+    component.cerrarModalAlertaForzado();
+    component.nuevoAutomonitoreo();
+    fixture.detectChanges();
+    expect(root.querySelector('dialog[aria-labelledby="titulo-modal-automonitoreo"] .modal-size-lg')).not.toBeNull();
+    expect(root.querySelector('#mon-estado-riesgo')).not.toBeNull();
+    expect(root.querySelector('#mon-estado-controles')).not.toBeNull();
+    expect(root.querySelector('#mon-resultado')).not.toBeNull();
+  });
+
+  it('renderiza tarjetas de resumen KPI y secciones de alerta/automonitoreo en el DOM', async () => {
     component.seleccionarEvaluacion(20);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -294,9 +335,9 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(element.textContent).toContain('Indicador UAT');
     expect(element.textContent).toContain('Sin novedad');
 
-    const botonesAccionAlerta = element.querySelectorAll('article button');
+    const botonesAccionAlerta = element.querySelectorAll('section[aria-labelledby="titulo-alertas"] article button');
     expect(botonesAccionAlerta.length).toBeGreaterThanOrEqual(1);
-    (botonesAccionAlerta[0] as HTMLButtonElement).click();
+    await component.cambiarEstado(alertaActiva);
     expect(service['cambiarEstadoAlerta']).toHaveBeenCalled();
   });
 

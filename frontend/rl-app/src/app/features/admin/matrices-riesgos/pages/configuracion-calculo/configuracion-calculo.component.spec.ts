@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { ConfiguracionCalculoComponent } from './configuracion-calculo.component';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('ConfiguracionCalculoComponent', () => {
   let fixture: ComponentFixture<ConfiguracionCalculoComponent>;
@@ -18,11 +19,13 @@ describe('ConfiguracionCalculoComponent', () => {
     crearFuncion: vi.fn(() => of(12)), crearFuncionVersion: vi.fn(() => of(13)), actualizarFuncionBorrador: vi.fn(() => of({ success: true })), cambiarEstadoFuncionVersion: vi.fn(() => of({ success: true })),
     crearParametro: vi.fn(() => of(14)), crearParametroVersion: vi.fn(() => of(15)), actualizarParametroBorrador: vi.fn(() => of({ success: true })), cambiarEstadoParametroVersion: vi.fn(() => of({ success: true }))
   };
+  const confirmation = { confirm: vi.fn(() => Promise.resolve(true)) };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [ConfiguracionCalculoComponent], providers: [
       { provide: CalculoConfiguracionService, useValue: config },
-      { provide: MatricesRiesgosService, useValue: { metodologiaVigente: vi.fn(() => of({ versionFormularioId: 1, codigo: 'FORM', version: 1, secciones: [], catalogos: [{ codigo: 'CAT_RIESGO', nombre: 'Niveles de riesgo', elementos: [{ codigo: 'ALTO', valor: 'Alto', orden: 1 }] }], reglas: [{ codigo: 'RULE_VRI', version: '1.0', algoritmoId: 'ALG_VRI' }] })) } }
+      { provide: MatricesRiesgosService, useValue: { metodologiaVigente: vi.fn(() => of({ versionFormularioId: 1, codigo: 'FORM', version: 1, secciones: [], catalogos: [{ codigo: 'CAT_RIESGO', nombre: 'Niveles de riesgo', elementos: [{ codigo: 'ALTO', valor: 'Alto', orden: 1 }] }], reglas: [{ codigo: 'RULE_VRI', version: '1.0', algoritmoId: 'ALG_VRI' }] })) } },
+      { provide: InstitutionalConfirmationService, useValue: confirmation }
     ] }).compileComponents();
     fixture = TestBed.createComponent(ConfiguracionCalculoComponent);
     component = fixture.componentInstance;
@@ -36,17 +39,17 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Configuración de cálculo');
   });
 
-  it('mantiene el contrato NATIVE/COMPOSITE fail-closed en la UX', () => {
+  it('mantiene el contrato NATIVE/COMPOSITE fail-closed en la UX', async () => {
     component.prepararNuevaFuncion();
     component.funcionForm.codigo = 'CLAMP';
     component.funcionForm.nombre = 'Clamp';
     component.funcionForm.handlerKey = '';
-    component.guardarFuncion();
+    await component.guardarFuncion();
     expect(component.error()).toContain('contrato de función');
     component.funcionForm.tipo = 'COMPOSITE';
     component.funcionForm.definicionDsl = 'x * 2';
     component.funcionForm.handlerKey = '';
-    component.guardarFuncion();
+    await component.guardarFuncion();
     expect(config.crearFuncion).toHaveBeenCalled();
   });
 

@@ -15,7 +15,6 @@
   </div>
 
   @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
-  @if (mensaje()) { <output class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" aria-live="polite">{{ mensaje() }}</output> }
 
 
   <div class="matrices-filter-surface flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4 sm:flex-row sm:items-end" data-ui-filter-block="riesgos" data-ui-filter-standard="full">
@@ -112,7 +111,7 @@
           <button type="button" class="modal-action-icon modal-action-icon--neutral" aria-label="Cancelar formulario de riesgo" title="Cancelar formulario de riesgo" [disabled]="guardando()" (click)="solicitarCierre()">
             <app-action-icon action="cancel"></app-action-icon>
           </button>
-          <button type="submit" class="modal-action-icon modal-action-icon--primary" [attr.aria-label]="etiquetaGuardarRiesgo" [attr.title]="etiquetaGuardarRiesgo" [disabled]="guardando()" data-ui-action="save-risk">
+          <button type="submit" class="modal-action-icon modal-action-icon--primary" [attr.aria-label]="etiquetaGuardarRiesgo" [attr.title]="etiquetaGuardarRiesgo" [disabled]="guardando() || !formularioValido()" data-ui-action="save-risk">
             <app-action-icon action="save" [loading]="guardando()"></app-action-icon>
           </button>
         </footer>

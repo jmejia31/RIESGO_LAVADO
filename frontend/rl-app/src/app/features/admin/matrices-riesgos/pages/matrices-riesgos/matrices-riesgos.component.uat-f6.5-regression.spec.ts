@@ -7,6 +7,7 @@ import { GlobalHttpStateService } from '../../../../../core/services/global-http
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, MetodologiaFormulario, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -118,7 +119,8 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
       providers: [
         { provide: MatricesRiesgosService, useValue: service },
         { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
-        { provide: GlobalHttpStateService, useValue: { limpiarError: vi.fn() } }
+        { provide: GlobalHttpStateService, useValue: { limpiarError: vi.fn() } },
+        { provide: InstitutionalConfirmationService, useValue: { confirm: vi.fn().mockResolvedValue(true) } }
       ]
     }).compileComponents();
 
@@ -127,7 +129,7 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     fixture.detectChanges();
   });
 
-  it('guarda un BORRADOR, relee la evaluación y muestra confirmación dentro del modal con datos verificados', () => {
+  it('guarda un BORRADOR, relee la evaluación y muestra confirmación dentro del modal con datos verificados', async () => {
     const valorActualizado = 'Gerencia Riesgos UAT-F6.5-02 — Edición BORRADOR';
     const detallePersistido: EvaluacionRiesgoDto = {
       ...detalleOriginal,
@@ -141,7 +143,7 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
 
     component.editarEvaluacion(resumen);
     component.actualizarRespuesta(component.seccionesModal()[0].campos[0], valorActualizado);
-    component.guardarEvaluacion();
+    await component.guardarEvaluacion();
     fixture.detectChanges();
 
     expect(service['actualizarEvaluacion']).toHaveBeenCalledWith(
@@ -163,14 +165,14 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     expect(feedback?.textContent).toContain('guardados y verificados correctamente');
   });
 
-  it('mantiene el modal abierto y muestra error dentro del diálogo si el GET posterior no coincide con el PUT', () => {
+  it('mantiene el modal abierto y muestra error dentro del diálogo si el GET posterior no coincide con el PUT', async () => {
     service['obtenerEvaluacion']
       .mockReturnValueOnce(of(detalleOriginal))
       .mockReturnValueOnce(of(detalleOriginal));
 
     component.editarEvaluacion(resumen);
     component.actualizarRespuesta(component.seccionesModal()[0].campos[0], 'Cambio que el servidor no devolvió');
-    component.guardarEvaluacion();
+    await component.guardarEvaluacion();
     fixture.detectChanges();
 
     expect(component.modalEditarAbierto()).toBe(true);

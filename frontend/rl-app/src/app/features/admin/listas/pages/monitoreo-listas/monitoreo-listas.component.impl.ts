@@ -2382,7 +2382,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.archivosSeguimiento.set(files);
   }
 
-  guardarMotivo() {
+  async guardarMotivo(): Promise<void> {
     const manual = this.esRegistroManual();
     let docId = this.formTipoDocId();
     const motivo = this.formMotivo().trim();
@@ -2448,6 +2448,16 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     }
 
     const notaSegFinal = comentarioSeg || (archivosSeg.length > 0 ? 'Evidencia documental adjunta en registro inicial.' : '');
+
+    const confirmado = await this.confirmation.confirm({
+      title: 'Registrar motivo de coincidencia',
+      message: `Se registrará el motivo para ${nombreCompleto} y quedará disponible para auditoría y seguimiento.`,
+      confirmLabel: 'Sí, registrar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     this.guardandoMotivo.set(true);
 
@@ -2754,12 +2764,24 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     });
   }
 
-  guardarSeguimiento() {
+  async guardarSeguimiento(): Promise<void> {
     const entidad = this.entidadSeleccionada();
     const motivo = this.formComentarioSeguimiento().trim();
     const archivos = this.archivosSeleccionados();
 
     if (!entidad || !motivo) return;
+
+    const confirmado = await this.confirmation.confirm({
+      title: this.modoEdicion() ? 'Guardar cambios del seguimiento' : 'Registrar seguimiento',
+      message: this.modoEdicion()
+        ? 'Se actualizará el seguimiento seleccionado y se conservará su trazabilidad.'
+        : 'Se registrará el nuevo seguimiento y las evidencias adjuntas.',
+      confirmLabel: 'Sí, guardar',
+      cancelLabel: 'Cancelar',
+      confirmIcon: 'save',
+      confirmVariant: 'primary'
+    });
+    if (!confirmado) return;
 
     this.guardandoSeguimiento.set(true);
 

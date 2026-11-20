@@ -4,6 +4,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosComponent — operaciones del componente', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -133,7 +134,8 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       imports: [MatricesRiesgosComponent],
       providers: [
         { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
-        { provide: MatricesRiesgosService, useValue: service }
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: InstitutionalConfirmationService, useValue: { confirm: vi.fn().mockResolvedValue(true) } }
       ]
     }).compileComponents();
 
@@ -254,16 +256,16 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(service['eliminarVersionFormulario']).not.toHaveBeenCalled();
   });
 
-  it('actualiza una evaluacion existente y expone el error de guardado sin ocultarlo', () => {
+  it('actualiza una evaluacion existente y expone el error de guardado sin ocultarlo', async () => {
     component.editarEvaluacion(evaluacionResumen);
     component.actualizarRespuesta(component.seccionesModal()[0].campos[0], 'Cumplimiento actualizado');
-    component.guardarEvaluacion();
+    await component.guardarEvaluacion();
     expect(service['actualizarEvaluacion']).toHaveBeenCalledWith(31, expect.objectContaining({ evaId: 31, evaRiesgoId: 5 }));
 
     service['actualizarEvaluacion'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Conflicto de version' } })));
     component.editarEvaluacion(evaluacionResumen);
     component.actualizarRespuesta(component.seccionesModal()[0].campos[0], 'Cumplimiento actualizado');
-    component.guardarEvaluacion();
+    await component.guardarEvaluacion();
     expect(component.errorEdicionEvaluacion()).toBe('Conflicto de version');
     expect(component.guardando()).toBe(false);
   });

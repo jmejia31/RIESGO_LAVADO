@@ -6,6 +6,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { Subject, of, throwError } from 'rxjs';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias', () => {
   let component: MatricesRiesgosComponent;
@@ -14,6 +15,9 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
 
   const authMock = {
     tieneRol: vi.fn(() => true)
+  };
+  const confirmationMock = {
+    confirm: vi.fn(() => Promise.resolve(true))
   };
 
   const mockFamilias: FamiliaFormularioDto[] = [
@@ -74,7 +78,8 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
         {
           provide: AuthService,
           useValue: authMock
-        }
+        },
+        { provide: InstitutionalConfirmationService, useValue: confirmationMock }
       ]
     }).compileComponents();
 
@@ -386,20 +391,20 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     expect(component.cargandoFamilias()).toBe(false);
   });
 
-  it('22. cubre guardar familia nueva y edición con éxito y error del backend', () => {
+  it('22. cubre guardar familia nueva y edición con éxito y error del backend', async () => {
     const crear = vi.spyOn(service, 'crearFamiliaFormulario').mockReturnValue(of(99));
     component.nuevaFamiliaCodigo = 'NUEVA';
     component.nuevaFamiliaNombre = 'Nueva familia';
     component.nuevaFamiliaDescripcion = 'Descripción';
     component.modoEdicionFamilia.set(false);
-    component.guardarFamilia();
+    await component.guardarFamilia();
     expect(crear).toHaveBeenCalledWith({ famCodigo: 'NUEVA', famNombre: 'Nueva familia', famDescripcion: 'Descripción' });
     expect(component.guardando()).toBe(false);
 
     const actualizar = vi.spyOn(service, 'actualizarFamiliaFormulario').mockReturnValue(throwError(() => ({ error: { detail: 'No se pudo actualizar.' } })));
     component.modoEdicionFamilia.set(true);
     component.familiaIdEditando = 1;
-    component.guardarFamilia();
+    await component.guardarFamilia();
     expect(actualizar).toHaveBeenCalledWith(1, expect.objectContaining({ famNombre: 'Nueva familia' }));
     expect(component.errorModal()).toBe('No se pudo actualizar.');
     expect(component.guardando()).toBe(false);

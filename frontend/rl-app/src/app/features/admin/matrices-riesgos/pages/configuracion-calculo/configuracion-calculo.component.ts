@@ -83,6 +83,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
   readonly tab = signal<ConfigTab>('formulas');
   readonly cargando = signal(true);
   readonly guardando = signal(false);
+  readonly confirmando = signal(false);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly busqueda = signal('');
@@ -297,8 +298,34 @@ export class ConfiguracionCalculoComponent implements OnInit {
   prepararNuevoParametro(): void { this.parametroForm = this.nuevoParametroForm(); this.modoParametro.set('create'); this.parametroSeleccionado.set(null); }
   prepararVersionParametro(): void { this.parametroForm = this.nuevoParametroForm(); this.parametroVersionEditando.set(null); this.modoParametro.set('version'); }
 
-  guardarFormula(): void {
+  formulaFormularioValido(): boolean {
+    return !!this.formulaForm.expresion.trim()
+      && (this.modoFormula() !== 'create' || (!!this.formulaForm.codigo.trim() && !!this.formulaForm.nombre.trim()));
+  }
+
+  funcionFormularioValido(): boolean {
+    if (this.modoFuncion() === 'create' && (!this.funcionForm.codigo.trim() || !this.funcionForm.nombre.trim())) return false;
+    if (this.funcionForm.tipo === 'NATIVE') return !!this.funcionForm.handlerKey.trim();
+    return !!this.funcionForm.definicionDsl.trim();
+  }
+
+  parametroFormularioValido(): boolean {
+    if (!this.parametroForm.tipo) return false;
+    if (this.modoParametro() === 'create' && (!this.parametroForm.codigo.trim() || !this.parametroForm.nombre.trim())) return false;
+    if (this.parametroForm.tipo === 'TEXT') return !!this.parametroForm.valorTexto.trim();
+    if (this.parametroForm.tipo === 'DATE') return !!this.parametroForm.valorFecha;
+    if (this.parametroForm.tipo === 'INTEGER') return this.parametroForm.valorEntero !== null && this.parametroForm.valorEntero !== undefined;
+    if (this.parametroForm.tipo === 'DECIMAL') return this.parametroForm.valorDecimal !== null && this.parametroForm.valorDecimal !== undefined;
+    return this.parametroForm.valorBooleano !== null && this.parametroForm.valorBooleano !== undefined;
+  }
+
+  operacionEnCurso(): boolean {
+    return this.guardando() || this.confirmando();
+  }
+
+  async guardarFormula(): Promise<void> {
     if (!this.validarFormula()) return;
+    if (!await this.confirmarGuardado('Guardar fórmula', '¿Desea guardar los cambios de la fórmula?')) return;
     const versionDto = { expresion: this.formulaForm.expresion.trim(), tipoResultado: this.formulaForm.tipoResultado };
     const request = this.modoFormula() === 'create'
       ? this.config.crearFormula(this.crearFormulaDto())
@@ -309,22 +336,22 @@ export class ConfiguracionCalculoComponent implements OnInit {
       .subscribe({ next: () => this.finalizar('Fórmula guardada correctamente.'), error: error => this.fallar(error, 'No se pudo guardar la fórmula.') });
   }
 
-  guardarFormulaBorrador(version: FormulaVersionDto): void {
+  async guardarFormulaBorrador(version: FormulaVersionDto): Promise<void> {
     if (version.estado !== 'DRAFT' || !this.formulaForm.expresion.trim()) return;
+    if (!await this.confirmarGuardado('Guardar borrador de fórmula', '¿Desea guardar los cambios del borrador?')) return;
     const dto: ActualizarFormulaBorradorDto = { expresion: this.formulaForm.expresion.trim(), tipoResultado: this.formulaForm.tipoResultado, versionRow: version.versionRow };
     this.ejecutar(this.config.actualizarFormulaBorrador(version.id, dto)).subscribe({ next: () => { this.finalizar('Borrador de fórmula actualizado.'); if (this.formulaSeleccionada()) this.seleccionarFormula(this.formulaSeleccionada()!); }, error: error => this.fallar(error, 'No se pudo actualizar el borrador de fórmula.') });
   }
 
-  cambiarEstadoFormula(item: FormulaDto, estado: 'INACTIVE' | 'ACTIVE' | 'RETIRED'): void {
-    void this.confirmar(`¿Cambiar el estado de ${item.codigo}?`).then(ok => {
-      if (!ok) return;
-      const dto: CambiarEstadoConfiguracionDto = { estado, versionRow: item.versionRow };
-      this.ejecutar(this.config.cambiarEstadoFormula(item.id, dto)).subscribe({ next: () => { this.finalizar('Estado de fórmula actualizado.'); this.cargar(); }, error: error => this.fallar(error, 'No se pudo cambiar el estado de la fórmula.') });
-    });
+  async cambiarEstadoFormula(item: FormulaDto, estado: 'INACTIVE' | 'ACTIVE' | 'RETIRED'): Promise<void> {
+    if (!await this.confirmar(`¿Cambiar el estado de ${item.codigo}?`)) return;
+    const dto: CambiarEstadoConfiguracionDto = { estado, versionRow: item.versionRow };
+    this.ejecutar(this.config.cambiarEstadoFormula(item.id, dto)).subscribe({ next: () => { this.finalizar('Estado de fórmula actualizado.'); this.cargar(); }, error: error => this.fallar(error, 'No se pudo cambiar el estado de la fórmula.') });
   }
 
-  guardarFuncion(): void {
+  async guardarFuncion(): Promise<void> {
     if (!this.validarFuncion()) return;
+    if (!await this.confirmarGuardado('Guardar función', '¿Desea guardar los cambios de la función?')) return;
     const version: CrearFuncionVersionDto = this.crearFuncionVersionDto();
     const observable = this.modoFuncion() === 'create'
       ? this.config.crearFuncion({ codigo: this.funcionForm.codigo.trim().toUpperCase(), nombre: this.funcionForm.nombre.trim(), descripcion: this.funcionForm.descripcion.trim() || null, categoria: this.funcionForm.categoria.trim() || 'CALCULO', versionInicial: version })
@@ -334,8 +361,9 @@ export class ConfiguracionCalculoComponent implements OnInit {
     this.ejecutar(observable).subscribe({ next: () => this.finalizar('Función guardada correctamente.'), error: error => this.fallar(error, 'No se pudo guardar la función.') });
   }
 
-  guardarParametro(): void {
+  async guardarParametro(): Promise<void> {
     if (!this.validarParametro()) return;
+    if (!await this.confirmarGuardado('Guardar parámetro', '¿Desea guardar los cambios del parámetro?')) return;
     const version = this.crearParametroVersionDto();
     const observable = this.modoParametro() === 'create'
       ? this.config.crearParametro({ codigo: this.parametroForm.codigo.trim().toUpperCase(), nombre: this.parametroForm.nombre.trim(), descripcion: this.parametroForm.descripcion.trim() || null, versionInicial: version })
@@ -345,20 +373,23 @@ export class ConfiguracionCalculoComponent implements OnInit {
     this.ejecutar(observable).subscribe({ next: () => this.finalizar('Parámetro guardado correctamente.'), error: error => this.fallar(error, 'No se pudo guardar el parámetro.') });
   }
 
-  actualizarFuncionBorrador(version: FuncionVersionDto): void {
+  async actualizarFuncionBorrador(version: FuncionVersionDto): Promise<void> {
     if (version.estado !== 'DRAFT' || !this.validarFuncion()) return;
+    if (!await this.confirmarGuardado('Guardar borrador de función', '¿Desea guardar los cambios del borrador?')) return;
     const dto: ActualizarFuncionBorradorDto = { ...this.crearFuncionVersionDto(), versionRow: version.versionRow };
     this.ejecutar(this.config.actualizarFuncionBorrador(version.id, dto)).subscribe({ next: () => { this.finalizar('Borrador de función actualizado.'); if (this.funcionSeleccionada()) this.seleccionarFuncion(this.funcionSeleccionada()!); }, error: error => this.fallar(error, 'No se pudo actualizar el borrador de función.') });
   }
 
-  actualizarParametroBorrador(version: ParametroVersionDto): void {
+  async actualizarParametroBorrador(version: ParametroVersionDto): Promise<void> {
     if (version.estado !== 'DRAFT' || !this.validarParametro()) return;
+    if (!await this.confirmarGuardado('Guardar borrador de parámetro', '¿Desea guardar los cambios del borrador?')) return;
     const dto: ActualizarParametroBorradorDto = { ...this.crearParametroVersionDto(), versionRow: version.versionRow };
     this.ejecutar(this.config.actualizarParametroBorrador(version.id, dto)).subscribe({ next: () => { this.finalizar('Borrador de parámetro actualizado.'); if (this.parametroSeleccionado()) this.seleccionarParametro(this.parametroSeleccionado()!); }, error: error => this.fallar(error, 'No se pudo actualizar el borrador de parámetro.') });
   }
 
-  cambiarEstadoVersion(kind: 'function' | 'parameter', item: FuncionVersionDto | ParametroVersionDto, estado: EstadoConfiguracion): void {
+  async cambiarEstadoVersion(kind: 'function' | 'parameter', item: FuncionVersionDto | ParametroVersionDto, estado: EstadoConfiguracion): Promise<void> {
     if (estado === 'PUBLISHED') { this.error.set('La publicación requiere la validación del Publication Gate único.'); return; }
+    if (!await this.confirmar(`¿Cambiar el estado de la versión a ${this.estadoLabel(estado)}?`)) return;
     const dto: CambiarEstadoConfiguracionDto = { estado, versionRow: item.versionRow };
     const request = kind === 'function' ? this.config.cambiarEstadoFuncionVersion(item.id, dto) : this.config.cambiarEstadoParametroVersion(item.id, dto);
     this.ejecutar(request).subscribe({ next: () => { this.finalizar('Estado actualizado.'); if (kind === 'function' && this.funcionSeleccionada()) this.seleccionarFuncion(this.funcionSeleccionada()!); if (kind === 'parameter' && this.parametroSeleccionado()) this.seleccionarParametro(this.parametroSeleccionado()!); }, error: error => this.fallar(error, 'No se pudo cambiar el estado.') });
@@ -393,14 +424,24 @@ export class ConfiguracionCalculoComponent implements OnInit {
   private fallar(error: unknown, fallback: string): void { this.guardando.set(false); this.error.set(this.mensajeError(error, fallback)); }
   private mensajeError(error: unknown, fallback: string): string { const value = error as { error?: { mensaje?: string }; message?: string }; return value?.error?.mensaje || value?.message || fallback; }
   private confirmar(text: string): Promise<boolean> {
-    return this.confirmation.confirm({
-      title: 'Confirmar cambio',
-      message: text,
-      icon: 'warning',
-      confirmLabel: 'Continuar',
-      cancelLabel: 'Cancelar',
-      confirmIcon: 'confirm'
-    });
+    return this.confirmarGuardado('Confirmar cambio', text);
+  }
+
+  private async confirmarGuardado(title: string, message: string): Promise<boolean> {
+    if (this.confirmando()) return false;
+    this.confirmando.set(true);
+    try {
+      return await this.confirmation.confirm({
+        title,
+        message,
+        icon: 'warning',
+        confirmLabel: 'Guardar cambios',
+        cancelLabel: 'Cancelar',
+        confirmIcon: 'save'
+      });
+    } finally {
+      this.confirmando.set(false);
+    }
   }
   private nuevaFormulaForm(): FormulaDraftForm { return { codigo: '', nombre: '', descripcion: '', expresion: '', tipoResultado: 'DECIMAL' }; }
   private nuevaFuncionForm(): FunctionDraftForm { return { codigo: '', nombre: '', descripcion: '', categoria: 'CALCULO', tipo: 'NATIVE', tipoResultado: 'DECIMAL', handlerKey: '', definicionDsl: '', minArity: 1, maxArity: 1 }; }

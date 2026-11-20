@@ -6,6 +6,7 @@ import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 import { MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS } from '../../models/matriz-institucional.contract';
 
 describe('MatricesRiesgosComponent', () => {
@@ -224,7 +225,8 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       providers: [
         { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
         { provide: MatricesRiesgosService, useValue: service },
-        { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } }
+       { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } },
+       { provide: InstitutionalConfirmationService, useValue: { confirm: vi.fn().mockResolvedValue(true) } }
       ]
     }).compileComponents();
 
@@ -426,12 +428,12 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.puedeGuardar()).toBe(true);
   });
 
-  it('crea una evaluación enviando respuestas dinámicas', () => {
+  it('crea una evaluación enviando respuestas dinámicas', async () => {
     component.nuevaEvaluacion();
     component.seleccionarFamilia('MATRIZ_RIESGOS_LAFT');
     component.riesgoId.set(5);
     component.actualizarRespuesta(component.secciones()[0].campos[0], 'Cumplimiento');
-    component.guardarEvaluacion();
+    await component.guardarEvaluacion();
 
     expect(service.crearEvaluacion).toHaveBeenCalledWith(expect.objectContaining({
       evaRiesgoId: 5,
@@ -609,17 +611,17 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.motivoTransicion).toBe('');
   });
 
-  it('guarda un borrador de formulario valido y bloquea JSON invalido', () => {
+  it('guarda un borrador de formulario valido y bloquea JSON invalido', async () => {
     const version = { ...component.versionVigente()!, verVigente: false, verEstado: 'DRAFT' as const };
     component.abrirDefinicion(version);
     component.definicionTecnica = '{invalido';
-    component.guardarDefinicion();
+    await component.guardarDefinicion();
     expect(service.actualizarBorradorFormulario).not.toHaveBeenCalled();
     expect(component.errorFormBuilder()).toContain('JSON');
 
     component.definicionTecnica = '{"codigoFormulario":"FORM_A","secciones":[]}';
     service.obtenerVersionFormulario.mockReturnValue(of({ ...version, verJson: component.definicionTecnica }));
-    component.guardarDefinicion();
+    await component.guardarDefinicion();
     expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(10, component.definicionTecnica);
     expect(component.versionEditando()?.verId).toBe(10);
     expect(component.versionEditando()?.verEstado).toBe('DRAFT');
@@ -978,7 +980,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     }
   });
 
-  it('guarda una evaluación histórica enviando sólo las claves de su versión', () => {
+  it('guarda una evaluación histórica enviando sólo las claves de su versión', async () => {
     component.evaluacionSeleccionada.set({
       evaId: 87, evaRiesgoId: 5, evaVersionId: 9, evaEstado: 'BORRADOR', evaDataJson: '{}',
       evaFechaEval: '2026-08-14T00:00:00', evaUsrEval: 1, evaVersionRow: 2, evaActivo: true
@@ -998,7 +1000,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.riesgoId.set(5);
     component.respuestas.set({ campo_historico: 'actualizado', ordinal: 87, rieCodigo: 'R-087', tipo_riesgo: 'LEGACY' });
 
-    component.guardarBorradorEvaluacion();
+    await component.guardarBorradorEvaluacion();
 
     expect(service.actualizarBorradorEvaluacion).toHaveBeenCalledWith(87, expect.objectContaining({
       evaVersionId: 9,

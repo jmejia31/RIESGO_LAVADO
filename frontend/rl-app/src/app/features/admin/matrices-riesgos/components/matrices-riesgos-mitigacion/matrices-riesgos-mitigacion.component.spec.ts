@@ -2,11 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosMitigacionComponent } from './matrices-riesgos-mitigacion.component';
+import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
 
 describe('MatricesRiesgosMitigacionComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosMitigacionComponent>;
   let component: MatricesRiesgosMitigacionComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
+  let confirmation: { confirm: ReturnType<typeof vi.fn> };
 
   const control = {
     conId: 3,
@@ -43,6 +45,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
   };
 
   beforeEach(async () => {
+    confirmation = { confirm: vi.fn().mockResolvedValue(true) };
     service = {
       obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
         { codigo: 'APROBADA', etiqueta: 'Aprobada' }, { codigo: 'BORRADOR', etiqueta: 'Borrador' },
@@ -63,7 +66,10 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     };
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosMitigacionComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: InstitutionalConfirmationService, useValue: confirmation }
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(MatricesRiesgosMitigacionComponent);
     component = fixture.componentInstance;
@@ -128,6 +134,8 @@ describe('MatricesRiesgosMitigacionComponent', () => {
 
   it('renderiza estados de control y plan como selectores controlados, no como texto libre', () => {
     component.seleccionarEvaluacion(20);
+    component.nuevoControl();
+    component.nuevoPlan();
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const controlEstado = element.querySelector('#control-estado') as HTMLSelectElement | null;
@@ -147,13 +155,21 @@ describe('MatricesRiesgosMitigacionComponent', () => {
 
     expect(root.querySelector('[data-ui-action="new-control"]')?.getAttribute('aria-label')).toBe('Nuevo control');
     expect(root.querySelector('[data-ui-action="new-plan"]')?.getAttribute('aria-label')).toBe('Nuevo plan de mitigación');
+    expect(root.querySelector('[data-ui-action="save-control"]')).toBeNull();
+    expect(root.querySelector('[data-ui-action="save-plan"]')).toBeNull();
+
+    component.nuevoControl();
+    fixture.detectChanges();
     expect(root.querySelector('[data-ui-action="save-control"]')?.getAttribute('aria-label')).toBe('Guardar nuevo control');
-    expect(root.querySelector('[data-ui-action="save-plan"]')?.getAttribute('aria-label')).toBe('Guardar nuevo plan');
+    component.cerrarModalControlForzado();
+    fixture.detectChanges();
 
     const editarControl = root.querySelector('button[aria-label="Editar y evaluar control"]') as HTMLButtonElement;
     editarControl.click();
     fixture.detectChanges();
     expect(root.querySelector('[data-ui-action="save-control"]')?.getAttribute('aria-label')).toBe('Actualizar control');
+    component.cerrarModalControlForzado();
+    fixture.detectChanges();
 
     const editarPlan = root.querySelector('button[aria-label="Editar plan y actividades"]') as HTMLButtonElement;
     editarPlan.click();
@@ -163,13 +179,13 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(root.querySelector('[data-ui-action="new-plan"]')?.className).toContain('bg-ihss-50');
   });
 
-  it('crea un control válido y resetea el formulario', () => {
+  it('crea un control válido y resetea el formulario', async () => {
     component.seleccionarEvaluacion(20);
     component.controlTipo = 'DETECTIVO';
     component.controlAutomatizacion = 'AUTOMATICO';
     component.controlEstado = 'ACTIVO';
     component.controlDescripcion = 'Control detectivo automático';
-    component.guardarControl();
+    await component.guardarControl();
 
     expect(service['crearControl']).toHaveBeenCalledWith({
       conEvaluacionId: 20,
@@ -184,7 +200,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.controlEditandoId).toBe(0);
   });
 
-  it('actualiza un control existente', () => {
+  it('actualiza un control existente', async () => {
     component.seleccionarEvaluacion(20);
     component.editarControl(control);
     expect(component.controlEditandoId).toBe(3);
@@ -192,7 +208,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
 
     component.controlDescripcion = 'Control modificado';
     component.controlEstado = '';
-    component.guardarControl();
+    await component.guardarControl();
 
     expect(service['actualizarControl']).toHaveBeenCalledWith(3, expect.objectContaining({
       conDescripcion: 'Control modificado',
@@ -209,17 +225,17 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.error()).toBe('Seleccione una evaluación y describa el control.');
   });
 
-  it('registra efectividad de control con validación de rango (0 a 100)', () => {
+  it('registra efectividad de control con validación de rango (0 a 100)', async () => {
     component.seleccionarEvaluacion(20);
     component.controlSeleccionadoId = 3;
     component.efectividad = -1;
-    component.evaluarControl();
+    await component.evaluarControl();
     expect(service['evaluarControl']).not.toHaveBeenCalled();
     expect(component.error()).toContain('efectividad entre 0 y 100');
 
     component.efectividad = 90;
     component.comentarioEfectividad = 'Prueba satisfactoria';
-    component.evaluarControl();
+    await component.evaluarControl();
     expect(service['evaluarControl']).toHaveBeenCalledWith(3, {
       ecoEfectividad: 90,
       ecoComentario: 'Prueba satisfactoria'
@@ -233,7 +249,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.error()).toBe('Fallo red efectividad');
   });
 
-  it('crea un plan de mitigación validando avance, presupuesto y fechas', () => {
+  it('crea un plan de mitigación validando avance, presupuesto y fechas', async () => {
     component.seleccionarEvaluacion(20);
     component.planDescripcion = 'Plan de acción 2026';
     component.planAvance = 25;
@@ -244,7 +260,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.planMonitoreoSeguimiento = 'Seguimiento mensual';
     component.planResponsables = 'Unidad responsable';
     component.planRecursos = 'Equipo especializado';
-    component.guardarPlan();
+    await component.guardarPlan();
 
     expect(service['crearPlan']).toHaveBeenCalledWith({
       plaEvaluacionId: 20,
@@ -261,7 +277,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.mensaje()).toBe('Plan creado correctamente.');
   });
 
-  it('actualiza un plan de mitigación existente', () => {
+  it('actualiza un plan de mitigación existente', async () => {
     component.seleccionarEvaluacion(20);
     component.editarPlan(plan);
     expect(component.planEditandoId).toBe(4);
@@ -274,7 +290,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.planMonitoreoSeguimiento = 'Seguimiento quincenal';
     component.planResponsables = 'Gerencia Operativa';
     component.planRecursos = 'Equipo actualizado';
-    component.guardarPlan();
+    await component.guardarPlan();
 
     expect(service['actualizarPlan']).toHaveBeenCalledWith(4, expect.objectContaining({
       plaDescripcion: 'Plan corregido',
@@ -310,25 +326,25 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.error()).toBe('Revise avance, presupuesto y rango de fechas del plan.');
   });
 
-  it('crea y actualiza una actividad de plan validando fechas y campos obligatorios', () => {
+  it('crea y actualiza una actividad de plan validando fechas y campos obligatorios', async () => {
     component.planSeleccionadoId = 4;
     component.actividadDescripcion = '';
     component.actividadResponsable = '';
-    component.guardarActividad();
+    await component.guardarActividad();
     expect(service['crearActividad']).not.toHaveBeenCalled();
     expect(component.error()).toBe('Seleccione un plan y complete descripción y responsable de la actividad.');
 
     component.actividadDescripcion = 'Actividad A';
     component.actividadResponsable = 'Responsable A';
     component.actividadAvance = -5;
-    component.guardarActividad();
+    await component.guardarActividad();
     expect(component.error()).toBe('Revise avance y rango de fechas de la actividad.');
 
     component.actividadAvance = 10;
     component.actividadFechaInicio = '2026-08-01';
     component.actividadFechaFin = '2026-08-10';
     component.actividadEstado = '';
-    component.guardarActividad();
+    await component.guardarActividad();
     expect(service['crearActividad']).toHaveBeenCalledWith(expect.objectContaining({
       actPlanId: 4,
       actDescripcion: 'Actividad A',
@@ -341,7 +357,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.editarActividad(actividad);
     expect(component.actividadEditandoId).toBe(5);
     component.actividadDescripcion = 'Actividad editada';
-    component.guardarActividad();
+    await component.guardarActividad();
     expect(service['actualizarActividad']).toHaveBeenCalledWith(5, expect.objectContaining({
       actDescripcion: 'Actividad editada'
     }));
@@ -354,14 +370,44 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.error()).toBe('Error al listar actividades');
   });
 
-  it('maneja error al guardar actividad', () => {
+  it('maneja error al guardar actividad', async () => {
     service['crearActividad'].mockReturnValue(throwError(() => ({})));
     component.planSeleccionadoId = 4;
     component.actividadDescripcion = 'Actividad';
     component.actividadResponsable = 'Responsable';
-    component.guardarActividad();
+    await component.guardarActividad();
     expect(component.error()).toBe('No se pudo guardar la actividad.');
     expect(component.guardando()).toBe(false);
+  });
+
+  it('no persiste un control cuando el usuario rechaza la confirmación', async () => {
+    confirmation.confirm.mockResolvedValue(false);
+    component.evaluacionId = 20;
+    component.controlDescripcion = 'Control que no debe persistirse';
+
+    await component.guardarControl();
+
+    expect(confirmation.confirm).toHaveBeenCalled();
+    expect(service['crearControl']).not.toHaveBeenCalled();
+    expect(component.modalControlAbierto()).toBe(false);
+  });
+
+  it('usa el modal grande y exige confirmar el descarte de cambios', async () => {
+    component.seleccionarEvaluacion(20);
+    component.nuevoControl();
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('dialog[aria-labelledby="titulo-modal-control"]') as HTMLElement;
+    expect(dialog.querySelector('.modal-container-card')?.className).toContain('modal-size-lg');
+
+    component.controlDescripcion = 'Cambio pendiente';
+    confirmation.confirm.mockResolvedValue(false);
+    await component.solicitarCierreControl();
+    expect(component.modalControlAbierto()).toBe(true);
+
+    confirmation.confirm.mockResolvedValue(true);
+    await component.solicitarCierreControl();
+    expect(component.modalControlAbierto()).toBe(false);
   });
 
   it('renderiza secciones de mitigación en el DOM al seleccionar una evaluación', () => {
