@@ -777,6 +777,15 @@ finally
     await CleanupStepAsync("RL_MR_VERSIONES_FORMULARIO", "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", lifecycleVersionId));
     await CleanupStepAsync("RL_MR_FAMILIAS_FORMULARIO", "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", lifecycleFamilyId));
 
+    // Publication flows own their version/family IDs, including the dirty-update scenario.
+    await CleanupStepAsync("RL_AUDITORIA;DIRTY_PUBLISH",
+        "DELETE FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id",
+        ("id", dirtyPublishVersionId.ToString()));
+    await CleanupStepAsync("RL_MR_VERSIONES_FORMULARIO;DIRTY_PUBLISH",
+        "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", dirtyPublishVersionId));
+    await CleanupStepAsync("RL_MR_FAMILIAS_FORMULARIO;DIRTY_PUBLISH",
+        "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", dirtyPublishFamilyId));
+
     // Four auxiliary users are run-owned: the startup preflight required that none existed.
     await CleanupStepAsync("RL_USUARIO_CAPACIDADES;BLOCK7", 
         "DELETE FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID IN (:area,:ugr,:both,:neither)",
@@ -797,6 +806,13 @@ finally
         triggerQuery.Parameters.Add(new OracleParameter("triggerName", tx12AuditTriggerName));
         if (Convert.ToInt64(await triggerQuery.ExecuteScalarAsync()) > 0)
             await CleanupStepAsync("TX12_E2E_TRIGGER", $"DROP TRIGGER {tx12AuditTriggerName}");
+        await CleanupStepAsync("RL_AUDITORIA;TX12",
+            "DELETE FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id",
+            ("id", tx12AuditVersionId.ToString()));
+        await CleanupStepAsync("RL_MR_VERSIONES_FORMULARIO;TX12",
+            "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", tx12AuditVersionId));
+        await CleanupStepAsync("RL_MR_FAMILIAS_FORMULARIO;TX12",
+            "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", tx12AuditFamilyId));
     }
 
     int remainingCount = 0;
@@ -822,17 +838,48 @@ finally
     if (hasControlEffectivenessTable)
         dependenciesRemaining += await CountOwnedRowsAsync("RL_MR_EVALUACIONES_CONTROL", "ECO_CONTROL_ID", ownedControls);
 
-    bool verified = remainingCount == 0 && dependenciesRemaining == 0 && cleanupFailures.Count == 0;
+    long metadataRemaining =
+        await CountOwnedRowsAsync("RL_MR_FAMILIAS_FORMULARIO", "FAM_ID", new long[]
+        {
+            block7FamilyId, lifecycleFamilyId, deleteFamilyId, formulaFamilyId, evaluationFamilyId,
+            publishFamilyId, dirtyPublishFamilyId, tx12AuditFamilyId
+        }) +
+        await CountOwnedRowsAsync("RL_MR_VERSIONES_FORMULARIO", "VER_ID", new long[]
+        {
+            versionId, lifecycleVersionId, deleteVersionAId, deleteVersionBId, formulaVersionId,
+            evaluationVersionId, publishVersionId, dirtyPublishVersionId, tx12AuditVersionId
+        }) +
+        await CountOwnedRowsAsync("RL_MR_REGLAS_CALCULO", "REG_ID", new long[] { versionId, lifecycleVersionId }) +
+        await CountOwnedRowsAsync("RL_MR_FORMULAS", "FOR_ID", new long[] { formulaId }) +
+        await CountOwnedRowsAsync("RL_MR_FORMULA_VERSIONES", "FOV_ID", new long[] { formulaVersionId }) +
+        await CountOwnedRowsAsync("RL_MR_FORMULA_USOS", "FUS_ID", new long[] { formulaUsageId }) +
+        await CountOwnedRowsAsync("RL_MR_EVIDENCIAS", "EVI_ID", new long[] { lifecycleEvidenceId }) +
+        await CountOwnedRowsAsync("RL_MR_EVIDENCIAS_VINCULOS", "EVV_ID", new long[] { lifecycleEvidenceLinkId }) +
+        await CountOwnedRowsAsync("RL_USUARIOS", "USR_ID",
+            new long[] { areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId }) +
+        await CountOwnedRowsAsync("RL_USUARIO_CAPACIDADES", "UCP_USR_ID",
+            new long[] { areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId });
+    if (tx12AuditFailureRequired)
+    {
+        await using var remainingTriggerQuery = new OracleCommand(
+            "SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME=:name", cleanup) { BindByName = true };
+        remainingTriggerQuery.Parameters.Add(new OracleParameter("name", tx12AuditTriggerName));
+        metadataRemaining += Convert.ToInt64(await remainingTriggerQuery.ExecuteScalarAsync());
+    }
+
+    bool verified = remainingCount == 0 && dependenciesRemaining == 0 &&
+                    metadataRemaining == 0 && cleanupFailures.Count == 0;
     Console.WriteLine($"BLOCK7_FIXTURE_RISK_CREATED={insertedCanonicalRiskIds.Count}");
     Console.WriteLine($"BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED={(verified ? "YES" : "NO")}");
     Console.WriteLine($"BLOCK7_FIXTURE_RISK_REMAINING={remainingCount}");
     Console.WriteLine($"BLOCK7_FIXTURE_DEPENDENCIES_REMAINING={dependenciesRemaining}");
+    Console.WriteLine($"BLOCK7_FIXTURE_METADATA_REMAINING={metadataRemaining}");
     Console.WriteLine($"BLOCK7_FIXTURE_CLEANUP_ERRORS={cleanupFailures.Count}");
 
     if (!verified)
     {
         throw new InvalidOperationException(
-            $"BLOCK7 cleanup failed: risks={remainingCount}, dependencies={dependenciesRemaining}, errors={cleanupFailures.Count}.");
+            $"BLOCK7 cleanup failed: risks={remainingCount}, dependencies={dependenciesRemaining}, metadata={metadataRemaining}, errors={cleanupFailures.Count}.");
     }
 }
 
