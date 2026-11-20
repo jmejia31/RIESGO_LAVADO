@@ -12389,3 +12389,58 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Quality Gate verificado y exitoso en GitHub Actions: run `44652692783` (`completed / success`, 13m6s).
   - Expediente formal y evidencias en `docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md` e `INDEX.json`.
   - Queda formalmente en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+## 2026-11-19 20:10 -06:00 — ANTIG — Intervención Quirúrgica Final P0: Coexistencia Oracle, Monitoreo Naturales, SRC y Endurecimiento DNP
+
+- **Identificación:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `08073695dcf35cb27affbecb304753aedba9218f`.
+  - Quality Gate Previo: `44652692783` (`completed / success`, 13m6s).
+  - Respaldos remotos previos y nuevo respaldo:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+- **Objetivo y Alcance:**
+  - P0: Reparar de forma definitiva la consulta de Monitoreo de Personas Naturales (`ConstruirConsultaMonitoreoNaturales`), unificando en la vista `Coincidencias` los JOINs de `G.DNI_NORM`, `'DNI:' || G.DNI_NORM` y `'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE)` con agregación `COALESCE` de fechas y `GREATEST` de `TIENE_MOTIVO`.
+  - P0: Normalizar `NUMERO_IDENTIFICACION` en la rama `UNION ALL` a DNI limpio y robustecer la subconsulta `NOT EXISTS` (`cleanDoc`, `'DNI:' || cleanDoc`, `SUBSTR(..., 5)`), eliminando duplicados de filas y garantizando `TIENE_MOTIVO = true` en una sola fila consolidada.
+  - P0: Permitir resolución bidireccional en `CompararDocumentoPositivoFuente()` para claves con prefijos institucionales `DNI:` y `EMP:` en consultas de detalle.
+  - P0: Detección y rechazo inmediato de referencias SRC contradictorias (`SRC:9999` vs `idRegistroFuente = 1111`) mediante `IdentidadMonitoreoPolicy.ValidarConsistenciaSrc` en repositorio y servicios (`ListasService`, `EvidenciasService`), previniendo mutaciones o accesos no autorizados a registros ajenos.
+  - P1: Comprobación de ocupación física en `RL_LISTA_POSITIVOS` sin filtrar por `LSP_ESTADO_REGISTRO` para evitar violaciones `ORA-00001` de la restricción `UQ_RL_LSP_DOCUMENTO UNIQUE` ante registros históricos inactivos.
+  - P1: Control previo de longitud máxima de clave física (`<= 50` caracteres) previo a INSERT en Oracle, evitando `ORA-12899`.
+  - P1: Endurecer `tools/validate_external_writes.ps1` exigiendo coincidencia exacta 1:1 por cada operación heredada (`DNP-01` a `DNP-06`), marcando cualquier coincidencia adicional (7ma escritura) u omisión como violación y saliendo con código 1. Suite `-SelfTest` ampliada a 8 pruebas (8/8 PASS).
+  - P0: Creación de la suite de pruebas de integración en Oracle XE descartable `PositivosCoexistenciaOracleIntegrationTests.cs` (`[P0FOracleRequiredFact]`) con los 12 escenarios de coexistencia y verificación de consulta agrupada sin duplicados y con motivo activo.
+  - Reconciliación de conteo real de pruebas unitarias: `PositivosCoexistenciaIntegridadTests.cs` actualizado a 17 métodos `[Fact]` (9 preexistentes + 8 nuevos).
+- **Archivos modificados:**
+  - `backend/RL.API/Features/Listas/Contracts/IdentidadMonitoreo.cs` (`ValidarConsistenciaSrc`).
+  - `backend/RL.API/Features/Listas/Persistence/ListasRepository.cs` (JOINs `DNI:`, `COALESCE`, `GREATEST`, `CompararDocumentoPositivoFuente`, `ValidarConsistenciaSrc`, ocupación física sin filtro de estado, longitud `<= 50`).
+  - `backend/RL.API/Features/Listas/Application/ListasService.cs` (`ValidarConsistenciaSrc`, longitud `<= 46` para empleado).
+  - `backend/RL.API/Features/Listas/Application/EvidenciasService.cs` (`ValidarConsistenciaSrc`).
+  - `tools/validate_external_writes.ps1` (conteo exacto 1:1, rechazo de 7ma escritura, falla cerrada en omisiones, suite `-SelfTest` 8/8).
+  - `backend/RL.API.Tests/Features/Listas/PositivosCoexistenciaIntegridadTests.cs` (8 nuevas pruebas unitarias para un total de 17 `[Fact]`).
+  - `docs/certificaciones/INDEX.json` (actualización de métricas y escenarios de coexistencia).
+  - `docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md` (Sección 8 completa).
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (estado vivo consolidado).
+  - `BITACORA_COLABORACION.md` (registro cronológico inmutable).
+- **Archivos creados:**
+  - `backend/RL.API.Tests/Features/Listas/PositivosCoexistenciaOracleIntegrationTests.cs` (12 escenarios de coexistencia Oracle XE + verificación de fila única con `TieneMotivo = true`).
+- **Resultados de verificación y conteos reales:**
+  - Backend unitario (`RL.API.Tests`): 1,323 pruebas ejecutadas y superadas (1,323/1,323 PASS, 0 fallidas, 0 omitidas).
+  - Pruebas en `PositivosCoexistenciaIntegridadTests.cs`: 17 pruebas superadas (17/17 PASS, 0 fallidas).
+  - Frontend Vitest (`frontend/rl-app`): 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
+  - `tools/validate_external_writes.ps1 -SelfTest`: PASS (8/8 pruebas sintéticas superadas).
+  - `tools/validate_external_writes.ps1`: PASS (`NO_NEW_EXTERNAL_WRITES=PASS`, `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`, 6/6 rutas heredadas auditadas, 0 violaciones).
+  - `tools/validate_repository_structure.ps1`: PASS.
+  - `tools/validate_database_scripts.ps1`: PASS.
+  - `tools/validate_documentation_links.ps1`: PASS.
+  - `python tools/validate_agent_skills.py`: PASS (14 Agent Skills).
+  - `git diff --check`: PASS (0 advertencias o errores).
+- **Gobernanza y restricciones:**
+  - Cero DDL/DML contra Oracle institucional (`DNP_IHSS`, `MMATAMOROS`).
+  - Cero modificaciones a `main` o producción.
+  - Archivos locales sin seguimiento preservados fuera del control de versiones.
+  - Cero regresiones en M1, M2 (PDF/Excel B06), M3 (Branding dinámico) y Matrices de Riesgos (82 campos canónicos).
+- **Punto exacto de continuación:**
+  - Commit y push a `origin/desarrollo`.
+  - Monitoreo del Quality Gate en GitHub Actions hasta conclusión exitosa.
+  - Queda formalmente en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).

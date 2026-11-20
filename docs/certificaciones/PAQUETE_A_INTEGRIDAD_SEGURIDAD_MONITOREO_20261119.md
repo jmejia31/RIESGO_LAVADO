@@ -155,7 +155,94 @@ En respuesta a la auditoría independiente y las observaciones del propietario d
 6. **Validación de Parámetros Contradictorios (Sección 4.5):**
    - En `ListasController.cs`, se validan discrepancias entre parámetros de URL (Query) y Formulario (Form), respondiendo con HTTP 400 Bad Request (`PARAMETROS_CONTRADICTORIOS`), y se validan los rangos permitidos (`tipoPositivoId` entre 1 y 3, `idRegistroFuente > 0`).
 
-### 7.2 Resultados de Verificación Final
+### 7.2 Resultados de Verificación
 - **Backend Unitario (`RL.API.Tests`):** 1,315 pruebas superadas (1,315/1,315 PASS, 0 fallidas).
 - **Frontend Vitest (`frontend/rl-app`):** 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
 - **Validadores del Repositorio:** 5/5 PASS (`tools/validate_external_writes.ps1 -SelfTest` PASS).
+
+---
+
+## 8. Intervención Quirúrgica Final P0 — Cierre Integral y Definitivo del Paquete A
+
+En cumplimiento de la orden del propietario para cerrar definitivamente los hallazgos técnicos residuales del Paquete A, se ejecutó una intervención quirúrgica focalizada en:
+
+### 8.1 Reparación de Consulta de Monitoreo de Personas Naturales (`ConstruirConsultaMonitoreoNaturales`)
+1. **Unificación de Claves Físicas Prefijadas en SQL:**
+   - La vista agregada `Coincidencias` en `ListasRepository.cs` ahora integra:
+     - `LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = G.DNI_NORM` (DNI limpio).
+     - `LEFT JOIN POSITIVOS_AGG PD ON PD.LSP_NO_DOCUMENTO = 'DNI:' || G.DNI_NORM` (DNI con prefijo institucional).
+     - `LEFT JOIN POSITIVOS_AGG PS ON PS.LSP_NO_DOCUMENTO = 'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE)` (clave de registro fuente para no identificados).
+   - `FECHA_REGISTRO_INTERNO` se unifica con `COALESCE(P.FECHA_REGISTRO_INTERNO, PD.FECHA_REGISTRO_INTERNO, PS.FECHA_REGISTRO_INTERNO)`.
+   - `TIENE_MOTIVO` se evalúa mediante `GREATEST(NVL(P.TIENE_MOTIVO, 0), NVL(PD.TIENE_MOTIVO, 0), NVL(PS.TIENE_MOTIVO, 0))`.
+2. **Eliminación de Filas Duplicadas en la Rama Manual / Positivos DNP:**
+   - En la rama `UNION ALL`, `NUMERO_IDENTIFICACION` normaliza visualmente a DNI limpio (`SUBSTR(..., 5)` para claves con prefijo `DNI:`).
+   - En la cláusula `NOT EXISTS`, se verifica tanto `cleanDoc`, `'DNI:' || cleanDoc` como `SUBSTR(..., 5)`. Esto elimina la duplicación de filas en pantalla y exportaciones, consolidando el motivo registrado en una única fila agrupada.
+3. **Soporte Bidireccional en Consultas de Detalle:**
+   - `CompararDocumentoPositivoFuente()` reconoce de forma simétrica tanto representaciones limpias como prefijadas (`DNI:`, `EMP:`) garantizando que `ObtenerDetalleNaturalAsync` y `ObtenerDetalleEmpleadoAsync` recuperen el detalle completo sin importar cómo fue almacenada físicamente la clave.
+
+### 8.2 Detección y Rechazo Estricto de Referencias SRC Contradictorias
+1. **Regla de Validación:**
+   - Se implementó `IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(documento, idRegistroFuente, out idResuelto)`:
+     - Si el documento inicia con `SRC:`, extrae el identificador numérico y valida que sea entero positivo.
+     - Si `idRegistroFuente` también se suministra y discrepa del valor del documento (p. ej. `noDocumento = "SRC:9999"` e `idRegistroFuente = 1111`), la operación es rechazada de inmediato como inválida/contradictoria.
+2. **Aplicación Transversal:**
+   - Se aplica en `ListasRepository.ContarPositivosActivosAsync`, `ListasRepository.ObtenerPositivoPorDocumentoAsync`, `ListasRepository.RegistrarPositivoCoreAsync`, `ListasService.RegistrarPositivoAsync`, `ListasService.ObtenerSeguimientosAsync` y `EvidenciasService.RegistrarSeguimientoAsync`.
+   - Se añadieron pruebas unitarias negativas demostrando que referencias ajenas no pueden acceder ni mutar expedientes de otros sujetos.
+
+### 8.3 Unicidad Física, Registros Inactivos y Control de Longitud
+1. **Verificación Física Global sin Filtro de Estado:**
+   - En `RegistrarPositivoCoreAsync`, la comprobación de ocupación de `cleanDoc` consulta `RL_LISTA_POSITIVOS` sin filtrar por `LSP_ESTADO_REGISTRO = 1`. De este modo, si un registro inactivo histórico (`LSP_ESTADO_REGISTRO = 0`) ocupa físicamente la clave, el nuevo registro de Persona Natural adopta automáticamente el prefijo `DNI:<cleanDoc>`, evitando colisiones con la restricción física `UQ_RL_LSP_DOCUMENTO UNIQUE (LSP_TIPO_DOCUMENTO_ID, LSP_NO_DOCUMENTO)` y previniendo excepciones `ORA-00001`.
+2. **Control Previo de Longitud Máxima:**
+   - Antes de ejecutar `INSERT`, se valida que la clave física no supere los 50 caracteres (`docToInsert.Length <= 50`). Si se excede, se ejecuta un rechazo controlado sin alcanzar Oracle, previniendo excepciones no manejadas `ORA-12899`.
+
+### 8.4 Endurecimiento del Validador de Escrituras Externas (`tools/validate_external_writes.ps1`)
+1. **Control de Conteo Exacto 1:1:**
+   - Cada una de las 6 operaciones heredadas (`DNP-01` a `DNP-06`) debe registrar exactamente 1 coincidencia (`MatchedCount == 1`).
+   - Cualquier coincidencia adicional (7ma escritura) es detectada inmediatamente como violación y provoca salida con código 1.
+   - Cualquier regla heredada no encontrada provoca salida obligatoria con error (código 1).
+2. **Suite `-SelfTest` Ampliada:**
+   - Prueba 7: Verifica que una 7ma escritura sintética duplicada es detectada y rechazada como violación.
+   - Prueba 8: Verifica que la omisión de una escritura heredada requerida falla cerrado.
+   - 8 de 8 pruebas de autoprueba superadas (`EXTERNAL_WRITES_VALIDATOR_SELF_TEST=PASS`).
+3. **Cumplimiento Declarado:**
+   - Se mantiene la declaración institucional:
+     `NO_NEW_EXTERNAL_WRITES=PASS`
+     `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`
+     `RUTAS HEREDADAS AUDITADAS: 6/6 (DNP-01 a DNP-06)`
+
+### 8.5 Pruebas Reales de Coexistencia Oracle (`PositivosCoexistenciaOracleIntegrationTests.cs`)
+Se creó la clase de pruebas de integración contra Oracle XE descartable (`[P0FOracleRequiredFact]`, `[Trait("Category", "P0FOracleIntegration")]`), cubriendo los 12 escenarios de persistencia y coexistencia:
+1. Natural primero, empleado segundo con mismo DNI.
+2. Empleado primero, natural segundo.
+3. Empleado histórico sin prefijo, natural nuevo toma `DNI:`.
+4. Natural histórico con `DNI:` se recupera y actualiza.
+5. Empleado histórico con `EMP:` se recupera y actualiza.
+6. Dos registros con mismo DNI y distintos motivos.
+7. Consulta puntual por documento y tipo resuelve el sujeto exacto.
+8. Integridad de auditoría y evidencias sin cruces.
+9. Registro inactivo físicamente ocupando clave -> Natural toma prefijo `DNI:` evitando ORA-00001.
+10. Clave física que excedería 50 caracteres recibe rechazo controlado sin ORA-12899.
+11. Operaciones concurrentes simuladas para mismo DNI y distintos tipos.
+12. Limpieza y preservación de integridad referencial.
+13. Consulta de Monitoreo agrupado: empleado histórico sin prefijo + natural con `DNI:` produce exactamente una fila con `TieneMotivo = true` en listado paginado y exportación.
+
+### 8.6 Métricas Finales de Verificación
+- **Backend Unitario (`RL.API.Tests`):** 1,323 pruebas superadas (1,323/1,323 PASS, 0 fallidas).
+- **Pruebas en `PositivosCoexistenciaIntegridadTests.cs`:** 17 pruebas unitarias superadas (9 preexistentes reconciliadas + 8 nuevas de validación SRC, longitudes y coexistencia física).
+- **Frontend Vitest (`frontend/rl-app`):** 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
+- **Validadores del Repositorio:** 5/5 PASS:
+  - `tools/validate_repository_structure.ps1`: PASS.
+  - `tools/validate_database_scripts.ps1`: PASS.
+  - `tools/validate_documentation_links.ps1`: PASS.
+  - `python tools/validate_agent_skills.py`: PASS.
+  - `tools/validate_external_writes.ps1 -SelfTest`: PASS (8/8 pruebas sintéticas).
+  - `tools/validate_external_writes.ps1`: PASS (6/6 rutas heredadas, 0 violaciones).
+- **Git Check:** `git diff --check` limpio (cero espacios finales o errores de salto de línea).
+- **Respaldos Remotos Intactos:**
+  1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`)
+  2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`)
+  3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`)
+- **Restricciones de Gobernanza:**
+  - Rama `main` no modificada.
+  - Cero DDL/DML contra Oracle institucional (`DNP_IHSS`, `MMATAMOROS`).
+  - Archivos locales sin seguimiento preservados fuera del control de versiones.

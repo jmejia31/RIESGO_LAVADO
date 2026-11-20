@@ -37,10 +37,13 @@ public sealed class ListasService : IListasService
     public Task<List<ResumenListaDto>> ObtenerResumenListasAsync() => _repo.ObtenerResumenListasAsync();
     public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento, int? tipoPositivoId = null, long? idRegistroFuente = null)
     {
-        if (string.IsNullOrWhiteSpace(noDocumento) && (!idRegistroFuente.HasValue || idRegistroFuente.Value <= 0))
+        if (!IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(noDocumento, idRegistroFuente, out var srcValido))
+            throw new AmbiguousIdentityException("La referencia de origen 'SRC:' no coincide con el identificador de registro fuente proporcionado.");
+
+        if (string.IsNullOrWhiteSpace(noDocumento) && (!srcValido.HasValue || srcValido.Value <= 0))
             return null;
 
-        return await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento, tipoPositivoId, idRegistroFuente);
+        return await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento, tipoPositivoId, srcValido);
     }
 
     public async Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerDetalleListaParaExportarAsync(int id, long usuarioId, string? ip)
@@ -87,6 +90,14 @@ public sealed class ListasService : IListasService
 
     public async Task<ServiceResult> RegistrarPositivoAsync(RegistrarPositivoDto dto, long creadoPorId)
     {
+        if (!IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(dto.NoDocumento, dto.IdRegistroFuente, out var srcValido))
+            return ServiceResult.BadRequest("La referencia de origen 'SRC:' no coincide con el identificador de registro fuente proporcionado.");
+
+        if (srcValido.HasValue && srcValido.Value > 0)
+        {
+            dto.IdRegistroFuente = srcValido;
+        }
+
         if ((string.IsNullOrWhiteSpace(dto.NoDocumento) || IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(dto.NoDocumento))
             && dto.IdRegistroFuente.HasValue && dto.IdRegistroFuente.Value > 0)
         {
@@ -120,6 +131,14 @@ public sealed class ListasService : IListasService
     {
         if (desde.HasValue && hasta.HasValue && desde.Value.Date > hasta.Value.Date)
             return ServiceResult<List<SeguimientoDto>>.BadRequest("La fecha desde no puede ser mayor que la fecha hasta.");
+
+        if (!IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(noDocumento, idRegistroFuente, out var srcValido))
+            return ServiceResult<List<SeguimientoDto>>.BadRequest("La referencia de origen 'SRC:' no coincide con el identificador de registro fuente proporcionado.");
+
+        if (srcValido.HasValue && srcValido.Value > 0)
+        {
+            idRegistroFuente = srcValido;
+        }
 
         if (IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(noDocumento) && (!idRegistroFuente.HasValue || idRegistroFuente.Value <= 0))
             return ServiceResult<List<SeguimientoDto>>.Conflict("No es posible consultar seguimientos sobre una identidad ambigua o no identificada sin registro fuente.");
@@ -206,6 +225,9 @@ public sealed class ListasService : IListasService
 
         if (dto.NoDocumento.Length > 50)
             return "El numero de documento no debe superar 50 caracteres.";
+
+        if (dto.TipoPositivoId == 3 && dto.NoDocumento.Length > 46 && !dto.NoDocumento.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+            return "El numero de documento para empleado no debe superar 46 caracteres.";
 
         if (string.IsNullOrWhiteSpace(dto.NombreCompleto))
             return "El nombre completo es obligatorio.";

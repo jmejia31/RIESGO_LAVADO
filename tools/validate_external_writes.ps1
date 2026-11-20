@@ -7,12 +7,12 @@ $ErrorActionPreference = 'Stop'
 
 # Definición canónica de las 6 operaciones de escritura heredadas permitidas exclusivamente en ListasRepository.cs
 $allowedLegacyWrites = @(
-    @{ Id = "DNP-01"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.TIPO_LISTAS_CAUTELA"; Op = "INSERT"; Method = "CrearTipoListaCautelaAsync" },
-    @{ Id = "DNP-02"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.TIPO_LISTAS_CAUTELA"; Op = "UPDATE"; Method = "ActualizarTipoListaCautelaAsync" },
-    @{ Id = "DNP-03"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.TIPO_LISTAS_CAUTELA"; Op = "DELETE"; Method = "EliminarTipoListaCautelaAsync" },
-    @{ Id = "DNP-04"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.REPORTE_COINCIDENCIAS"; Op = "UPDATE"; Method = "CalificarCoincidenciaAsync" },
-    @{ Id = "DNP-05"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.LISTA_CAUTELA"; Op = "DELETE"; Method = "CargarListaCautelaAsync" },
-    @{ Id = "DNP-06"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.LISTA_CAUTELA"; Op = "INSERT"; Method = "CargarListaCautelaAsync" }
+    @{ Id = "DNP-01"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.TIPO_LISTAS_CAUTELA"; Op = "INSERT"; Method = "CrearTipoListaCautelaAsync"; StatementRegex = '(?is)INSERT\s+INTO\s+DNP_IHSS\.TIPO_LISTAS_CAUTELA' },
+    @{ Id = "DNP-02"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.TIPO_LISTAS_CAUTELA"; Op = "UPDATE"; Method = "ActualizarTipoListaCautelaAsync"; StatementRegex = '(?is)UPDATE\s+DNP_IHSS\.TIPO_LISTAS_CAUTELA' },
+    @{ Id = "DNP-03"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.TIPO_LISTAS_CAUTELA"; Op = "DELETE"; Method = "EliminarTipoListaCautelaAsync"; StatementRegex = '(?is)DELETE\s+FROM\s+DNP_IHSS\.TIPO_LISTAS_CAUTELA' },
+    @{ Id = "DNP-04"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.REPORTE_COINCIDENCIAS"; Op = "UPDATE"; Method = "CalificarCoincidenciaAsync"; StatementRegex = '(?is)UPDATE\s+DNP_IHSS\.REPORTE_COINCIDENCIAS' },
+    @{ Id = "DNP-05"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.LISTA_CAUTELA"; Op = "DELETE"; Method = "CargarListaCautelaAsync"; StatementRegex = '(?is)DELETE\s+FROM\s+DNP_IHSS\.LISTA_CAUTELA' },
+    @{ Id = "DNP-06"; File = "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"; Table = "DNP_IHSS.LISTA_CAUTELA"; Op = "INSERT"; Method = "CargarListaCautelaAsync"; StatementRegex = '(?is)INSERT\s+INTO\s+DNP_IHSS\.LISTA_CAUTELA' }
 )
 
 # Regex universal de operaciones de escritura sobre DNP_IHSS (incluye multilínea, comentarios intercalados y mayúsculas/minúsculas)
@@ -60,6 +60,81 @@ function Find-ExternalWritesInText {
     return $results
 }
 
+function Evaluate-Writes {
+    param(
+        [System.Collections.Generic.List[PSObject]]$FoundWrites,
+        [hashtable[]]$AllowedWrites
+    )
+
+    $violations = [System.Collections.Generic.List[PSObject]]::new()
+    $usageMap = @{}
+    foreach ($leg in $AllowedWrites) {
+        $usageMap[$leg.Id] = 0
+    }
+
+    foreach ($w in $FoundWrites) {
+        $matchedRule = $null
+        foreach ($leg in $AllowedWrites) {
+            if ($w.File.Equals($leg.File, [System.StringComparison]::OrdinalIgnoreCase) -and
+                $w.Table.Equals($leg.Table, [System.StringComparison]::OrdinalIgnoreCase) -and
+                $w.Operation.Equals($leg.Op, [System.StringComparison]::OrdinalIgnoreCase)) {
+
+                if (-not [string]::IsNullOrWhiteSpace($leg.StatementRegex)) {
+                    if ($w.RawMatch -notmatch $leg.StatementRegex) {
+                        continue
+                    }
+                }
+                $matchedRule = $leg
+                break
+            }
+        }
+
+        if ($null -ne $matchedRule) {
+            $count = $usageMap[$matchedRule.Id]
+            if ($count -ge 1) {
+                # 7ma escritura / coincidencia excedente de operación permitida
+                $violations.Add([PSCustomObject]@{
+                    File = $w.File
+                    Line = $w.Line
+                    Operation = $w.Operation
+                    Table = $w.Table
+                    RawMatch = $w.RawMatch
+                    Reason = "DUPLICATE_OR_EXCESS_LEGACY_WRITE_FOR_$($matchedRule.Id)"
+                })
+            } else {
+                $usageMap[$matchedRule.Id] = $count + 1
+            }
+        } else {
+            $violations.Add([PSCustomObject]@{
+                File = $w.File
+                Line = $w.Line
+                Operation = $w.Operation
+                Table = $w.Table
+                RawMatch = $w.RawMatch
+                Reason = "UNAUTHORIZED_EXTERNAL_WRITE"
+            })
+        }
+    }
+
+    $missingWrites = [System.Collections.Generic.List[string]]::new()
+    $matchedAllowedCount = 0
+    foreach ($leg in $AllowedWrites) {
+        if ($usageMap[$leg.Id] -eq 1) {
+            $matchedAllowedCount++
+        } elseif ($usageMap[$leg.Id] -eq 0) {
+            $missingWrites.Add($leg.Id)
+        }
+    }
+
+    return @{
+        TotalWrites = $FoundWrites.Count
+        AllowedMatches = $matchedAllowedCount
+        Violations = $violations
+        MissingLegacyWrites = $missingWrites
+        UsageMap = $usageMap
+    }
+}
+
 function Audit-Directory {
     param(
         [string]$RootPath,
@@ -69,8 +144,6 @@ function Audit-Directory {
 
     $sourceExtensions = @("*.cs", "*.ts", "*.js", "*.sql")
     $foundWrites = [System.Collections.Generic.List[PSObject]]::new()
-    $violations = [System.Collections.Generic.List[PSObject]]::new()
-    $matchedAllowedCount = 0
 
     foreach ($folder in $SearchFolders) {
         $folderPath = Join-Path $RootPath $folder
@@ -89,33 +162,13 @@ function Audit-Directory {
 
             foreach ($w in $writes) {
                 $foundWrites.Add($w)
-
-                # Comprobar si coincide con una de las rutas heredadas autorizadas
-                $matched = $false
-                foreach ($leg in $AllowedWrites) {
-                    if ($w.File.Equals($leg.File, [System.StringComparison]::OrdinalIgnoreCase) -and
-                        $w.Table.Equals($leg.Table, [System.StringComparison]::OrdinalIgnoreCase) -and
-                        $w.Operation.Equals($leg.Op, [System.StringComparison]::OrdinalIgnoreCase)) {
-                        $matched = $true
-                        break
-                    }
-                }
-
-                if ($matched) {
-                    $matchedAllowedCount++
-                } else {
-                    $violations.Add($w)
-                }
             }
         }
     }
 
-    return @{
-        TotalWrites = $foundWrites.Count
-        AllowedMatches = $matchedAllowedCount
-        Violations = $violations
-        AllWrites = $foundWrites
-    }
+    $evaluation = Evaluate-Writes -FoundWrites $foundWrites -AllowedWrites $AllowedWrites
+    $evaluation["AllWrites"] = $foundWrites
+    return $evaluation
 }
 
 # Modo Self-Test
@@ -187,6 +240,49 @@ if ($SelfTest) {
         Write-Host "  PASS: TRUNCATE TABLE detectado correctamente" -ForegroundColor Green
     }
 
+    function Get-SyntheticRawMatch($op, $table) {
+        if ($op -eq "INSERT") { return "INSERT INTO $table" }
+        if ($op -eq "UPDATE") { return "UPDATE $table" }
+        if ($op -eq "DELETE") { return "DELETE FROM $table" }
+        return "$op $table"
+    }
+
+    # 7. Prueba: 7ma escritura (coincidencia excedente o duplicada de regla permitida) es rechazada como violación
+    $dummyWrites = [System.Collections.Generic.List[PSObject]]::new()
+    foreach ($leg in $allowedLegacyWrites) {
+        $dummyWrites.Add([PSCustomObject]@{
+            File = $leg.File; Line = 10; Operation = $leg.Op; Table = $leg.Table; RawMatch = (Get-SyntheticRawMatch $leg.Op $leg.Table)
+        })
+    }
+    # Agregar una 7ma escritura duplicada de DNP-01
+    $dummyWrites.Add([PSCustomObject]@{
+        File = $allowedLegacyWrites[0].File; Line = 999; Operation = $allowedLegacyWrites[0].Op; Table = $allowedLegacyWrites[0].Table; RawMatch = (Get-SyntheticRawMatch $allowedLegacyWrites[0].Op $allowedLegacyWrites[0].Table)
+    })
+    $r7 = Evaluate-Writes -FoundWrites $dummyWrites -AllowedWrites $allowedLegacyWrites
+    if ($r7.Violations.Count -ne 1 -or $r7.Violations[0].Reason -notmatch "DUPLICATE_OR_EXCESS") {
+        Write-Host "  FAIL: 7ma escritura duplicada no detectada como violacion" -ForegroundColor Red
+        $testPassed = $false
+    } else {
+        Write-Host "  PASS: 7ma escritura duplicada detectada como violacion exitosamente" -ForegroundColor Green
+    }
+
+    # 8. Prueba: Omisión de una escritura heredada requerida falla cerrado (MissingLegacyWrites)
+    $dummyWritesIncomplete = [System.Collections.Generic.List[PSObject]]::new()
+    # Solo 5 escrituras (omitir DNP-06)
+    for ($i = 0; $i -lt 5; $i++) {
+        $leg = $allowedLegacyWrites[$i]
+        $dummyWritesIncomplete.Add([PSCustomObject]@{
+            File = $leg.File; Line = 10; Operation = $leg.Op; Table = $leg.Table; RawMatch = (Get-SyntheticRawMatch $leg.Op $leg.Table)
+        })
+    }
+    $r8 = Evaluate-Writes -FoundWrites $dummyWritesIncomplete -AllowedWrites $allowedLegacyWrites
+    if ($r8.MissingLegacyWrites.Count -ne 1 -or $r8.MissingLegacyWrites[0] -ne "DNP-06") {
+        Write-Host "  FAIL: Omision de escritura heredada no detectada" -ForegroundColor Red
+        $testPassed = $false
+    } else {
+        Write-Host "  PASS: Omision de escritura heredada detectada y bloqueada exitosamente" -ForegroundColor Green
+    }
+
     if (-not $testPassed) {
         Write-Error "SELF_TEST_FAILED: Una o mas autopruebas del validador fallaron."
         exit 1
@@ -203,19 +299,23 @@ Write-Host "Iniciando auditoria preventiva de escrituras a fuentes externas (DNP
 $audit = Audit-Directory -RootPath $repoFull -SearchFolders @("backend/RL.API", "frontend/rl-app/src") -AllowedWrites $allowedLegacyWrites
 
 Write-Host "Operaciones de escritura heredadas encontradas en ListasRepository: $($audit.AllowedMatches)/$($allowedLegacyWrites.Count)"
-Write-Host "Nuevas operaciones de escritura no autorizadas a DNP_IHSS: $($audit.Violations.Count)"
+Write-Host "Nuevas operaciones de escritura no autorizadas o excedentes a DNP_IHSS: $($audit.Violations.Count)"
 
-if ($audit.Violations.Count -gt 0) {
-    Write-Host "ERROR: Se encontraron escrituras no autorizadas a fuentes externas:" -ForegroundColor Red
-    foreach ($v in $audit.Violations) {
-        Write-Host "  [VIOLACION] $($v.File):$($v.Line) -> $($v.Operation) sobre $($v.Table)" -ForegroundColor Yellow
-        Write-Host "    $($v.RawMatch)" -ForegroundColor DarkGray
+if ($audit.Violations.Count -gt 0 -or $audit.MissingLegacyWrites.Count -gt 0) {
+    if ($audit.Violations.Count -gt 0) {
+        Write-Host "ERROR: Se encontraron escrituras no autorizadas o excedentes a fuentes externas:" -ForegroundColor Red
+        foreach ($v in $audit.Violations) {
+            Write-Host "  [VIOLACION] $($v.File):$($v.Line) -> $($v.Operation) sobre $($v.Table) ($($v.Reason))" -ForegroundColor Yellow
+            Write-Host "    $($v.RawMatch)" -ForegroundColor DarkGray
+        }
+    }
+    if ($audit.MissingLegacyWrites.Count -gt 0) {
+        Write-Host "ERROR: Faltan operaciones heredadas requeridas:" -ForegroundColor Red
+        foreach ($m in $audit.MissingLegacyWrites) {
+            Write-Host "  [FALTANTE] Regla heredada requerida no encontrada: $m" -ForegroundColor Yellow
+        }
     }
     exit 1
-}
-
-if ($audit.AllowedMatches -ne 6) {
-    Write-Host "ADVERTENCIA: Se esperaban exactamente 6 rutas heredadas auditadas, pero se encontraron $($audit.AllowedMatches)." -ForegroundColor Yellow
 }
 
 Write-Host "=========================================================="

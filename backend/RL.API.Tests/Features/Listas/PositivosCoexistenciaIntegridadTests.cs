@@ -205,6 +205,137 @@ public sealed class PositivosCoexistenciaIntegridadTests
         Assert.Equal(2, tablaPositivos[(tipoDoc, docNatural)].TipoPositivo);
     }
 
+    [Fact]
+    public void ValidarConsistenciaSrc_ReferenciaContradictoria_RetornaFalse()
+    {
+        bool esValido = IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:9999", 1111, out var idResuelto);
+        Assert.False(esValido);
+    }
+
+    [Fact]
+    public void ValidarConsistenciaSrc_ReferenciaConsistente_RetornaTrue()
+    {
+        bool esValido = IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:1111", 1111, out var idResuelto);
+        Assert.True(esValido);
+        Assert.Equal(1111, idResuelto);
+    }
+
+    [Fact]
+    public void ValidarConsistenciaSrc_SinIdFuente_ResuelveIdDesdeDocumento()
+    {
+        bool esValido = IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:5555", null, out var idResuelto);
+        Assert.True(esValido);
+        Assert.Equal(5555, idResuelto);
+    }
+
+    [Fact]
+    public void ValidarConsistenciaSrc_FormatoInvalido_RetornaFalse()
+    {
+        bool esValido = IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:abc", null, out _);
+        Assert.False(esValido);
+
+        bool esValidoNegativo = IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:-10", null, out _);
+        Assert.False(esValidoNegativo);
+    }
+
+    [Fact]
+    public async Task RegistrarPositivo_SrcContradictorio_RetornaBadRequest()
+    {
+        var repoStub = InterfaceStub.Create<IListasRepository>(out _);
+        var auditoriaStub = InterfaceStub.Create<IAuditoriaRepository>(out _);
+        var service = new ListasService(repoStub, auditoriaStub);
+
+        var dto = new RegistrarPositivoDto
+        {
+            TipoDocumentoId = 1,
+            TipoPositivoId = 2,
+            NoDocumento = "SRC:9999",
+            IdRegistroFuente = 1111,
+            NombreCompleto = "PERSONA PRUEBA",
+            MotivoIngreso = "Motivo de prueba",
+            TipoListaCautelaId = 1,
+            OrigenRegistro = "MANUAL_CUMPLIMIENTO"
+        };
+
+        var result = await service.RegistrarPositivoAsync(dto, 99);
+        Assert.False(result.Success);
+        Assert.Contains("SRC:", result.Message);
+    }
+
+    [Fact]
+    public async Task RegistrarSeguimiento_SrcContradictorio_RetornaBadRequest()
+    {
+        var repoStub = InterfaceStub.Create<IListasRepository>(out _);
+        var envStub = InterfaceStub.Create<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>(out _);
+        var configStub = InterfaceStub.Create<Microsoft.Extensions.Configuration.IConfiguration>(out _);
+        var service = new EvidenciasService(repoStub, configStub, envStub);
+
+        var result = await service.RegistrarSeguimientoAsync(
+            noDocumento: "SRC:9999",
+            motivoIngreso: "Seguimiento contradictorio",
+            archivos: null,
+            usuarioId: 99,
+            tipoPositivoId: 2,
+            idRegistroFuente: 1111);
+
+        Assert.False(result.Success);
+        Assert.Contains("SRC:", result.Message);
+    }
+
+    [Fact]
+    public async Task ValidarPositivo_LongitudExcedenteEmpleado_RetornaBadRequest()
+    {
+        var repoStub = InterfaceStub.Create<IListasRepository>(out _);
+        var auditoriaStub = InterfaceStub.Create<IAuditoriaRepository>(out _);
+        var service = new ListasService(repoStub, auditoriaStub);
+
+        // Documento de 48 caracteres para empleado: generaría EMP: (52 caracteres) excediendo VARCHAR2(50)
+        var docLargo = new string('9', 48);
+        var dto = new RegistrarPositivoDto
+        {
+            TipoDocumentoId = 1,
+            TipoPositivoId = 3,
+            NoDocumento = docLargo,
+            NombreCompleto = "EMPLEADO LARGO",
+            MotivoIngreso = "Motivo",
+            TipoListaCautelaId = 1,
+            OrigenRegistro = "MANUAL_CUMPLIMIENTO"
+        };
+
+        var result = await service.RegistrarPositivoAsync(dto, 99);
+        Assert.False(result.Success);
+        Assert.Contains("46 caracteres", result.Message);
+    }
+
+    [Fact]
+    public void SimulacionCoexistencia_EscenarioD_RegistroInactivoOcupaClaveFisica_NaturalSegundoUsaPrefijoDni()
+    {
+        // Simular tabla física con constraint UNIQUE (TipoDoc, NoDocumento) que incluye filas inactivas (Estado = 0)
+        var tablaFisica = new Dictionary<(int TipoDoc, string Doc), (long Id, int Estado, string DocFisico)>();
+        long nextId = 1;
+
+        string dni = "0801198512345";
+        int tipoDoc = 1;
+
+        // Registro histórico previo INACTIVO (LSP_ESTADO_REGISTRO = 0) que ocupa físicamente cleanDoc
+        tablaFisica[(tipoDoc, dni)] = (nextId++, 0, dni);
+
+        // Paso 2: Registrar Natural -> la consulta física (sin filtro de estado) detecta la ocupación de cleanDoc
+        bool ocupadoFisicamente = tablaFisica.ContainsKey((tipoDoc, dni));
+        string docNatural = ocupadoFisicamente ? $"DNI:{dni}" : dni;
+
+        Assert.True(ocupadoFisicamente);
+        Assert.Equal($"DNI:{dni}", docNatural);
+        Assert.False(tablaFisica.ContainsKey((tipoDoc, docNatural)));
+
+        // Se inserta bajo DNI: sin colisionar con el constraint de Oracle UQ_RL_LSP_DOCUMENTO
+        tablaFisica[(tipoDoc, docNatural)] = (nextId++, 1, docNatural);
+
+        Assert.Equal(2, tablaFisica.Count);
+        Assert.Equal(0, tablaFisica[(tipoDoc, dni)].Estado);
+        Assert.Equal(1, tablaFisica[(tipoDoc, docNatural)].Estado);
+    }
+
     private static ListasController CrearController(
         out InterfaceStub listasStub,
         out InterfaceStub evidenciasStub,

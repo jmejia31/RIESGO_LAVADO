@@ -1,3 +1,54 @@
+# ESTADO VIGENTE — Paquete A: Intervención Quirúrgica Final P0 — Coexistencia Oracle, Consulta Monitoreo Naturales, SRC y Endurecimiento DNP (ANTIG, 2026-11-19 20:10 -06:00)
+
+- **Identificación y Referencia:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `08073695dcf35cb27affbecb304753aedba9218f`.
+  - Quality Gate Previo: `44652692783` (`completed / success`, 13m6s).
+  - Respaldos remotos íntegros verificados:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+  - Estado: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Expediente formal: `docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md` e `INDEX.json`.
+- **Alcance Quirúrgico Resuelto:**
+  - **P0 — Reparación integral de Consulta de Personas Naturales (`ConstruirConsultaMonitoreoNaturales`):**
+    - `Coincidencias` en `ListasRepository.cs` integra JOIN simultáneo para `G.DNI_NORM`, `'DNI:' || G.DNI_NORM` y `'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE)`.
+    - Agregación correcta de `FECHA_REGISTRO_INTERNO` con `COALESCE` y `TIENE_MOTIVO` con `GREATEST`.
+    - En la rama `UNION ALL`, normalización visual a DNI limpio (`SUBSTR(..., 5)`) y subconsulta `NOT EXISTS` exhaustiva (`cleanDoc`, `'DNI:' || cleanDoc`, `SUBSTR(..., 5)`), eliminando duplicados y consolidando `TIENE_MOTIVO = true` en una sola fila.
+    - `CompararDocumentoPositivoFuente()` bidireccional para `DNI:` y `EMP:` asegurando detalle completo en `ObtenerDetalleNaturalAsync` y `ObtenerDetalleEmpleadoAsync`.
+  - **P0 — Referencias SRC Contradictorias:**
+    - `IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(documento, idRegistroFuente)` rechaza de inmediato discrepancias entre documento `SRC:9999` e `idRegistroFuente = 1111` con HTTP 400 Bad Request o ArgumentException.
+    - Aplicado transversalmente en `ContarPositivosActivosAsync`, `ObtenerPositivoPorDocumentoAsync`, `RegistrarPositivoCoreAsync`, `ListasService.RegistrarPositivoAsync`, `ListasService.ObtenerSeguimientosAsync` y `EvidenciasService.RegistrarSeguimientoAsync`.
+    - Pruebas unitarias negativas añadidas demostrando que referencias ajenas no pueden acceder ni mutar registros de otros sujetos.
+  - **P1 — Unicidad Física, Registros Inactivos y Control de Longitudes:**
+    - Comprobación de ocupación física en `RL_LISTA_POSITIVOS` sin filtrar por estado (`LSP_ESTADO_REGISTRO`), evitando violaciones de `UQ_RL_LSP_DOCUMENTO UNIQUE` (`ORA-00001`) si existen registros históricos inactivos (`LSP_ESTADO_REGISTRO = 0`).
+    - Control previo de longitud máxima de clave física (`<= 50` caracteres) previo a INSERT en Oracle, evitando excepciones no manejadas `ORA-12899`.
+  - **P1 — Endurecimiento del Validador DNP (`tools/validate_external_writes.ps1`):**
+    - Conteo exacto 1:1 por operación heredada (`DNP-01` a `DNP-06`, 6 en total). Coincidencias adicionales (7ma escritura) u omisiones provocan salida obligatoria con error (código 1).
+    - Suite `-SelfTest` ampliada a 8 pruebas (8/8 PASS).
+    - Declaración preservada: `NO_NEW_EXTERNAL_WRITES=PASS`, `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`, `RUTAS HEREDADAS AUDITADAS: 6/6`.
+  - **P0 — Pruebas Reales de Coexistencia Oracle (`PositivosCoexistenciaOracleIntegrationTests.cs`):**
+    - Suite de integración contra Oracle XE descartable (`[P0FOracleRequiredFact]`) cubriendo los 12 escenarios de persistencia y la consulta de monitoreo agrupado con fila única y `TieneMotivo = true`.
+  - **Reconciliación de Pruebas Unitarias:**
+    - `PositivosCoexistenciaIntegridadTests.cs` actualizado con 17 métodos `[Fact]` (9 preexistentes reales + 8 nuevos de validación SRC, longitud y simulación inactiva).
+- **Métricas de Pruebas y Calidad:**
+  - Backend unitario: 1,323 pruebas superadas en `RL.API.Tests` (1,323/1,323 PASS, 0 fallidas).
+  - Frontend Vitest: 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
+  - Validadores del repositorio: 5/5 PASS (estructura, scripts DB, enlaces Markdown, Agent Skills, escrituras externas con `-SelfTest` 8/8 PASS).
+  - `git diff --check`: 0 errores.
+- **Gobernanza y Preservación:**
+  - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
+  - Rama `main` y producción: 0 modificaciones.
+  - Archivos locales sin seguimiento preservados fuera del control de versiones.
+  - Cero regresiones en M1, M2 (PDF/Excel B06), M3 (Branding dinámico) y Matrices de Riesgos (82 campos canónicos).
+- **Punto de continuación:**
+  - Commit y push selectivo a `origin/desarrollo`.
+  - Verificación del run de GitHub Actions CI para el commit generado.
+  - Queda formalmente en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+---
+
 # ESTADO VIGENTE — Paquete A: Integridad de Expedientes, Seguridad Oracle y Corrección Quirúrgica P0 (ANTIG, 2026-11-19 19:15 -06:00)
 
 - **Identificación y Referencia:**

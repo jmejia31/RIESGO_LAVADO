@@ -102,6 +102,14 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public async Task<ServiceResult> RegistrarSeguimientoAsync(string noDocumento, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId, int? tipoPositivoId = null, long? idRegistroFuente = null)
     {
+        if (!IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(noDocumento, idRegistroFuente, out var srcValido))
+            return ServiceResult.BadRequest("La referencia de origen 'SRC:' no coincide con el identificador de registro fuente proporcionado.");
+
+        if (srcValido.HasValue && srcValido.Value > 0)
+        {
+            idRegistroFuente = srcValido;
+        }
+
         motivoIngreso = motivoIngreso?.Trim();
         if (string.IsNullOrWhiteSpace(motivoIngreso))
             return ServiceResult.BadRequest("El comentario de seguimiento es obligatorio.");

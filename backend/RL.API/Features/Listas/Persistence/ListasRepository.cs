@@ -221,8 +221,20 @@ namespace RL.API.Features.Listas.Persistence
 
         // Consulta puntual por PK + documento: Oracle trata las cadenas vacias como NULL.
         // La misma condicion evita perder manuales y positivos DNP sin identificacion.
+        // Soporta claves con prefijos institucionales (DNI:, EMP:) y representaciones limpias.
         private static string CompararDocumentoPositivoFuente() =>
-            " AND NVL(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__') = NVL(TRIM(TRANSLATE(:numeroIdentificacion, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__')";
+            @" AND (
+                NVL(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__') = NVL(TRIM(TRANSLATE(:numeroIdentificacion, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__')
+                OR 'DNI:' || NVL(TRIM(TRANSLATE(:numeroIdentificacion, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__') = NVL(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__')
+                OR 'EMP:' || NVL(TRIM(TRANSLATE(:numeroIdentificacion, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__') = NVL(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__')
+                OR NVL(TRIM(TRANSLATE(:numeroIdentificacion, CHR(9)||CHR(10)||CHR(13), '   ')), '__SIN_IDENTIFICACION__') = CASE
+                    WHEN UPPER(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'DNI:%'
+                        THEN SUBSTR(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), 5)
+                    WHEN UPPER(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'EMP:%'
+                        THEN SUBSTR(TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), 5)
+                    ELSE TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))
+                END
+            )";
 
         public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(
             string numeroIdentificacion, long? idRegistroFuente = null, string? tipoFuente = null)
@@ -671,6 +683,9 @@ namespace RL.API.Features.Listas.Persistence
 
         public async Task<int> ContarPositivosActivosAsync(string documento, int tipoPositivoId, long? idRegistroFuente = null)
         {
+            if (!IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(documento, idRegistroFuente, out var srcValido))
+                throw new ArgumentException("La referencia de origen 'SRC:' no coincide con el identificador de registro fuente proporcionado.");
+
             var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(documento);
             bool isUnidentified = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado)
                 || normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase)
@@ -683,13 +698,7 @@ namespace RL.API.Features.Listas.Persistence
 
             if (isUnidentified)
             {
-                long? srcId = idRegistroFuente;
-                if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (long.TryParse(normalizado.Substring(4), out var parsed))
-                        srcId = parsed;
-                }
-
+                long? srcId = srcValido;
                 if (!srcId.HasValue || srcId.Value <= 0)
                     return 0;
 
@@ -860,6 +869,16 @@ namespace RL.API.Features.Listas.Persistence
                 var origenRegistro = NormalizarOrigenRegistro(dto.OrigenRegistro);
 
                 var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(dto.NoDocumento);
+                if (!IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(normalizado, dto.IdRegistroFuente, out var srcValido))
+                {
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+                if (srcValido.HasValue && srcValido.Value > 0)
+                {
+                    dto.IdRegistroFuente = srcValido;
+                }
+
                 bool isUnidentified = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado)
                     || normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase)
                     || string.IsNullOrWhiteSpace(normalizado);
@@ -872,12 +891,6 @@ namespace RL.API.Features.Listas.Persistence
                     if (isUnidentified)
                     {
                         long? srcId = dto.IdRegistroFuente;
-                        if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (long.TryParse(normalizado.Substring(4), out var parsed))
-                                srcId = parsed;
-                        }
-
                         if (!srcId.HasValue || srcId.Value <= 0)
                         {
                             await transaction.RollbackAsync();
@@ -1037,11 +1050,6 @@ namespace RL.API.Features.Listas.Persistence
                     if (isUnidentified)
                     {
                         long? srcId = dto.IdRegistroFuente;
-                        if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (long.TryParse(normalizado.Substring(4), out var parsed))
-                                srcId = parsed;
-                        }
                         docToInsert = $"SRC:{srcId!.Value}";
                     }
                     else
@@ -1050,10 +1058,27 @@ namespace RL.API.Features.Listas.Persistence
                         if (dto.TipoPositivoId == 3)
                         {
                             docToInsert = $"EMP:{cleanDoc}";
+                            // Verificar ocupación física global (activa e inactiva) para evitar ORA-00001
+                            await using var occEmpCmd = conn.CreateCommand();
+                            occEmpCmd.Transaction = transaction;
+                            occEmpCmd.BindByName = true;
+                            occEmpCmd.CommandText = @"
+                                SELECT COUNT(1)
+                                FROM RL_LISTA_POSITIVOS
+                                WHERE LSP_NO_DOCUMENTO = :empDoc
+                                  AND LSP_TIPO_DOCUMENTO_ID = :tipoDocId";
+                            occEmpCmd.Parameters.Add(new OracleParameter("empDoc", docToInsert));
+                            occEmpCmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
+                            var occupiedEmp = Convert.ToInt32(await occEmpCmd.ExecuteScalarAsync());
+                            if (occupiedEmp > 0)
+                            {
+                                await transaction.RollbackAsync();
+                                return false;
+                            }
                         }
                         else if (dto.TipoPositivoId == 2)
                         {
-                            // Para Persona Natural: verificar si cleanDoc ya está ocupado bajo este tipo de documento
+                            // Para Persona Natural: verificar si cleanDoc ya está ocupado físicamente (activo o inactivo) bajo este tipo de documento
                             await using var occCmd = conn.CreateCommand();
                             occCmd.Transaction = transaction;
                             occCmd.BindByName = true;
@@ -1061,17 +1086,59 @@ namespace RL.API.Features.Listas.Persistence
                                 SELECT COUNT(1)
                                 FROM RL_LISTA_POSITIVOS
                                 WHERE LSP_NO_DOCUMENTO = :cleanDoc
-                                  AND LSP_TIPO_DOCUMENTO_ID = :tipoDocId
-                                  AND LSP_ESTADO_REGISTRO = 1";
+                                  AND LSP_TIPO_DOCUMENTO_ID = :tipoDocId";
                             occCmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
                             occCmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
                             var occupied = Convert.ToInt32(await occCmd.ExecuteScalarAsync());
                             docToInsert = occupied > 0 ? $"DNI:{cleanDoc}" : cleanDoc;
+
+                            if (docToInsert != cleanDoc)
+                            {
+                                await using var occDniCmd = conn.CreateCommand();
+                                occDniCmd.Transaction = transaction;
+                                occDniCmd.BindByName = true;
+                                occDniCmd.CommandText = @"
+                                    SELECT COUNT(1)
+                                    FROM RL_LISTA_POSITIVOS
+                                    WHERE LSP_NO_DOCUMENTO = :dniDoc
+                                      AND LSP_TIPO_DOCUMENTO_ID = :tipoDocId";
+                                occDniCmd.Parameters.Add(new OracleParameter("dniDoc", docToInsert));
+                                occDniCmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
+                                var occupiedDni = Convert.ToInt32(await occDniCmd.ExecuteScalarAsync());
+                                if (occupiedDni > 0)
+                                {
+                                    await transaction.RollbackAsync();
+                                    return false;
+                                }
+                            }
                         }
                         else
                         {
                             docToInsert = cleanDoc;
+                            await using var occJurCmd = conn.CreateCommand();
+                            occJurCmd.Transaction = transaction;
+                            occJurCmd.BindByName = true;
+                            occJurCmd.CommandText = @"
+                                SELECT COUNT(1)
+                                FROM RL_LISTA_POSITIVOS
+                                WHERE LSP_NO_DOCUMENTO = :cleanDoc
+                                  AND LSP_TIPO_DOCUMENTO_ID = :tipoDocId";
+                            occJurCmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                            occJurCmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
+                            var occupiedJur = Convert.ToInt32(await occJurCmd.ExecuteScalarAsync());
+                            if (occupiedJur > 0)
+                            {
+                                await transaction.RollbackAsync();
+                                return false;
+                            }
                         }
+                    }
+
+                    // Validación de longitud máxima en Oracle VARCHAR2(50) para evitar ORA-12899
+                    if (docToInsert.Length > 50)
+                    {
+                        await transaction.RollbackAsync();
+                        return false;
                     }
 
                     var origenNuevo = origenRegistro ?? "MANUAL_CUMPLIMIENTO";
@@ -1140,6 +1207,9 @@ namespace RL.API.Features.Listas.Persistence
 
         public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento, int? tipoPositivoId = null, long? idRegistroFuente = null)
         {
+            if (!IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(noDocumento, idRegistroFuente, out var srcValido))
+                throw new ArgumentException("La referencia de origen 'SRC:' no coincide con el identificador de registro fuente proporcionado.");
+
             var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(noDocumento);
             bool isUnidentified = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado)
                 || normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase)
@@ -1162,13 +1232,7 @@ namespace RL.API.Features.Listas.Persistence
 
             if (isUnidentified)
             {
-                long? srcId = idRegistroFuente;
-                if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (long.TryParse(normalizado.Substring(4), out var parsed))
-                        srcId = parsed;
-                }
-
+                long? srcId = srcValido;
                 if (!srcId.HasValue || srcId.Value <= 0)
                     return null;
 
@@ -2680,8 +2744,8 @@ namespace RL.API.Features.Listas.Persistence
                        G.TOTAL_REPETIDOS,
                        G.FECHA_ENCONTRO,
                        G.FECHA_CALIFICO,
-                       NVL(P.FECHA_REGISTRO_INTERNO, PS.FECHA_REGISTRO_INTERNO) FECHA_REGISTRO_INTERNO,
-                       GREATEST(NVL(P.TIENE_MOTIVO, 0), NVL(PS.TIENE_MOTIVO, 0)) TIENE_MOTIVO,
+                       COALESCE(P.FECHA_REGISTRO_INTERNO, PD.FECHA_REGISTRO_INTERNO, PS.FECHA_REGISTRO_INTERNO) FECHA_REGISTRO_INTERNO,
+                       GREATEST(NVL(P.TIENE_MOTIVO, 0), NVL(PD.TIENE_MOTIVO, 0), NVL(PS.TIENE_MOTIVO, 0)) TIENE_MOTIVO,
                        0 ES_MANUAL,
                        NVL(I.REFERENCIAS, 0) IDENTIDAD_REFERENCIAS,
                        GREATEST(NVL(I.SUJETOS, 0), CASE WHEN G.NOMBRES_DISTINTOS > 1 THEN G.NOMBRES_DISTINTOS ELSE 0 END) IDENTIDADES_DISTINTAS,
@@ -2689,6 +2753,7 @@ namespace RL.API.Features.Listas.Persistence
                        G.CATEGORIA_IDENTIDAD
                 FROM REPORTE_GRUPOS G
                 LEFT JOIN POSITIVOS_AGG P ON P.LSP_NO_DOCUMENTO = G.DNI_NORM AND G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
+                LEFT JOIN POSITIVOS_AGG PD ON PD.LSP_NO_DOCUMENTO = 'DNI:' || G.DNI_NORM AND G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
                 LEFT JOIN POSITIVOS_AGG PS ON PS.LSP_NO_DOCUMENTO = 'SRC:' || TO_CHAR(G.ID_REGISTRO_FUENTE) AND G.CATEGORIA_IDENTIDAD = 'SIN_IDENTIFICACION'
                 LEFT JOIN IDENTIDAD_AGG I ON I.NUMERO_IDENTIFICACION = G.DNI_NORM AND G.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
             )
@@ -2703,7 +2768,10 @@ namespace RL.API.Features.Listas.Persistence
             SELECT LP.LSP_POSITIVO_ID,
                    CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
                         THEN 'POSITIVO_DNP' ELSE 'MANUAL_CUMPLIMIENTO' END,
-                   TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), LP.LSP_NOMBRE_COMPLETO,
+                   CASE WHEN UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'DNI:%'
+                        THEN SUBSTR(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), 5)
+                        ELSE TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')) END,
+                   LP.LSP_NOMBRE_COMPLETO,
                    CAST(NULL AS VARCHAR2(100)),
                    NVL(LC.LISTA_CAUTELA_DESCRICPION,'MANUAL'), 0,
                    CAST(NULL AS DATE), CAST(NULL AS DATE),
@@ -2716,7 +2784,10 @@ namespace RL.API.Features.Listas.Persistence
                                   OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) IN
                                        ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                             THEN 'SIN_IDENTIFICACION' ELSE 'IDENTIFICADA' END,
-                   1, TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))
+                   1,
+                   CASE WHEN UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'DNI:%'
+                        THEN SUBSTR(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), 5)
+                        ELSE TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')) END
             FROM RL_LISTA_POSITIVOS LP
             LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA LC
               ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
@@ -2729,7 +2800,10 @@ namespace RL.API.Features.Listas.Persistence
                  OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) IN ('NULL','VACIO','VACÍO','SIN IDENTIFICACION','SIN IDENTIFICACIÓN')
                  OR NOT EXISTS (SELECT 1 FROM Coincidencias C
                                  WHERE ((C.CATEGORIA_IDENTIDAD = 'IDENTIFICADA'
-                                         AND TRIM(TRANSLATE(C.NUMERO_IDENTIFICACION, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')))
+                                         AND (TRIM(TRANSLATE(C.NUMERO_IDENTIFICACION, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))
+                                              OR 'DNI:' || TRIM(TRANSLATE(C.NUMERO_IDENTIFICACION, CHR(9)||CHR(10)||CHR(13), '   ')) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))
+                                              OR (UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'DNI:%'
+                                                  AND TRIM(TRANSLATE(C.NUMERO_IDENTIFICACION, CHR(9)||CHR(10)||CHR(13), '   ')) = SUBSTR(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), 5))))
                                      OR (C.CATEGORIA_IDENTIDAD = 'SIN_IDENTIFICACION'
                                          AND 'SRC:' || TO_CHAR(C.ID_REGISTRO_FUENTE) = TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')))))
               )";

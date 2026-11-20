@@ -39,6 +39,36 @@ public static class IdentidadMonitoreoPolicy
 {
     public static string NormalizarDocumento(string? documento) => documento?.Trim() ?? string.Empty;
 
+    public static bool ValidarConsistenciaSrc(string? documento, long? idRegistroFuente)
+        => ValidarConsistenciaSrc(documento, idRegistroFuente, out _);
+
+    public static bool ValidarConsistenciaSrc(string? documento, long? idRegistroFuente, out long? idResuelto)
+    {
+        idResuelto = idRegistroFuente;
+        var normalizado = NormalizarDocumento(documento);
+        if (normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
+        {
+            var rawId = normalizado.Substring(4).Trim();
+            if (!long.TryParse(rawId, out var parsedId) || parsedId <= 0)
+            {
+                return false;
+            }
+
+            if (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
+            {
+                if (idRegistroFuente.Value != parsedId)
+                {
+                    return false;
+                }
+            }
+
+            idResuelto = parsedId;
+            return true;
+        }
+
+        return true;
+    }
+
     public static bool EsMarcadorNoIdentificacion(string? documento)
     {
         var valor = NormalizarDocumento(documento).ToUpperInvariant();
