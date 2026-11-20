@@ -145,7 +145,7 @@ public static class MatricesOracleBootstrap
         };
         foreach (string seq in secuencias17)
         {
-            await ExecuteIgnoreAsync(connection, $"CREATE SEQUENCE {seq} START WITH 1 INCREMENT BY 1 NOCACHE");
+            await ExecuteIgnoreAsync(connection, $"CREATE SEQUENCE {seq} START WITH 100 INCREMENT BY 1 NOCACHE");
         }
 
         // 4. Crear tablas del Modelo 17
@@ -215,6 +215,27 @@ public static class MatricesOracleBootstrap
                 );
             EXCEPTION
                 WHEN DUP_VAL_ON_INDEX THEN NULL;
+            END;");
+
+        // Avanzar secuencias para que los tests que llaman a NEXTVAL no colisionen con los IDs semilla (1)
+        await ExecuteIgnoreAsync(connection, @"
+            DECLARE
+                v_num NUMBER;
+            BEGIN
+                FOR i IN 1..100 LOOP
+                    BEGIN
+                        SELECT SEQ_RL_MR_FAMILIAS.NEXTVAL INTO v_num FROM DUAL;
+                        EXIT WHEN v_num >= 100;
+                    EXCEPTION WHEN OTHERS THEN EXIT;
+                    END;
+                END LOOP;
+                FOR i IN 1..100 LOOP
+                    BEGIN
+                        SELECT SEQ_RL_MR_VERSIONES.NEXTVAL INTO v_num FROM DUAL;
+                        EXIT WHEN v_num >= 100;
+                    EXCEPTION WHEN OTHERS THEN EXIT;
+                    END;
+                END LOOP;
             END;");
 
         await ExecuteIgnoreAsync(connection, @"
