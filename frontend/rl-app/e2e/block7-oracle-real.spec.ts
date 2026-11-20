@@ -545,9 +545,11 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     return item;
   };
   const evidenceItems: Array<{ eviId: number; eviHash: string }> = [];
+  const block9EvidencePrefix = `block9-${fixture.riskId}-`;
+  const block9EvidenceName = (suffix: string) => `${block9EvidencePrefix}${suffix}`;
   for (const name of [
-    'block9-evidence-preventive-a.pdf', 'block9-evidence-preventive-b.pdf',
-    'block9-evidence-detective.pdf', 'block9-evidence-corrective.pdf',
+    block9EvidenceName('evidence-preventive-a.pdf'), block9EvidenceName('evidence-preventive-b.pdf'),
+    block9EvidenceName('evidence-detective.pdf'), block9EvidenceName('evidence-corrective.pdf'),
   ]) evidenceItems.push(await uploadEvidence(name));
   for (let index = 0; index < evidenceItems.length; index++) {
     const evidenceLink = await request.post(`${evidenceApi}/vinculos`, { data: { evidenciaId: evidenceItems[index].eviId, tipoEntidad: 'control', entidadId: controlIds[index] } });
@@ -568,13 +570,13 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(monitoringProjection.find(field => field.fieldNumber === 71)?.value).toBe('MITIGADO');
   expect(monitoringProjection.find(field => field.fieldNumber === 72)?.value).toBe('1. SE_MANTIENE\n2. NO_SE_MANTIENE');
   expect(monitoringProjection.find(field => field.fieldNumber === 73)?.value).toBe('1. 30\n2. 50');
-  expect(monitoringProjection.find(field => field.fieldNumber === 74)?.value).toBe('1. block9-evidence-preventive-a.pdf\n2. block9-evidence-preventive-b.pdf');
+  expect(monitoringProjection.find(field => field.fieldNumber === 74)?.value).toBe(`1. ${block9EvidenceName('evidence-preventive-a.pdf')}\n2. ${block9EvidenceName('evidence-preventive-b.pdf')}`);
   expect(monitoringProjection.find(field => field.fieldNumber === 75)?.value).toBe('1. SE_MANTIENE');
   expect(monitoringProjection.find(field => field.fieldNumber === 76)?.value).toBe('1. 85');
-  expect(monitoringProjection.find(field => field.fieldNumber === 77)?.value).toBe('1. block9-evidence-detective.pdf');
+  expect(monitoringProjection.find(field => field.fieldNumber === 77)?.value).toBe(`1. ${block9EvidenceName('evidence-detective.pdf')}`);
   expect(monitoringProjection.find(field => field.fieldNumber === 78)?.value).toBe('1. NO_SE_MANTIENE');
   expect(monitoringProjection.find(field => field.fieldNumber === 79)?.value).toBe('1. 90');
-  expect(monitoringProjection.find(field => field.fieldNumber === 80)?.value).toBe('1. block9-evidence-corrective.pdf');
+  expect(monitoringProjection.find(field => field.fieldNumber === 80)?.value).toBe(`1. ${block9EvidenceName('evidence-corrective.pdf')}`);
   expect(monitoringProjection.find(field => field.fieldNumber === 81)?.value).toBe('OBS-AREA-BOTH');
   expect(monitoringProjection.find(field => field.fieldNumber === 82)?.value).toBe('OBS-UGR-BOTH');
 
@@ -609,7 +611,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     response.request().method() === 'POST'
     && new URL(response.url()).pathname.endsWith('/evidencias/cargar'));
   await matrixFileChooser.setFiles({
-    name: 'block9-ui-control-evidence.pdf',
+    name: block9EvidenceName('ui-control-evidence.pdf'),
     mimeType: 'application/pdf',
     buffer: Buffer.from('%PDF-1.4\nBlock 9 browser evidence\n%%EOF'),
   });
@@ -618,7 +620,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const matrixLinkResponse = await matrixLinkResponsePromise;
   expect(matrixLinkResponse.status(), await matrixLinkResponse.text()).toBe(200);
   await expect(monitoringUiPage.getByText('Evidencia cargada y vinculada al control.')).toBeVisible();
-  await expect(monitoringUiPage.getByText('block9-ui-control-evidence.pdf')).toBeVisible();
+  await expect(monitoringUiPage.getByText(block9EvidenceName('ui-control-evidence.pdf'))).toBeVisible();
   const matrixUploadBody = await matrixUploadResponse.json() as { datos: { eviId: number } };
   const matrixUiEvidenceId = matrixUploadBody.datos.eviId;
 
