@@ -12641,3 +12641,39 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - `BITACORA_COLABORACION.md`
   - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
 - **Gobernanza:** 0 mutaciones en código institucional, 0 cambios en fórmulas o riesgos oficiales, 0 cambios en modales.
+
+## 2026-11-20 14:05 -06:00 — Estandarización quirúrgica de modales y grilla de Monitoreo/Mitigación (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `20db627d4799b81a75279ad4f7993df71cb393d5`; autor `COD`; servicios locales detenidos al cierre.
+- **Objetivo y alcance:** Ajustar exclusivamente el frontend del módulo Matrices de Riesgos para que Mitigación y Monitoreo Operativo utilicen el shell institucional de modales, con formularios completos, confirmación previa a mutaciones, cierre seguro de cambios pendientes y distribución continua en dos columnas.
+- **Cambios funcionales:** Mitigación usa modales institucionales grandes para controles y planes; Monitoreo usa modales grandes para Señales de Alerta y Automonitoreo con todos los campos del DTO visible; los controles monitoreados están en una sola grilla continua `md:grid-cols-2`, sin tarjetas artificiales a ancho completo ni espacios por separación de tipos.
+- **Campos confirmados:** Alerta (`Código`, `Estado`, `Indicador`) y Automonitoreo (`Estado del riesgo`, `Estado de controles`, `Resultado`); el `evaluacionId` continúa formando parte del contexto enviado por código.
+- **Archivos modificados:** Componentes TS/HTML/spec de `matrices-riesgos-mitigacion` y `matrices-riesgos-monitoreo-operativo`, además de esta bitácora y el estado colaborativo. No se modificaron backend, Oracle, migraciones ni archivos protegidos.
+- **Pruebas ejecutadas:** Regresión Angular `97` archivos / `1068` pruebas PASS; prueba enfocada posterior al ajuste `1` archivo / `20` pruebas PASS; lint PASS; build PASS con advertencias preexistentes de SCSS/CommonJS; modal validator PASS (`31` modales); native-dialog, estructura, scripts DB y enlaces documentales PASS; `git diff --check` sin errores.
+- **Servicios:** Backend y frontend detenidos al cierre; no existen listeners en `localhost:4200` ni `localhost:5043`.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; la aceptación visual del propietario continúa pendiente y no se declara cierre global.
+- **Punto exacto de continuación:** publicar selectivamente estos cambios y la documentación en `origin/desarrollo`; luego levantar manualmente los servicios para revisar los modales grandes y la grilla continua de dos columnas.
+
+## 2026-11-20 15:20 -06:00 — Estandarización transversal de scroll, validación y confirmación de guardado (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `20db627d4799b81a75279ad4f7993df71cb393d5`; autor `COD`; commit funcional local `e027670f` (`fix(frontend): estandariza guardado y scroll institucional`).
+- **Objetivo:** aplicar en las interfaces administrativas el comportamiento solicitado: secciones extensas con scroll interno, botones de guardado bloqueados hasta completar requisitos y confirmación institucional antes de persistir cambios.
+- **Cambios funcionales:**
+  - Mitigación: scroll interno para controles, planes, alertas y actividades; formularios de control, efectividad, plan y actividad validan requisitos antes de habilitar guardar.
+  - Monitoreo operativo: scroll interno para señales, automonitoreo y controles; formularios de alerta y automonitoreo quedan bloqueados mientras falten campos obligatorios.
+  - Configuración de cálculo: se preservan los paneles desplazables existentes y se exige validación más confirmación institucional para fórmulas, funciones, parámetros y sus versiones.
+  - Configuración del sistema, tipos de lista, usuarios, familias de formularios, evaluaciones, borradores, definiciones, motivos y seguimientos ahora confirman antes de ejecutar mutaciones.
+  - Constructor de formularios: “Guardar catálogo” y “Guardar elemento” se deshabilitan si faltan código, nombre, valor u orden válidos; la persistencia definitiva continúa en el guardado principal confirmado.
+  - Riesgos: se añadió notificación institucional centrada para éxito/error y se retiró el feedback genérico de línea para el guardado de riesgo.
+- **Pruebas ejecutadas:**
+  - Angular completo: `98` archivos / `1072` pruebas PASS.
+  - Matrices de Riesgos: `15` archivos / `251` pruebas PASS.
+  - Batería funcional focalizada: `6` archivos / `122` pruebas PASS.
+  - `npm run lint`: PASS.
+  - `npm run build`: PASS, con advertencias existentes de presupuesto SCSS y CommonJS `exceljs`.
+  - Modal estándar: PASS (`31` modales); diálogos nativos: PASS (`0` usos productivos); estructura, scripts de BD y enlaces documentales: PASS; `git diff --check`: PASS.
+- **No ejecutado:** backend .NET, pruebas Oracle, `npm run e2e` y `tools/run_quality_gates.ps1`; el alcance de esta intervención fue frontend y no se modificaron contratos backend, Oracle ni migraciones. La prueba visual real en navegador queda para el propietario.
+- **Servicios:** no fueron iniciados ni detenidos por `COD` en esta intervención. Al cierre se verificaron listeners manuales activos en `localhost:5043` (backend, PID `37648`) y `localhost:4200` (frontend, PID `68896`), conforme al levantamiento manual del propietario.
+- **Preservación:** no se tocaron `main`, producción, Oracle, backend ni archivos protegidos. Los archivos sin seguimiento ajenos permanecen sin stage y sin modificación por esta intervención.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; publicación selectiva pendiente en `origin/desarrollo` y aceptación visual del propietario pendiente.
+- **Punto exacto de continuación:** publicar el commit funcional y el commit documental; luego validar visualmente scroll, botones deshabilitados, confirmación institucional y persistencia en las interfaces administrativas.

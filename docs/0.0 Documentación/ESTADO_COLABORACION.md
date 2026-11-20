@@ -5722,3 +5722,21 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Preservación:** 34 archivos sin seguimiento conservados íntegros; 0 escrituras Oracle institucional; 0 mutaciones en `main` o producción; 0 PII.
 - **Expediente:** [`M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md`](../certificaciones/M1_P0_RESTAURACION_UNIVERSAL_MOTIVOS_SEGUIMIENTOS_20261118.md).
 - **Punto de continuación:** Servidores locales activos (backend `5043`, frontend `4200`); entrega del expediente técnico al propietario (`jmejia31`) para la aceptación funcional visual del registro universal de motivos y seguimientos en [Issue #41](https://github.com/jmejia31/RIESGO_LAVADO/issues/41).
+- **Última corrección COD — 2026-11-20 14:05 -06:00:** En `desarrollo`, se ajustaron exclusivamente los componentes frontend de Mitigación y Monitoreo Operativo. Los modales de control/plan y de Señal de Alerta/Automonitoreo usan `modal-size-lg`; los formularios conservan todos los campos editables de sus DTO; los controles monitoreados usan una sola grilla continua `md:grid-cols-2`, sin filas artificiales de ancho completo ni huecos entre tipos.
+- **Campos confirmados:** Alerta: Código, Estado, Indicador. Automonitoreo: Estado del riesgo, Estado de controles, Resultado. El `evaluacionId` se conserva como contexto del guardado.
+- **Verificación:** Angular completo `97/97` archivos y `1068/1068` pruebas PASS; prueba enfocada posterior al cambio `1/1` archivo y `20/20` pruebas PASS; lint/build PASS; modal validator PASS (`31` modales); validadores de estructura, scripts DB, enlaces y diálogos nativos PASS; diff check sin errores.
+- **Restricciones:** Backend, Oracle, migraciones, contratos REST, `main`, producción y archivos globales protegidos no fueron modificados. Servicios detenidos al cierre: sin listeners en `localhost:4200` y `localhost:5043`.
+- **Estado actual:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; queda pendiente la revisión visual manual del propietario y la publicación del commit de esta intervención en `origin/desarrollo`.
+
+## Estado vigente — Estandarización transversal de guardado y scroll institucional — 2026-11-20 15:20 -06:00 (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`.
+- **Base SHA:** `20db627d4799b81a75279ad4f7993df71cb393d5`.
+- **Source Code SHA local:** `e027670f` (`fix(frontend): estandariza guardado y scroll institucional`); publicación remota pendiente al momento de este registro.
+- **Alcance implementado:** scroll interno para secciones extensas de Mitigación, Monitoreo Operativo y paneles de configuración; validación de campos obligatorios antes de habilitar botones de guardado; confirmación institucional previa a mutaciones en configuración, listas, usuarios, familias, riesgos, evaluaciones, mitigación, monitoreo y cálculos; notificación institucional centrada para guardado de riesgos.
+- **Constructor de formularios:** los guardados locales de catálogo y elemento quedan deshabilitados con campos incompletos; el guardado definitivo de la definición sigue controlado por el flujo confirmado del componente padre.
+- **Verificación local:** Angular `98/98` archivos y `1072/1072` pruebas PASS; Matrices `15/15` y `251/251` PASS; batería focalizada `6/6` y `122/122` PASS; lint/build PASS con advertencias no bloqueantes de SCSS/CommonJS; validadores de modales, diálogos nativos, estructura, scripts BD y enlaces PASS.
+- **No verificado en esta intervención:** backend .NET, Oracle, E2E de navegador, Quality Gate completo y aceptación visual manual. No se realizaron cambios de backend, Oracle ni migraciones.
+- **Servicios:** listeners manuales activos al cierre: backend `localhost:5043` PID `37648`; frontend `localhost:4200` PID `68896`. `COD` no inició ni detuvo esos procesos.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`, condicionado a publicación en `origin/desarrollo` y revisión visual del propietario. No se modifica la aceptación del propietario por inferencia.
+- **Pendientes:** publicar los commits selectivos, verificar paridad remota y ejecutar la revisión visual de scroll, habilitación de guardado y confirmaciones institucionales en las interfaces afectadas.
