@@ -733,7 +733,7 @@ finally
                 SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO
                  WHERE CON_EVALUACION_ID IN (
                     SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))
-              AND EVV_TIPO_ENTIDAD='control')
+              AND LOWER(EVV_TIPO_ENTIDAD)='control')
                OR EVV_EVIDENCIA_ID IN (
                 SELECT EVI_ID FROM RL_MR_EVIDENCIAS
                  WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix)",
@@ -748,7 +748,7 @@ finally
                 SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO
                  WHERE CON_EVALUACION_ID IN (
                     SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))
-              AND EVV_TIPO_ENTIDAD='control'", ("riskId", id));
+              AND LOWER(EVV_TIPO_ENTIDAD)='control'", ("riskId", id));
         await CleanupStepAsync($"RL_MR_ACTIVIDADES;RISK_ID={id}", @"DELETE FROM RL_MR_ACTIVIDADES
             WHERE ACT_PLAN_ID IN (
                 SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (
