@@ -52,15 +52,18 @@ if (canonicalRisks.Length != 59
     || canonicalRisks.Any(risk => string.IsNullOrWhiteSpace(risk.Code) || string.IsNullOrWhiteSpace(risk.Name))
     || canonicalRisks.Select(risk => risk.Code).Distinct(StringComparer.Ordinal).Count() != 59)
     throw new InvalidOperationException("The official workbook must provide 59 unique, named risk identities for the Block 12 browser fixture.");
-long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 800_000_000;
+// Run-scoped Oracle NUMBER(15) identities must not wrap every nine days.
+long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+// E2E users are constrained by RL_USUARIOS.USR_ID NUMBER(10).
+long userStamp = stamp % 800_000_000;
 long riskId = stamp + 700_000_000;
 long[] canonicalRiskIds = Enumerable.Range(0, canonicalRisks.Length).Select(index => riskId + index).ToArray();
 long versionId = stamp + 700_000_001;
 long userId = 987654;
-long areaOnlyUserId = stamp + 10;
-long ugrOnlyUserId = stamp + 11;
-long bothUserId = stamp + 12;
-long neitherUserId = stamp + 13;
+long areaOnlyUserId = userStamp + 10;
+long ugrOnlyUserId = userStamp + 11;
+long bothUserId = userStamp + 12;
+long neitherUserId = userStamp + 13;
 long lifecycleFamilyId = stamp + 900_000_000;
 long lifecycleVersionId = stamp + 900_000_001;
 long lifecycleEvaluationId = stamp + 900_000_002;
@@ -100,6 +103,28 @@ string definition = CreateDefinition(ruleCode);
 string lifecycleDefinition = CreateDefinition(lifecycleRuleCode);
 string lifecycleDefinitionHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(lifecycleDefinition))).ToLowerInvariant();
 string lifecycleEvidenceHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("h08-evidence"))).ToLowerInvariant();
+// A collision must abort before entering teardown; this run does not own pre-existing IDs.
+await using (var collisionCheck = new OracleCommand(
+    "SELECT COUNT(*) FROM RL_MR_RIESGOS WHERE RIE_ID BETWEEN :firstId AND :lastId",
+    oracle) { BindByName = true })
+{
+    collisionCheck.Parameters.Add(new OracleParameter("firstId", canonicalRiskIds[0]));
+    collisionCheck.Parameters.Add(new OracleParameter("lastId", canonicalRiskIds[^1]));
+    if (Convert.ToInt64(await collisionCheck.ExecuteScalarAsync()) != 0)
+        throw new InvalidOperationException("Block 7 synthetic risk IDs already exist; no foreign rows may be removed.");
+}
+await using (var userCollisionCheck = new OracleCommand(
+    "SELECT COUNT(*) FROM RL_USUARIOS WHERE USR_ID IN (:area,:ugr,:both,:neither)",
+    oracle) { BindByName = true })
+{
+    userCollisionCheck.Parameters.Add(new OracleParameter("area", areaOnlyUserId));
+    userCollisionCheck.Parameters.Add(new OracleParameter("ugr", ugrOnlyUserId));
+    userCollisionCheck.Parameters.Add(new OracleParameter("both", bothUserId));
+    userCollisionCheck.Parameters.Add(new OracleParameter("neither", neitherUserId));
+    if (Convert.ToInt64(await userCollisionCheck.ExecuteScalarAsync()) != 0)
+        throw new InvalidOperationException("Block 7 synthetic test user IDs already exist; refusing to update foreign users.");
+}
+
 // Include fixture seeding in the teardown scope: partial initialization must be cleaned up.
 try
 {
