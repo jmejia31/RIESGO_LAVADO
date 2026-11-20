@@ -22,6 +22,7 @@ import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shar
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
@@ -34,6 +35,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   private readonly service = inject(MatricesRiesgosService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly confirmation = inject(InstitutionalConfirmationService);
+  private readonly notification = inject(InstitutionalNotificationService);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
   @Input() evaluacionIdInicial: number | null = null;
@@ -118,7 +120,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   cargarResumen(): void {
     this.service.obtenerResumenOperativo().subscribe({
       next: resumen => this.resumen.set(this.normalizarResumen(resumen)),
-      error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar el resumen operativo.'))
+      error: error => this.notificarError(this.mensajeError(error, 'No se pudo cargar el resumen operativo.'))
     });
   }
 
@@ -192,7 +194,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     this.service.actualizarMonitoreoControl(control.controlId, dto).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set('Seguimiento del control actualizado.');
+        this.notificarExito('Seguimiento del control actualizado.');
         this.cargarBloque6();
         this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
       },
@@ -205,7 +207,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     const data = this.bloque6();
     const permitido = tipo === 'area' ? data?.puedeEditarObservacionesArea : data?.puedeEditarObservacionesUgr;
     if (!permitido) {
-      this.error.set(`No tiene permiso para editar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
+      this.notificarError(`No tiene permiso para editar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
       return;
     }
     const etiqueta = tipo === 'area' ? 'del Área' : 'UGR';
@@ -222,12 +224,12 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     request.subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set(`Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'} guardadas.`);
+        this.notificarExito(`Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'} guardadas.`);
         this.cargarBloque6();
         this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
       },
       error: error => {
-        if ((error as { status?: number })?.status === 403) this.error.set(`No tiene permiso para editar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
+        if ((error as { status?: number })?.status === 403) this.notificarError(`No tiene permiso para editar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
         else this.finalizarGuardadoError(error, `No se pudieron guardar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
       }
     });
@@ -247,7 +249,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
             delete actualizados[control.controlId];
             return actualizados;
           });
-          this.mensaje.set('Evidencia cargada y vinculada al control.');
+          this.notificarExito('Evidencia cargada y vinculada al control.');
           this.cargarBloque6();
           this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
         },
@@ -275,7 +277,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     this.service.desvincularEvidencia({ evidenciaId, tipoEntidad: 'control', entidadId: control.controlId }).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set('Evidencia desvinculada. El archivo se conserva según su ciclo de vida.');
+        this.notificarExito('Evidencia desvinculada. El archivo se conserva según su ciclo de vida.');
         this.cargarBloque6();
         this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
       },
@@ -298,11 +300,11 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   async crearAlerta(): Promise<void> {
     if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.alertaCodigo.trim() || !this.alertaIndicador.trim()) {
-      this.error.set('Seleccione una evaluación y complete código e indicador de la alerta.');
+      this.notificarError('Seleccione una evaluación y complete código e indicador de la alerta.');
       return;
     }
     if (this.alertaCodigo.trim().length > 50 || this.alertaIndicador.trim().length > 150) {
-      this.error.set('Revise las longitudes máximas permitidas de la alerta.');
+      this.notificarError('Revise las longitudes máximas permitidas de la alerta.');
       return;
     }
 
@@ -326,7 +328,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.alertaCodigo = '';
         this.alertaIndicador = '';
         this.alertaEstado = 'ACTIVO';
-        this.mensaje.set('Señal de alerta registrada correctamente.');
+        this.notificarExito('Señal de alerta registrada correctamente.');
         this.cerrarModalAlertaForzado();
         this.cargarSeguimiento();
         this.cargarResumen();
@@ -349,7 +351,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     this.service.cambiarEstadoAlerta(alerta.aleId, nuevoEstado).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set(`Alerta ${nuevoEstado === 'ACTIVO' ? 'activada' : 'inactivada'} correctamente.`);
+        this.notificarExito(`Alerta ${nuevoEstado === 'ACTIVO' ? 'activada' : 'inactivada'} correctamente.`);
         this.cargarSeguimiento();
         this.cargarResumen();
         this.persisted.emit();
@@ -369,7 +371,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   async registrarAutomonitoreo(): Promise<void> {
     if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.monEstadoRiesgo.trim() || !this.monEstadoControles.trim() || !this.monResultado.trim()) {
-      this.error.set('Seleccione una evaluación y complete todos los campos del automonitoreo.');
+      this.notificarError('Seleccione una evaluación y complete todos los campos del automonitoreo.');
       return;
     }
 
@@ -393,7 +395,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.monEstadoRiesgo = '';
         this.monEstadoControles = '';
         this.monResultado = '';
-        this.mensaje.set('Automonitoreo registrado correctamente.');
+        this.notificarExito('Automonitoreo registrado correctamente.');
         this.cerrarModalAutomonitoreoForzado();
         this.cargarSeguimiento();
         this.cargarResumen();
@@ -405,12 +407,38 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
 
   private finalizarError(error: unknown, mensaje: string): void {
     this.cargando.set(false);
-    this.error.set(this.mensajeError(error, mensaje));
+    this.notificarError(this.mensajeError(error, mensaje));
   }
 
   private finalizarGuardadoError(error: unknown, mensaje: string): void {
     this.guardando.set(false);
-    this.error.set(this.mensajeError(error, mensaje));
+    this.notificarError(this.mensajeError(error, mensaje));
+  }
+
+  private notificarError(mensaje: string): void {
+    this.error.set(mensaje);
+    this.mensaje.set(null);
+    void this.notification.notify({
+      title: 'No se pudo completar la operación',
+      message: mensaje,
+      icon: 'error',
+      confirmIcon: 'cancel',
+      confirmLabel: 'Aceptar',
+      confirmVariant: 'danger'
+    });
+  }
+
+  private notificarExito(mensaje: string): void {
+    this.mensaje.set(mensaje);
+    this.error.set(null);
+    void this.notification.notify({
+      title: 'Operación completada',
+      message: mensaje,
+      icon: 'success',
+      confirmIcon: 'confirm',
+      confirmLabel: 'Aceptar',
+      confirmVariant: 'success'
+    });
   }
 
   private mensajeError(error: unknown, mensaje: string): string {

@@ -15,13 +15,15 @@ describe('MainLayoutComponent', () => {
     const config = { CargarConfiguracion: vi.fn(() => of(undefined)) };
     const modulos = new Subject<Array<{ modId: number; modRuta: string; modSeccion: string; modNombre: string }>>();
     const catalogo = { modulos: vi.fn(() => modulos.asObservable()) };
-    const globalState = {};
+    const globalState = { ultimoError: signal<string | null>(null) };
+    const notification = { notify: vi.fn(() => Promise.resolve()) };
     const component = new MainLayoutComponent(
       auth as never,
       config as never,
       globalState as never,
       catalogo as never,
-      new ElementRef(host)
+      new ElementRef(host),
+      notification as never
     );
 
     return { component, host, usuario, config, catalogo, modulos };

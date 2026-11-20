@@ -83,13 +83,6 @@
       </div>
     </div>
 
-    @if (errorCarga()) {
-      <div class="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
-        <span class="font-semibold">Consulta no disponible:</span>
-        <span>{{ errorCarga() }}</span>
-      </div>
-    }
-
     <div class="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
       <app-page-size-selector selectId="bitacora-page-size" [value]="limite()" [options]="[10, 25, 50]" ariaLabel="Eventos de auditoría por página" (valueChange)="limite.set($event); paginaActual.set(1); cargarDatos()" />
       <button type="button" (click)="filtrarDocumentosEliminados()" [disabled]="cargando()"

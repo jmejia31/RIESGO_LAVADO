@@ -21,6 +21,7 @@ import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shar
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 @Component({
   selector: 'app-matrices-riesgos-mitigacion',
@@ -33,6 +34,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   private readonly service = inject(MatricesRiesgosService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly confirmation = inject(InstitutionalConfirmationService);
+  private readonly notification = inject(InstitutionalNotificationService);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
   @Input() evaluacionIdInicial: number | null = null;
@@ -209,7 +211,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   async guardarControl(): Promise<void> {
     if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.controlDescripcion.trim()) {
-      this.error.set('Seleccione una evaluación y describa el control.');
+      this.notificarError('Seleccione una evaluación y describa el control.');
       return;
     }
 
@@ -238,7 +240,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     solicitud.subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set(this.controlEditandoId > 0 ? 'Control actualizado correctamente.' : 'Control creado correctamente.');
+        this.notificarExito(this.controlEditandoId > 0 ? 'Control actualizado correctamente.' : 'Control creado correctamente.');
         this.cerrarModalControlForzado();
         this.cargarMitigacion();
         this.persisted.emit();
@@ -254,7 +256,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
         ...item,
         ecoComentario: item.ecoComentario ? normalizarMojibakeVisibleUtf8(item.ecoComentario) : item.ecoComentario
       }))),
-      error: (error: unknown) => this.error.set(this.mensajeError(error, 'No se pudo cargar la efectividad del control.'))
+      error: (error: unknown) => this.notificarError(this.mensajeError(error, 'No se pudo cargar la efectividad del control.'))
     });
   }
 
@@ -265,7 +267,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   async guardarEfectividad(): Promise<void> {
     if (this.operacionEnCurso()) return;
     if (this.controlSeleccionadoId <= 0 || this.efectividad < 0 || this.efectividad > 100) {
-      this.error.set('Seleccione un control y registre una efectividad entre 0 y 100.');
+      this.notificarError('Seleccione un control y registre una efectividad entre 0 y 100.');
       return;
     }
     const confirmado = await this.confirmarGuardado(
@@ -284,7 +286,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
         this.guardando.set(false);
         this.efectividad = 0;
         this.comentarioEfectividad = '';
-        this.mensaje.set('Efectividad del control registrada correctamente.');
+        this.notificarExito('Efectividad del control registrada correctamente.');
         this.cargarEvaluacionesControl(this.controlSeleccionadoId);
         this.modalEfectividadAbierto.set(false);
       },
@@ -318,11 +320,11 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   async guardarPlan(): Promise<void> {
     if (this.operacionEnCurso()) return;
     if (this.evaluacionId <= 0 || !this.planDescripcion.trim()) {
-      this.error.set('Seleccione una evaluación y describa el plan.');
+      this.notificarError('Seleccione una evaluación y describa el plan.');
       return;
     }
     if (this.planAvance < 0 || this.planAvance > 100 || this.planPresupuesto < 0 || this.planFechaFin < this.planFechaInicio) {
-      this.error.set('Revise avance, presupuesto y rango de fechas del plan.');
+      this.notificarError('Revise avance, presupuesto y rango de fechas del plan.');
       return;
     }
     const confirmado = await this.confirmarGuardado(
@@ -352,7 +354,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     solicitud.subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set(this.planEditandoId > 0 ? 'Plan actualizado correctamente.' : 'Plan creado correctamente.');
+        this.notificarExito(this.planEditandoId > 0 ? 'Plan actualizado correctamente.' : 'Plan creado correctamente.');
         this.cerrarModalPlanForzado();
         this.cargarMitigacion();
         this.persisted.emit();
@@ -365,7 +367,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     this.planSeleccionadoId = planId;
     this.service.listarActividades(planId).subscribe({
       next: actividades => this.actividades.set(actividades),
-      error: (error: unknown) => this.error.set(this.mensajeError(error, 'No se pudieron cargar las actividades.'))
+      error: (error: unknown) => this.notificarError(this.mensajeError(error, 'No se pudieron cargar las actividades.'))
     });
   }
 
@@ -384,7 +386,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
 
   nuevaActividad(): void {
     if (this.planSeleccionadoId <= 0) {
-      this.error.set('Seleccione un plan antes de crear una actividad.');
+      this.notificarError('Seleccione un plan antes de crear una actividad.');
       return;
     }
     this.resetActividadForm();
@@ -395,11 +397,11 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   async guardarActividad(): Promise<void> {
     if (this.operacionEnCurso()) return;
     if (this.planSeleccionadoId <= 0 || !this.actividadDescripcion.trim() || !this.actividadResponsable.trim()) {
-      this.error.set('Seleccione un plan y complete descripción y responsable de la actividad.');
+      this.notificarError('Seleccione un plan y complete descripción y responsable de la actividad.');
       return;
     }
     if (this.actividadAvance < 0 || this.actividadAvance > 100 || this.actividadFechaFin < this.actividadFechaInicio) {
-      this.error.set('Revise avance y rango de fechas de la actividad.');
+      this.notificarError('Revise avance y rango de fechas de la actividad.');
       return;
     }
     const confirmado = await this.confirmarGuardado(
@@ -426,7 +428,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     solicitud.subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set(this.actividadEditandoId > 0 ? 'Actividad actualizada correctamente.' : 'Actividad creada correctamente.');
+        this.notificarExito(this.actividadEditandoId > 0 ? 'Actividad actualizada correctamente.' : 'Actividad creada correctamente.');
         this.cerrarModalActividadForzado();
         this.cargarActividades(this.planSeleccionadoId);
         this.persisted.emit();
@@ -449,12 +451,38 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
 
   private finalizarError(error: unknown, mensaje: string): void {
     this.cargando.set(false);
-    this.error.set(this.mensajeError(error, mensaje));
+    this.notificarError(this.mensajeError(error, mensaje));
   }
 
   private finalizarGuardadoError(error: unknown, mensaje: string): void {
     this.guardando.set(false);
-    this.error.set(this.mensajeError(error, mensaje));
+    this.notificarError(this.mensajeError(error, mensaje));
+  }
+
+  private notificarError(mensaje: string): void {
+    this.error.set(mensaje);
+    this.mensaje.set(null);
+    void this.notification.notify({
+      title: 'No se pudo completar la operación',
+      message: mensaje,
+      icon: 'error',
+      confirmIcon: 'cancel',
+      confirmLabel: 'Aceptar',
+      confirmVariant: 'danger'
+    });
+  }
+
+  private notificarExito(mensaje: string): void {
+    this.mensaje.set(mensaje);
+    this.error.set(null);
+    void this.notification.notify({
+      title: 'Operación completada',
+      message: mensaje,
+      icon: 'success',
+      confirmIcon: 'confirm',
+      confirmLabel: 'Aceptar',
+      confirmVariant: 'success'
+    });
   }
 
   private mensajeError(error: unknown, mensaje: string): string {

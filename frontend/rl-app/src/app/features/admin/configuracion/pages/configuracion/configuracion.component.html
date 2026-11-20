@@ -45,24 +45,6 @@
     </div>
   </div>
 
-  <!-- Alertas Globales -->
-  @if (mensajeExito()) {
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3 animate-fade-in">
-      <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span class="text-sm font-medium">{{ mensajeExito() }}</span>
-    </div>
-  }
-  @if (mensajeError()) {
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-3 animate-fade-in">
-      <svg class="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span class="text-sm font-medium">{{ mensajeError() }}</span>
-    </div>
-  }
-
   <!-- TAB 1: PARÁMETROS DEL SISTEMA -->
   @if (activeTab() === 'sistema') {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">

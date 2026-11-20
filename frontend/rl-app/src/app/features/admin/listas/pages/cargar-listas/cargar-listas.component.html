@@ -10,11 +10,6 @@
   <!-- Sección Cargar Listas -->
   <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
     <h3 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3">Cargar Listas</h3>
-    @if (errorTipos()) {
-      <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
-        {{ errorTipos() }}
-      </div>
-    }
     <form [formGroup]="form" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(300px,2fr)_auto] items-end gap-4 max-w-5xl">
       <div class="flex-1 w-full space-y-1">
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Seleccione Uno *</label>
@@ -60,11 +55,6 @@
         <p class="text-sm font-medium text-gray-500">Cargando resumen de listas...</p>
       </div>
     } @else {
-      @if (errorResumen()) {
-        <div class="mx-6 mt-6 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
-          {{ errorResumen() }}
-        </div>
-      }
       <div class="p-6">
         <div class="overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[860px] w-full text-center border-collapse border border-gray-200">

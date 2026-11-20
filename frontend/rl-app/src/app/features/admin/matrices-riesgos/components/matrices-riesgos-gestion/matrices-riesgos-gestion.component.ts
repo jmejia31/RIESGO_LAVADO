@@ -298,7 +298,16 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
 
   private finalizarError(error: unknown, mensaje: string): void {
     this.cargando.set(false);
-    this.error.set(this.mensajeError(error, mensaje));
+    const detalle = this.mensajeError(error, mensaje);
+    this.error.set(detalle);
+    void this.notification.notify({
+      title: 'No se pudo cargar la gestión de riesgos',
+      message: detalle,
+      icon: 'error',
+      confirmIcon: 'cancel',
+      confirmLabel: 'Aceptar',
+      confirmVariant: 'danger'
+    });
   }
 
   private mensajeError(error: unknown, mensaje: string): string {

@@ -15,8 +15,6 @@
     </div>
   </div>
 
-  @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
-
   @switch (vista()) {
     @case ('riesgos') { <app-matrices-riesgos-gestion /> }
     @case ('mitigacion') { <app-matrices-riesgos-mitigacion [evaluaciones]="evaluaciones()" /> }

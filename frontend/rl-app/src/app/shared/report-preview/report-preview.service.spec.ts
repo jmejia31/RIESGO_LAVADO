@@ -2,11 +2,9 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReportPreviewService } from './report-preview.service';
 
-vi.mock('sweetalert2', () => ({
-  default: { fire: vi.fn().mockResolvedValue({}) }
-}));
-
 describe('ReportPreviewService', () => {
+  const notification = { notify: vi.fn().mockResolvedValue(undefined) } as any;
+
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
@@ -16,7 +14,7 @@ describe('ReportPreviewService', () => {
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:report-preview');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     const sanitizer = { bypassSecurityTrustResourceUrl: (value: string) => value } as unknown as DomSanitizer;
-    const service = new ReportPreviewService(sanitizer);
+    const service = new ReportPreviewService(sanitizer, notification);
 
     service.openPdf(new Blob(['pdf']), 'reporte.pdf', 'Vista previa PDF', 'Descripción');
     expect(service.state()?.kind).toBe('pdf');
@@ -28,7 +26,7 @@ describe('ReportPreviewService', () => {
 
   it('prepara Excel sin descargar hasta que el usuario lo solicita', async () => {
     const sanitizer = { bypassSecurityTrustResourceUrl: (value: string) => value } as unknown as DomSanitizer;
-    const service = new ReportPreviewService(sanitizer);
+    const service = new ReportPreviewService(sanitizer, notification);
     const workbook = { sheets: [{ name: 'Reporte', sheet: { data: [['Código'], ['R-1']] } }] };
 
     await service.openExcel(workbook, 'reporte.xlsx', 'Vista previa Excel', 'Descripción');
@@ -37,19 +35,17 @@ describe('ReportPreviewService', () => {
   });
   it('abre PDF y Excel sin notificar una descarga prematura', async () => {
     const sanitizer = { bypassSecurityTrustResourceUrl: (value: string) => value } as unknown as DomSanitizer;
-    const service = new ReportPreviewService(sanitizer);
-    const fire = (await import('sweetalert2')).default.fire;
+    const service = new ReportPreviewService(sanitizer, notification);
 
     await service.openExcel({ sheets: [{ name: 'Reporte', sheet: { data: [['Codigo'], ['R-1']] } }] }, 'reporte.xlsx', 'Vista previa del reporte', 'Revise el reporte.');
     service.openPdf(new Blob(['pdf'], { type: 'application/pdf' }), 'reporte.pdf', 'Vista previa del reporte PDF', 'Revise el reporte.');
 
-    expect(fire).not.toHaveBeenCalled();
+    expect(notification.notify).not.toHaveBeenCalled();
   });
 
   it('notifica la descarga iniciada solamente después de descargar', async () => {
     const sanitizer = { bypassSecurityTrustResourceUrl: (value: string) => value } as unknown as DomSanitizer;
-    const service = new ReportPreviewService(sanitizer);
-    const fire = (await import('sweetalert2')).default.fire;
+    const service = new ReportPreviewService(sanitizer, notification);
     const click = vi.fn();
     const link = { href: '', download: '', click };
     vi.stubGlobal('document', {
@@ -60,10 +56,10 @@ describe('ReportPreviewService', () => {
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
 
     service.openPdf(new Blob(['pdf'], { type: 'application/pdf' }), 'reporte.pdf', 'Vista previa del reporte PDF', 'Revise el reporte.');
-    expect(fire).not.toHaveBeenCalled();
+    expect(notification.notify).not.toHaveBeenCalled();
     await expect(service.download()).resolves.toBe(true);
     expect(click).toHaveBeenCalledOnce();
-    expect(fire).toHaveBeenCalledWith(expect.objectContaining({ toast: true, icon: 'success', title: 'Descarga iniciada' }));
+    expect(notification.notify).toHaveBeenCalledWith(expect.objectContaining({ icon: 'success', title: 'Descarga iniciada' }));
 
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -71,8 +67,7 @@ describe('ReportPreviewService', () => {
 
   it('informa el error sin anunciar éxito cuando falla el inicio de descarga', async () => {
     const sanitizer = { bypassSecurityTrustResourceUrl: (value: string) => value } as unknown as DomSanitizer;
-    const service = new ReportPreviewService(sanitizer);
-    const fire = (await import('sweetalert2')).default.fire;
+    const service = new ReportPreviewService(sanitizer, notification);
     vi.spyOn(URL, 'createObjectURL').mockImplementation(() => { throw new Error('fallo'); });
 
     service.state.set({
@@ -83,8 +78,8 @@ describe('ReportPreviewService', () => {
       blob: new Blob(['pdf'], { type: 'application/pdf' })
     });
     await expect(service.download()).resolves.toBe(false);
-    expect(fire).toHaveBeenCalledWith(expect.objectContaining({ icon: 'error' }));
-    expect(fire).not.toHaveBeenCalledWith(expect.objectContaining({ title: 'Descarga iniciada' }));
+    expect(notification.notify).toHaveBeenCalledWith(expect.objectContaining({ icon: 'error' }));
+    expect(notification.notify).not.toHaveBeenCalledWith(expect.objectContaining({ title: 'Descarga iniciada' }));
     vi.restoreAllMocks();
   });
 });

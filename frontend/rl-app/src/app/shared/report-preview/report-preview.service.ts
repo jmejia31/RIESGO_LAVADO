@@ -10,6 +10,7 @@ import {
   workbookToBlob
 } from '../../core/utils/excel-export.util';
 import { getInstitutionalReportBranding } from '../../core/reporting/institutional-report-standard';
+import { InstitutionalNotificationService } from '../notification/institutional-notification.service';
 
 export type ReportPreviewKind = 'pdf' | 'excel';
 
@@ -34,7 +35,10 @@ export class ReportPreviewService {
   private pdfObjectUrl: string | null = null;
   private previewSequence = 0;
 
-  constructor(private readonly sanitizer: DomSanitizer) {}
+  constructor(
+    private readonly sanitizer: DomSanitizer,
+    private readonly notification: InstitutionalNotificationService
+  ) {}
 
   openPdf(blob: Blob, fileName: string, title: string, description: string): void {
     this.close();
@@ -154,32 +158,24 @@ export class ReportPreviewService {
   }
 
   private async notificarDescargaIniciada(current: ReportPreviewState): Promise<void> {
-    const Swal = await import('sweetalert2');
     const contenido = current.title.replace(/^Vista previa (?:del|de la|de los|de las|de)\s+/i, '').trim();
-    await Swal.default.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
+    await this.notification.notify({
       title: 'Descarga iniciada',
-      text: contenido ? `Descarga iniciada: ${contenido}.` : 'Descarga iniciada correctamente.',
-      showConfirmButton: false,
-      timer: 3500,
-      timerProgressBar: true
+      message: contenido ? `Descarga iniciada: ${contenido}.` : 'Descarga iniciada correctamente.',
+      icon: 'success',
+      confirmIcon: 'download',
+      confirmVariant: 'success'
     });
   }
 
   private async notificarDescargaFallida(current: ReportPreviewState): Promise<void> {
-    const Swal = await import('sweetalert2');
     const contenido = current.title.replace(/^Vista previa (?:del|de la|de los|de las|de)\s+/i, '').trim();
-    await Swal.default.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
+    await this.notification.notify({
       title: 'No fue posible iniciar la descarga',
-      text: contenido ? `No fue posible iniciar la descarga de ${contenido}.` : 'No fue posible iniciar la descarga del reporte.',
-      showConfirmButton: false,
-      timer: 4500,
-      timerProgressBar: true
+      message: contenido ? `No fue posible iniciar la descarga de ${contenido}.` : 'No fue posible iniciar la descarga del reporte.',
+      icon: 'error',
+      confirmIcon: 'cancel',
+      confirmVariant: 'danger'
     });
   }
 

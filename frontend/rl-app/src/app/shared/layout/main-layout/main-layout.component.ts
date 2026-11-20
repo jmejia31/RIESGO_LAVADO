@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, computed, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, EffectRef, Injector, OnDestroy, OnInit, Optional, computed, effect, runInInjectionContext, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -9,6 +9,7 @@ import { GlobalHttpStateService } from '../../../core/services/global-http-state
 
 import { ActionIconComponent } from '../../components/action-icon/action-icon.component';
 import { InstitutionalTooltipDirective } from '../../components/institutional-tooltip/institutional-tooltip.directive';
+import { InstitutionalNotificationService } from '../../notification/institutional-notification.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -28,16 +29,33 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   private focoPrevio: HTMLElement | null = null;
   private dialogoConTabindexTemporal: HTMLElement | null = null;
   private readonly estadoInertOriginal = new Map<HTMLElement, boolean>();
+  private errorNotificationEffect?: EffectRef;
 
   constructor(
     readonly auth: AuthService,
     readonly configService: ConfiguracionService,
     readonly globalState: GlobalHttpStateService,
     private readonly catalogoService: CatalogoService,
-    private readonly host: ElementRef<HTMLElement>
+    private readonly host: ElementRef<HTMLElement>,
+    @Optional() private readonly notification?: InstitutionalNotificationService,
+    @Optional() private readonly injector?: Injector
   ) {}
 
   ngOnInit() {
+    if (this.injector && this.notification && !this.errorNotificationEffect) {
+      this.errorNotificationEffect = runInInjectionContext(this.injector, () => effect(() => {
+        const error = this.globalState.ultimoError();
+        if (!error) return;
+        void this.notification?.notify({
+          title: 'No se pudo completar la solicitud',
+          message: error,
+          icon: 'error',
+          confirmIcon: 'cancel',
+          confirmVariant: 'danger'
+        });
+      }));
+    }
+
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.sidebarAbierto.set(false);
     }
@@ -64,6 +82,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.errorNotificationEffect?.destroy();
+    this.errorNotificationEffect = undefined;
     this.observadorDialogos?.disconnect();
     this.observadorDialogos = undefined;
 

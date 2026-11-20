@@ -9,6 +9,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { InstitutionalFileUploadComponent } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload.component';
 import { INSTITUTIONAL_FAVICON_FILE_POLICY, INSTITUTIONAL_LOGO_FILE_POLICY, LOGIN_SLIDE_IMAGE_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
 @Component({
@@ -22,6 +23,7 @@ export class ConfiguracionComponent implements OnInit {
   private fb = inject(FormBuilder);
   public configService = inject(ConfiguracionService);
   private readonly confirmation = inject(InstitutionalConfirmationService);
+  private readonly notification = inject(InstitutionalNotificationService);
 
   activeTab = signal<'sistema' | 'slides'>('sistema');
   readonly maxTextoTextarea = 1000;
@@ -279,11 +281,25 @@ export class ConfiguracionComponent implements OnInit {
   private mostrarExito(msg: string) {
     this.mensajeExito.set(msg);
     setTimeout(() => this.mensajeExito.set(null), 5000);
+    void this.notification.notify({
+      title: 'Operación completada',
+      message: msg,
+      icon: 'success',
+      confirmIcon: 'confirm',
+      confirmVariant: 'success'
+    });
   }
 
   private mostrarError(msg: string) {
     this.mensajeError.set(msg);
     setTimeout(() => this.mensajeError.set(null), 7000);
+    void this.notification.notify({
+      title: 'No se pudo completar la operación',
+      message: msg,
+      icon: 'error',
+      confirmIcon: 'cancel',
+      confirmVariant: 'danger'
+    });
   }
 
   onArchivoSeleccionado(files: File[]) {
@@ -299,30 +315,11 @@ export class ConfiguracionComponent implements OnInit {
         this.slideForm.patchValue({ imagenUrl: res.url });
         this.slideForm.get('imagenUrl')?.markAsTouched();
         
-        import('sweetalert2').then(Swal => {
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: '¡Imagen Subida!',
-            text: 'La imagen ha sido cargada y procesada exitosamente en el servidor.',
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-          });
-        });
       },
       error: (err) => {
         this.subiendoImagen.set(false);
         const msg = err?.error?.mensaje || 'Error al subir el archivo de imagen.';
-        import('sweetalert2').then(Swal => {
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error de carga',
-            text: msg,
-            icon: 'error',
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
-        });
+        this.mostrarError(msg);
       }
     });
   }

@@ -12,6 +12,7 @@ import { InstitutionalFileUploadComponent } from '../../../../../shared/componen
 import { LIST_IMPORT_FILE_POLICY } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 @Component({
   selector: 'app-cargar-listas',
@@ -50,7 +51,8 @@ export class CargarListasComponent implements OnInit {
   constructor(
     private listasService: ListasService,
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private readonly notification: InstitutionalNotificationService
   ) {}
 
   ngOnInit() {
@@ -76,7 +78,9 @@ export class CargarListasComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar tipos de listas:', err);
         this.tiposListas.set([]);
-        this.errorTipos.set(err?.error?.mensaje || 'No se pudieron cargar los tipos de listas disponibles.');
+        const mensaje = err?.error?.mensaje || 'No se pudieron cargar los tipos de listas disponibles.';
+        this.errorTipos.set(mensaje);
+        void this.notification.notify({ title: 'No se pudieron cargar los tipos de listas', message: mensaje, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
         this.cargandoTipos.set(false);
       }
     });
@@ -93,7 +97,9 @@ export class CargarListasComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar resumen de listas:', err);
         this.resumenListas.set([]);
-        this.errorResumen.set(err?.error?.mensaje || 'No se pudo cargar el resumen de listas.');
+        const mensaje = err?.error?.mensaje || 'No se pudo cargar el resumen de listas.';
+        this.errorResumen.set(mensaje);
+        void this.notification.notify({ title: 'No se pudo cargar el resumen de listas', message: mensaje, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
         this.cargandoResumen.set(false);
       }
     });
@@ -118,41 +124,19 @@ export class CargarListasComponent implements OnInit {
 
     const archivoSeleccionado = this.archivoSeleccionado();
     if (!archivoSeleccionado) {
-      import('sweetalert2').then((Swal) => {
-        Swal.default.fire({
-          allowOutsideClick: false,
-          title: 'Archivo requerido',
-          text: 'Por favor, seleccione un archivo para cargar.',
-          icon: 'warning',
-          confirmButtonColor: 'var(--ihss-primary-color)'
-        });
-      });
+      void this.notification.notify({ title: 'Archivo requerido', message: 'Por favor, seleccione un archivo para cargar.', icon: 'warning', confirmIcon: 'view', confirmVariant: 'primary' });
       return;
     }
 
     const tipoListaId = parseInt(this.form.get('tipoListaId')?.value, 10);
     this.procesandoCarga.set(true);
 
-    import('sweetalert2').then((Swal) => {
-      Swal.default.fire({
-        title: 'Procesando archivo',
-        text: 'Espere mientras se validan y cargan los registros...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.default.showLoading();
-        }
-      });
-
-      this.listasService.uploadListaCautela(archivoSeleccionado, tipoListaId).subscribe({
+    void this.notification.showLoading('Procesando archivo', 'Espere mientras se validan y cargan los registros...');
+    this.listasService.uploadListaCautela(archivoSeleccionado, tipoListaId).subscribe({
         next: (res) => {
           this.procesandoCarga.set(false);
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Carga Exitosa',
-            text: res.mensaje || 'Los registros fueron cargados exitosamente.',
-            icon: 'success',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notification.closeLoading();
+          void this.notification.notify({ title: 'Carga exitosa', message: res.mensaje || 'Los registros fueron cargados exitosamente.', icon: 'success', confirmIcon: 'confirm', confirmVariant: 'success' });
           // Limpiar archivo seleccionado
           this.archivoSeleccionado.set(null);
           this.form.reset({ tipoListaId: '' });
@@ -163,55 +147,28 @@ export class CargarListasComponent implements OnInit {
           this.procesandoCarga.set(false);
           console.error('Error en validación:', err);
           const msg = err.error?.mensaje || 'Error al validar el archivo. Asegúrese de que tenga el formato y las columnas correctas.';
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error de Validación',
-            text: msg,
-            icon: 'error',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notification.closeLoading();
+          void this.notification.notify({ title: 'Error de validación', message: msg, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
         }
       });
-    });
   }
 
   imprimir(item: ResumenLista) {
     if (!item.tipoListaCautelaId) {
-      import('sweetalert2').then((Swal) => {
-        Swal.default.fire({
-          title: 'Error',
-          text: 'No se puede exportar esta lista porque no tiene un ID de tipo válido.',
-          icon: 'error',
-          confirmButtonColor: 'var(--ihss-primary-color)'
-        });
-      });
+      void this.notification.notify({ title: 'No se puede exportar la lista', message: 'La lista no tiene un ID de tipo válido.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
       return;
     }
 
     if (this.exportandoTipoId()) return;
     this.exportandoTipoId.set(item.tipoListaCautelaId);
 
-    import('sweetalert2').then((Swal) => {
-      Swal.default.fire({
-        title: 'Exportando',
-        text: 'Obteniendo registros para la exportación a Excel...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.default.showLoading();
-        }
-      });
-
-      this.listasService.exportarLista(item.tipoListaCautelaId!).subscribe({
+    void this.notification.showLoading('Exportando lista', 'Obteniendo registros para la exportación a Excel...');
+    this.listasService.exportarLista(item.tipoListaCautelaId!).subscribe({
         next: (registros) => {
           this.exportandoTipoId.set(null);
           if (!registros || registros.length === 0) {
-            Swal.default.fire({
-              allowOutsideClick: false,
-              title: 'Información',
-              text: 'No hay registros en esta lista para exportar.',
-              icon: 'info',
-              confirmButtonColor: 'var(--ihss-primary-color)'
-            });
+            this.notification.closeLoading();
+            void this.notification.notify({ title: 'Sin registros para exportar', message: 'No hay registros en esta lista para exportar.', icon: 'info', confirmIcon: 'view', confirmVariant: 'primary' });
             return;
           }
 
@@ -285,8 +242,8 @@ export class CargarListasComponent implements OnInit {
           XLSX.utils.book_append_sheet(wb, ws, item.lista);
 
           const fileName = `${this.nombreArchivoSeguro(item.lista)}_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
-          Swal.default.close();
-            void this.reportPreview.openExcel(
+          this.notification.closeLoading();
+          void this.reportPreview.openExcel(
               wb,
               fileName,
               `Vista previa de la lista ${item.lista}`,
@@ -297,16 +254,10 @@ export class CargarListasComponent implements OnInit {
         error: (err) => {
           this.exportandoTipoId.set(null);
           console.error('Error al exportar lista:', err);
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error',
-            text: err?.error?.mensaje || 'Ocurrió un error al intentar exportar la lista de cautela.',
-            icon: 'error',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notification.closeLoading();
+          void this.notification.notify({ title: 'No se pudo exportar la lista', message: err?.error?.mensaje || 'Ocurrió un error al intentar exportar la lista de cautela.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
         }
       });
-    });
   }
 
   esInvalido(name: string) {

@@ -7,6 +7,7 @@ import { MatricesRiesgosMonitoreoOperativoComponent } from '../../components/mat
 import { MatricesRiesgosComponent } from '../matrices-riesgos/matrices-riesgos.component';
 import { ConfiguracionCalculoComponent } from '../configuracion-calculo/configuracion-calculo.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 type VistaCiclo = 'matriz' | 'riesgos' | 'mitigacion' | 'monitoreo' | 'configuracion';
 
@@ -26,6 +27,7 @@ type VistaCiclo = 'matriz' | 'riesgos' | 'mitigacion' | 'monitoreo' | 'configura
 })
 export class MatricesRiesgosCicloIntegralComponent {
   private readonly service = inject(MatricesRiesgosService);
+  private readonly notification = inject(InstitutionalNotificationService);
 
   readonly vista = signal<VistaCiclo>('matriz');
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
@@ -62,7 +64,16 @@ export class MatricesRiesgosCicloIntegralComponent {
       error: error => {
         this.evaluaciones.set([]);
         const respuesta = error as { error?: { mensaje?: string }; message?: string };
-        this.error.set(respuesta?.error?.mensaje || respuesta?.message || 'No se pudieron cargar las evaluaciones operativas.');
+        const mensaje = respuesta?.error?.mensaje || respuesta?.message || 'No se pudieron cargar las evaluaciones operativas.';
+        this.error.set(mensaje);
+        void this.notification.notify({
+          title: 'No se pudieron cargar las evaluaciones',
+          message: mensaje,
+          icon: 'error',
+          confirmIcon: 'cancel',
+          confirmLabel: 'Aceptar',
+          confirmVariant: 'danger'
+        });
         this.evaluacionesOperativasEnCarga = false;
       }
     });

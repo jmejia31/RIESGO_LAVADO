@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ListasService } from '../../data-access/listas.service';
 import { TipoListaCautela } from '../../models/listas.models';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
@@ -43,7 +44,8 @@ export class TipoListasComponent implements OnInit {
   constructor(
     private listasService: ListasService,
     private fb: FormBuilder,
-    private confirmation: InstitutionalConfirmationService
+    private confirmation: InstitutionalConfirmationService,
+    private readonly notification: InstitutionalNotificationService
   ) {}
 
   ngOnInit() {
@@ -70,7 +72,9 @@ export class TipoListasComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar tipos de listas:', err);
         this.listas.set([]);
-        this.errorCarga.set(err?.error?.mensaje || 'No se pudieron cargar los tipos de listas de cautela.');
+        const mensaje = err?.error?.mensaje || 'No se pudieron cargar los tipos de listas de cautela.';
+        this.errorCarga.set(mensaje);
+        void this.notification.notify({ title: 'No se pudieron cargar los tipos de listas', message: mensaje, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
         this.cargando.set(false);
       }
     });
@@ -144,25 +148,13 @@ export class TipoListasComponent implements OnInit {
         this.guardando.set(false);
         this.cancelar();
         this.cargar();
-        
-        import('sweetalert2').then((Swal) => {
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Éxito',
-            text: res.mensaje || 'Registro guardado correctamente.',
-            icon: 'success',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-          });
-        });
+        void this.notification.notify({ title: 'Tipo de lista guardado', message: res.mensaje || 'Registro guardado correctamente.', icon: 'success', confirmIcon: 'confirm', confirmVariant: 'success' });
       },
       error: (err) => {
         this.guardando.set(false);
         const msg = err.error?.mensaje || 'Ocurrió un error al guardar.';
         this.errorGuardar.set(msg);
+        void this.notification.notify({ title: 'No se pudo guardar el tipo de lista', message: msg, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
       }
     });
   }
@@ -178,29 +170,15 @@ export class TipoListasComponent implements OnInit {
       confirmVariant: 'danger'
     }).then(confirmed => {
       if (!confirmed) return;
-      import('sweetalert2').then(Swal => {
-        this.listasService.eliminarTipoListaCautela(item.tipoListaCautelaId).subscribe({
+      this.listasService.eliminarTipoListaCautela(item.tipoListaCautelaId).subscribe({
           next: (res) => {
             this.cargar();
-            Swal.default.fire({
-              allowOutsideClick: false,
-              title: 'Eliminado',
-              text: res.mensaje || 'El tipo de lista ha sido eliminado.',
-              icon: 'success',
-              confirmButtonColor: 'var(--ihss-primary-color)'
-            });
+            void this.notification.notify({ title: 'Tipo de lista eliminado', message: res.mensaje || 'El tipo de lista ha sido eliminado.', icon: 'success', confirmIcon: 'confirm', confirmVariant: 'success' });
           },
           error: (err) => {
-            Swal.default.fire({
-              allowOutsideClick: false,
-              title: 'Error',
-              text: err.error?.mensaje || 'No se pudo eliminar el tipo de lista.',
-              icon: 'error',
-              confirmButtonColor: 'var(--ihss-primary-color)'
-            });
+            void this.notification.notify({ title: 'No se pudo eliminar el tipo de lista', message: err.error?.mensaje || 'No se pudo eliminar el tipo de lista.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
           }
         });
-      });
     });
   }
 

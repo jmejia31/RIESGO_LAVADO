@@ -1,23 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
-import Swal from 'sweetalert2';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { ListasService } from '../../data-access/listas.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 import { MonitoreoListasComponent } from './monitoreo-listas.component';
-
-vi.mock('sweetalert2', () => ({
-  default: { fire: vi.fn(), showLoading: vi.fn(), close: vi.fn() }
-}));
 
 describe('MonitoreoListasComponent', () => {
   let fixture: ComponentFixture<MonitoreoListasComponent>;
   let component: MonitoreoListasComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
   let confirmation: { confirm: ReturnType<typeof vi.fn>; confirmWithInput: ReturnType<typeof vi.fn> };
-  const fire = vi.mocked(Swal.fire);
-  const close = vi.mocked(Swal.close);
+  let notification: {
+    notify: ReturnType<typeof vi.fn>;
+    showLoading: ReturnType<typeof vi.fn>;
+    closeLoading: ReturnType<typeof vi.fn>;
+  };
   let createObjectUrl: ReturnType<typeof vi.fn>;
   let revokeObjectUrl: ReturnType<typeof vi.fn>;
 
@@ -53,9 +52,12 @@ describe('MonitoreoListasComponent', () => {
       registrarAuditoriaImpresion: vi.fn(() => of({ success: true })),
       registrarAuditoriaExportacion: vi.fn(() => of({ success: true }))
     };
-    fire.mockReset();
-    close.mockReset();
     confirmation = { confirm: vi.fn().mockResolvedValue(true), confirmWithInput: vi.fn().mockResolvedValue(null) };
+    notification = {
+      notify: vi.fn().mockResolvedValue(undefined),
+      showLoading: vi.fn().mockResolvedValue(undefined),
+      closeLoading: vi.fn()
+    };
     createObjectUrl = vi.fn(() => 'blob:evidencia-prueba');
     revokeObjectUrl = vi.fn();
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectUrl });
@@ -66,6 +68,7 @@ describe('MonitoreoListasComponent', () => {
       providers: [
         { provide: ListasService, useValue: service },
         { provide: InstitutionalConfirmationService, useValue: confirmation },
+        { provide: InstitutionalNotificationService, useValue: notification },
         { provide: ConfiguracionService, useValue: { configSistema: vi.fn(() => null) } },
         { provide: DomSanitizer, useValue: { bypassSecurityTrustResourceUrl: vi.fn(value => value) } }
       ]
@@ -272,10 +275,10 @@ describe('MonitoreoListasComponent', () => {
 
     component.guardarMotivo();
 
-    await vi.waitFor(() => expect(fire).toHaveBeenCalled());
+    await vi.waitFor(() => expect(notification.notify).toHaveBeenCalled());
     expect(service['registrarPositivo']).not.toHaveBeenCalled();
     expect(component.guardandoMotivo()).toBe(false);
-    expect(fire).toHaveBeenCalledWith(expect.objectContaining({ title: 'Campos requeridos' }));
+    expect(notification.notify).toHaveBeenCalledWith(expect.objectContaining({ title: 'Campos requeridos', icon: 'warning' }));
   });
 
   it('registra un positivo manual valido y refresca la lista', async () => {
@@ -332,8 +335,8 @@ describe('MonitoreoListasComponent', () => {
     expect(service['actualizarSeguimiento']).toHaveBeenCalledWith(44, 'Nota corregida', []);
     expect(component.guardandoSeguimiento()).toBe(false);
     expect(component.modoEdicion()).toBe(true);
-    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
-      title: 'Error', text: 'Actualizacion rechazada'
+    expect(notification.notify).toHaveBeenLastCalledWith(expect.objectContaining({
+      title: 'No se pudo guardar el seguimiento', message: 'Actualizacion rechazada', icon: 'error'
     }));
   });
 
@@ -357,7 +360,7 @@ describe('MonitoreoListasComponent', () => {
     component.onManualSeguimientoFilesSelected(selected);
     expect(component.archivosSeleccionados()).toEqual(selected);
     expect(component.archivosSeguimiento()).toEqual(selected);
-    expect(fire).not.toHaveBeenCalled();
+    expect(notification.notify).not.toHaveBeenCalled();
   });
 
   it('cancela la eliminacion de evidencia sin invocar el servicio', async () => {
@@ -390,7 +393,7 @@ describe('MonitoreoListasComponent', () => {
     }));
     expect(component.evidenciasExistentes()).toEqual([conservada]);
     expect(component.listaSeguimientos()[0].evidencias).toEqual([conservada]);
-    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Eliminado' }));
+    expect(notification.notify).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Evidencia eliminada', icon: 'success' }));
   });
 
   it('elimina un seguimiento, cancela su edicion y refresca el historial', async () => {
@@ -421,8 +424,8 @@ describe('MonitoreoListasComponent', () => {
     await vi.waitFor(() => expect(service['eliminarSeguimiento']).toHaveBeenCalledOnce());
     expect(component.modoEdicion()).toBe(true);
     expect(component.seguimientoEditandoId()).toBe(55);
-    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
-      title: 'Error', text: 'Seguimiento protegido'
+    expect(notification.notify).toHaveBeenLastCalledWith(expect.objectContaining({
+      title: 'No se pudo eliminar el seguimiento', message: 'Seguimiento protegido', icon: 'error'
     }));
   });
 
@@ -439,7 +442,7 @@ describe('MonitoreoListasComponent', () => {
     expect(service['descargarEvidenciaBlob']).toHaveBeenCalledWith(71);
     expect(createObjectUrl).toHaveBeenCalledWith(archivo);
     expect(abrir).toHaveBeenCalledWith('blob:evidencia-prueba', '_blank');
-    expect(close).toHaveBeenCalled();
+    expect(notification.closeLoading).toHaveBeenCalled();
   });
 
   it('descarga una evidencia no visualizable mediante un enlace temporal', async () => {
@@ -455,7 +458,7 @@ describe('MonitoreoListasComponent', () => {
     await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
     expect(createObjectUrl).toHaveBeenCalledWith(archivo);
     expect(abrir).not.toHaveBeenCalled();
-    expect(close).toHaveBeenCalled();
+    expect(notification.closeLoading).toHaveBeenCalled();
   });
 
   it('muestra un error controlado cuando no puede descargar la evidencia', async () => {
@@ -467,9 +470,9 @@ describe('MonitoreoListasComponent', () => {
 
     await vi.waitFor(() => expect(service['descargarEvidenciaBlob']).toHaveBeenCalledOnce());
     expect(createObjectUrl).not.toHaveBeenCalled();
-    expect(close).toHaveBeenCalled();
-    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
-      title: 'Error', text: 'No se pudo cargar el archivo de evidencia.'
+    expect(notification.closeLoading).toHaveBeenCalled();
+    expect(notification.notify).toHaveBeenLastCalledWith(expect.objectContaining({
+      title: 'No se pudo cargar la evidencia', message: 'No se pudo cargar el archivo de evidencia.', icon: 'error'
     }));
   });
 
@@ -514,10 +517,10 @@ describe('MonitoreoListasComponent', () => {
 
     component.exportarListaPrincipal();
 
-    await vi.waitFor(() => expect(fire).toHaveBeenCalled());
+    await vi.waitFor(() => expect(notification.notify).toHaveBeenCalled());
     expect(click).not.toHaveBeenCalled();
     expect(component.cargando()).toBe(false);
-    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida' }));
+    expect(notification.notify).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida', icon: 'error' }));
     expect(consoleError).toHaveBeenCalled();
   });
 
@@ -605,10 +608,10 @@ describe('MonitoreoListasComponent', () => {
 
     component.exportarFichaExcelPatrono(patrono);
 
-    await vi.waitFor(() => expect(fire).toHaveBeenCalled());
+    await vi.waitFor(() => expect(notification.notify).toHaveBeenCalled());
     expect(click).not.toHaveBeenCalled();
     expect(component.cargando()).toBe(false);
-    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida' }));
+    expect(notification.notify).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida', icon: 'error' }));
     expect(consoleError).toHaveBeenCalled();
   });
   it('explica la accion de seguimiento universal segun la presencia de motivo', () => {

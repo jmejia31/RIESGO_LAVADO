@@ -2,11 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosCicloIntegralComponent } from './matrices-riesgos-ciclo-integral.component';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 describe('MatricesRiesgosCicloIntegralComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosCicloIntegralComponent>;
   let component: MatricesRiesgosCicloIntegralComponent;
   let service: { listarEvaluaciones: ReturnType<typeof vi.fn> };
+  let notification: { notify: ReturnType<typeof vi.fn> };
 
   const paginadoOperativo = {
     items: [{
@@ -33,9 +35,13 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
     service = {
       listarEvaluaciones: vi.fn().mockReturnValue(of(paginadoOperativo))
     };
+    notification = { notify: vi.fn().mockResolvedValue(undefined) };
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosCicloIntegralComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: InstitutionalNotificationService, useValue: notification }
+      ]
     }).overrideComponent(MatricesRiesgosCicloIntegralComponent, {
       set: { template: '<div class="vista">{{ vista() }}</div>' }
     }).compileComponents();

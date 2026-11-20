@@ -3,12 +3,14 @@ import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosMitigacionComponent } from './matrices-riesgos-mitigacion.component';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 describe('MatricesRiesgosMitigacionComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosMitigacionComponent>;
   let component: MatricesRiesgosMitigacionComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
   let confirmation: { confirm: ReturnType<typeof vi.fn> };
+  let notification: { notify: ReturnType<typeof vi.fn> };
 
   const control = {
     conId: 3,
@@ -46,6 +48,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
 
   beforeEach(async () => {
     confirmation = { confirm: vi.fn().mockResolvedValue(true) };
+    notification = { notify: vi.fn().mockResolvedValue(undefined) };
     service = {
       obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
         { codigo: 'APROBADA', etiqueta: 'Aprobada' }, { codigo: 'BORRADOR', etiqueta: 'Borrador' },
@@ -68,7 +71,8 @@ describe('MatricesRiesgosMitigacionComponent', () => {
       imports: [MatricesRiesgosMitigacionComponent],
       providers: [
         { provide: MatricesRiesgosService, useValue: service },
-        { provide: InstitutionalConfirmationService, useValue: confirmation }
+        { provide: InstitutionalConfirmationService, useValue: confirmation },
+        { provide: InstitutionalNotificationService, useValue: notification }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(MatricesRiesgosMitigacionComponent);
@@ -223,6 +227,19 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.guardarControl();
     expect(service['crearControl']).not.toHaveBeenCalled();
     expect(component.error()).toBe('Seleccione una evaluación y describa el control.');
+  });
+
+  it('usa notificación institucional y no pinta un banner inline para validaciones operativas', async () => {
+    component.evaluacionId = 0;
+    await component.guardarControl();
+    fixture.detectChanges();
+
+    expect(notification.notify).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'No se pudo completar la operación',
+      icon: 'error',
+      confirmIcon: 'cancel'
+    }));
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')).toBeNull();
   });
 
   it('registra efectividad de control con validación de rango (0 a 100)', async () => {

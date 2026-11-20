@@ -8,6 +8,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 @Component({
   selector: 'app-bitacora',
@@ -18,6 +19,7 @@ import { InstitutionalTooltipDirective } from '../../../../../shared/components/
 })
 export class BitacoraComponent implements OnInit {
   private auditoriaService = inject(AuditoriaService);
+  private notification = inject(InstitutionalNotificationService);
   private busquedaTimer: ReturnType<typeof setTimeout> | null = null;
 
   datos = signal<AuditoriaDto[]>([]);
@@ -151,7 +153,15 @@ export class BitacoraComponent implements OnInit {
         console.error('Error al cargar bitácora:', err);
         this.datos.set([]);
         this.totalRegistros.set(0);
-        this.errorCarga.set(err?.error?.mensaje || 'No se pudo cargar la bitácora con los filtros indicados.');
+        const mensaje = err?.error?.mensaje || 'No se pudo cargar la bitácora con los filtros indicados.';
+        this.errorCarga.set(mensaje);
+        void this.notification.notify({
+          title: 'No se pudo cargar la bitácora',
+          message: mensaje,
+          icon: 'error',
+          confirmIcon: 'cancel',
+          confirmVariant: 'danger'
+        });
         this.cargando.set(false);
       }
     });
@@ -211,7 +221,14 @@ export class BitacoraComponent implements OnInit {
 
   private validarRangoFechas(): boolean {
     if (this.filtroFechaInicio && this.filtroFechaFin && this.filtroFechaInicio > this.filtroFechaFin) {
-      this.errorCarga.set('La fecha "Desde" no puede ser mayor que la fecha "Hasta".');
+      const mensaje = 'La fecha "Desde" no puede ser mayor que la fecha "Hasta".';
+      this.errorCarga.set(mensaje);
+      void this.notification.notify({
+        title: 'Rango de fechas inválido',
+        message: mensaje,
+        icon: 'warning',
+        confirmIcon: 'view'
+      });
       this.datos.set([]);
       this.totalRegistros.set(0);
       return false;

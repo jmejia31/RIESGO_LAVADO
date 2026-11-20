@@ -18,6 +18,7 @@ import { DataPaginationComponent } from '../../../../../shared/components/data-p
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { createHttpErrorScopeContext } from '../../../../../core/http/http-error-scope';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
@@ -65,7 +66,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     private cat:  CatalogoService,
     private fb:   FormBuilder,
     private ad:   ActiveDirectorioService,
-    private confirmation: InstitutionalConfirmationService
+    private confirmation: InstitutionalConfirmationService,
+    private readonly notification: InstitutionalNotificationService
   ) {}
 
   ngOnInit() {
@@ -78,14 +80,18 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       },
       error: e => {
         console.error('Error cargando dominios:', e);
-        this.errorCatalogos.set('Error al cargar la lista de dominios.');
+        const mensaje = 'Error al cargar la lista de dominios.';
+        this.errorCatalogos.set(mensaje);
+        void this.notification.notify({ title: 'No se pudieron cargar los dominios', message: mensaje, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
       }
     });
     this.cat.modulos('local').subscribe({
       next: m => this.listaModulos.set(m),
       error: e => {
         console.error('Error cargando módulos:', e);
-        this.errorCatalogos.set('Error al cargar los módulos del sistema.');
+        const mensaje = 'Error al cargar los módulos del sistema.';
+        this.errorCatalogos.set(mensaje);
+        void this.notification.notify({ title: 'No se pudieron cargar los módulos', message: mensaje, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
       }
     });
   }
@@ -182,7 +188,9 @@ export class UsuariosComponent implements OnInit, OnDestroy {
           if (solicitudId !== this.secuenciaCarga) return;
           this.usuarios.set([]);
           this.totalRegistros.set(0);
-          this.errorListado.set(err?.error?.mensaje || 'No se pudo cargar el listado de usuarios.');
+          const mensaje = err?.error?.mensaje || 'No se pudo cargar el listado de usuarios.';
+          this.errorListado.set(mensaje);
+          void this.notification.notify({ title: 'No se pudo cargar el listado de usuarios', message: mensaje, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
           this.cargando.set(false);
         }
       });
@@ -302,6 +310,13 @@ export class UsuariosComponent implements OnInit, OnDestroy {
         }
 
         this.errorGuardar.set(msg);
+        void this.notification.notify({
+          title: 'No se pudo guardar el usuario',
+          message: msg,
+          icon: 'error',
+          confirmIcon: 'cancel',
+          confirmVariant: 'danger'
+        });
       }
     });
   }
@@ -317,40 +332,20 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       confirmVariant: 'primary'
     }).then(confirmed => {
       if (!confirmed) return;
-      import('sweetalert2').then(Swal => {
-          Swal.default.fire({
-            title: 'Procesando...',
-            text: 'Por favor, espere.',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.default.showLoading();
-            }
-          });
-
-          this.http.post<{ success: boolean; mensaje: string }>(
+      void this.notification.showLoading('Procesando reinicio', 'Por favor, espere mientras se genera la nueva clave provisional.');
+      this.http.post<{ success: boolean; mensaje: string }>(
             `${environment.apiUrl}/auth/recuperar-password`, 
             { email: u.email }
           , { context: createHttpErrorScopeContext('local') }).subscribe({
             next: (resp) => {
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Contraseña Reiniciada',
-                text: `Se ha enviado la nueva clave provisional al correo electrónico del usuario.`,
-                icon: 'success',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              void this.notification.notify({ title: 'Contraseña reiniciada', message: 'Se ha enviado la nueva clave provisional al correo electrónico del usuario.', icon: 'success', confirmIcon: 'confirm', confirmVariant: 'success' });
             },
             error: (err) => {
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Error',
-                text: err.error?.mensaje || 'No se pudo reiniciar la contraseña.',
-                icon: 'error',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              void this.notification.notify({ title: 'No se pudo reiniciar la contraseña', message: err.error?.mensaje || 'No se pudo reiniciar la contraseña.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
             }
           });
-      });
     });
   }
 

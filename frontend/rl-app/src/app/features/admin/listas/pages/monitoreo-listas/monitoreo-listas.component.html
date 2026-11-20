@@ -176,12 +176,7 @@
     <!-- Tabla -->
     <div class="relative overflow-x-auto rounded-xl border border-gray-200">
 
-        @if (errorMonitoreo()) {
-          <div class="py-20 flex flex-col items-center justify-center gap-2 text-center px-6">
-            <p class="text-sm font-semibold text-red-700">{{ errorMonitoreo() }}</p>
-            <p class="text-xs text-gray-500">Los datos anteriores no se reemplazaron. Reintente cuando el servicio esté disponible.</p>
-          </div>
-        } @else if (datosFiltrados().length === 0) {
+        @if (datosFiltrados().length === 0) {
           <!-- Vacío -->
           <div class="py-20 flex flex-col items-center justify-center gap-2">
             <svg class="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

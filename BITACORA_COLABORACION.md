@@ -12689,3 +12689,33 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Restricciones:** no se modificaron backend, Oracle, migraciones, contratos REST, `main`, producción ni archivos globales protegidos. No se iniciaron ni detuvieron servicios; permanecen según el levantamiento manual previo.
 - **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; la aceptación visual del propietario y la publicación remota quedan pendientes hasta ejecutar el cierre de esta intervención.
 - **Punto exacto de continuación:** publicar los commits locales pendientes en `origin/desarrollo`, verificar paridad remota y revisar en navegador el modal mediano y el botón (+).
+
+## 2026-11-20 15:53 -06:00 — Migración de feedback inline a notificación institucional y normalización de scroll (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `e31fa93b95958579fd2d72a26d0dd578641c9f2f`; autor `COD`.
+- **Objetivo:** corregir los banners rojos/verdes visibles en Monitoreo Operativo, Mitigación y las pantallas de carga del ciclo de Matrices de Riesgos, usando el servicio institucional compartido; uniformar los scrolls internos de las listas operativas.
+- **Cambios funcionales:**
+  - Monitoreo Operativo y Mitigación ahora envían errores, validaciones y confirmaciones de operación a `InstitutionalNotificationService`; se retiraron sus banners de página `role="alert"`/`output`.
+  - Gestión de Riesgos y el contenedor del ciclo notifican institucionalmente los fallos de carga; los errores de validación propios de formularios/modales se conservaron dentro de su contexto.
+  - Las listas de señales, automonitoreos, controles, planes y actividades usan el mismo patrón `overflow-y-auto overscroll-contain` y límite visual `42rem`; no se cambió Configuración de cálculo.
+  - Se añadieron regresiones que comprueban que el aviso se emite por el servicio institucional y que no se renderiza un banner inline.
+- **Archivos modificados:** componentes y pruebas de Gestión de Riesgos, Mitigación, Monitoreo Operativo y Ciclo Integral; no se modificaron backend, Oracle, migraciones ni `frontend/rl-app/src/styles.css`.
+- **Pruebas ejecutadas:** `4` archivos / `78` pruebas focalizadas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; validador de modales PASS (`31`); validador de diálogos nativos PASS (`0` usos productivos); `git diff --check` PASS.
+- **No ejecutado:** backend .NET, Oracle, E2E de navegador y Quality Gate completo; este cambio es frontend y los servicios manuales no fueron iniciados ni detenidos.
+- **Preservación:** no se tocó Configuración de cálculo, `main`, producción, Oracle ni archivos ajenos sin seguimiento; esos archivos permanecen fuera del stage.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; publicación en `origin/desarrollo` y validación visual manual quedan pendientes del cierre.
+- **Punto exacto de continuación:** ejecutar el cierre documental, commit selectivo, `git push origin desarrollo`, verificar paridad remota y revisar en navegador que ya no aparezcan banners inline.
+
+## 2026-11-20 16:45 -06:00 — Estandarización transversal de notificaciones institucionales (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `e31fa93b95958579fd2d72a26d0dd578641c9f2f`; autor `COD`.
+- **Objetivo:** eliminar alertas operativas genéricas restantes y utilizar el estándar institucional compartido en las interfaces administrativas, sin alterar Configuración de cálculo, backend, Oracle, migraciones ni reglas de negocio.
+- **Cambios funcionales:** `InstitutionalNotificationService` ahora centraliza notificaciones, cargas y diálogos informativos HTML con el shell institucional; se migraron feedback de Configuración del Sistema, Cargar Listas, Tipo de Listas, Coincidencias, Usuarios, Bitácora, Monitoreo de Listas, vista previa de reportes, login y error HTTP global. Se retiraron banners operativos genéricos donde la notificación institucional ya es la fuente de feedback; las validaciones de campo y estados de carga contextuales se conservaron.
+- **Corrección de regresión:** Monitoreo de Listas dejó de depender de SweetAlert directo en sus pruebas y ahora verifica `InstitutionalNotificationService`; el efecto de error HTTP global conserva compatibilidad con las pruebas manuales del layout mediante contexto de inyección opcional.
+- **Scroll:** Señales de alerta y Automonitoreo ya contaban con el patrón institucional `max-h-[42rem] overflow-y-auto overscroll-contain`; se omitió cualquier cambio adicional.
+- **Configuración protegida:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/configuracion-calculo/` no fue modificado.
+- **Pruebas ejecutadas:** Angular completo `98` archivos / `1075` pruebas PASS; focalizadas `3` archivos / `53` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; validador de alertas paralelas PASS (`0` confirmaciones SweetAlert directas; solo formularios de entrada de login clasificados); validador de modales PASS (`31`); diálogos nativos PASS (`0` usos productivos); `git diff --check` sin errores.
+- **No ejecutado:** backend .NET, Oracle, E2E de navegador y `tools/run_quality_gates.ps1`; no se iniciaron ni detuvieron servicios en esta intervención, conforme a la preferencia de levantamiento manual del propietario.
+- **Preservación:** no se tocó `main`, producción, Oracle, backend, migraciones, `frontend/rl-app/src/styles.css`, Configuración de cálculo ni archivos sin seguimiento ajenos.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; la validación visual manual del propietario y la publicación remota quedan pendientes del cierre de esta intervención.
+- **Punto exacto de continuación:** stage selectivo de archivos rastreados, commit, push a `origin/desarrollo`, verificación de paridad remota y revisión visual manual de las notificaciones institucionales.

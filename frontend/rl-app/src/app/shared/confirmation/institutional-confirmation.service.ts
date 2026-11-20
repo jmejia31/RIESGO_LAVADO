@@ -22,11 +22,12 @@ export interface InstitutionalConfirmationInputOptions extends InstitutionalConf
 
 export interface InstitutionalConfirmationDialog {
   fire(options: SweetAlertOptions): Promise<SweetAlertResult>;
+  close?: () => void;
 }
 
 export const INSTITUTIONAL_CONFIRMATION_DIALOG = new InjectionToken<InstitutionalConfirmationDialog>(
   'INSTITUTIONAL_CONFIRMATION_DIALOG',
-  { providedIn: 'root', factory: () => ({ fire: options => Swal.fire(options) }) }
+  { providedIn: 'root', factory: () => ({ fire: options => Swal.fire(options), close: () => Swal.close() }) }
 );
 
 function escapeHtml(value: string): string {

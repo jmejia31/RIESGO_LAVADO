@@ -17,6 +17,7 @@ import { InstitutionalFileUploadComponent } from '../../../../../shared/componen
 import { INSTITUTIONAL_EVIDENCE_FILE_POLICY, InstitutionalFileUploadPolicy } from '../../../../../shared/components/institutional-file-upload/institutional-file-upload-policy';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
@@ -45,6 +46,7 @@ type RespuestaMonitoreo = {
 export class MonitoreoListasComponent implements OnInit, OnDestroy {
   protected readonly reportPreview = inject(ReportPreviewService);
   private readonly confirmation = inject(InstitutionalConfirmationService);
+  private readonly notification = inject(InstitutionalNotificationService);
   private configService = inject(ConfiguracionService);
   private filtroSeguimientoTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly solicitudesMonitoreo$ = new Subject<SolicitudMonitoreo>();
@@ -361,7 +363,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     this.iniciarPipelineMonitoreo();
     const tipo = options.tipo ?? this.tipoActivo();
     if (tipo === 'empleado' && this.rangoPlanillaInvalido()) {
-      this.errorMonitoreo.set('El mes inicial de planilla no puede ser posterior al mes final.');
+      const mensaje = 'El mes inicial de planilla no puede ser posterior al mes final.';
+      this.errorMonitoreo.set(mensaje);
+      this.notificar('Rango de planilla inválido', mensaje, 'warning', 'view');
       this.cargando.set(false);
       this.contextoMonitoreoCargado = null;
       this.contextoMonitoreoEnCarga = null;
@@ -396,7 +400,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
             this.contextoMonitoreoEnCarga = null;
           }
           if (tipo === this.tipoActivo()) {
-            this.errorMonitoreo.set(this.mensajeErrorApi(err, 'No se pudieron cargar las coincidencias. Los datos mostrados anteriormente se conservaron.'));
+            const mensaje = this.mensajeErrorApi(err, 'No se pudieron cargar las coincidencias. Los datos mostrados anteriormente se conservaron.');
+            this.errorMonitoreo.set(mensaje);
+            this.notificar('No se pudieron cargar las coincidencias', mensaje, 'error', 'cancel');
             this.cargando.set(false);
           }
           return EMPTY;
@@ -546,15 +552,28 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     return err?.error?.mensaje || err?.error?.message || fallback;
   }
 
+  private notificar(title: string, message: string, icon: 'success' | 'error' | 'warning' | 'info', confirmIcon: 'confirm' | 'cancel' | 'view' | 'download' = 'confirm'): void {
+    void this.notification.notify({
+      title,
+      message,
+      icon,
+      confirmIcon,
+      confirmVariant: icon === 'error' ? 'danger' : icon === 'success' ? 'success' : 'primary'
+    });
+  }
+
+  private mostrarCarga(title: string, message: string): void {
+    void this.notification.showLoading(title, message);
+  }
+
   private bloquearIdentidad(item: { estadoIdentidad?: string; estadoAsociacion?: string }): boolean {
     if (this.esIdentidadOperable(item)) return false;
-    void import('sweetalert2').then(Swal => Swal.default.fire({
-      allowOutsideClick: false,
-      title: 'Operación bloqueada',
-      text: this.mensajeErrorApi({ error: { codigo: item.estadoIdentidad === 'AMBIGUOUS' ? 'AMBIGUOUS_IDENTITY' : 'UNVERIFIED_ASSOCIATION' } }, 'La identidad no está verificada.'),
-      icon: 'warning',
-      confirmButtonColor: 'var(--ihss-primary-color)'
-    }));
+    this.notificar(
+      'Operación bloqueada',
+      this.mensajeErrorApi({ error: { codigo: item.estadoIdentidad === 'AMBIGUOUS' ? 'AMBIGUOUS_IDENTITY' : 'UNVERIFIED_ASSOCIATION' } }, 'La identidad no está verificada.'),
+      'warning',
+      'view'
+    );
     return true;
   }
 
@@ -1534,29 +1553,13 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   private manejarErrorAuditoriaObligatoria(err: unknown, operacion: string) {
     console.error(`No se pudo registrar auditoría de ${operacion}:`, err);
     this.cargando.set(false);
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        allowOutsideClick: false,
-        title: 'Auditoría requerida',
-        text: `No se pudo registrar la auditoría de ${operacion}. La operación fue cancelada.`,
-        icon: 'error',
-        confirmButtonColor: 'var(--ihss-primary-color)'
-      });
-    });
+    this.notificar('Auditoría requerida', `No se pudo registrar la auditoría de ${operacion}. La operación fue cancelada.`, 'error', 'cancel');
   }
 
   public manejarErrorReporte(err: unknown, operacion: string): void {
     console.error(`No se pudo completar la ${operacion}:`, err);
     this.cargando.set(false);
-    void import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        allowOutsideClick: false,
-        title: 'Reporte no generado',
-        text: this.mensajeErrorApi(err, `No se pudo completar la ${operacion}. No se creó ningún archivo vacío.`),
-        icon: 'error',
-        confirmButtonColor: 'var(--ihss-primary-color)'
-      });
-    });
+    this.notificar('Reporte no generado', this.mensajeErrorApi(err, `No se pudo completar la ${operacion}. No se creó ningún archivo vacío.`), 'error', 'cancel');
   }
 
   private registrarAuditoriaFichaExcel(noDocumento: string, tipo: string, nombre: string, fileName: string, cantidadSeguimientos: number, rangoSeguimiento: RangoSeguimientoReporte) {
@@ -2401,15 +2404,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       nombreCompleto = this.formManualNombre().trim();
       tipoPositivoId = this.formManualTipoPositivoId() || 1;
       if (!noDocumento || !nombreCompleto || !tipoPositivoId) {
-        import('sweetalert2').then(Swal => {
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Campos requeridos',
-            text: 'Por favor complete todos los campos obligatorios del registro manual.',
-            icon: 'warning',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
-        });
+        this.notificar('Campos requeridos', 'Por favor complete todos los campos obligatorios del registro manual.', 'warning', 'view');
         return;
       }
     } else {
@@ -2435,15 +2430,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     }
 
     if (!docId || !cautelaId || !origenRegistro || !motivo) {
-      import('sweetalert2').then(Swal => {
-        Swal.default.fire({
-          allowOutsideClick: false,
-          title: 'Campos requeridos',
-          text: 'Por favor ingrese el motivo de ingreso a la lista de positivos.',
-          icon: 'warning',
-          confirmButtonColor: 'var(--ihss-primary-color)'
-        });
-      });
+      this.notificar('Campos requeridos', 'Por favor ingrese el motivo de ingreso a la lista de positivos.', 'warning', 'view');
       return;
     }
 
@@ -2472,46 +2459,27 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       ...(idRegistroFuente ? { idRegistroFuente } : {})
     };
 
-    import('sweetalert2').then(Swal => {
-      this.listasService.registrarPositivo(dto).subscribe({
+    this.listasService.registrarPositivo(dto).subscribe({
         next: (resp) => {
           if (notaSegFinal) {
             this.listasService.registrarSeguimiento(noDocumento, notaSegFinal, archivosSeg, tipoPositivoId, idRegistroFuente ?? undefined).subscribe({
               next: () => {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();
-                Swal.default.fire({
-                  allowOutsideClick: false,
-                  title: 'Registro Completo',
-                  text: 'Se ha registrado el motivo y el primer seguimiento correctamente.',
-                  icon: 'success',
-                  confirmButtonColor: 'var(--ihss-primary-color)'
-                });
+                this.notificar('Registro completo', 'Se ha registrado el motivo y el primer seguimiento correctamente.', 'success');
                 this.cargarDatos({ force: true, mostrarLoader: false });
               },
               error: (errSeg) => {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();
-                Swal.default.fire({
-                  allowOutsideClick: false,
-                  title: 'Registro Parcial',
-                  text: 'El motivo se registró con éxito, pero hubo un error al registrar el seguimiento: ' + (errSeg.error?.mensaje || 'Error desconocido'),
-                  icon: 'warning',
-                  confirmButtonColor: 'var(--ihss-primary-color)'
-                });
+                this.notificar('Registro parcial', 'El motivo se registró con éxito, pero hubo un error al registrar el seguimiento: ' + (errSeg.error?.mensaje || 'Error desconocido'), 'warning', 'view');
                 this.cargarDatos({ force: true, mostrarLoader: false });
               }
             });
           } else {
             this.guardandoMotivo.set(false);
             this.cerrarModalMotivo();
-            Swal.default.fire({
-              allowOutsideClick: false,
-              title: 'Registro Exitoso',
-              text: resp.mensaje || 'Se ha registrado el motivo correctamente.',
-              icon: 'success',
-              confirmButtonColor: 'var(--ihss-primary-color)'
-            });
+            this.notificar('Registro exitoso', resp.mensaje || 'Se ha registrado el motivo correctamente.', 'success');
             this.cargarDatos({ force: true, mostrarLoader: false });
           }
         },
@@ -2520,16 +2488,9 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           if (err?.status === 499) {
             return;
           }
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error',
-            text: err.error?.mensaje || 'No se pudo guardar el registro.',
-            icon: 'error',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notificar('No se pudo guardar el registro', err.error?.mensaje || 'No se pudo guardar el registro.', 'error', 'cancel');
         }
       });
-    });
   }
 
   darSeguimiento(row: any) {
@@ -2617,15 +2578,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     const desde = this.filtroSeguimientoDesde();
     const hasta = this.filtroSeguimientoHasta();
     if (desde && hasta && desde > hasta) {
-      import('sweetalert2').then(Swal => {
-        Swal.default.fire({
-          allowOutsideClick: false,
-          title: 'Rango no valido',
-          text: 'La fecha desde no puede ser mayor que la fecha hasta.',
-          icon: 'warning',
-          confirmButtonColor: 'var(--ihss-primary-color)'
-        });
-      });
+      this.notificar('Rango no válido', 'La fecha desde no puede ser mayor que la fecha hasta.', 'warning', 'view');
       return;
     }
 
@@ -2712,20 +2665,14 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   }
 
   eliminarEvidenciaExistente(evi: Evidencia) {
-    import('sweetalert2').then(async Swal => {
+    void (async () => {
       const motivoEliminacion = await this.solicitarMotivoEliminacion(
         '¿Eliminar evidencia?',
         `Se eliminará lógicamente el archivo ${evi.nombreArchivo}.`
       );
 
       if (motivoEliminacion) {
-          Swal.default.fire({
-            title: 'Eliminando...',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.default.showLoading();
-            }
-          });
+          this.mostrarCarga('Eliminando evidencia', 'Espere mientras se actualiza la evidencia documental.');
 
           this.listasService.eliminarEvidencia(evi.evidenciaId, motivoEliminacion).subscribe({
             next: (resp) => {
@@ -2742,26 +2689,16 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                 })
               );
 
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Eliminado',
-                text: resp.mensaje || 'Evidencia eliminada correctamente.',
-                icon: 'success',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              this.notificar('Evidencia eliminada', resp.mensaje || 'Evidencia eliminada correctamente.', 'success');
             },
             error: (err) => {
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Error',
-                text: err.error?.mensaje || 'No se pudo eliminar la evidencia.',
-                icon: 'error',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              this.notificar('No se pudo eliminar la evidencia', err.error?.mensaje || 'No se pudo eliminar la evidencia.', 'error', 'cancel');
             }
           });
       }
-    });
+    })();
   }
 
   async guardarSeguimiento(): Promise<void> {
@@ -2785,8 +2722,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     this.guardandoSeguimiento.set(true);
 
-    import('sweetalert2').then(Swal => {
-      const request$ = this.modoEdicion()
+    const request$ = this.modoEdicion()
         ? this.listasService.actualizarSeguimiento(this.seguimientoEditandoId()!, motivo, archivos)
         : this.listasService.registrarSeguimiento(entidad.noDocumento, motivo, archivos, entidad.tipoPositivoId, entidad.idRegistroFuente);
 
@@ -2797,13 +2733,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           
           this.cancelarEdicion();
           
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Éxito',
-            text: resp.mensaje || (editMode ? 'Seguimiento actualizado exitosamente.' : 'Seguimiento registrado exitosamente.'),
-            icon: 'success',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notificar('Seguimiento guardado', resp.mensaje || (editMode ? 'Seguimiento actualizado exitosamente.' : 'Seguimiento registrado exitosamente.'), 'success');
 
           this.cargarSeguimientos(entidad.noDocumento, entidad.tipoPositivoId, entidad.idRegistroFuente);
         },
@@ -2812,32 +2742,16 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           if (err?.status === 499) {
             return;
           }
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error',
-            text: err.error?.mensaje || 'No se pudo guardar el seguimiento.',
-            icon: 'error',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notificar('No se pudo guardar el seguimiento', err.error?.mensaje || 'No se pudo guardar el seguimiento.', 'error', 'cancel');
         }
       });
-    });
   }
 
   descargarEvidencia(evi: Evidencia) {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: 'Cargando archivo...',
-        text: 'Por favor, espere.',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.default.showLoading();
-        }
-      });
-
-      this.listasService.descargarEvidenciaBlob(evi.evidenciaId).subscribe({
+    this.mostrarCarga('Cargando archivo', 'Por favor, espere mientras se recupera la evidencia.');
+    this.listasService.descargarEvidenciaBlob(evi.evidenciaId).subscribe({
         next: (blob) => {
-          Swal.default.close();
+          this.notification.closeLoading();
           const mimeType = blob.type || evi.tipoMime;
           const blobUrl = URL.createObjectURL(blob);
 
@@ -2856,34 +2770,21 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
         },
         error: (err) => {
-          Swal.default.close();
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error',
-            text: 'No se pudo cargar el archivo de evidencia.',
-            icon: 'error',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notification.closeLoading();
+          this.notificar('No se pudo cargar la evidencia', 'No se pudo cargar el archivo de evidencia.', 'error', 'cancel');
         }
       });
-    });
   }
 
   eliminarSeguimiento(seg: Seguimiento) {
-    import('sweetalert2').then(async Swal => {
+    void (async () => {
       const motivoEliminacion = await this.solicitarMotivoEliminacion(
         '¿Eliminar seguimiento?',
         'Esta acción realizará una eliminación lógica de la nota de seguimiento.'
       );
 
       if (motivoEliminacion) {
-          Swal.default.fire({
-            title: 'Eliminando...',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.default.showLoading();
-            }
-          });
+          this.mostrarCarga('Eliminando seguimiento', 'Espere mientras se actualiza el historial.');
 
           this.listasService.eliminarSeguimiento(seg.detalleListaId, motivoEliminacion).subscribe({
             next: (resp) => {
@@ -2891,13 +2792,8 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
                 this.cancelarEdicion();
               }
 
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Eliminado',
-                text: resp.mensaje || 'El seguimiento ha sido eliminado correctamente.',
-                icon: 'success',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              this.notificar('Seguimiento eliminado', resp.mensaje || 'El seguimiento ha sido eliminado correctamente.', 'success');
 
               const entidad = this.entidadSeleccionada();
               if (entidad) {
@@ -2905,17 +2801,12 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
               }
             },
             error: (err) => {
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Error',
-                text: err.error?.mensaje || 'No se pudo eliminar el seguimiento.',
-                icon: 'error',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              this.notificar('No se pudo eliminar el seguimiento', err.error?.mensaje || 'No se pudo eliminar el seguimiento.', 'error', 'cancel');
             }
           });
       }
-    });
+    })();
   }
 
   obtenerIconoArchivo(mime: string): string {

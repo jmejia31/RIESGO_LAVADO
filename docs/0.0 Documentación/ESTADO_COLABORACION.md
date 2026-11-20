@@ -5751,3 +5751,29 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Servicios:** no iniciados ni detenidos por `COD`; se conserva el estado manual previo de backend `5043` y frontend `4200`.
 - **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente publicar en `origin/desarrollo` y realizar validación visual manual del propietario.
 - **Punto exacto de continuación:** publicar `898635b2` y la documentación, verificar `origin/desarrollo`, y comprobar en navegador el modal mediano y el icono (+).
+
+## Estado vigente — Feedback institucional y scroll operativo — 2026-11-20 15:53 -06:00 (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`.
+- **Base SHA:** `e31fa93b95958579fd2d72a26d0dd578641c9f2f`.
+- **Alcance:** Monitoreo Operativo, Mitigación, Gestión de Riesgos y carga operativa del Ciclo Integral. Configuración de cálculo no fue modificada.
+- **Resultado:** los avisos de error, validación y éxito de estas superficies se emiten por `InstitutionalNotificationService`; los banners de página inline fueron retirados. Se conservan los mensajes internos de formularios/modales cuando son parte del contexto de captura. Las listas largas usan scroll interno con el patrón institucional común y límite de `42rem`.
+- **Archivos:** componentes y pruebas de Gestión, Mitigación, Monitoreo y Ciclo Integral; sin cambios en backend, Oracle, migraciones, estilos globales protegidos ni archivos no relacionados.
+- **Verificación:** `4/4` archivos y `78/78` pruebas focalizadas PASS; lint PASS; build PASS con advertencias preexistentes; modal validator `31` PASS; native-dialog validator PASS; diff check PASS.
+- **No verificado:** E2E visual con navegador, backend/Oracle y Quality Gate completo. Los servicios manuales no fueron iniciados ni detenidos por `COD`.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; falta commit/push y revisión visual del propietario.
+- **Punto de continuación:** publicar selectivamente el código y estos documentos en `origin/desarrollo`, verificar el SHA remoto y revisar las notificaciones institucionales y los scrolls en el navegador.
+
+## Estado vigente — Estandarización transversal de notificaciones institucionales — 2026-11-20 16:45 -06:00 (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`.
+- **Base SHA:** `e31fa93b95958579fd2d72a26d0dd578641c9f2f`.
+- **Alcance implementado:** migración de feedback operativo de Configuración del Sistema, Cargar Listas, Tipo de Listas, Coincidencias, Usuarios, Bitácora, Monitoreo de Listas, vista previa de reportes, login y error HTTP global al `InstitutionalNotificationService`; se retiraron banners operativos genéricos donde correspondía y se conservaron validaciones de campo/estados contextuales.
+- **Correcciones técnicas:** se añadieron carga institucional y diálogo HTML al servicio compartido; Monitoreo de Listas ya no prueba SweetAlert directo; el efecto de error global del layout se crea con contexto Angular válido y dependencia opcional para no romper pruebas manuales.
+- **Scroll:** Señales de alerta y Automonitoreo ya tenían scroll interno institucional de `42rem`; no se modificaron en esta intervención.
+- **Configuración de cálculo:** expresamente intacta; no se modificaron sus archivos.
+- **Verificación:** Angular `98/98` suites y `1075/1075` pruebas PASS; focalizada `3/3` y `53/53` PASS; lint/build PASS con advertencias preexistentes; validadores de alertas paralelas, modales (`31`), diálogos nativos (`0` usos productivos) y diff PASS.
+- **No verificado:** backend .NET, Oracle, E2E de navegador y Quality Gate completo. No se iniciaron ni detuvieron servicios.
+- **Preservación:** backend, Oracle, migraciones, `main`, producción, estilos globales protegidos, Configuración de cálculo y archivos sin seguimiento ajenos permanecen sin cambios.
+- **Estado actual:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente commit/push y revisión visual manual del propietario.
+- **Punto de continuación:** stage selectivo, commit y `git push origin desarrollo`; verificar `HEAD == origin/desarrollo` y entregar al propietario para revisión de alertas institucionales.

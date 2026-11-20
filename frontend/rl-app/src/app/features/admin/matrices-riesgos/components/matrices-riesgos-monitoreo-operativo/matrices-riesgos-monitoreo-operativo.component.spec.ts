@@ -3,12 +3,14 @@ import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosMonitoreoOperativoComponent } from './matrices-riesgos-monitoreo-operativo.component';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 
 describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosMonitoreoOperativoComponent>;
   let component: MatricesRiesgosMonitoreoOperativoComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
   let confirmation: { confirm: ReturnType<typeof vi.fn> };
+  let notification: { notify: ReturnType<typeof vi.fn> };
 
   const resumen = {
     fechaGeneracion: '2026-08-07T12:00:00Z',
@@ -52,6 +54,7 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
 
   beforeEach(async () => {
     confirmation = { confirm: vi.fn().mockResolvedValue(true) };
+    notification = { notify: vi.fn().mockResolvedValue(undefined) };
     service = {
       obtenerCatalogoEstadosEvaluacion: vi.fn().mockReturnValue(of([
         { codigo: 'APROBADA', etiqueta: 'Aprobada' }, { codigo: 'BORRADOR', etiqueta: 'Borrador' },
@@ -77,7 +80,8 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
       imports: [MatricesRiesgosMonitoreoOperativoComponent],
       providers: [
         { provide: MatricesRiesgosService, useValue: service },
-        { provide: InstitutionalConfirmationService, useValue: confirmation }
+        { provide: InstitutionalConfirmationService, useValue: confirmation },
+        { provide: InstitutionalNotificationService, useValue: notification }
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(MatricesRiesgosMonitoreoOperativoComponent);
@@ -232,6 +236,19 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     component.alertaIndicador = 'I'.repeat(151);
     component.crearAlerta();
     expect(component.error()).toBe('Revise las longitudes máximas permitidas de la alerta.');
+  });
+
+  it('usa notificación institucional y no pinta un banner inline para errores operativos', async () => {
+    component.evaluacionId = 0;
+    await component.crearAlerta();
+    fixture.detectChanges();
+
+    expect(notification.notify).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'No se pudo completar la operación',
+      icon: 'error',
+      confirmIcon: 'cancel'
+    }));
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')).toBeNull();
   });
 
   it('alterna el estado de una alerta activa e inactiva', async () => {

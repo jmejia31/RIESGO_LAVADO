@@ -7,6 +7,7 @@ import { ConfiguracionService } from '../../../../core/configuration/configuraci
 import { LoginSlide } from '../../../../core/configuration/configuracion.models';
 import { ActionIconComponent, renderActionIconSvg } from '../../../../shared/components/action-icon/action-icon.component';
 import { InstitutionalTooltipDirective } from '../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
+import { InstitutionalNotificationService } from '../../../../shared/notification/institutional-notification.service';
 
 @Component({
   selector:    'app-login',
@@ -21,6 +22,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   public configService = inject(ConfiguracionService);
   private route = inject(ActivatedRoute);
+  private notification = inject(InstitutionalNotificationService);
 
   form: FormGroup;
   cargando  = signal(false);
@@ -60,27 +62,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   verificarExpiracion() {
     const razon = this.route.snapshot.queryParamMap.get('razon');
     if (razon === 'expirada') {
-      import('sweetalert2').then(Swal => {
-        Swal.default.fire({
-          allowOutsideClick: false,
-          title: 'Sesión Expirada',
-          text: 'Su sesión ha caducado por inactividad. Por favor, ingrese de nuevo.',
-          icon: 'info',
-          confirmButtonText: 'Entendido',
-          confirmButtonColor: 'var(--ihss-primary-color)'
-        });
-      });
+      void this.notification.notify({ title: 'Sesión expirada', message: 'Su sesión ha caducado por inactividad. Por favor, ingrese de nuevo.', icon: 'info', confirmIcon: 'refresh', confirmVariant: 'primary' });
     } else if (razon === 'cambio-password') {
-      import('sweetalert2').then(Swal => {
-        Swal.default.fire({
-          allowOutsideClick: false,
-          title: 'Cambio de contraseña requerido',
-          text: 'Debe iniciar sesión y completar el cambio de contraseña provisional antes de acceder al sistema.',
-          icon: 'warning',
-          confirmButtonText: 'Entendido',
-          confirmButtonColor: 'var(--ihss-primary-color)'
-        });
-      });
+      void this.notification.notify({ title: 'Cambio de contraseña requerido', message: 'Debe iniciar sesión y completar el cambio de contraseña provisional antes de acceder al sistema.', icon: 'warning', confirmIcon: 'lock', confirmVariant: 'primary' });
     }
   }
 
@@ -256,13 +240,12 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
       }).then((result) => {
         if (result.isConfirmed && result.value) {
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: '¡Contraseña Actualizada!',
-            text: 'Su contraseña ha sido cambiada con éxito. Iniciando sesión...',
+          void this.notification.notify({
+            title: 'Contraseña actualizada',
+            message: 'Su contraseña ha sido cambiada con éxito. Iniciando sesión...',
             icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
+            confirmIcon: 'confirm',
+            confirmVariant: 'success'
           }).then(() => {
             const nuevaPass = (result.value as any).newPassword;
             const email = this.form.value.email;
@@ -318,12 +301,12 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
       }).then((result) => {
         if (result.isConfirmed && result.value) {
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: '¡Correo Enviado!',
-            text: result.value.mensaje || 'Se ha enviado una clave provisional a su correo electrónico.',
+          void this.notification.notify({
+            title: 'Correo enviado',
+            message: result.value.mensaje || 'Se ha enviado una clave provisional a su correo electrónico.',
             icon: 'success',
-            confirmButtonColor: 'var(--ihss-primary-color)'
+            confirmIcon: 'confirm',
+            confirmVariant: 'success'
           });
         }
       });

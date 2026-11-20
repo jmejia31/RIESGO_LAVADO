@@ -11,6 +11,7 @@ import { DataPaginationComponent } from '../../../../../shared/components/data-p
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
+import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
 import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 
@@ -23,6 +24,7 @@ import { InstitutionalTooltipDirective } from '../../../../../shared/components/
 })
 export class CoincidenciasPatronoComponent implements OnInit {
   private readonly reportPreview = inject(ReportPreviewService);
+  private readonly notification = inject(InstitutionalNotificationService);
   resumen = signal<CoincidenciaPatronoResumen[]>([]);
   cargando = signal(true);
   
@@ -238,39 +240,17 @@ export class CoincidenciasPatronoComponent implements OnInit {
   }
 
   private mostrarError(title: string, text: string) {
-    import('sweetalert2').then((Swal) => {
-      Swal.default.fire({
-        allowOutsideClick: false,
-        title,
-        text,
-        icon: 'error',
-        confirmButtonColor: 'var(--ihss-primary-color)'
-      });
-    });
+    void this.notification.notify({ title, message: text, icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
   }
 
   imprimir(item: CoincidenciaPatronoResumen) {
     const f = item.fechaEncontro.split('T')[0];
-    import('sweetalert2').then((Swal) => {
-      Swal.default.fire({
-        title: 'Exportando',
-        text: 'Obteniendo registros detallados para la exportación a Excel...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.default.showLoading();
-        }
-      });
-
-      this.listasService.getDetalleCoincidenciasPatronoParaExportar(f).subscribe({
+    void this.notification.showLoading('Exportando coincidencias', 'Obteniendo registros detallados para la exportación a Excel...');
+    this.listasService.getDetalleCoincidenciasPatronoParaExportar(f).subscribe({
         next: (registros) => {
           if (!registros || registros.length === 0) {
-            Swal.default.fire({
-              allowOutsideClick: false,
-              title: 'Información',
-              text: 'No hay registros de coincidencias para esta fecha para exportar.',
-              icon: 'info',
-              confirmButtonColor: 'var(--ihss-primary-color)'
-            });
+            this.notification.closeLoading();
+            void this.notification.notify({ title: 'Sin registros para exportar', message: 'No hay registros de coincidencias para esta fecha para exportar.', icon: 'info', confirmIcon: 'view', confirmVariant: 'primary' });
             return;
           }
 
@@ -356,7 +336,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
             }
           ).subscribe({
             next: () => {
-              Swal.default.close();
+              this.notification.closeLoading();
                 void this.reportPreview.openExcel(
                   wb,
                   fileName,
@@ -366,29 +346,18 @@ export class CoincidenciasPatronoComponent implements OnInit {
             },
             error: err => {
               console.error('No se pudo registrar auditoría de exportación:', err);
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Auditoría requerida',
-                text: 'No se pudo registrar la auditoría de exportación. La exportación fue cancelada.',
-                icon: 'error',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              void this.notification.notify({ title: 'Auditoría requerida', message: 'No se pudo registrar la auditoría de exportación. La exportación fue cancelada.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
             }
           });
 
         },
         error: (err) => {
           console.error('Error al exportar:', err);
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error',
-            text: 'Ocurrió un error al intentar exportar las coincidencias.',
-            icon: 'error',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notification.closeLoading();
+          void this.notification.notify({ title: 'No se pudieron exportar las coincidencias', message: 'Ocurrió un error al intentar exportar las coincidencias.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
         }
       });
-    });
   }
 
   calificar(r: CoincidenciaPatronoDetalle, tipoCalificacionId: number) {
@@ -403,43 +372,23 @@ export class CoincidenciasPatronoComponent implements OnInit {
       confirmVariant: 'primary'
     }).then(confirmed => {
       if (!confirmed) return;
-      import('sweetalert2').then(Swal => {
-          Swal.default.fire({
-            title: 'Procesando',
-            text: 'Guardando calificación...',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.default.showLoading();
-            }
-          });
-
-          this.listasService.calificarCoincidencia(r.reporteCoincidenciaId, tipoCalificacionId).subscribe({
+      void this.notification.showLoading('Guardando calificación', 'Espere mientras se registra la calificación...');
+      this.listasService.calificarCoincidencia(r.reporteCoincidenciaId, tipoCalificacionId).subscribe({
             next: () => {
               // Actualizar localmente el tipoCalificacion
               r.tipoCalificacion = desc;
               // También actualizar la lista de resumen general en background
               this.cargarResumen();
               
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Calificado',
-                text: `El registro ha sido calificado como ${desc}.`,
-                icon: 'success',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              void this.notification.notify({ title: 'Registro calificado', message: `El registro ha sido calificado como ${desc}.`, icon: 'success', confirmIcon: 'confirm', confirmVariant: 'success' });
             },
             error: (err) => {
               console.error('Error al calificar:', err);
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Error',
-                text: 'No se pudo guardar la calificación del registro.',
-                icon: 'error',
-                confirmButtonColor: 'var(--ihss-primary-color)'
-              });
+              this.notification.closeLoading();
+              void this.notification.notify({ title: 'No se pudo guardar la calificación', message: 'No se pudo guardar la calificación del registro.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
             }
           });
-      });
     });
   }
 
@@ -480,18 +429,10 @@ export class CoincidenciasPatronoComponent implements OnInit {
   }
 
   mostrarDetalleRegistro(r: CoincidenciaPatronoDetalle) {
-    import('sweetalert2').then((Swal) => {
-      Swal.default.fire({
-        title: 'Obteniendo detalles...',
-        text: 'Consultando la base de datos de listas...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.default.showLoading();
-        }
-      });
-
-      this.listasService.getResumenMatchLista(r.dataId, r.nombre).subscribe({
+    void this.notification.showLoading('Obteniendo detalles', 'Consultando la base de datos de listas...');
+    this.listasService.getResumenMatchLista(r.dataId, r.nombre).subscribe({
         next: (detalleHtml) => {
+          this.notification.closeLoading();
           // Extraer tokens del nombre del patrono (misma lógica que el backend)
           const tokens = this.extraerTokens(r.nombre || '');
 
@@ -543,30 +484,18 @@ export class CoincidenciasPatronoComponent implements OnInit {
             </div>
           `;
 
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: '🔎 Detalle de Coincidencia',
+          void this.notification.showHtml({
+            title: 'Detalle de coincidencia',
             html: htmlContent,
-            width: 600,
-            confirmButtonColor: 'var(--ihss-primary-color)',
-            confirmButtonText: 'Cerrar',
-            customClass: {
-              popup: 'rounded-2xl',
-              title: 'text-base'
-            }
+            confirmLabel: 'Cerrar',
+            size: 'lg'
           });
         },
         error: (err) => {
           console.error('Error al obtener detalle dinámico:', err);
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Error',
-            text: 'Ocurrió un error al intentar consultar el detalle de coincidencias en la base de datos.',
-            icon: 'error',
-            confirmButtonColor: 'var(--ihss-primary-color)'
-          });
+          this.notification.closeLoading();
+          void this.notification.notify({ title: 'No se pudo consultar el detalle', message: 'Ocurrió un error al intentar consultar el detalle de coincidencias en la base de datos.', icon: 'error', confirmIcon: 'cancel', confirmVariant: 'danger' });
         }
       });
-    });
   }
 }
