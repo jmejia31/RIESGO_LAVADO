@@ -126,6 +126,7 @@ await using (var userCollisionCheck = new OracleCommand(
         throw new InvalidOperationException("Block 7 synthetic test user IDs already exist; refusing to update foreign users.");
 }
 
+var insertedCanonicalRiskIds = new List<long>(canonicalRiskIds.Length);
 // Include fixture seeding in the teardown scope: partial initialization must be cleaned up.
 try
 {
@@ -134,6 +135,7 @@ for (int index = 0; index < canonicalRisks.Length; index++)
     var risk = canonicalRisks[index];
     await ExecuteAsync(oracle, "INSERT INTO RL_MR_RIESGOS (RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION) VALUES (:id,:code,:name,'Block 12 disposable canonical identity',1,:usr,SYSDATE)",
         ("id", canonicalRiskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
+    insertedCanonicalRiskIds.Add(canonicalRiskIds[index]);
 }
 await ExecuteAsync(oracle,
     "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'Familia E2E Block 7','Fixture desechable para certificacion',1,0,0,SYSDATE)",
@@ -666,7 +668,7 @@ finally
     var ownedPlans = new HashSet<long>();
     var ownedEvidenceIds = new HashSet<long>();
     await TrackOwnedIdsAsync(ownedEvaluations,
-        "SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:id", canonicalRiskIds);
+        "SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:id", insertedCanonicalRiskIds);
     await TrackOwnedIdsAsync(ownedControls,
         "SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID=:id", ownedEvaluations);
     await TrackOwnedIdsAsync(ownedPlans,
@@ -697,30 +699,35 @@ finally
     await CleanupStepAsync("RL_AUDITORIA", "DELETE FROM RL_AUDITORIA WHERE AUD_TABLA='RL_MR_VERSIONES_FORMULARIO' AND AUD_REGISTRO_ID=:id", ("id", publishVersionId.ToString()));
     await CleanupStepAsync("RL_MR_VERSIONES_FORMULARIO", "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", publishVersionId));
     await CleanupStepAsync("RL_MR_FAMILIAS_FORMULARIO", "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", publishFamilyId));
-    await CleanupStepAsync("RL_MR_EVIDENCIAS_VINCULOS", @"DELETE FROM RL_MR_EVIDENCIAS_VINCULOS
-        WHERE (EVV_ENTIDAD_ID IN (
-            SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO
-             WHERE CON_EVALUACION_ID IN (
-                SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))
-          AND EVV_TIPO_ENTIDAD='control')
-           OR EVV_EVIDENCIA_ID IN (
-            SELECT EVI_ID FROM RL_MR_EVIDENCIAS
-             WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix)",
-        ("riskId", riskId), ("userId", userId), ("filePrefix", $"block9-{riskId}-%"));
-    await CleanupStepAsync("RL_MR_EVIDENCIAS", "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix", ("userId", userId), ("filePrefix", $"block9-{riskId}-%"));
-    await CleanupStepAsync("RL_MR_ACTIVIDADES", @"DELETE FROM RL_MR_ACTIVIDADES
-        WHERE ACT_PLAN_ID IN (
-            SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (
-                SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))", ("riskId", riskId));
-    await CleanupStepAsync("RL_MR_PLANES", "DELETE FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
-    await CleanupStepAsync("RL_MR_CONTROLES_RIESGO", "DELETE FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
-    await CleanupStepAsync("RL_MR_SENALES_ALERTA", "DELETE FROM RL_MR_SENALES_ALERTA WHERE ALE_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
-    await CleanupStepAsync("RL_MR_AUTOMONITOREO", "DELETE FROM RL_MR_AUTOMONITOREO WHERE MON_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
-    await CleanupStepAsync("RL_MR_FLUJOS_EVALUACION", "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
-    await CleanupStepAsync("RL_MR_PROYECCIONES_EVALUACION", "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
-    await CleanupStepAsync("RL_MR_EVALUACIONES_RIESGO", "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId", ("riskId", riskId));
+    // Risk-root cleanup may only touch IDs created by this host execution.
+    if (insertedCanonicalRiskIds.Contains(riskId))
+    {
+        await CleanupStepAsync("RL_MR_EVIDENCIAS_VINCULOS", @"DELETE FROM RL_MR_EVIDENCIAS_VINCULOS
+            WHERE (EVV_ENTIDAD_ID IN (
+                SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO
+                 WHERE CON_EVALUACION_ID IN (
+                    SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))
+              AND EVV_TIPO_ENTIDAD='control')
+               OR EVV_EVIDENCIA_ID IN (
+                SELECT EVI_ID FROM RL_MR_EVIDENCIAS
+                 WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix)",
+            ("riskId", riskId), ("userId", userId), ("filePrefix", $"block9-{riskId}-%"));
+        await CleanupStepAsync("RL_MR_EVIDENCIAS", "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_USR_CREACION=:userId AND EVI_NOMBRE_ARCHIVO LIKE :filePrefix", ("userId", userId), ("filePrefix", $"block9-{riskId}-%"));
+        await CleanupStepAsync("RL_MR_ACTIVIDADES", @"DELETE FROM RL_MR_ACTIVIDADES
+            WHERE ACT_PLAN_ID IN (
+                SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (
+                    SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId))", ("riskId", riskId));
+        await CleanupStepAsync("RL_MR_PLANES", "DELETE FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+        await CleanupStepAsync("RL_MR_CONTROLES_RIESGO", "DELETE FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+        await CleanupStepAsync("RL_MR_SENALES_ALERTA", "DELETE FROM RL_MR_SENALES_ALERTA WHERE ALE_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+        await CleanupStepAsync("RL_MR_AUTOMONITOREO", "DELETE FROM RL_MR_AUTOMONITOREO WHERE MON_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+        await CleanupStepAsync("RL_MR_FLUJOS_EVALUACION", "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+        await CleanupStepAsync("RL_MR_PROYECCIONES_EVALUACION", "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID IN (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId)", ("riskId", riskId));
+        await CleanupStepAsync("RL_MR_EVALUACIONES_RIESGO", "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID=:riskId", ("riskId", riskId));
+    
+        }
 
-    foreach (long id in canonicalRiskIds)
+    foreach (long id in insertedCanonicalRiskIds)
     {
         await CleanupStepAsync($"RL_MR_EVIDENCIAS_VINCULOS;RISK_ID={id}", @"DELETE FROM RL_MR_EVIDENCIAS_VINCULOS
             WHERE EVV_ENTIDAD_ID IN (
@@ -755,6 +762,14 @@ finally
     await CleanupStepAsync("RL_MR_EVALUACIONES_RIESGO", "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", lifecycleEvaluationId));
     await CleanupStepAsync("RL_MR_VERSIONES_FORMULARIO", "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", lifecycleVersionId));
     await CleanupStepAsync("RL_MR_FAMILIAS_FORMULARIO", "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", lifecycleFamilyId));
+
+    // Four auxiliary users are run-owned: the startup preflight required that none existed.
+    await CleanupStepAsync("RL_USUARIO_CAPACIDADES;BLOCK7", 
+        "DELETE FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID IN (:area,:ugr,:both,:neither)",
+        ("area", areaOnlyUserId), ("ugr", ugrOnlyUserId), ("both", bothUserId), ("neither", neitherUserId));
+    await CleanupStepAsync("RL_USUARIOS;BLOCK7",
+        "DELETE FROM RL_USUARIOS WHERE USR_ID IN (:area,:ugr,:both,:neither)",
+        ("area", areaOnlyUserId), ("ugr", ugrOnlyUserId), ("both", bothUserId), ("neither", neitherUserId));
 
     // Remove only fixture-owned metadata by exact IDs after dependent evaluations are gone.
     await CleanupStepAsync("RL_MR_VERSIONES_FORMULARIO;BLOCK7", "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", versionId));
@@ -793,7 +808,7 @@ finally
         dependenciesRemaining += await CountOwnedRowsAsync("RL_MR_EVALUACIONES_CONTROL", "ECO_CONTROL_ID", ownedControls);
 
     bool verified = remainingCount == 0 && dependenciesRemaining == 0 && cleanupFailures.Count == 0;
-    Console.WriteLine($"BLOCK7_FIXTURE_RISK_CREATED={canonicalRiskIds.Length}");
+    Console.WriteLine($"BLOCK7_FIXTURE_RISK_CREATED={insertedCanonicalRiskIds.Count}");
     Console.WriteLine($"BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED={(verified ? "YES" : "NO")}");
     Console.WriteLine($"BLOCK7_FIXTURE_RISK_REMAINING={remainingCount}");
     Console.WriteLine($"BLOCK7_FIXTURE_DEPENDENCIES_REMAINING={dependenciesRemaining}");
