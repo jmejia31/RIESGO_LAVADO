@@ -675,6 +675,20 @@ finally
         return result;
     }
 
+    async Task<long> CountOwnedControlLinksAsync(IEnumerable<long> controlIds)
+    {
+        long remaining = 0;
+        foreach (long controlId in controlIds)
+        {
+            await using var query = new OracleCommand(
+                "SELECT COUNT(*) FROM RL_MR_EVIDENCIAS_VINCULOS WHERE EVV_ENTIDAD_ID=:id AND LOWER(EVV_TIPO_ENTIDAD)='control'",
+                cleanup) { BindByName = true };
+            query.Parameters.Add(new OracleParameter("id", controlId));
+            remaining += Convert.ToInt64(await query.ExecuteScalarAsync());
+        }
+        return remaining;
+    }
+
     var ownedEvaluations = new HashSet<long>();
     var ownedControls = new HashSet<long>();
     var ownedPlans = new HashSet<long>();
@@ -803,7 +817,8 @@ finally
         await CountOwnedRowsAsync("RL_MR_SENALES_ALERTA", "ALE_EVALUACION_ID", ownedEvaluations) +
         await CountOwnedRowsAsync("RL_MR_AUTOMONITOREO", "MON_EVALUACION_ID", ownedEvaluations) +
         await CountOwnedRowsAsync("RL_MR_EVIDENCIAS", "EVI_ID", ownedEvidenceIds) +
-        await CountOwnedRowsAsync("RL_MR_EVIDENCIAS_VINCULOS", "EVV_EVIDENCIA_ID", ownedEvidenceIds);
+        await CountOwnedRowsAsync("RL_MR_EVIDENCIAS_VINCULOS", "EVV_EVIDENCIA_ID", ownedEvidenceIds) +
+        await CountOwnedControlLinksAsync(ownedControls);
     if (hasControlEffectivenessTable)
         dependenciesRemaining += await CountOwnedRowsAsync("RL_MR_EVALUACIONES_CONTROL", "ECO_CONTROL_ID", ownedControls);
 
