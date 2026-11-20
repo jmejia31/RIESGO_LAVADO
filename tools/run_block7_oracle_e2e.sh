@@ -96,11 +96,13 @@ cleanup() {
      grep -Fq 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES' "$api_log" &&
      grep -Fq 'BLOCK7_FIXTURE_RISK_REMAINING=0' "$api_log" &&
      grep -Fq 'BLOCK7_FIXTURE_DEPENDENCIES_REMAINING=0' "$api_log" &&
+     grep -Fq 'BLOCK7_FIXTURE_METADATA_REMAINING=0' "$api_log" &&
      grep -Fq 'BLOCK7_FIXTURE_CLEANUP_ERRORS=0' "$api_log" &&
      [[ "$host_exit_code" -eq 0 && "$cleanup_exit_code" -eq 0 ]]; then
     echo 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES'
     echo 'BLOCK7_FIXTURE_RISK_REMAINING=0'
     echo 'BLOCK7_FIXTURE_DEPENDENCIES_REMAINING=0'
+    echo 'BLOCK7_FIXTURE_METADATA_REMAINING=0'
     echo 'BLOCK7_FIXTURE_CLEANUP_ERRORS=0'
   else
     echo 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=NO' >&2
