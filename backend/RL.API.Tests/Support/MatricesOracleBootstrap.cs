@@ -18,7 +18,26 @@ public static class MatricesOracleBootstrap
     {
         ValidarDestinoDisposableXe(connection.ConnectionString);
 
-        // 1. Asegurar tabla RL_USUARIOS y usuario semilla
+        // 1. Asegurar tabla RL_ROLES y rol semilla
+        await ExecuteIgnoreAsync(connection, @"
+            CREATE TABLE RL_ROLES (
+                ROL_ID NUMBER(3) PRIMARY KEY,
+                ROL_NOMBRE VARCHAR2(50) NOT NULL UNIQUE,
+                ROL_DESCRIPCION VARCHAR2(200),
+                ROL_ACTIVO NUMBER(1) DEFAULT 1 NOT NULL,
+                ROL_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,
+                CONSTRAINT CK_RL_ROL_ACTIVO CHECK (ROL_ACTIVO IN (0,1))
+            )");
+
+        int rolesCount = Convert.ToInt32(await ScalarAsync(connection, "SELECT COUNT(*) FROM RL_ROLES WHERE ROL_ID = 1"));
+        if (rolesCount == 0)
+        {
+            await ExecuteIgnoreAsync(connection, @"
+                INSERT INTO RL_ROLES (ROL_ID, ROL_NOMBRE, ROL_DESCRIPCION, ROL_ACTIVO, ROL_FECHA_CREACION)
+                VALUES (1, 'ADMINISTRADOR', 'Rol de Administración', 1, SYSDATE)");
+        }
+
+        // 2. Asegurar tabla RL_USUARIOS y usuario semilla
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_USUARIOS (
                 USR_ID NUMBER(10) PRIMARY KEY,
@@ -53,7 +72,22 @@ public static class MatricesOracleBootstrap
                 )");
         }
 
-        // 2. Asegurar RL_AUDITORIA y SEQ_RL_AUDITORIA
+        // 3. Asegurar RL_USUARIO_CAPACIDADES
+        await ExecuteIgnoreAsync(connection, @"
+            CREATE TABLE RL_USUARIO_CAPACIDADES (
+                UCP_USR_ID NUMBER(10) NOT NULL,
+                UCP_CAPACIDAD VARCHAR2(80 CHAR) NOT NULL,
+                UCP_ACTIVO NUMBER(1) DEFAULT 1 NOT NULL,
+                UCP_ASIGNADO_POR NUMBER(10),
+                UCP_FECHA_ASIGNACION DATE DEFAULT SYSDATE NOT NULL,
+                CONSTRAINT PK_RL_USUARIO_CAP PRIMARY KEY (UCP_USR_ID, UCP_CAPACIDAD),
+                CONSTRAINT FK_RL_UCP_USR FOREIGN KEY (UCP_USR_ID) REFERENCES RL_USUARIOS(USR_ID),
+                CONSTRAINT CK_RL_UCP_CAP CHECK (UCP_CAPACIDAD IN ('MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR','MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR')),
+                CONSTRAINT CK_RL_UCP_ACTIVO CHECK (UCP_ACTIVO IN (0,1))
+            )");
+        await ExecuteIgnoreAsync(connection, "CREATE INDEX IDX_RL_UCP_CAP ON RL_USUARIO_CAPACIDADES(UCP_CAPACIDAD, UCP_ACTIVO)");
+
+        // 4. Asegurar RL_AUDITORIA y SEQ_RL_AUDITORIA
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_AUDITORIA (
                 AUD_ID NUMBER(15) PRIMARY KEY,
@@ -106,14 +140,18 @@ public static class MatricesOracleBootstrap
                 FAM_DESCRIPCION VARCHAR2(500),
                 FAM_ACTIVO NUMBER(1) DEFAULT 1 NOT NULL,
                 FAM_ARCHIVADA NUMBER(1) DEFAULT 0 NOT NULL,
+                FAM_PREDETERMINADA NUMBER(1) DEFAULT 0 NOT NULL,
                 FAM_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,
                 FAM_FECHA_ARCHIVADO DATE,
                 FAM_USR_ARCHIVADO NUMBER(10),
                 FAM_MOTIVO_ARCHIVADO VARCHAR2(500),
                 CONSTRAINT PK_RL_MR_FAMILIAS PRIMARY KEY (FAM_ID),
                 CONSTRAINT UQ_RL_MR_FAM_COD UNIQUE (FAM_CODIGO),
-                CONSTRAINT CK_RL_MR_FAM_ACT CHECK (FAM_ACTIVO IN (0,1))
+                CONSTRAINT CK_RL_MR_FAM_ACT CHECK (FAM_ACTIVO IN (0,1)),
+                CONSTRAINT CK_RL_MR_FAM_PREDET CHECK (FAM_PREDETERMINADA IN (0,1))
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FAMILIAS_FORMULARIO ADD (FAM_PREDETERMINADA NUMBER(1) DEFAULT 0 NOT NULL)");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FAMILIAS_FORMULARIO ADD CONSTRAINT CK_RL_MR_FAM_PREDET CHECK (FAM_PREDETERMINADA IN (0,1))");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_VERSIONES_FORMULARIO (
@@ -356,6 +394,15 @@ public static class MatricesOracleBootstrap
                 CONSTRAINT FK_RL_MR_MON_EVA FOREIGN KEY (MON_EVALUACION_ID) REFERENCES RL_MR_EVALUACIONES_RIESGO(EVA_ID),
                 CONSTRAINT FK_RL_MR_MON_USR FOREIGN KEY (MON_USR_ID) REFERENCES RL_USUARIOS(USR_ID)
             )");
+
+        // Asegurar columnas de Bloques 4 y 6 en caso de tabla preexistente
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_CONTROLES_RIESGO ADD (CON_ESTADO_MONITOREO VARCHAR2(30 CHAR))");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_CONTROLES_RIESGO ADD (CON_EFECTIVIDAD_MONITOREO NUMBER(5,2))");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_PLANES ADD (PLA_MONITOREO_SEGUIMIENTO VARCHAR2(1000 CHAR))");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_PLANES ADD (PLA_RESPONSABLES VARCHAR2(1000 CHAR))");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_PLANES ADD (PLA_RECURSOS VARCHAR2(1000 CHAR))");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_AUTOMONITOREO ADD (MON_OBSERVACIONES_AREA VARCHAR2(2000 CHAR))");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_AUTOMONITOREO ADD (MON_OBSERVACIONES_UGR VARCHAR2(2000 CHAR))");
 
         // 5. Crear tablas y secuencias de Configuración de Cálculo (8 tablas y 8 secuencias)
         string[] secuenciasCalculo =
