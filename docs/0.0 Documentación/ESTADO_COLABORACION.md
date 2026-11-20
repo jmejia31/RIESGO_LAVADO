@@ -1,33 +1,31 @@
-# ESTADO VIGENTE — Paquete A: Integridad de Expedientes y Seguridad de Fuentes Externas (ANTIG, 2026-11-19 18:15 -06:00)
+# ESTADO VIGENTE — Paquete A: Integridad de Expedientes, Seguridad Oracle y Corrección Quirúrgica P0 (ANTIG, 2026-11-19 19:15 -06:00)
 
 - **Identificación y Referencia:**
   - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
   - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
-  - Base SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`. Código SHA: `bc9120e7f7b3dfd1dbb8cf7b38d9cb6fe5886638`.
-  - Quality Gate Verificado: `44644160900` (`completed / success`, 12m53s).
-  - Respaldo remoto íntegro verificado: `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` en `ef72356f4996b47dbbc29097df30deafbbfed641`.
+  - Base SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`. Código SHA Inicial: `bc9120e79e647416ca56b42a08fa492150d82bf9`. Documentación Base SHA: `8e31268a39cb38947e1610b113171f7eacfeeeeb`.
+  - Quality Gate Previo: `44644160900` (`completed / success`, 12m53s).
+  - Respaldos remotos íntegros verificados:
+    - `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` en `ef72356f4996b47dbbc29097df30deafbbfed641`.
+    - `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` en `8e31268a39cb38947e1610b113171f7eacfeeeeb`.
   - Estado: `READY_FOR_INDEPENDENT_REVIEW`.
   - Expediente formal: `docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md`.
-- **Alcance Implementado y Aislamiento de Expedientes:**
-  - Aislamiento completo de expedientes entre Persona Natural (`TipoPositivoId = 2`) y Empleado IHSS (`TipoPositivoId = 3`) que comparten el mismo DNI en `RL_LISTA_POSITIVOS` y `RL_DETALLE_LISTA`.
-  - Convivencia nativa en base de datos sin colisión ni sobreescritura (`LSP_TIPO_POSITIVO_ID = dto.TipoPositivoId`).
-  - Eliminación de fallback inseguro a prefijo `EMP:`.
-  - Soporte de claves heredadas y fuentes externas (`DNI:<DOC>`, `EMP:<DOC>`, `SRC:<ID_REGISTRO_FUENTE>`).
-  - Escenario A-11: Rechazo explícito con HTTP 409 Conflict y código `AMBIGUOUS_IDENTITY` cuando coexisten múltiples positivos activos sin tipo especificado.
-  - Sincronización en frontend Angular (`listas.service.ts` y `monitoreo-listas.component.impl.ts`): consultas, seguimientos, notas y descargas PDF/Excel envían `tipoPositivoId` e `idRegistroFuente`.
-- **Auditoría Exhaustiva de Fuentes Externas (DNP_IHSS):**
-  - Cero escrituras nuevas introducidas: `NO_NEW_EXTERNAL_WRITES=PASS`.
-  - Declaración formal: `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED` debido a las 6 rutas de escritura heredadas preexistentes en `ListasRepository.cs`: `TIPO_LISTAS_CAUTELA` (INSERT/UPDATE/DELETE), `REPORTE_COINCIDENCIAS` (UPDATE), `LISTA_CAUTELA` (DELETE/INSERT).
-  - Validador preventivo permanente: `tools/validate_external_writes.ps1` activo y pasando.
+- **Correcciones Quirúrgicas P0 Resueltas:**
+  - **PA-P0-01 (CRÍTICA):** Coexistencia física de Persona Natural (`TipoPositivoId = 2`) y Empleado (`TipoPositivoId = 3`) con mismo DNI bajo restricción de unicidad `UQ_RL_LSP_DOCUMENTO UNIQUE (LSP_TIPO_DOCUMENTO_ID, LSP_NO_DOCUMENTO)`. Empleado se inserta con prefijo físico `EMP:<cleanDoc>` (alineado con Monitoreo M1), y si `cleanDoc` ya está ocupado por histórico, Persona Natural se almacena como `DNI:<cleanDoc>`, garantizando coexistencia física en ambos órdenes de inserción (Escenario A y Escenario B) sin violar la restricción UNIQUE y preservando claves históricas.
+  - **PA-P0-02 (CRÍTICA):** Desasociación estricta entre documentos identificados y claves de fuente. Se eliminó tajantemente `OR LSP_NO_DOCUMENTO = :srcDoc` de las ramas para personas o empresas que cuentan con documento identificado. `SRC:<ID>` queda estrictamente confinado a registros no identificables (`N/A(3)`).
+  - **PA-P1-03 (ALTA):** Pleno reconocimiento de representaciones históricas (`EMP:`, `DNI:`, `SRC:`, sin prefijo). Cuando se especifica el tipo de sujeto, se resuelve únicamente ese sujeto; cuando no se especifica y existe ambigüedad (múltiples registros activos para el mismo DNI), el sistema detecta la condición y responde con HTTP 409 Conflict (`AMBIGUOUS_IDENTITY`).
+  - **PA-P1-04 (ALTA):** Endurecimiento del validador `tools/validate_external_writes.ps1` con inventario estricto de las 6 rutas heredadas (DNP-01 a DNP-06), regex multilínea para sentencias SQL (`INSERT`, `UPDATE`, `DELETE`, `MERGE`, `TRUNCATE`, `ALTER`, `DROP`, `CREATE`), depuración de comentarios y suite `-SelfTest`. Integrado formalmente en `tools/run_quality_gates.ps1` y en `.github/workflows/quality-gates.yml`.
+  - **PA-P1-05 (ALTA):** Corrección del SHA documentado del código del Paquete A: `bc9120e79e647416ca56b42a08fa492150d82bf9` sustituyendo la referencia errónea.
+  - **Validación de Parámetros Contradictorios (Sección 4.5):** Detección y rechazo con HTTP 400 Bad Request (`PARAMETROS_CONTRADICTORIOS`) ante discrepancias entre Query y Form en `RegistrarSeguimiento`, validación de rango `tipoPositivoId` (1..3) e `idRegistroFuente` (> 0).
 - **Métricas de Pruebas y Conteos Reales:**
-  - Backend unitario: 1,306 superadas en `RL.API.Tests` (1,306/1,306 PASS, 0 fallidas, 0 omitidas).
+  - Backend unitario: 1,315 pruebas superadas en `RL.API.Tests` (1,315/1,315 PASS, 0 fallidas, 0 omitidas en suite sin integración).
   - Frontend Vitest: 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
-  - Validadores del repositorio: 5/5 PASS (`validate_repository_structure.ps1`, `validate_database_scripts.ps1`, `validate_documentation_links.ps1`, `validate_agent_skills.py`, `validate_external_writes.ps1`).
+  - Validadores del repositorio: 5/5 PASS (`validate_repository_structure.ps1`, `validate_database_scripts.ps1`, `validate_documentation_links.ps1`, `validate_agent_skills.py`, `validate_external_writes.ps1` con `-SelfTest`).
   - Pruebas de integración Oracle XE: 8 omitidas localmente por requerir contenedor `Database:Profile=LOCAL_XE`, delegadas a verificación en GitHub Actions CI.
 - **Gobernanza y Preservación:**
   - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura).
   - Rama `main` y producción: 0 modificaciones.
-  - 38 archivos locales sin seguimiento preservados intactos fuera del stage de Git.
+  - Archivos locales sin seguimiento preservados intactos fuera del stage de Git.
   - Cero regresiones en Monitoreo de Listas (M1), Reportería PDF/Excel (M2 - B06), Favicon dinámico (M3) y Matrices de Riesgos (82 campos canónicos).
 - **Punto de continuación:** Commit y push selectivo a `origin/desarrollo` y verificación del run de GitHub Actions CI.
 

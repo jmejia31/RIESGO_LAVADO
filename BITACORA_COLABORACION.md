@@ -12283,7 +12283,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
   - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
   - BASE_SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`.
-  - IMPLEMENTED_SHA: `bc9120e7f7b3dfd1dbb8cf7b38d9cb6fe5886638`.
+  - IMPLEMENTED_SHA: `bc9120e79e647416ca56b42a08fa492150d82bf9`.
   - QUALITY_GATE_BASE: `44613258648` (SUCCESS).
   - QUALITY_GATE_VERIFIED: `44644160900` (`completed / success`, 12m53s).
   - Respaldo remoto íntegro verificado: `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` en `ef72356f4996b47dbbc29097df30deafbbfed641`.
@@ -12342,3 +12342,49 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Commit y push selectivo a `origin/desarrollo`.
   - Verificación del run de GitHub Actions CI para el commit generado.
   - Queda en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / propietario.
+
+## 2026-11-19 19:15 -06:00 — ANTIG — Corrección Quirúrgica P0: Coexistencia Oracle, Integridad DNP y Cierre Paquete A
+
+- **Identificación:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `8e31268a39cb38947e1610b113171f7eacfeeeeb`.
+  - Respaldos remotos previos:
+    - `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    - `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+- **Objetivo y Alcance:**
+  - Resolver los 5 hallazgos identificados en auditoría independiente del Paquete A (PA-P0-01, PA-P0-02, PA-P1-03, PA-P1-04, PA-P1-05).
+  - Garantizar coexistencia física de Persona Natural (`TipoPositivoId = 2`) y Empleado (`TipoPositivoId = 3`) que comparten DNI bajo `UQ_RL_LSP_DOCUMENTO UNIQUE (LSP_TIPO_DOCUMENTO_ID, LSP_NO_DOCUMENTO)` en ambos órdenes de inserción (Escenario A y B) y con datos históricos (Escenario C).
+  - Desasociar tajantemente consultas de documentos identificados respecto a claves de fuente `:srcDoc`.
+  - Endurecer `tools/validate_external_writes.ps1` con inventario estricto de las 6 rutas históricas (DNP-01 a DNP-06), soporte multilínea, descarte de comentarios, suite `-SelfTest` e integración en CI y quality gates.
+  - Rechazar parámetros contradictorios entre Query y Form en endpoints de seguimiento con HTTP 400 (`PARAMETROS_CONTRADICTORIOS`).
+  - Corregir el SHA documentado de código del Paquete A a `bc9120e79e647416ca56b42a08fa492150d82bf9`.
+- **Archivos modificados:**
+  - `tools/validate_external_writes.ps1` (hardened + -SelfTest).
+  - `tools/run_quality_gates.ps1` (integración de -SelfTest y auditoría externa).
+  - `.github/workflows/quality-gates.yml` (integración en pipeline de CI).
+  - `backend/RL.API/Features/Listas/Persistence/ListasRepository.cs` (coexistencia física bajo UNIQUE, segregación :srcDoc, LimpiarPrefijosDocumento).
+  - `backend/RL.API/Features/Listas/ListasController.cs` (validación de parámetros contradictorios 400, validación de rangos 1..3 y > 0).
+  - `docs/certificaciones/INDEX.json` (corrección SHA código).
+  - `docs/certificaciones/PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md` (corrección SHA y Adenda Sección 7).
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (actualización de estado vivo y corrección SHA).
+  - `BITACORA_COLABORACION.md` (corrección SHA y registro inmutable).
+- **Archivos creados:**
+  - `backend/RL.API.Tests/Features/Listas/PositivosCoexistenciaIntegridadTests.cs` (pruebas sintéticas de coexistencia Escenarios A/B/C, ambigüedad 409 y validación 400).
+- **Resultados de verificación:**
+  - Backend unitario (`RL.API.Tests`): 1,315 pruebas superadas (1,315/1,315 PASS, 0 fallidas).
+  - Frontend Vitest (`frontend/rl-app`): 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
+  - `tools/validate_external_writes.ps1 -SelfTest`: PASS (6 pruebas sintéticas superadas).
+  - `tools/validate_external_writes.ps1`: PASS (`NO_NEW_EXTERNAL_WRITES=PASS`, 6 rutas heredadas catalogadas).
+  - `tools/validate_repository_structure.ps1`: PASS.
+  - `tools/validate_database_scripts.ps1`: PASS.
+  - `tools/validate_documentation_links.ps1`: PASS.
+  - `python tools/validate_agent_skills.py`: PASS.
+- **Gobernanza y restricciones:**
+  - Cero DDL/DML contra Oracle institucional.
+  - Cero modificaciones a `main` o producción.
+  - Archivos locales sin seguimiento preservados fuera del commit.
+- **Punto exacto de continuación:**
+  - Publicación a `origin/desarrollo` mediante `git push`.
+  - Verificación del run de GitHub Actions CI.
+  - Expediente disponible para revisión independiente.

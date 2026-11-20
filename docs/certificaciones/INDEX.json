@@ -570,7 +570,7 @@
       "path": "PAQUETE_A_INTEGRIDAD_SEGURIDAD_MONITOREO_20261119.md",
       "author": "ANTIG",
       "status": "READY_FOR_INDEPENDENT_REVIEW",
-      "source_code_sha": "bc9120e7f7b3dfd1dbb8cf7b38d9cb6fe5886638",
+      "source_code_sha": "bc9120e79e647416ca56b42a08fa492150d82bf9",
       "quality_gate_run": 44644160900,
       "quality_gate_status": "SUCCESS",
       "github_quality_gate_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44644160900",

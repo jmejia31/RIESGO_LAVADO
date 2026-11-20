@@ -28,6 +28,18 @@ function Assert-Minimum {
     }
 }
 
+$externalWritesValidator = Join-Path $RepositoryRoot 'tools/validate_external_writes.ps1'
+$pwshCommand = if (Get-Command 'pwsh' -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
+& $pwshCommand -NoProfile -ExecutionPolicy Bypass -File $externalWritesValidator -SelfTest
+if ($LASTEXITCODE -ne 0) {
+    throw "Las autopruebas del validador de escrituras externas fallaron con codigo $LASTEXITCODE"
+}
+& $pwshCommand -NoProfile -ExecutionPolicy Bypass -File $externalWritesValidator -RepositoryRoot $RepositoryRoot
+if ($LASTEXITCODE -ne 0) {
+    throw "El validador preventivo de escrituras externas DNP_IHSS fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'EXTERNAL_WRITES_VALIDATOR=PASS'
+
 $block9ContractValidator = Join-Path $RepositoryRoot 'tools/validate_block9_mitigation_monitoring_contract.js'
 & node $block9ContractValidator
 if ($LASTEXITCODE -ne 0) {

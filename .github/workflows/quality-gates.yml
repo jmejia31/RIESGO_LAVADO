@@ -154,6 +154,8 @@ jobs:
         shell: pwsh
         run: |
           ./tools/validate_database_scripts.ps1
+          ./tools/validate_external_writes.ps1 -SelfTest
+          ./tools/validate_external_writes.ps1
           ./scripts/validation/validate_matrices_preoracle_readiness.ps1
           ./scripts/validation/validate_matrices_phase9_oracle_dossier.ps1
           ./scripts/validation/validate_matrices_phase10_transition_package.ps1

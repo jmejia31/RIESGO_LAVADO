@@ -659,60 +659,103 @@ namespace RL.API.Features.Listas.Persistence
                     : null);
         }
 
+        private static string LimpiarPrefijosDocumento(string? documento)
+        {
+            var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(documento);
+            if (normalizado.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+                return normalizado.Substring(4).Trim();
+            if (normalizado.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase))
+                return normalizado.Substring(4).Trim();
+            return normalizado;
+        }
+
         public async Task<int> ContarPositivosActivosAsync(string documento, int tipoPositivoId, long? idRegistroFuente = null)
         {
             var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(documento);
-            if (string.IsNullOrWhiteSpace(normalizado))
-            {
-                if (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
-                    normalizado = $"SRC:{idRegistroFuente.Value}";
-                else
-                    return 0;
-            }
-
-            var rawDoc = normalizado;
-            string? altDoc = null;
-            if (tipoPositivoId == 3)
-            {
-                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
-                    ? rawDoc.Substring(4).Trim()
-                    : $"EMP:{rawDoc}";
-            }
-            else if (tipoPositivoId == 2)
-            {
-                altDoc = rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
-                    ? rawDoc.Substring(4).Trim()
-                    : $"DNI:{rawDoc}";
-            }
-            else if (tipoPositivoId == 0)
-            {
-                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
-                    ? rawDoc.Substring(4).Trim()
-                    : rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
-                        ? rawDoc.Substring(4).Trim()
-                        : $"EMP:{rawDoc}";
-            }
-
-            string? srcDoc = (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
-                ? $"SRC:{idRegistroFuente.Value}"
-                : null;
+            bool isUnidentified = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado)
+                || normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase)
+                || string.IsNullOrWhiteSpace(normalizado);
 
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
             await using var cmd = conn.CreateCommand();
             cmd.BindByName = true;
-            cmd.CommandText = @"
-                SELECT COUNT(DISTINCT LSP_POSITIVO_ID)
-                FROM RL_LISTA_POSITIVOS
-                WHERE (LSP_NO_DOCUMENTO = :documento
-                    OR (:altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc)
-                    OR (:srcDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :srcDoc))
-                  AND (:tipoPositivoId = 0 OR LSP_TIPO_POSITIVO_ID = :tipoPositivoId)
-                  AND LSP_ESTADO_REGISTRO = 1";
-            cmd.Parameters.Add(new OracleParameter("documento", rawDoc));
-            cmd.Parameters.Add(new OracleParameter("altDoc", (object?)altDoc ?? DBNull.Value));
-            cmd.Parameters.Add(new OracleParameter("srcDoc", (object?)srcDoc ?? DBNull.Value));
-            cmd.Parameters.Add(new OracleParameter("tipoPositivoId", tipoPositivoId));
+
+            if (isUnidentified)
+            {
+                long? srcId = idRegistroFuente;
+                if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (long.TryParse(normalizado.Substring(4), out var parsed))
+                        srcId = parsed;
+                }
+
+                if (!srcId.HasValue || srcId.Value <= 0)
+                    return 0;
+
+                cmd.CommandText = @"
+                    SELECT COUNT(DISTINCT LSP_POSITIVO_ID)
+                    FROM RL_LISTA_POSITIVOS
+                    WHERE LSP_NO_DOCUMENTO = :srcDoc
+                      AND (:tipoPositivoId = 0 OR LSP_TIPO_POSITIVO_ID = :tipoPositivoId)
+                      AND LSP_ESTADO_REGISTRO = 1";
+                cmd.Parameters.Add(new OracleParameter("srcDoc", $"SRC:{srcId.Value}"));
+                cmd.Parameters.Add(new OracleParameter("tipoPositivoId", tipoPositivoId));
+                return Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            }
+
+            var cleanDoc = LimpiarPrefijosDocumento(normalizado);
+            if (string.IsNullOrWhiteSpace(cleanDoc)) return 0;
+
+            var empDoc = $"EMP:{cleanDoc}";
+            var dniDoc = $"DNI:{cleanDoc}";
+
+            if (tipoPositivoId == 3)
+            {
+                cmd.CommandText = @"
+                    SELECT COUNT(DISTINCT LSP_POSITIVO_ID)
+                    FROM RL_LISTA_POSITIVOS
+                    WHERE (LSP_NO_DOCUMENTO = :empDoc OR LSP_NO_DOCUMENTO = :cleanDoc)
+                      AND LSP_TIPO_POSITIVO_ID = 3
+                      AND LSP_ESTADO_REGISTRO = 1";
+                cmd.Parameters.Add(new OracleParameter("empDoc", empDoc));
+                cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+            }
+            else if (tipoPositivoId == 2)
+            {
+                cmd.CommandText = @"
+                    SELECT COUNT(DISTINCT LSP_POSITIVO_ID)
+                    FROM RL_LISTA_POSITIVOS
+                    WHERE (LSP_NO_DOCUMENTO = :cleanDoc OR LSP_NO_DOCUMENTO = :dniDoc)
+                      AND LSP_TIPO_POSITIVO_ID = 2
+                      AND LSP_ESTADO_REGISTRO = 1";
+                cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                cmd.Parameters.Add(new OracleParameter("dniDoc", dniDoc));
+            }
+            else if (tipoPositivoId == 1)
+            {
+                cmd.CommandText = @"
+                    SELECT COUNT(DISTINCT LSP_POSITIVO_ID)
+                    FROM RL_LISTA_POSITIVOS
+                    WHERE LSP_NO_DOCUMENTO = :cleanDoc
+                      AND LSP_TIPO_POSITIVO_ID = 1
+                      AND LSP_ESTADO_REGISTRO = 1";
+                cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+            }
+            else
+            {
+                cmd.CommandText = @"
+                    SELECT COUNT(DISTINCT LSP_POSITIVO_ID)
+                    FROM RL_LISTA_POSITIVOS
+                    WHERE (LSP_NO_DOCUMENTO = :cleanDoc
+                        OR (LSP_NO_DOCUMENTO = :empDoc AND LSP_TIPO_POSITIVO_ID = 3)
+                        OR (LSP_NO_DOCUMENTO = :dniDoc AND LSP_TIPO_POSITIVO_ID = 2))
+                      AND LSP_ESTADO_REGISTRO = 1";
+                cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                cmd.Parameters.Add(new OracleParameter("empDoc", empDoc));
+                cmd.Parameters.Add(new OracleParameter("dniDoc", dniDoc));
+            }
+
             return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
 
@@ -777,9 +820,17 @@ namespace RL.API.Features.Listas.Persistence
         {
             var documento = IdentidadMonitoreoPolicy.NormalizarDocumento(dto.NoDocumento);
             if (string.IsNullOrWhiteSpace(documento))
-                return false;
+            {
+                if (dto.IdRegistroFuente.HasValue && dto.IdRegistroFuente.Value > 0)
+                    documento = $"SRC:{dto.IdRegistroFuente.Value}";
+                else
+                    return false;
+            }
 
-            var gate = PositivosPorDocumento.GetOrAdd(documento, static _ => new SemaphoreSlim(1, 1));
+            var lockKey = LimpiarPrefijosDocumento(documento);
+            if (string.IsNullOrWhiteSpace(lockKey)) lockKey = documento;
+
+            var gate = PositivosPorDocumento.GetOrAdd(lockKey, static _ => new SemaphoreSlim(1, 1));
             await gate.WaitAsync();
             try
             {
@@ -789,7 +840,7 @@ namespace RL.API.Features.Listas.Persistence
             {
                 gate.Release();
                 if (gate.CurrentCount == 1)
-                    PositivosPorDocumento.TryRemove(new KeyValuePair<string, SemaphoreSlim>(documento, gate));
+                    PositivosPorDocumento.TryRemove(new KeyValuePair<string, SemaphoreSlim>(lockKey, gate));
             }
         }
 
@@ -805,42 +856,88 @@ namespace RL.API.Features.Listas.Persistence
                 int? existingTipoPositivoId = null;
                 string? existingDataJson = null;
                 string? existingOrigenRegistro = null;
+                string? existingNoDocumento = null;
                 var origenRegistro = NormalizarOrigenRegistro(dto.OrigenRegistro);
 
-                string? altDoc = null;
-                if (dto.TipoPositivoId == 3)
-                {
-                    altDoc = dto.NoDocumento!.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
-                        ? dto.NoDocumento.Substring(4).Trim()
-                        : $"EMP:{dto.NoDocumento}";
-                }
-                else if (dto.TipoPositivoId == 2)
-                {
-                    altDoc = dto.NoDocumento!.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
-                        ? dto.NoDocumento.Substring(4).Trim()
-                        : $"DNI:{dto.NoDocumento}";
-                }
-
-                string? srcDoc = (dto.IdRegistroFuente.HasValue && dto.IdRegistroFuente.Value > 0)
-                    ? $"SRC:{dto.IdRegistroFuente.Value}"
-                    : null;
+                var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(dto.NoDocumento);
+                bool isUnidentified = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado)
+                    || normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase)
+                    || string.IsNullOrWhiteSpace(normalizado);
 
                 await using (var checkCmd = conn.CreateCommand())
                 {
                     checkCmd.Transaction = transaction;
                     checkCmd.BindByName = true;
-                    checkCmd.CommandText = @"
-                    SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO
-                    FROM RL_LISTA_POSITIVOS
-                    WHERE (LSP_NO_DOCUMENTO = :noDoc
-                        OR (:altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc)
-                        OR (:srcDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :srcDoc))
-                      AND LSP_TIPO_POSITIVO_ID = :tipoPosId
-                      AND LSP_ESTADO_REGISTRO = 1";
-                    checkCmd.Parameters.Add(new OracleParameter("noDoc", (object?)dto.NoDocumento ?? DBNull.Value));
-                    checkCmd.Parameters.Add(new OracleParameter("altDoc", (object?)altDoc ?? DBNull.Value));
-                    checkCmd.Parameters.Add(new OracleParameter("srcDoc", (object?)srcDoc ?? DBNull.Value));
-                    checkCmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
+
+                    if (isUnidentified)
+                    {
+                        long? srcId = dto.IdRegistroFuente;
+                        if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (long.TryParse(normalizado.Substring(4), out var parsed))
+                                srcId = parsed;
+                        }
+
+                        if (!srcId.HasValue || srcId.Value <= 0)
+                        {
+                            await transaction.RollbackAsync();
+                            return false;
+                        }
+
+                        checkCmd.CommandText = @"
+                            SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_NO_DOCUMENTO
+                            FROM RL_LISTA_POSITIVOS
+                            WHERE LSP_NO_DOCUMENTO = :srcDoc
+                              AND LSP_TIPO_POSITIVO_ID = :tipoPosId
+                              AND LSP_ESTADO_REGISTRO = 1";
+                        checkCmd.Parameters.Add(new OracleParameter("srcDoc", $"SRC:{srcId.Value}"));
+                        checkCmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
+                    }
+                    else
+                    {
+                        var cleanDoc = LimpiarPrefijosDocumento(normalizado);
+                        if (string.IsNullOrWhiteSpace(cleanDoc))
+                        {
+                            await transaction.RollbackAsync();
+                            return false;
+                        }
+
+                        var empDoc = $"EMP:{cleanDoc}";
+                        var dniDoc = $"DNI:{cleanDoc}";
+
+                        if (dto.TipoPositivoId == 3)
+                        {
+                            checkCmd.CommandText = @"
+                                SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_NO_DOCUMENTO
+                                FROM RL_LISTA_POSITIVOS
+                                WHERE (LSP_NO_DOCUMENTO = :empDoc OR LSP_NO_DOCUMENTO = :cleanDoc)
+                                  AND LSP_TIPO_POSITIVO_ID = 3
+                                  AND LSP_ESTADO_REGISTRO = 1";
+                            checkCmd.Parameters.Add(new OracleParameter("empDoc", empDoc));
+                            checkCmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                        }
+                        else if (dto.TipoPositivoId == 2)
+                        {
+                            checkCmd.CommandText = @"
+                                SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_NO_DOCUMENTO
+                                FROM RL_LISTA_POSITIVOS
+                                WHERE (LSP_NO_DOCUMENTO = :cleanDoc OR LSP_NO_DOCUMENTO = :dniDoc)
+                                  AND LSP_TIPO_POSITIVO_ID = 2
+                                  AND LSP_ESTADO_REGISTRO = 1";
+                            checkCmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                            checkCmd.Parameters.Add(new OracleParameter("dniDoc", dniDoc));
+                        }
+                        else
+                        {
+                            checkCmd.CommandText = @"
+                                SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO, LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_NO_DOCUMENTO
+                                FROM RL_LISTA_POSITIVOS
+                                WHERE LSP_NO_DOCUMENTO = :cleanDoc
+                                  AND LSP_TIPO_POSITIVO_ID = 1
+                                  AND LSP_ESTADO_REGISTRO = 1";
+                            checkCmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                        }
+                    }
 
                     var existingCount = 0;
                     await using var reader = await checkCmd.ExecuteReaderAsync();
@@ -852,11 +949,12 @@ namespace RL.API.Features.Listas.Persistence
                         existingId = Convert.ToInt64(reader["LSP_POSITIVO_ID"]);
                         existingTipoPositivoId = Convert.ToInt32(reader["LSP_TIPO_POSITIVO_ID"]);
                         existingOrigenRegistro = reader["LSP_ORIGEN_REGISTRO"] == DBNull.Value ? null : reader["LSP_ORIGEN_REGISTRO"]?.ToString();
+                        existingNoDocumento = reader["LSP_NO_DOCUMENTO"]?.ToString();
                         var existingDto = new RegistrarPositivoDto
                         {
                             TipoDocumentoId = Convert.ToInt32(reader["LSP_TIPO_DOCUMENTO_ID"]),
                             TipoPositivoId = dto.TipoPositivoId,
-                            NoDocumento = dto.NoDocumento,
+                            NoDocumento = existingNoDocumento,
                             NombreCompleto = dto.NombreCompleto,
                             MotivoIngreso = reader["LSP_MOTIVO_INGRESO"]?.ToString() ?? string.Empty,
                             TipoListaCautelaId = reader["LSP_TIPO_LISTA_CAUTELA_ID"] == DBNull.Value ? null : Convert.ToInt32(reader["LSP_TIPO_LISTA_CAUTELA_ID"]),
@@ -899,29 +997,29 @@ namespace RL.API.Features.Listas.Persistence
                       AND LSP_ESTADO_REGISTRO = 1";
 
                     cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
-                cmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
-                cmd.Parameters.Add(new OracleParameter("nombre", dto.NombreCompleto));
-                cmd.Parameters.Add(new OracleParameter("motivo", dto.MotivoIngreso));
-                cmd.Parameters.Add(new OracleParameter("cautelaId", (object?)dto.TipoListaCautelaId ?? DBNull.Value));
-                cmd.Parameters.Add(new OracleParameter("origenRegistro", (object?)origenRegistro ?? DBNull.Value));
-                cmd.Parameters.Add(new OracleParameter("id", existingId.Value));
+                    cmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
+                    cmd.Parameters.Add(new OracleParameter("nombre", dto.NombreCompleto));
+                    cmd.Parameters.Add(new OracleParameter("motivo", dto.MotivoIngreso));
+                    cmd.Parameters.Add(new OracleParameter("cautelaId", (object?)dto.TipoListaCautelaId ?? DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("origenRegistro", (object?)origenRegistro ?? DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("id", existingId.Value));
 
                     int rows = await cmd.ExecuteNonQueryAsync();
                     bool success = rows > 0;
 
                     if (success)
                     {
-                    var auditDto = new RegistrarPositivoDto
-                    {
-                        TipoDocumentoId = dto.TipoDocumentoId,
-                        TipoPositivoId = dto.TipoPositivoId,
-                        NoDocumento = dto.NoDocumento,
-                        NombreCompleto = dto.NombreCompleto,
-                        MotivoIngreso = dto.MotivoIngreso,
-                        TipoListaCautelaId = dto.TipoListaCautelaId,
-                        OrigenRegistro = origenRegistro ?? existingOrigenRegistro
-                    };
-                    string dataJsonNvo = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
+                        var auditDto = new RegistrarPositivoDto
+                        {
+                            TipoDocumentoId = dto.TipoDocumentoId,
+                            TipoPositivoId = dto.TipoPositivoId,
+                            NoDocumento = existingNoDocumento ?? dto.NoDocumento,
+                            NombreCompleto = dto.NombreCompleto,
+                            MotivoIngreso = dto.MotivoIngreso,
+                            TipoListaCautelaId = dto.TipoListaCautelaId,
+                            OrigenRegistro = origenRegistro ?? existingOrigenRegistro
+                        };
+                        string dataJsonNvo = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
                         await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_LISTA_POSITIVOS", existingId.Value.ToString(), "UPDATE", existingDataJson, dataJsonNvo, creadoPorId, null, null, "MonitoreoListas");
                         await transaction.CommitAsync();
                         _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
@@ -934,6 +1032,48 @@ namespace RL.API.Features.Listas.Persistence
                 }
                 else
                 {
+                    // Determinar el documento a insertar garantizando coexistencia fisica
+                    string docToInsert;
+                    if (isUnidentified)
+                    {
+                        long? srcId = dto.IdRegistroFuente;
+                        if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (long.TryParse(normalizado.Substring(4), out var parsed))
+                                srcId = parsed;
+                        }
+                        docToInsert = $"SRC:{srcId!.Value}";
+                    }
+                    else
+                    {
+                        var cleanDoc = LimpiarPrefijosDocumento(normalizado);
+                        if (dto.TipoPositivoId == 3)
+                        {
+                            docToInsert = $"EMP:{cleanDoc}";
+                        }
+                        else if (dto.TipoPositivoId == 2)
+                        {
+                            // Para Persona Natural: verificar si cleanDoc ya está ocupado bajo este tipo de documento
+                            await using var occCmd = conn.CreateCommand();
+                            occCmd.Transaction = transaction;
+                            occCmd.BindByName = true;
+                            occCmd.CommandText = @"
+                                SELECT COUNT(1)
+                                FROM RL_LISTA_POSITIVOS
+                                WHERE LSP_NO_DOCUMENTO = :cleanDoc
+                                  AND LSP_TIPO_DOCUMENTO_ID = :tipoDocId
+                                  AND LSP_ESTADO_REGISTRO = 1";
+                            occCmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                            occCmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
+                            var occupied = Convert.ToInt32(await occCmd.ExecuteScalarAsync());
+                            docToInsert = occupied > 0 ? $"DNI:{cleanDoc}" : cleanDoc;
+                        }
+                        else
+                        {
+                            docToInsert = cleanDoc;
+                        }
+                    }
+
                     var origenNuevo = origenRegistro ?? "MANUAL_CUMPLIMIENTO";
                     await using var cmd = conn.CreateCommand();
                     cmd.Transaction = transaction;
@@ -951,34 +1091,34 @@ namespace RL.API.Features.Listas.Persistence
                     ) RETURNING LSP_POSITIVO_ID INTO :newId";
 
                     cmd.Parameters.Add(new OracleParameter("tipoDocId", dto.TipoDocumentoId));
-                cmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
-                cmd.Parameters.Add(new OracleParameter("noDoc", (object?)dto.NoDocumento ?? DBNull.Value));
-                cmd.Parameters.Add(new OracleParameter("nombre", dto.NombreCompleto));
-                cmd.Parameters.Add(new OracleParameter("motivo", dto.MotivoIngreso));
-                cmd.Parameters.Add(new OracleParameter("creadoPor", creadoPorId));
-                cmd.Parameters.Add(new OracleParameter("cautelaId", (object?)dto.TipoListaCautelaId ?? DBNull.Value));
-                cmd.Parameters.Add(new OracleParameter("origenRegistro", origenNuevo));
+                    cmd.Parameters.Add(new OracleParameter("tipoPosId", dto.TipoPositivoId));
+                    cmd.Parameters.Add(new OracleParameter("noDoc", docToInsert));
+                    cmd.Parameters.Add(new OracleParameter("nombre", dto.NombreCompleto));
+                    cmd.Parameters.Add(new OracleParameter("motivo", dto.MotivoIngreso));
+                    cmd.Parameters.Add(new OracleParameter("creadoPor", creadoPorId));
+                    cmd.Parameters.Add(new OracleParameter("cautelaId", (object?)dto.TipoListaCautelaId ?? DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("origenRegistro", origenNuevo));
 
-                var outParam = new OracleParameter("newId", OracleDbType.Int64, System.Data.ParameterDirection.Output);
-                cmd.Parameters.Add(outParam);
+                    var outParam = new OracleParameter("newId", OracleDbType.Int64, System.Data.ParameterDirection.Output);
+                    cmd.Parameters.Add(outParam);
 
                     int rows = await cmd.ExecuteNonQueryAsync();
                     bool success = rows > 0;
 
                     if (success && outParam.Value != DBNull.Value)
                     {
-                    long newId = Convert.ToInt64(outParam.Value.ToString());
-                    var auditDto = new RegistrarPositivoDto
-                    {
-                        TipoDocumentoId = dto.TipoDocumentoId,
-                        TipoPositivoId = dto.TipoPositivoId,
-                        NoDocumento = dto.NoDocumento,
-                        NombreCompleto = dto.NombreCompleto,
-                        MotivoIngreso = dto.MotivoIngreso,
-                        TipoListaCautelaId = dto.TipoListaCautelaId,
-                        OrigenRegistro = origenNuevo
-                    };
-                    string dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
+                        long newId = Convert.ToInt64(outParam.Value.ToString());
+                        var auditDto = new RegistrarPositivoDto
+                        {
+                            TipoDocumentoId = dto.TipoDocumentoId,
+                            TipoPositivoId = dto.TipoPositivoId,
+                            NoDocumento = docToInsert,
+                            NombreCompleto = dto.NombreCompleto,
+                            MotivoIngreso = dto.MotivoIngreso,
+                            TipoListaCautelaId = dto.TipoListaCautelaId,
+                            OrigenRegistro = origenNuevo
+                        };
+                        string dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
                         await _auditoriaRepo.RegistrarAsync(conn, transaction, "RL_LISTA_POSITIVOS", newId.ToString(), "INSERT", null, dataJson, creadoPorId, null, null, "MonitoreoListas");
                         await transaction.CommitAsync();
                         _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
@@ -1001,72 +1141,112 @@ namespace RL.API.Features.Listas.Persistence
         public async Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento, int? tipoPositivoId = null, long? idRegistroFuente = null)
         {
             var normalizado = IdentidadMonitoreoPolicy.NormalizarDocumento(noDocumento);
-            if (string.IsNullOrWhiteSpace(normalizado))
-            {
-                if (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
-                    normalizado = $"SRC:{idRegistroFuente.Value}";
-                else
-                    return null;
-            }
+            bool isUnidentified = IdentidadMonitoreoPolicy.EsMarcadorNoIdentificacion(normalizado)
+                || normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase)
+                || string.IsNullOrWhiteSpace(normalizado);
 
-            var rawDoc = normalizado;
             int effectiveTipo = tipoPositivoId ?? 0;
             if (effectiveTipo == 0)
             {
-                if (rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
+                if (normalizado.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase))
                     effectiveTipo = 3;
-                else if (rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase))
+                else if (normalizado.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase))
                     effectiveTipo = 2;
             }
-
-            string? altDoc = null;
-            if (effectiveTipo == 3)
-            {
-                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
-                    ? rawDoc.Substring(4).Trim()
-                    : $"EMP:{rawDoc}";
-            }
-            else if (effectiveTipo == 2)
-            {
-                altDoc = rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
-                    ? rawDoc.Substring(4).Trim()
-                    : $"DNI:{rawDoc}";
-            }
-            else if (effectiveTipo == 0)
-            {
-                altDoc = rawDoc.StartsWith("EMP:", StringComparison.OrdinalIgnoreCase)
-                    ? rawDoc.Substring(4).Trim()
-                    : rawDoc.StartsWith("DNI:", StringComparison.OrdinalIgnoreCase)
-                        ? rawDoc.Substring(4).Trim()
-                        : $"EMP:{rawDoc}";
-            }
-
-            string? srcDoc = (idRegistroFuente.HasValue && idRegistroFuente.Value > 0)
-                ? $"SRC:{idRegistroFuente.Value}"
-                : null;
 
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
 
             await using var cmd = conn.CreateCommand();
             cmd.BindByName = true;
-            cmd.CommandText = @"
-                SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO,
-                       LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
-                FROM RL_LISTA_POSITIVOS
-                WHERE (LSP_NO_DOCUMENTO = :noDoc
-                    OR (:altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc)
-                    OR (:srcDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :srcDoc))
-                  AND (:tipoPosId = 0 OR LSP_TIPO_POSITIVO_ID = :tipoPosId)
-                  AND LSP_ESTADO_REGISTRO = 1
-                ORDER BY CASE
-                    WHEN LSP_NO_DOCUMENTO = :noDoc THEN 1
-                    WHEN :altDoc IS NOT NULL AND LSP_NO_DOCUMENTO = :altDoc THEN 2
-                    ELSE 3 END";
-            cmd.Parameters.Add(new OracleParameter("noDoc", rawDoc));
-            cmd.Parameters.Add(new OracleParameter("altDoc", (object?)altDoc ?? DBNull.Value));
-            cmd.Parameters.Add(new OracleParameter("srcDoc", (object?)srcDoc ?? DBNull.Value));
-            cmd.Parameters.Add(new OracleParameter("tipoPosId", effectiveTipo));
+
+            if (isUnidentified)
+            {
+                long? srcId = idRegistroFuente;
+                if ((!srcId.HasValue || srcId.Value <= 0) && normalizado.StartsWith("SRC:", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (long.TryParse(normalizado.Substring(4), out var parsed))
+                        srcId = parsed;
+                }
+
+                if (!srcId.HasValue || srcId.Value <= 0)
+                    return null;
+
+                cmd.CommandText = @"
+                    SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO,
+                           LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
+                    FROM RL_LISTA_POSITIVOS
+                    WHERE LSP_NO_DOCUMENTO = :srcDoc
+                      AND (:tipoPosId = 0 OR LSP_TIPO_POSITIVO_ID = :tipoPosId)
+                      AND LSP_ESTADO_REGISTRO = 1";
+                cmd.Parameters.Add(new OracleParameter("srcDoc", $"SRC:{srcId.Value}"));
+                cmd.Parameters.Add(new OracleParameter("tipoPosId", effectiveTipo));
+            }
+            else
+            {
+                var cleanDoc = LimpiarPrefijosDocumento(normalizado);
+                if (string.IsNullOrWhiteSpace(cleanDoc)) return null;
+
+                var empDoc = $"EMP:{cleanDoc}";
+                var dniDoc = $"DNI:{cleanDoc}";
+
+                if (effectiveTipo == 3)
+                {
+                    cmd.CommandText = @"
+                        SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO,
+                               LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
+                        FROM RL_LISTA_POSITIVOS
+                        WHERE (LSP_NO_DOCUMENTO = :empDoc OR LSP_NO_DOCUMENTO = :cleanDoc)
+                          AND LSP_TIPO_POSITIVO_ID = 3
+                          AND LSP_ESTADO_REGISTRO = 1
+                        ORDER BY CASE WHEN LSP_NO_DOCUMENTO = :empDoc THEN 1 ELSE 2 END";
+                    cmd.Parameters.Add(new OracleParameter("empDoc", empDoc));
+                    cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                }
+                else if (effectiveTipo == 2)
+                {
+                    cmd.CommandText = @"
+                        SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO,
+                               LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
+                        FROM RL_LISTA_POSITIVOS
+                        WHERE (LSP_NO_DOCUMENTO = :cleanDoc OR LSP_NO_DOCUMENTO = :dniDoc)
+                          AND LSP_TIPO_POSITIVO_ID = 2
+                          AND LSP_ESTADO_REGISTRO = 1
+                        ORDER BY CASE WHEN LSP_NO_DOCUMENTO = :cleanDoc THEN 1 ELSE 2 END";
+                    cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                    cmd.Parameters.Add(new OracleParameter("dniDoc", dniDoc));
+                }
+                else if (effectiveTipo == 1)
+                {
+                    cmd.CommandText = @"
+                        SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO,
+                               LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
+                        FROM RL_LISTA_POSITIVOS
+                        WHERE LSP_NO_DOCUMENTO = :cleanDoc
+                          AND LSP_TIPO_POSITIVO_ID = 1
+                          AND LSP_ESTADO_REGISTRO = 1";
+                    cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                }
+                else
+                {
+                    // effectiveTipo == 0 (no especificado): buscar todas las variantes posibles
+                    cmd.CommandText = @"
+                        SELECT LSP_POSITIVO_ID, LSP_TIPO_DOCUMENTO_ID, LSP_TIPO_POSITIVO_ID, LSP_MOTIVO_INGRESO,
+                               LSP_TIPO_LISTA_CAUTELA_ID, LSP_ORIGEN_REGISTRO, LSP_FECHA_CREACION
+                        FROM RL_LISTA_POSITIVOS
+                        WHERE (LSP_NO_DOCUMENTO = :cleanDoc
+                            OR (LSP_NO_DOCUMENTO = :empDoc AND LSP_TIPO_POSITIVO_ID = 3)
+                            OR (LSP_NO_DOCUMENTO = :dniDoc AND LSP_TIPO_POSITIVO_ID = 2))
+                          AND LSP_ESTADO_REGISTRO = 1
+                        ORDER BY CASE
+                            WHEN LSP_NO_DOCUMENTO = :cleanDoc THEN 1
+                            WHEN LSP_NO_DOCUMENTO = :empDoc THEN 2
+                            ELSE 3 END";
+                    cmd.Parameters.Add(new OracleParameter("cleanDoc", cleanDoc));
+                    cmd.Parameters.Add(new OracleParameter("empDoc", empDoc));
+                    cmd.Parameters.Add(new OracleParameter("dniDoc", dniDoc));
+                }
+            }
 
             var candidateIds = new List<long>(capacity: 2);
             var candidateList = new List<ExistingPositivoDto>();

@@ -246,6 +246,12 @@ namespace RL.API.Features.Listas
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, mensaje = "Datos inválidos" });
 
+            if (dto.TipoPositivoId < 1 || dto.TipoPositivoId > 3)
+                return BadRequest(new { success = false, mensaje = "El tipo de sujeto debe estar entre 1 y 3" });
+
+            if (dto.IdRegistroFuente.HasValue && dto.IdRegistroFuente.Value <= 0)
+                return BadRequest(new { success = false, mensaje = "El identificador de registro fuente debe ser mayor a cero" });
+
             var result = await _listasService.RegistrarPositivoAsync(dto, ObtenerUsuarioId());
             return Responder(result);
         }
@@ -257,6 +263,12 @@ namespace RL.API.Features.Listas
             [FromQuery] int? tipoPositivoId = null,
             [FromQuery] long? idRegistroFuente = null)
         {
+            if (tipoPositivoId.HasValue && (tipoPositivoId.Value < 1 || tipoPositivoId.Value > 3))
+                return BadRequest(new { success = false, mensaje = "El tipo de sujeto debe estar entre 1 y 3" });
+
+            if (idRegistroFuente.HasValue && idRegistroFuente.Value <= 0)
+                return BadRequest(new { success = false, mensaje = "El identificador de registro fuente debe ser mayor a cero" });
+
             try
             {
                 var result = await _listasService.ObtenerPositivoPorDocumentoAsync(noDocumento, tipoPositivoId, idRegistroFuente);
@@ -282,6 +294,12 @@ namespace RL.API.Features.Listas
             [FromQuery] int? tipoPositivoId = null,
             [FromQuery] long? idRegistroFuente = null)
         {
+            if (tipoPositivoId.HasValue && (tipoPositivoId.Value < 1 || tipoPositivoId.Value > 3))
+                return BadRequest(new { success = false, mensaje = "El tipo de sujeto debe estar entre 1 y 3" });
+
+            if (idRegistroFuente.HasValue && idRegistroFuente.Value <= 0)
+                return BadRequest(new { success = false, mensaje = "El identificador de registro fuente debe ser mayor a cero" });
+
             try
             {
                 var result = await _listasService.ObtenerSeguimientosAsync(noDocumento, desde, hasta, tipoPositivoId, idRegistroFuente);
@@ -314,10 +332,27 @@ namespace RL.API.Features.Listas
             [FromForm] int? tipoPositivoIdForm = null,
             [FromForm] long? idRegistroFuenteForm = null)
         {
+            if (tipoPositivoId.HasValue && tipoPositivoIdForm.HasValue && tipoPositivoId.Value != tipoPositivoIdForm.Value)
+            {
+                return BadRequest(new { success = false, codigo = "PARAMETROS_CONTRADICTORIOS", mensaje = "El tipo de sujeto enviado en la consulta contradice el enviado en el formulario." });
+            }
+
+            if (idRegistroFuente.HasValue && idRegistroFuenteForm.HasValue && idRegistroFuente.Value != idRegistroFuenteForm.Value)
+            {
+                return BadRequest(new { success = false, codigo = "PARAMETROS_CONTRADICTORIOS", mensaje = "El identificador de fuente enviado en la consulta contradice el enviado en el formulario." });
+            }
+
+            var effectiveTipoPositivoId = tipoPositivoId ?? tipoPositivoIdForm;
+            var effectiveIdRegistroFuente = idRegistroFuente ?? idRegistroFuenteForm;
+
+            if (effectiveTipoPositivoId.HasValue && (effectiveTipoPositivoId.Value < 1 || effectiveTipoPositivoId.Value > 3))
+                return BadRequest(new { success = false, mensaje = "El tipo de sujeto debe estar entre 1 y 3" });
+
+            if (effectiveIdRegistroFuente.HasValue && effectiveIdRegistroFuente.Value <= 0)
+                return BadRequest(new { success = false, mensaje = "El identificador de registro fuente debe ser mayor a cero" });
+
             try
             {
-                var effectiveTipoPositivoId = tipoPositivoId ?? tipoPositivoIdForm;
-                var effectiveIdRegistroFuente = idRegistroFuente ?? idRegistroFuenteForm;
                 var result = await _evidenciasService.RegistrarSeguimientoAsync(noDocumento, motivoIngreso, archivos, ObtenerUsuarioId(), effectiveTipoPositivoId, effectiveIdRegistroFuente);
                 return Responder(result);
             }

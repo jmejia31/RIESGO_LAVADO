@@ -11,7 +11,7 @@
 | **Autoridad Funcional** | Javier Mejía (`jmejia31`) — Propietario del Sistema |
 | **Fecha de Intervención** | 19 de noviembre de 2026 |
 | **Base SHA** | `ef72356f4996b47dbbc29097df30deafbbfed641` |
-| **Código Implementado SHA** | `bc9120e7f7b3dfd1dbb8cf7b38d9cb6fe5886638` |
+| **Código Implementado SHA** | `bc9120e79e647416ca56b42a08fa492150d82bf9` |
 | **Quality Gate Base** | `44613258648` (SUCCESS) |
 | **Quality Gate Verificado** | [44644160900](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44644160900) — `completed / success` (12m53s) |
 | **Rama de Respaldo Remoto** | `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` |
@@ -129,3 +129,32 @@ Exclusivamente en `backend/RL.API/Features/Listas/Persistence/ListasRepository.c
 2. **Reportería PDF/Excel (M2 - B06):** Encabezados institucionales `#FFFFFF`, colores institucionales, logo y vistas previas completamente preservados.
 3. **Identidad Dinámica (M3):** Título dinámico del navegador y favicon institucional preservados al 100%.
 4. **Matrices de Riesgos:** 82 campos canónicos, persistencia y ciclo de vida de versiones intactos.
+
+---
+
+## 7. Adenda de Corrección Quirúrgica P0 — Auditoría Independiente y Cierre Complementario
+
+En respuesta a la auditoría independiente y las observaciones del propietario del proyecto, se ejecutó la resolución integral de los cinco hallazgos identificados:
+
+### 7.1 Resolución de Hallazgos
+1. **PA-P0-01 (CRÍTICA) — Coexistencia física bajo `UQ_RL_LSP_DOCUMENTO UNIQUE (LSP_TIPO_DOCUMENTO_ID, LSP_NO_DOCUMENTO)`:**
+   - Para resolver la limitación de la clave única física de Oracle sin alterar el esquema ni ejecutar DDL institucional, se implementó la discriminación de clave documental:
+     - Los registros de **Empleado IHSS (`TipoPositivoId = 3`)** se insertan físicamente con clave `EMP:<cleanDoc>` (coincidente con la consulta de vinculación en Monitoreo M1).
+     - Los registros de **Persona Natural (`TipoPositivoId = 2`)** se insertan con `cleanDoc`; si este se encuentra ocupado por un registro histórico sin prefijo, se insertan como `DNI:<cleanDoc>`.
+     - Se garantiza la coexistencia en ambos órdenes de inserción (Escenario A: Natural primero, Empleado segundo; Escenario B: Empleado primero, Natural segundo) y con datos heredados (Escenario C).
+2. **PA-P0-02 (CRÍTICA) — Desasociación estricta entre documentos identificados y claves de fuente:**
+   - Se erradicó totalmente la cláusula `OR LSP_NO_DOCUMENTO = :srcDoc` de las ramas de consulta de personas y empresas identificadas en `ListasRepository.cs`. Las claves `SRC:<ID>` quedan reservadas exclusivamente para sujetos con condición `SIN_IDENTIFICACION` (`N/A(3)`).
+3. **PA-P1-03 (ALTA) — Pleno reconocimiento de representaciones históricas y resolución de ambigüedad:**
+   - Se reconocen todas las variantes (`cleanDoc`, `EMP:<DOC>`, `DNI:<DOC>`, `SRC:<ID>`). Al especificar el tipo de sujeto, se resuelve únicamente la entidad correspondiente; ante omisión del tipo con múltiples registros activos para el mismo DNI, se responde con HTTP 409 Conflict y código `AMBIGUOUS_IDENTITY`.
+4. **PA-P1-04 (ALTA) — Endurecimiento del validador de escrituras externas `tools/validate_external_writes.ps1`:**
+   - Se incorporó inventario estricto de las 6 rutas históricas (DNP-01 a DNP-06), soporte multilínea para comandos SQL (`INSERT`, `UPDATE`, `DELETE`, `MERGE`, `TRUNCATE`, `ALTER`, `DROP`, `CREATE`), filtrado de comentarios y suite de pruebas sintéticas (`-SelfTest`, 6 pruebas PASS).
+   - Se integró obligatoriamente en `tools/run_quality_gates.ps1` y en el flujo `.github/workflows/quality-gates.yml`.
+5. **PA-P1-05 (ALTA) — Corrección de SHA documentado:**
+   - Se subsanó la errata del SHA del código del Paquete A registrando `bc9120e79e647416ca56b42a08fa492150d82bf9`.
+6. **Validación de Parámetros Contradictorios (Sección 4.5):**
+   - En `ListasController.cs`, se validan discrepancias entre parámetros de URL (Query) y Formulario (Form), respondiendo con HTTP 400 Bad Request (`PARAMETROS_CONTRADICTORIOS`), y se validan los rangos permitidos (`tipoPositivoId` entre 1 y 3, `idRegistroFuente > 0`).
+
+### 7.2 Resultados de Verificación Final
+- **Backend Unitario (`RL.API.Tests`):** 1,315 pruebas superadas (1,315/1,315 PASS, 0 fallidas).
+- **Frontend Vitest (`frontend/rl-app`):** 96 suites superadas, 1,059 pruebas superadas (1,059/1,059 PASS, 0 fallidas).
+- **Validadores del Repositorio:** 5/5 PASS (`tools/validate_external_writes.ps1 -SelfTest` PASS).
