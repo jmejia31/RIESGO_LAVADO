@@ -113,6 +113,38 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         long evidenceId = stamp + 401;
         const long userId = 987654;
         DateTime approvedAt = new(2026, 8, 1);
+
+        // Verify fixture dataset isolation: detect any residual canonical risks from previous suites
+        var residualRisks = new List<(long Id, string Code, string Desc, string Usr, DateTime? Created)>();
+        foreach (var risk in canonical)
+        {
+            await using var checkCmd = new OracleCommand(
+                "SELECT RIE_ID, RIE_CODIGO, RIE_DESCRIPCION, RIE_USR_CREACION, RIE_FECHA_CREACION FROM RL_MR_RIESGOS WHERE RIE_CODIGO=:code",
+                seed) { BindByName = true };
+            checkCmd.Parameters.Add(new OracleParameter("code", risk.Code));
+            await using var reader = await checkCmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                residualRisks.Add((
+                    reader.GetInt64(0),
+                    reader.GetString(1),
+                    reader.IsDBNull(2) ? "" : reader.GetString(2),
+                    reader.IsDBNull(3) ? "" : reader.GetValue(3).ToString()!,
+                    reader.IsDBNull(4) ? (DateTime?)null : reader.GetDateTime(4)
+                ));
+            }
+        }
+
+        if (residualRisks.Count > 0)
+        {
+            var diagnostic = string.Join("\n", residualRisks.Select(r =>
+                $"  Residual risk: RIE_ID={r.Id}, RIE_CODIGO={r.Code}, USR={r.Usr}, CREATED={r.Created:yyyy-MM-dd HH:mm:ss}, DESC={r.Desc}"));
+            _output.WriteLine("BLOCK12_CANONICAL_PRE_INSERT_ISOLATION=FAIL");
+            _output.WriteLine(diagnostic);
+            Assert.Fail($"Fixture isolation failure: {residualRisks.Count} residual canonical risks exist before test execution:\n{diagnostic}");
+        }
+        _output.WriteLine("BLOCK12_CANONICAL_PRE_INSERT_ISOLATION=PASS");
+
         try
         {
             for (int index = 0; index < canonical.Length; index++)
@@ -184,6 +216,15 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             }
             foreach (long riskId in riskIds)
                 await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+
+            int remainingOwnRisks = 0;
+            foreach (long riskId in riskIds)
+            {
+                await using var checkCmd = new OracleCommand("SELECT COUNT(*) FROM RL_MR_RIESGOS WHERE RIE_ID=:id", seed) { BindByName = true };
+                checkCmd.Parameters.Add(new OracleParameter("id", riskId));
+                remainingOwnRisks += Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+            }
+            Assert.Equal(0, remainingOwnRisks);
             _output.WriteLine("BLOCK12_ORACLE_59_IDENTITY_CLEANUP=PASS");
         }
     }
@@ -377,6 +418,38 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         long[] flowIds = Enumerable.Range(201, 59).Select(offset => stamp + offset).ToArray();
         const long userId = 987654;
         DateTime approvedAt = new(2026, 9, 1);
+
+        // Verify fixture dataset isolation: detect any residual canonical risks from previous suites
+        var residualRisks = new List<(long Id, string Code, string Desc, string Usr, DateTime? Created)>();
+        foreach (var risk in canonical)
+        {
+            await using var checkCmd = new OracleCommand(
+                "SELECT RIE_ID, RIE_CODIGO, RIE_DESCRIPCION, RIE_USR_CREACION, RIE_FECHA_CREACION FROM RL_MR_RIESGOS WHERE RIE_CODIGO=:code",
+                seed) { BindByName = true };
+            checkCmd.Parameters.Add(new OracleParameter("code", risk.Code));
+            await using var reader = await checkCmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                residualRisks.Add((
+                    reader.GetInt64(0),
+                    reader.GetString(1),
+                    reader.IsDBNull(2) ? "" : reader.GetString(2),
+                    reader.IsDBNull(3) ? "" : reader.GetValue(3).ToString()!,
+                    reader.IsDBNull(4) ? (DateTime?)null : reader.GetDateTime(4)
+                ));
+            }
+        }
+
+        if (residualRisks.Count > 0)
+        {
+            var diagnostic = string.Join("\n", residualRisks.Select(r =>
+                $"  Residual risk: RIE_ID={r.Id}, RIE_CODIGO={r.Code}, USR={r.Usr}, CREATED={r.Created:yyyy-MM-dd HH:mm:ss}, DESC={r.Desc}"));
+            _output.WriteLine("BLOCK12_FULL_CHAIN_PRE_INSERT_ISOLATION=FAIL");
+            _output.WriteLine(diagnostic);
+            Assert.Fail($"Fixture isolation failure: {residualRisks.Count} residual canonical risks exist before full chain execution:\n{diagnostic}");
+        }
+        _output.WriteLine("BLOCK12_FULL_CHAIN_PRE_INSERT_ISOLATION=PASS");
+
         try
         {
             for (int index = 0; index < canonical.Length; index++)
@@ -554,6 +627,16 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             }
             foreach (long riskId in riskIds)
                 await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+
+            int remainingOwnRisks = 0;
+            foreach (long riskId in riskIds)
+            {
+                await using var checkCmd = new OracleCommand("SELECT COUNT(*) FROM RL_MR_RIESGOS WHERE RIE_ID=:id", seed) { BindByName = true };
+                checkCmd.Parameters.Add(new OracleParameter("id", riskId));
+                remainingOwnRisks += Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
+            }
+            Assert.Equal(0, remainingOwnRisks);
+
             using (var pooledConnection = new OracleConnection(BoundedPool(connectionString)))
                 OracleConnection.ClearPool(pooledConnection);
             _output.WriteLine("BLOCK12_FULL_CHAIN_ORACLE_CLEANUP=PASS");

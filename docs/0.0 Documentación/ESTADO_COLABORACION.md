@@ -1,4 +1,24 @@
-# ESTADO VIGENTE — Paquete B: Cierre Quirúrgico P0 (ANTIG, 2026-11-20 09:30 -06:00)
+# ESTADO VIGENTE — Corrección Quirúrgica P0: Aislamiento y Limpieza de Fixtures Oracle XE (ANTIG, 2026-11-20 13:20 -06:00)
+
+- **Identificación y Referencia:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `b081c9953ba8d25c5d662655e43a0cb9a79cf19a`.
+  - Incidente: Run `44795491224` falló en paso 375 (`Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection`) con `Assert.Single() Failure: The collection contained 2 items` al buscar `ROTR-AFIL-2` por duplicación de fixture sintética (`RIE_ID=700487093` dejado por `Block7OracleE2EHost`).
+  - Causa Raíz: En `tools/Block7OracleE2EHost/Program.cs`, el ciclo de limpieza solo eliminaba evaluaciones de `canonicalRiskIds[0]`, arrojando `ORA-02292` al intentar eliminar `canonicalRiskIds[1]` (`ROTR-AFIL-2`), abortando la limpieza y dejando 58 riesgos sintéticos huérfanos.
+  - Corrección Realizada:
+    1. `tools/Block7OracleE2EHost/Program.cs`: Endpoint `POST /__e2e/shutdown`, limpieza completa en orden referencial para los 59 `canonicalRiskIds` con `BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES` y `BLOCK7_FIXTURE_RISK_REMAINING=0`.
+    2. `tools/run_block7_oracle_e2e.sh`: Invocación de `POST /__e2e/shutdown`, espera de terminación del proceso y verificación obligatoria de 0 riesgos restantes en log.
+    3. `backend/RL.API.Tests/Features/MatricesRiesgos/InstitutionalProjectionOracleIntegrationTests.cs`: Pre-check de aislamiento en `Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection` y `WorkbookCalculationResultsSurviveOracleApiProjectionAndBothExportsForAllRisks` para detectar residuos previos y fallar con diagnóstico explícito; preservación estricta de `Assert.Single()`; verificación final de 0 riesgos propios restantes.
+  - Respaldos remotos íntegros verificados en GitHub:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+  - Estado del Paquete B: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Revisión independiente: `PENDING_CHATGPT_REVIEW`.
+  - Expedientes formales: `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` e `INDEX.json`.
+
+# HISTORIAL RECIENTE — Paquete B: Cierre Quirúrgico P0 (ANTIG, 2026-11-20 09:30 -06:00)
 
 - **Identificación y Referencia:**
   - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.

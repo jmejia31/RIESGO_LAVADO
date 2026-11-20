@@ -50,6 +50,13 @@ cleanup() {
   if [[ "${RL_P03_TX12_AUDIT_FAILURE_REQUIRED:-}" == "true" && "$tx12_disabled" != "true" ]]; then
     curl --silent --show-error --fail --request POST http://127.0.0.1:5043/__e2e/tx12-audit-disable >/dev/null 2>&1 || true
   fi
+  curl --silent --show-error --request POST http://127.0.0.1:5043/__e2e/shutdown >/dev/null 2>&1 || true
+  for _ in $(seq 1 15); do
+    if ! kill -0 "$api_pid" 2>/dev/null; then
+      break
+    fi
+    sleep 1
+  done
   kill "$api_pid" 2>/dev/null || true
   wait "$api_pid" 2>/dev/null || true
 }
@@ -324,3 +331,26 @@ echo 'BLOCK9_EVIDENCE_ORACLE_INTEGRATION=PASS'
 echo 'BLOCK9_REAL_BROWSER_TESTS_EXECUTED=1'
 echo 'BLOCK9_CRITICAL_ROUTES_MOCKED=0'
 echo 'BLOCK9_BROWSER_API_ORACLE_E2E=PASS'
+
+# Explicit graceful shutdown and cleanup verification
+echo "Shutting down Block 7 Oracle E2E host and verifying fixture cleanup..."
+curl --silent --show-error --request POST http://127.0.0.1:5043/__e2e/shutdown >/dev/null 2>&1 || true
+for _ in $(seq 1 15); do
+  if ! kill -0 "$api_pid" 2>/dev/null; then
+    break
+  fi
+  sleep 1
+done
+kill "$api_pid" 2>/dev/null || true
+wait "$api_pid" 2>/dev/null || true
+
+if grep -Fq 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES' "$api_log" \
+   && grep -Fq 'BLOCK7_FIXTURE_RISK_REMAINING=0' "$api_log"; then
+  echo 'BLOCK7_FIXTURE_RISK_CREATED=59'
+  echo 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES'
+  echo 'BLOCK7_FIXTURE_RISK_REMAINING=0'
+else
+  echo "BLOCK7 host cleanup verification failed! Log contents:" >&2
+  tail -n 60 "$api_log" >&2
+  exit 1
+fi

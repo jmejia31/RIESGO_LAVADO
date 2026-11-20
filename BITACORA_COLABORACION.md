@@ -12608,3 +12608,36 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Publicar cambios en `origin/desarrollo`.
   - Monitorear el Quality Gate en GitHub Actions hasta conclusión exitosa.
   - Entregar el informe de cierre INI a Javier Mejía y ChatGPT para revisión independiente.
+
+
+## 2026-11-20 13:20 -06:00 — Corrección Quirúrgica P0: Aislamiento y Limpieza de Fixtures Oracle XE (ANTIG)
+
+- **Identificación:** Rama `desarrollo`. Agente ejecutor: ANTIG (Antigravity). Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+- **Incidente / Quality Gate:** Fallo en paso 375 de CI `Reconcile all 59 canonical risk identities through Oracle XE API and consolidated projection` (`Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection`) en run `44795491224`.
+  - Error: `Assert.Single() Failure: The collection contained 2 items` al buscar `ROTR-AFIL-2` en `/api/matrices-riesgos/riesgos/paginado`.
+  - Causa Raíz Comprobada: `tools/Block7OracleE2EHost/Program.cs` insertó los 59 riesgos canónicos durante el gate E2E de navegador. Al finalizar, su bloque `finally` limpiaba evaluaciones únicamente para `canonicalRiskIds[0]` (`riskId`), pero no para `canonicalRiskIds[1..58]` (`ROTR-AFIL-2` en adelante). Cuando el ciclo de eliminación intentó ejecutar `DELETE FROM RL_MR_RIESGOS WHERE RIE_ID = canonicalRiskIds[1]`, Oracle arrojó `ORA-02292` por registros hijos existentes en `RL_MR_EVALUACIONES_RIESGO` (creados por el endpoint `/__e2e/seed-full-chain-calculations`), abortando la limpieza y dejando 58 riesgos canónicos sintéticos huérfanos (`rieUsrCreacion: 987654`) en la base de datos descartable.
+- **Acciones Correctivas Implementadas:**
+  1. **tools/Block7OracleE2EHost/Program.cs:**
+     - Se añadió endpoint de terminación controlada `POST /__e2e/shutdown` que invoca `IHostApplicationLifetime.StopApplication()`.
+     - En el bloque `finally`, se corrigió el ciclo de eliminación para recorrer exhaustivamente todos los `canonicalRiskIds`, eliminando de forma segura y en orden referencial: vínculos de evidencias, actividades, planes, evaluaciones de control, controles, señales de alerta, automonitoreo, flujos, proyecciones, evaluaciones y el riesgo.
+     - Se protegió cada instrucción de limpieza individual para que un fallo puntual no aborte la limpieza del resto de registros.
+     - Se implementó la verificación obligatoria independiente de 0 riesgos restantes para la fixture:
+       `BLOCK7_FIXTURE_RISK_CREATED=59`
+       `BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES`
+       `BLOCK7_FIXTURE_RISK_REMAINING=0`
+       arrojando `InvalidOperationException` si queda algún residuo.
+  2. **tools/run_block7_oracle_e2e.sh:**
+     - En `cleanup()` y al final de la suite E2E, se invoca `POST /__e2e/shutdown` y se espera la terminación efectiva del proceso (`api_pid`).
+     - Se verifica en el log que `BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES` y `BLOCK7_FIXTURE_RISK_REMAINING=0`; el script falla de inmediato si la limpieza no se demuestra.
+  3. **backend/RL.API.Tests/Features/MatricesRiesgos/InstitutionalProjectionOracleIntegrationTests.cs:**
+     - En `Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection` y `WorkbookCalculationResultsSurviveOracleApiProjectionAndBothExportsForAllRisks`:
+       - Pre-check de aislamiento: se consulta `RL_MR_RIESGOS` para verificar que antes de insertar no exista ningún residuo de fixtures previas. Si existen, emite diagnóstico detallado y falla explícitamente (`BLOCK12_CANONICAL_PRE_INSERT_ISOLATION=FAIL`). Si está limpio, emite `PASS`.
+       - Se mantiene estrictamente `Assert.Single()` para validar la unicidad de las respuestas de API y consolidado.
+       - En `finally`, se limpian los IDs propios creados por la prueba y se verifica de forma independiente que queden 0 registros propios (`Assert.Equal(0, remainingOwnRisks)`).
+- **Archivos Modificados:**
+  - `tools/Block7OracleE2EHost/Program.cs`
+  - `tools/run_block7_oracle_e2e.sh`
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/InstitutionalProjectionOracleIntegrationTests.cs`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Gobernanza:** 0 mutaciones en código institucional, 0 cambios en fórmulas o riesgos oficiales, 0 cambios en modales.
