@@ -11,7 +11,9 @@
 | **Autoridad Funcional** | Javier Mejía (`jmejia31`) — Propietario del Sistema |
 | **Fecha de Intervención** | 19 de noviembre de 2026 |
 | **Base SHA** | `ef72356f4996b47dbbc29097df30deafbbfed641` |
+| **Código Implementado SHA** | `bc9120e7f7b3dfd1dbb8cf7b38d9cb6fe5886638` |
 | **Quality Gate Base** | `44613258648` (SUCCESS) |
+| **Quality Gate Verificado** | [44644160900](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44644160900) — `completed / success` (12m53s) |
 | **Rama de Respaldo Remoto** | `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` |
 | **Backup SHA** | `ef72356f4996b47dbbc29097df30deafbbfed641` |
 | **Estado de Certificación** | `READY_FOR_INDEPENDENT_REVIEW` |

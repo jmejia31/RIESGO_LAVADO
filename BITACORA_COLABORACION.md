@@ -12283,7 +12283,9 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
   - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
   - BASE_SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`.
+  - IMPLEMENTED_SHA: `bc9120e7f7b3dfd1dbb8cf7b38d9cb6fe5886638`.
   - QUALITY_GATE_BASE: `44613258648` (SUCCESS).
+  - QUALITY_GATE_VERIFIED: `44644160900` (`completed / success`, 12m53s).
   - Respaldo remoto íntegro verificado: `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` en `ef72356f4996b47dbbc29097df30deafbbfed641`.
 - **Objetivo y Alcance:**
   - Aislar completamente los expedientes de Persona Natural (`TipoPositivoId = 2`) y Empleado IHSS (`TipoPositivoId = 3`) que comparten el mismo DNI en `RL_LISTA_POSITIVOS` y `RL_DETALLE_LISTA`.
