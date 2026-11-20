@@ -47,20 +47,78 @@ dotnet "$api_dll" >"$api_log" 2>&1 &
 api_pid=$!
 tx12_disabled=false
 cleanup() {
-  if [[ "${RL_P03_TX12_AUDIT_FAILURE_REQUIRED:-}" == "true" && "$tx12_disabled" != "true" ]]; then
-    curl --silent --show-error --fail --request POST http://127.0.0.1:5043/__e2e/tx12-audit-disable >/dev/null 2>&1 || true
-  fi
-  curl --silent --show-error --request POST http://127.0.0.1:5043/__e2e/shutdown >/dev/null 2>&1 || true
-  for _ in $(seq 1 15); do
-    if ! kill -0 "$api_pid" 2>/dev/null; then
-      break
+  local test_exit_code="$1"
+  local cleanup_exit_code=0
+  local host_exit_code=0
+  local waited=0
+
+  # Preserve the test result and execute teardown only once, even after errors.
+  trap - EXIT
+  set +e
+
+  if [[ "${RL_P03_TX12_AUDIT_FAILURE_REQUIRED:-}" == "true" && "$tx12_disabled" != "true" ]] &&
+     kill -0 "$api_pid" 2>/dev/null; then
+    if ! curl --silent --show-error --fail --max-time 15 \
+         --request POST http://127.0.0.1:5043/__e2e/tx12-audit-disable >/dev/null; then
+      echo 'BLOCK7_TX12_FAULT_RESET=FAIL' >&2
+      cleanup_exit_code=1
     fi
-    sleep 1
-  done
-  kill "$api_pid" 2>/dev/null || true
-  wait "$api_pid" 2>/dev/null || true
+  fi
+
+  if kill -0 "$api_pid" 2>/dev/null; then
+    if ! curl --silent --show-error --fail --max-time 15 \
+         --request POST http://127.0.0.1:5043/__e2e/shutdown >/dev/null; then
+      echo 'BLOCK7_HOST_GRACEFUL_SHUTDOWN_REQUEST=FAIL' >&2
+      cleanup_exit_code=1
+    fi
+    while kill -0 "$api_pid" 2>/dev/null && (( waited < 120 )); do
+      sleep 1
+      waited=$((waited + 1))
+    done
+    if kill -0 "$api_pid" 2>/dev/null; then
+      echo "BLOCK7_HOST_GRACEFUL_SHUTDOWN_TIMEOUT=FAIL;SECONDS=$waited" >&2
+      cleanup_exit_code=1
+      kill -TERM "$api_pid" 2>/dev/null
+      sleep 2
+      if kill -0 "$api_pid" 2>/dev/null; then
+        kill -KILL "$api_pid" 2>/dev/null
+      fi
+    fi
+  fi
+
+  wait "$api_pid" 2>/dev/null || host_exit_code=$?
+  if [[ "$host_exit_code" -ne 0 ]]; then
+    echo "BLOCK7_HOST_PROCESS_EXIT=FAIL;CODE=$host_exit_code" >&2
+    cleanup_exit_code=1
+  fi
+
+  if [[ -f "$api_log" ]] &&
+     grep -Fq 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES' "$api_log" &&
+     grep -Fq 'BLOCK7_FIXTURE_RISK_REMAINING=0' "$api_log" &&
+     grep -Fq 'BLOCK7_FIXTURE_DEPENDENCIES_REMAINING=0' "$api_log" &&
+     grep -Fq 'BLOCK7_FIXTURE_CLEANUP_ERRORS=0' "$api_log" &&
+     [[ "$host_exit_code" -eq 0 && "$cleanup_exit_code" -eq 0 ]]; then
+    echo 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES'
+    echo 'BLOCK7_FIXTURE_RISK_REMAINING=0'
+    echo 'BLOCK7_FIXTURE_DEPENDENCIES_REMAINING=0'
+    echo 'BLOCK7_FIXTURE_CLEANUP_ERRORS=0'
+  else
+    echo 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=NO' >&2
+    echo 'BLOCK7_FIXTURE_RISK_REMAINING=UNVERIFIED' >&2
+    if [[ -f "$api_log" ]]; then
+      sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 80 >&2
+    fi
+    cleanup_exit_code=1
+  fi
+
+  if [[ "$test_exit_code" -ne 0 || "$cleanup_exit_code" -ne 0 ]]; then
+    echo "BLOCK7_E2E_FINAL_RESULT=FAIL;TEST_EXIT=$test_exit_code;CLEANUP_EXIT=$cleanup_exit_code" >&2
+    exit 1
+  fi
+  echo 'BLOCK7_E2E_FINAL_RESULT=PASS'
+  exit 0
 }
-trap cleanup EXIT
+trap 'cleanup "$?"' EXIT
 
 ready=false
 for attempt in $(seq 1 60); do
@@ -332,25 +390,3 @@ echo 'BLOCK9_REAL_BROWSER_TESTS_EXECUTED=1'
 echo 'BLOCK9_CRITICAL_ROUTES_MOCKED=0'
 echo 'BLOCK9_BROWSER_API_ORACLE_E2E=PASS'
 
-# Explicit graceful shutdown and cleanup verification
-echo "Shutting down Block 7 Oracle E2E host and verifying fixture cleanup..."
-curl --silent --show-error --request POST http://127.0.0.1:5043/__e2e/shutdown >/dev/null 2>&1 || true
-for _ in $(seq 1 15); do
-  if ! kill -0 "$api_pid" 2>/dev/null; then
-    break
-  fi
-  sleep 1
-done
-kill "$api_pid" 2>/dev/null || true
-wait "$api_pid" 2>/dev/null || true
-
-if grep -Fq 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES' "$api_log" \
-   && grep -Fq 'BLOCK7_FIXTURE_RISK_REMAINING=0' "$api_log"; then
-  echo 'BLOCK7_FIXTURE_RISK_CREATED=59'
-  echo 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES'
-  echo 'BLOCK7_FIXTURE_RISK_REMAINING=0'
-else
-  echo "BLOCK7 host cleanup verification failed! Log contents:" >&2
-  tail -n 60 "$api_log" >&2
-  exit 1
-fi
