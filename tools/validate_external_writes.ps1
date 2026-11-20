@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot),
     [switch]$SelfTest
 )

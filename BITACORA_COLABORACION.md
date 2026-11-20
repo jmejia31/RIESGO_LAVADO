@@ -12444,3 +12444,29 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Commit y push a `origin/desarrollo`.
   - Monitoreo del Quality Gate en GitHub Actions hasta conclusión exitosa.
   - Queda formalmente en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+## 2026-11-19 20:25 -06:00 — ANTIG — Ajuste Quirúrgico en Pruebas de Integración Oracle XE Paquete A
+
+- **Identificación:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama autorizada: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `8a8d8031d9b359f802100806ea95d66bf634b868`.
+  - Respaldos remotos íntegros preservados:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+- **Diagnóstico y Corrección en CI (Run 44658607457):**
+  - El run de CI en GitHub Actions ejecutó los tests `[P0FOracleRequiredFact]` en el contenedor Docker Oracle XE. Se identificaron dos defectos exclusivos del harness de integración:
+    1. `InterfaceStub.Create<IAuditoriaRepository>` no tenía configurada respuesta para `RegistrarAsync`, provocando `InvalidOperationException` al auditar inserciones en `ListasRepository`. Se implementó `NoOpAuditoriaRepository : IAuditoriaRepository` en la clase de prueba.
+    2. En el segundo test (`CoexistenciaOracle_EmpleadoHistoricoSinPrefijo_NaturalConDni_MonitoreoAgrupado_FilaUnica_TieneMotivoTrue`), la consulta agrupada de naturales fallaba con `ORA-00942: table or view does not exist` debido a que tablas y vistas auxiliares de `DNP_IHSS` (`REPORTE_COINCIDENCIAS`, `TIPO_LISTAS_CAUTELA`, `SOCIOS`, `REPRESENTANTES`, etc.) se limpiaban en pruebas previas. Se amplió `EnsureCoexistenciaFixtureAsync` para crear de forma idempotente todas las entidades requeridas en el esquema de prueba.
+  - Además, se blindaron los bloques `finally` con `TryExecuteAsync` para evitar que un fallo en la prueba enmascare la causa raíz.
+- **Archivos modificados:**
+  - `backend/RL.API.Tests/Features/Listas/PositivosCoexistenciaOracleIntegrationTests.cs`.
+- **Resultados de verificación local:**
+  - Backend build: 0 errores.
+  - Backend unit tests (`RL.API.Tests` sin Oracle XE local): 1,332/1,332 PASS (1 omitida).
+  - Validadores: Estructura PASS, Scripts DB PASS, Enlaces doc PASS, Agent Skills PASS (14/14), External writes PASS (SelfTest 8/8, Auditoría DNP 6/6 rutas heredadas, 0 violaciones).
+  - `git diff --check`: PASS (0 errores de espacios).
+- **Punto exacto de continuación:**
+  - Publicar en `origin/desarrollo` y monitorear el Quality Gate en GitHub Actions.
+  - Queda formalmente en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).

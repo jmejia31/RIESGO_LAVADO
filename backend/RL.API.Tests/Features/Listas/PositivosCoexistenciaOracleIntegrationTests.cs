@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Auditoria.Contracts;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Listas.Application;
 using RL.API.Features.Listas.Contracts;
@@ -21,6 +23,7 @@ using Xunit.Abstractions;
 namespace RL.API.Tests.Features.Listas;
 
 [Collection("MatricesRiesgosOracle")]
+[SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Convención de nombres de pruebas de integración")]
 public sealed class PositivosCoexistenciaOracleIntegrationTests
 {
     private readonly ITestOutputHelper _output;
@@ -28,6 +31,43 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
     public PositivosCoexistenciaOracleIntegrationTests(ITestOutputHelper output)
     {
         _output = output;
+    }
+
+    private sealed class NoOpAuditoriaRepository : IAuditoriaRepository
+    {
+        public Task RegistrarAsync(
+            string tabla,
+            string registroId,
+            string accion,
+            string? datosAnt,
+            string? datosNvo,
+            long? usrId,
+            string? email,
+            string? ip,
+            string? modulo) => Task.CompletedTask;
+
+        public Task RegistrarAsync(
+            OracleConnection connection,
+            OracleTransaction? transaction,
+            string tabla,
+            string registroId,
+            string accion,
+            string? datosAnt,
+            string? datosNvo,
+            long? usrId,
+            string? email,
+            string? ip,
+            string? modulo) => Task.CompletedTask;
+
+        public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(
+            int pagina,
+            int limite,
+            string? buscar,
+            string? accion,
+            string? modulo,
+            string? tabla,
+            DateTime? fechaInicio,
+            DateTime? fechaFin) => Task.FromResult((new List<AuditoriaDto>(), 0));
     }
 
     [P0FOracleRequiredFact]
@@ -46,7 +86,7 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
 
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
         using var appCache = new ApplicationMemoryCache(memoryCache);
-        var auditoria = InterfaceStub.Create<IAuditoriaRepository>(out _);
+        var auditoria = new NoOpAuditoriaRepository();
         var repository = new ListasRepository(
             new OracleDbContext(connectionString),
             auditoria,
@@ -260,7 +300,7 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
 
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
         using var appCache = new ApplicationMemoryCache(memoryCache);
-        var auditoria = InterfaceStub.Create<IAuditoriaRepository>(out _);
+        var auditoria = new NoOpAuditoriaRepository();
         var repository = new ListasRepository(
             new OracleDbContext(connectionString),
             auditoria,
@@ -333,8 +373,8 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
         }
         finally
         {
-            await ExecuteAsync(connection, "DELETE FROM RL_LISTA_POSITIVOS WHERE LSP_POSITIVO_ID IN (94002, 94003)");
-            await ExecuteAsync(connection, "DELETE FROM DNP_IHSS.REPORTE_COINCIDENCIAS WHERE REPORTE_COINCIDENCIA_ID = 94001");
+            await TryExecuteAsync(connection, "DELETE FROM RL_LISTA_POSITIVOS WHERE LSP_POSITIVO_ID IN (94002, 94003)");
+            await TryExecuteAsync(connection, "DELETE FROM DNP_IHSS.REPORTE_COINCIDENCIAS WHERE REPORTE_COINCIDENCIA_ID = 94001");
             await CleanupCoexistenciaFixtureAsync(connection, fixture);
         }
     }
@@ -346,6 +386,10 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
         {
             await ExecuteAsync(connection, "CREATE USER DNP_IHSS IDENTIFIED BY \"M1SynthXe2026\" DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS");
             createdUser = true;
+        }
+        else
+        {
+            await ExecuteAsync(connection, "ALTER USER DNP_IHSS DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS");
         }
 
         bool createdPositivos = false;
@@ -366,11 +410,110 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
                     LSP_ORIGEN_REGISTRO VARCHAR2(100),
                     CONSTRAINT UQ_RL_LSP_DOCUMENTO UNIQUE (LSP_TIPO_DOCUMENTO_ID, LSP_NO_DOCUMENTO)
                 )");
-            await ExecuteAsync(connection, "CREATE SEQUENCE SEQ_RL_LISTA_POSITIVOS START WITH 95000 INCREMENT BY 1");
             createdPositivos = true;
         }
 
-        return new CoexistenciaFixtureState(createdUser, createdPositivos);
+        bool createdSequence = false;
+        if (await ScalarAsync(connection, "SELECT COUNT(*) FROM USER_SEQUENCES WHERE SEQUENCE_NAME = 'SEQ_RL_LISTA_POSITIVOS'") == 0)
+        {
+            await ExecuteAsync(connection, "CREATE SEQUENCE SEQ_RL_LISTA_POSITIVOS START WITH 95000 INCREMENT BY 1");
+            createdSequence = true;
+        }
+
+        bool createdCautela = false;
+        if (await ScalarAsync(connection, "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = 'DNP_IHSS' AND TABLE_NAME = 'TIPO_LISTAS_CAUTELA'") == 0)
+        {
+            await ExecuteAsync(connection, @"
+                CREATE TABLE DNP_IHSS.TIPO_LISTAS_CAUTELA (
+                    TIPO_LISTA_CAUTELA_ID NUMBER PRIMARY KEY,
+                    LISTA_CAUTELA_DESCRICPION VARCHAR2(150)
+                )");
+            createdCautela = true;
+        }
+        await TryExecuteAsync(connection, "INSERT INTO DNP_IHSS.TIPO_LISTAS_CAUTELA (TIPO_LISTA_CAUTELA_ID, LISTA_CAUTELA_DESCRICPION) VALUES (901, 'LISTA PRUEBA')");
+
+        bool createdCoincidencias = false;
+        if (await ScalarAsync(connection, "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = 'DNP_IHSS' AND TABLE_NAME = 'REPORTE_COINCIDENCIAS'") == 0)
+        {
+            await ExecuteAsync(connection, @"
+                CREATE TABLE DNP_IHSS.REPORTE_COINCIDENCIAS (
+                    REPORTE_COINCIDENCIA_ID NUMBER PRIMARY KEY,
+                    DNI VARCHAR2(50),
+                    NOMBRE VARCHAR2(300),
+                    TIPO_PERSONA VARCHAR2(75),
+                    LISTA_CONCIDENCIA VARCHAR2(100),
+                    FECHA_ENCONTRO DATE,
+                    FECHA_CALIFICO DATE,
+                    NUMERO_PATRONO VARCHAR2(50),
+                    TIPO_CALIFICACION_ID NUMBER
+                )");
+            createdCoincidencias = true;
+        }
+
+        bool createdSocios = false;
+        if (await ScalarAsync(connection, "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = 'DNP_IHSS' AND TABLE_NAME = 'SOCIOS'") == 0)
+        {
+            await ExecuteAsync(connection, @"
+                CREATE TABLE DNP_IHSS.SOCIOS (
+                    SOCIO_ID NUMBER PRIMARY KEY,
+                    NUMERO_IDENTIFICACION VARCHAR2(50)
+                )");
+            createdSocios = true;
+        }
+
+        bool createdRepresentantes = false;
+        if (await ScalarAsync(connection, "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = 'DNP_IHSS' AND TABLE_NAME = 'REPRESENTANTES'") == 0)
+        {
+            await ExecuteAsync(connection, @"
+                CREATE TABLE DNP_IHSS.REPRESENTANTES (
+                    REPRESENTANTE_ID NUMBER PRIMARY KEY,
+                    NUMERO_IDENTIFICACION VARCHAR2(50)
+                )");
+            createdRepresentantes = true;
+        }
+
+        bool createdSociosRep = false;
+        if (await ScalarAsync(connection, "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = 'DNP_IHSS' AND TABLE_NAME = 'V_SOCIOS_REPRESENTANTES_M1'") == 0)
+        {
+            await ExecuteAsync(connection, @"
+                CREATE TABLE DNP_IHSS.V_SOCIOS_REPRESENTANTES_M1 (
+                    NUMERO_IDENTIFICACION VARCHAR2(50),
+                    NUMERO_PATRONAL VARCHAR2(50),
+                    NOMBRES_PERSONA VARCHAR2(300),
+                    TIPO_CONDICION_ACTUA_DESC VARCHAR2(150),
+                    NOMBRE_EMPRESA VARCHAR2(300),
+                    ES_PEP VARCHAR2(20)
+                )");
+            await ExecuteAsync(connection, "CREATE OR REPLACE VIEW DNP_IHSS.V_SOCIOS_REPRESENTANTES AS SELECT * FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES_M1");
+            createdSociosRep = true;
+        }
+
+        bool createdEmpleadosPlanillas = false;
+        if (await ScalarAsync(connection, "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = 'DNP_IHSS' AND TABLE_NAME = 'V_EMPLEADOS_IHSS_PLANILLAS_M1'") == 0)
+        {
+            await ExecuteAsync(connection, @"
+                CREATE TABLE DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS_M1 (
+                    IDENTIDAD VARCHAR2(50),
+                    NUMEPATRO VARCHAR2(50),
+                    NOMBRE VARCHAR2(300),
+                    RAZOSOCI VARCHAR2(300),
+                    NOMBRE_EMPLEADO VARCHAR2(300),
+                    PERIODO DATE
+                )");
+            await ExecuteAsync(connection, "CREATE OR REPLACE VIEW DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS AS SELECT * FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS_M1");
+            createdEmpleadosPlanillas = true;
+        }
+
+        return new CoexistenciaFixtureState(
+            createdUser,
+            createdPositivos,
+            createdSequence,
+            createdCautela,
+            createdCoincidencias,
+            createdSocios,
+            createdRepresentantes,
+            createdSociosRep,
+            createdEmpleadosPlanillas);
     }
 
     private static async Task CleanupCoexistenciaFixtureAsync(OracleConnection connection, CoexistenciaFixtureState fixture)
@@ -378,8 +521,49 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
         if (fixture.CreatedPositivos)
         {
             await TryExecuteAsync(connection, "DROP TABLE RL_LISTA_POSITIVOS PURGE");
+        }
+        else
+        {
+            await TryExecuteAsync(connection, "DELETE FROM RL_LISTA_POSITIVOS WHERE LSP_POSITIVO_ID >= 93000");
+        }
+
+        if (fixture.CreatedSequence)
+        {
             await TryExecuteAsync(connection, "DROP SEQUENCE SEQ_RL_LISTA_POSITIVOS");
         }
+
+        if (fixture.CreatedEmpleadosPlanillas)
+        {
+            await TryExecuteAsync(connection, "DROP VIEW DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS");
+            await TryExecuteAsync(connection, "DROP TABLE DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS_M1 PURGE");
+        }
+
+        if (fixture.CreatedSociosRep)
+        {
+            await TryExecuteAsync(connection, "DROP VIEW DNP_IHSS.V_SOCIOS_REPRESENTANTES");
+            await TryExecuteAsync(connection, "DROP TABLE DNP_IHSS.V_SOCIOS_REPRESENTANTES_M1 PURGE");
+        }
+
+        if (fixture.CreatedRepresentantes)
+        {
+            await TryExecuteAsync(connection, "DROP TABLE DNP_IHSS.REPRESENTANTES PURGE");
+        }
+
+        if (fixture.CreatedSocios)
+        {
+            await TryExecuteAsync(connection, "DROP TABLE DNP_IHSS.SOCIOS PURGE");
+        }
+
+        if (fixture.CreatedCoincidencias)
+        {
+            await TryExecuteAsync(connection, "DROP TABLE DNP_IHSS.REPORTE_COINCIDENCIAS PURGE");
+        }
+
+        if (fixture.CreatedCautela)
+        {
+            await TryExecuteAsync(connection, "DROP TABLE DNP_IHSS.TIPO_LISTAS_CAUTELA PURGE");
+        }
+
         if (fixture.CreatedUser)
         {
             await TryExecuteAsync(connection, "DROP USER DNP_IHSS CASCADE");
@@ -422,5 +606,14 @@ public sealed class PositivosCoexistenciaOracleIntegrationTests
         try { await ExecuteAsync(connection, sql); } catch { }
     }
 
-    private sealed record CoexistenciaFixtureState(bool CreatedUser, bool CreatedPositivos);
+    private sealed record CoexistenciaFixtureState(
+        bool CreatedUser,
+        bool CreatedPositivos,
+        bool CreatedSequence,
+        bool CreatedCautela,
+        bool CreatedCoincidencias,
+        bool CreatedSocios,
+        bool CreatedRepresentantes,
+        bool CreatedSociosRep,
+        bool CreatedEmpleadosPlanillas);
 }
