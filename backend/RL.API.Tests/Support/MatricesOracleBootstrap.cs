@@ -657,15 +657,23 @@ public static class MatricesOracleBootstrap
             await using var cmd = new OracleCommand(sql, connection);
             await cmd.ExecuteNonQueryAsync();
         }
-        catch (OracleException ex) when (ex.Number is 955 or 2260 or 2275 or 1430 or 2443 or 942 or 2289)
+        catch (OracleException ex) when (ex.Number is 1 or 942 or 955 or 1418 or 1430 or 1442 or 2260 or 2261 or 2264 or 2275 or 2289 or 2441 or 2442 or 2443)
         {
-            // 955: object already exists
-            // 2260: table can have only one primary key
-            // 2275: such a referential constraint already exists in the table
-            // 1430: column being added already exists in table
-            // 2443: cannot drop constraint - nonexistent constraint
+            // Idempotencia segura en Oracle XE descartable:
+            // 1: unique constraint violated
             // 942: table or view does not exist (para drops)
+            // 955: object already exists
+            // 1418: specified index does not exist (para drops)
+            // 1430: column being added already exists in table
+            // 1442: column being modified to NOT NULL is already NOT NULL
+            // 2260: table can have only one primary key
+            // 2261: unique or primary key already exists
+            // 2264: name already used by an existing constraint
+            // 2275: such a referential constraint already exists in the table
             // 2289: sequence does not exist (para drops)
+            // 2441: cannot drop nonexistent primary key
+            // 2442: cannot drop nonexistent unique key
+            // 2443: cannot drop constraint - nonexistent constraint
         }
     }
 
