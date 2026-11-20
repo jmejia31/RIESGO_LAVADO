@@ -12521,3 +12521,52 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Publicar expediente y trazabilidad en `origin/desarrollo`.
   - Monitorear el Quality Gate en GitHub Actions hasta conclusión exitosa.
   - Estado: `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+## 2026-11-20 00:50 -06:00 — ANTIG — Subsanación Probatoria del Paquete B y Compensación Segura de Evidencias
+
+- **Identificación:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama autorizada: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `b081c9953ba8d25c5d662655e43a0cb9a79cf19a`. Quality Gate Previo Base: `44681293755` (`completed / success`).
+  - Respaldos remotos íntegros preservados en GitHub:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+- **Objetivo y Alcance:**
+  - Subsanación probatoria formal y exhaustiva del expediente `PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` en cumplimiento de la orden del propietario.
+  - Corrección quirúrgica del único defecto real reproducido en el código: compensación lógica de fallos en almacenamiento físico de evidencias (`GuardarArchivosAsync`) en `EvidenciasService.cs` (`FUNCTIONAL_CODE_CHANGES=1`).
+  - Incorporación de una **Fe de Erratas Técnica y Trazable de 10 puntos** en el expediente B sin borrar el historial.
+  - Sinceramiento de estados técnicos: B3 (`BLOCKED_LOCAL_ORACLE_XE`), B4 (Consistencia sintáctica verificada en unit tests / procedencia física verificada en repositorio), B5 (`BLOCKED_EXTERNAL_AUTHORIZATION`), B6 (`PDF_EXCEL_PAIRS_BLOCKED=5`, `PDF_EXCEL_PAIRS_EXECUTED=0`).
+  - Identificación y delimitación de generadores reales de reportería: Matrices de Riesgos en backend ASP.NET Core (`MatricesRiesgosReportExportService.cs`), Monitoreo en frontend (`institutional-report.util.ts`, `excel-export.util.ts`).
+  - Preservación formal de aprobaciones previas de Propietario (`B06_OWNER_ACCEPTANCE=APPROVED`, `M1_OWNER_ACCEPTANCE=APPROVED`, `M2_OWNER_ACCEPTANCE=APPROVED`, `M3_OWNER_ACCEPTANCE=APPROVED`).
+- **Defecto Real Corregido y Pruebas de Regresión:**
+  - `backend/RL.API/Features/Listas/Application/EvidenciasService.cs`: Ante fallo en almacenamiento de archivos en disco durante `RegistrarSeguimientoAsync`, el método llamaba a `EliminarSeguimientoLogicoAsync(idSeguimiento)`. Si este segundo paso fallaba o retornaba `false`, el código retornaba un mensaje erróneo afirmando que "la operación fue revertida". Se ajustó para capturar el resultado booleano `compensado` y, en caso de fallo o excepción en la compensación, reportar verídicamente: *"No se pudo completar el almacenamiento de evidencias y la reversión compensatoria no pudo confirmarse."*
+  - `backend/RL.API.Tests/Features/Listas/EvidenciasServiceIsolationTests.cs`: 3 pruebas unitarias añadidas demostrando: compensación exitosa afirma reversión; fallo de compensación no afirma reversión; excepción en compensación no afirma reversión no demostrada. Total suite: 6/6 PASS.
+  - `backend/RL.API.Tests/Features/Listas/PositivosCoexistenciaIntegridadTests.cs`: 3 pruebas unitarias añadidas demostrando: validación sintáctica de `ValidarConsistenciaSrc` rechazando texto malformado (`SRC:`, `SRC:abc`, `SRC:-5`, `SRC:EMP:123`, `SRC:NAT:456`); extracción numérica para `SRC:12345`; y verificación de rechazo 404 ante referencias SRC inexistentes en repositorio. Total suite: 21/21 PASS.
+- **Archivos Modificados:**
+  - `backend/RL.API/Features/Listas/Application/EvidenciasService.cs` (corrección de reversión compensatoria).
+  - `backend/RL.API.Tests/Features/Listas/EvidenciasServiceIsolationTests.cs` (pruebas de compensación segura).
+  - `backend/RL.API.Tests/Features/Listas/PositivosCoexistenciaIntegridadTests.cs` (pruebas sintéticas SRC).
+  - `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` (Fe de Erratas y expediente reconciliado).
+  - `docs/certificaciones/INDEX.json` (actualización de entrada Paquete B con métricas y estados fidedignos).
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (estado vigente antepuesto).
+  - `BITACORA_COLABORACION.md` (registro cronológico de la subsanación).
+- **Resultados de Verificación y Métricas Reales:**
+  - Backend Unit Tests: 1,330/1,330 PASS, 0 FAIL (`dotnet test --filter "FullyQualifiedName!~IntegrationTests"`).
+  - Backend Institutional Tests: 158/158 PASS, 1 SKIP (`WorkflowAllowsAndAuditsAllThirtyDirectedStateChangesOnLocalXe` omitida por ausencia de Oracle XE local).
+  - Frontend Vitest: 1,059/1,059 PASS en 96 suites (`npm test -- --watch=false`).
+  - Frontend Lint: 0 errores, 0 advertencias (`npm run lint`).
+  - Compilación Backend: 0 errores.
+  - Compilación Frontend: 0 errores.
+  - Validadores: 5/5 PASS (scripts DB, links documentación, estructura, Agent Skills, escrituras externas con `-SelfTest` 8/8 PASS).
+  - `git diff --check`: PASS (0 errores de formato/espacios).
+- **Gobernanza y Restricciones:**
+  - Mutaciones en Oracle institucional: DDL=0, DML=0.
+  - Cambios en rama `main` o producción: 0.
+  - Cambios en código funcional: 1 (`backend/RL.API/Features/Listas/Application/EvidenciasService.cs`).
+  - Estado final: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Firma independiente: `PENDING_CHATGPT_REVIEW`.
+- **Punto Exacto de Continuación:**
+  - Publicar cambios en `origin/desarrollo`.
+  - Monitorear el Quality Gate en GitHub Actions hasta conclusión exitosa.
+  - Entregar el informe de cierre INI a Javier Mejía y ChatGPT para revisión independiente.

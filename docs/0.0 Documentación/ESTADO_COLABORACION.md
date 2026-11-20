@@ -1,4 +1,51 @@
-# ESTADO VIGENTE — Paquete B: Certificación Complementaria Integral (ANTIG, 2026-11-19 23:15 -06:00)
+# ESTADO VIGENTE — Paquete B: Subsanación Probatoria y Compensación Segura de Evidencias (ANTIG, 2026-11-20 00:45 -06:00)
+
+- **Identificación y Referencia:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `b081c9953ba8d25c5d662655e43a0cb9a79cf19a`. Quality Gate Previo Base: `44681293755` (`completed / success`).
+  - Respaldos remotos íntegros verificados en GitHub:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+  - Estado del Paquete B: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Revisión independiente: `PENDING_CHATGPT_REVIEW`.
+  - Expedientes formales: `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` (con Fe de Erratas Técnica y Trazable de 10 puntos) e `INDEX.json`.
+- **Alcance de la Subsanación Probatoria:**
+  - **Corrección Funcional Demostrada (`FUNCTIONAL_CODE_CHANGES=1`):**
+    - Archivo: `backend/RL.API/Features/Listas/Application/EvidenciasService.cs`.
+    - Defecto real resuelto: En `RegistrarSeguimientoAsync`, ante fallo en almacenamiento físico de evidencias (`GuardarArchivosAsync`) y posterior fallo o retorno `false` en eliminación lógica compensatoria (`EliminarSeguimientoLogicoAsync`), el código retornaba un mensaje falso afirmando que "la operación fue revertida".
+    - Solución quirúrgica: Captura del resultado `compensado`. Si no se pudo compensar o lanzó excepción, retorna mensaje verídico: *"No se pudo completar el almacenamiento de evidencias y la reversión compensatoria no pudo confirmarse."*
+    - Pruebas de regresión unitarias añadidas en `EvidenciasServiceIsolationTests.cs`: 3 pruebas (compensación exitosa afirma reversión, fallo de compensación no afirma reversión, excepción en compensación no afirma reversión). Total suite: 6/6 PASS.
+  - **Subsanación B4 — Referencias SRC:**
+    - Pruebas sintéticas añadidas en `PositivosCoexistenciaIntegridadTests.cs` (3 pruebas) demostrando:
+      - `IdentidadMonitoreoPolicy.ValidarConsistenciaSrc(documento, idRegistroFuente, out idResuelto)` solo acepta `SRC:<digitos>` numéricos y rechaza texto malformado (`SRC:`, `SRC:abc`, `SRC:-5`, `SRC:EMP:123`, `SRC:NAT:456`).
+      - La verificación de existencia real de la fila fuente reside en `ListasRepository.cs` en base de datos, no en la policy sintáctica en memoria.
+      - Total suite `PositivosCoexistenciaIntegridadTests`: 21/21 PASS.
+  - **Sinceramiento de Estados B3, B5, B6:**
+    - B3 (Integridad real de expedientes Oracle): `BLOCKED_LOCAL_ORACLE_XE` (puerto local TCP 1521 cerrado; 11/11 pruebas superadas en GitHub Actions CI, 0 ejecutadas localmente).
+    - B5 (QA Institucional E2E): `BLOCKED_EXTERNAL_AUTHORIZATION` (sin credenciales productivas ni red corporativa IHSS conectada).
+    - B6 (Paridad física PDF/Excel): `PDF_EXCEL_PAIRS_BLOCKED=5`, `PDF_EXCEL_PAIRS_EXECUTED=0` (bloqueadas para extracción física pareada por dependencia Oracle XE local). Identificación de generadores reales: Matrices de Riesgos en backend ASP.NET Core (`MatricesRiesgosReportExportService.cs`), Monitoreo en frontend (`institutional-report.util.ts`, `excel-export.util.ts`).
+  - **Fe de Erratas Técnica de 10 Puntos en Expediente B:**
+    - Incorporada en `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` sin borrar el historial, desglosando firmas reales, arquitectura de reportes, política de logos B06, temas de contraste y métricas de CI vs. Local.
+- **Métricas de Verificación:**
+  - Backend Unit Tests: 1,330/1,330 PASS, 0 FAIL (`dotnet test --filter "FullyQualifiedName!~IntegrationTests"`).
+  - Backend Institutional Tests: 158/158 PASS, 1 SKIP (`WorkflowAllowsAndAuditsAllThirtyDirectedStateChangesOnLocalXe` omitida por Oracle XE local no disponible).
+  - Frontend Vitest: 1,059/1,059 PASS en 96 suites (`npm test -- --watch=false`).
+  - Frontend Lint: 0 errores, 0 advertencias (`npm run lint`).
+  - Validadores: 5/5 PASS (scripts DB, links documentación, estructura, Agent Skills, escrituras externas con `-SelfTest` 8/8 PASS).
+- **Gobernanza y Preservaciones:**
+  - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura autorizada).
+  - Rama `main` y producción: 0 modificaciones.
+  - Preservación formal de aprobaciones de Propietario: `B06_OWNER_ACCEPTANCE=APPROVED`, `M1_OWNER_ACCEPTANCE=APPROVED`, `M2_OWNER_ACCEPTANCE=APPROVED`, `M3_OWNER_ACCEPTANCE=APPROVED`.
+- **Punto de continuación:**
+  - Publicación a `origin/desarrollo`.
+  - Verificación del run de GitHub Actions CI.
+  - Entrega de informe final INI para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+---
+
+# ESTADO HISTÓRICO — Paquete B: Certificación Complementaria Integral (ANTIG, 2026-11-19 23:15 -06:00)
 
 - **Identificación y Referencia:**
   - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.

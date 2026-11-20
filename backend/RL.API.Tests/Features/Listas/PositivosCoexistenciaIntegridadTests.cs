@@ -364,4 +364,62 @@ public sealed class PositivosCoexistenciaIntegridadTests
 
         return controller;
     }
+
+    [Fact]
+    public void ValidarConsistenciaSrc_MalformadoTexto_RetornaFalse()
+    {
+        // SRC sin número, con caracteres alfabéticos, prefijos compuestos o IDs negativos no son válidos
+        Assert.False(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:", null));
+        Assert.False(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:abc", null));
+        Assert.False(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:-5", null));
+        Assert.False(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:EMP:12345", null));
+        Assert.False(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:NAT:9999", null));
+    }
+
+    [Fact]
+    public void ValidarConsistenciaSrc_ValidoNumerico_RetornaTrueYExtraeId()
+    {
+        Assert.True(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:12345", null, out var id1));
+        Assert.Equal(12345L, id1);
+
+        Assert.True(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("SRC:12345", 12345L, out var id2));
+        Assert.Equal(12345L, id2);
+
+        // Documento estándar sin prefijo SRC: es aceptado sintácticamente
+        Assert.True(IdentidadMonitoreoPolicy.ValidarConsistenciaSrc("0801199012345", null, out var id3));
+        Assert.Null(id3);
+    }
+
+    [Fact]
+    public async Task ObtenerPositivoPorDocumento_SrcInexistente_RetornaOkConDatosNull()
+    {
+        var controller = CrearController(out var listasStub, out _, out _);
+        listasStub.On(nameof(IListasService.ObtenerPositivoPorDocumentoAsync), _ =>
+            Task.FromResult<ExistingPositivoDto?>(null));
+
+        var result = await controller.ObtenerPositivoPorDocumento("SRC:9999", tipoPositivoId: null);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(200, okResult.StatusCode);
+        var json = System.Text.Json.JsonSerializer.Serialize(okResult.Value);
+        Assert.Contains("\"datos\":null", json);
+    }
+
+    [Fact]
+    public async Task RegistrarSeguimiento_SrcInexistente_RetornaNotFound()
+    {
+        var controller = CrearController(out _, out var evidenciasStub, out _);
+        evidenciasStub.On(nameof(IEvidenciasService.RegistrarSeguimientoAsync), _ =>
+            Task.FromResult(ServiceResult.NotFound("No se encontró un registro positivo activo para este documento.")));
+
+        var result = await controller.RegistrarSeguimiento(
+            noDocumento: "SRC:9999",
+            motivoIngreso: "Seguimiento sobre inexistente",
+            archivos: null,
+            tipoPositivoId: 2,
+            idRegistroFuente: 9999);
+
+        var notFoundResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(404, notFoundResult.StatusCode);
+    }
 }

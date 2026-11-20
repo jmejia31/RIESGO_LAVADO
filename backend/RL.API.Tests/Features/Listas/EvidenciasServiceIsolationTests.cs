@@ -86,4 +86,83 @@ public sealed class EvidenciasServiceIsolationTests
         Assert.Equal(404, result.StatusCode);
         Assert.Empty(repo.CallsTo(nameof(IListasRepository.RegistrarSeguimientoAsync)));
     }
+
+    [Fact]
+    public async Task RegistrarSeguimiento_FalloAlmacenamiento_CompensacionExitosa_AfirmaReversion()
+    {
+        var service = CrearServicio(out var repo);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(1));
+        repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), _ =>
+            Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto { PositivoId = 100, TipoPositivoId = 2 }));
+        repo.On(nameof(IListasRepository.RegistrarSeguimientoAsync), _ => Task.FromResult(1001L));
+        repo.On(nameof(IListasRepository.GuardarEvidenciaMetaAsync), _ =>
+            throw new InvalidOperationException("Fallo forzado al persistir evidencia"));
+        repo.On(nameof(IListasRepository.EliminarSeguimientoLogicoAsync), _ => Task.FromResult(true));
+
+        var pdfBytes = "%PDF-1.4\n%%EOF"u8.ToArray();
+        var file = new Microsoft.AspNetCore.Http.FormFile(new MemoryStream(pdfBytes), 0, pdfBytes.Length, "archivo", "evidencia.pdf")
+        {
+            Headers = new Microsoft.AspNetCore.Http.HeaderDictionary { ["Content-Type"] = "application/pdf" }
+        };
+
+        var result = await service.RegistrarSeguimientoAsync("0801199012345", "Nota con fallo", [file], 1, 2);
+
+        Assert.False(result.Success);
+        Assert.Contains("la operación fue revertida", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Single(repo.CallsTo(nameof(IListasRepository.EliminarSeguimientoLogicoAsync)));
+    }
+
+    [Fact]
+    public async Task RegistrarSeguimiento_FalloAlmacenamiento_FalloCompensacion_NoAfirmaReversionNoDemostrada()
+    {
+        var service = CrearServicio(out var repo);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(1));
+        repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), _ =>
+            Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto { PositivoId = 100, TipoPositivoId = 2 }));
+        repo.On(nameof(IListasRepository.RegistrarSeguimientoAsync), _ => Task.FromResult(1001L));
+        repo.On(nameof(IListasRepository.GuardarEvidenciaMetaAsync), _ =>
+            throw new InvalidOperationException("Fallo forzado al persistir evidencia"));
+        // La compensación devuelve false (no se pudo inactivar en base de datos)
+        repo.On(nameof(IListasRepository.EliminarSeguimientoLogicoAsync), _ => Task.FromResult(false));
+
+        var pdfBytes = "%PDF-1.4\n%%EOF"u8.ToArray();
+        var file = new Microsoft.AspNetCore.Http.FormFile(new MemoryStream(pdfBytes), 0, pdfBytes.Length, "archivo", "evidencia.pdf")
+        {
+            Headers = new Microsoft.AspNetCore.Http.HeaderDictionary { ["Content-Type"] = "application/pdf" }
+        };
+
+        var result = await service.RegistrarSeguimientoAsync("0801199012345", "Nota con fallo compensacion", [file], 1, 2);
+
+        Assert.False(result.Success);
+        // Debe indicar que la reversión no pudo confirmarse y NO afirmar que fue revertida
+        Assert.DoesNotContain("la operación fue revertida", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("no pudo confirmarse", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RegistrarSeguimiento_FalloAlmacenamiento_ExcepcionCompensacion_NoAfirmaReversionNoDemostrada()
+    {
+        var service = CrearServicio(out var repo);
+        repo.On(nameof(IListasRepository.ContarPositivosActivosAsync), _ => Task.FromResult(1));
+        repo.On(nameof(IListasRepository.ObtenerPositivoPorDocumentoAsync), _ =>
+            Task.FromResult<ExistingPositivoDto?>(new ExistingPositivoDto { PositivoId = 100, TipoPositivoId = 2 }));
+        repo.On(nameof(IListasRepository.RegistrarSeguimientoAsync), _ => Task.FromResult(1001L));
+        repo.On(nameof(IListasRepository.GuardarEvidenciaMetaAsync), _ =>
+            throw new InvalidOperationException("Fallo forzado al persistir evidencia"));
+        // La compensación arroja excepción
+        repo.On(nameof(IListasRepository.EliminarSeguimientoLogicoAsync), _ =>
+            throw new InvalidOperationException("DB inaccesible durante compensación"));
+
+        var pdfBytes = "%PDF-1.4\n%%EOF"u8.ToArray();
+        var file = new Microsoft.AspNetCore.Http.FormFile(new MemoryStream(pdfBytes), 0, pdfBytes.Length, "archivo", "evidencia.pdf")
+        {
+            Headers = new Microsoft.AspNetCore.Http.HeaderDictionary { ["Content-Type"] = "application/pdf" }
+        };
+
+        var result = await service.RegistrarSeguimientoAsync("0801199012345", "Nota con excepcion compensacion", [file], 1, 2);
+
+        Assert.False(result.Success);
+        Assert.DoesNotContain("la operación fue revertida", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("no pudo confirmarse", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

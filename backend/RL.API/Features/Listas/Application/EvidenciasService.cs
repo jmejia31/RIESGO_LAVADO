@@ -149,9 +149,10 @@ public sealed class EvidenciasService : IEvidenciasService
         }
         catch (Exception ex)
         {
+            var compensado = false;
             try
             {
-                await _repo.EliminarSeguimientoLogicoAsync(
+                compensado = await _repo.EliminarSeguimientoLogicoAsync(
                     detalleId,
                     usuarioId,
                     "Rollback compensatorio: no se pudo completar el almacenamiento de evidencias.");
@@ -161,8 +162,14 @@ public sealed class EvidenciasService : IEvidenciasService
                 Serilog.Log.Error(rollbackEx, "No se pudo completar el rollback compensatorio del seguimiento {DetalleId}", detalleId);
             }
 
-            Serilog.Log.Error(ex, "Se revirtió el seguimiento {DetalleId} porque falló el almacenamiento de evidencias", detalleId);
-            return ServiceResult.Failure("No se pudo completar el seguimiento y sus evidencias; la operación fue revertida.");
+            if (compensado)
+            {
+                Serilog.Log.Error(ex, "Se revirtió el seguimiento {DetalleId} porque falló el almacenamiento de evidencias", detalleId);
+                return ServiceResult.Failure("No se pudo completar el seguimiento y sus evidencias; la operación fue revertida.");
+            }
+
+            Serilog.Log.Error(ex, "Falló el almacenamiento de evidencias y no se pudo confirmar la reversión compensatoria del seguimiento {DetalleId}", detalleId);
+            return ServiceResult.Failure("No se pudo completar el almacenamiento de evidencias y la reversión compensatoria no pudo confirmarse.");
         }
     }
 
