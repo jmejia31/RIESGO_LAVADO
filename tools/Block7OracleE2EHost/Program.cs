@@ -59,6 +59,7 @@ long userStamp = stamp % 800_000_000;
 long riskId = stamp + 700_000_000;
 long[] canonicalRiskIds = Enumerable.Range(0, canonicalRisks.Length).Select(index => riskId + index).ToArray();
 long versionId = stamp + 700_000_001;
+long block7FamilyId = stamp + 700_100_000;
 long userId = 987654;
 long areaOnlyUserId = userStamp + 10;
 long ugrOnlyUserId = userStamp + 11;
@@ -134,8 +135,10 @@ for (int index = 0; index < canonicalRisks.Length; index++)
     await ExecuteAsync(oracle, "INSERT INTO RL_MR_RIESGOS (RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION) VALUES (:id,:code,:name,'Block 12 disposable canonical identity',1,:usr,SYSDATE)",
         ("id", canonicalRiskIds[index]), ("code", risk.Code), ("name", risk.Name), ("usr", userId));
 }
-await ExecuteAsync(oracle, "MERGE INTO RL_MR_FAMILIAS_FORMULARIO destino USING (SELECT 1 FAM_ID FROM DUAL) origen ON (destino.FAM_ID = origen.FAM_ID) WHEN MATCHED THEN UPDATE SET FAM_CODIGO='BLOCK7_FAMILIA',FAM_NOMBRE='Familia E2E Block 7',FAM_DESCRIPCION='Fixture desechable para certificacion',FAM_ACTIVO=1,FAM_ARCHIVADA=0,FAM_PREDETERMINADA=0 WHEN NOT MATCHED THEN INSERT (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (1,'BLOCK7_FAMILIA','Familia E2E Block 7','Fixture desechable para certificacion',1,0,0,SYSDATE)");
-await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_E2E',1,:json,RPAD('B',64,'B'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
+await ExecuteAsync(oracle,
+    "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_PREDETERMINADA,FAM_FECHA_CREACION) VALUES (:id,:code,'Familia E2E Block 7','Fixture desechable para certificacion',1,0,0,SYSDATE)",
+    ("id", block7FamilyId), ("code", $"BLOCK7_FAMILIA_{stamp}"));
+await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:familyId,'BLOCK7_E2E',1,:json,RPAD('B',64,'B'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("familyId", block7FamilyId), ("json", definition), ("usr", userId));
 var fullChainUiFixtures = new List<object>();
 bool fullChainSeeded = false;
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable browser rule','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
@@ -256,7 +259,7 @@ app.MapGet("/__e2e/readyz", async (OracleDbContext db, CancellationToken cancell
     _ = await command.ExecuteScalarAsync(cancellationToken);
     return Results.Ok(new { status = "ready" });
 });
-app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId, definition = JsonDocument.Parse(definition).RootElement.Clone() }));
+app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, familyId = block7FamilyId, versionCode = "BLOCK7_E2E", areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId, definition = JsonDocument.Parse(definition).RootElement.Clone() }));
 app.MapGet("/__e2e/family-lifecycle-fixture", () => Results.Ok(new { lifecycleFamilyId, lifecycleFamilyCode, lifecycleVersionId, lifecycleEvaluationId, lifecycleEvidenceId, lifecycleEvidenceLinkId, lifecycleRiskId = riskId, lifecycleRiskCode = riskCode }));
 app.MapGet("/__e2e/version-delete-fixture", () => Results.Ok(new
 {
@@ -755,6 +758,7 @@ finally
 
     // Remove only fixture-owned metadata by exact IDs after dependent evaluations are gone.
     await CleanupStepAsync("RL_MR_VERSIONES_FORMULARIO;BLOCK7", "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", versionId));
+    await CleanupStepAsync("RL_MR_FAMILIAS_FORMULARIO;BLOCK7", "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", block7FamilyId));
     await CleanupStepAsync("RL_MR_REGLAS_CALCULO;BLOCK7", "DELETE FROM RL_MR_REGLAS_CALCULO WHERE REG_ID IN (:main,:lifecycle)",
         ("main", versionId), ("lifecycle", lifecycleVersionId));
     if (tx12AuditFailureRequired)
