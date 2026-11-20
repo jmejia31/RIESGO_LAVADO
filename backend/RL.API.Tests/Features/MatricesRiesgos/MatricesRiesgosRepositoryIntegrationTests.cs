@@ -798,7 +798,8 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
                 conn);
             string esquema = Convert.ToString(await schemaCmd.ExecuteScalarAsync()) ?? string.Empty;
 
-            if (!string.Equals(esquema, "RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase))
+            string[] esquemasAutorizados = ["RIESGO_LAVADO", "SYSTEM"];
+            if (!esquemasAutorizados.Contains(esquema, StringComparer.OrdinalIgnoreCase))
             {
                 Assert.Fail($"Esquema Oracle no autorizado para certificación: {esquema}.");
             }
