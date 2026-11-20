@@ -242,6 +242,16 @@ Se creó la clase de pruebas de integración contra Oracle XE descartable (`[P0F
   1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`)
   2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`)
   3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`)
+### 8.7 Certificación CI en GitHub Actions
+- **Código Fuente Certificado (`SOURCE_CODE_SHA`):** `966d0ec825e70089da983d02644b2acb0306fab6`
+- **Quality Gate Ejecutado y Aprobado:** [Run 44660135562](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44660135562)
+- **Estado CI:** `COMPLETED / SUCCESS` (2/2 jobs exitosos, duración 16m41s).
+- **Pruebas de Integración Oracle XE Ejecutadas en CI:**
+  - `PositivosCoexistenciaOracleIntegrationTests.CoexistenciaOracle_12EscenariosPersistencia_EnOracleXeDescartable`: PASS.
+  - `PositivosCoexistenciaOracleIntegrationTests.CoexistenciaOracle_EmpleadoHistoricoSinPrefijo_NaturalConDni_MonitoreoAgrupado_FilaUnica_TieneMotivoTrue`: PASS.
+- **Certificaciones de Matrices y Contenedores:** PASS (todas las 34 fórmulas de oráculo, 2006 cálculos de libro, 30 transiciones de flujo y 59 identidades canónicas aprobadas contra Oracle XE).
+- **Estado de Certificación:** `READY_FOR_INDEPENDENT_REVIEW`.
+
 - **Restricciones de Gobernanza:**
   - Rama `main` no modificada.
   - Cero DDL/DML contra Oracle institucional (`DNP_IHSS`, `MMATAMOROS`).
