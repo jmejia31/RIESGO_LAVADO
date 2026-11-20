@@ -76,7 +76,8 @@ public sealed class PositivosIntegridadOracleIntegrationTests
             int activosTotal = await repo.ContarPositivosActivosAsync(dni, 0);
             Assert.Equal(2, activosTotal);
 
-            _output.WriteLine("B3_01_COEXISTENCIA_FISICA=PASS");
+            Console.WriteLine("B3_01_COEXISTENCIA_NATURAL_EMPLEADO=PASS");
+            _output.WriteLine("B3_01_COEXISTENCIA_NATURAL_EMPLEADO=PASS");
         }
         finally
         {
@@ -120,7 +121,8 @@ public sealed class PositivosIntegridadOracleIntegrationTests
             Assert.Contains(seguimientosEmpleado, s => s.DetalleListaId == segEmpleadoId && s.MotivoIngreso.Contains("Empleado IHSS"));
             Assert.DoesNotContain(seguimientosEmpleado, s => s.DetalleListaId == segNaturalId);
 
-            _output.WriteLine("B3_02_SEGUIMIENTOS_AISLAMIENTO=PASS");
+            Console.WriteLine("B3_02_SEGUIMIENTOS_AISLAMIENTO_POSITIVO_ID=PASS");
+            _output.WriteLine("B3_02_SEGUIMIENTOS_AISLAMIENTO_POSITIVO_ID=PASS");
         }
         finally
         {
@@ -182,7 +184,8 @@ public sealed class PositivosIntegridadOracleIntegrationTests
             Assert.Equal(expectedSha256, recoveredSha256);
             Assert.Equal(rawBytes.Length, recoveredBytes.Length);
 
-            _output.WriteLine("B3_03_EVIDENCIA_FISICA_SHA256=PASS");
+            Console.WriteLine("B3_03_EVIDENCIAS_FISICAS_SHA256=PASS");
+            _output.WriteLine("B3_03_EVIDENCIAS_FISICAS_SHA256=PASS");
         }
         finally
         {
@@ -251,6 +254,7 @@ public sealed class PositivosIntegridadOracleIntegrationTests
             int deleteAuditRows = Convert.ToInt32(await verifyCmd.ExecuteScalarAsync());
             Assert.True(deleteAuditRows >= 1, "Debe existir al menos 1 fila física en RL_AUDITORIA para el DELETE.");
 
+            Console.WriteLine("B3_04_AUDITORIA_PERSISTENTE_ORACLE_XE=PASS");
             _output.WriteLine("B3_04_AUDITORIA_PERSISTENTE_ORACLE_XE=PASS");
         }
         finally
@@ -351,6 +355,7 @@ public sealed class PositivosIntegridadOracleIntegrationTests
             Assert.True(storedFiles.Length >= 2, "Debe haber al menos 2 archivos distintos en disco.");
             _output.WriteLine("CASO_E_DUPLICATE_FILENAMES_UNIQUE_STORAGE=PASS");
 
+            Console.WriteLine("B3_05_COMPENSACION_CASOS_A_B_C_D_E=PASS");
             _output.WriteLine("B3_05_COMPENSACION_CASOS_A_B_C_D_E=PASS");
         }
         finally
