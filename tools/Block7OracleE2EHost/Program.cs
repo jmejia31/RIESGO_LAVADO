@@ -100,6 +100,9 @@ string definition = CreateDefinition(ruleCode);
 string lifecycleDefinition = CreateDefinition(lifecycleRuleCode);
 string lifecycleDefinitionHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(lifecycleDefinition))).ToLowerInvariant();
 string lifecycleEvidenceHash = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("h08-evidence"))).ToLowerInvariant();
+// Include fixture seeding in the teardown scope: partial initialization must be cleaned up.
+try
+{
 for (int index = 0; index < canonicalRisks.Length; index++)
 {
     var risk = canonicalRisks[index];
@@ -580,8 +583,6 @@ app.MapPost("/__e2e/shutdown", (IHostApplicationLifetime lifetime) =>
     lifetime.StopApplication();
     return Results.Ok(new { status = "stopping" });
 });
-try
-{
     await app.RunAsync();
 }
 finally
