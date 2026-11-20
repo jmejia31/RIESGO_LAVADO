@@ -5791,3 +5791,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Preservación:** no se modificaron `main`, producción, Oracle, migraciones, Configuración de cálculo ni archivos ajenos sin seguimiento.
 - **Estado actual:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; falta publicar en `origin/desarrollo` y revisar visualmente el botón deshabilitado/habilitado y los marcadores de obligatoriedad.
 - **Punto de continuación:** commit documental, `git push origin desarrollo`, verificación remota y prueba manual del flujo Nuevo plan con campos incompletos y completos.
+
+## Estado vigente — Modal grande y campos obligatorios de efectividad — 2026-11-20 17:06 -06:00 (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`.
+- **Base SHA:** `6f895862`.
+- **Source Code SHA:** `fce5a8142d24cd7de9b5597a7264f5b8def393ad` (`fix(mitigacion): amplia modal de efectividad y exige comentario`); publicación remota pendiente al momento de este registro.
+- **Alcance:** modal Registrar efectividad del componente de Mitigación. Usa `modal-size-lg`; Efectividad % y Comentario son obligatorios; el botón solo se habilita con ambos datos válidos y la confirmación institucional continúa activa.
+- **Archivos:** componente TypeScript, template HTML y prueba unitaria del componente de Mitigación. No se modificaron backend, Oracle, migraciones ni Configuración de cálculo.
+- **Verificación:** focalizada `1/1` archivo y `26/26` pruebas PASS; Angular `98/98` archivos y `1077/1077` pruebas PASS; lint/build PASS con advertencias preexistentes; `git diff --check` PASS.
+- **No verificado:** E2E visual con navegador, backend/Oracle y Quality Gate completo. No se iniciaron ni detuvieron servicios; el propietario los levanta manualmente.
+- **Preservación:** no se modificaron `main`, producción, Oracle, migraciones, Configuración de cálculo ni archivos ajenos sin seguimiento.
+- **Estado actual:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; falta publicar en `origin/desarrollo` y revisar visualmente tamaño, obligatoriedad y confirmación.
+- **Punto de continuación:** commit documental, `git push origin desarrollo`, verificación remota y prueba manual del modal Registrar efectividad.

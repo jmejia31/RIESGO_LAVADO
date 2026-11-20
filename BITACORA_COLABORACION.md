@@ -12733,3 +12733,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó Configuración de cálculo, `main`, producción, Oracle, migraciones, datos ni archivos sin seguimiento ajenos; el stage fue selectivo.
 - **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente publicar el commit funcional y este registro en `origin/desarrollo`, y validar manualmente que el botón se habilite únicamente al completar los campos.
 - **Punto exacto de continuación:** publicar selectivamente código y documentación, verificar `HEAD == origin/desarrollo`, y probar en navegador el modal con campos vacíos, valores `0`, fechas inválidas y formulario completo.
+
+## 2026-11-20 17:06 -06:00 — Modal grande y obligatoriedad de comentario en efectividad (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `6f895862`; commit funcional `fce5a8142d24cd7de9b5597a7264f5b8def393ad` (`fix(mitigacion): amplia modal de efectividad y exige comentario`); autor `COD`.
+- **Objetivo:** ampliar el modal Registrar efectividad al siguiente tamaño institucional y evitar registros incompletos.
+- **Cambios funcionales:** el modal pasó de `modal-size-md` a `modal-size-lg`; Efectividad % y Comentario se muestran como obligatorios con `required`, `aria-required` y marca visual. El botón de registro permanece deshabilitado hasta tener un valor entre 0 y 100 y comentario no vacío. La validación imperativa del método de guardado aplica la misma regla y conserva la confirmación institucional.
+- **Contrato preservado:** el backend y Oracle no fueron modificados. Aunque `ECO_COMENTARIO` admite nullable en el contrato existente, la interfaz aplica la obligatoriedad de negocio solicitada y envía texto no vacío cuando se registra.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.ts`, `.html` y `.spec.ts`.
+- **Pruebas ejecutadas:** prueba focalizada `1` archivo / `26` pruebas PASS; Angular completo `98` archivos / `1077` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS/CommonJS; `git diff --check` PASS.
+- **No ejecutado:** backend .NET, Oracle, E2E visual con navegador y Quality Gate completo; no se iniciaron ni detuvieron servicios. Configuración de cálculo permanece intacta.
+- **Preservación:** no se tocó `main`, producción, Oracle, migraciones, Configuración de cálculo ni archivos ajenos sin seguimiento; el stage fue selectivo.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente publicar el commit funcional y este registro en `origin/desarrollo`, y comprobar visualmente el ancho nuevo y el bloqueo del botón.
+- **Punto exacto de continuación:** publicar documentación y código, verificar paridad remota y revisar el flujo Registrar efectividad con comentario vacío, comentario completo y valor fuera de rango.
