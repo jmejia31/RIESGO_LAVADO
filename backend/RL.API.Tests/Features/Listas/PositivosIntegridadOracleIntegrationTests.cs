@@ -415,8 +415,12 @@ public sealed class PositivosIntegridadOracleIntegrationTests
                 USR_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL
             )");
         await ExecuteIgnoreAsync(connection, @"
-            INSERT INTO RL_USUARIOS (USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL, USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID)
-            VALUES (1, 'ADMIN', 'B3', 'admin.b3@ihss.local', 'HASH', 'SALT', 1)");
+            BEGIN
+                INSERT INTO RL_USUARIOS (USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL, USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID)
+                VALUES (1, 'ADMIN', 'B3', 'admin.b3@ihss.local', 'HASH', 'SALT', 1);
+            EXCEPTION
+                WHEN DUP_VAL_ON_INDEX THEN NULL;
+            END;");
 
         // 2. RL_AUDITORIA y SEQ
         await ExecuteIgnoreAsync(connection, @"
@@ -534,7 +538,7 @@ public sealed class PositivosIntegridadOracleIntegrationTests
             await using var cmd = new OracleCommand(sql, connection);
             await cmd.ExecuteNonQueryAsync();
         }
-        catch (OracleException ex) when (ex.Number is 955 or 2260 or 2275 or 1430 or 2443 or 942 or 2289)
+        catch (OracleException ex) when (ex.Number is 1 or 955 or 2260 or 2275 or 1430 or 2443 or 942 or 2289 or 2264 or 2261 or 1451)
         {
         }
     }
