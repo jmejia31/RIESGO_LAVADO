@@ -12719,3 +12719,17 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó `main`, producción, Oracle, backend, migraciones, `frontend/rl-app/src/styles.css`, Configuración de cálculo ni archivos sin seguimiento ajenos.
 - **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; la validación visual manual del propietario y la publicación remota quedan pendientes del cierre de esta intervención.
 - **Punto exacto de continuación:** stage selectivo de archivos rastreados, commit, push a `origin/desarrollo`, verificación de paridad remota y revisión visual manual de las notificaciones institucionales.
+
+## 2026-11-20 16:58 -06:00 — Validación obligatoria del plan de mitigación (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `20149ed1afee2b7048ad40e6172406734fe7ddb7`; commit funcional `604a0bed2042a1ab9260e20b83433038e98715c2` (`fix(mitigacion): exige campos obligatorios en planes`); autor `COD`.
+- **Objetivo:** impedir que un plan de mitigación se guarde con datos incompletos y hacer explícitos los requisitos visibles del modal Nuevo/Editar plan.
+- **Regla aplicada:** son obligatorios evaluación seleccionada, descripción, avance (0–100), presupuesto (>= 0), fecha de inicio, fecha de fin no anterior al inicio, estado catalogado, monitoreo/seguimiento, responsables y recursos. El valor `0` sigue siendo válido para avance y presupuesto; vacío, `null`, `NaN` o valores fuera de rango no lo son.
+- **Cambios funcionales:** el botón `data-ui-action="save-plan"` permanece deshabilitado mientras `planFormularioValido()` sea falso; los campos muestran `required`, `aria-required` y marca visual; el método de guardado repite la validación y nunca envía `null` en los tres campos textuales requeridos. La confirmación institucional previa al guardado se conserva.
+- **Contrato de datos:** la revisión de `RL_MR_PLANES` confirmó ocho campos núcleo `NOT NULL` y tres columnas textuales nullable (`PLA_MONITOREO_SEGUIMIENTO`, `PLA_RESPONSABLES`, `PLA_RECURSOS`). No se modificó Oracle, DDL, migraciones, backend ni contratos REST; la obligatoriedad adicional es una regla de negocio de captura compatible con el esquema existente.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.ts`, `.html` y `.spec.ts`.
+- **Pruebas ejecutadas:** prueba focalizada `1` archivo / `26` pruebas PASS; Angular completo `98` archivos / `1077` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS/CommonJS; `git diff --check` PASS.
+- **No ejecutado:** backend .NET, Oracle, E2E de navegador y Quality Gate completo; no se iniciaron ni detuvieron servicios. Las advertencias del build incluyen Configuración de cálculo, que no fue modificada.
+- **Preservación:** no se tocó Configuración de cálculo, `main`, producción, Oracle, migraciones, datos ni archivos sin seguimiento ajenos; el stage fue selectivo.
+- **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente publicar el commit funcional y este registro en `origin/desarrollo`, y validar manualmente que el botón se habilite únicamente al completar los campos.
+- **Punto exacto de continuación:** publicar selectivamente código y documentación, verificar `HEAD == origin/desarrollo`, y probar en navegador el modal con campos vacíos, valores `0`, fechas inválidas y formulario completo.

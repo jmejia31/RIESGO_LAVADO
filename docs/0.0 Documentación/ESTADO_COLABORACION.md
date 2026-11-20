@@ -5777,3 +5777,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Preservación:** backend, Oracle, migraciones, `main`, producción, estilos globales protegidos, Configuración de cálculo y archivos sin seguimiento ajenos permanecen sin cambios.
 - **Estado actual:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente commit/push y revisión visual manual del propietario.
 - **Punto de continuación:** stage selectivo, commit y `git push origin desarrollo`; verificar `HEAD == origin/desarrollo` y entregar al propietario para revisión de alertas institucionales.
+
+## Estado vigente — Campos obligatorios del plan de mitigación — 2026-11-20 16:58 -06:00 (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`.
+- **Base SHA:** `20149ed1afee2b7048ad40e6172406734fe7ddb7`.
+- **Source Code SHA:** `604a0bed2042a1ab9260e20b83433038e98715c2` (`fix(mitigacion): exige campos obligatorios en planes`); publicación remota pendiente al momento de este registro.
+- **Alcance:** modal Nuevo/Editar plan de mitigación. Se exige evaluación, descripción, avance, presupuesto, fechas válidas, estado catalogado, monitoreo/seguimiento, responsables y recursos; el botón de guardado y la validación imperativa aplican la misma regla. Se conserva la confirmación institucional.
+- **Base de datos:** `RL_MR_PLANES` tiene ocho campos núcleo `NOT NULL`; las columnas `PLA_MONITOREO_SEGUIMIENTO`, `PLA_RESPONSABLES` y `PLA_RECURSOS` son nullable en el contrato Oracle. No se ejecutaron DDL/DML ni se cambió la base; la UI aplica una obligatoriedad de negocio más estricta sin incompatibilidad de persistencia.
+- **Archivos:** componente TypeScript, template HTML y prueba unitaria del componente de Mitigación. Configuración de cálculo permanece intacta.
+- **Verificación:** focalizada `1/1` archivo y `26/26` pruebas PASS; Angular `98/98` archivos y `1077/1077` pruebas PASS; lint/build PASS con advertencias preexistentes; `git diff --check` PASS.
+- **No verificado:** E2E visual con navegador, backend/Oracle y Quality Gate completo. No se iniciaron ni detuvieron servicios; el propietario los levanta manualmente.
+- **Preservación:** no se modificaron `main`, producción, Oracle, migraciones, Configuración de cálculo ni archivos ajenos sin seguimiento.
+- **Estado actual:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; falta publicar en `origin/desarrollo` y revisar visualmente el botón deshabilitado/habilitado y los marcadores de obligatoriedad.
+- **Punto de continuación:** commit documental, `git push origin desarrollo`, verificación remota y prueba manual del flujo Nuevo plan con campos incompletos y completos.
