@@ -24,6 +24,7 @@ import {
 import {
   INSTITUTIONAL_PDF_LOGO_WIDTH_MM,
   INSTITUTIONAL_LOGO_POLICY,
+  INSTITUTIONAL_REPORT_COLORS,
   setInstitutionalReportBranding,
   getInstitutionalReportBranding
 } from './institutional-report-standard';
@@ -35,6 +36,16 @@ function sha256Hex(buffer: ArrayBuffer | Uint8Array): string {
 
 describe('Microfase C3 — Certificación física de paridad Parejas 2, 3, 4 y 5 (Frontend)', () => {
   const capturedHashes: Record<string, string> = {};
+
+  afterAll(() => {
+    setInstitutionalReportBranding({
+      headerColor: INSTITUTIONAL_REPORT_COLORS.navy,
+      headerTextColor: INSTITUTIONAL_REPORT_COLORS.white,
+      logoUrl: '',
+      logoStatus: 'sin-logo'
+    });
+  });
+
   // 5 Temas M2 de contraste institucional
   const cincoTemasM2 = [
     { nombre: 'Navy Institucional', hex: '#123B63', rgb: [18, 59, 99] as [number, number, number] },
@@ -58,6 +69,8 @@ describe('Microfase C3 — Certificación física de paridad Parejas 2, 3, 4 y 5
       const current = getInstitutionalReportBranding();
       expect(current.headerColor).toEqual(tema.rgb);
     }
+    // Restaurar color navy predeterminado institucional para aislamiento entre pruebas
+    setInstitutionalReportBranding({ headerColor: INSTITUTIONAL_REPORT_COLORS.navy });
   });
 
   it('Pareja 2 (REP-04 / REP-05): Monitoreo de Listas — Lista Principal (Física Excel y PDF)', async () => {
