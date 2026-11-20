@@ -37,7 +37,7 @@ public static class MatricesOracleBootstrap
                 VALUES (1, 'ADMINISTRADOR', 'Rol de Administración', 1, SYSDATE)");
         }
 
-        // 2. Asegurar tabla RL_USUARIOS y usuario semilla
+        // 2. Asegurar tabla RL_USUARIOS y usuarios semilla
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_USUARIOS (
                 USR_ID NUMBER(10) PRIMARY KEY,
@@ -58,10 +58,8 @@ public static class MatricesOracleBootstrap
                 USR_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL
             )");
 
-        int usersCount = Convert.ToInt32(await ScalarAsync(connection, "SELECT COUNT(*) FROM RL_USUARIOS WHERE USR_ID = 1"));
-        if (usersCount == 0)
-        {
-            await ExecuteIgnoreAsync(connection, @"
+        await ExecuteIgnoreAsync(connection, @"
+            BEGIN
                 INSERT INTO RL_USUARIOS (
                     USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL,
                     USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID,
@@ -69,8 +67,26 @@ public static class MatricesOracleBootstrap
                 ) VALUES (
                     1, 'ADMIN', 'INTEGRACION', 'admin@riesgolavado.local',
                     'DUMMY_HASH', 'DUMMY_SALT', 1, 1, SYSDATE
-                )");
-        }
+                );
+            EXCEPTION
+                WHEN DUP_VAL_ON_INDEX THEN NULL;
+            END;
+        ");
+
+        await ExecuteIgnoreAsync(connection, @"
+            BEGIN
+                INSERT INTO RL_USUARIOS (
+                    USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL,
+                    USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID,
+                    USR_ACTIVO, USR_FECHA_CREACION
+                ) VALUES (
+                    987654, 'BLOCK7', 'INTEGRACION', 'block7@riesgolavado.local',
+                    'DUMMY_HASH', 'DUMMY_SALT', 1, 1, SYSDATE
+                );
+            EXCEPTION
+                WHEN DUP_VAL_ON_INDEX THEN NULL;
+            END;
+        ");
 
         // 3. Asegurar RL_USUARIO_CAPACIDADES
         await ExecuteIgnoreAsync(connection, @"
@@ -81,10 +97,10 @@ public static class MatricesOracleBootstrap
                 UCP_ASIGNADO_POR NUMBER(10),
                 UCP_FECHA_ASIGNACION DATE DEFAULT SYSDATE NOT NULL,
                 CONSTRAINT PK_RL_USUARIO_CAP PRIMARY KEY (UCP_USR_ID, UCP_CAPACIDAD),
-                CONSTRAINT FK_RL_UCP_USR FOREIGN KEY (UCP_USR_ID) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT CK_RL_UCP_CAP CHECK (UCP_CAPACIDAD IN ('MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR','MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR')),
                 CONSTRAINT CK_RL_UCP_ACTIVO CHECK (UCP_ACTIVO IN (0,1))
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_USUARIO_CAPACIDADES DROP CONSTRAINT FK_RL_UCP_USR");
         await ExecuteIgnoreAsync(connection, "CREATE INDEX IDX_RL_UCP_CAP ON RL_USUARIO_CAPACIDADES(UCP_CAPACIDAD, UCP_ACTIVO)");
 
         // 4. Asegurar RL_AUDITORIA y SEQ_RL_AUDITORIA
@@ -169,12 +185,12 @@ public static class MatricesOracleBootstrap
                 VER_USR_CREACION NUMBER(10) DEFAULT 1 NOT NULL,
                 CONSTRAINT PK_RL_MR_VERSIONES PRIMARY KEY (VER_ID),
                 CONSTRAINT FK_RL_MR_VER_FAM FOREIGN KEY (VER_FAMILIA_ID) REFERENCES RL_MR_FAMILIAS_FORMULARIO(FAM_ID),
-                CONSTRAINT FK_RL_MR_VER_USR FOREIGN KEY (VER_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT CK_RL_MR_VER_EST CHECK (VER_ESTADO IN ('DRAFT','IN_REVIEW','APPROVED','PUBLISHED','RETIRED','ARCHIVED')),
                 CONSTRAINT CK_RL_MR_VER_VIG CHECK (VER_VIGENTE IN (0,1))
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_VERSIONES_FORMULARIO MODIFY (VER_USR_CREACION DEFAULT 1)");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_VERSIONES_FORMULARIO DROP CONSTRAINT UQ_RL_MR_VER_FAM_VER");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_VERSIONES_FORMULARIO DROP CONSTRAINT FK_RL_MR_VER_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_CATALOGOS (
@@ -225,10 +241,10 @@ public static class MatricesOracleBootstrap
                 RIE_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,
                 CONSTRAINT PK_RL_MR_RIESGOS PRIMARY KEY (RIE_ID),
                 CONSTRAINT UQ_RL_MR_RIE_COD UNIQUE (RIE_CODIGO),
-                CONSTRAINT FK_RL_MR_RIE_USR FOREIGN KEY (RIE_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT CK_RL_MR_RIE_ACT CHECK (RIE_ACTIVO IN (0,1))
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_RIESGOS MODIFY (RIE_USR_CREACION DEFAULT 1)");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_RIESGOS DROP CONSTRAINT FK_RL_MR_RIE_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_EVALUACIONES_RIESGO (
@@ -244,10 +260,10 @@ public static class MatricesOracleBootstrap
                 CONSTRAINT PK_RL_MR_EVALUACIONES PRIMARY KEY (EVA_ID),
                 CONSTRAINT FK_RL_MR_EVA_RIE FOREIGN KEY (EVA_RIESGO_ID) REFERENCES RL_MR_RIESGOS(RIE_ID),
                 CONSTRAINT FK_RL_MR_EVA_VER FOREIGN KEY (EVA_VERSION_ID) REFERENCES RL_MR_VERSIONES_FORMULARIO(VER_ID),
-                CONSTRAINT FK_RL_MR_EVA_USR FOREIGN KEY (EVA_USR_REGISTRO) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT CK_RL_MR_EVA_ACT CHECK (EVA_ACTIVO IN (0,1))
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_EVALUACIONES_RIESGO MODIFY (EVA_USR_REGISTRO DEFAULT 1)");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_EVALUACIONES_RIESGO DROP CONSTRAINT FK_RL_MR_EVA_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_PROYECCIONES_EVALUACION (
@@ -279,10 +295,10 @@ public static class MatricesOracleBootstrap
                 FLU_FECHA DATE DEFAULT SYSDATE NOT NULL,
                 CONSTRAINT PK_RL_MR_FLUJOS PRIMARY KEY (FLU_ID),
                 CONSTRAINT FK_RL_MR_FLU_EVA FOREIGN KEY (FLU_EVALUACION_ID) REFERENCES RL_MR_EVALUACIONES_RIESGO(EVA_ID),
-                CONSTRAINT FK_RL_MR_FLU_USR FOREIGN KEY (FLU_USR_ID) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT CK_RL_MR_FLU_EST CHECK (FLU_ESTADO IN ('BORRADOR','EN_REVISION','OBSERVADA','APROBADA','RECHAZADA','CERRADA','DRAFT'))
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FLUJOS_EVALUACION MODIFY (FLU_USR_ID DEFAULT 1)");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FLUJOS_EVALUACION DROP CONSTRAINT FK_RL_MR_FLU_USR");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FLUJOS_EVALUACION DROP CONSTRAINT CK_RL_MR_FLU_EST");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FLUJOS_EVALUACION ADD CONSTRAINT CK_RL_MR_FLU_EST CHECK (FLU_ESTADO IN ('BORRADOR','EN_REVISION','OBSERVADA','APROBADA','RECHAZADA','CERRADA','DRAFT'))");
 
@@ -358,10 +374,10 @@ public static class MatricesOracleBootstrap
                 EVI_RUTA VARCHAR2(500) NOT NULL,
                 EVI_USR_CREACION NUMBER(10) DEFAULT 1 NOT NULL,
                 EVI_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,
-                CONSTRAINT PK_RL_MR_EVIDENCIAS PRIMARY KEY (EVI_ID),
-                CONSTRAINT FK_RL_MR_EVI_USR FOREIGN KEY (EVI_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID)
+                CONSTRAINT PK_RL_MR_EVIDENCIAS PRIMARY KEY (EVI_ID)
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_EVIDENCIAS MODIFY (EVI_USR_CREACION DEFAULT 1)");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_EVIDENCIAS DROP CONSTRAINT FK_RL_MR_EVI_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_EVIDENCIAS_VINCULOS (
@@ -373,11 +389,11 @@ public static class MatricesOracleBootstrap
                 EVV_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL,
                 CONSTRAINT PK_RL_MR_EVI_VINCULOS PRIMARY KEY (EVV_ID),
                 CONSTRAINT FK_RL_MR_EVV_EVI FOREIGN KEY (EVV_EVIDENCIA_ID) REFERENCES RL_MR_EVIDENCIAS(EVI_ID),
-                CONSTRAINT FK_RL_MR_EVV_USR FOREIGN KEY (EVV_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT UQ_RL_MR_EVV_UNICO UNIQUE (EVV_EVIDENCIA_ID, EVV_TIPO_ENTIDAD, EVV_ENTIDAD_ID),
                 CONSTRAINT CK_RL_MR_EVV_TIPO CHECK (EVV_TIPO_ENTIDAD IN ('RIESGO','EVALUACION','CONTROL','PLAN','ACTIVIDAD','ALERTA','AUTOMONITOREO'))
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_EVIDENCIAS_VINCULOS MODIFY (EVV_USR_CREACION DEFAULT 1)");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_EVIDENCIAS_VINCULOS DROP CONSTRAINT FK_RL_MR_EVV_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_SENALES_ALERTA (
@@ -407,10 +423,10 @@ public static class MatricesOracleBootstrap
                 MON_OBSERVACIONES_UGR VARCHAR2(2000),
                 MON_FECHA DATE DEFAULT SYSDATE NOT NULL,
                 CONSTRAINT PK_RL_MR_AUTOMONITOREO PRIMARY KEY (MON_ID),
-                CONSTRAINT FK_RL_MR_MON_EVA FOREIGN KEY (MON_EVALUACION_ID) REFERENCES RL_MR_EVALUACIONES_RIESGO(EVA_ID),
-                CONSTRAINT FK_RL_MR_MON_USR FOREIGN KEY (MON_USR_ID) REFERENCES RL_USUARIOS(USR_ID)
+                CONSTRAINT FK_RL_MR_MON_EVA FOREIGN KEY (MON_EVALUACION_ID) REFERENCES RL_MR_EVALUACIONES_RIESGO(EVA_ID)
             )");
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_AUTOMONITOREO MODIFY (MON_RESULTADO DEFAULT 'RESULTADO', MON_USR_ID DEFAULT 1)");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_AUTOMONITOREO DROP CONSTRAINT FK_RL_MR_MON_USR");
 
         // Asegurar columnas de Bloques 4 y 6 en caso de tabla preexistente
         await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_CONTROLES_RIESGO ADD (CON_ESTADO_MONITOREO VARCHAR2(30 CHAR))");
@@ -452,9 +468,9 @@ public static class MatricesOracleBootstrap
                 CONSTRAINT PK_RL_MR_FORMULAS PRIMARY KEY (FOR_ID),
                 CONSTRAINT UQ_RL_MR_FOR_COD UNIQUE (FOR_CODIGO),
                 CONSTRAINT CK_RL_MR_FOR_EST CHECK (FOR_ESTADO IN ('ACTIVE','INACTIVE','RETIRED')),
-                CONSTRAINT CK_RL_MR_FOR_ROW CHECK (FOR_VERSION_ROW >= 1),
-                CONSTRAINT FK_RL_MR_FOR_USR FOREIGN KEY (FOR_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID)
+                CONSTRAINT CK_RL_MR_FOR_ROW CHECK (FOR_VERSION_ROW >= 1)
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FORMULAS DROP CONSTRAINT FK_RL_MR_FOR_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_FORMULA_VERSIONES (
@@ -472,13 +488,13 @@ public static class MatricesOracleBootstrap
                 FOV_VERSION_ROW NUMBER(10) DEFAULT 1 NOT NULL,
                 CONSTRAINT PK_RL_MR_FOV PRIMARY KEY (FOV_ID),
                 CONSTRAINT FK_RL_MR_FOV_FOR FOREIGN KEY (FOV_FORMULA_ID) REFERENCES RL_MR_FORMULAS(FOR_ID),
-                CONSTRAINT FK_RL_MR_FOV_USR FOREIGN KEY (FOV_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT UQ_RL_MR_FOV_VER UNIQUE (FOV_FORMULA_ID, FOV_VERSION),
                 CONSTRAINT CK_RL_MR_FOV_VER CHECK (FOV_VERSION >= 1),
                 CONSTRAINT CK_RL_MR_FOV_EST CHECK (FOV_ESTADO IN ('DRAFT','IN_REVIEW','APPROVED','PUBLISHED','RETIRED','ARCHIVED')),
                 CONSTRAINT CK_RL_MR_FOV_HASH CHECK (REGEXP_LIKE(FOV_HASH,'^[0-9A-Fa-f]{64}$')),
                 CONSTRAINT CK_RL_MR_FOV_ROW CHECK (FOV_VERSION_ROW >= 1)
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FORMULA_VERSIONES DROP CONSTRAINT FK_RL_MR_FOV_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_FORMULA_USOS (
@@ -494,12 +510,12 @@ public static class MatricesOracleBootstrap
                 CONSTRAINT PK_RL_MR_FORMULA_USOS PRIMARY KEY (FUS_ID),
                 CONSTRAINT FK_RL_MR_FUS_VERF FOREIGN KEY (FUS_VERSION_FORMULARIO_ID) REFERENCES RL_MR_VERSIONES_FORMULARIO(VER_ID),
                 CONSTRAINT FK_RL_MR_FUS_FOV FOREIGN KEY (FUS_FORMULA_VERSION_ID) REFERENCES RL_MR_FORMULA_VERSIONES(FOV_ID),
-                CONSTRAINT FK_RL_MR_FUS_USR FOREIGN KEY (FUS_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT UQ_RL_MR_FUS_USO UNIQUE (FUS_VERSION_FORMULARIO_ID, FUS_CAMPO_CLAVE),
                 CONSTRAINT CK_RL_MR_FUS_ACT CHECK (FUS_ACTIVO IN (0,1)),
                 CONSTRAINT CK_RL_MR_FUS_ORD CHECK (FUS_ORDEN >= 1),
                 CONSTRAINT CK_RL_MR_FUS_ETA CHECK (FUS_ETAPA IN ('INHERENTE','CONTROL','RESIDUAL','CALCULO'))
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FORMULA_USOS DROP CONSTRAINT FK_RL_MR_FUS_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_FUNCIONES (
@@ -515,9 +531,9 @@ public static class MatricesOracleBootstrap
                 CONSTRAINT PK_RL_MR_FUNCIONES PRIMARY KEY (FUN_ID),
                 CONSTRAINT UQ_RL_MR_FUN_COD UNIQUE (FUN_CODIGO),
                 CONSTRAINT CK_RL_MR_FUN_EST CHECK (FUN_ESTADO IN ('ACTIVE','INACTIVE','RETIRED')),
-                CONSTRAINT CK_RL_MR_FUN_ROW CHECK (FUN_VERSION_ROW >= 1),
-                CONSTRAINT FK_RL_MR_FUN_USR FOREIGN KEY (FUN_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID)
+                CONSTRAINT CK_RL_MR_FUN_ROW CHECK (FUN_VERSION_ROW >= 1)
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FUNCIONES DROP CONSTRAINT FK_RL_MR_FUN_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_FUNCION_VERSIONES (
@@ -535,13 +551,13 @@ public static class MatricesOracleBootstrap
                 FUV_VERSION_ROW NUMBER(10) DEFAULT 1 NOT NULL,
                 CONSTRAINT PK_RL_MR_FUV PRIMARY KEY (FUV_ID),
                 CONSTRAINT FK_RL_MR_FUV_FUN FOREIGN KEY (FUV_FUNCION_ID) REFERENCES RL_MR_FUNCIONES(FUN_ID),
-                CONSTRAINT FK_RL_MR_FUV_USR FOREIGN KEY (FUV_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT UQ_RL_MR_FUV_VER UNIQUE (FUV_FUNCION_ID, FUV_VERSION),
                 CONSTRAINT CK_RL_MR_FUV_VER CHECK (FUV_VERSION >= 1),
                 CONSTRAINT CK_RL_MR_FUV_EST CHECK (FUV_ESTADO IN ('DRAFT','IN_REVIEW','APPROVED','PUBLISHED','RETIRED','ARCHIVED')),
                 CONSTRAINT CK_RL_MR_FUV_HASH CHECK (REGEXP_LIKE(FUV_HASH,'^[0-9A-Fa-f]{64}$')),
                 CONSTRAINT CK_RL_MR_FUV_ROW CHECK (FUV_VERSION_ROW >= 1)
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_FUNCION_VERSIONES DROP CONSTRAINT FK_RL_MR_FUV_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_FUNCION_ARGUMENTOS (
@@ -574,9 +590,9 @@ public static class MatricesOracleBootstrap
                 CONSTRAINT PK_RL_MR_PAC PRIMARY KEY (PAC_ID),
                 CONSTRAINT UQ_RL_MR_PAC_COD UNIQUE (PAC_CODIGO),
                 CONSTRAINT CK_RL_MR_PAC_EST CHECK (PAC_ESTADO IN ('ACTIVE','INACTIVE','RETIRED')),
-                CONSTRAINT CK_RL_MR_PAC_ROW CHECK (PAC_VERSION_ROW >= 1),
-                CONSTRAINT FK_RL_MR_PAC_USR FOREIGN KEY (PAC_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID)
+                CONSTRAINT CK_RL_MR_PAC_ROW CHECK (PAC_VERSION_ROW >= 1)
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_PARAMETROS_CALCULO DROP CONSTRAINT FK_RL_MR_PAC_USR");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_PARAMETRO_VERSIONES (
@@ -594,12 +610,12 @@ public static class MatricesOracleBootstrap
                 PAV_VERSION_ROW NUMBER(10) DEFAULT 1 NOT NULL,
                 CONSTRAINT PK_RL_MR_PAV PRIMARY KEY (PAV_ID),
                 CONSTRAINT FK_RL_MR_PAV_PAC FOREIGN KEY (PAV_PARAMETRO_ID) REFERENCES RL_MR_PARAMETROS_CALCULO(PAC_ID),
-                CONSTRAINT FK_RL_MR_PAV_USR FOREIGN KEY (PAV_USR_CREACION) REFERENCES RL_USUARIOS(USR_ID),
                 CONSTRAINT UQ_RL_MR_PAV_VER UNIQUE (PAV_PARAMETRO_ID, PAV_VERSION),
                 CONSTRAINT CK_RL_MR_PAV_VER CHECK (PAV_VERSION >= 1),
                 CONSTRAINT CK_RL_MR_PAV_EST CHECK (PAV_ESTADO IN ('DRAFT','IN_REVIEW','APPROVED','PUBLISHED','RETIRED','ARCHIVED')),
                 CONSTRAINT CK_RL_MR_PAV_ROW CHECK (PAV_VERSION_ROW >= 1)
             )");
+        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_PARAMETRO_VERSIONES DROP CONSTRAINT FK_RL_MR_PAV_USR");
 
         // 6. Crear los 16 índices principales
         string[] indices =
