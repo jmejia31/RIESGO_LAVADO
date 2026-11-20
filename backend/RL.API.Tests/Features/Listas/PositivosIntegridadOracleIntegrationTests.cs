@@ -279,12 +279,15 @@ public sealed class PositivosIntegridadOracleIntegrationTests
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Storage:EvidenciasPath"] = tempStorage
+                ["Storage:EvidenciasPath"] = tempStorage,
+                ["Evidencias:StoragePath"] = tempStorage
             })
             .Build();
 
         var (repo, _) = CrearRepositorioYAuditoria(connectionString);
-        var env = InterfaceStub.Create<IWebHostEnvironment>(out _);
+        var env = InterfaceStub.Create<IWebHostEnvironment>(out var envStub);
+        envStub.On("get_ContentRootPath", _ => tempStorage);
+        envStub.On("get_WebRootPath", _ => tempStorage);
         var service = new EvidenciasService(repo, config, env);
 
         string dni = "08011994" + Random.Shared.Next(10000, 99999);
@@ -328,8 +331,9 @@ public sealed class PositivosIntegridadOracleIntegrationTests
             _output.WriteLine("CASO_C_AUDIT_VERIFIED_COMPENSATION=PASS");
 
             // Caso D: Reintento exitoso tras fallo temporal
-            var resultD = await service.RegistrarSeguimientoAsync(dni, "Seguimiento reintento exitoso", new List<IFormFile> { validFile }, 1, tipoPositivoId: 2);
-            Assert.True(resultD.Success);
+            var validFileD = new SyntheticFormFile("prueba_reintento.pdf", "application/pdf", Encoding.UTF8.GetBytes("%PDF-1.4 prueba reintento"));
+            var resultD = await service.RegistrarSeguimientoAsync(dni, "Seguimiento reintento exitoso", new List<IFormFile> { validFileD }, 1, tipoPositivoId: 2);
+            Assert.True(resultD.Success, $"Caso D falló: {resultD.Message}");
             var seguimientosD = await repo.ObtenerSeguimientosAsync(dni, tipoPositivoId: 2);
             var segD = seguimientosD.FirstOrDefault(s => s.MotivoIngreso == "Seguimiento reintento exitoso");
             Assert.NotNull(segD);
