@@ -266,8 +266,12 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
 
   async guardarEfectividad(): Promise<void> {
     if (this.operacionEnCurso()) return;
-    if (this.controlSeleccionadoId <= 0 || this.efectividad < 0 || this.efectividad > 100) {
+    if (this.controlSeleccionadoId <= 0 || !this.numeroEnRango(this.efectividad, 0, 100)) {
       this.notificarError('Seleccione un control y registre una efectividad entre 0 y 100.');
+      return;
+    }
+    if (!this.textoRequerido(this.comentarioEfectividad)) {
+      this.notificarError('Registre el comentario de la efectividad antes de guardar.');
       return;
     }
     const confirmado = await this.confirmarGuardado(
@@ -278,7 +282,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     if (!confirmado) return;
     const dto: EvaluacionControlGuardarDto = {
       ecoEfectividad: Number(this.efectividad),
-      ecoComentario: this.comentarioEfectividad.trim() || null
+      ecoComentario: this.comentarioEfectividad.trim()
     };
     this.guardando.set(true);
     this.service.evaluarControl(this.controlSeleccionadoId, dto).subscribe({
@@ -507,8 +511,9 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
   }
 
   efectividadFormularioValida(): boolean {
-    return this.controlSeleccionadoId > 0 && Number.isFinite(Number(this.efectividad))
-      && this.efectividad >= 0 && this.efectividad <= 100;
+    return this.controlSeleccionadoId > 0
+      && this.numeroEnRango(this.efectividad, 0, 100)
+      && this.textoRequerido(this.comentarioEfectividad);
   }
 
   planFormularioValido(): boolean {

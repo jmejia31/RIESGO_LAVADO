@@ -242,7 +242,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')).toBeNull();
   });
 
-  it('registra efectividad de control con validación de rango (0 a 100)', async () => {
+  it('registra efectividad de control con comentario obligatorio y rango de 0 a 100', async () => {
     component.seleccionarEvaluacion(20);
     component.controlSeleccionadoId = 3;
     component.efectividad = -1;
@@ -251,6 +251,11 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.error()).toContain('efectividad entre 0 y 100');
 
     component.efectividad = 90;
+    component.comentarioEfectividad = '';
+    await component.evaluarControl();
+    expect(service['evaluarControl']).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Registre el comentario de la efectividad antes de guardar.');
+
     component.comentarioEfectividad = 'Prueba satisfactoria';
     await component.evaluarControl();
     expect(service['evaluarControl']).toHaveBeenCalledWith(3, {
@@ -465,7 +470,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.modalControlAbierto()).toBe(false);
   });
 
-  it('usa el modal mediano y un icono de validación para registrar efectividad', () => {
+  it('usa el modal grande y bloquea registrar efectividad hasta completar los campos', () => {
     component.seleccionarEvaluacion(20);
     component.editarControl(control);
     fixture.detectChanges();
@@ -480,7 +485,10 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     fixture.detectChanges();
 
     const dialog = fixture.nativeElement.querySelector('dialog[aria-labelledby="titulo-modal-efectividad"]') as HTMLElement;
-    expect(dialog.querySelector('.modal-container-card')?.className).toContain('modal-size-md');
+    expect(dialog.querySelector('.modal-container-card')?.className).toContain('modal-size-lg');
+    expect((dialog.querySelector('[data-ui-action="save-effectiveness"]') as HTMLButtonElement | null)?.disabled).toBe(true);
+    expect(dialog.querySelector('#control-efectividad')?.getAttribute('required')).not.toBeNull();
+    expect(dialog.querySelector('#control-comentario')?.getAttribute('required')).not.toBeNull();
     expect(dialog.querySelector('#control-comentario')?.className).toContain('min-h-24');
   });
 

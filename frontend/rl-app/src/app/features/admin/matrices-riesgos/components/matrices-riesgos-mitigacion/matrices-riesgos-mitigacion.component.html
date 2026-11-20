@@ -70,7 +70,32 @@
   }
 
   @if (modalEfectividadAbierto()) {
-    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-efectividad" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()"><div class="modal-container-card modal-size-md"><div class="modal-header-institutional"><div><h3 id="titulo-modal-efectividad">Registrar efectividad</h3><p>Registre el resultado de seguimiento del control seleccionado.</p></div><button type="button" class="modal-close-button" title="Cerrar efectividad" aria-label="Cerrar efectividad" [disabled]="operacionEnCurso()" (click)="solicitarCierreEfectividad()"><app-action-icon action="close"></app-action-icon></button></div><div class="modal-body-scrollable space-y-5"><div><label for="control-efectividad" class="block text-sm font-medium">Efectividad %</label><input id="control-efectividad" type="number" min="0" max="100" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="efectividad"></div><div><label for="control-comentario" class="block text-sm font-medium">Comentario</label><textarea id="control-comentario" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="comentarioEfectividad" maxlength="500"></textarea></div></div><div class="modal-footer-institutional"><button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar efectividad" aria-label="Cancelar efectividad" [disabled]="operacionEnCurso()" (click)="solicitarCierreEfectividad()"><app-action-icon action="cancel"></app-action-icon></button><button type="button" class="modal-action-icon modal-action-icon--primary" title="Registrar efectividad" aria-label="Registrar efectividad" [disabled]="operacionEnCurso() || !efectividadFormularioValida()" (click)="guardarEfectividad()"><app-action-icon action="save" [loading]="operacionEnCurso()"></app-action-icon></button></div></div></dialog>
+    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-efectividad" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
+      <div class="modal-container-card modal-size-lg">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-efectividad">Registrar efectividad</h3>
+            <p>Registre el resultado de seguimiento del control seleccionado.</p>
+          </div>
+          <button type="button" class="modal-close-button" title="Cerrar efectividad" aria-label="Cerrar efectividad" [disabled]="operacionEnCurso()" (click)="solicitarCierreEfectividad()"><app-action-icon action="close"></app-action-icon></button>
+        </div>
+        <div class="modal-body-scrollable space-y-5">
+          <p class="text-xs text-slate-600"><span class="font-bold text-red-600" aria-hidden="true">*</span> Todos los campos marcados son obligatorios para registrar la efectividad.</p>
+          <div>
+            <label for="control-efectividad" class="block text-sm font-medium">Efectividad % <span class="text-red-600" aria-hidden="true">*</span></label>
+            <input id="control-efectividad" type="number" min="0" max="100" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="efectividad" required aria-required="true">
+          </div>
+          <div>
+            <label for="control-comentario" class="block text-sm font-medium">Comentario <span class="text-red-600" aria-hidden="true">*</span></label>
+            <textarea id="control-comentario" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="comentarioEfectividad" maxlength="500" required aria-required="true"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer-institutional">
+          <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar efectividad" aria-label="Cancelar efectividad" [disabled]="operacionEnCurso()" (click)="solicitarCierreEfectividad()"><app-action-icon action="cancel"></app-action-icon></button>
+          <button type="button" class="modal-action-icon modal-action-icon--primary" title="Registrar efectividad" aria-label="Registrar efectividad" data-ui-action="save-effectiveness" [disabled]="operacionEnCurso() || !efectividadFormularioValida()" (click)="guardarEfectividad()"><app-action-icon action="save" [loading]="operacionEnCurso()"></app-action-icon></button>
+        </div>
+      </div>
+    </dialog>
   }
 
   @if (modalPlanAbierto()) {
