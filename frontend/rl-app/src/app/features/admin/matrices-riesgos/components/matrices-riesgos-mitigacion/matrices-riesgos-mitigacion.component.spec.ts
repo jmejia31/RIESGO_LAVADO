@@ -294,6 +294,28 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.mensaje()).toBe('Plan creado correctamente.');
   });
 
+  it('mantiene bloqueado el guardado del plan hasta completar todos sus campos obligatorios', () => {
+    component.seleccionarEvaluacion(20);
+    component.nuevoPlan();
+    fixture.detectChanges();
+
+    const guardar = fixture.nativeElement.querySelector('[data-ui-action="save-plan"]') as HTMLButtonElement;
+    expect(guardar.disabled).toBe(true);
+
+    component.planDescripcion = 'Plan de acción 2026';
+    component.planAvance = 0;
+    component.planPresupuesto = 0;
+    component.planFechaInicio = '2026-08-01';
+    component.planFechaFin = '2026-08-15';
+    component.planEstado = 'PENDIENTE';
+    component.planMonitoreoSeguimiento = 'Seguimiento mensual';
+    component.planResponsables = 'Unidad responsable';
+    component.planRecursos = 'Equipo institucional';
+    fixture.detectChanges();
+
+    expect(component.planFormularioValido()).toBe(true);
+  });
+
   it('actualiza un plan de mitigación existente', async () => {
     component.seleccionarEvaluacion(20);
     component.editarPlan(plan);
@@ -341,6 +363,22 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.planFechaFin = '2026-08-05';
     component.guardarPlan();
     expect(component.error()).toBe('Revise avance, presupuesto y rango de fechas del plan.');
+  });
+
+  it('rechaza guardar un plan cuando falta monitoreo, responsables o recursos', () => {
+    component.seleccionarEvaluacion(20);
+    component.planDescripcion = 'Plan X';
+    component.planAvance = 50;
+    component.planPresupuesto = 100;
+    component.planFechaInicio = '2026-08-05';
+    component.planFechaFin = '2026-08-10';
+    component.planEstado = 'PENDIENTE';
+
+    component.guardarPlan();
+
+    expect(component.planFormularioValido()).toBe(false);
+    expect(service['crearPlan']).not.toHaveBeenCalled();
+    expect(component.error()).toBe('Complete todos los campos obligatorios del plan antes de guardar.');
   });
 
   it('crea y actualiza una actividad de plan validando fechas y campos obligatorios', async () => {

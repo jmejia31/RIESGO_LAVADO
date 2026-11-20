@@ -74,7 +74,63 @@
   }
 
   @if (modalPlanAbierto()) {
-    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-plan" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()"><div class="modal-container-card modal-size-lg"><div class="modal-header-institutional"><div><h3 id="titulo-modal-plan">{{ planEditandoId > 0 ? 'Editar plan de mitigación' : 'Nuevo plan de mitigación' }}</h3><p>Complete la planificación y mantenga las fechas y estados controlados.</p></div><button type="button" class="modal-close-button" title="Cerrar plan" aria-label="Cerrar plan" [disabled]="operacionEnCurso()" (click)="solicitarCierrePlan()"><app-action-icon action="close"></app-action-icon></button></div><div class="modal-body-scrollable space-y-4"><div class="grid gap-3 md:grid-cols-2"><div class="md:col-span-2"><label for="plan-descripcion" class="block text-sm font-medium">Descripción</label><textarea id="plan-descripcion" class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planDescripcion" maxlength="500"></textarea></div><div><label for="plan-avance" class="block text-sm">Avance %</label><input id="plan-avance" type="number" min="0" max="100" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planAvance"></div><div><label for="plan-presupuesto" class="block text-sm">Presupuesto</label><input id="plan-presupuesto" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planPresupuesto"></div><div><label for="plan-fecha-inicio" class="block text-sm">Inicio</label><input id="plan-fecha-inicio" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaInicio"></div><div><label for="plan-fecha-fin" class="block text-sm">Fin</label><input id="plan-fecha-fin" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaFin"></div><div class="md:col-span-2"><label for="plan-monitoreo-seguimiento" class="block text-sm font-medium">Monitoreo/ Seguimiento</label><textarea id="plan-monitoreo-seguimiento" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planMonitoreoSeguimiento" maxlength="1000"></textarea></div><div class="md:col-span-2"><label for="plan-responsables" class="block text-sm font-medium">Responsables</label><textarea id="plan-responsables" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planResponsables" maxlength="1000"></textarea></div><div class="md:col-span-2"><label for="plan-recursos" class="block text-sm font-medium">Recursos</label><textarea id="plan-recursos" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planRecursos" maxlength="1000"></textarea></div><div><label for="plan-estado" class="block text-sm">Estado</label><select id="plan-estado" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" [(ngModel)]="planEstado" aria-describedby="plan-estado-ayuda">@for (estado of estadosPlan; track estado.valor) { <option [value]="estado.valor">{{ estado.texto }}</option> }</select><p id="plan-estado-ayuda" class="mt-1 text-xs text-slate-500">Flujo institucional del plan; no admite estados escritos manualmente.</p></div></div></div><div class="modal-footer-institutional"><button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar edición del plan" aria-label="Cancelar edición del plan" [disabled]="operacionEnCurso()" (click)="solicitarCierrePlan()"><app-action-icon action="cancel"></app-action-icon></button><button type="button" class="modal-action-icon modal-action-icon--primary" title="{{ planEditandoId > 0 ? 'Actualizar plan' : 'Guardar nuevo plan' }}" aria-label="{{ planEditandoId > 0 ? 'Actualizar plan' : 'Guardar nuevo plan' }}" data-ui-action="save-plan" [disabled]="operacionEnCurso() || !planFormularioValido()" (click)="guardarPlan()"><app-action-icon [action]="planEditandoId > 0 ? 'refresh' : 'save'" [loading]="operacionEnCurso()"></app-action-icon></button></div></div></dialog>
+    <dialog open class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-plan" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
+      <div class="modal-container-card modal-size-lg">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-plan">{{ planEditandoId > 0 ? 'Editar plan de mitigación' : 'Nuevo plan de mitigación' }}</h3>
+            <p>Complete la planificación y mantenga las fechas y estados controlados.</p>
+          </div>
+          <button type="button" class="modal-close-button" title="Cerrar plan" aria-label="Cerrar plan" [disabled]="operacionEnCurso()" (click)="solicitarCierrePlan()"><app-action-icon action="close"></app-action-icon></button>
+        </div>
+        <div class="modal-body-scrollable space-y-4">
+          <p class="text-xs text-slate-600"><span class="font-bold text-red-600" aria-hidden="true">*</span> Todos los campos marcados son obligatorios para guardar el plan.</p>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div class="md:col-span-2">
+              <label for="plan-descripcion" class="block text-sm font-medium">Descripción <span class="text-red-600" aria-hidden="true">*</span></label>
+              <textarea id="plan-descripcion" class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planDescripcion" maxlength="500" required aria-required="true"></textarea>
+            </div>
+            <div>
+              <label for="plan-avance" class="block text-sm">Avance % <span class="text-red-600" aria-hidden="true">*</span></label>
+              <input id="plan-avance" type="number" min="0" max="100" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planAvance" required aria-required="true">
+            </div>
+            <div>
+              <label for="plan-presupuesto" class="block text-sm">Presupuesto <span class="text-red-600" aria-hidden="true">*</span></label>
+              <input id="plan-presupuesto" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planPresupuesto" required aria-required="true">
+            </div>
+            <div>
+              <label for="plan-fecha-inicio" class="block text-sm">Inicio <span class="text-red-600" aria-hidden="true">*</span></label>
+              <input id="plan-fecha-inicio" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaInicio" required aria-required="true">
+            </div>
+            <div>
+              <label for="plan-fecha-fin" class="block text-sm">Fin <span class="text-red-600" aria-hidden="true">*</span></label>
+              <input id="plan-fecha-fin" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaFin" required aria-required="true">
+            </div>
+            <div class="md:col-span-2">
+              <label for="plan-monitoreo-seguimiento" class="block text-sm font-medium">Monitoreo/ Seguimiento <span class="text-red-600" aria-hidden="true">*</span></label>
+              <textarea id="plan-monitoreo-seguimiento" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planMonitoreoSeguimiento" maxlength="1000" required aria-required="true"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label for="plan-responsables" class="block text-sm font-medium">Responsables <span class="text-red-600" aria-hidden="true">*</span></label>
+              <textarea id="plan-responsables" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planResponsables" maxlength="1000" required aria-required="true"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label for="plan-recursos" class="block text-sm font-medium">Recursos <span class="text-red-600" aria-hidden="true">*</span></label>
+              <textarea id="plan-recursos" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planRecursos" maxlength="1000" required aria-required="true"></textarea>
+            </div>
+            <div>
+              <label for="plan-estado" class="block text-sm">Estado <span class="text-red-600" aria-hidden="true">*</span></label>
+              <select id="plan-estado" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" [(ngModel)]="planEstado" aria-describedby="plan-estado-ayuda" required aria-required="true">@for (estado of estadosPlan; track estado.valor) { <option [value]="estado.valor">{{ estado.texto }}</option> }</select>
+              <p id="plan-estado-ayuda" class="mt-1 text-xs text-slate-500">Flujo institucional del plan; no admite estados escritos manualmente.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-institutional">
+          <button type="button" class="modal-action-icon modal-action-icon--neutral" title="Cancelar edición del plan" aria-label="Cancelar edición del plan" [disabled]="operacionEnCurso()" (click)="solicitarCierrePlan()"><app-action-icon action="cancel"></app-action-icon></button>
+          <button type="button" class="modal-action-icon modal-action-icon--primary" title="{{ planEditandoId > 0 ? 'Actualizar plan' : 'Guardar nuevo plan' }}" aria-label="{{ planEditandoId > 0 ? 'Actualizar plan' : 'Guardar nuevo plan' }}" data-ui-action="save-plan" [disabled]="operacionEnCurso() || !planFormularioValido()" (click)="guardarPlan()"><app-action-icon [action]="planEditandoId > 0 ? 'refresh' : 'save'" [loading]="operacionEnCurso()"></app-action-icon></button>
+        </div>
+      </div>
+    </dialog>
   }
 
   @if (modalActividadAbierto()) {

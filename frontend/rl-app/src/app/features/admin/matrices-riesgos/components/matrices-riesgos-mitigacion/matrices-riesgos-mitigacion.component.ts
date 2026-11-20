@@ -319,12 +319,20 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
 
   async guardarPlan(): Promise<void> {
     if (this.operacionEnCurso()) return;
-    if (this.evaluacionId <= 0 || !this.planDescripcion.trim()) {
+    if (this.evaluacionId <= 0 || !this.textoRequerido(this.planDescripcion)) {
       this.notificarError('Seleccione una evaluación y describa el plan.');
       return;
     }
-    if (this.planAvance < 0 || this.planAvance > 100 || this.planPresupuesto < 0 || this.planFechaFin < this.planFechaInicio) {
+    if (!this.numeroEnRango(this.planAvance, 0, 100)
+      || !this.numeroEnRango(this.planPresupuesto, 0)
+      || !this.textoRequerido(this.planFechaInicio)
+      || !this.textoRequerido(this.planFechaFin)
+      || this.planFechaFin < this.planFechaInicio) {
       this.notificarError('Revise avance, presupuesto y rango de fechas del plan.');
+      return;
+    }
+    if (!this.planFormularioValido()) {
+      this.notificarError('Complete todos los campos obligatorios del plan antes de guardar.');
       return;
     }
     const confirmado = await this.confirmarGuardado(
@@ -343,9 +351,9 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
       plaFechaInicio: this.fechaIso(this.planFechaInicio),
       plaFechaFin: this.fechaIso(this.planFechaFin),
       plaEstado: this.planEstado.trim() || 'PENDIENTE',
-      plaMonitoreoSeguimiento: this.planMonitoreoSeguimiento.trim() || null,
-      plaResponsables: this.planResponsables.trim() || null,
-      plaRecursos: this.planRecursos.trim() || null
+      plaMonitoreoSeguimiento: this.planMonitoreoSeguimiento.trim(),
+      plaResponsables: this.planResponsables.trim(),
+      plaRecursos: this.planRecursos.trim()
     };
     this.guardando.set(true);
     const solicitud: Observable<unknown> = this.planEditandoId > 0
@@ -505,11 +513,16 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
 
   planFormularioValido(): boolean {
     return this.evaluacionId > 0
-      && this.planDescripcion.trim().length > 0
-      && this.planAvance >= 0 && this.planAvance <= 100
-      && this.planPresupuesto >= 0
-      && !!this.planFechaInicio && !!this.planFechaFin
-      && this.planFechaFin >= this.planFechaInicio;
+      && this.textoRequerido(this.planDescripcion)
+      && this.numeroEnRango(this.planAvance, 0, 100)
+      && this.numeroEnRango(this.planPresupuesto, 0)
+      && this.textoRequerido(this.planFechaInicio)
+      && this.textoRequerido(this.planFechaFin)
+      && this.planFechaFin >= this.planFechaInicio
+      && this.textoRequerido(this.planMonitoreoSeguimiento)
+      && this.textoRequerido(this.planResponsables)
+      && this.textoRequerido(this.planRecursos)
+      && this.estadosPlan.some(estado => estado.valor === this.planEstado);
   }
 
   actividadFormularioValida(): boolean {
@@ -626,6 +639,18 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
 
   private estadoActividadFormulario(): string {
     return JSON.stringify([this.planSeleccionadoId, this.actividadEditandoId, this.actividadDescripcion, this.actividadResponsable, this.actividadAvance, this.actividadFechaInicio, this.actividadFechaFin, this.actividadEstado]);
+  }
+
+  private textoRequerido(valor: unknown): valor is string {
+    return typeof valor === 'string' && valor.trim().length > 0;
+  }
+
+  private numeroEnRango(valor: unknown, minimo: number, maximo?: number): boolean {
+    if (valor === null || valor === undefined || valor === '') return false;
+    const numero = Number(valor);
+    return Number.isFinite(numero)
+      && numero >= minimo
+      && (maximo === undefined || numero <= maximo);
   }
 
   private resetControlForm(): void {
