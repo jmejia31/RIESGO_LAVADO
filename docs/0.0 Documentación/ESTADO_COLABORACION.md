@@ -3,8 +3,8 @@
 - **Identificación y Referencia:**
   - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
   - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
-  - Base SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`. Código SHA Inicial: `bc9120e79e647416ca56b42a08fa492150d82bf9`. Documentación Base SHA: `8e31268a39cb38947e1610b113171f7eacfeeeeb`.
-  - Quality Gate Previo: `44644160900` (`completed / success`, 12m53s).
+  - Base SHA: `ef72356f4996b47dbbc29097df30deafbbfed641`. Código Verificado SHA: `115f8035e1d9bafa7553a785959ce038b921caf8`. Código SHA Inicial: `bc9120e79e647416ca56b42a08fa492150d82bf9`. Documentación Base SHA: `8e31268a39cb38947e1610b113171f7eacfeeeeb`.
+  - Quality Gate Verificado: `44652692783` (`completed / success`, 13m6s). Quality Gate Previo: `44644160900` (`completed / success`, 12m53s).
   - Respaldos remotos íntegros verificados:
     - `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` en `ef72356f4996b47dbbc29097df30deafbbfed641`.
     - `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` en `8e31268a39cb38947e1610b113171f7eacfeeeeb`.

@@ -11,11 +11,12 @@
 | **Autoridad Funcional** | Javier Mejía (`jmejia31`) — Propietario del Sistema |
 | **Fecha de Intervención** | 19 de noviembre de 2026 |
 | **Base SHA** | `ef72356f4996b47dbbc29097df30deafbbfed641` |
-| **Código Implementado SHA** | `bc9120e79e647416ca56b42a08fa492150d82bf9` |
-| **Quality Gate Base** | `44613258648` (SUCCESS) |
-| **Quality Gate Verificado** | [44644160900](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44644160900) — `completed / success` (12m53s) |
-| **Rama de Respaldo Remoto** | `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` |
-| **Backup SHA** | `ef72356f4996b47dbbc29097df30deafbbfed641` |
+| **Código Implementado SHA** | `115f8035e1d9bafa7553a785959ce038b921caf8` |
+| **Código Inicial SHA** | `bc9120e79e647416ca56b42a08fa492150d82bf9` |
+| **Documentación Base SHA** | `8e31268a39cb38947e1610b113171f7eacfeeeeb` |
+| **Quality Gate Verificado** | [44652692783](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44652692783) — `completed / success` (13m6s) |
+| **Quality Gate Previo** | `44644160900` (SUCCESS) |
+| **Respaldos Remotos Verificados** | `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`)<br>`origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`) |
 | **Estado de Certificación** | `READY_FOR_INDEPENDENT_REVIEW` |
 | **Cumplimiento DNP_IHSS** | `NO_NEW_EXTERNAL_WRITES=PASS` / `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED` |
 
