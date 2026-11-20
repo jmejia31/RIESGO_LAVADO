@@ -379,7 +379,6 @@ public static class MatricesOracleBootstrap
                 CONSTRAINT FK_RL_MR_ALE_EVA FOREIGN KEY (ALE_EVALUACION_ID) REFERENCES RL_MR_EVALUACIONES_RIESGO(EVA_ID),
                 CONSTRAINT CK_RL_MR_ALE_EST CHECK (ALE_ESTADO IN ('ACTIVO','INACTIVO'))
             )");
-        await ExecuteIgnoreAsync(connection, "ALTER TABLE RL_MR_SENALES_ALERTA MODIFY (ALE_FECHA_DISPARO NULL)");
 
         await ExecuteIgnoreAsync(connection, @"
             CREATE TABLE RL_MR_AUTOMONITOREO (
@@ -659,7 +658,7 @@ public static class MatricesOracleBootstrap
             await using var cmd = new OracleCommand(sql, connection);
             await cmd.ExecuteNonQueryAsync();
         }
-        catch (OracleException ex) when (ex.Number is 1 or 942 or 955 or 1418 or 1430 or 1442 or 2260 or 2261 or 2264 or 2275 or 2289 or 2441 or 2442 or 2443)
+        catch (OracleException ex) when (ex.Number is 1 or 942 or 955 or 1418 or 1430 or 1442 or 1451 or 2260 or 2261 or 2264 or 2275 or 2289 or 2441 or 2442 or 2443)
         {
             // Idempotencia segura en Oracle XE descartable:
             // 1: unique constraint violated
@@ -668,6 +667,7 @@ public static class MatricesOracleBootstrap
             // 1418: specified index does not exist (para drops)
             // 1430: column being added already exists in table
             // 1442: column being modified to NOT NULL is already NOT NULL
+            // 1451: column to be modified to NULL is already NULL
             // 2260: table can have only one primary key
             // 2261: unique or primary key already exists
             // 2264: name already used by an existing constraint
