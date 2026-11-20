@@ -37,7 +37,7 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
             : null;
     }
 
-    [Fact]
+    [MatricesPurgeOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task SyntheticPurge_PreservaAislamientoRollbackIntegridadYRecreacion()
     {
@@ -556,4 +556,16 @@ public sealed class MatricesSyntheticPurgeOracleIntegrationTests
     }
 
     private sealed record Snapshot(int TableCount, long RowCount, string Digest);
+}
+
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class MatricesPurgeOracleRequiredFactAttribute : FactAttribute
+{
+    public MatricesPurgeOracleRequiredFactAttribute()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("RL_MATRICES_SYNTHETIC_PURGE_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            Skip = "Requiere el paso de integración de purga sintética Oracle XE de Matrices (RL_MATRICES_SYNTHETIC_PURGE_REQUIRED=true).";
+        }
+    }
 }

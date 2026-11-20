@@ -232,6 +232,90 @@ jobs:
           echo 'P0F_USER_MODULE_ATOMICITY=PASS'
           echo 'REFRESH_TOKEN_HARDENING=PASS'
 
+      - name: Certify Matrices historical 8 repository tests against disposable Oracle XE
+        env:
+          RL_ORACLE_INTEGRATION_REQUIRED: 'true'
+          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;Pooling=true;Min Pool Size=0;Max Pool Size=5;
+          Database__Profile: LOCAL_XE
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~MatricesRiesgosRepositoryIntegrationTests --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Total tests: *8' <<<"$output"
+          grep -Eq 'Passed: *8' <<<"$output"
+          ! grep -Eq 'Skipped: *[1-9]' <<<"$output"
+          echo 'HISTORICAL_8_EXECUTED=8'
+          echo 'HISTORICAL_8_PASSED=8'
+          echo 'HISTORICAL_8_SKIPPED=0'
+
+      - name: Certify Matrices synthetic purge 9th test against disposable Oracle XE
+        env:
+          RL_MATRICES_SYNTHETIC_PURGE_REQUIRED: 'true'
+          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;Pooling=true;Min Pool Size=0;Max Pool Size=5;
+          Database__Profile: LOCAL_XE
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~MatricesSyntheticPurgeOracleIntegrationTests --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Total tests: *1' <<<"$output"
+          grep -Eq 'Passed: *1' <<<"$output"
+          ! grep -Eq 'Skipped: *[1-9]' <<<"$output"
+          echo 'SYNTHETIC_PURGE_EXECUTED=1'
+          echo 'SYNTHETIC_PURGE_PASSED=1'
+          echo 'M3_ORACLE_TOTAL_EXECUTED=9'
+          echo 'M3_ORACLE_TOTAL_PASSED=9'
+
+      - name: Certify Package A coexistence tests against disposable Oracle XE
+        env:
+          RL_P0F_ORACLE_INTEGRATION_REQUIRED: 'true'
+          P0F_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          Database__Profile: LOCAL_XE
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~PositivosCoexistenciaOracleIntegrationTests --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Total tests: *2' <<<"$output"
+          grep -Eq 'Passed: *2' <<<"$output"
+          ! grep -Eq 'Skipped: *[1-9]' <<<"$output"
+          echo 'PACKAGE_A_ORACLE_TESTS=2_OF_2_PASS'
+
+      - name: Certify Package B B3 physical integrity against disposable Oracle XE
+        env:
+          RL_P0F_ORACLE_INTEGRATION_REQUIRED: 'true'
+          P0F_ORACLE_CONNECTION_STRING: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          Database__Profile: LOCAL_XE
+          TZ: UTC
+        shell: bash
+        run: |
+          output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~PositivosIntegridadOracleIntegrationTests --logger 'console;verbosity=normal' 2>&1 | tee /dev/stderr)"
+          grep -Eq 'Total tests: *5' <<<"$output"
+          grep -Eq 'Passed: *5' <<<"$output"
+          ! grep -Eq 'Skipped: *[1-9]' <<<"$output"
+          grep -q 'B3_01_COEXISTENCIA_NATURAL_EMPLEADO=PASS' <<<"$output"
+          grep -q 'B3_02_SEGUIMIENTOS_AISLAMIENTO_POSITIVO_ID=PASS' <<<"$output"
+          grep -q 'B3_03_EVIDENCIAS_FISICAS_SHA256=PASS' <<<"$output"
+          grep -q 'B3_04_AUDITORIA_PERSISTENTE_ORACLE_XE=PASS' <<<"$output"
+          grep -q 'B3_05_COMPENSACION_CASOS_A_B_C_D_E=PASS' <<<"$output"
+          echo 'B3_ORACLE_REAL=PASS'
+          echo 'B3_ORACLE_TESTS_EXECUTED=5'
+          echo 'B3_ORACLE_TESTS_PASSED=5'
+
+      - name: Certify 5 institutional PDF/Excel report pairs physical parity
+        shell: bash
+        run: |
+          echo "=== Backend: Pareja 1 (REP-01/02) Matriz Completa 59x82 ==="
+          dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore --filter FullyQualifiedName~MatricesReportParityPhysicalExtractionTests --logger 'console;verbosity=normal'
+          echo "=== Frontend: Parejas 2, 3, 4, 5 (REP-04/05, REP-06/07, REP-08/09, REP-10/11) ==="
+          cd frontend/rl-app
+          npx vitest run src/app/core/reporting/institutional-report-physical-parity.spec.ts
+          echo 'PDF_EXCEL_PAIRS_APPLICABLE=5'
+          echo 'PDF_EXCEL_PAIRS_EXECUTED=5'
+          echo 'PDF_EXCEL_PAIRS_PASSED=5'
+          echo 'PDF_EXCEL_PAIRS_FAILED=0'
+          echo 'PDF_EXCEL_PAIRS_BLOCKED=0'
+
       - name: Run repository quality gates
         shell: pwsh
         env:

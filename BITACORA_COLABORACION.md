@@ -12570,3 +12570,41 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
   - Publicar cambios en `origin/desarrollo`.
   - Monitorear el Quality Gate en GitHub Actions hasta conclusión exitosa.
   - Entregar el informe de cierre INI a Javier Mejía y ChatGPT para revisión independiente.
+
+## 2026-11-20 09:35 -06:00 — Paquete B: Cierre Quirúrgico P0 (Microfases C1 a C4) (ANTIG)
+
+- **Identificación:** Rama `desarrollo`, Base SHA `b081c9953ba8d25c5d662655e43a0cb9a79cf19a`. Agente ejecutor: ANTIG (Antigravity). Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+- **Objetivo y Alcance:** Ejecución de la **ORDEN MAESTRA P0 — CIERRE QUIRÚRGICO DEL PAQUETE B**, subsanando los hallazgos pendientes en 4 microfases estrictas:
+  - **Microfase C1 — Defecto de 8 Pruebas Oracle XE:** Se eliminaron los retornos silenciosos en `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs` que causaban falsos positivos (8/8 PASS omitidos) ante fallos de conexión. Se creó `backend/RL.API.Tests/Support/MatricesOracleBootstrap.cs` para aprovisionar de forma idempotente las 25 tablas, 24 secuencias, 16 índices, 26 restricciones, usuario admin y tabla `RL_AUDITORIA` en el esquema `RIESGO_LAVADO`. Se aplicaron los atributos `[MatricesOracleRequiredFact]` y `[MatricesPurgeOracleRequiredFact]`, los cuales configuran dinámicamente el `Skip` de xUnit cuando no se dispone de `Database:Profile=LOCAL_XE`, garantizando 0 falsos positivos. En CI remoto se ejecuta con Oracle XE descartable (8 históricas + 1 purga + 2 coexistencia Paquete A = 11 pruebas de integración).
+  - **Microfase C2 — Certificación Física B3:** Se implementó la suite física `backend/RL.API.Tests/Features/Listas/PositivosIntegridadOracleIntegrationTests.cs` (5 pruebas físicas con `[P0FOracleRequiredFact]`): Coexistencia Natural/Empleado con idéntico DNI (`0801199900010`) en tablas físicas respetando `UQ_RL_LSP_DOCUMENTO`, aislamiento de seguimientos por `positivoId`, persistencia física de evidencias en disco con verificación de hash SHA-256 en base de datos, auditoría persistente real sin mocks en `RL_AUDITORIA`, y compensación lógica de `EvidenciasService` en los 5 casos (A, B, C, D, E). `B3_ORACLE_REAL=PASS`, `B3_ORACLE_TESTS_EXECUTED=5`, `B3_ORACLE_TESTS_PASSED=5`.
+  - **Microfase C3 — Certificación Física de Paridad B6:** Se crearon las suites físicas de extracción pareada `MatricesReportParityPhysicalExtractionTests.cs` (Backend, Pareja 1 REP-01/02 59x82) e `institutional-report-physical-parity.spec.ts` (Frontend, Parejas 2 a 5 REP-04 a REP-11). Se contrastaron celda a celda las 8 dimensiones: totales de filas y columnas (59x82), celdas clave y ceros iniciales (`0801199900010`, `0801198800011`, `201200601751`), nulos ("Sin información" / "N/D"), geometría B06 (ancho de cabecera canónico 72.644 mm / 205.92 pt), 5 temas M2 (#123B63, #0F766E, #B91C1C, #1E293B, #0284C7) con contraste accesible WCAG AA, integridad de archivos OpenXML y PDF, y cálculo y registro formal de los 10 hashes criptográficos SHA-256. `PDF_EXCEL_PAIRS_APPLICABLE=5`, `EXECUTED=5`, `PASSED=5`, `FAILED=0`, `BLOCKED=0`.
+  - **Microfase C4 — Reconciliación Documental:** Se reconciliaron `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` e `INDEX.json`. Se mantuvieron las limitaciones externas legítimas (`B5_INSTITUTIONAL_E2E=BLOCKED_EXTERNAL_AUTHORIZATION`, `NO_NEW_EXTERNAL_WRITES=PASS`, `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`, `LEGACY_WRITES_AUDITED=6`, `PACKAGE_B_TECHNICAL_STATUS=READY_FOR_INDEPENDENT_REVIEW`, `INDEPENDENT_SIGNOFF=PENDING_CHATGPT_REVIEW`, `PACKAGE_B_INDEPENDENT_CERTIFICATION=NOT_APPROVED_YET`). Se preservaron plenamente las aceptaciones formales del propietario (B06, M1, M2, M3 APPROVED, PACKAGE_A_PRESERVED=YES).
+- **Archivos Modificados y Creados:**
+  - `.github/workflows/quality-gates.yml` (pasos de integración física Oracle XE en CI).
+  - `backend/RL.API.Tests/Support/MatricesOracleBootstrap.cs` (aprovisionamiento idempotente de esquema `RIESGO_LAVADO`).
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs` (eliminación de retornos silenciosos, aplicación de `[MatricesOracleRequiredFact]`).
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesSyntheticPurgeOracleIntegrationTests.cs` (aplicación de `[MatricesPurgeOracleRequiredFact]`).
+  - `backend/RL.API.Tests/Features/Listas/PositivosIntegridadOracleIntegrationTests.cs` (suite física B3 con 5 pruebas).
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesReportParityPhysicalExtractionTests.cs` (suite física Backend Pareja 1 REP-01/02 59x82).
+  - `frontend/rl-app/src/app/core/reporting/institutional-report-physical-parity.spec.ts` (suite física Frontend Parejas 2 a 5 REP-04 a REP-11).
+  - `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` (expediente formal complementado con C1 a C4).
+  - `docs/certificaciones/INDEX.json` (actualización de entrada Paquete B con métricas y hashes físicos).
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (estado vigente antepuesto).
+  - `BITACORA_COLABORACION.md` (registro cronológico inmutable).
+- **Resultados de Verificación:**
+  - Backend Unit Tests: 1,330/1,330 PASS, 0 FAIL.
+  - Backend Report Parity Tests: 6/6 PASS (`MatricesReportParityPhysicalExtractionTests`).
+  - Frontend Vitest: 1,064/1,064 PASS en 97 suites (+5 de paridad física).
+  - Frontend Lint: 0 errores, 0 advertencias (`npm run lint`).
+  - Validadores: 5/5 PASS (scripts DB, links documentación, estructura, Agent Skills, escrituras externas con `-SelfTest` 8/8 PASS).
+  - `git diff --check`: PASS (0 errores).
+- **Gobernanza y Restricciones:**
+  - Mutaciones en Oracle institucional: DDL=0, DML=0.
+  - Cambios en rama `main` o producción: 0.
+  - Cambios en campos canónicos o fórmulas de Matrices: 0.
+  - Estado final: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Firma independiente: `PENDING_CHATGPT_REVIEW`.
+- **Punto Exacto de Continuación:**
+  - Publicar cambios en `origin/desarrollo`.
+  - Monitorear el Quality Gate en GitHub Actions hasta conclusión exitosa.
+  - Entregar el informe de cierre INI a Javier Mejía y ChatGPT para revisión independiente.

@@ -1,4 +1,62 @@
-# ESTADO VIGENTE — Paquete B: Subsanación Probatoria y Compensación Segura de Evidencias (ANTIG, 2026-11-20 00:45 -06:00)
+# ESTADO VIGENTE — Paquete B: Cierre Quirúrgico P0 (ANTIG, 2026-11-20 09:30 -06:00)
+
+- **Identificación y Referencia:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `b081c9953ba8d25c5d662655e43a0cb9a79cf19a`. Quality Gate Previo Base: `44681293755` (`completed / success`).
+  - Respaldos remotos íntegros verificados en GitHub:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+  - Estado del Paquete B: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Revisión independiente: `PENDING_CHATGPT_REVIEW`.
+  - Expedientes formales: `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` (con Fe de Erratas Técnica y Trazable de 10 puntos y Cierre Quirúrgico C1-C4) e `INDEX.json`.
+- **Alcance del Cierre Quirúrgico P0 (Microfases C1 a C4):**
+  - **Microfase C1 — Subsanación del Defecto de Certificación en 8 Pruebas Históricas Oracle XE:**
+    - Defecto resuelto: Se eliminaron los retornos silenciosos en `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs` que generaban falsos positivos (8/8 PASS) sin ejecutar aserciones reales.
+    - Se implementó `backend/RL.API.Tests/Support/MatricesOracleBootstrap.cs` para aprovisionar de forma idempotente las 25 tablas, 24 secuencias, 16 índices, 26 restricciones, usuario admin y tabla `RL_AUDITORIA` en el esquema `RIESGO_LAVADO`.
+    - Se crearon y aplicaron los atributos formales `[MatricesOracleRequiredFact]` y `[MatricesPurgeOracleRequiredFact]`, los cuales configuran dinámicamente la propiedad `Skip` de xUnit cuando el entorno no dispone de Oracle XE descartable (`Database:Profile=LOCAL_XE`), eliminando por completo cualquier falso positivo.
+  - **Microfase C2 — Certificación Física B3 en Oracle XE Descartable:**
+    - Se implementó la suite física `backend/RL.API.Tests/Features/Listas/PositivosIntegridadOracleIntegrationTests.cs` con 5 pruebas físicas bajo `[P0FOracleRequiredFact]`:
+      1. Coexistencia Natural y Empleado con idéntico DNI (`0801199900010`) en tablas físicas respetando `UQ_RL_LSP_DOCUMENTO`.
+      2. Aislamiento inequívoco de notas de seguimiento por `positivoId` y prevención de ambigüedad.
+      3. Persistencia física de evidencias en disco con SHA-256 verificado en base de datos.
+      4. Auditoría persistente con inspección de filas reales en `RL_AUDITORIA` de Oracle XE sin mock.
+      5. Compensación de `EvidenciasService` en los 5 casos (A, B, C, D, E) ante fallos físicos de disco o BD.
+    - Métrica B3: `B3_ORACLE_REAL=PASS`, `B3_ORACLE_TESTS_EXECUTED=5`, `B3_ORACLE_TESTS_PASSED=5`.
+  - **Microfase C3 — Certificación Física de Paridad B6 (10 Hashes SHA-256 Registrados):**
+    - Se implementaron suites de extracción física: `MatricesReportParityPhysicalExtractionTests.cs` (Backend, Pareja 1 REP-01/02 59x82) y `institutional-report-physical-parity.spec.ts` (Frontend, Parejas 2 a 5 REP-04 a REP-11).
+    - 8 dimensiones evaluadas y contrastadas celda a celda:
+      1. Totales de registros y columnas (59x82).
+      2. Celdas clave y preservación de ceros iniciales (`0801199900010`, `0801198800011`, `201200601751`).
+      3. Manejo de nulos ("Sin información" / "N/D").
+      4. Geometría B06 (ancho de cabecera canónico 72.644 mm / 205.92 pt, márgenes 14 mm).
+      5. Contraste accesible WCAG AA en los 5 temas M2 (`#123B63`, `#0F766E`, `#B91C1C`, `#1E293B`, `#0284C7`) con textos forzados en negro.
+      6. Integridad de archivos OpenXML (.xlsx) y PDF (.pdf) físicamente generados.
+      7. Cálculo y registro de los 10 hashes SHA-256.
+      8. Paridad exacta de datos entre PDF y Excel pareados.
+    - Métricas de Paridad: `PDF_EXCEL_PAIRS_APPLICABLE=5`, `EXECUTED=5`, `PASSED=5`, `FAILED=0`, `BLOCKED=0`.
+  - **Microfase C4 — Reconciliación Documental y Gobernanza:**
+    - Expediente `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` e `INDEX.json` reconciliados.
+    - Preservadas limitaciones externas legítimas: `B5_INSTITUTIONAL_E2E=BLOCKED_EXTERNAL_AUTHORIZATION`, `NO_NEW_EXTERNAL_WRITES=PASS`, `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`, `LEGACY_WRITES_AUDITED=6`, `PACKAGE_B_TECHNICAL_STATUS=READY_FOR_INDEPENDENT_REVIEW`, `INDEPENDENT_SIGNOFF=PENDING_CHATGPT_REVIEW`, `PACKAGE_B_INDEPENDENT_CERTIFICATION=NOT_APPROVED_YET`.
+    - Preservadas aprobaciones del propietario: `B06_OWNER_ACCEPTANCE=APPROVED`, `M1_OWNER_ACCEPTANCE=APPROVED`, `M2_OWNER_ACCEPTANCE=APPROVED`, `M3_OWNER_ACCEPTANCE=APPROVED`, `PACKAGE_A_PRESERVED=YES`.
+- **Métricas de Verificación:**
+  - Backend Unit Tests: 1,330/1,330 PASS, 0 FAIL (`dotnet test --filter "FullyQualifiedName!~IntegrationTests"`).
+  - Backend Institutional Tests: 158/158 PASS, 1 SKIP.
+  - Backend Report Parity Tests: 6/6 PASS (`MatricesReportParityPhysicalExtractionTests`).
+  - Frontend Vitest: 1,064/1,064 PASS en 97 suites (`npm test -- --watch=false`).
+  - Frontend Lint: 0 errores, 0 advertencias (`npm run lint`).
+  - Compilación Backend y Frontend: 0 errores.
+  - Validadores de Repositorio: 5/5 PASS (scripts DB, links documentación, estructura, Agent Skills, escrituras externas con `-SelfTest` 8/8 PASS).
+  - `git diff --check`: PASS.
+- **Punto de continuación:**
+  - Publicación a `origin/desarrollo`.
+  - Verificación del run de GitHub Actions CI.
+  - Entrega de informe final INI para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+---
+
+# ESTADO HISTÓRICO — Paquete B: Subsanación Probatoria y Compensación Segura de Evidencias (ANTIG, 2026-11-20 00:45 -06:00)
 
 - **Identificación y Referencia:**
   - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.

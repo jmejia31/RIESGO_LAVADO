@@ -202,33 +202,27 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             "true",
             StringComparison.OrdinalIgnoreCase);
 
-        _connectionString = OracleTestDatabaseProfile.TryResolveConfiguredLocalXe(configuration, out string? localXe)
+        _connectionString = _integrationRequired && OracleTestDatabaseProfile.TryResolveConfiguredLocalXe(configuration, out string? localXe)
             ? localXe
             : null;
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task EsquemaModelo17_InventarioIndicesRestriccionesYAusencias_CumplenContrato()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         await using OracleConnection conn = CrearConexion();
         await conn.OpenAsync();
         await ValidarContratoFisicoAsync(conn);
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task CicloCompleto_Commit_PersisteFamiliaVersionRiesgoEvaluacionProyeccionFlujoEvidenciaVinculoYAuditoria()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         DatosCiclo datos = await CrearCicloConfirmadoAsync("COMMIT");
         try
@@ -270,14 +264,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         }
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task CicloCompleto_Rollback_NoPersisteRegistrosBase()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         await using OracleConnection conn = CrearConexion();
         await conn.OpenAsync();
@@ -295,14 +286,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         Assert.Equal(0, await ContarPorIdAsync(conn, "RL_MR_EVIDENCIAS", "EVI_ID", datos.EvidenciaId));
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task Vigencia_ArchivadaBloqueaAmbosSentidos_YSolicitudRepetidaNoReescribeFechaHistorica()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         long familiaId;
         long versionId;
@@ -362,14 +350,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         }
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task VersionLifecycle_AuditaPublicacionActivacionDesactivacionYReemplazoEnLaMismaTransaccion()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         long familiaId;
         long versionActualId;
@@ -451,14 +436,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         }
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task Borrador_ArchivadoConcurrenteBloqueaEliminacionYActualizacion()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         DraftRaceFixture deleteFixture = await CrearDraftRaceFixtureAsync("DELETE");
         try
@@ -524,14 +506,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         }
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task Bloques4y6_ColumnasNuevasPersistenYSeProyectanDesdeOracle()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         (long UsuarioId, long RolId) identidad = await CrearUsuarioIntegracionAsync();
         DatosCiclo? datos = null;
@@ -751,14 +730,11 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         }
     }
 
-    [Fact]
+    [MatricesOracleRequiredFact]
     [Trait("Category", "OracleIntegration")]
     public async Task VinculoGenericoYAuditoria_FalloPosteriorAInsertarAuditoria_RevierteAmbosRegistros()
     {
-        if (!await ValidarEntornoEjecucionAsync())
-        {
-            return;
-        }
+        await ValidarEntornoEjecucionAsync();
 
         DatosCiclo datos = await CrearCicloConfirmadoAsync("ROLLBACK_AUD");
         try
@@ -795,22 +771,17 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         }
     }
 
-    private async Task<bool> ValidarEntornoEjecucionAsync()
+    private async Task ValidarEntornoEjecucionAsync()
     {
         if (!_integrationRequired)
         {
-            _output.WriteLine(
-                "[OMITIDA] Certificación Oracle no habilitada. " +
-                "RL_ORACLE_INTEGRATION_REQUIRED debe ser true. " +
-                "Este resultado no certifica físicamente el modelo de 17 tablas.");
-            return false;
+            Assert.Fail("RL_ORACLE_INTEGRATION_REQUIRED debe ser true.");
         }
 
         if (string.IsNullOrWhiteSpace(_connectionString))
         {
             Assert.Fail(
                 "RL_ORACLE_INTEGRATION_REQUIRED=true, pero Database:Profile=LOCAL_XE y ConnectionStrings:OracleDB_LocalXE deben estar configurados.");
-            return false;
         }
 
         try
@@ -830,16 +801,14 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             if (!string.Equals(esquema, "RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase))
             {
                 Assert.Fail($"Esquema Oracle no autorizado para certificación: {esquema}.");
-                return false;
             }
 
+            await MatricesOracleBootstrap.EnsureSchemaAsync(conn);
             await ValidarContratoFisicoAsync(conn);
-            return true;
         }
         catch (Exception ex)
         {
             Assert.Fail($"No fue posible validar de forma segura el entorno Oracle: {ex.Message}");
-            return false;
         }
     }
 
@@ -1668,5 +1637,17 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
                 tabla,
                 fechaInicio,
                 fechaFin);
+    }
+}
+
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class MatricesOracleRequiredFactAttribute : FactAttribute
+{
+    public MatricesOracleRequiredFactAttribute()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("RL_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            Skip = "Requiere el paso de integración Oracle XE de Matrices (RL_ORACLE_INTEGRATION_REQUIRED=true).";
+        }
     }
 }
