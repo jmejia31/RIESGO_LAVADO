@@ -1,3 +1,39 @@
+# ESTADO VIGENTE — Paquete B: Certificación Complementaria Integral (ANTIG, 2026-11-19 23:15 -06:00)
+
+- **Identificación y Referencia:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `e246c6f45a10f0c147b5c947642acb9619c66769`. Código Certificado SHA: `966d0ec825e70089da983d02644b2acb0306fab6`.
+  - Quality Gate Previo (Código): `44660135562` (`completed / success`, 12m48s). Quality Gate Previo (Documental): `44662356256` (`completed / success`).
+  - Respaldos remotos íntegros verificados:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+  - Estado: `READY_FOR_INDEPENDENT_REVIEW`.
+  - Expediente formal: `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` e `INDEX.json`.
+- **Modalidad y Alcance:**
+  - Modalidad: Verificación y Auditoría sin Modificaciones Funcionales (`FUNCTIONAL_CODE_CHANGES=0`).
+  - Microfase B1: Matriz de inventario de brechas (Categorías A, B, C, D, E) auditada y documentada.
+  - Microfase B2: Verificación de las 9 pruebas Oracle XE históricas de M3 + 2 de Paquete A (11/11 PASS en GitHub Actions CI, Run 44660135562). Gated localmente por ausencia de contenedor Oracle XE (puerto TCP 1521 cerrado).
+  - Microfase B3: Integridad documental y aislamiento de expedientes demostrada (coexistencia Natural/Empleado con mismo DNI, notas y evidencias aisladas, detección de ambigüedad Escenario A-11 con HTTP 409).
+  - Microfase B4: Procedencia de referencias `SRC:` blindada mediante `IdentidadMonitoreoPolicy.ValidarConsistenciaSrc` (17 pruebas unitarias PASS).
+  - Microfase B5: Recorridos institucionales auditados (lectura institucional autorizada, mutaciones externas DDL=0, DML=0, `NO_NEW_EXTERNAL_WRITES=PASS`, `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`).
+  - Microfase B6: Matriz de paridad PDF/Excel (REP-01 a REP-18 auditada, 5 parejas funcionales con 100% paridad, geometría de logotipo único 72.644 mm / 205.92 pt preservada, 5 temas institucionales preservados).
+  - Microfase B7: Validación transversal y seguridad (`npm audit` con 0 vulnerabilidades mediante fork de picomatch en `vendor/picomatch`, validador de escrituras externas con `-SelfTest` 8/8 PASS, 5/5 validadores de repositorio superados).
+  - Microfase B8: Métricas de calidad y no regresión consolidadas (Backend: 1,332/1,332 PASS; Backend Institucional: 158/158 PASS, 1 SKIP; Frontend: 1,059/1,059 PASS en 96 suites).
+  - Microfase B9: Expediente formal publicado en `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` e indexado en `docs/certificaciones/INDEX.json`.
+- **Gobernanza y Preservaciones:**
+  - Base Oracle institucional: DDL=0, DML=0 (100% solo lectura autorizada).
+  - Rama `main` y producción: 0 modificaciones.
+  - Archivos locales sin seguimiento preservados fuera del control de versiones.
+  - Preservación formal de aprobaciones de Propietario: `B06_OWNER_ACCEPTANCE=APPROVED`, `M1_OWNER_ACCEPTANCE=APPROVED`, `M2_OWNER_ACCEPTANCE=APPROVED`, `M3_OWNER_ACCEPTANCE=APPROVED`.
+- **Punto de continuación:**
+  - Publicación documental selectiva a `origin/desarrollo`.
+  - Verificación de Quality Gate en GitHub Actions.
+  - Queda en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+---
+
 # ESTADO VIGENTE — Paquete A: Intervención Quirúrgica Final P0 — Coexistencia Oracle, Consulta Monitoreo Naturales, SRC y Endurecimiento DNP (ANTIG, 2026-11-19 20:25 -06:00)
 
 - **Identificación y Referencia:**

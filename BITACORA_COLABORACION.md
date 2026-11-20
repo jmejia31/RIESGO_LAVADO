@@ -12470,3 +12470,53 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Punto exacto de continuación:**
   - Publicar en `origin/desarrollo` y monitorear el Quality Gate en GitHub Actions.
   - Queda formalmente en estado `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
+
+## 2026-11-19 23:15 -06:00 — ANTIG — Paquete B: Certificación Complementaria Integral
+
+- **Identificación:**
+  - Proyecto: SGRLA-IHSS — RIESGO_LAVADO. Rama autorizada: `desarrollo`.
+  - Agente ejecutor: ANTIG — Antigravity. Propietario / Autoridad funcional: Javier Mejía (`jmejia31`).
+  - Base SHA: `e246c6f45a10f0c147b5c947642acb9619c66769`.
+  - Código Certificado SHA: `966d0ec825e70089da983d02644b2acb0306fab6` (Quality Gate `44660135562` SUCCESS).
+  - Quality Gate Previo Documental: `44662356256` (`completed / success`).
+  - Respaldos remotos íntegros preservados:
+    1. `origin/respaldo/desarrollo-pre-paquete-a-integridad-seguridad-20261119-ef72356f` (`ef72356f4996b47dbbc29097df30deafbbfed641`).
+    2. `origin/respaldo/desarrollo-pre-correccion-paquete-a-20261119-8e31268a` (`8e31268a39cb38947e1610b113171f7eacfeeeeb`).
+    3. `origin/respaldo/desarrollo-pre-intervencion-final-paquete-a-20261119-08073695` (`08073695dcf35cb27affbecb304753aedba9218f`).
+- **Objetivo y Alcance:**
+  - Ejecución de la intervención `PAQUETE_B_CERTIFICACION_COMPLEMENTARIA` en modalidad inicial de auditoría y verificación sin cambios a código funcional (`FUNCTIONAL_CODE_CHANGES=0`).
+  - Microfase B1: Elaboración de la matriz de inventario de pruebas y brechas categorizadas (A, B, C, D, E).
+  - Microfase B2: Verificación de las 9 pruebas Oracle XE históricas de M3 + 2 pruebas de coexistencia de Paquete A (11/11 pruebas superadas al 100% en GitHub Actions CI, Run `44660135562`). Verificación de guardas de protección local (`Database:Profile=LOCAL_XE`).
+  - Microfase B3: Verificación de integridad documental y aislamiento de expedientes de Persona Natural (`TipoPositivoId = 2`) y Empleado (`TipoPositivoId = 3`) con mismo DNI, notas y evidencias aisladas, prevención de ambigüedad (Escenario A-11 con HTTP 409 Conflict) y atomicidad transaccional.
+  - Microfase B4: Verificación de procedencia de referencias `SRC:` con validación estricta en `IdentidadMonitoreoPolicy.ValidarConsistenciaSrc` y 17 pruebas unitarias dedicadas.
+  - Microfase B5: Auditoría de recorridos institucionales (lectura institucional autorizada vs mutaciones en esquemas institucionales bloqueadas DDL=0, DML=0; preservación de `NO_NEW_EXTERNAL_WRITES=PASS` y `DNP_GLOBAL_READ_ONLY_COMPLIANCE=NOT_YET_DEMONSTRATED`).
+  - Microfase B6: Verificación de la matriz completa de reportería institucional REP-01 a REP-18, 5 parejas funcionales con 100% paridad, geometría de logotipo único 72.644 mm / 205.92 pt y 5 temas institucionales.
+  - Microfase B7: Validación transversal y de seguridad (`npm audit` con 0 vulnerabilidades, validador de escrituras DNP 6/6 rutas catalogadas y suite sintética 8/8 PASS, linters y compilación limpios).
+  - Microfase B8: Consolidación de métricas de calidad y no regresión.
+  - Microfase B9: Creación del expediente formal `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md` e indexación en `docs/certificaciones/INDEX.json`.
+- **Archivos creados:**
+  - `docs/certificaciones/PAQUETE_B_CERTIFICACION_COMPLEMENTARIA_20261119.md`.
+- **Archivos modificados:**
+  - `docs/certificaciones/INDEX.json` (incorporación de entrada `PAQUETE-B-CERTIFICACION-COMPLEMENTARIA-20261119`).
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md` (antepuesto estado consolidado de Paquete B).
+  - `BITACORA_COLABORACION.md` (registro cronológico inmutable de Paquete B).
+- **Resultados de verificación y métricas reales:**
+  - Backend unitario (`RL.API.Tests`): 1,332/1,332 PASS (0 fallos).
+  - Backend pruebas institucionales: 158/158 PASS (1 omitida por requerir Oracle XE local).
+  - Coexistencia unitaria: 17/17 PASS.
+  - Frontend Vitest (`frontend/rl-app`): 1,059/1,059 PASS en 96 suites (0 fallos).
+  - Compilación backend: `dotnet build RIESGO_LAVADO.sln` -> 0 errores.
+  - Compilación frontend: `npm run build` -> 0 errores (11.1s).
+  - Linter frontend: `npm run lint` -> 0 errores, 0 advertencias.
+  - Dependencias npm: `npm audit` -> 0 vulnerabilidades.
+  - Validadores del repositorio: 5/5 PASS (estructura, base de datos, enlaces, agent skills, escrituras externas con `-SelfTest` 8/8 PASS).
+  - `git diff --check`: PASS (0 errores).
+- **Gobernanza y restricciones:**
+  - Mutaciones en Oracle institucional: DDL=0, DML=0.
+  - Cambios en rama `main` o producción: 0.
+  - Cambios en código funcional: 0 (`FUNCTIONAL_CODE_CHANGES=0`).
+  - Preservación formal de aprobaciones de Propietario: `B06_OWNER_ACCEPTANCE=APPROVED`, `M1_OWNER_ACCEPTANCE=APPROVED`, `M2_OWNER_ACCEPTANCE=APPROVED`, `M3_OWNER_ACCEPTANCE=APPROVED`.
+- **Punto exacto de continuación:**
+  - Publicar expediente y trazabilidad en `origin/desarrollo`.
+  - Monitorear el Quality Gate en GitHub Actions hasta conclusión exitosa.
+  - Estado: `READY_FOR_INDEPENDENT_REVIEW` para revisión independiente por ChatGPT / Javier Mejía (`jmejia31`).
