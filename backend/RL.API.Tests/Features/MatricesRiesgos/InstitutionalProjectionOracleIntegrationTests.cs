@@ -1499,6 +1499,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         await ExecuteAsync(connection,"DELETE FROM RL_MR_ACTIVIDADES WHERE ACT_PLAN_ID IN (:a,:b)",("a",planA),("b",planB));
         await ExecuteAsync(connection,"DELETE FROM RL_MR_PLANES WHERE PLA_ID IN (:a,:b)",("a",planA),("b",planB));
         await ExecuteAsync(connection,"DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id",("id",evaluation));
+        await ExecuteAsync(connection,"DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id",("id",evaluation));
         await ExecuteAsync(connection,"DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id",("id",evaluation));
         await ExecuteAsync(connection,"DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id",("id",risk));
     }
