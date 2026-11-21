@@ -163,9 +163,13 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
   it('renderiza las nueve columnas institucionales de Evaluaciones', () => {
     const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
+    const superficieTabla = panel.querySelector('[aria-label="Tabla de evaluaciones de riesgo"]') as HTMLElement;
     const encabezados = Array.from(panel.querySelectorAll('table.b03-single-header thead:not(.hidden) th'))
       .map(th => (th.textContent || '').trim().replace(/\s+/g, ' '));
 
+    expect(superficieTabla.className).toContain('h-[55vh]');
+    expect(superficieTabla.className).toContain('overflow-y-scroll');
+    expect(superficieTabla.className).toContain('overflow-x-auto');
     expect(encabezados).toEqual([
       'Evaluación',
       'Código de riesgo / riesgo inherente',

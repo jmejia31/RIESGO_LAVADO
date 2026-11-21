@@ -395,6 +395,11 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
+    const superficieTabla = root.querySelector('[aria-label="Tabla de evaluaciones de riesgo consolidadas"]') as HTMLElement | null;
+    expect(superficieTabla).not.toBeNull();
+    expect(superficieTabla?.className).toContain('h-[55vh]');
+    expect(superficieTabla?.className).toContain('overflow-y-scroll');
+    expect(superficieTabla?.className).toContain('overflow-x-auto');
     const acciones = root.querySelector('[data-consolidado-actions]') as HTMLElement | null;
     expect(acciones).not.toBeNull();
     expect(acciones?.classList.contains('flex-nowrap')).toBe(true);
