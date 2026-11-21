@@ -297,6 +297,8 @@ describe('MatricesRiesgosGestionComponent', () => {
 
     const botonesEditar = element.querySelectorAll('table tbody button');
     expect(botonesEditar.length).toBe(2);
+    expect(element.querySelector('table tbody app-action-icon[action="edit"]')).not.toBeNull();
+    expect(element.querySelector('[aria-label="Tabla de riesgos"]')?.className).toContain('overflow-y-scroll');
     (botonesEditar[0] as HTMLButtonElement).click();
     expect(component.editandoId()).toBe(7);
     fixture.detectChanges();

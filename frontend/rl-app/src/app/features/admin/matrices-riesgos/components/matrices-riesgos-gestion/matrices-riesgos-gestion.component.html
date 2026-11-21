@@ -34,7 +34,7 @@
     </div>
     <app-page-size-selector [value]="tamanoPagina()" [options]="opcionesTamanoPagina" ariaLabel="Riesgos por página" (valueChange)="cambiarTamanoPagina($event)" />
   </div>
-  <div class="overflow-x-auto rounded-xl border border-slate-200">
+  <div class="h-[55vh] min-h-[22rem] max-h-[36rem] overflow-x-auto overflow-y-scroll rounded-xl border border-slate-200" aria-label="Tabla de riesgos">
     <table class="min-w-[760px] w-full divide-y divide-slate-200 text-sm b03-single-header">
     <thead class="bg-slate-100 text-left text-xs uppercase text-slate-600">
       <tr>
@@ -47,7 +47,7 @@
     </thead>
       <tbody class="divide-y divide-slate-100">
         @for (riesgo of riesgos(); track riesgo.rieId) {
-          <tr><td class="px-4 py-3 font-semibold">{{ riesgo.rieCodigo }}</td><td class="px-4 py-3">{{ riesgo.rieNombre }}</td><td class="px-4 py-3">{{ riesgo.rieDescripcion || '-' }}</td><td class="px-4 py-3">{{ riesgo.rieActivo ? 'Activo' : 'Inactivo' }}</td><td class="px-4 py-3"><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-ihss-700" title="Editar riesgo" aria-label="Editar riesgo" (click)="editar(riesgo, $event)">
+          <tr><td class="px-4 py-3 font-semibold">{{ riesgo.rieCodigo }}</td><td class="px-4 py-3">{{ riesgo.rieNombre }}</td><td class="px-4 py-3">{{ riesgo.rieDescripcion || '-' }}</td><td class="px-4 py-3">{{ riesgo.rieActivo ? 'Activo' : 'Inactivo' }}</td><td class="px-4 py-3"><button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ihss-700 transition-colors hover:bg-ihss-50 focus:outline-none focus:ring-2 focus:ring-ihss-500/20" title="Editar riesgo" aria-label="Editar riesgo" (click)="editar(riesgo, $event)">
             <app-action-icon action="edit"></app-action-icon>
           </button></td></tr>
         } @empty { <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">Sin riesgos registrados.</td></tr> }

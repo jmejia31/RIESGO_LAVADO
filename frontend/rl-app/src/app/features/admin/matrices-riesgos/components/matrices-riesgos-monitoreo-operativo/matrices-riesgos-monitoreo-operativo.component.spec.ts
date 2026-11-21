@@ -352,6 +352,13 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(element.textContent).toContain('Indicador UAT');
     expect(element.textContent).toContain('Sin novedad');
 
+    const listaAlertas = element.querySelector('[aria-label="Lista de señales de alerta"]') as HTMLElement;
+    const listaAutomonitoreos = element.querySelector('[aria-label="Lista de automonitoreos"]') as HTMLElement;
+    expect(listaAlertas.className).toContain('h-[22rem]');
+    expect(listaAlertas.className).toContain('overflow-y-scroll');
+    expect(listaAutomonitoreos.className).toContain('h-[22rem]');
+    expect(listaAutomonitoreos.className).toContain('overflow-y-scroll');
+
     const botonesAccionAlerta = element.querySelectorAll('section[aria-labelledby="titulo-alertas"] article button');
     expect(botonesAccionAlerta.length).toBeGreaterThanOrEqual(1);
     await component.cambiarEstado(alertaActiva);
