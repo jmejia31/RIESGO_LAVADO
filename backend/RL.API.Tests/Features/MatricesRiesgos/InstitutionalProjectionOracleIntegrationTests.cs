@@ -1008,6 +1008,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 1_000_000_000;
         long riskId = stamp + 710;
         long versionId = stamp + 711;
+        long familyId = stamp + 712;
         const long userId = 987654;
         const string ruleCode = "BLOCK7_ORACLE_FIXTURE";
         string definition = JsonSerializer.Serialize(new
@@ -1042,8 +1043,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         try
         {
             await ExecuteAsync(seed, "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,'Block 7 Oracle fixture','Disposable test risk',1,:usr,SYSDATE)", ("id", riskId), ("code", $"B7-{stamp}"), ("usr", userId));
-            await ExecuteAsync(seed, "MERGE INTO RL_MR_FAMILIAS_FORMULARIO destino USING (SELECT 1 FAM_ID FROM DUAL) origen ON (destino.FAM_ID = origen.FAM_ID) WHEN MATCHED THEN UPDATE SET FAM_CODIGO='BLOCK7_FAMILIA',FAM_NOMBRE='Familia E2E Block 7',FAM_DESCRIPCION='Fixture desechable para certificacion',FAM_ACTIVO=1,FAM_ARCHIVADA=0 WHEN NOT MATCHED THEN INSERT (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_ARCHIVADA,FAM_FECHA_CREACION) VALUES (1,'BLOCK7_FAMILIA','Familia E2E Block 7','Fixture desechable para certificacion',1,0,SYSDATE)");
-            await ExecuteAsync(seed, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_ORACLE_FIXTURE',1,:json,RPAD('A',64,'A'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
+            await ExecuteAsync(seed, "INSERT INTO RL_MR_FAMILIAS_FORMULARIO (FAM_ID,FAM_CODIGO,FAM_NOMBRE,FAM_DESCRIPCION,FAM_ACTIVO,FAM_FECHA_CREACION) VALUES (:id,:code,'Familia E2E Block 7','Fixture desechable para certificacion',1,SYSDATE)", ("id", familyId), ("code", $"BLOCK7_FAMILIA_{stamp}"));
+            await ExecuteAsync(seed, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,:family,'BLOCK7_ORACLE_FIXTURE',1,:json,RPAD('A',64,'A'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("family", familyId), ("json", definition), ("usr", userId));
             await ExecuteAsync(seed, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Block 7 Oracle fixture','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
 
             await using var app = await CreateBlock7ApiAsync(connectionString);
@@ -1215,6 +1216,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
             await ExecuteAsync(seed, "DELETE FROM RL_MR_REGLAS_CALCULO WHERE REG_CODIGO=:code", ("code", ruleCode));
             await ExecuteAsync(seed, "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", versionId));
+            await ExecuteAsync(seed, "DELETE FROM RL_MR_FAMILIAS_FORMULARIO WHERE FAM_ID=:id", ("id", familyId));
         }
     }
 
@@ -1352,12 +1354,13 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         DateTime baseDate = new(2026, 1, 1);
         try
         {
+            string riskCode = $"ROP-CUMP-{stamp}";
             string answers = BuildAnswersJson();
             string calculations = BuildCalculationsJson();
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_RIESGOS VALUES (:id,'ROP-CUMP-59','Fixture','Fixture risk',1,:usr,SYSDATE)", ("id",riskId),("usr",userId));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,'Fixture','Fixture risk',1,:usr,SYSDATE)", ("id",riskId),("code",riskCode),("usr",userId));
             await ExecuteAsync(connection, "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,:answers,:calc,:fixtureDate,:usr,1,1)", ("id",evaluationId),("risk",riskId),("answers",answers),("calc",calculations),("fixtureDate",baseDate),("usr",userId));
             // The legacy summary columns are VARCHAR2(20); canonical display labels come from EVA_CALCULOS_JSON.
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_PROYECCIONES_EVALUACION VALUES (:id,:eva,'ROP-CUMP-59','Fixture Area',3,1,'BAJO','NO SIGNIFICATIVO','Mitigar','BORRADOR','Owner',:fixtureDate)", ("id",stamp+201),("eva",evaluationId),("fixtureDate",baseDate));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_PROYECCIONES_EVALUACION VALUES (:id,:eva,:code,'Fixture Area',3,1,'BAJO','NO SIGNIFICATIVO','Mitigar','BORRADOR','Owner',:fixtureDate)", ("id",stamp+201),("eva",evaluationId),("code",riskCode),("fixtureDate",baseDate));
             foreach (long id in new[] { controlA, controlB, controlC })
             {
                 string type = id == controlC ? "DETECTIVO" : "PREVENTIVO";
@@ -1368,10 +1371,10 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             await ExecuteAsync(connection, "INSERT INTO RL_MR_ACTIVIDADES VALUES (:id,:plan,'Actividad A','Persona A',0,:startDate,:finishDate,'PENDIENTE')", ("id",activityA),("plan",planA),("startDate",baseDate),("finishDate",baseDate.AddDays(10)));
             await ExecuteAsync(connection, "INSERT INTO RL_MR_ACTIVIDADES VALUES (:id,:plan,'Actividad B','Persona B',0,:startDate,:finishDate,'PENDIENTE')", ("id",activityB),("plan",planB),("startDate",baseDate.AddMonths(2)),("finishDate",baseDate.AddMonths(2).AddDays(10)));
             await ExecuteAsync(connection, "INSERT INTO RL_MR_SENALES_ALERTA VALUES (:id,:eva,'ALERTA','Indicador fixture','ACTIVO',:fixtureDate)", ("id",stamp+550),("eva",evaluationId),("fixtureDate",baseDate));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_AUTOMONITOREO VALUES (:id,:eva,'ALTO','VIGENTE','Fixture',:usr,'Area obs','UGR obs',:fixtureDate)", ("id",stamp+560),("eva",evaluationId),("usr",userId),("fixtureDate",baseDate));
-            await InsertEvidenceAsync(connection,evidenceLate,"late-id-first",baseDate.AddDays(2),controlA);
-            await InsertEvidenceAsync(connection,evidenceEarly,"early-id-later",baseDate.AddDays(1),controlA);
-            await InsertEvidenceAsync(connection,evidenceOther,"other-control",baseDate,controlB);
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_AUTOMONITOREO (MON_ID,MON_EVALUACION_ID,MON_ESTADO_RIESGO,MON_ESTADO_CONTR,MON_RESULTADO,MON_USR_ID,MON_OBSERVACIONES_AREA,MON_OBSERVACIONES_UGR,MON_FECHA) VALUES (:id,:eva,'ALTO','VIGENTE','Fixture',:usr,'Area obs','UGR obs',:fixtureDate)", ("id",stamp+560),("eva",evaluationId),("usr",userId),("fixtureDate",baseDate));
+            await InsertEvidenceAsync(connection,evidenceLate,"late-id-first",baseDate.AddDays(2),controlA,userId);
+            await InsertEvidenceAsync(connection,evidenceEarly,"early-id-later",baseDate.AddDays(1),controlA,userId);
+            await InsertEvidenceAsync(connection,evidenceOther,"other-control",baseDate,controlB,userId);
 
             // Characterize the same Oracle snapshot transaction under a concurrent committed update.
             await using (var readerConnection = CreateConnection(connectionString))
@@ -1565,10 +1568,10 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         }
     }
 
-    private static async Task InsertEvidenceAsync(OracleConnection connection,long id,string name,DateTime date,long controlId)
+    private static async Task InsertEvidenceAsync(OracleConnection connection,long id,string name,DateTime date,long controlId,long userId)
     {
-        await ExecuteAsync(connection,"INSERT INTO RL_MR_EVIDENCIAS (EVI_ID,EVI_NOMBRE_ARCHIVO,EVI_EXTENSION,EVI_TAMANO,EVI_HASH,EVI_RUTA,EVI_USR_CREACION,EVI_FECHA_CREACION) VALUES (:id,:name,'.pdf',1,'BLOCK6-FIXTURE','/block6-fixture',1,:fixtureDate)",("id",id),("name",name),("fixtureDate",date));
-        await ExecuteAsync(connection,"INSERT INTO RL_MR_EVIDENCIAS_VINCULOS (EVV_ID,EVV_EVIDENCIA_ID,EVV_TIPO_ENTIDAD,EVV_ENTIDAD_ID) VALUES (:link,:evi,'CONTROL',:control)",("link",id+1000),("evi",id),("control",controlId));
+        await ExecuteAsync(connection,"INSERT INTO RL_MR_EVIDENCIAS (EVI_ID,EVI_NOMBRE_ARCHIVO,EVI_EXTENSION,EVI_TAMANO,EVI_HASH,EVI_RUTA,EVI_USR_CREACION,EVI_FECHA_CREACION) VALUES (:id,:name,'.pdf',1,'BLOCK6-FIXTURE','/block6-fixture',:usr,:fixtureDate)",("id",id),("name",name),("usr",userId),("fixtureDate",date));
+        await ExecuteAsync(connection,"INSERT INTO RL_MR_EVIDENCIAS_VINCULOS (EVV_ID,EVV_EVIDENCIA_ID,EVV_TIPO_ENTIDAD,EVV_ENTIDAD_ID,EVV_USR_CREACION,EVV_FECHA_CREACION) VALUES (:link,:evi,'CONTROL',:control,:usr,:fixtureDate)",("link",id+1000),("evi",id),("control",controlId),("usr",userId),("fixtureDate",date));
     }
 
     private static async Task CleanupAsync(OracleConnection connection,long risk,long evaluation,long planA,long planB,long[] controls,long[] evidence,long[] monitoringIds)

@@ -139,6 +139,15 @@ await using (var sharedUserCheck = new OracleCommand(
 // Include fixture seeding in the teardown scope: partial initialization must be cleaned up.
 try
 {
+    foreach (long id in new[] { userId, areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId })
+        await ExecuteAsync(oracle, @"
+            MERGE INTO RL_USUARIOS destino
+            USING (SELECT :id USR_ID FROM DUAL) origen
+            ON (destino.USR_ID = origen.USR_ID)
+            WHEN NOT MATCHED THEN
+                INSERT (USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL, USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID, USR_ACTIVO)
+                VALUES (:id, 'USER_' || :id, 'FIXTURE', 'user' || :id || '@ihss.local', 'HASH', 'SALT', 1, 1)", ("id", id));
+
 for (int index = 0; index < canonicalRisks.Length; index++)
 {
     var risk = canonicalRisks[index];
@@ -154,14 +163,6 @@ var fullChainUiFixtures = new List<object>();
 bool fullChainSeeded = false;
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable browser rule','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable H08 lifecycle rule','BLOCK7_LEGACY_TEST',1)", ("id", lifecycleVersionId), ("code", lifecycleRuleCode));
-foreach (long id in new[] { userId, areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId })
-    await ExecuteAsync(oracle, @"
-        MERGE INTO RL_USUARIOS destino
-        USING (SELECT :id USR_ID FROM DUAL) origen
-        ON (destino.USR_ID = origen.USR_ID)
-        WHEN NOT MATCHED THEN
-            INSERT (USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL, USR_PASSWORD_HASH, USR_PASSWORD_SALT, USR_ROL_ID, USR_ACTIVO)
-            VALUES (:id, 'USER_' || :id, 'FIXTURE', 'user' || :id || '@ihss.local', 'HASH', 'SALT', 1, 1)", ("id", id));
 await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,'MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR',1)", ("id", areaOnlyUserId));
 await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,'MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR',1)", ("id", ugrOnlyUserId));
 foreach (string capability in new[] { "MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR", "MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR" })
