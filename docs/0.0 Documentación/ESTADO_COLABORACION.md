@@ -1,4 +1,16 @@
-# ESTADO VIGENTE — Scroll propio en Coincidencias Empleado (COD, 2026-11-21 12:49 -06:00)
+# ESTADO VIGENTE — Scroll propio en Coincidencias Patrono (COD, 2026-11-21 12:56 -06:00)
+
+- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=b6563ec9`; `SOURCE_CODE_SHA=94a767703cef591aab3fabad21118ad2b80a7f9c`. Propietario / autoridad funcional: Javier Mejía (`jmejia31`).
+- **Objetivo:** dar altura controlada y scroll propio a la tabla principal de `Coincidencias Patrono`, preservando búsqueda, ordenamiento, paginación, detalle y exportación.
+- **Implementado:** la superficie de la tabla usa `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-y-scroll overscroll-contain`; el contenedor interno conserva `overflow-x-auto` para el desplazamiento horizontal de columnas. Se agregó `aria-label="Tabla de coincidencias de patronos"`.
+- **Archivos:** `frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component.html` y `coincidencias-patrono.presentation.spec.ts`.
+- **Verificación fresca:** prueba focalizada `1/1` archivo y `1/1` prueba PASS; lint PASS; build PASS con advertencias preexistentes de SCSS/CommonJS; `git diff --check` PASS.
+- **No verificado:** backend .NET, Oracle, E2E de navegador, regresión frontend completa y Quality Gate completo. Los servicios no fueron iniciados ni detenidos.
+- **Protecciones:** no se modificaron backend, Oracle, migraciones, Configuración de cálculo, contratos REST, `main`, producción ni archivos ajenos sin seguimiento.
+- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; aceptación visual del propietario pendiente.
+- **Continuación obligatoria:** publicar este registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar visualmente el scroll vertical/horizontal de Coincidencias Patrono.
+
+# ESTADO HISTÓRICO — Scroll propio en Coincidencias Empleado (COD, 2026-11-21 12:49 -06:00)
 
 - **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=afe204cb56ad8bc43a8baaeb7a7cad4e92cc19a4`; `SOURCE_CODE_SHA=a1d84440d82efdf2d7a0161ed10a6fc6668dbe43`. Propietario / autoridad funcional: Javier Mejía (`jmejia31`).
 - **Objetivo:** dar altura controlada y scroll propio a la tabla principal de `Coincidencias Empleado`, preservando búsqueda, ordenamiento, paginación, detalle y exportación.
