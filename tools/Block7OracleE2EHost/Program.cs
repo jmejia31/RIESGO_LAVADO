@@ -1247,7 +1247,24 @@ sealed class DisposableCalculationConfigurationMutationHandler
 
 sealed class E2EConfiguracionService : IConfiguracionService
 {
-    public Task<ConfigSistema?> ObtenerConfigSistemaAsync() => Task.FromResult<ConfigSistema?>(null);
+    // El host E2E no ejercita la persistencia de configuración, pero la aplicación
+    // carga este recurso global al iniciar. Devolver 404 deja un modal institucional
+    // abierto y bloquea la interacción real del navegador con Matrices de Riesgos.
+    // La configuración mínima mantiene el endpoint real en 200 sin tocar Oracle
+    // institucional ni introducir una dependencia ajena al alcance de TX12.
+    public Task<ConfigSistema?> ObtenerConfigSistemaAsync() => Task.FromResult<ConfigSistema?>(new ConfigSistema
+    {
+        SfsId = 1,
+        NombreInstitucion = "Instituto Hondureño de Seguridad Social",
+        NombreSistema = "SGRLA-IHSS",
+        ColorPrimario = "#1e3a8a",
+        ColorSecundario = "#1d4ed8",
+        ColorEncabezadoReportes = "#123B63",
+        TimeoutSesion = 30,
+        MaxIntentos = 5,
+        ValidezClaveTemp = 15,
+        UltimaActualizacion = DateTime.UtcNow
+    });
     public Task<List<LoginSlide>> ObtenerSlidesAsync() => Task.FromResult(new List<LoginSlide>());
     public Task<List<LoginSlide>> ObtenerTodosSlidesAsync() => Task.FromResult(new List<LoginSlide>());
     public Task<bool> GuardarConfigSistemaAsync(ConfigSistema config, long usuarioId, string? ip) => Task.FromResult(false);
