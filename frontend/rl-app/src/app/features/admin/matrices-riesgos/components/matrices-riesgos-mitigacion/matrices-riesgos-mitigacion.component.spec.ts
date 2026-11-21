@@ -345,6 +345,20 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.mensaje()).toBe('Plan actualizado correctamente.');
   });
 
+  it('conserva el plan seleccionado y sus actividades al cerrar un plan existente', async () => {
+    component.seleccionarEvaluacion(20);
+    component.editarPlan(plan);
+    fixture.detectChanges();
+
+    await component.solicitarCierrePlan();
+    fixture.detectChanges();
+
+    expect(component.modalPlanAbierto()).toBe(false);
+    expect(component.planSeleccionadoId).toBe(plan.plaId);
+    expect(component.actividades()).toEqual([actividad]);
+    expect(fixture.nativeElement.querySelector('button[aria-label="Editar actividad"]')).not.toBeNull();
+  });
+
   it('valida campos obligatorios y rangos de plan antes de invocar backend', () => {
     component.evaluacionId = 0;
     component.planDescripcion = '';

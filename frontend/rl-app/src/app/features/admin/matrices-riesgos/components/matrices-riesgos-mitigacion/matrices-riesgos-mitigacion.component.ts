@@ -593,7 +593,7 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
       });
       if (!confirmado) return;
     }
-    this.cerrarModalPlanForzado();
+    this.cerrarModalPlanForzado(this.planEditandoId > 0);
   }
 
   async solicitarCierreActividad(): Promise<void> {
@@ -700,9 +700,15 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges, OnInit {
     this.resetControlForm();
   }
 
-  cerrarModalPlanForzado(): void {
+  cerrarModalPlanForzado(preservarPlanSeleccionado = false): void {
+    const planSeleccionado = preservarPlanSeleccionado ? this.planSeleccionadoId : 0;
+    const actividadesDelPlan = preservarPlanSeleccionado ? this.actividades() : [];
     this.modalPlanAbierto.set(false);
     this.resetPlanForm();
+    if (preservarPlanSeleccionado && planSeleccionado > 0) {
+      this.planSeleccionadoId = planSeleccionado;
+      this.actividades.set(actividadesDelPlan);
+    }
   }
 
   cerrarModalActividadForzado(): void {
