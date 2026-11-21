@@ -755,11 +755,14 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(pageA.locator('#plan-descripcion')).toHaveValue('Plan E2E A actualizado');
   const planUiSave = pageA.waitForResponse(response => response.request().method() === 'PUT'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/planes/${planA}`);
+  const planListRefresh = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/evaluaciones/${evaluation.id}/planes`);
   await pageA.getByRole('button', { name: 'Actualizar plan' }).click();
   const confirmPlanUpdate = pageA.getByRole('button', { name: 'Guardar cambios' });
   await expect(confirmPlanUpdate).toBeVisible();
   await confirmPlanUpdate.click();
   expect((await planUiSave).status()).toBe(200);
+  expect((await planListRefresh).status()).toBe(200);
   await expect(pageA.getByText('Plan actualizado correctamente.')).toBeVisible();
   const refreshedPlan = pageA.getByRole('button', { name: 'Editar plan y actividades' }).first();
   await expect(refreshedPlan).toBeVisible();
