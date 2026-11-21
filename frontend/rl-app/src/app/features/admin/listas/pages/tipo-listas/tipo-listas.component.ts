@@ -28,10 +28,22 @@ export class TipoListasComponent implements OnInit {
   idParaEditar = signal<number | null>(null);
   orden = signal('id');
   direccion = signal<SortDirection>('asc');
+  buscar = signal('');
+  listasFiltradas = computed(() => {
+    const termino = this.buscar().trim().toLowerCase();
+    if (!termino) return [...this.listas()];
+
+    return this.listas().filter(item => [
+      item.tipoListaCautelaId,
+      item.descripcion,
+      item.tipoArchivo,
+      item.cantidadColumnas
+    ].some(valor => String(valor ?? '').toLowerCase().includes(termino)));
+  });
   listasOrdenadas = computed(() => {
     const factor = this.direccion() === 'asc' ? 1 : -1;
     const campo = this.orden();
-    return [...this.listas()].sort((a, b) => {
+    return [...this.listasFiltradas()].sort((a, b) => {
       const izquierda = campo === 'id' ? a.tipoListaCautelaId : campo === 'columnas' ? (a.cantidadColumnas ?? 0) : campo === 'archivo' ? (a.tipoArchivo ?? '') : a.descripcion;
       const derecha = campo === 'id' ? b.tipoListaCautelaId : campo === 'columnas' ? (b.cantidadColumnas ?? 0) : campo === 'archivo' ? (b.tipoArchivo ?? '') : b.descripcion;
       if (typeof izquierda === 'number' && typeof derecha === 'number') return (izquierda - derecha) * factor;
@@ -83,6 +95,14 @@ export class TipoListasComponent implements OnInit {
   ordenar(columna: string): void {
     if (this.orden() === columna) this.direccion.set(this.direccion() === 'asc' ? 'desc' : 'asc');
     else { this.orden.set(columna); this.direccion.set('asc'); }
+  }
+
+  cambiarBusqueda(valor: string): void {
+    this.buscar.set(valor);
+  }
+
+  limpiarFiltros(): void {
+    this.buscar.set('');
   }
 
   prepararNuevo() {
