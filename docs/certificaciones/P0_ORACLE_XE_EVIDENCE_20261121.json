@@ -1,0 +1,53 @@
+{
+  "project": "RIESGO_LAVADO",
+  "repository": "jmejia31/RIESGO_LAVADO",
+  "branch": "desarrollo",
+  "base_sha": "ec77b091fce5a08cd39a64467f998da499c3f734",
+  "source_code_sha": "e87fbaccb699775d343fda3c4d8f9695ceb2d337",
+  "integration_sha": "2b93ef2a7f70a8b4c5ea1248d5e97ed2abf1f6e3",
+  "pull_request": "https://github.com/jmejia31/RIESGO_LAVADO/pull/45",
+  "quality_gate": {
+    "run_id": 44946443638,
+    "url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44946443638",
+    "event": "push",
+    "status_at_capture": "in_progress",
+    "conclusion_at_capture": null
+  },
+  "local_results": {
+    "solution_build": { "status": "PASS", "errors": 0 },
+    "frontend_build": { "status": "PASS" },
+    "frontend_lint": { "status": "PASS" },
+    "frontend_unit": { "status": "PASS", "files": 102, "tests": 1086 },
+    "block7_targeted": { "status": "PASS", "passed": 1, "total": 1 },
+    "block6_targeted": { "status": "PASS", "passed": 1, "total": 1, "projection_fields": 82 },
+    "block10_targeted": { "status": "PASS", "passed": 1, "total": 1 },
+    "p0f_targeted": { "status": "PASS", "passed": 9, "total": 9 },
+    "block12_targeted": {
+      "status": "PARTIAL",
+      "passed": 2,
+      "total": 4,
+      "directed_state_changes": "30/30",
+      "full_matrix_fields": "2460/2460",
+      "blocked_by_external_excel_lock": 2
+    },
+    "block5_isolated": { "status": "PASS", "passed": 22, "total": 22 },
+    "backend_full_local": { "passed": 1343, "skipped": 19, "failed": 4, "failure_class": "external_workbook_lock" },
+    "repository_structure": { "status": "PASS" },
+    "database_scripts": { "status": "PASS" },
+    "documentation_links": { "status": "PASS" },
+    "agent_skills": { "status": "PASS", "skills": 14 }
+  },
+  "oracle_scope": {
+    "environment": "LOCAL_XE disposable container only",
+    "institutional_oracle_touched": false,
+    "production_touched": false,
+    "synthetic_user_987654_removed": true,
+    "canonical_59_verified_in_clean_ci": "PENDING",
+    "full_matrix_2006_verified_in_clean_ci": "PENDING",
+    "cleanup_zero_residuals_verified_in_clean_ci": "PENDING"
+  },
+  "status": "BLOCKED",
+  "certified": false,
+  "owner_acceptance": "PENDING",
+  "evidence_commit_sha": "PENDING_DOCUMENTATION_COMMIT"
+}

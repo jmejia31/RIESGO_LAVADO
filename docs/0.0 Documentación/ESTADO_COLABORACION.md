@@ -1,8 +1,22 @@
+# ESTADO VIGENTE — Cierre técnico P0 Oracle XE (COD, 2026-11-21 14:30 -06:00)
+
+- **Estado actual:** `INTEGRATED_NOT_CERTIFIED` / `BLOCKED`.
+- **Fuente de código:** `desarrollo` @ `e87fbaccb699775d343fda3c4d8f9695ceb2d337`; base de intervención `ec77b091fce5a08cd39a64467f998da499c3f734`.
+- **Quality Gate exacto:** [run 44946443638](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44946443638), `in_progress` al último sondeo; no se declara PASS.
+- **Evidencia local:** build .NET PASS; Block 7 `1/1`; Block 6 `1/1` y 82 campos; Block 10 `1/1`; P0-F `9/9`; Block 12 `2/4` con `30/30` transiciones y `2460/2460` campos; Block 5 aislado `22/22`; frontend build/lint PASS; frontend unit `102` archivos y `1086` pruebas PASS; validadores estructural, DB, documentación y skills PASS.
+- **Limitaciones reales:** suite backend completa local `1343` PASS, `19` SKIP, `4` FAIL por bloqueo de Excel externo; suite OracleIntegration general no certificable sobre el XE local heredado por diferencias de inventario/longitud; E2E Block 7 local no ejecutado porque `5043` estaba ocupado por servicio manual.
+- **Seguridad y alcance:** solo se usó `rl-oracle-xe-local`; usuario sintético `987654` eliminado; no se tocó Oracle institucional, producción, `main` ni migraciones protegidas; no se incluyeron archivos no rastreados ajenos.
+- **Expediente:** `docs/certificaciones/P0_ORACLE_XE_CERTIFICACION_20261121.md`, `P0_ORACLE_XE_EVIDENCE_20261121.json` y `P0_ORACLE_XE_CERTIFICACION_FINAL_20261121.docx`. El DOCX requiere revisión visual en un entorno con LibreOffice/Word porque el runtime de esta intervención no incluye `soffice.exe`.
+- **Pendientes obligatorios:** conclusión del Quality Gate; `59/59` identidades; `2006/2006` cálculos; cero residuos de riesgos, dependencias, evidencias y metadatos; Browser/API de bloques 7, 9 y 12; revisión visual del DOCX; aceptación expresa del propietario.
+- **Punto de continuación:** consultar el run `44946443638`, guardar su conclusión y URLs de jobs en el expediente, regenerar el informe Word si cambian los resultados y publicar la actualización documental.
+
+---
+
 # ESTADO VIGENTE — Integración quirúrgica P0 Oracle XE (CHAT, 2026-11-21)
 
 - **Proyecto y rama:** RIESGO_LAVADO, `desarrollo`; autor `CHAT`; propietario `jmejia31`.
 - **Autorización expresa del propietario:** integrar la rama temporal de reparación Oracle XE a `desarrollo` sin sobrescribir el trabajo simultáneo de `COD`.
-- **Operación remota ejecutada:** PR [#45](../../pull/45) fusionado por GitHub mediante commit merge `2b93ef2a7f70a8b4c5ea1248d5e97ed2abf1f6e3`. Base `desarrollo` inmediatamente anterior: `18a83cdf34486e77432540cecfc706b5c64f32e3`; rama candidata `chat/p0-oracle-fixtures-20261120` @ `d059f4be176128f59608cfcdf23bc432b2020c18` (15 commits).
+- **Operación remota ejecutada:** PR [#45](https://github.com/jmejia31/RIESGO_LAVADO/pull/45) fusionado por GitHub mediante commit merge `2b93ef2a7f70a8b4c5ea1248d5e97ed2abf1f6e3`. Base `desarrollo` inmediatamente anterior: `18a83cdf34486e77432540cecfc706b5c64f32e3`; rama candidata `chat/p0-oracle-fixtures-20261120` @ `d059f4be176128f59608cfcdf23bc432b2020c18` (15 commits).
 - **Archivos incorporados (únicamente tres):** `tools/Block7OracleE2EHost/Program.cs`, `tools/run_block7_oracle_e2e.sh`, `frontend/rl-app/e2e/block7-oracle-real.spec.ts`.
 - **Alcance:** fail-closed en limpieza y shutdown E2E, errores de Oracle no silenciados, inventario y comprobación de remanentes, separación por identidad de run sintético, prevención de reutilización de IDs/familias/evidencias y mayor resguardo de dependencias.
 - **Integridad de trabajo de CODEX:** comparación remota identificó 25 commits en `desarrollo` desde la base común previa y **0 archivos solapados** con los tres archivos CHAT. El merge conserva el historial de `COD` sin tocar archivos UI, modales, listados, configuraciones o documentos de su trabajo. No se ejecutaron `reset`, `force push` ni sustituciones de rama.

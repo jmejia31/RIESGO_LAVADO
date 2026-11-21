@@ -669,6 +669,31 @@
       "main_modified": false,
       "production_modified": false,
       "oracle_institutional_writes": 0
+    },
+    {
+      "id": "P0-ORACLE-XE-20261121",
+      "path": "P0_ORACLE_XE_CERTIFICACION_20261121.md",
+      "status": "BLOCKED_INTEGRATED_NOT_CERTIFIED",
+      "author": "COD",
+      "base_sha": "ec77b091fce5a08cd39a64467f998da499c3f734",
+      "source_code_sha": "e87fbaccb699775d343fda3c4d8f9695ceb2d337",
+      "evidence_commit_sha": "PENDING_DOCUMENTATION_COMMIT",
+      "quality_gate_run": 44946443638,
+      "quality_gate_status": "IN_PROGRESS_AT_CAPTURE",
+      "github_quality_gate_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44946443638",
+      "github_evidence_url": "PENDING_DOCUMENTATION_COMMIT",
+      "github_evidence_index_url": "PENDING_DOCUMENTATION_COMMIT",
+      "github_remote_verified": "SOURCE_CODE_PUSH_VERIFIED_DOCUMENTATION_PENDING",
+      "security_scan": "PENDING_QUALITY_GATE",
+      "oracle_xe_disposable": "LOCAL_AND_CI_REQUIRED",
+      "canonical_risk_identities": "PENDING_59_OF_59",
+      "full_matrix_calculations": "PENDING_2006_OF_2006",
+      "cleanup_residuals": "PENDING_ZERO_RISKS_DEPENDENCIES_EVIDENCE_METADATA",
+      "oracle_institutional_writes": 0,
+      "production_modified": false,
+      "main_modified": false,
+      "owner_acceptance": "PENDING",
+      "review_ready": "BLOCKED_PENDING_EXACT_SHA_CI_AND_DOCX_VISUAL_REVIEW"
     }
   ]
 }
