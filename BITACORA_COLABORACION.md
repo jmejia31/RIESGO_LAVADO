@@ -12851,3 +12851,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó `main`, producción, Configuración de cálculo ni archivos ajenos sin seguimiento; el stage fue selectivo.
 - **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; pendiente aceptación visual del propietario.
 - **Punto exacto de continuación:** publicar este registro documental en `origin/desarrollo`, confirmar `HEAD == origin/desarrollo`, y revisar visualmente búsqueda, limpieza, ordenamiento, scroll interno y exportación de Cargar Listas.
+
+## 2026-11-21 — Integración P0 Oracle XE sin interferencia con CODEX (CHAT)
+
+- **Autor y autorización:** `CHAT`, integración solicitada expresamente por el propietario `jmejia31`.
+- **Fuente:** `chat/p0-oracle-fixtures-20261120`, último SHA `d059f4be176128f59608cfcdf23bc432b2020c18`, 15 commits; base inicial `20db627d4799b81a75279ad4f7993df71cb393d5`.
+- **PR y resultado:** `#45`, fusionado en `origin/desarrollo`; `SOURCE_CODE_SHA=2b93ef2a7f70a8b4c5ea1248d5e97ed2abf1f6e3` (merge commit); base remota inmediata antes de fusionar `18a83cdf34486e77432540cecfc706b5c64f32e3`. Código accesible en `https://github.com/jmejia31/RIESGO_LAVADO/pull/45`.
+- **Alcance de 3 archivos:** `tools/Block7OracleE2EHost/Program.cs` (fixtures sintéticas, rollback cleanup, auditoría de errores y residuos), `tools/run_block7_oracle_e2e.sh` (shutdown supervisado, fallos y metadatos), `frontend/rl-app/e2e/block7-oracle-real.spec.ts` (nombres por run y familia de pruebas).
+- **Prevención de interferencias:** antes del merge, comparé los 25 commits nuevos de `COD` en `desarrollo` respecto a la base original. Ninguno modificaba las tres rutas CHAT. GitHub confirmó `mergeable=true` y el PR fue fusionado por merge normal (dos historias), preservando íntegramente cambios de CODEX. No se tocaron `main`, producción, Oracle institucional, migraciones ni configuraciones de modales.
+- **Revisión ejecutada:** inspección remota GitHub, SHA/PR, comparación de archivos, comprobaciones estáticas de ausencia de `catch {}`, selectores acotados y marcadores fail-closed; estos controles no sustituyen una compilación real.
+- **Pruebas no ejecutadas por CHAT:** `dotnet restore/build/test`, `npm ci`, `npm run e2e`, Oracle XE con DDL/DML en esquema descartable, pruebas físicas de 59 identidades, limpieza de dependencias y Quality Gate integral del SHA fusionado. Motivo: entorno de ejecución sin .NET ni Oracle XE y sin posibilidad de ejecutar GitHub Actions localmente.
+- **Estado final del código integrado:** `ORACLE_FIXTURE_CODE_INTEGRATED=YES`; `ORACLE_FIXTURE_CERTIFIED=NO`; `ORACLE_FIXTURE_QUALITY_GATE=PENDING`; `ORACLE_FIXTURE_ORACLE_XE=PENDING`.
+- **Handoff a COD:** sincronizar sin pérdida de trabajo local, ejecutar pruebas focalizadas y CI exacto, contrastar resultados `59/59`, `2006/2006`, `RISK_REMAINING=0`, `DEPENDENCIES_REMAINING=0`, `METADATA_REMAINING=0`, `CLEANUP_ERRORS=0`; investigar cualquier error real, no silenciar ni quitar asserts; publicar resultado y presentar al propietario para aceptación final.
+
