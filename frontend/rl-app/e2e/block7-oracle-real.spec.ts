@@ -756,6 +756,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const planUiSave = pageA.waitForResponse(response => response.request().method() === 'PUT'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/planes/${planA}`);
   await pageA.getByRole('button', { name: 'Actualizar plan' }).click();
+  const confirmPlanUpdate = pageA.getByRole('button', { name: 'Sí, guardar' });
+  await expect(confirmPlanUpdate).toBeVisible();
+  await confirmPlanUpdate.click();
   expect((await planUiSave).status()).toBe(200);
   await expect(pageA.getByText('Plan actualizado correctamente.')).toBeVisible();
   await pageA.getByRole('button', { name: 'Editar actividad' }).first().click();
@@ -763,6 +766,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const activityUiSave = pageA.waitForResponse(response => response.request().method() === 'PUT'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/actividades/${activityIds[0]}`);
   await pageA.getByRole('button', { name: 'Actualizar actividad' }).click();
+  const confirmActivityUpdate = pageA.getByRole('button', { name: 'Sí, guardar' });
+  await expect(confirmActivityUpdate).toBeVisible();
+  await confirmActivityUpdate.click();
   expect((await activityUiSave).status()).toBe(200);
   const browserProjectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   expect(browserProjectionResponse.ok()).toBeTruthy();
@@ -854,6 +860,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const saveArea = pageA.waitForResponse(response => response.request().method() === 'PUT'
     && new URL(response.url()).pathname.endsWith(`/observaciones/area`));
   await pageA.getByRole('button', { name: 'Guardar Observaciones del Área' }).click();
+  const confirmAreaSave = pageA.getByRole('button', { name: 'Sí, guardar' });
+  await expect(confirmAreaSave).toBeVisible();
+  await confirmAreaSave.click();
   expect((await saveArea).status()).toBe(200);
   await expect(areaObservations).toHaveValue('OBS-AREA-BROWSER');
   const finalMonitoringProjection = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
