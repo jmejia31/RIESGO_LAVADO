@@ -697,18 +697,18 @@
               <label for="gestor-buscar-familia" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Buscar</label>
               <div class="relative">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
-                <input id="gestor-buscar-familia" type="search" class="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" placeholder="Buscar por código o nombre" [ngModel]="filtroBuscarFamilia()" (ngModelChange)="filtroBuscarFamilia.set($event); paginaFamilias.set(1)" />
+                <input id="gestor-buscar-familia" type="search" class="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" placeholder="Buscar por código o nombre" [ngModel]="filtroBuscarFamilia()" (ngModelChange)="cambiarBuscarFamilia($event)" />
               </div>
             </div>
             <div>
               <label for="gestor-estado-familia" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Estado</label>
-              <select id="gestor-estado-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoFamilia()" (ngModelChange)="filtroEstadoFamilia.set($event); paginaFamilias.set(1)">
+              <select id="gestor-estado-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoFamilia()" (ngModelChange)="cambiarEstadoFamilia($event)">
                 <option value="TODAS">Todas</option><option value="ACTIVAS">Activas</option><option value="INACTIVAS">Inactivas</option>
               </select>
             </div>
             <div>
               <label for="gestor-vigencia-familia" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Vigencia</label>
-              <select id="gestor-vigencia-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroVigenciaFamilia()" (ngModelChange)="filtroVigenciaFamilia.set($event); paginaFamilias.set(1)">
+              <select id="gestor-vigencia-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroVigenciaFamilia()" (ngModelChange)="cambiarVigenciaFamilia($event)">
                 <option value="TODAS">Todas</option><option value="VIGENTES">Con vigente</option><option value="SIN_VIGENTE">Sin vigente</option>
               </select>
             </div>

@@ -181,7 +181,35 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     expect(component.familiasFiltradas().length).toBe(3);
   });
 
-  it('7. Ver detalle usa el nuevo modal UI-FAM.2 y consulta la familia por su famId', () => {
+  it('7. Los filtros visibles del gestor ejecutan la consulta al cambiar', () => {
+    mostrarGestorPrincipal();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const buscar = compiled.querySelector<HTMLInputElement>('#gestor-buscar-familia');
+    const estado = compiled.querySelector<HTMLSelectElement>('#gestor-estado-familia');
+    const vigencia = compiled.querySelector<HTMLSelectElement>('#gestor-vigencia-familia');
+    const buscarSpy = vi.spyOn(component, 'cambiarBuscarFamilia');
+    const estadoSpy = vi.spyOn(component, 'cambiarEstadoFamilia');
+    const vigenciaSpy = vi.spyOn(component, 'cambiarVigenciaFamilia');
+
+    expect(buscar).not.toBeNull();
+    expect(estado).not.toBeNull();
+    expect(vigencia).not.toBeNull();
+
+    buscar!.value = 'QA_TEST';
+    buscar!.dispatchEvent(new Event('input'));
+    estado!.value = 'ACTIVAS';
+    estado!.dispatchEvent(new Event('change'));
+    vigencia!.value = 'VIGENTES';
+    vigencia!.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(buscarSpy).toHaveBeenCalledWith('QA_TEST');
+    expect(estadoSpy).toHaveBeenCalledWith('ACTIVAS');
+    expect(vigenciaSpy).toHaveBeenCalledWith('VIGENTES');
+  });
+
+  it('8. Ver detalle usa el nuevo modal UI-FAM.2 y consulta la familia por su famId', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(mockFamilias[0]));
 
     component.abrirModalVerFamilia(mockFamilias[0]);
