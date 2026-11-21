@@ -763,7 +763,10 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(pageA.getByText('Plan actualizado correctamente.')).toBeVisible();
   const refreshedPlan = pageA.getByRole('button', { name: 'Editar plan y actividades' }).first();
   await expect(refreshedPlan).toBeVisible();
+  const refreshedActivities = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/planes/${planA}/actividades`);
   await refreshedPlan.click();
+  expect((await refreshedActivities).status()).toBe(200);
   await expect(pageA.getByRole('button', { name: 'Editar actividad' }).first()).toBeVisible();
   await pageA.getByRole('button', { name: 'Editar actividad' }).first().click();
   await pageA.locator('#actividad-descripcion').fill('Actividad E2E A1 actualizada');
