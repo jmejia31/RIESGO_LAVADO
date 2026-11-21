@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Oracle.ManagedDataAccess.Client;
 using Xunit;
@@ -210,12 +211,34 @@ public static class MatricesOracleBootstrap
                     VER_ID, VER_FAMILIA_ID, VER_CODIGO, VER_VERSION, VER_JSON, VER_HASH,
                     VER_ESTADO, VER_VIGENTE, VER_FECHA_INICIO, VER_FECHA_CREACION, VER_USR_CREACION
                 ) VALUES (
-                    1, 1, 'VER_SEMILLA', 1, '{\""sections\"":[]}', '0000000000000000000000000000000000000000000000000000000000000000',
+                    1, 1, 'VER_SEMILLA', 1, '{""sections"":[]}', '0000000000000000000000000000000000000000000000000000000000000000',
                     'PUBLISHED', 1, SYSDATE, SYSDATE, 1
                 );
             EXCEPTION
-                WHEN DUP_VAL_ON_INDEX THEN NULL;
+                WHEN DUP_VAL_ON_INDEX THEN
+                    UPDATE RL_MR_VERSIONES_FORMULARIO
+                       SET VER_JSON = '{""sections"":[]}'
+                     WHERE VER_ID = 1
+                       AND VER_FAMILIA_ID = 1
+                       AND VER_CODIGO = 'VER_SEMILLA';
             END;");
+
+        string seedJson = Convert.ToString(await ScalarAsync(
+            connection,
+            "SELECT VER_JSON FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID = 1 AND VER_FAMILIA_ID = 1 AND VER_CODIGO = 'VER_SEMILLA'")) ?? string.Empty;
+        try
+        {
+            using JsonDocument seedDocument = JsonDocument.Parse(seedJson);
+            if (seedDocument.RootElement.ValueKind != JsonValueKind.Object
+                || !seedDocument.RootElement.TryGetProperty("sections", out _))
+            {
+                throw new InvalidOperationException("La semilla Oracle XE VER_ID=1 no cumple el contrato JSON esperado.");
+            }
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("La semilla Oracle XE VER_ID=1 contiene JSON inválido.", ex);
+        }
 
         // Avanzar secuencias para que los tests que llaman a NEXTVAL no colisionen con los IDs semilla (1)
         await ExecuteIgnoreAsync(connection, @"
