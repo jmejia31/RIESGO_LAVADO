@@ -16,6 +16,7 @@ El resultado no puede certificarse todavía. El Quality Gate exacto del commit f
 | Rama | `desarrollo` |
 | Base de la intervención | `ec77b091fce5a08cd39a64467f998da499c3f734` |
 | SHA funcional | `e87fbaccb699775d343fda3c4d8f9695ceb2d337` |
+| SHA documental inicial | `3c98e200` |
 | Integración previa | `2b93ef2a7f70a8b4c5ea1248d5e97ed2abf1f6e3` |
 | PR integrado | [PR 45](https://github.com/jmejia31/RIESGO_LAVADO/pull/45) |
 | Quality Gate exacto | [run 44946443638](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44946443638) |
@@ -23,6 +24,8 @@ El resultado no puede certificarse todavía. El Quality Gate exacto del commit f
 | Estado al emitir este expediente | `in_progress` |
 | Certificación Oracle XE | `PENDING` |
 | Aceptación del propietario | `PENDING` |
+
+El expediente documental inicial se publicó en el commit `3c98e200` y queda accesible en [el archivo de certificación](https://github.com/jmejia31/RIESGO_LAVADO/blob/3c98e200/docs/certificaciones/P0_ORACLE_XE_CERTIFICACION_20261121.md), [la evidencia JSON](https://github.com/jmejia31/RIESGO_LAVADO/blob/3c98e200/docs/certificaciones/P0_ORACLE_XE_EVIDENCE_20261121.json) y [el índice de evidencias](https://github.com/jmejia31/RIESGO_LAVADO/blob/3c98e200/docs/certificaciones/INDEX.json).
 
 ## Cambios realizados
 

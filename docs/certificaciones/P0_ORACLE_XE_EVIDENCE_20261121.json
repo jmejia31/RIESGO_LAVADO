@@ -49,5 +49,5 @@
   "status": "BLOCKED",
   "certified": false,
   "owner_acceptance": "PENDING",
-  "evidence_commit_sha": "PENDING_DOCUMENTATION_COMMIT"
+  "evidence_commit_sha": "3c98e200"
 }
