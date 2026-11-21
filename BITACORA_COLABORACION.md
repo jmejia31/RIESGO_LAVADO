@@ -12746,3 +12746,19 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó `main`, producción, Oracle, migraciones, Configuración de cálculo ni archivos ajenos sin seguimiento; el stage fue selectivo.
 - **Estado:** `READY_FOR_OWNER_VISUAL_ACCEPTANCE`; pendiente publicar el commit funcional y este registro en `origin/desarrollo`, y comprobar visualmente el ancho nuevo y el bloqueo del botón.
 - **Punto exacto de continuación:** publicar documentación y código, verificar paridad remota y revisar el flujo Registrar efectividad con comentario vacío, comentario completo y valor fuera de rango.
+
+## 2026-11-21 12:18 -06:00 — Scroll propio en Monitoreo y Gestión de riesgos (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `c0fbfd26ab317d73b1c12984e22ef7f492053d8e`; autor `COD`.
+- **Objetivo:** evitar que las listas operativas y la tabla de Gestión de riesgos crezcan indefinidamente y hacer visible su desplazamiento interno sin alterar la navegación ni las acciones existentes.
+- **Cambios funcionales:**
+  - `Señales de alerta` y `Automonitoreo` ahora usan una altura interna de `22rem`, `overflow-y-scroll`, `overscroll-contain` y regiones accesibles identificadas por `aria-label`.
+  - La tabla de `Gestión de riesgos` ahora usa `55vh` con límites de `22rem` a `36rem`, desplazamiento vertical propio y desplazamiento horizontal conservado para sus columnas.
+  - El botón de edición conserva el icono institucional compartido `app-action-icon action="edit"`; se amplió su área de interacción a `32×32 px`, con hover y foco institucionales.
+- **Pruebas de regresión:** se verifican los contenedores de scroll, sus clases de desplazamiento y la presencia del icono institucional de edición.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component.html`, `.spec.ts`; `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-gestion/matrices-riesgos-gestion.component.html`, `.spec.ts`.
+- **Pruebas ejecutadas:** pruebas focalizadas `2` archivos / `46` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias existentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **Regresión completa:** `98` archivos, `1075` pruebas PASS y `2` pruebas con timeout de 5000 ms: `MatricesRiesgosComponent > presenta porcentajes históricos V1 y ratios runtime con unidad explícita, sin inferencia` y `contrato global de vista previa de exportaciones > no permite descargas directas desde productores de reportes`. No se atribuyen esas fallas a este cambio de scroll; requieren una ejecución separada con diagnóstico propio.
+- **Preservación:** no se tocó backend, Oracle, migraciones, Configuración de cálculo, reportes, `main`, producción ni archivos ajenos sin seguimiento. No se iniciaron ni detuvieron servicios.
+- **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; `FULL_FRONTEND_REGRESSION=NOT_VERIFIED_DUE_TO_EXISTING_TIMEOUTS`; aceptación visual del propietario pendiente.
+- **Punto exacto de continuación:** commit funcional, actualización documental, `git push origin desarrollo`, verificación de paridad remota y revisión visual de los tres contenedores con suficientes registros para confirmar el scroll interno.
