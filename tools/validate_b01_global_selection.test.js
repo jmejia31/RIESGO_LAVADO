@@ -78,7 +78,11 @@ test('B01 migrates the system configuration tabs to the same contract', () => {
 
 test('B01 negative regression rejects local active color decisions in migrated consumers', () => {
   const monitoringSelection = monitoringTemplate.slice(0, monitoringTemplate.indexOf('data-ui-monitoring-kpis'));
-  const systemTabs = systemConfigurationTemplate.slice(0, systemConfigurationTemplate.indexOf('<!-- Alertas Globales -->'));
+  const systemTabsStart = systemConfigurationTemplate.indexOf('institutional-selection institutional-selection--regular');
+  const systemTabsEnd = systemConfigurationTemplate.indexOf('<!-- TAB 1:');
+  assert.notEqual(systemTabsStart, -1);
+  assert.ok(systemTabsEnd > systemTabsStart);
+  const systemTabs = systemConfigurationTemplate.slice(systemTabsStart, systemTabsEnd);
   assert.doesNotMatch(cycleTemplate, /\[class\.(?:bg-ihss-700|text-white)\]/);
   assert.doesNotMatch(secondaryTemplate, /\[class\.(?:bg-ihss-900|text-white|hover:text-gray-900|hover:bg-gray-100\/70)\]/);
   assert.doesNotMatch(calculationTemplate, /\[class\.(?:bg-ihss-700|text-white|bg-white|hover:bg-slate-50)\]/);
