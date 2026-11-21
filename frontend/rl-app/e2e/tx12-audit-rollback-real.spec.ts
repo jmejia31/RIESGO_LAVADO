@@ -70,6 +70,9 @@ test('TX12 certifica fallo real de auditoría y rollback desde Angular', async (
   const putResponse = page.waitForResponse(response => response.request().method() === 'PUT'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/formularios/${fixture.versionId}`);
   await builder.locator('#btn-guardar-builder').click();
+  const confirmationButton = page.getByRole('button', { name: 'Sí, guardar definición' });
+  await expect(confirmationButton).toBeVisible();
+  await confirmationButton.click();
   const put = await putResponse;
   expect(put.status()).toBe(500);
   const putBody = await put.text();
