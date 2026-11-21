@@ -1,15 +1,12 @@
-# ESTADO VIGENTE — Scroll propio en Monitoreo y Gestión de riesgos (COD, 2026-11-21 12:18 -06:00)
+# ESTADO VIGENTE — Scroll propio en Evaluaciones de Riesgo (COD, 2026-11-21 12:28 -06:00)
 
-- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. Base SHA `c0fbfd26ab317d73b1c12984e22ef7f492053d8e`. Propietario / autoridad funcional: Javier Mejía (`jmejia31`).
-- **Objetivo:** dar altura controlada y scroll propio a `Señales de alerta`, `Automonitoreo` y la tabla de `Gestión de riesgos`, preservando la funcionalidad actual.
-- **Implementado:**
-  - Monitoreo: ambas listas usan `h-[22rem] min-h-0 overflow-y-scroll overscroll-contain` y `aria-label` específico.
-  - Gestión: tabla dentro de `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-x-auto overflow-y-scroll`, con desplazamiento horizontal conservado.
-  - Edición de riesgo: se mantiene el catálogo institucional `app-action-icon` con acción `edit`; únicamente se mejoró el área visible/interactiva del botón.
+- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. Base SHA `21845bfa243d3defa7090c3ae223562e1a67be2f`. Propietario / autoridad funcional: Javier Mejía (`jmejia31`).
+- **Objetivo:** dar altura controlada y scroll propio a `Evaluaciones de Riesgo` y `Evaluaciones de Riesgo Consolidadas`, preservando filtros, paginación, ordenamiento, acciones y modales.
+- **Implementado:** ambos contenedores usan `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-x-auto overflow-y-scroll overscroll-contain`, con `aria-label` específico. El scroll horizontal existente se conserva para las tablas anchas.
 - **Protecciones:** no se modificaron backend, Oracle, migraciones, Configuración de cálculo, contratos REST, `main`, producción ni datos. Los servicios no fueron iniciados ni detenidos.
-- **Verificación:** focalizadas `46/46` PASS en `2` archivos; lint PASS; build PASS con advertencias preexistentes de SCSS/CommonJS; `git diff --check` PASS. La regresión completa obtuvo `1075/1077` PASS en `98` archivos; dos pruebas quedaron en timeout de 5000 ms y se clasifican como `NOT_VERIFIED`, no como PASS.
-- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; `FULL_FRONTEND_REGRESSION=NOT_VERIFIED_DUE_TO_TIMEOUTS`; aceptación visual del propietario pendiente. Commit funcional y publicación remota aún pendientes.
-- **Continuación obligatoria:** publicar selectivamente los cuatro archivos funcionales y estos dos documentos en `origin/desarrollo`; verificar `HEAD == origin/desarrollo`; después revisar visualmente scroll de señales, automonitoreo, tabla de riesgos y el icono de edición.
+- **Verificación:** focalizadas `40/40` PASS en `2` archivos; lint PASS; build PASS con advertencias existentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente. La UI no se declara cerrada hasta publicar y comprobar visualmente ambos scrolls.
+- **Continuación obligatoria:** publicar selectivamente código y documentación en `origin/desarrollo`, confirmar paridad de SHA y revisar en navegador el desplazamiento vertical/horizontal de ambas tablas.
 
 # ESTADO HISTÓRICO — Corrección Quirúrgica P0: Aislamiento y Limpieza de Fixtures Oracle XE (ANTIG, 2026-11-20 13:20 -06:00)
 

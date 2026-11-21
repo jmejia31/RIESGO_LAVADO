@@ -12762,3 +12762,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó backend, Oracle, migraciones, Configuración de cálculo, reportes, `main`, producción ni archivos ajenos sin seguimiento. No se iniciaron ni detuvieron servicios.
 - **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; `FULL_FRONTEND_REGRESSION=NOT_VERIFIED_DUE_TO_EXISTING_TIMEOUTS`; aceptación visual del propietario pendiente.
 - **Punto exacto de continuación:** commit funcional, actualización documental, `git push origin desarrollo`, verificación de paridad remota y revisión visual de los tres contenedores con suficientes registros para confirmar el scroll interno.
+
+## 2026-11-21 12:28 -06:00 — Scroll propio en Evaluaciones de Riesgo (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `21845bfa243d3defa7090c3ae223562e1a67be2f`; autor `COD`.
+- **Objetivo:** ajustar la altura y agregar desplazamiento interno a `Evaluaciones de Riesgo` y `Evaluaciones de Riesgo Consolidadas`, sin afectar filtros, paginación, ordenamiento, acciones ni modales.
+- **Cambios funcionales:** ambos contenedores usan `h-[55vh]`, límites `22rem`–`36rem`, `overflow-y-scroll`, `overflow-x-auto` y `overscroll-contain`. Se agregaron `aria-label` específicos para identificar cada región desplazable.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`; `matrices-riesgos.component.evaluaciones-tabla.spec.ts`; `matrices-riesgos.component.tabs-independientes.spec.ts`.
+- **Pruebas ejecutadas:** suites focalizadas `2` archivos / `40` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias existentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **No ejecutado:** backend .NET, Oracle, E2E de navegador y regresión frontend completa en esta intervención; el cambio está limitado a presentación y contenedores de scroll frontend. Los servicios no se iniciaron ni detuvieron.
+- **Preservación:** no se tocó Configuración de cálculo, backend, Oracle, migraciones, contratos REST, `main`, producción ni archivos ajenos sin seguimiento.
+- **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente. La fase/UI no se declara cerrada hasta publicar y verificar visualmente ambas tablas.
+- **Punto exacto de continuación:** publicar el commit funcional y el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar que ambas tablas permitan desplazamiento vertical y horizontal sin alterar sus acciones.
