@@ -136,6 +136,19 @@ describe('MonitoreoListasComponent — deduplicación de detalle', () => {
     expect(root.querySelector('[data-ui-monitoring-kpi="closed-passive"]')?.textContent).toContain('3');
   });
 
+  it('mantiene la tabla de coincidencias y exportaciones dentro de un contenedor con scroll propio', () => {
+    component.cargando.set(false);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const superficieTabla = root.querySelector('[aria-label="Tabla de coincidencias y exportaciones"]') as HTMLElement;
+
+    expect(superficieTabla).not.toBeNull();
+    expect(superficieTabla.className).toContain('h-[55vh]');
+    expect(superficieTabla.className).toContain('overflow-y-scroll');
+    expect(superficieTabla.className).toContain('overflow-x-hidden');
+  });
+
   it('M1-P0: muestra badge de coincidencias en filas agrupadas y separa grupos de coincidencias fuente en KPI', () => {
     fixture.detectChanges();
     component.tipoActivo.set('natural');

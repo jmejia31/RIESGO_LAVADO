@@ -201,6 +201,9 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('[data-ui-fam="gestor-principal"]')).not.toBeNull();
     expect(compiled.textContent).toContain('Familias de Formularios');
+    const superficieTabla = compiled.querySelector('[aria-label="Tabla de familias de formularios"]') as HTMLElement;
+    expect(superficieTabla.className).toContain('h-[55vh]');
+    expect(superficieTabla.className).toContain('overflow-y-scroll');
 
     const headers = Array.from(compiled.querySelectorAll('[data-ui-fam-table="principal"] thead:not(.hidden) th'))
       .map(th => th.textContent?.trim());

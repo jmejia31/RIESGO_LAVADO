@@ -725,7 +725,7 @@
           </div>
         </div>
 
-        <div class="matrices-table-surface relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div class="matrices-table-surface relative h-[55vh] min-h-[22rem] max-h-[36rem] overflow-x-hidden overflow-y-scroll overscroll-contain rounded-2xl border border-gray-200 bg-white shadow-sm" aria-label="Tabla de familias de formularios">
           @if (cargandoFamilias() && familias().length === 0) {
             <div class="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center bg-white/70 py-3" role="status" aria-live="polite">
               <span class="inline-flex items-center gap-2 rounded-lg border border-ihss-100 bg-white px-3 py-2 text-xs font-semibold text-ihss-800 shadow-sm">
