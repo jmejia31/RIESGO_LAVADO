@@ -12789,3 +12789,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó Configuración de cálculo, backend, Oracle, migraciones, exportadores, `main`, producción ni archivos ajenos sin seguimiento.
 - **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente. La UI no se declara cerrada hasta publicar y verificar visualmente las dos superficies.
 - **Punto exacto de continuación:** publicar el commit funcional y el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar visualmente el scroll vertical/horizontal en Familias y Coincidencias.
+## 2026-11-21 12:49 -06:00 — Scroll propio en Coincidencias Empleado (COD)
+
+- **Identificación:** Rama `desarrollo`; `BASE_SHA=afe204cb56ad8bc43a8baaeb7a7cad4e92cc19a4`; `SOURCE_CODE_SHA=a1d84440d82efdf2d7a0161ed10a6fc6668dbe43`; autor `COD`.
+- **Objetivo:** ajustar la altura de la tabla principal de `Coincidencias Empleado` y agregarle desplazamiento vertical propio sin alterar búsqueda, ordenamiento, paginación, detalle ni exportación.
+- **Cambios funcionales:** el contenedor de la tabla usa `h-[55vh]`, límites `22rem`–`36rem`, `overflow-y-scroll`, `overscroll-contain` y `aria-label="Tabla de coincidencias de empleados"`. El contenedor interno conserva `overflow-x-auto` para las columnas en pantallas angostas.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component.html`; nueva regresión `coincidencias-empleado.presentation.spec.ts`.
+- **Pruebas ejecutadas en esta intervención:** `npm test -- --watch=false --include=src/app/features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.presentation.spec.ts` — `1` archivo / `1` prueba PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **No ejecutado:** backend .NET, Oracle, E2E de navegador, regresión frontend completa y Quality Gate completo; no son necesarios para esta corrección de layout acotada y quedan como pendientes de regresión ampliada. Los servicios no fueron iniciados ni detenidos.
+- **Preservación:** no se modificaron backend, Oracle, migraciones, Configuración de cálculo, contratos REST, `main`, producción ni archivos ajenos sin seguimiento.
+- **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente.
+- **Punto de continuación:** publicar el registro documental en `origin/desarrollo`, verificar paridad de SHA y revisar visualmente que la tabla limite su altura y permita desplazamiento vertical/horizontal sin alterar las acciones.
