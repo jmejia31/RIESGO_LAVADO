@@ -1,4 +1,17 @@
-# ESTADO VIGENTE — Scroll propio en Coincidencias Patrono (COD, 2026-11-21 12:56 -06:00)
+# ESTADO VIGENTE — Filtros y scroll propio en Usuarios del Sistema (Riesgos) (COD, 2026-11-21 13:07 -06:00)
+
+- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=991cb3f6`; `SOURCE_CODE_SHA=d83d24a15fccb4fe379f870bebe41d64f54d4d95`; propietario / autoridad funcional: Javier Mejía (`jmejia31`).
+- **Objetivo:** ajustar la altura de la tabla de `Usuarios del Sistema (Riesgos)`, agregar scroll propio y restituir el estándar institucional de filtros sin alterar acciones, ordenamiento, paginación, roles ni permisos.
+- **Implementado:** la interfaz ahora muestra un bloque de filtros institucional con búsqueda por nombre, apellido o correo electrónico, botón de limpieza y selector de registros por página. La búsqueda utiliza el parámetro `buscar` que ya soporta el endpoint paginado y reinicia la paginación en la primera página. La tabla usa una superficie `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-y-scroll overscroll-contain`; el contenedor interno conserva `overflow-x-auto` para columnas en pantallas angostas y el encabezado queda visible durante el desplazamiento.
+- **Contrato preservado:** no se agregaron filtros de rol/estado ficticios porque el contrato actual de `auth/usuarios/paginado` solo admite búsqueda textual, paginación y ordenamiento, y `UsuarioInfoDto` no expone estado activo. No se modificaron backend ni Oracle.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/usuarios/pages/usuarios/usuarios.component.html`, `usuarios.component.ts` y `usuarios.component.http-scope.spec.ts`.
+- **Verificación fresca:** prueba focalizada `1` archivo / `3` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **No verificado:** backend .NET, Oracle, E2E de navegador, regresión frontend completa y Quality Gate completo. Los servicios no fueron iniciados ni detenidos.
+- **Protecciones:** no se modificaron `main`, producción, backend, Oracle, migraciones, Configuración de cálculo, contratos REST ni archivos ajenos sin seguimiento.
+- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; aceptación visual del propietario pendiente.
+- **Continuación obligatoria:** publicar el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar visualmente búsqueda, limpieza, paginación, scroll vertical/horizontal y acciones de usuarios.
+
+# ESTADO HISTÓRICO — Scroll propio en Coincidencias Patrono (COD, 2026-11-21 12:56 -06:00)
 
 - **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=b6563ec9`; `SOURCE_CODE_SHA=94a767703cef591aab3fabad21118ad2b80a7f9c`. Propietario / autoridad funcional: Javier Mejía (`jmejia31`).
 - **Objetivo:** dar altura controlada y scroll propio a la tabla principal de `Coincidencias Patrono`, preservando búsqueda, ordenamiento, paginación, detalle y exportación.
