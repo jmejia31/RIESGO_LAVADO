@@ -1,12 +1,12 @@
-# ESTADO VIGENTE — Scroll propio en Evaluaciones de Riesgo (COD, 2026-11-21 12:28 -06:00)
+# ESTADO VIGENTE — Scroll propio en Familias y Coincidencias (COD, 2026-11-21 12:39 -06:00)
 
-- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. Base SHA `21845bfa243d3defa7090c3ae223562e1a67be2f`. Propietario / autoridad funcional: Javier Mejía (`jmejia31`).
-- **Objetivo:** dar altura controlada y scroll propio a `Evaluaciones de Riesgo` y `Evaluaciones de Riesgo Consolidadas`, preservando filtros, paginación, ordenamiento, acciones y modales.
-- **Implementado:** ambos contenedores usan `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-x-auto overflow-y-scroll overscroll-contain`, con `aria-label` específico. El scroll horizontal existente se conserva para las tablas anchas.
+- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. Base SHA `cb77dda288c54d849e30d84725e28d573f083c00`. Propietario / autoridad funcional: Javier Mejía (`jmejia31`).
+- **Objetivo:** dar altura controlada y scroll propio a `Familias de Formularios` y `Coincidencias y exportaciones`, preservando filtros, paginación, exportaciones, acciones y contratos.
+- **Implementado:** ambas superficies usan `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-y-scroll overscroll-contain`; Familias conserva el scroll horizontal en su contenedor interno y Coincidencias conserva el mismo patrón para las columnas. Se agregaron `aria-label` específicos.
 - **Protecciones:** no se modificaron backend, Oracle, migraciones, Configuración de cálculo, contratos REST, `main`, producción ni datos. Los servicios no fueron iniciados ni detenidos.
-- **Verificación:** focalizadas `40/40` PASS en `2` archivos; lint PASS; build PASS con advertencias existentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
-- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente. La UI no se declara cerrada hasta publicar y comprobar visualmente ambos scrolls.
-- **Continuación obligatoria:** publicar selectivamente código y documentación en `origin/desarrollo`, confirmar paridad de SHA y revisar en navegador el desplazamiento vertical/horizontal de ambas tablas.
+- **Verificación:** Familias `40/40` PASS en `2` archivos; Monitoreo `5/5` PASS en `1` archivo; lint PASS; build PASS con advertencias existentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente. La UI no se declara cerrada hasta publicar y comprobar visualmente ambas superficies.
+- **Continuación obligatoria:** publicar selectivamente código y documentación en `origin/desarrollo`, confirmar paridad de SHA y revisar en navegador el desplazamiento vertical/horizontal de Familias y Coincidencias.
 
 # ESTADO HISTÓRICO — Corrección Quirúrgica P0: Aislamiento y Limpieza de Fixtures Oracle XE (ANTIG, 2026-11-20 13:20 -06:00)
 

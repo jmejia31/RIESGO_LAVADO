@@ -12774,3 +12774,18 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó Configuración de cálculo, backend, Oracle, migraciones, contratos REST, `main`, producción ni archivos ajenos sin seguimiento.
 - **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente. La fase/UI no se declara cerrada hasta publicar y verificar visualmente ambas tablas.
 - **Punto exacto de continuación:** publicar el commit funcional y el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar que ambas tablas permitan desplazamiento vertical y horizontal sin alterar sus acciones.
+
+## 2026-11-21 12:39 -06:00 — Scroll propio en Familias y Coincidencias (COD)
+
+- **Identificación:** Rama `desarrollo`; base SHA `cb77dda288c54d849e30d84725e28d573f083c00`; autor `COD`.
+- **Objetivo:** ajustar la altura y agregar desplazamiento interno a `Familias de Formularios` y `Coincidencias y exportaciones`, sin modificar filtros, paginación, exportaciones, acciones ni contratos de datos.
+- **Cambios funcionales:**
+  - Familias de Formularios: contenedor con `h-[55vh]`, límites `22rem`–`36rem`, `overflow-y-scroll`, `overscroll-contain` y scroll horizontal delegado al contenedor interno de la tabla.
+  - Coincidencias y exportaciones: contenedor con `h-[55vh]`, límites `22rem`–`36rem`, `overflow-y-scroll`, `overscroll-contain` y scroll horizontal interno conservado para las columnas.
+  - Ambas regiones tienen `aria-label` específico para accesibilidad y localización de la superficie desplazable.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`, `matrices-riesgos.component.ui-fam1.spec.ts`; `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html`, `monitoreo-listas.presentation.spec.ts`.
+- **Pruebas ejecutadas:** Familias `2` archivos / `40` pruebas PASS; Monitoreo focalizado `1` archivo / `5` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias existentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **No ejecutado:** backend .NET, Oracle, E2E de navegador y regresión frontend completa en esta intervención; los cambios son de layout frontend. Los servicios no se iniciaron ni detuvieron.
+- **Preservación:** no se tocó Configuración de cálculo, backend, Oracle, migraciones, exportadores, `main`, producción ni archivos ajenos sin seguimiento.
+- **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; validación visual del propietario pendiente. La UI no se declara cerrada hasta publicar y verificar visualmente las dos superficies.
+- **Punto exacto de continuación:** publicar el commit funcional y el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar visualmente el scroll vertical/horizontal en Familias y Coincidencias.
