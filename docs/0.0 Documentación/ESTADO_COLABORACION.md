@@ -1,4 +1,17 @@
-# ESTADO VIGENTE — Filtros y scroll propio en Usuarios del Sistema (Riesgos) (COD, 2026-11-21 13:07 -06:00)
+# ESTADO VIGENTE — Filtros y scroll propio en Tipos de Listas de Cautela (COD, 2026-11-21 13:15 -06:00)
+
+- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=9955537ea113bc1d345a0310cdb864d3e5e195e2`; `SOURCE_CODE_SHA=df1f269ca3f43a8fb6c13e89e7da06543c5fa677`; propietario / autoridad funcional: Javier Mejía (`jmejia31`).
+- **Objetivo:** ajustar la altura de `Tipos de Listas de Cautela`, agregar scroll propio y aplicar el estándar institucional de filtros de búsqueda sin alterar altas, edición, eliminación, ordenamiento ni el contrato REST.
+- **Implementado:** la interfaz ahora muestra búsqueda local por ID, descripción, tipo de archivo o cantidad de columnas y un botón institucional para limpiar el filtro. La búsqueda se aplica antes del ordenamiento local. La tabla usa una superficie `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-y-scroll overscroll-contain`; el contenedor interno conserva `overflow-x-auto` y el encabezado queda visible durante el desplazamiento.
+- **Contrato preservado:** `getTiposListasCautela` continúa cargando el catálogo completo mediante la misma ruta y no se agregaron parámetros, cambios backend ni modificaciones Oracle. No se agregó selector de paginación porque esta pantalla no usa paginación y recibe el catálogo completo.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/listas/pages/tipo-listas/tipo-listas.component.html`, `tipo-listas.component.ts` y `tipo-listas.presentation.spec.ts`.
+- **Verificación fresca:** prueba focalizada `1` archivo / `2` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **No verificado:** backend .NET, Oracle, E2E de navegador, regresión frontend completa y Quality Gate completo. Los servicios no fueron iniciados ni detenidos.
+- **Protecciones:** no se modificaron `main`, producción, backend, Oracle, migraciones, Configuración de cálculo, contratos REST ni archivos ajenos sin seguimiento.
+- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; aceptación visual del propietario pendiente.
+- **Continuación obligatoria:** publicar el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar visualmente búsqueda, limpieza, ordenamiento, scroll vertical/horizontal y acciones CRUD de Tipos de Listas.
+
+# ESTADO HISTÓRICO — Filtros y scroll propio en Usuarios del Sistema (Riesgos) (COD, 2026-11-21 13:07 -06:00)
 
 - **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=991cb3f6`; `SOURCE_CODE_SHA=d83d24a15fccb4fe379f870bebe41d64f54d4d95`; propietario / autoridad funcional: Javier Mejía (`jmejia31`).
 - **Objetivo:** ajustar la altura de la tabla de `Usuarios del Sistema (Riesgos)`, agregar scroll propio y restituir el estándar institucional de filtros sin alterar acciones, ordenamiento, paginación, roles ni permisos.
