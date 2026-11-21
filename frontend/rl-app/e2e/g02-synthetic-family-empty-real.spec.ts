@@ -61,11 +61,11 @@ test('GATE02 verifica el estado vacio de una familia eliminada desde la API y An
 
   // B02 avoids redundant fetches when the active tab is selected again.
   // Leave Plantillas and return so the updated search is applied by the real API.
-  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
   const filteredResponse = page.waitForResponse(httpResponse =>
     httpResponse.request().method() === 'GET'
     && new URL(httpResponse.url()).pathname === '/api/matrices-riesgos/familias/paginado'
     && new URL(httpResponse.url()).searchParams.get('buscar') === code);
+  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
   await page.getByRole('tab', { name: 'Plantillas' }).click();
   const filtered = await filteredResponse;
   expect(filtered.status()).toBe(200);
