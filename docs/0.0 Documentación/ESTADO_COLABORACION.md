@@ -1,4 +1,17 @@
-# ESTADO VIGENTE — Filtros y scroll propio en Tipos de Listas de Cautela (COD, 2026-11-21 13:15 -06:00)
+# ESTADO VIGENTE — Filtros y scroll propio en Cargar Listas (COD, 2026-11-21 13:26 -06:00)
+
+- **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=0a75ef36bb9320cbfe4a600e4248413a05bd8041`; `SOURCE_CODE_SHA=fa801d6405e13c7156cd9ec6b3ec52aed2ec381e`; propietario / autoridad funcional: Javier Mejía (`jmejia31`).
+- **Objetivo:** ajustar la altura de la tabla de `Cargar Listas`, agregar scroll propio y aplicar el estándar institucional de filtros de búsqueda sin alterar carga de archivos, ordenamiento ni exportación.
+- **Implementado:** la interfaz ahora muestra búsqueda local por lista, usuario, fecha o cantidad de registros y un botón institucional para limpiar el filtro. La búsqueda se aplica antes del ordenamiento local. La tabla usa una superficie `h-[55vh] min-h-[22rem] max-h-[36rem] overflow-y-scroll overscroll-contain`; el contenedor interno conserva `overflow-x-auto` y el encabezado queda visible durante el desplazamiento.
+- **Contrato preservado:** la carga continúa usando `getTiposListasCautela`, `getResumenListas`, `uploadListaCautela` y `exportarLista` sin cambios de ruta, payload ni parámetros. No se modificaron backend, Oracle, migraciones ni datos; no se agregó paginación porque el resumen actual se entrega completo.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.html`, `cargar-listas.component.ts` y `cargar-listas.presentation.spec.ts`.
+- **Verificación fresca:** prueba focalizada `1` archivo / `2` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **No verificado:** backend .NET, Oracle, E2E de navegador, regresión frontend completa y Quality Gate completo. Los servicios no fueron iniciados ni detenidos.
+- **Protecciones:** no se modificaron `main`, producción, backend, Oracle, migraciones, Configuración de cálculo, contratos REST ni archivos ajenos sin seguimiento.
+- **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; aceptación visual del propietario pendiente.
+- **Continuación obligatoria:** publicar el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar visualmente búsqueda, limpieza, ordenamiento, scroll vertical/horizontal y exportación de Cargar Listas.
+
+# ESTADO HISTÓRICO — Filtros y scroll propio en Tipos de Listas de Cautela (COD, 2026-11-21 13:15 -06:00)
 
 - **Identificación:** Proyecto SGRLA-IHSS — RIESGO_LAVADO. Rama `desarrollo`. `BASE_SHA=9955537ea113bc1d345a0310cdb864d3e5e195e2`; `SOURCE_CODE_SHA=df1f269ca3f43a8fb6c13e89e7da06543c5fa677`; propietario / autoridad funcional: Javier Mejía (`jmejia31`).
 - **Objetivo:** ajustar la altura de `Tipos de Listas de Cautela`, agregar scroll propio y aplicar el estándar institucional de filtros de búsqueda sin alterar altas, edición, eliminación, ordenamiento ni el contrato REST.
@@ -9,7 +22,7 @@
 - **No verificado:** backend .NET, Oracle, E2E de navegador, regresión frontend completa y Quality Gate completo. Los servicios no fueron iniciados ni detenidos.
 - **Protecciones:** no se modificaron `main`, producción, backend, Oracle, migraciones, Configuración de cálculo, contratos REST ni archivos ajenos sin seguimiento.
 - **Estado actual:** `FOCUSED_TECHNICAL_CHECKS_PASS`; aceptación visual del propietario pendiente.
-- **Continuación obligatoria:** publicar el registro documental en `origin/desarrollo`, confirmar paridad de SHA y revisar visualmente búsqueda, limpieza, ordenamiento, scroll vertical/horizontal y acciones CRUD de Tipos de Listas.
+- **Continuación obligatoria:** revisar visualmente búsqueda, limpieza, ordenamiento, scroll vertical/horizontal y acciones CRUD de Tipos de Listas.
 
 # ESTADO HISTÓRICO — Filtros y scroll propio en Usuarios del Sistema (Riesgos) (COD, 2026-11-21 13:07 -06:00)
 

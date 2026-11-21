@@ -12838,3 +12838,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se tocó `main`, producción, Configuración de cálculo ni archivos ajenos sin seguimiento; el stage fue selectivo.
 - **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; pendiente aceptación visual del propietario.
 - **Punto exacto de continuación:** publicar este registro documental en `origin/desarrollo`, confirmar `HEAD == origin/desarrollo`, y revisar visualmente búsqueda, limpieza, ordenamiento, scroll interno y acciones CRUD.
+
+## 2026-11-21 13:26 -06:00 — Filtros y scroll propio en Cargar Listas (COD)
+
+- **Identificación:** Rama `desarrollo`; `BASE_SHA=0a75ef36bb9320cbfe4a600e4248413a05bd8041`; `SOURCE_CODE_SHA=fa801d6405e13c7156cd9ec6b3ec52aed2ec381e`; autor `COD`.
+- **Objetivo:** ajustar la altura de la tabla de Cargar Listas, agregarle desplazamiento interno y aplicar el estándar institucional de filtros de búsqueda sin alterar la carga de archivos, el ordenamiento ni la exportación.
+- **Cambios funcionales:** se agregó búsqueda local por lista, usuario, fecha o cantidad de registros, botón de limpieza y regresión de presentación. El filtrado se ejecuta antes del ordenamiento local. La tabla ahora usa superficie `h-[55vh]`, límites `22rem`–`36rem`, `overflow-y-scroll`, `overscroll-contain`, encabezado fijo y un contenedor interno `overflow-x-auto` para el desplazamiento horizontal.
+- **Contrato preservado:** la carga y el resumen continúan utilizando `getTiposListasCautela`, `getResumenListas`, `uploadListaCautela` y `exportarLista`; no se modificaron rutas, payloads, backend, Oracle, migraciones ni datos. No se agregó paginación porque el resumen actual se recibe completo.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.html`, `cargar-listas.component.ts` y `cargar-listas.presentation.spec.ts`.
+- **Pruebas ejecutadas:** `npm test -- --watch=false --include=src/app/features/admin/listas/pages/cargar-listas/cargar-listas.presentation.spec.ts` — `1` archivo / `2` pruebas PASS; `npm run lint` PASS; `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; `git diff --check` PASS.
+- **No ejecutado:** backend .NET, Oracle, E2E de navegador, regresión frontend completa y `tools/run_quality_gates.ps1`; no se iniciaron ni detuvieron servicios, conforme a la preferencia del propietario.
+- **Preservación:** no se tocó `main`, producción, Configuración de cálculo ni archivos ajenos sin seguimiento; el stage fue selectivo.
+- **Estado:** `FOCUSED_TECHNICAL_CHECKS_PASS`; pendiente aceptación visual del propietario.
+- **Punto exacto de continuación:** publicar este registro documental en `origin/desarrollo`, confirmar `HEAD == origin/desarrollo`, y revisar visualmente búsqueda, limpieza, ordenamiento, scroll interno y exportación de Cargar Listas.
