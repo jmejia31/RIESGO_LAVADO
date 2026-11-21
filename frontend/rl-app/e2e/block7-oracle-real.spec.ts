@@ -365,6 +365,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     response.request().method() === 'POST'
     && new URL(response.url()).pathname.endsWith('/evaluaciones/borrador'));
   await page.getByRole('button', { name: 'Guardar borrador' }).click();
+  const confirmSave = page.getByRole('button', { name: 'Sí, guardar borrador' });
+  await expect(confirmSave).toBeVisible();
+  await confirmSave.click();
   const createResponse = await createResponsePromise;
   expect(createResponse.status()).toBe(200);
   const created = await createResponse.json() as { datos: number };
@@ -654,6 +657,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
     response.request().method() === 'GET'
     && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   await page.getByRole('button', { name: 'Guardar borrador' }).click();
+  const confirmUpdate = page.getByRole('button', { name: 'Sí, guardar borrador' });
+  await expect(confirmUpdate).toBeVisible();
+  await confirmUpdate.click();
   expect((await updateResponsePromise).status()).toBe(200);
   const projectionAfterSave = await projectionAfterSavePromise;
   expect(projectionAfterSave.status()).toBe(200);
@@ -798,12 +804,18 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   const saveA = concurrencyA.waitForResponse(response => response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
   await concurrencyA.getByRole('button', { name: 'Guardar borrador' }).click();
+  const confirmSaveA = concurrencyA.getByRole('button', { name: 'Sí, guardar borrador' });
+  await expect(confirmSaveA).toBeVisible();
+  await confirmSaveA.click();
   expect((await saveA).status()).toBe(200);
 
   await fillAndWaitForIncompleteCalculation(pageB, () => pageB.getByLabel('Área principal').fill('Editor B stale'));
   const saveB = pageB.waitForResponse(response => response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
   await pageB.getByRole('button', { name: 'Guardar borrador' }).click();
+  const confirmSaveB = pageB.getByRole('button', { name: 'Sí, guardar borrador' });
+  await expect(confirmSaveB).toBeVisible();
+  await confirmSaveB.click();
   expect((await saveB).status()).toBe(409);
   await expect(pageB.getByText(/modificada por otra sesión o usuario/i).first()).toBeVisible();
   await expect(pageB.getByLabel('Área principal')).toHaveValue('Editor B stale');
