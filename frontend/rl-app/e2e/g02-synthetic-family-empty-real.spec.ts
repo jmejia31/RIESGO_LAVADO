@@ -57,16 +57,14 @@ test('GATE02 verifica el estado vacio de una familia eliminada desde la API y An
 
   const search = page.locator('#gestor-buscar-familia');
   await expect(search).toBeVisible();
-  await search.fill(code);
-
-  // B02 avoids redundant fetches when the active tab is selected again.
-  // Leave Plantillas and return so the updated search is applied by the real API.
+  // The real component applies the filter immediately and remembers the loaded
+  // context. Observe that request directly; changing tabs would intentionally
+  // avoid a redundant fetch and make the test wait for an event that cannot occur.
   const filteredResponse = page.waitForResponse(httpResponse =>
     httpResponse.request().method() === 'GET'
     && new URL(httpResponse.url()).pathname === '/api/matrices-riesgos/familias/paginado'
     && new URL(httpResponse.url()).searchParams.get('buscar') === code);
-  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
-  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await search.fill(code);
   const filtered = await filteredResponse;
   expect(filtered.status()).toBe(200);
   const filteredBody = await filtered.json() as PagedResponse;
