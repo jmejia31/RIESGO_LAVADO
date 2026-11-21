@@ -763,7 +763,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await confirmPlanUpdate.click();
   expect((await planUiSave).status()).toBe(200);
   expect((await planListRefresh).status()).toBe(200);
-  await expect(pageA.getByText('Plan actualizado correctamente.')).toBeVisible();
+  const planUpdateNotification = pageA.getByRole('dialog', { name: /Notificación institucional/ });
+  await expect(planUpdateNotification).toContainText('Plan actualizado correctamente.');
+  await planUpdateNotification.getByRole('button', { name: 'Aceptar' }).click();
   const refreshedPlan = pageA.getByRole('button', { name: 'Editar plan y actividades' }).first();
   await expect(refreshedPlan).toBeVisible();
   const refreshedActivities = pageA.waitForResponse(response => response.request().method() === 'GET'
