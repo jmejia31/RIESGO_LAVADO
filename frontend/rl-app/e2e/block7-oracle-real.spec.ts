@@ -773,6 +773,8 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await refreshedPlan.click();
   expect((await refreshedActivities).status()).toBe(200);
   await expect(pageA.getByRole('button', { name: 'Editar actividad' }).first()).toBeVisible();
+  await pageA.getByRole('button', { name: 'Cerrar plan' }).click();
+  await expect(pageA.locator('dialog[aria-labelledby="titulo-modal-plan"]')).toHaveCount(0);
   await pageA.getByRole('button', { name: 'Editar actividad' }).first().click();
   await pageA.locator('#actividad-descripcion').fill('Actividad E2E A1 actualizada');
   const activityUiSave = pageA.waitForResponse(response => response.request().method() === 'PUT'
