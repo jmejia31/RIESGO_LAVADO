@@ -47,6 +47,24 @@
     <div class="p-6 border-b border-gray-100">
       <h3 class="text-lg font-bold text-gray-800">Listas</h3>
       <p class="text-sm text-gray-500 mt-1">Resumen de cargas registradas por tipo de lista y usuario responsable.</p>
+      <div class="mt-4 flex flex-col gap-3 bg-slate-50/70 sm:flex-row sm:items-end" data-ui-filter-block="cargar-listas" data-ui-filter-standard="search">
+        <div class="min-w-[220px] flex-1">
+          <label for="cargar-listas-buscar" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Buscar</label>
+          <input id="cargar-listas-buscar" type="search"
+            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus:border-ihss-500 focus:ring-2 focus:ring-ihss-500/20"
+            placeholder="Buscar por lista, usuario, fecha o cantidad..."
+            [value]="buscar()"
+            (input)="cambiarBusqueda($any($event.target).value)" />
+        </div>
+        <button type="button"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ihss-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+          title="Limpiar filtros de cargas de listas"
+          aria-label="Limpiar filtros de cargas de listas"
+          [disabled]="!buscar().trim()"
+          (click)="limpiarFiltros()">
+          <app-action-icon action="clear-filters"></app-action-icon>
+        </button>
+      </div>
     </div>
 
     @if (cargandoResumen() && resumenListas().length === 0) {
@@ -56,9 +74,10 @@
       </div>
     } @else {
       <div class="p-6">
-        <div class="overflow-x-auto rounded-xl border border-gray-200">
-        <table class="min-w-[860px] w-full text-center border-collapse border border-gray-200">
-            <thead>
+        <div class="relative h-[55vh] min-h-[22rem] max-h-[36rem] overflow-x-hidden overflow-y-scroll overscroll-contain rounded-xl border border-gray-200" aria-label="Tabla de cargas de listas de cautela">
+          <div class="overflow-x-auto custom-scrollbar">
+          <table class="min-w-[860px] w-full text-center border-collapse border border-gray-200">
+            <thead class="sticky top-0 z-10">
               <tr class="bg-gray-50/75 text-xs font-bold text-gray-700 uppercase tracking-wider">
                 <th class="px-6 py-3.5 border border-gray-200"><app-sortable-table-header column="lista" label="Lista" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar cargas por lista" (sortChange)="ordenar($event)" /></th>
                 <th class="px-6 py-3.5 border border-gray-200"><app-sortable-table-header column="usuario" label="Usuario" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar cargas por usuario" (sortChange)="ordenar($event)" /></th>
@@ -93,6 +112,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     }

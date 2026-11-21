@@ -33,10 +33,24 @@ export class CargarListasComponent implements OnInit {
   errorResumen = signal<string | null>(null);
   orden = signal('id');
   direccion = signal<SortDirection>('asc');
+  buscar = signal('');
+  resumenFiltrado = computed(() => {
+    const termino = this.buscar().trim().toLowerCase();
+    if (!termino) return [...this.resumenListas()];
+
+    return this.resumenListas().filter(item => [
+      item.tipoListaCautelaId,
+      item.lista,
+      item.usuario,
+      item.fechaCreacion,
+      item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString('es-HN') : '',
+      item.cantidadRegistros
+    ].some(valor => String(valor ?? '').toLowerCase().includes(termino)));
+  });
   resumenOrdenado = computed(() => {
     const factor = this.direccion() === 'asc' ? 1 : -1;
     const campo = this.orden();
-    return [...this.resumenListas()].sort((a, b) => {
+    return [...this.resumenFiltrado()].sort((a, b) => {
       const izquierda = campo === 'id' ? (a.tipoListaCautelaId ?? 0) : campo === 'cantidad' ? a.cantidadRegistros : campo === 'fecha' ? (a.fechaCreacion ?? '') : campo === 'usuario' ? a.usuario : a.lista;
       const derecha = campo === 'id' ? (b.tipoListaCautelaId ?? 0) : campo === 'cantidad' ? b.cantidadRegistros : campo === 'fecha' ? (b.fechaCreacion ?? '') : campo === 'usuario' ? b.usuario : b.lista;
       if (typeof izquierda === 'number' && typeof derecha === 'number') return (izquierda - derecha) * factor;
@@ -108,6 +122,14 @@ export class CargarListasComponent implements OnInit {
   ordenar(columna: string): void {
     if (this.orden() === columna) this.direccion.set(this.direccion() === 'asc' ? 'desc' : 'asc');
     else { this.orden.set(columna); this.direccion.set('asc'); }
+  }
+
+  cambiarBusqueda(valor: string): void {
+    this.buscar.set(valor);
+  }
+
+  limpiarFiltros(): void {
+    this.buscar.set('');
   }
 
   readonly archivoSeleccionado = signal<File | null>(null);
