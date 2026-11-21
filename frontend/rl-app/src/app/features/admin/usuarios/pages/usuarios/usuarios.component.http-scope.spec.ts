@@ -61,4 +61,49 @@ describe('UsuariosComponent HTTP error scope', () => {
     save.flush({ success: false, mensaje: 'Validación local' }, { status: 400, statusText: 'Bad Request' });
     expect(component.errorGuardar()).toBe('Validación local');
   });
+
+  it('renders the institutional user filter and bounded table scroll surface', () => {
+    const fixture = TestBed.createComponent(UsuariosComponent);
+    fixture.detectChanges();
+
+    http.expectOne(request => request.url === 'http://localhost:5043/api/auth/usuarios/paginado').flush({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 25, totalRegistros: 0, totalPaginas: 0 } });
+    http.expectOne('http://localhost:5043/api/catalogos/roles').flush({ success: true, datos: [] });
+    http.expectOne('http://localhost:5043/api/catalogos/dominios').flush({ success: true, datos: [] });
+    http.expectOne('http://localhost:5043/api/catalogos/modulos').flush({ success: true, datos: [] });
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const filter = root.querySelector('[data-ui-filter-block="usuarios"]') as HTMLElement | null;
+    const tableSurface = root.querySelector('[aria-label="Tabla de usuarios"]') as HTMLElement | null;
+
+    expect(filter).not.toBeNull();
+    expect(root.querySelector('#usuarios-buscar')).not.toBeNull();
+    expect(root.querySelector('[aria-label="Limpiar filtros de usuarios"]')).not.toBeNull();
+    expect(tableSurface?.className).toContain('h-[55vh]');
+    expect(tableSurface?.className).toContain('overflow-y-scroll');
+    expect(tableSurface?.className).toContain('overflow-x-hidden');
+  });
+
+  it('sends the institutional search filter and clears it from the first page', () => {
+    const fixture = TestBed.createComponent(UsuariosComponent);
+    fixture.detectChanges();
+
+    http.expectOne(request => request.url === 'http://localhost:5043/api/auth/usuarios/paginado').flush({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 25, totalRegistros: 0, totalPaginas: 0 } });
+    http.expectOne('http://localhost:5043/api/catalogos/roles').flush({ success: true, datos: [] });
+    http.expectOne('http://localhost:5043/api/catalogos/dominios').flush({ success: true, datos: [] });
+    http.expectOne('http://localhost:5043/api/catalogos/modulos').flush({ success: true, datos: [] });
+
+    const component = fixture.componentInstance;
+    component.cambiarBusqueda('Ana');
+    const filtered = http.expectOne(request => request.url === 'http://localhost:5043/api/auth/usuarios/paginado');
+    expect(filtered.request.params.get('buscar')).toBe('Ana');
+    expect(filtered.request.params.get('pagina')).toBe('1');
+    filtered.flush({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 25, totalRegistros: 0, totalPaginas: 0 } });
+
+    component.limpiarFiltros();
+    const cleared = http.expectOne(request => request.url === 'http://localhost:5043/api/auth/usuarios/paginado');
+    expect(cleared.request.params.get('buscar')).toBe('');
+    expect(cleared.request.params.get('pagina')).toBe('1');
+    cleared.flush({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 25, totalRegistros: 0, totalPaginas: 0 } });
+  });
 });

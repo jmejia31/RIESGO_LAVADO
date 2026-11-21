@@ -202,6 +202,13 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.cargar();
   }
 
+  limpiarFiltros(): void {
+    if (!this.buscar()) return;
+    this.buscar.set('');
+    this.paginaActual.set(1);
+    this.cargar();
+  }
+
   cambiarPagina(pagina: number): void {
     if (pagina < 1 || pagina > this.totalPaginas()) return;
     this.paginaActual.set(pagina);
