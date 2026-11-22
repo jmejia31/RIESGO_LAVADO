@@ -269,6 +269,9 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
     solicitud.subscribe({
       next: () => {
         this.guardando.set(false);
+        const focoRetorno = this.focoRetorno;
+        // The form closes immediately, but institutional notification has its own
+        // modal focus trap. Restore keyboard focus only after that notification closes.
         void this.notification.notify({
           title: id > 0 ? 'Riesgo actualizado' : 'Riesgo creado',
           icon: 'success',
@@ -276,6 +279,12 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
           confirmIcon: 'confirm',
           confirmLabel: 'Aceptar',
           confirmVariant: 'success'
+        }).then(() => {
+          setTimeout(() => {
+            if (focoRetorno?.isConnected && !focoRetorno.closest('[inert]')) {
+              focoRetorno.focus({ preventScroll: true });
+            }
+          }, 0);
         });
         this.cerrarFormulario();
         this.cargar();
