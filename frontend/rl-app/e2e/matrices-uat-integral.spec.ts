@@ -1666,36 +1666,68 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   const selectorEvaluacionMitigacion = page.getByRole('combobox', { name: 'Evaluación', exact: true });
   await selectorEvaluacionMitigacion.click();
   await page.getByRole('option', { name: /#20 · Riesgo 7 · Borrador/ }).click();
-  await expect(page.locator('#control-estado')).toHaveValue('ACTIVO');
-  await expect(page.locator('#control-estado option')).toHaveCount(2);
-  await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
-  await page.getByRole('button', { name: 'Guardar nuevo control', exact: true }).click();
-  await expect.poll(() => recibidos['control']?.conEvaluacionId).toBe(20);
-  await expect(page.getByText('Control creado correctamente.')).toBeVisible();
-  await page.getByRole('button', { name: 'Editar y evaluar control' }).click();
-  await page.getByLabel('Efectividad %').fill('85');
-  await page.getByRole('button', { name: 'Registrar efectividad' }).click();
-  await expect.poll(() => recibidos['efectividad']?.ecoEfectividad).toBe(85);
-  await expect(page.getByText('Efectividad del control registrada correctamente.')).toBeVisible();
 
-  await expect(page.locator('#plan-estado')).toHaveValue('PENDIENTE');
-  await expect(page.locator('#plan-estado option')).toHaveCount(5);
-  await expect(page.locator('#plan-estado option')).toHaveText(['Pendiente', 'En proceso', 'Cerrado', 'Vencido', 'Inactivo']);
-  await page.getByLabel('Descripción', { exact: true }).nth(1).fill('Plan UAT');
-  await page.getByRole('button', { name: 'Guardar nuevo plan', exact: true }).click();
+  // Control is edited in its existing institutional modal, not in the underlying grid.
+  await page.getByRole('button', { name: 'Nuevo control' }).click();
+  const controlModal = page.locator('dialog[aria-labelledby="titulo-modal-control"]');
+  await expect(controlModal).toBeVisible();
+  await expect(controlModal.locator('#control-estado')).toHaveValue('ACTIVO');
+  await expect(controlModal.locator('#control-estado option')).toHaveCount(2);
+  await controlModal.locator('#control-descripcion').fill('Control preventivo UAT');
+  await controlModal.getByRole('button', { name: 'Guardar nuevo control' }).click();
+  await confirmarAccionInstitucional(page, 'Confirmar guardado');
+  await expect.poll(() => recibidos['control']?.conEvaluacionId).toBe(20);
+  await aceptarNotificacionInstitucional(page, 'Control creado correctamente.');
+
+  await page.getByRole('button', { name: 'Editar y evaluar control' }).click();
+  await expect(controlModal).toBeVisible();
+  await controlModal.getByRole('button', { name: 'Registrar efectividad' }).click();
+  const efectividadModal = page.locator('dialog[aria-labelledby="titulo-modal-efectividad"]');
+  await expect(efectividadModal).toBeVisible();
+  await efectividadModal.locator('#control-efectividad').fill('85');
+  await efectividadModal.locator('#control-comentario').fill('Efectividad evaluada por UAT');
+  await efectividadModal.getByRole('button', { name: 'Registrar efectividad' }).click();
+  await confirmarAccionInstitucional(page, 'Registrar efectividad');
+  await expect.poll(() => recibidos['efectividad']?.ecoEfectividad).toBe(85);
+  await aceptarNotificacionInstitucional(page, 'Efectividad del control registrada correctamente.');
+  await controlModal.getByRole('button', { name: 'Cerrar control' }).click();
+  await expect(controlModal).toHaveCount(0);
+
+  // Plans also require their own modal and mandatory fields.
+  await page.getByRole('button', { name: 'Nuevo plan de mitigación' }).click();
+  const planModal = page.locator('dialog[aria-labelledby="titulo-modal-plan"]');
+  await expect(planModal).toBeVisible();
+  await expect(planModal.locator('#plan-estado')).toHaveValue('PENDIENTE');
+  await expect(planModal.locator('#plan-estado option')).toHaveCount(5);
+  await expect(planModal.locator('#plan-estado option')).toHaveText(['Pendiente', 'En proceso', 'Cerrado', 'Vencido', 'Inactivo']);
+  await planModal.locator('#plan-descripcion').fill('Plan UAT');
+  await planModal.locator('#plan-avance').fill('0');
+  await planModal.locator('#plan-presupuesto').fill('0');
+  await planModal.locator('#plan-fecha-inicio').fill('2026-08-07');
+  await planModal.locator('#plan-fecha-fin').fill('2026-08-08');
+  await planModal.locator('#plan-monitoreo-seguimiento').fill('Seguimiento institucional UAT');
+  await planModal.locator('#plan-responsables').fill('Equipo UAT');
+  await planModal.locator('#plan-recursos').fill('Recursos asignados UAT');
+  await planModal.getByRole('button', { name: 'Guardar nuevo plan' }).click();
+  await confirmarAccionInstitucional(page, 'Confirmar guardado');
   await expect.poll(() => recibidos['plan']?.plaEvaluacionId).toBe(20);
   await expect.poll(() => recibidos['plan']?.plaEstado).toBe('PENDIENTE');
-  await expect(page.getByText('Plan creado correctamente.')).toBeVisible();
+  await aceptarNotificacionInstitucional(page, 'Plan creado correctamente.');
+
   await page.getByRole('button', { name: 'Editar plan y actividades' }).click();
-  await expect(page.getByRole('heading', { name: 'Actividades del plan' })).toBeVisible();
-  const seccionActividades = page.locator('div.bg-slate-50', { has: page.getByRole('heading', { name: 'Actividades del plan' }) });
-  await seccionActividades.getByLabel('Descripción', { exact: true }).fill('Actividad UAT');
-  await expect(seccionActividades.getByLabel('Descripción', { exact: true })).toHaveValue('Actividad UAT');
-  await seccionActividades.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
-  await expect(seccionActividades.getByLabel('Responsable', { exact: true })).toHaveValue('Responsable UAT');
-  await seccionActividades.getByRole('button', { name: 'Guardar nueva actividad', exact: true }).click();
+  await expect(planModal).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Actividades del plan seleccionado' })).toBeVisible();
+  await planModal.getByRole('button', { name: 'Cerrar plan' }).click();
+  await expect(planModal).toHaveCount(0);
+  await page.getByRole('button', { name: 'Nueva actividad' }).click();
+  const actividadModal = page.locator('dialog[aria-labelledby="titulo-modal-actividad"]');
+  await expect(actividadModal).toBeVisible();
+  await actividadModal.locator('#actividad-descripcion').fill('Actividad UAT');
+  await actividadModal.locator('#actividad-responsable').fill('Responsable UAT');
+  await actividadModal.getByRole('button', { name: 'Guardar nueva actividad' }).click();
+  await confirmarAccionInstitucional(page, 'Confirmar guardado');
   await expect.poll(() => recibidos['actividad']?.actPlanId).toBe(41);
-  await expect(page.getByText('Actividad creada correctamente.')).toBeVisible();
+  await aceptarNotificacionInstitucional(page, 'Actividad creada correctamente.');
 });
 
 test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
