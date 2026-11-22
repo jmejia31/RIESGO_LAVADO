@@ -4,6 +4,7 @@ import { throwError } from 'rxjs';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
+import { CONFIRMACION_CAMBIOS_HEADER } from '../interceptors/confirmacion-cambios.interceptor';
 import { ConfiguracionService } from './configuracion.service';
 import { ConfigSistema } from './configuracion.models';
 import { getInstitutionalReportBranding } from '../reporting/institutional-report-standard';
@@ -80,6 +81,25 @@ describe('ConfiguracionService', () => {
     expect(document.documentElement.style.getPropertyValue('--ihss-accent-rgb')).toBe('171 205 239');
     expect(document.documentElement.style.getPropertyValue('--ihss-700-rgb')).toBe('17 34 51');
     expect(document.documentElement.style.getPropertyValue('--ihss-modal-accent-rgb')).not.toBe('171 205 239');
+  });
+
+  it('omite una segunda confirmación solamente cuando la UI ya obtuvo consentimiento', () => {
+    const config: ConfigSistema = {
+      nombreInstitucion: 'IHSS', nombreSistema: 'SGRLA-IHSS', timeoutSesion: 30
+    };
+
+    service.GuardarConfiguracion(config, true).subscribe();
+    const confirmed = http.expectOne('http://localhost:5043/api/configuracion/sistema');
+    expect(confirmed.request.method).toBe('PUT');
+    expect(confirmed.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    confirmed.flush({ success: true, mensaje: 'Configuración guardada' });
+
+    service.GuardarConfiguracion(config).subscribe();
+    const withoutConsent = http.expectOne('http://localhost:5043/api/configuracion/sistema');
+    expect(withoutConsent.request.method).toBe('PUT');
+    // The default caller still requires the global interceptor's confirmation.
+    expect(withoutConsent.request.headers.has(CONFIRMACION_CAMBIOS_HEADER)).toBe(false);
+    withoutConsent.flush({ success: true, mensaje: 'Configuración guardada' });
   });
 
   it('permite scope local por consumidor sin cambiar el default global', () => {
