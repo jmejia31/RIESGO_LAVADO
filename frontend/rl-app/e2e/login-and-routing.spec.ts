@@ -522,6 +522,10 @@ test('navega entre bloques sin guardar y solo persiste con Guardar borrador', as
       && new URL(request.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador')
   );
   await page.getByRole('button', { name: 'Guardar borrador' }).click();
+  // The existing institutional confirmation is mandatory before any draft POST.
+  const confirmation = page.locator('.swal2-popup.institutional-confirmation');
+  await expect(confirmation).toBeVisible();
+  await confirmation.getByRole('button', { name: 'Sí, guardar borrador' }).click();
   const request = await saveRequest;
   const payload = request.postDataJSON();
   expect(payload.evaRiesgoId).toBe(502);
