@@ -167,6 +167,7 @@ Assert-Minimum 'Backend ramas' $backendBranchPct $backendThresholds.Branches
 # Run the Block 7 disposable Oracle/browser fixture only after backend tests.
 # Its minimal RL_USUARIOS table is intentionally sufficient for that host but
 # would shadow the richer P0-F Oracle fixture if created before coverage tests.
+$block7FullE2ERan = $false
 if ($env:RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED -eq 'true') {
     if ([string]::IsNullOrWhiteSpace($env:BLOCK7_ORACLE_CONNECTION_STRING)) {
         throw 'La certificacion Oracle/browser de Bloque 7 requiere la conexion Oracle XE desechable'
@@ -174,10 +175,14 @@ if ($env:RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED -eq 'true') {
 
     Write-Host '=== Certificacion real Bloque 7: Oracle + Browser/API ===' -ForegroundColor Cyan
     $block7OracleScript = Join-Path $RepositoryRoot 'tools/run_block7_oracle_e2e.sh'
+    # Keep the complete repository E2E suite inside the disposable API-host
+    # lifecycle; the script shuts that host down from its EXIT trap.
+    $env:RL_BLOCK7_FULL_REPOSITORY_E2E_REQUIRED = 'true'
     & bash $block7OracleScript
     if ($LASTEXITCODE -ne 0) {
         throw "La certificacion Oracle/browser del Bloque 7 fallo con codigo $LASTEXITCODE"
     }
+    $block7FullE2ERan = $true
 }
 
 Write-Host '=== Cobertura Frontend ===' -ForegroundColor Cyan
@@ -204,7 +209,7 @@ try {
     Assert-Minimum 'Frontend funciones' $frontendFunctionPct $frontendThresholds.Functions
     Assert-Minimum 'Frontend lineas' $frontendLinePct $frontendThresholds.Lines
 
-    if (-not $SkipE2E) {
+    if (-not $SkipE2E -and -not $block7FullE2ERan) {
         Write-Host '=== Pruebas E2E ===' -ForegroundColor Cyan
         & $npmCommand run e2e
         if ($LASTEXITCODE -ne 0) {

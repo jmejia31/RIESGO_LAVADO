@@ -366,6 +366,27 @@ for marker in \
   grep -Fq "$marker" <<<"$p0_delete_output"
 done
 echo 'P0_DELETE_REAL_BROWSER_E2E=PASS'
+
+# The complete repository E2E suite must run while this script's real
+# Oracle-backed API host is alive. The EXIT trap shuts port 5043 down after
+# this script returns, so running the suite later would create false API
+# timeouts for tests that depend on the real host.
+if [[ "${RL_BLOCK7_FULL_REPOSITORY_E2E_REQUIRED:-}" == "true" ]]; then
+  pushd "$repo_root/frontend/rl-app" >/dev/null
+  if ! full_e2e_output="$(npm run e2e 2>&1 | tee /dev/stderr)"; then
+    popd >/dev/null
+    echo 'Full repository E2E failed while the real Oracle API host was alive.' >&2
+    sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 160 >&2
+    exit 1
+  fi
+  popd >/dev/null
+  if ! grep -Eq '[0-9]+ passed' <<<"$full_e2e_output"; then
+    echo 'Full repository E2E did not report passing tests.' >&2
+    exit 1
+  fi
+  echo 'BLOCK7_FULL_REPOSITORY_E2E=PASS'
+fi
+
 grep -Fq 'BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006' <<<"$browser_output"
 # Inspect only the API host log and report counts, never exception text or connection data.
 api_log_without_expected_tx12="$(mktemp)"
