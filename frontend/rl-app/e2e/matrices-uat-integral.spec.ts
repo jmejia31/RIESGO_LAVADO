@@ -1381,8 +1381,9 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await expect.poll(() => createPayload?.rieCodigo).toBe('R-008');
   expect(createPayload).toEqual({ rieCodigo: 'R-008', rieNombre: 'Riesgo integral UAT', rieDescripcion: 'Creado por prueba UAT', rieActivo: true });
   await expect(createModal).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Nuevo riesgo' })).toBeFocused();
   await aceptarNotificacionInstitucional(page, 'El riesgo R-008 fue creado correctamente.');
+  // Keyboard focus returns to the original trigger after the notification is acknowledged.
+  await expect(page.getByRole('button', { name: 'Nuevo riesgo' })).toBeFocused();
   await expect(page.locator('app-matrices-riesgos-gestion table')).toBeVisible();
   await expect(page.locator('app-matrices-riesgos-gestion section > form')).toHaveCount(0);
 
