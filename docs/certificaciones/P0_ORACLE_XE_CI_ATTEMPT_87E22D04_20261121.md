@@ -15,7 +15,7 @@
 | Run CI | [44975074761](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761) |
 | Job principal | [137063068350](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761/job/137063068350) |
 | Fecha local | `2026-11-21 20:13–20:42 -06:00` |
-| EVIDENCE_COMMIT_SHA | `PENDING_FIRST_DOC_COMMIT` |
+| EVIDENCE_COMMIT_SHA | `b9fde1b48bf3c23328ca5f987c437dc6353713ba` |
 | GitHub remoto verificado | `YES` |
 | Aceptación del propietario | `PENDING` |
 

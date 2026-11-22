@@ -702,7 +702,7 @@
       "status": "BLOCKED",
       "author": "COD",
       "source_code_sha": "87e22d04f2f8f9082246a96f00eb1f76cba15878",
-      "evidence_commit_sha": "PENDING_FIRST_DOC_COMMIT",
+      "evidence_commit_sha": "b9fde1b48bf3c23328ca5f987c437dc6353713ba",
       "quality_gate_run": 44975074761,
       "quality_gate_status": "FAILURE",
       "github_quality_gate_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761",

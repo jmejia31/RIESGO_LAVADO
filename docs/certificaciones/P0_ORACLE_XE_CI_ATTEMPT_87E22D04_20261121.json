@@ -41,7 +41,7 @@
   "status": "BLOCKED",
   "certified": false,
   "owner_acceptance": "PENDING",
-  "evidence_commit_sha": "PENDING_FIRST_DOC_COMMIT",
+  "evidence_commit_sha": "b9fde1b48bf3c23328ca5f987c437dc6353713ba",
   "github_remote_verified": true,
   "no_retry_after_failure": true
 }
