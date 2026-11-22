@@ -1867,40 +1867,57 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await evaluationPicker.click();
   await page.getByRole('option', { name: /#20 · Riesgo 7 · Borrador/ }).click();
 
+  const planModal = page.locator('dialog[aria-labelledby="titulo-modal-plan"]');
+  const activityModal = page.locator('dialog[aria-labelledby="titulo-modal-actividad"]');
   const savePlan = async (description: string, monitoring: string, managers: string, resources: string, budget: string, start: string, end: string): Promise<void> => {
-    await page.locator('#plan-descripcion').fill(description);
-    await page.locator('#plan-avance').fill('35');
-    await page.locator('#plan-estado').selectOption('EN_PROCESO');
-    await page.locator('#plan-fecha-inicio').fill(start);
-    await page.locator('#plan-fecha-fin').fill(end);
-    await page.locator('#plan-presupuesto').fill(budget);
-    await page.locator('#plan-monitoreo-seguimiento').fill(monitoring);
-    await page.locator('#plan-responsables').fill(managers);
-    await page.locator('#plan-recursos').fill(resources);
-    await page.getByRole('button', { name: 'Guardar nuevo plan', exact: true }).click();
+    await page.getByRole('button', { name: 'Nuevo plan de mitigación' }).click();
+    await expect(planModal).toBeVisible();
+    await planModal.locator('#plan-descripcion').fill(description);
+    await planModal.locator('#plan-avance').fill('35');
+    await planModal.locator('#plan-estado').selectOption('EN_PROCESO');
+    await planModal.locator('#plan-fecha-inicio').fill(start);
+    await planModal.locator('#plan-fecha-fin').fill(end);
+    await planModal.locator('#plan-presupuesto').fill(budget);
+    await planModal.locator('#plan-monitoreo-seguimiento').fill(monitoring);
+    await planModal.locator('#plan-responsables').fill(managers);
+    await planModal.locator('#plan-recursos').fill(resources);
+    await planModal.getByRole('button', { name: 'Guardar nuevo plan', exact: true }).click();
+    await confirmarAccionInstitucional(page, 'Confirmar guardado');
+    await aceptarNotificacionInstitucional(page, 'Plan creado correctamente.');
+    await expect(planModal).toHaveCount(0);
   };
   await savePlan('Plan correctivo de revisión reforzada', 'Seguimiento mensual por la unidad responsable', 'Unidad de Cumplimiento y Jefatura Operativa', 'Personal especializado y herramienta de monitoreo', '12500.50', '2026-08-07', '2026-09-07');
   await expect.poll(() => serverPlans.length).toBe(1);
   await page.getByRole('button', { name: 'Editar plan y actividades' }).first().click();
+  await expect(planModal).toBeVisible();
+  // Editing the plan selects its activities. Close the unchanged form to use the activity toolbar.
+  await planModal.getByRole('button', { name: 'Cerrar plan' }).click();
+  await expect(planModal).toHaveCount(0);
 
   const addActivity = async (description: string, responsible: string): Promise<void> => {
-    await page.locator('#actividad-descripcion').fill(description);
-    await page.locator('#actividad-responsable').fill(responsible);
-    await page.locator('#actividad-fecha-inicio').fill('2026-08-08');
-    await page.locator('#actividad-fecha-fin').fill('2026-08-28');
-    await page.locator('#actividad-estado').selectOption('EN_PROCESO');
-    await page.getByRole('button', { name: 'Guardar nueva actividad', exact: true }).click();
+    await page.getByRole('button', { name: 'Nueva actividad' }).click();
+    await expect(activityModal).toBeVisible();
+    await activityModal.locator('#actividad-descripcion').fill(description);
+    await activityModal.locator('#actividad-responsable').fill(responsible);
+    await activityModal.locator('#actividad-fecha-inicio').fill('2026-08-08');
+    await activityModal.locator('#actividad-fecha-fin').fill('2026-08-28');
+    await activityModal.locator('#actividad-estado').selectOption('EN_PROCESO');
+    await activityModal.getByRole('button', { name: 'Guardar nueva actividad', exact: true }).click();
+    await confirmarAccionInstitucional(page, 'Confirmar guardado');
+    await aceptarNotificacionInstitucional(page, 'Actividad creada correctamente.');
+    await expect(activityModal).toHaveCount(0);
   };
   await addActivity('Revisar controles documentales', 'Analista de Cumplimiento');
   await expect.poll(() => serverActivities.length).toBe(1);
-  await page.getByRole('button', { name: 'Nueva actividad', exact: true }).click();
   await addActivity('Actualizar expediente de seguimiento', 'Jefatura Operativa');
   await expect.poll(() => serverActivities.length).toBe(2);
 
-  await page.getByRole('button', { name: 'Nuevo plan de mitigación', exact: true }).click();
   await savePlan('Plan complementario de supervisión', 'Seguimiento quincenal', 'Gerencia Operativa', 'Equipo interno de supervisión', '5000.00', '2026-08-10', '2026-09-10');
   await expect.poll(() => serverPlans.length).toBe(2);
   await page.getByRole('button', { name: 'Editar plan y actividades' }).nth(1).click();
+  await expect(planModal).toBeVisible();
+  await planModal.getByRole('button', { name: 'Cerrar plan' }).click();
+  await expect(planModal).toHaveCount(0);
   await addActivity('Verificar cierre de hallazgos', 'Supervisor Operativo');
   await expect.poll(() => serverActivities.length).toBe(3);
   expect(serverActivities.map(activity => activity['actPlanId'])).toEqual([201, 201, 202]);
@@ -1913,9 +1930,12 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await expect(page.locator('#plan-recursos')).toHaveValue('Personal especializado y herramienta de monitoreo');
   await expect(page.locator('#plan-responsables')).toHaveValue('Unidad de Cumplimiento y Jefatura Operativa');
   await expect(page.locator('#plan-monitoreo-seguimiento')).toHaveValue('Seguimiento mensual por la unidad responsable');
-  await page.locator('#plan-recursos').fill('Personal especializado, monitoreo y análisis');
-  await page.getByRole('button', { name: 'Actualizar plan', exact: true }).click();
+  await expect(planModal).toBeVisible();
+  await planModal.locator('#plan-recursos').fill('Personal especializado, monitoreo y análisis');
+  await planModal.getByRole('button', { name: 'Actualizar plan', exact: true }).click();
+  await confirmarAccionInstitucional(page, 'Guardar cambios');
   await expect.poll(() => serverPlans[0]['plaRecursos']).toBe('Personal especializado, monitoreo y análisis');
+  await aceptarNotificacionInstitucional(page, 'Plan actualizado correctamente.');
 
   await page.getByRole('button', { name: 'Matriz y evaluaciones', exact: true }).click();
   await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
