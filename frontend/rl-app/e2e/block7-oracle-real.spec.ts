@@ -881,6 +881,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(confirmAreaSave).toBeVisible();
   await confirmAreaSave.click();
   expect((await saveArea).status()).toBe(200);
+  const areaSaveNotification = pageA.getByRole('dialog', { name: /Notificación institucional/ });
+  await expect(areaSaveNotification).toContainText('Observaciones del Área guardadas.');
+  await areaSaveNotification.getByRole('button', { name: 'Aceptar' }).click();
   await expect(areaObservations).toHaveValue('OBS-AREA-BROWSER');
   const finalMonitoringProjection = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   const finalProjectionBody = (await finalMonitoringProjection.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos.fields;
