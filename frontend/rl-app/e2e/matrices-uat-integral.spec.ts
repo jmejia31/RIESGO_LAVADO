@@ -182,6 +182,22 @@ async function preparar(page: Page): Promise<void> {
 
 test.beforeEach(async ({ page }) => preparar(page));
 
+/** Use the existing institutional dialogs, never bypass or recreate them. */
+async function confirmarAccionInstitucional(page: Page, label: string): Promise<void> {
+  const modal = page.locator('.swal2-popup.institutional-confirmation');
+  await expect(modal).toBeVisible();
+  await modal.getByRole('button', { name: label, exact: true }).click();
+  await expect(modal).toHaveCount(0);
+}
+
+async function aceptarNotificacionInstitucional(page: Page, title?: string): Promise<void> {
+  const modal = page.locator('.swal2-popup.institutional-confirmation');
+  await expect(modal).toBeVisible();
+  if (title) await expect(modal).toContainText(title);
+  await modal.getByRole('button', { name: 'Aceptar', exact: true }).click();
+  await expect(modal).toHaveCount(0);
+}
+
 test('B01 mantiene contraste AA real en pestañas secundarias y detecta la regresión original', async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -993,7 +1009,9 @@ test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET 
   const guardarArea = page.getByRole('button', { name: 'Guardar Observaciones del Área' });
   const areaReload = page.waitForResponse(response => response.url().includes('/bloque6') && response.request().method() === 'GET');
   await guardarArea.click();
+  await confirmarAccionInstitucional(page, 'Guardar observaciones');
   await areaReload;
+  await aceptarNotificacionInstitucional(page, 'Operación completada');
   await expect(guardarArea).toBeEnabled();
   await expect(area).toHaveValue('Área persistida por capability');
   await expect(page.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR inicial');
@@ -1004,7 +1022,9 @@ test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET 
   await expect(guardarUgr).toBeEnabled();
   const ugrReload = page.waitForResponse(response => response.url().includes('/bloque6') && response.request().method() === 'GET');
   await guardarUgr.click();
+  await confirmarAccionInstitucional(page, 'Guardar observaciones');
   await ugrReload;
+  await aceptarNotificacionInstitucional(page, 'Operación completada');
   await expect(guardarUgr).toBeEnabled();
   await expect(ugr).toHaveValue('UGR persistida por capability');
   await expect(page.getByRole('textbox', { name: 'Observaciones del Área' })).toHaveValue('Área persistida por capability');
@@ -1579,6 +1599,8 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     const downloadPromise = page.waitForEvent('download');
     await preview.getByRole('button', { name: 'Descargar reporte revisado' }).click();
     expect((await downloadPromise).suggestedFilename()).toBe('Matriz_Riesgos.xlsx');
+    // The shared institutional notification blocks further modal actions until acknowledged.
+    await aceptarNotificacionInstitucional(page, 'Descarga iniciada');
     await excelClose.click();
   }
   expect(pageErrors).toEqual([]);
@@ -2132,6 +2154,7 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   const botonGuardar = page.getByRole('button', { name: 'Guardar borrador' });
   await expect(botonGuardar).toBeEnabled();
   await botonGuardar.click();
+  await confirmarAccionInstitucional(page, 'Sí, guardar borrador');
 
   const feedbackExito = page.locator('[data-uat="feedback-edicion-exito"]');
   await expect(feedbackExito).toBeVisible();
