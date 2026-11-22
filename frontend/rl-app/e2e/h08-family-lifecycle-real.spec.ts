@@ -233,6 +233,9 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     const createResponse = page.waitForResponse(response => response.request().method() === 'POST'
       && new URL(response.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador'));
     await newEvaluationDialog.getByRole('button', { name: 'Guardar borrador' }).click();
+    const saveConfirmation = page.getByRole('button', { name: 'Sí, guardar borrador' });
+    await expect(saveConfirmation).toBeVisible();
+    await saveConfirmation.click();
     const created = await createResponse;
     expect(created.status(), await created.text()).toBe(200);
     await expect(newEvaluationDialog).toBeHidden();
