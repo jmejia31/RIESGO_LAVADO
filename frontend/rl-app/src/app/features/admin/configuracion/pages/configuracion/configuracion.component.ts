@@ -144,7 +144,8 @@ export class ConfiguracionComponent implements OnInit {
 
     const data: ConfigSistema = this.form.value;
 
-    this.configService.GuardarConfiguracion(data).subscribe({
+    // The existing institutional modal was accepted; do not request a second one over HTTP.
+    this.configService.GuardarConfiguracion(data, true).subscribe({
       next: () => {
         this.configService.CargarConfiguracion('local').subscribe({
           next: persisted => {
