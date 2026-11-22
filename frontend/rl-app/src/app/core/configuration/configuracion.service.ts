@@ -76,13 +76,14 @@ export class ConfiguracionService {
     for (const [property, value] of Object.entries(tema.properties)) root.style.setProperty(property, value);
   }
 
-  GuardarConfiguracion(config: ConfigSistema) {
+  GuardarConfiguracion(config: ConfigSistema, confirmadaInstitucionalmente = false) {
     const operacionActual = ++this.secuenciaOperacion;
     this.versionFavicon++;
-    // ConfiguracionComponent already obtains explicit institutional confirmation before this call.
-    // Prevent the global HTTP interceptor from requesting a second confirmation dialog.
+    // Only a caller that already obtained an explicit institutional confirmation may
+    // suppress the global HTTP interceptor's additional confirmation. All other callers
+    // retain the default fail-closed confirmation behavior.
     return this.http.put<{ success: boolean, mensaje: string }>(`${this.apiUrl}/sistema`, config, {
-      headers: { [CONFIRMACION_CAMBIOS_HEADER]: '1' },
+      ...(confirmadaInstitucionalmente ? { headers: { [CONFIRMACION_CAMBIOS_HEADER]: '1' } } : {}),
       context: createHttpErrorScopeContext('local')
     })
       .pipe(
