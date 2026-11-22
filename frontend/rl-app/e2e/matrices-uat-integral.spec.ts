@@ -1374,11 +1374,12 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await page.locator('#nombre-riesgo').fill('Riesgo integral UAT');
   await page.locator('#descripcion-riesgo').fill('Creado por prueba UAT');
   await page.getByRole('button', { name: 'Guardar nuevo riesgo', exact: true }).click();
+  await confirmarAccionInstitucional(page, 'Crear riesgo');
   await expect.poll(() => createPayload?.rieCodigo).toBe('R-008');
   expect(createPayload).toEqual({ rieCodigo: 'R-008', rieNombre: 'Riesgo integral UAT', rieDescripcion: 'Creado por prueba UAT', rieActivo: true });
   await expect(createModal).toBeHidden();
   await expect(page.getByRole('button', { name: 'Nuevo riesgo' })).toBeFocused();
-  await expect(page.getByText('Riesgo creado correctamente.')).toBeVisible();
+  await aceptarNotificacionInstitucional(page, 'El riesgo R-008 fue creado correctamente.');
   await expect(page.locator('app-matrices-riesgos-gestion table')).toBeVisible();
   await expect(page.locator('app-matrices-riesgos-gestion section > form')).toHaveCount(0);
 
@@ -1420,7 +1421,9 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await page.getByRole('button', { name: 'Editar riesgo' }).first().click();
   await page.locator('#nombre-riesgo').fill('Riesgo editado UAT');
   await page.getByRole('button', { name: 'Guardar cambios del riesgo' }).click();
+  await confirmarAccionInstitucional(page, 'Guardar cambios');
   await expect.poll(() => updatePayload?.rieNombre).toBe('Riesgo editado UAT');
+  await aceptarNotificacionInstitucional(page, 'El riesgo R-007 fue actualizado correctamente.');
   expect(updatePayload).toEqual({ rieCodigo: 'R-007', rieNombre: 'Riesgo editado UAT', rieDescripcion: 'Base UAT', rieActivo: true });
   await expect(editModal).toBeHidden();
   expect(browserDialogs).toBe(0);
@@ -1431,7 +1434,9 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
     await page.locator('#codigo-riesgo').fill(`R-LOCAL-${status}`);
     await page.locator('#nombre-riesgo').fill(`Prueba local ${status}`);
     await page.getByRole('button', { name: 'Guardar nuevo riesgo' }).click();
+    await confirmarAccionInstitucional(page, 'Crear riesgo');
     await expect(createModal.getByRole('alert')).toContainText(`Error local HTTP ${status}`);
+    await aceptarNotificacionInstitucional(page, 'No se pudo guardar el riesgo');
     await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
     const localDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
@@ -1443,7 +1448,9 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await page.locator('#nombre-riesgo').fill('Conflicto local de actualización');
   nextUpdateFailure = 409;
   await page.getByRole('button', { name: 'Guardar cambios del riesgo' }).click();
+  await confirmarAccionInstitucional(page, 'Guardar cambios');
   await expect(editModal.getByRole('alert')).toContainText('Error local HTTP 409');
+  await aceptarNotificacionInstitucional(page, 'No se pudo guardar el riesgo');
   await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
   const conflictDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
