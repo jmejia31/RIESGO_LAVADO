@@ -1719,9 +1719,10 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
 
   await page.getByRole('button', { name: 'Editar plan y actividades' }).click();
   await expect(planModal).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Actividades del plan seleccionado' })).toBeVisible();
   await planModal.getByRole('button', { name: 'Cerrar plan' }).click();
   await expect(planModal).toHaveCount(0);
+  // The underlying activity region must only be checked after closing aria-modal plan dialog.
+  await expect(page.getByRole('heading', { name: 'Actividades del plan seleccionado' })).toBeVisible();
   await page.getByRole('button', { name: 'Nueva actividad' }).click();
   const actividadModal = page.locator('dialog[aria-labelledby="titulo-modal-actividad"]');
   await expect(actividadModal).toBeVisible();
