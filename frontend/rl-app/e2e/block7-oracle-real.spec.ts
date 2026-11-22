@@ -784,6 +784,9 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   await expect(confirmActivityUpdate).toBeVisible();
   await confirmActivityUpdate.click();
   expect((await activityUiSave).status()).toBe(200);
+  const activityUpdateNotification = pageA.getByRole('dialog', { name: /Notificación institucional/ });
+  await expect(activityUpdateNotification).toContainText('Actividad actualizada correctamente.');
+  await activityUpdateNotification.getByRole('button', { name: 'Aceptar' }).click();
   const browserProjectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
   expect(browserProjectionResponse.ok()).toBeTruthy();
   const browserProjection = (await browserProjectionResponse.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos.fields;
