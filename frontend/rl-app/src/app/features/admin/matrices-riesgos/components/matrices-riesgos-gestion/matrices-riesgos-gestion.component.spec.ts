@@ -180,6 +180,36 @@ describe('MatricesRiesgosGestionComponent', () => {
     }));
   });
 
+  it('devuelve el foco al botón Nuevo riesgo después de cerrar la notificación de guardado', async () => {
+    const root = fixture.nativeElement as HTMLElement;
+    const trigger = root.querySelector<HTMLButtonElement>('[data-ui-action="new-risk"]');
+    expect(trigger).not.toBeNull();
+    if (!trigger) throw new Error('Falta botón de Nuevo riesgo en la UI institucional.');
+
+    let cerrarNotificacion!: () => void;
+    notification.notify.mockReturnValue(new Promise<void>(resolve => { cerrarNotificacion = resolve; }));
+    const focus = vi.spyOn(trigger, 'focus');
+    trigger.click();
+    fixture.detectChanges();
+    component.codigo = 'R-080';
+    component.nombre = 'Riesgo con retorno de foco';
+    // Simulate the application being inert while the shared institutional alert is open.
+    root.setAttribute('inert', '');
+    try {
+      await component.guardar();
+      expect(component.modalRiesgoAbierto()).toBe(false);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(focus).not.toHaveBeenCalled();
+
+      root.removeAttribute('inert');
+      cerrarNotificacion();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(focus).toHaveBeenCalled();
+    } finally {
+      root.removeAttribute('inert');
+    }
+  });
+
   it('edita un riesgo con descripción null inicializando string vacío', () => {
     component.editar(riesgoInactivo);
     expect(component.editandoId()).toBe(9);
