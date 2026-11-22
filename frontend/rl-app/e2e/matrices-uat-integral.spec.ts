@@ -1438,8 +1438,9 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
     await page.locator('#nombre-riesgo').fill(`Prueba local ${status}`);
     await page.getByRole('button', { name: 'Guardar nuevo riesgo' }).click();
     await confirmarAccionInstitucional(page, 'Crear riesgo');
-    await expect(createModal.getByRole('alert')).toContainText(`Error local HTTP ${status}`);
     await aceptarNotificacionInstitucional(page, 'No se pudo guardar el riesgo');
+    // The error remains in the institutional form after its blocking notification is dismissed.
+    await expect(createModal.getByRole('alert')).toContainText(`Error local HTTP ${status}`);
     await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
     const localDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
@@ -1452,8 +1453,8 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   nextUpdateFailure = 409;
   await page.getByRole('button', { name: 'Guardar cambios del riesgo' }).click();
   await confirmarAccionInstitucional(page, 'Guardar cambios');
-  await expect(editModal.getByRole('alert')).toContainText('Error local HTTP 409');
   await aceptarNotificacionInstitucional(page, 'No se pudo guardar el riesgo');
+  await expect(editModal.getByRole('alert')).toContainText('Error local HTTP 409');
   await expect(page.locator('[data-global-http-error]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Cancelar formulario de riesgo' }).click();
   const conflictDiscard = page.locator('[role="dialog"], [role="alertdialog"]').last();
