@@ -165,6 +165,9 @@ test('H08 certifica secuencialmente Angular real, vigencia, evaluaciones, integr
     const readbackResponse = page.waitForResponse(response => response.request().method() === 'GET'
       && /\/api\/matrices-riesgos\/formularios\/\d+$/.test(new URL(response.url()).pathname));
     await page.locator('#btn-guardar-builder').click();
+    const saveConfirmation = page.getByRole('button', { name: 'Sí, guardar definición' });
+    await expect(saveConfirmation).toBeVisible();
+    await saveConfirmation.click();
     const save = await saveResponse;
     if (save.status() < 200 || save.status() >= 300) {
       const responseBody = (await save.text()).slice(0, 2000);
