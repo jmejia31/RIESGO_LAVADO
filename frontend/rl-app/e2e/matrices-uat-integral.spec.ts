@@ -1745,16 +1745,26 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
   const selectorEvaluacionMonitoreo = page.getByRole('combobox', { name: 'Evaluación', exact: true });
   await selectorEvaluacionMonitoreo.click();
   await page.getByRole('option', { name: /#20 · Riesgo 7 · Borrador/ }).click();
-  await page.getByLabel('Código', { exact: true }).fill('ALE-UAT');
-  await page.getByLabel('Indicador', { exact: true }).fill('Umbral operativo UAT');
-  await page.getByRole('button', { name: 'Registrar alerta' }).click();
+  await page.getByRole('button', { name: 'Nueva señal de alerta' }).click();
+  const alertaModal = page.locator('dialog[aria-labelledby="titulo-modal-alerta"]');
+  await expect(alertaModal).toBeVisible();
+  await alertaModal.locator('#alerta-codigo').fill('ALE-UAT');
+  await alertaModal.locator('#alerta-indicador').fill('Umbral operativo UAT');
+  await alertaModal.getByRole('button', { name: 'Registrar alerta' }).click();
+  await confirmarAccionInstitucional(page, 'Registrar alerta');
   await expect.poll(() => recibidos['alerta']?.aleCodigo).toBe('ALE-UAT');
+  await aceptarNotificacionInstitucional(page, 'Señal de alerta registrada correctamente.');
 
-  await page.getByLabel('Estado del riesgo').selectOption('VIGENTE');
-  await page.getByLabel('Estado de controles').selectOption('SE_MANTIENE');
-  await page.getByLabel('Resultado').fill('Seguimiento conforme');
-  await page.getByRole('button', { name: 'Guardar monitoreo' }).click();
+  await page.getByRole('button', { name: 'Nuevo automonitoreo' }).click();
+  const automonitoreoModal = page.locator('dialog[aria-labelledby="titulo-modal-automonitoreo"]');
+  await expect(automonitoreoModal).toBeVisible();
+  await automonitoreoModal.locator('#mon-estado-riesgo').selectOption('VIGENTE');
+  await automonitoreoModal.locator('#mon-estado-controles').selectOption('SE_MANTIENE');
+  await automonitoreoModal.locator('#mon-resultado').fill('Seguimiento conforme');
+  await automonitoreoModal.getByRole('button', { name: 'Registrar automonitoreo' }).click();
+  await confirmarAccionInstitucional(page, 'Registrar automonitoreo');
   await expect.poll(() => recibidos['monitoreo']?.monResultado).toBe('Seguimiento conforme');
+  await aceptarNotificacionInstitucional(page, 'Automonitoreo registrado correctamente.');
 });
 
 test('H5-B: Ver evaluación abre sin consultar familias/1 hardcodeado, sin 404 y con consola limpia', async ({ page }) => {
