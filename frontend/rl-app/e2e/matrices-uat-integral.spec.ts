@@ -186,8 +186,11 @@ test.beforeEach(async ({ page }) => preparar(page));
 async function confirmarAccionInstitucional(page: Page, label: string): Promise<void> {
   const modal = page.locator('.swal2-popup.institutional-confirmation');
   await expect(modal).toBeVisible();
-  await modal.getByRole('button', { name: label, exact: true }).click();
-  await expect(modal).toHaveCount(0);
+  const actionButton = modal.getByRole('button', { name: label, exact: true });
+  await actionButton.click();
+  // A fast API success may replace the confirmation with a notification in the same tick.
+  // Assert the confirmation action disappeared, not that every institutional popup vanished.
+  await expect(actionButton).toHaveCount(0);
 }
 
 async function aceptarNotificacionInstitucional(page: Page, title?: string): Promise<void> {
