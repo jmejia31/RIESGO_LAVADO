@@ -1,0 +1,47 @@
+{
+  "project": "RIESGO_LAVADO",
+  "repository": "jmejia31/RIESGO_LAVADO",
+  "branch": "desarrollo",
+  "source_code_sha": "87e22d04f2f8f9082246a96f00eb1f76cba15878",
+  "base_sha": "e4f839a515ecd8b6ef922d2ce3f6b19ea9f6b0b6",
+  "ci_run": {
+    "run_id": 44975074761,
+    "url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761",
+    "main_job_id": 137063068350,
+    "main_job_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761/job/137063068350",
+    "conclusion": "failure"
+  },
+  "results": {
+    "e2e_passed": 82,
+    "e2e_skipped": 7,
+    "e2e_failed": 12,
+    "api_host_alive_during_full_e2e": true,
+    "fixture_cleanup_exit": 0,
+    "risk_remaining": 0,
+    "dependencies_remaining": 0,
+    "metadata_remaining": 0,
+    "cleanup_errors": 0,
+    "intentional_tx12_negative_fault": true
+  },
+  "failure_groups": {
+    "institutional_title_favicon": 4,
+    "matrices_uat_integral": 8,
+    "representative_failures": [
+      "timeout waiting for #plan-descripcion",
+      "missing [data-uat=feedback-edicion-exito]"
+    ]
+  },
+  "scope": {
+    "oracle_environment": "CI disposable Oracle XE only",
+    "institutional_oracle_touched": false,
+    "production_touched": false,
+    "main_modified": false,
+    "secrets_or_pii_published": false
+  },
+  "status": "BLOCKED",
+  "certified": false,
+  "owner_acceptance": "PENDING",
+  "evidence_commit_sha": "PENDING_FIRST_DOC_COMMIT",
+  "github_remote_verified": true,
+  "no_retry_after_failure": true
+}

@@ -694,6 +694,31 @@
       "main_modified": false,
       "owner_acceptance": "PENDING",
       "review_ready": "BLOCKED_PENDING_EXACT_SHA_CI_AND_DOCX_VISUAL_REVIEW"
+    },
+    {
+      "id": "P0-ORACLE-XE-CI-ATTEMPT-87E22D04-20261121",
+      "path": "P0_ORACLE_XE_CI_ATTEMPT_87E22D04_20261121.md",
+      "evidence_json_path": "P0_ORACLE_XE_CI_ATTEMPT_87E22D04_20261121.json",
+      "status": "BLOCKED",
+      "author": "COD",
+      "source_code_sha": "87e22d04f2f8f9082246a96f00eb1f76cba15878",
+      "evidence_commit_sha": "PENDING_FIRST_DOC_COMMIT",
+      "quality_gate_run": 44975074761,
+      "quality_gate_status": "FAILURE",
+      "github_quality_gate_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761",
+      "github_job_url": "https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761/job/137063068350",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/P0_ORACLE_XE_CI_ATTEMPT_87E22D04_20261121.md",
+      "github_evidence_index_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/INDEX.json",
+      "github_remote_verified": true,
+      "e2e_passed": 82,
+      "e2e_skipped": 7,
+      "e2e_failed": 12,
+      "fixture_cleanup": "PASS_ZERO_RESIDUALS",
+      "oracle_institutional_writes": 0,
+      "production_modified": false,
+      "main_modified": false,
+      "owner_acceptance": "PENDING",
+      "review_ready": "NO_BLOCKED_BY_12_E2E_FAILURES"
     }
   ]
 }

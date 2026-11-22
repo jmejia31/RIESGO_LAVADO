@@ -12878,3 +12878,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Publicación:** el commit funcional se publicó en `origin/desarrollo`. La documentación de esta entrada se publicará en un commit separado. Se conservaron los archivos no rastreados preexistentes y no se incluyeron en el stage.
 - **Punto exacto de continuación:** esperar la conclusión del Quality Gate del SHA `e87fbacc…`, consultar sus jobs y logs, actualizar el expediente con la conclusión real y mantener `BLOCKED` si cualquier control crítico falla o queda pendiente.
 
+## 2026-11-21 20:45 -06:00 — Intento único de cierre CI P0 Oracle XE (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`; `SOURCE_CODE_SHA=87e22d04f2f8f9082246a96f00eb1f76cba15878`.
+- **Objetivo:** verificar una sola vez la corrección de aislamiento de fixtures y del ciclo de vida del host Oracle XE antes del E2E genérico, sin tocar Oracle institucional, producción, `main` ni archivos ajenos.
+- **Cambio evaluado:** `tools/run_block7_oracle_e2e.sh` cierra el primer host descartable, comprueba la limpieza y levanta un segundo host con ámbito de fixtures nuevo para el E2E completo. No se hizo otra modificación después de este intento.
+- **CI:** [run 44975074761](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761), job principal [137063068350](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761/job/137063068350). Detección `SUCCESS`; job principal `FAILURE`.
+- **Resultado:** E2E completo `82 PASS`, `7 SKIP`, `12 FAIL`. Los fallos se agrupan en cuatro escenarios de título/favicon y ocho escenarios UAT de matrices; el log muestra, entre otros, timeout esperando `#plan-descripcion` y ausencia de `[data-uat="feedback-edicion-exito"]`.
+- **Contención y seguridad:** la API permaneció activa durante el E2E; la limpieza descartable pasó con `CLEANUP_EXIT=0`, residuos de riesgos/dependencias/metadatos `0` y errores de limpieza `0`. No hubo escrituras en Oracle institucional/producción ni publicación de secretos, dumps o PII.
+- **Estado:** `P0_ORACLE_XE_STATUS=BLOCKED`; no se certifican `59/59`, `2006/2006` ni aceptación del propietario. Por instrucción del propietario, no se corrigió ni repitió la corrida después del fallo.
+- **Expediente:** `docs/certificaciones/P0_ORACLE_XE_CI_ATTEMPT_87E22D04_20261121.md` y `.json`.
+- **Punto exacto de continuación:** revisión autorizada de los doce fallos en una intervención posterior. No sustituir el fallo CI por pruebas manuales ni declarar éxito por los casos aprobados.
+

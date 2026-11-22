@@ -1,3 +1,14 @@
+# ESTADO VIGENTE — Intento CI P0 Oracle XE detenido por fallo real (COD, 2026-11-21 20:45 -06:00)
+
+- **Estado actual:** `BLOCKED`; no se declara `READY_FOR_OWNER_VISUAL_ACCEPTANCE`.
+- **Fuente de código:** `desarrollo` @ `87e22d04f2f8f9082246a96f00eb1f76cba15878`; publicación funcional verificada en `origin/desarrollo`.
+- **Quality Gate único posterior a la corrección:** [run 44975074761](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/44975074761), `FAILURE`; E2E completo `82 PASS`, `7 SKIP`, `12 FAIL`.
+- **Fallo vigente:** cuatro escenarios de título/favicon y ocho escenarios UAT de matrices; síntomas observados: timeout esperando `#plan-descripcion` y ausencia de `[data-uat="feedback-edicion-exito"]`. La API Oracle permaneció viva durante el E2E, por lo que el defecto de host apagado quedó resuelto, pero no la certificación.
+- **Oracle y seguridad:** fixture descartable limpiado (`CLEANUP_EXIT=0`, riesgos/dependencias/metadatos restantes `0`, errores `0`); Oracle institucional, producción y `main` no fueron tocados.
+- **Decisión:** por instrucción del propietario no se realizó otra corrección ni otra ejecución después de este fallo. Las pruebas manuales no sustituyen este Quality Gate.
+- **Evidencia:** `docs/certificaciones/P0_ORACLE_XE_CI_ATTEMPT_87E22D04_20261121.md` y `.json`.
+- **Continuación:** una intervención posterior y autorizada debe revisar los doce fallos sin ocultar errores ni modificar datos. La aceptación del propietario permanece `PENDING`.
+
 # ESTADO VIGENTE — Cierre técnico P0 Oracle XE (COD, 2026-11-21 14:30 -06:00)
 
 - **Estado actual:** `INTEGRATED_NOT_CERTIFIED` / `BLOCKED`.
