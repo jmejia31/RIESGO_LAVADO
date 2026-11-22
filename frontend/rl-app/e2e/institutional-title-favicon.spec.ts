@@ -173,12 +173,17 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
 
     await inputNombre.fill('Portal Institucional de Riesgos');
     await inputIcono.fill('/uploads/icono-b.png');
+    const saveResponse = page.waitForResponse(response =>
+      response.request().method() === 'PUT'
+      && new URL(response.url()).pathname === '/api/configuracion/sistema'
+      && response.status() === 200);
     await btnGuardar.click();
 
     // Confirmar en el modal de confirmación institucional
     const btnConfirmar = page.getByRole('button', { name: 'Sí, guardar' });
     await expect(btnConfirmar).toBeVisible();
     await btnConfirmar.click();
+    await saveResponse;
 
     // 3. Verificación de actualización en caliente SIN recarga de página (ANGULAR_RESTART_REQUIRED=NO)
     await expect(page).toHaveTitle('Portal Institucional de Riesgos | Gestión de Riesgos LA/FT');
@@ -262,12 +267,17 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
     const btnGuardar = page.locator('button[aria-label="Guardar cambios del sistema"]');
 
     await inputIcono.fill('');
+    const saveResponse = page.waitForResponse(response =>
+      response.request().method() === 'PUT'
+      && new URL(response.url()).pathname === '/api/configuracion/sistema'
+      && response.status() === 200);
     await btnGuardar.click();
 
     // Confirmar en el modal de confirmación institucional
     const btnConfirmar = page.getByRole('button', { name: 'Sí, guardar' });
     await expect(btnConfirmar).toBeVisible();
     await btnConfirmar.click();
+    await saveResponse;
 
     // Comprobar que el favicon se restableció inmediatamente a favicon.ico
     const fallbackFavicon = page.locator('link[rel="icon"]');
@@ -459,6 +469,12 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
 
     // 4. Verificar indicador de estado "Listo para guardar"
     await expect(page.locator('text=Listo para guardar')).toBeVisible();
+    // Upload triggers an institutional success notification that must be acknowledged
+    // before the underlying configuration-save button becomes interactive.
+    const uploadNotification = page.locator('.swal2-popup.institutional-confirmation');
+    await expect(uploadNotification).toContainText('Favicon convertido y verificado');
+    await uploadNotification.getByRole('button', { name: 'Aceptar', exact: true }).click();
+    await expect(uploadNotification).toHaveCount(0);
 
     // 5. La miniatura debe ir al backend y no a localhost:4200/uploads (Angular).
     await expect(page.locator('img[alt="Favicon 16x16"]')).toHaveAttribute(
