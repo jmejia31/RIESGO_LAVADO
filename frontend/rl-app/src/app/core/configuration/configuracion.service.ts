@@ -79,7 +79,10 @@ export class ConfiguracionService {
   GuardarConfiguracion(config: ConfigSistema) {
     const operacionActual = ++this.secuenciaOperacion;
     this.versionFavicon++;
+    // ConfiguracionComponent already obtains explicit institutional confirmation before this call.
+    // Prevent the global HTTP interceptor from requesting a second confirmation dialog.
     return this.http.put<{ success: boolean, mensaje: string }>(`${this.apiUrl}/sistema`, config, {
+      headers: { [CONFIRMACION_CAMBIOS_HEADER]: '1' },
       context: createHttpErrorScopeContext('local')
     })
       .pipe(
