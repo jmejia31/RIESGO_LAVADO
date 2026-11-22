@@ -371,7 +371,83 @@ echo 'P0_DELETE_REAL_BROWSER_E2E=PASS'
 # Oracle-backed API host is alive. The EXIT trap shuts port 5043 down after
 # this script returns, so running the suite later would create false API
 # timeouts for tests that depend on the real host.
+first_api_log="$api_log"
 if [[ "${RL_BLOCK7_FULL_REPOSITORY_E2E_REQUIRED:-}" == "true" ]]; then
+  # The targeted suites above intentionally mutate their dedicated H08/P0/TX12
+  # fixtures.  The repository suite includes those same real tests, so it must
+  # receive a fresh fixture scope; otherwise its initial Oracle snapshots would
+  # fail because a previous test in this process already changed them.  Restart
+  # only the disposable host (not Oracle XE) to obtain a new timestamped scope.
+  first_api_log="$api_log"
+  first_api_pid="$api_pid"
+  first_host_exit_code=0
+  first_host_cleanup_code=0
+  first_host_waited=0
+
+  if [[ "${RL_P03_TX12_AUDIT_FAILURE_REQUIRED:-}" == "true" && "$tx12_disabled" != "true" ]] &&
+     kill -0 "$first_api_pid" 2>/dev/null; then
+    if ! curl --silent --show-error --fail --max-time 15 \
+         --request POST http://127.0.0.1:5043/__e2e/tx12-audit-disable >/dev/null; then
+      first_host_cleanup_code=1
+    fi
+  fi
+  if kill -0 "$first_api_pid" 2>/dev/null; then
+    if ! curl --silent --show-error --fail --max-time 15 \
+         --request POST http://127.0.0.1:5043/__e2e/shutdown >/dev/null; then
+      first_host_cleanup_code=1
+    fi
+    while kill -0 "$first_api_pid" 2>/dev/null && (( first_host_waited < 120 )); do
+      sleep 1
+      first_host_waited=$((first_host_waited + 1))
+    done
+    if kill -0 "$first_api_pid" 2>/dev/null; then
+      first_host_cleanup_code=1
+      kill -TERM "$first_api_pid" 2>/dev/null || true
+      sleep 2
+      if kill -0 "$first_api_pid" 2>/dev/null; then
+        kill -KILL "$first_api_pid" 2>/dev/null || true
+      fi
+    fi
+  fi
+  if wait "$first_api_pid" 2>/dev/null; then
+    first_host_exit_code=0
+  else
+    first_host_exit_code=$?
+  fi
+  if [[ "$first_host_exit_code" -ne 0 || "$first_host_cleanup_code" -ne 0 ]] ||
+     ! grep -Fq 'BLOCK7_FIXTURE_RISK_CLEANUP_VERIFIED=YES' "$first_api_log" ||
+     ! grep -Fq 'BLOCK7_FIXTURE_RISK_REMAINING=0' "$first_api_log" ||
+     ! grep -Fq 'BLOCK7_FIXTURE_DEPENDENCIES_REMAINING=0' "$first_api_log" ||
+     ! grep -Fq 'BLOCK7_FIXTURE_METADATA_REMAINING=0' "$first_api_log" ||
+     ! grep -Fq 'BLOCK7_FIXTURE_CLEANUP_ERRORS=0' "$first_api_log"; then
+    echo 'BLOCK7_FIRST_HOST_CLEANUP=FAIL' >&2
+    sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$first_api_log" | tail -n 160 >&2
+    exit 1
+  fi
+  echo 'BLOCK7_FIRST_HOST_CLEANUP=PASS'
+
+  api_log="${RUNNER_TEMP:-/tmp}/block7-e2e-api-full.log"
+  dotnet "$api_dll" >"$api_log" 2>&1 &
+  api_pid=$!
+  tx12_disabled=false
+  ready=false
+  for attempt in $(seq 1 60); do
+    if curl --silent --show-error --fail http://127.0.0.1:5043/__e2e/readyz >/dev/null; then
+      ready=true
+      break
+    fi
+    if ! kill -0 "$api_pid" 2>/dev/null; then
+      sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+  if [[ "$ready" != "true" ]]; then
+    sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 160 >&2
+    exit 1
+  fi
+  echo 'BLOCK7_FULL_E2E_FRESH_API_ORACLE_READY=PASS'
+
   pushd "$repo_root/frontend/rl-app" >/dev/null
   if ! full_e2e_output="$(npm run e2e 2>&1 | tee /dev/stderr)"; then
     popd >/dev/null
@@ -388,11 +464,14 @@ if [[ "${RL_BLOCK7_FULL_REPOSITORY_E2E_REQUIRED:-}" == "true" ]]; then
 fi
 
 grep -Fq 'BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006' <<<"$browser_output"
-# Inspect only the API host log and report counts, never exception text or connection data.
-api_log_without_expected_tx12="$(mktemp)"
-awk -v start="$tx12_log_start_line" -v end="$tx12_log_end_line" 'NR <= start || NR > end' "$api_log" > "$api_log_without_expected_tx12"
-oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_log_without_expected_tx12" || true)"
-rm -f "$api_log_without_expected_tx12"
+# Inspect both disposable API host logs and report counts, never exception text
+# or connection data.  TX12 deliberately raises ORA-20991; filter that exact
+# expected fault instead of excluding a broad log range that could hide other
+# Oracle failures from the full repository suite.
+api_logs_to_scan="$(mktemp)"
+cat "$first_api_log" "$api_log" > "$api_logs_to_scan"
+oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_logs_to_scan" | grep -Eiv 'ORA-20991|TX12 disposable audit failure' || true)"
+rm -f "$api_logs_to_scan"
 if [[ -n "$oracle_error_matches" ]]; then
   oracle_error_count="$(printf '%s\n' "$oracle_error_matches" | wc -l | tr -d '[:space:]')"
   echo "BLOCK7_UNEXPECTED_ORACLE_ERRORS=$oracle_error_count" >&2
