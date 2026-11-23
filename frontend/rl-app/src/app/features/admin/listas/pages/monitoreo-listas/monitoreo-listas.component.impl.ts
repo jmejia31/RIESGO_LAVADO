@@ -1456,7 +1456,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       ['Nombre / Razón Social:', row.nombre || 'N/D', 'Proveedor IHSS:', row.esProveedorIhss || 'No'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row)],
       ['Fecha Coincidencia:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
-      ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente)]
+      ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)]
     ];
 
     autoTableInstitucional(doc, {
@@ -1620,7 +1620,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           ['Nombre / Razón Social:', row.nombre || 'N/D', 'Proveedor IHSS:', row.esProveedorIhss || 'No'],
           ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row)],
           ['Fecha Coincidencia:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
-          ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente)],
+          ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este patrono.']
