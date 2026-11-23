@@ -12958,3 +12958,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservación:** no se iniciaron ni detuvieron servicios; `main`, producción, Oracle institucional, Configuración de cálculo y archivos no rastreados ajenos permanecen intactos.
 - **Estado:** `BLOCK12_HARNESS_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; no se declara certificación hasta leer el resultado exacto.
 
+## 2026-11-23 12:11 -06:00 — Resultado del Quality Gate posterior al arnés Block 12 (COD)
+
+- **Evidencia:** Quality Gate [45233074442](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45233074442) sobre `93f7d70ef3b03573dfc0f016ac318c6da62969c2` terminó `failure`.
+- **Resultado del objetivo original:** `Reproduce pre-fix Full Matrix failure on disposable Oracle XE` pasó. El diagnóstico emitió `projectionHttpStatus=409`, `monitoringHttpStatus=200`, identidad/hash preservados y `BLOCK12_PRE_FIX_DIAGNOSTIC` válido.
+- **Fallo nuevo, independiente:** `Reconcile all 59 canonical risk identities through Oracle XE API and consolidated projection` falló en `RCUMP-COMPRAS-37` porque Oracle XE no aceptó conexiones: `ORA-50201` / `ORA-12516`, listener `127.0.0.1:1521` sin protocol handler listo para el servicio `XE`. La API devolvió HTTP 500 y la prueba esperaba `OK`.
+- **Afectación:** el fallo corresponde a disponibilidad/estado del Oracle XE descartable del runner; no es una modificación del endpoint ni del arnés Block 12. La limpieza previa reportó `BLOCK12_ORACLE_59_IDENTITY_CLEANUP=PASS`. No se ejecutó otra corrección.
+- **Cambios de esta revisión:** ninguno adicional al commit `93f7d70e`; no se tocó código productivo, Oracle institucional, `main`, producción, servicios manuales ni datos reales. Los archivos no rastreados preexistentes permanecen fuera del stage.
+- **Dictamen:** `BLOCKED` por infraestructura Oracle XE en el Quality Gate completo. No se declara CI verde ni certificación total. Conforme a la instrucción del propietario, se detiene aquí y no se inicia otro ciclo de prueba/error sin una decisión explícita.
+- **Punto exacto de continuación:** revisar/reintentar el runner Oracle XE o su capacidad de listener fuera de esta intervención; si se solicita una nueva ejecución, partir de `93f7d70e` sin modificar código hasta contar con evidencia nueva.
+

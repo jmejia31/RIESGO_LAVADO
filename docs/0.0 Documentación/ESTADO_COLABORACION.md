@@ -5987,3 +5987,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Validación local:** `git diff --check=PASS`; sintaxis Bash normalizada `PASS`; selección del harness histórico `PASS`. Playwright/Oracle XE local quedan pendientes; no se alteraron servicios manuales.
 - **Estado:** `BLOCK12_HARNESS_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `PACKAGE_C_INSTITUTIONAL_STATUS=PENDING_AUTHORIZED_READ_ONLY_REVALIDATION`; `OWNER_SIGNOFF=PENDING`.
 - **Punto exacto de continuación:** publicar este cambio selectivo, leer una sola vez el nuevo Quality Gate y, si vuelve a fallar, conservar el bloqueo y reportar la causa sin aplicar otra corrección no demostrada.
+
+## Estado vigente — Quality Gate Block 12 y bloqueo Oracle XE — 2026-11-23 12:11 -06:00 (COD)
+
+- **Source Code SHA:** `93f7d70ef3b03573dfc0f016ac318c6da62969c2`, publicado en `origin/desarrollo`.
+- **Quality Gate:** [45233074442](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45233074442) terminó `failure`.
+- **Prueba corregida:** `Reproduce pre-fix Full Matrix failure on disposable Oracle XE` = `PASS`; la evidencia real confirma HTTP `409` para la fixture histórica incompleta y conserva identidad/hash.
+- **Fallo bloqueante:** `Reconcile all 59 canonical risk identities through Oracle XE API and consolidated projection` en `RCUMP-COMPRAS-37`; Oracle XE produjo `ORA-50201` y `ORA-12516` porque el listener en `127.0.0.1:1521` no tenía protocol handler listo para `XE`. La API respondió HTTP 500 donde la prueba esperaba `OK`.
+- **Interpretación:** es un fallo de disponibilidad del Oracle XE descartable del runner, posterior y ajeno a la corrección del arnés Block 12. No hay evidencia de pérdida de datos institucionales ni de un defecto nuevo del endpoint.
+- **Estado:** `BLOCK12_HARNESS_CORRECTED=YES`; `BLOCK12_REGRESSION_REPRODUCTION=PASS`; `QUALITY_GATE_STATUS=BLOCKED_ORACLE_XE`; `FINAL_P0_CERTIFICATION=BLOCKED`; `OWNER_SIGNOFF=PENDING`.
+- **Preservación:** no hubo cambios adicionales en esta revisión; no se tocó código productivo, Oracle institucional, `main`, producción, servicios manuales ni archivos no rastreados ajenos.
+- **Punto exacto de continuación:** no realizar otra corrección de código. Solo reintentar el Quality Gate cuando se resuelva la disponibilidad del listener Oracle XE, partiendo del SHA publicado y verificando la infraestructura antes de ejecutar.
