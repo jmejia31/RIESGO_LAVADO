@@ -12928,3 +12928,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `PACKAGE_C_INSTITUTIONAL_STATUS=PENDING_AUTHORIZED_READ_ONLY_REVALIDATION`; `OWNER_SIGNOFF=PENDING`.
 - **Punto exacto de continuación:** publicar este handoff, verificar `HEAD == origin/desarrollo`, esperar la conclusión del Quality Gate de `f9badb47`, reparar/restaurar dependencias frontend sin detener servicios manuales y ejecutar la lectura Oracle autorizada/sanitizada antes de certificar.
 
+## 2026-11-23 10:46 -06:00 — Corrección inmediata de regresión TypeScript detectada por Quality Gate (COD)
+
+- **Evidencia:** el Quality Gate [45217917089](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45217917089) terminó `failure`. Los validadores, restore, seguridad de picomatch, ESLint, build .NET y controles Oracle previos pasaron; Angular falló con `TS2339: Property 'tipoFuente' does not exist on type 'CoincidenciaJuridica'` en las dos exportaciones de patrono.
+- **Causa:** el cambio de origen histórico pasó `row.tipoFuente` a dos reportes jurídicos, aunque ese contrato solo existe en naturales/empleados. El error fue introducido por esta intervención y queda reconocido, no atribuido a infraestructura.
+- **Corrección:** se retiró únicamente el argumento incompatible de las dos llamadas jurídicas; naturales y empleados mantienen la etiqueta de origen histórico. No se modificaron contratos de jurídica, reglas, datos ni Oracle.
+- **Código corregido y publicado:** `d05371b5bb7bdebf6acbfcb32f5887e5471dc5e6` (`fix(listas): conserva contrato juridico en reportes`).
+- **Verificación posterior:** `MonitoreoFuenteM1Tests` volvió a pasar `23/23`; `git diff --check` no reportó errores. La compilación Angular local sigue pendiente por `node_modules` incompleto, por lo que el nuevo Quality Gate es la validación decisiva.
+- **Estado CI posterior:** el push de la corrección generó un nuevo Quality Gate; no se declara verde hasta leer su conclusión exacta. El expediente Word fue actualizado con el SHA corregido y la causa de la regresión; su render visual sigue pendiente por falta de Word/LibreOffice.
+- **Punto exacto de continuación:** leer el nuevo run de `d05371b5`, conservar `BLOCKED` si falla cualquier control, y no repetir ciclos adicionales sin una causa nueva verificable.
+
