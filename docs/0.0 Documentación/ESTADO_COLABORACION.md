@@ -1,3 +1,13 @@
+# ESTADO VIGENTE — Quality Gate Oracle XE y reparación Angular cerrados (COD, 2026-11-23 14:33 -06:00)
+
+- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; `SOURCE_CODE_SHA=e96fc9681cad37e65e5898bded1742a7a7fdb382`; publicado en `origin/desarrollo`. Se preservan todas las entradas anteriores de continuidad.
+- **Corrección funcional:** `backend/RL.API.Tests/Features/MatricesRiesgos/InstitutionalProjectionOracleIntegrationTests.cs` usa el pool acotado existente (`MaxPoolSize=4`) para la reconciliación canónica de 59 identidades; no se modificaron producción, Oracle institucional, esquema, migraciones, datos, `main` ni contratos productivos.
+- **Frontend local:** `npm ci --ignore-scripts --no-audit --no-fund` PASS en `frontend/rl-app` (`515` paquetes); prueba Angular focalizada PASS (`1` archivo, `21/21`); `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`. La dependencia `@angular/build:dev-server` queda instalada para `ng serve -o` manual.
+- **Quality Gate exacto:** [run 45256539528](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45256539528), SHA exacto `e96fc9681cad37e65e5898bded1742a7a7fdb382`, `completed/success`. Pasaron el paso de reconciliación `59/59`, las `2006/2006` proyecciones/cálculos, Oracle XE descartable, transiciones y auditoría, contenedores, validadores, build, E2E y npm audit.
+- **Estado real:** `WORKSPACE_NODE_MODULES_REPAIR=PASS`; `ANGULAR_FOCUSED_TEST=21/21 PASS`; `ANGULAR_BUILD=PASS_WITH_EXISTING_WARNINGS`; `ORACLE_XE_QUALITY_GATE=PASS`; `SOURCE_CODE_CERTIFIED_BY_CI=YES`; `PRODUCTION_ORACLE_TOUCHED=NO`; `LOCAL_SERVICES_STARTED_OR_STOPPED=NO`; `OWNER_FUNCTIONAL_ACCEPTANCE=PENDING`.
+- **Limitaciones:** la prueba .NET focalizada local no usó Oracle porque no estaba habilitado (`1/1` por retorno de configuración); la certificación física equivalente sí quedó cubierta por el Quality Gate de GitHub. No se inició ni detuvo backend/frontend local.
+- **Punto exacto de continuación:** el propietario puede levantar manualmente backend y frontend y ejecutar la aceptación visual/funcional local; conservar `e96fc9681cad37e65e5898bded1742a7a7fdb382` como SHA de código certificado. No repetir correcciones ni tocar producción/Oracle institucional sin un fallo reproducible y evidencia concreta.
+
 # ESTADO VIGENTE — Excepción estricta para aborto de favicon obsoleto en E2E (CHAT, 2026-11-23)
 
 - **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; autor `CHAT`; **SHA del cambio de prueba:** `0b5407d7b097008722861a09171797432ffdf026`. Se preservan todas las entradas anteriores de continuidad.

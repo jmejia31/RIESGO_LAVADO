@@ -1,3 +1,14 @@
+## 2026-11-23 14:33 -06:00 — Cierre de corrección Oracle XE y reparación Angular (COD)
+
+- **Base y cierre:** rama `desarrollo`; código funcional publicado en `origin/desarrollo` con `SOURCE_CODE_SHA=e96fc9681cad37e65e5898bded1742a7a7fdb382`. Se preservaron los archivos sin seguimiento ajenos y no se incluyeron en el stage.
+- **Objetivo:** resolver la dependencia Angular incompleta en `node_modules` y el `ORA-12516` del Quality Gate en `Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection`.
+- **Diagnóstico reproducido:** la instalación Angular estaba incompleta (`@angular/core` inválido y sin `@angular/core/testing`); una primera instalación fue bloqueada por `EBUSY` en `sass-embedded` mientras un proceso manual retenía archivos. No se detuvo ningún servicio manual ni se forzó limpieza.
+- **Corrección funcional:** `backend/RL.API.Tests/Features/MatricesRiesgos/InstitutionalProjectionOracleIntegrationTests.cs` ahora construye la API de prueba de la reconciliación canónica con `useBoundedConnectionPool: true`, reutilizando el pool máximo 4 ya empleado por las pruebas Block 12 estables. No se modificaron API productiva, Oracle institucional, esquema, migraciones ni datos.
+- **Verificación local fresca:** `frontend/rl-app/npm ci --ignore-scripts --no-audit --no-fund` PASS (`515` paquetes); prueba Angular focalizada PASS (`1` archivo, `21/21`); `npm run build` PASS con advertencias preexistentes de presupuesto SCSS y CommonJS `exceljs`; prueba .NET focalizada compiló y PASS localmente sin opt-in Oracle (`1/1`, retorno por configuración ausente), sin presentarla como prueba física Oracle.
+- **Quality Gate exacto:** [run 45256539528](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45256539528), SHA exacto `e96fc9681cad37e65e5898bded1742a7a7fdb382`, terminó `completed/success`. Pasaron validadores, build, pruebas, `59/59` identidades canónicas, `2006/2006` cálculos/proyecciones, transiciones Oracle XE, contenedores, auditorías y npm audit; el paso que fallaba por `ORA-12516` terminó `success`.
+- **Alcance y limitaciones:** no se ejecutó Oracle XE local ni se tocó la base productiva; no se iniciaron ni detuvieron servicios locales. `ng serve -o` queda disponible para ejecución manual del propietario. Las advertencias de build no son errores bloqueantes.
+- **Punto de continuación:** aceptación funcional/visual del propietario en el entorno local; conservar este SHA como fuente de código certificada por el Quality Gate y no modificar producción, Oracle institucional o `main` sin autorización.
+
 ## 2026-11-23 14:08 -06:00 — Corrección quirúrgica de Oracle XE y validación Angular (COD)
 
 - **Base:** rama `desarrollo`, `HEAD=origin/desarrollo=c8de16859cc3acf6730c1c00b17bec5ae2f69a78`; se preservaron todos los archivos sin seguimiento ajenos y no se incluyeron en el stage.
