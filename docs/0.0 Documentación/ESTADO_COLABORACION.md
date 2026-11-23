@@ -5998,3 +5998,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Estado:** `BLOCK12_HARNESS_CORRECTED=YES`; `BLOCK12_REGRESSION_REPRODUCTION=PASS`; `QUALITY_GATE_STATUS=BLOCKED_ORACLE_XE`; `FINAL_P0_CERTIFICATION=BLOCKED`; `OWNER_SIGNOFF=PENDING`.
 - **Preservación:** no hubo cambios adicionales en esta revisión; no se tocó código productivo, Oracle institucional, `main`, producción, servicios manuales ni archivos no rastreados ajenos.
 - **Punto exacto de continuación:** no realizar otra corrección de código. Solo reintentar el Quality Gate cuando se resuelva la disponibilidad del listener Oracle XE, partiendo del SHA publicado y verificando la infraestructura antes de ejecutar.
+
+## Estado vigente — Auditoría directa de producción y corrección null-safe — 2026-11-23 13:28 -06:00 (COD)
+
+- **Base / rama:** `f62770bb292692c84d233b3bba7f31f266fe1145` / `desarrollo`; publicación de esta corrección pendiente al cierre de la intervención.
+- **Destino real:** perfil `PRODUCTION`, `HPPROD1` / servicio `hpprod1`, esquema y usuario `RIESGO_LAVADO`. La verificación no usó Oracle XE.
+- **Hallazgo comprobado:** producción contiene `52` controles; en los `52/52` `CON_ESTADO_MONITOREO` es `NULL`. Tipo, descripción, automatización, estado y efectividad no son nulos. El auditor fallaba al convertir el nulo mediante `NVL(..., '')` y leerlo con `GetString`; Oracle considera la cadena vacía como nula.
+- **Corrección aplicada:** `tools/AuditMatricesExcelVsProduction/Program.cs` usa lectura `IsDBNull` para los campos nullable y conserva el resto del contrato. No se cambió backend productivo, datos, migraciones ni Oracle.
+- **Evidencia ejecutada:** `SET TRANSACTION READ ONLY`; `PRODUCTION_DML=0`; `PRODUCTION_DDL=0`; `DATABASE_WRITES=0`; build del auditor PASS (`0` errores, `15` advertencias); auditoría directa PASS (`EXIT_CODE=0`, `59/59` riesgos, `4838/4838` posiciones, `0` no clasificadas, `0` errores técnicos).
+- **Servicios y alcance:** backend/frontend no fueron iniciados ni detenidos; E2E visual y pruebas de interfaz quedan pendientes; `Configuración de cálculo` permanece intacta. `scratch_excel_59x82.json` y los no rastreados previos permanecen fuera del stage.
+- **Estado vigente:** `PRODUCTION_READ_ONLY_AUDIT=PASS`; `AUDITOR_NULL_HANDLING=CORRECTED`; `P0_CERTIFICATION=BLOCKED` hasta publicar y leer el Quality Gate del nuevo SHA y completar las validaciones restantes. No declarar certificación total por esta auditoría aislada.
+- **Punto exacto de continuación:** commit/push selectivo del auditor y documentación, verificación de `HEAD == origin/desarrollo`, lectura única del Quality Gate resultante y detenerse si aparece una causa nueva no demostrada.

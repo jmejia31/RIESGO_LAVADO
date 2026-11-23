@@ -12968,3 +12968,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Dictamen:** `BLOCKED` por infraestructura Oracle XE en el Quality Gate completo. No se declara CI verde ni certificación total. Conforme a la instrucción del propietario, se detiene aquí y no se inicia otro ciclo de prueba/error sin una decisión explícita.
 - **Punto exacto de continuación:** revisar/reintentar el runner Oracle XE o su capacidad de listener fuera de esta intervención; si se solicita una nueva ejecución, partir de `93f7d70e` sin modificar código hasta contar con evidencia nueva.
 
+## 2026-11-23 13:28 -06:00 — Revalidación autorizada contra Oracle institucional y corrección del auditor (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; base `f62770bb292692c84d233b3bba7f31f266fe1145`. No se modificó `main`, producción como código desplegado ni ningún archivo ajeno sin seguimiento.
+- **Objetivo:** comprobar el fallo usando la base real seleccionada por el perfil actual y no Oracle XE descartable; corregir únicamente el defecto demostrado que impedía leerla.
+- **Destino comprobado:** `Database:Profile=PRODUCTION`; `DB_NAME=HPPROD1`; `SERVICE_NAME=hpprod1`; `INSTANCE_NAME=hpprod1`; `CURRENT_SCHEMA=RIESGO_LAVADO`; `SESSION_USER=RIESGO_LAVADO`. La conexión fue directa a la base institucional configurada.
+- **Protección:** se estableció `SET TRANSACTION READ ONLY`; solo se ejecutaron consultas `SELECT`; `PRODUCTION_DML=0`; `PRODUCTION_DDL=0`; `DATABASE_WRITES=0`. No se alteró ningún registro, esquema, migración ni servicio manual.
+- **Causa exacta:** los 52 controles existentes tienen `CON_ESTADO_MONITOREO IS NULL`. El auditor usaba `NVL(CON_ESTADO_MONITOREO, '')`, pero Oracle trata `''` como `NULL`, y luego llamaba `GetString` sobre esa columna. El backend productivo ya usa lectura nullable para ese campo; el fallo era del auditor del Quality Gate, no una pérdida de información.
+- **Corrección quirúrgica:** `tools/AuditMatricesExcelVsProduction/Program.cs` dejó de depender de `NVL(..., '')` y lee `CON_ESTADO_MONITOREO`/`CON_AUTOMATIZACION` con `IsDBNull`, preservando el valor vacío sin modificar la base.
+- **Verificación:** build del auditor PASS, `0` errores y `15` advertencias de analizadores preexistentes; auditoría completa directa sobre producción PASS con `EXIT_CODE=0`, `59/59` riesgos, `4838/4838` posiciones, `0` no clasificadas, `0` errores técnicos, `0` escrituras y `DATABASE_WRITES=0`.
+- **Pruebas no ejecutadas:** no se iniciaron backend/frontend; no se ejecutó E2E visual ni se intentó corregir Oracle XE. El archivo local `scratch_excel_59x82.json` quedó fuera del stage junto con los artefactos no rastreados preexistentes.
+- **Estado:** `PRODUCTION_READ_ONLY_AUDIT=PASS`; `AUDITOR_NULL_HANDLING=CORRECTED`; la certificación P0 integral continúa `BLOCKED` hasta el Quality Gate remoto del commit publicado y las pruebas/aceptación que aún correspondan. Esta evidencia sí corresponde a la base institucional real.
+- **Punto exacto de continuación:** publicar selectivamente el auditor y esta bitácora/estado en `origin/desarrollo`, verificar el SHA remoto y leer una sola vez el Quality Gate resultante; no tocar Oracle institucional ni hacer otro cambio sin una causa nueva.
+

@@ -335,7 +335,7 @@ public static class Program
 
         // Extracción de controles (esperado 0)
         var dbControlsByEva = new Dictionary<long, List<(string tipo, string desc, decimal efectividad, string estado, string automatizacion)>>();
-        await using (var cmd = new OracleCommand("SELECT CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, NVL(CON_EFECTIVIDAD_MONITOREO, 0), NVL(CON_ESTADO_MONITOREO, ''), NVL(CON_AUTOMATIZACION, '') FROM RL_MR_CONTROLES_RIESGO ORDER BY CON_EVALUACION_ID, CON_ID", conn))
+        await using (var cmd = new OracleCommand("SELECT CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, NVL(CON_EFECTIVIDAD_MONITOREO, 0), CON_ESTADO_MONITOREO, CON_AUTOMATIZACION FROM RL_MR_CONTROLES_RIESGO ORDER BY CON_EVALUACION_ID, CON_ID", conn))
         await using (var r = await cmd.ExecuteReaderAsync())
         {
             while (await r.ReadAsync())
@@ -344,8 +344,8 @@ public static class Program
                 string tipo = r.GetString(1).Trim();
                 string desc = r.GetString(2).Trim();
                 decimal ef = r.GetDecimal(3);
-                string est = r.GetString(4).Trim();
-                string auto = r.GetString(5).Trim();
+                string est = r.IsDBNull(4) ? string.Empty : r.GetString(4).Trim();
+                string auto = r.IsDBNull(5) ? string.Empty : r.GetString(5).Trim();
                 if (!dbControlsByEva.TryGetValue(eId, out var list))
                 {
                     list = new List<(string, string, decimal, string, string)>();
