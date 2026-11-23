@@ -53,10 +53,10 @@
         <article data-ui-monitoring-kpi="active" class="flex h-full flex-col rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Coincidencias activas</p>
           <p class="mt-2 text-3xl font-bold text-gray-900">{{ coincidenciasActivasGeneral() }}</p>
-          @if ((tipoActivo() === 'natural' || tipoActivo() === 'empleado') && totalCoincidenciasFuente() > totalGeneral()) {
-            <p class="mt-auto pt-2 text-xs text-gray-500">Grupos por DNI ({{ totalCoincidenciasFuente() }} coincidencias de origen)</p>
+          @if (tipoActivo() === 'natural' || tipoActivo() === 'empleado') {
+            <p class="mt-auto pt-2 text-xs text-gray-500">Registros agrupados por identificación ({{ totalCoincidenciasFuente() }} coincidencias de origen)</p>
           } @else {
-            <p class="mt-auto pt-2 text-xs text-gray-500">Total de coincidencias del tipo seleccionado</p>
+            <p class="mt-auto pt-2 text-xs text-gray-500">Registros de coincidencia del tipo seleccionado</p>
           }
         </article>
         <article data-ui-monitoring-kpi="pending" class="flex h-full flex-col rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm">

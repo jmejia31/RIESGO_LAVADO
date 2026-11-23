@@ -29,6 +29,14 @@ export interface RegistrarPositivoDto {
   idRegistroFuente?: number | null;
 }
 
+export type TipoFuenteMonitoreo =
+  | 'DNP_COINCIDENCIA'
+  | 'MANUAL_CUMPLIMIENTO'
+  | 'POSITIVO_DNP'
+  | 'NOTICIA_PRENSA'
+  | 'OTRO'
+  | 'ORIGEN_NO_DETERMINADO';
+
 export interface ExistingPositivo {
   tipoDocumentoId: number;
   motivoIngreso: string;
@@ -65,7 +73,7 @@ export interface CoincidenciaNatural {
   listaCoincidencia: string;
   totalRepetidos: number;
   idRegistroFuente?: number;
-  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP';
+  tipoFuente?: TipoFuenteMonitoreo;
   numeroPatronal?: string;
   categoriaIdentidad?: 'IDENTIFICADA' | 'SIN_IDENTIFICACION';
   fechaEncontro?: string | null;
@@ -83,7 +91,7 @@ export interface CoincidenciaEmpleado {
   listaCoincidencia: string;
   totalRepetidos: number;
   idRegistroFuente?: number;
-  tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP';
+  tipoFuente?: TipoFuenteMonitoreo;
   numeroPatrono?: string;
   categoriaIdentidad?: 'IDENTIFICADA' | 'SIN_IDENTIFICACION';
   fechaEncontro?: string | null;

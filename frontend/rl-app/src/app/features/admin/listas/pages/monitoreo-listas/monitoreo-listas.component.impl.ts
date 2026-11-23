@@ -90,6 +90,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
   formMotivo = signal<string>('');
   listaTiposListasCautela = signal<TipoListaCautela[]>([]);
   origenesRegistro = [
+    { valor: '', etiqueta: 'Origen no determinado (registro histórico)' },
     { valor: 'DNP_LISTAS', etiqueta: 'Coincidencia DNP / Listas' },
     { valor: 'MANUAL_CUMPLIMIENTO', etiqueta: 'Registro manual Sección de Cumplimiento' },
     { valor: 'NOTICIA_PRENSA', etiqueta: 'Noticia / Prensa / Medio externo' },
@@ -851,8 +852,23 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     return dateStr ? this.formatDate(dateStr) : 'N/D';
   }
 
-  private obtenerEtiquetaOrigenRegistro(origen?: string | null): string {
-    return this.origenesRegistro.find(item => item.valor === origen)?.etiqueta || 'N/D';
+  private obtenerEtiquetaOrigenRegistro(origen?: string | null, tipoFuente?: string | null): string {
+    const origenNormalizado = origen?.trim().toUpperCase() ||
+      (tipoFuente === 'DNP_COINCIDENCIA' || tipoFuente === 'POSITIVO_DNP' ? 'DNP_LISTAS' : '');
+    return this.origenesRegistro.find(item => item.valor === origenNormalizado)?.etiqueta
+      || 'Origen no determinado (registro histórico)';
+  }
+
+  private obtenerOrigenInicial(row: { esManual?: boolean; tipoFuente?: string | null }): string {
+    if (row.esManual) return 'MANUAL_CUMPLIMIENTO';
+    if (row.tipoFuente === 'DNP_COINCIDENCIA' || row.tipoFuente === 'POSITIVO_DNP') return 'DNP_LISTAS';
+    if (row.tipoFuente === 'NOTICIA_PRENSA' || row.tipoFuente === 'OTRO') return row.tipoFuente;
+    return '';
+  }
+
+  private normalizarOrigenParaFormulario(origen?: string | null): string {
+    const valor = origen?.trim().toUpperCase() || '';
+    return this.origenesRegistro.some(item => item.valor === valor && item.valor !== '') ? valor : '';
   }
 
   // Fecha propia del alta en Riesgo Lavado; no reemplaza la fecha de coincidencia de DNP.
@@ -1125,7 +1141,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       ['DNI / Identificación:', row.numeroIdentificacion || 'N/D', 'Nombre Completo:', row.nombre || 'N/D'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Total de Coincidencias:', String(row.totalRepetidos || 0)],
       ['Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
-      ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
+      ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente), '', '']
     ];
 
     autoTableInstitucional(doc, {
@@ -1310,7 +1326,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       ['DNI / Identidad:', row.identidad || 'N/D', 'Nombre Completo:', row.nombre || 'N/D'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Total de Coincidencias:', String(row.totalRepetidos || 0)],
       ['Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
-      ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
+      ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente), '', '']
     ];
 
     autoTableInstitucional(doc, {
@@ -1440,7 +1456,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       ['Nombre / Razón Social:', row.nombre || 'N/D', 'Proveedor IHSS:', row.esProveedorIhss || 'No'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row)],
       ['Fecha Coincidencia:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
-      ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)]
+      ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente)]
     ];
 
     autoTableInstitucional(doc, {
@@ -1604,7 +1620,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           ['Nombre / Razón Social:', row.nombre || 'N/D', 'Proveedor IHSS:', row.esProveedorIhss || 'No'],
           ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row)],
           ['Fecha Coincidencia:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
-          ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)],
+          ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente)],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este patrono.']
@@ -1658,7 +1674,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           ['DNI / Identificación', row.numeroIdentificacion || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
           ['Lista Coincidencia', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
           ['Estado Monitoreo', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
-          ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', ''],
+          ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente), '', ''],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para esta persona.'],
@@ -1721,7 +1737,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           ['DNI / Identidad', row.identidad || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
           ['Lista Coincidencia', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
           ['Estado Monitoreo', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
-          ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', ''],
+          ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro, row.tipoFuente), '', ''],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este empleado.'],
@@ -2297,7 +2313,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
 
     const defaultTipoDoc = this.deducirTipoDocumentoDefault(row, tipo);
     const defaultTipoCautela = this.deducirTipoListaCautelaDefault(row);
-    const defaultOrigen = row.esManual ? 'MANUAL_CUMPLIMIENTO' : 'DNP_LISTAS';
+    const defaultOrigen = this.obtenerOrigenInicial(row);
 
     this.formTipoDocId.set(defaultTipoDoc);
     this.formTipoListaCautelaId.set(defaultTipoCautela);
@@ -2324,7 +2340,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
           this.formTipoDocId.set(existing.tipoDocumentoId || defaultTipoDoc);
           this.formMotivo.set(existing.motivoIngreso || '');
           this.formTipoListaCautelaId.set(existing.tipoListaCautelaId || defaultTipoCautela);
-          this.formOrigenRegistro.set(existing.origenRegistro || defaultOrigen);
+          this.formOrigenRegistro.set(this.normalizarOrigenParaFormulario(existing.origenRegistro) || defaultOrigen);
         } else {
           this.formTipoDocId.set(defaultTipoDoc);
           this.formTipoListaCautelaId.set(defaultTipoCautela);
@@ -2390,7 +2406,7 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
     let docId = this.formTipoDocId();
     const motivo = this.formMotivo().trim();
     let cautelaId = this.formTipoListaCautelaId();
-    let origenRegistro = this.formOrigenRegistro();
+    let origenRegistro: string | null = this.formOrigenRegistro() || null;
     const comentarioSeg = this.formSeguimientoComentario().trim();
     const archivosSeg = this.archivosSeguimiento();
 
@@ -2424,12 +2440,17 @@ export class MonitoreoListasComponent implements OnInit, OnDestroy {
       cautelaId = this.deducirTipoListaCautelaDefault(this.entidadSeleccionada());
       this.formTipoListaCautelaId.set(cautelaId);
     }
-    if (!origenRegistro) {
-      origenRegistro = manual ? 'MANUAL_CUMPLIMIENTO' : 'DNP_LISTAS';
+    const puedePreservarOrigenNoDeterminado = !manual && idRegistroFuente !== null;
+    if (!origenRegistro && manual) {
+      origenRegistro = 'MANUAL_CUMPLIMIENTO';
+      this.formOrigenRegistro.set(origenRegistro);
+    }
+    if (!origenRegistro && !manual && !puedePreservarOrigenNoDeterminado) {
+      origenRegistro = 'DNP_LISTAS';
       this.formOrigenRegistro.set(origenRegistro);
     }
 
-    if (!docId || !cautelaId || !origenRegistro || !motivo) {
+    if (!docId || !cautelaId || !motivo || (!origenRegistro && !puedePreservarOrigenNoDeterminado)) {
       this.notificar('Campos requeridos', 'Por favor ingrese el motivo de ingreso a la lista de positivos.', 'warning', 'view');
       return;
     }

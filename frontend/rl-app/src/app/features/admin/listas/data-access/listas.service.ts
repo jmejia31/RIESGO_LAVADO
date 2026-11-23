@@ -26,7 +26,8 @@ import {
   ConsultaMonitoreoPaginada,
   ConsultaCoincidenciasPaginada,
   Paginado,
-  MonitoreoPaginado
+  MonitoreoPaginado,
+  TipoFuenteMonitoreo
 } from '../models/listas.models';
 import { createHttpErrorScopeContext, HttpErrorScope } from '../../../../core/http/http-error-scope';
 
@@ -128,7 +129,7 @@ export class ListasService {
     numeroIdentificacion: string,
     errorScope: HttpErrorScope = 'global',
     idRegistroFuente?: number,
-    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP'
+    tipoFuente?: TipoFuenteMonitoreo
   ): Observable<DetalleCoincidenciaNatural[]> {
     const context = createHttpErrorScopeContext(errorScope);
     if (idRegistroFuente && tipoFuente) {
@@ -153,7 +154,7 @@ export class ListasService {
     numeroIdentificacion: string,
     errorScope: HttpErrorScope = 'global',
     idRegistroFuente?: number,
-    tipoFuente?: 'DNP_COINCIDENCIA' | 'MANUAL_CUMPLIMIENTO' | 'POSITIVO_DNP',
+    tipoFuente?: TipoFuenteMonitoreo,
     periodoPlanilla?: string
   ): Observable<DetalleCoincidenciaEmpleado[]> {
     const context = createHttpErrorScopeContext(errorScope);

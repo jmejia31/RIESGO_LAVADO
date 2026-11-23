@@ -259,17 +259,24 @@ namespace RL.API.Features.Listas.Persistence
 
             await using var command = conn.CreateCommand();
             command.BindByName = true;
-            if (tipoFuente is "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP")
+            if (tipoFuente is "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP" or "NOTICIA_PRENSA" or "OTRO" or "ORIGEN_NO_DETERMINADO")
             {
                 command.CommandText = @"
                     SELECT P.LSP_POSITIVO_ID ID_REGISTRO_FUENTE,
-                           CASE WHEN UPPER(TRIM(P.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                              THEN 'POSITIVO_DNP' ELSE 'MANUAL_CUMPLIMIENTO' END TIPO_FUENTE,
+                           CASE UPPER(TRIM(P.LSP_ORIGEN_REGISTRO))
+                              WHEN 'DNP_LISTAS' THEN 'POSITIVO_DNP'
+                              WHEN 'MANUAL_CUMPLIMIENTO' THEN 'MANUAL_CUMPLIMIENTO'
+                              WHEN 'NOTICIA_PRENSA' THEN 'NOTICIA_PRENSA'
+                              WHEN 'OTRO' THEN 'OTRO'
+                              ELSE 'ORIGEN_NO_DETERMINADO' END TIPO_FUENTE,
                            TRIM(TRANSLATE(P.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')) NUMERO_IDENTIFICACION,
                            P.LSP_NOMBRE_COMPLETO NOMBRES_PERSONA,
-                           CASE WHEN UPPER(TRIM(P.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                              THEN 'POSITIVO DNP SIN COINCIDENCIA CALIFICADA'
-                              ELSE 'REGISTRO MANUAL DE CUMPLIMIENTO' END TIPO_CONDICION_ACTUA_DESC,
+                           CASE UPPER(TRIM(P.LSP_ORIGEN_REGISTRO))
+                              WHEN 'DNP_LISTAS' THEN 'POSITIVO DNP SIN COINCIDENCIA CALIFICADA'
+                              WHEN 'MANUAL_CUMPLIMIENTO' THEN 'REGISTRO MANUAL DE CUMPLIMIENTO'
+                              WHEN 'NOTICIA_PRENSA' THEN 'REGISTRO DE NOTICIA / PRENSA / MEDIO EXTERNO'
+                              WHEN 'OTRO' THEN 'REGISTRO CON ORIGEN EXPLÍCITO: OTRO'
+                              ELSE 'ORIGEN NO DETERMINADO (REGISTRO HISTÓRICO)' END TIPO_CONDICION_ACTUA_DESC,
                            CAST(NULL AS VARCHAR2(100)) NUMERO_PATRONAL,
                            CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
                            CAST(NULL AS VARCHAR2(20)) ES_PEP,
@@ -455,16 +462,23 @@ namespace RL.API.Features.Listas.Persistence
 
             await using var command = conn.CreateCommand();
             command.BindByName = true;
-            if (tipoFuente is "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP")
+            if (tipoFuente is "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP" or "NOTICIA_PRENSA" or "OTRO" or "ORIGEN_NO_DETERMINADO")
             {
                 command.CommandText = @"
                     SELECT P.LSP_POSITIVO_ID ID_REGISTRO_FUENTE,
-                           CASE WHEN UPPER(TRIM(P.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                              THEN 'POSITIVO_DNP' ELSE 'MANUAL_CUMPLIMIENTO' END TIPO_FUENTE,
+                           CASE UPPER(TRIM(P.LSP_ORIGEN_REGISTRO))
+                              WHEN 'DNP_LISTAS' THEN 'POSITIVO_DNP'
+                              WHEN 'MANUAL_CUMPLIMIENTO' THEN 'MANUAL_CUMPLIMIENTO'
+                              WHEN 'NOTICIA_PRENSA' THEN 'NOTICIA_PRENSA'
+                              WHEN 'OTRO' THEN 'OTRO'
+                              ELSE 'ORIGEN_NO_DETERMINADO' END TIPO_FUENTE,
                            P.LSP_NO_DOCUMENTO DNI, P.LSP_NOMBRE_COMPLETO NOMBRE,
-                           CASE WHEN UPPER(TRIM(P.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                              THEN 'POSITIVO DNP SIN COINCIDENCIA CALIFICADA'
-                              ELSE 'REGISTRO MANUAL DE CUMPLIMIENTO' END TIPO_CONDICION_ACTUA_DESC,
+                           CASE UPPER(TRIM(P.LSP_ORIGEN_REGISTRO))
+                              WHEN 'DNP_LISTAS' THEN 'POSITIVO DNP SIN COINCIDENCIA CALIFICADA'
+                              WHEN 'MANUAL_CUMPLIMIENTO' THEN 'REGISTRO MANUAL DE CUMPLIMIENTO'
+                              WHEN 'NOTICIA_PRENSA' THEN 'REGISTRO DE NOTICIA / PRENSA / MEDIO EXTERNO'
+                              WHEN 'OTRO' THEN 'REGISTRO CON ORIGEN EXPLÍCITO: OTRO'
+                              ELSE 'ORIGEN NO DETERMINADO (REGISTRO HISTÓRICO)' END TIPO_CONDICION_ACTUA_DESC,
                            CAST(NULL AS VARCHAR2(100)) NUMEPATRO,
                            CAST(NULL AS VARCHAR2(500)) NOMBRE_EMPRESA,
                            CAST(NULL AS VARCHAR2(500)) RAZOSOCI,
@@ -2766,8 +2780,12 @@ namespace RL.API.Features.Listas.Persistence
             FROM Coincidencias
             UNION ALL
             SELECT LP.LSP_POSITIVO_ID,
-                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                        THEN 'POSITIVO_DNP' ELSE 'MANUAL_CUMPLIMIENTO' END,
+                   CASE UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO))
+                        WHEN 'DNP_LISTAS' THEN 'POSITIVO_DNP'
+                        WHEN 'MANUAL_CUMPLIMIENTO' THEN 'MANUAL_CUMPLIMIENTO'
+                        WHEN 'NOTICIA_PRENSA' THEN 'NOTICIA_PRENSA'
+                        WHEN 'OTRO' THEN 'OTRO'
+                        ELSE 'ORIGEN_NO_DETERMINADO' END,
                    CASE WHEN UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'DNI:%'
                         THEN SUBSTR(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), 5)
                         ELSE TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')) END,
@@ -2777,8 +2795,8 @@ namespace RL.API.Features.Listas.Persistence
                    CAST(NULL AS DATE), CAST(NULL AS DATE),
                    LP.LSP_FECHA_CREACION,
                    CASE WHEN LP.LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END,
-                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                        THEN 0 ELSE 1 END, 0, 0,
+                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'MANUAL_CUMPLIMIENTO'
+                        THEN 1 ELSE 0 END, 0, 0,
                    CASE WHEN LP.LSP_NO_DOCUMENTO IS NULL OR TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')) IS NULL
                                   OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'N/A%'
                                   OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) IN
@@ -2793,7 +2811,8 @@ namespace RL.API.Features.Listas.Persistence
               ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
             WHERE LP.LSP_TIPO_POSITIVO_ID = 2 AND LP.LSP_ESTADO_REGISTRO = 1
               AND (
-                 NVL(UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)), 'MANUAL_CUMPLIMIENTO') <> 'DNP_LISTAS'
+                 (UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) IS NULL
+                  OR UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) <> 'DNP_LISTAS')
                  -- Un marcador compartido no prueba duplicidad entre fuentes.
                  OR LP.LSP_NO_DOCUMENTO IS NULL
                  OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'N/A%'
@@ -2914,16 +2933,20 @@ namespace RL.API.Features.Listas.Persistence
             FROM Coincidencias
             UNION ALL
             SELECT LP.LSP_POSITIVO_ID,
-                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                        THEN 'POSITIVO_DNP' ELSE 'MANUAL_CUMPLIMIENTO' END,
+                   CASE UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO))
+                        WHEN 'DNP_LISTAS' THEN 'POSITIVO_DNP'
+                        WHEN 'MANUAL_CUMPLIMIENTO' THEN 'MANUAL_CUMPLIMIENTO'
+                        WHEN 'NOTICIA_PRENSA' THEN 'NOTICIA_PRENSA'
+                        WHEN 'OTRO' THEN 'OTRO'
+                        ELSE 'ORIGEN_NO_DETERMINADO' END,
                    TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')), LP.LSP_NOMBRE_COMPLETO,
                    CAST(NULL AS VARCHAR2(100)),
                    NVL(LC.LISTA_CAUTELA_DESCRICPION,'MANUAL'), 0,
                    CAST(NULL AS DATE), CAST(NULL AS DATE),
                    LP.LSP_FECHA_CREACION,
                    CASE WHEN LP.LSP_MOTIVO_INGRESO IS NULL THEN 0 ELSE 1 END,
-                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'DNP_LISTAS'
-                        THEN 0 ELSE 1 END, 0, 0,
+                   CASE WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'MANUAL_CUMPLIMIENTO'
+                        THEN 1 ELSE 0 END, 0, 0,
                    CASE WHEN LP.LSP_NO_DOCUMENTO IS NULL OR TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   ')) IS NULL
                                   OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'N/A%'
                                   OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) IN
@@ -2935,7 +2958,8 @@ namespace RL.API.Features.Listas.Persistence
               ON LP.LSP_TIPO_LISTA_CAUTELA_ID = LC.TIPO_LISTA_CAUTELA_ID
             WHERE LP.LSP_TIPO_POSITIVO_ID = 3 AND LP.LSP_ESTADO_REGISTRO = 1
               AND (
-                 NVL(UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)), 'MANUAL_CUMPLIMIENTO') <> 'DNP_LISTAS'
+                 (UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) IS NULL
+                  OR UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) <> 'DNP_LISTAS')
                  -- Un marcador compartido no prueba duplicidad entre fuentes.
                  OR LP.LSP_NO_DOCUMENTO IS NULL
                  OR UPPER(TRIM(TRANSLATE(LP.LSP_NO_DOCUMENTO, CHR(9)||CHR(10)||CHR(13), '   '))) LIKE 'N/A%'

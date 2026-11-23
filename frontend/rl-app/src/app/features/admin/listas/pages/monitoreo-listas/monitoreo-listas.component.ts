@@ -57,7 +57,7 @@ type InstanciaInternaMonitoreo = {
   esCerradoPasivo(item: RegistroMonitoreo): boolean;
   obtenerRangoSeguimientoReporte(noDocumento?: string): RangoSeguimientoReporte;
   obtenerEstadoMonitoreoReporte(item: RegistroMonitoreo): string;
-  obtenerEtiquetaOrigenRegistro(origen?: string | null): string;
+  obtenerEtiquetaOrigenRegistro(origen?: string | null, tipoFuente?: string | null): string;
   obtenerFechaRegistroInterno(
     rowFecha?: string | null,
     positivo?: { fechaRegistroInterno?: string | null } | null

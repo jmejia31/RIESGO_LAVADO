@@ -108,7 +108,7 @@ namespace RL.API.Features.Listas
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerDetalleNatural(string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null)
         {
-            if (idRegistroFuente is <= 0 || (idRegistroFuente.HasValue && tipoFuente is not ("DNP_COINCIDENCIA" or "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP")))
+            if (idRegistroFuente is <= 0 || (idRegistroFuente.HasValue && tipoFuente is not ("DNP_COINCIDENCIA" or "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP" or "NOTICIA_PRENSA" or "OTRO" or "ORIGEN_NO_DETERMINADO")))
                 return BadRequest(new { success = false, mensaje = "Referencia de origen inválida." });
             try
             {
@@ -128,7 +128,7 @@ namespace RL.API.Features.Listas
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerDetalleEmpleado(string numeroIdentificacion, [FromQuery] long? idRegistroFuente = null, [FromQuery] string? tipoFuente = null, [FromQuery] DateTime? periodoPlanilla = null)
         {
-            if (idRegistroFuente is <= 0 || (idRegistroFuente.HasValue && tipoFuente is not ("DNP_COINCIDENCIA" or "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP")))
+            if (idRegistroFuente is <= 0 || (idRegistroFuente.HasValue && tipoFuente is not ("DNP_COINCIDENCIA" or "MANUAL_CUMPLIMIENTO" or "POSITIVO_DNP" or "NOTICIA_PRENSA" or "OTRO" or "ORIGEN_NO_DETERMINADO")))
                 return BadRequest(new { success = false, mensaje = "Referencia de origen inválida." });
             try
             {

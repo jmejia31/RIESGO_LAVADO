@@ -129,6 +129,20 @@ public sealed class MonitoreoFuenteM1Tests
     }
 
     [Fact]
+    public void OrigenHistoricoNulo_NoSeClasificaComoManual()
+    {
+        foreach (var method in new[] { "ConstruirConsultaMonitoreoNaturales", "ConstruirConsultaMonitoreoEmpleados" })
+        {
+            var sql = Sql(method);
+            Assert.Contains("WHEN 'MANUAL_CUMPLIMIENTO' THEN 'MANUAL_CUMPLIMIENTO'", sql);
+            Assert.Contains("ELSE 'ORIGEN_NO_DETERMINADO' END", sql);
+            Assert.Contains("WHEN UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) = 'MANUAL_CUMPLIMIENTO'", sql);
+            Assert.Contains("UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)) IS NULL", sql);
+            Assert.DoesNotContain("NVL(UPPER(TRIM(LP.LSP_ORIGEN_REGISTRO)), 'MANUAL_CUMPLIMIENTO')", sql);
+        }
+    }
+
+    [Fact]
     public void DetallePorReferenciaManual_AdmiteDocumentoNuloOSinIdentificacion()
     {
         var sql = Sql("CompararDocumentoPositivoFuente");

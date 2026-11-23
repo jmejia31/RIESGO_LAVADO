@@ -178,7 +178,7 @@ describe('MonitoreoListasComponent — deduplicación de detalle', () => {
     const root = fixture.nativeElement as HTMLElement;
     const activeKpi = root.querySelector('[data-ui-monitoring-kpi="active"]');
     expect(activeKpi?.textContent).toContain('190');
-    expect(activeKpi?.textContent).toContain('Grupos por DNI (5742 coincidencias de origen)');
+    expect(activeKpi?.textContent).toContain('Registros agrupados por identificación (5742 coincidencias de origen)');
     expect(root.textContent).toContain('5 coincidencias');
     expect(root.textContent).toContain('Asociación ambigua');
   });
