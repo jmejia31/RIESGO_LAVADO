@@ -29,9 +29,14 @@ trap cleanup EXIT
 git -C "$repo_root" fetch --no-tags --depth=1 origin "$prefx_sha"
 git -C "$repo_root" worktree add --detach "$prefx_root" FETCH_HEAD
 
-# Run the current diagnostic E2E against the historical defective app source.
-cp "$repo_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts" \
-  "$prefx_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts"
+# Use the historical browser flow with the historical Angular/backend code.
+# Copying the current evolving E2E spec into this detached old worktree mixed
+# incompatible modal contracts ("Si, guardar borrador") and failed before the
+# expected Full Matrix regression could be exercised.
+# Append only a focused negative regression to the historical original spec;
+# do not alter the historical source application or the current suite.
+cat "$repo_root/tools/block12_prefx_reproduction.case.ts" \
+  >> "$prefx_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts"
 # The normal E2E host uses a fixed user id and leaves that row in the shared XE schema.
 # Give this isolated historical run a run-scoped user id in both its host and browser token.
 sed -i "s/987654/$prefx_user_id/g" \
@@ -76,7 +81,7 @@ echo 'BLOCK12_PREFX_ORACLE_API_READY=PASS'
 
 pushd "$prefx_root/frontend/rl-app" >/dev/null
 export CI=true
-browser_output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts --grep 'Block 7/9 real browser certifies draft' 2>&1 | tee /dev/stderr)"
+browser_output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts --grep 'Block 12 historical pre-fix Full Matrix projection regression' 2>&1 | tee /dev/stderr)"
 popd >/dev/null
 
 if grep -Fq 'Datos incompatibles para proyección institucional' "$api_log"; then
