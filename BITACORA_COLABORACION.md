@@ -12938,3 +12938,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado CI posterior:** el push de la corrección generó un nuevo Quality Gate; no se declara verde hasta leer su conclusión exacta. El expediente Word fue actualizado con el SHA corregido y la causa de la regresión; su render visual sigue pendiente por falta de Word/LibreOffice.
 - **Punto exacto de continuación:** leer el nuevo run de `d05371b5`, conservar `BLOCKED` si falla cualquier control, y no repetir ciclos adicionales sin una causa nueva verificable.
 
+## 2026-11-23 — Corrección de expectativa E2E M1 tras fallo verificable del Quality Gate (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`. El workspace conservó cambios no rastreados preexistentes; no se incluyeron en el stage.
+- **Evidencia:** Quality Gate [45222571124](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45222571124) terminó `failure` con `93 PASS`, `7 SKIP` y `1 FAIL` en `frontend/rl-app/e2e/monitoreo-listas-m1-agrupacion.spec.ts:117`. El error fue una expectativa del texto antiguo `Grupos por DNI (...)`; la interfaz vigente muestra `Registros agrupados por identificación (...)`. El stack `ORA-20991` pertenece al escenario negativo TX12 y confirma el rollback sintético; no fue una pérdida de datos ni el test fallido real.
+- **Corrección:** se actualizaron únicamente las dos expectativas E2E de naturales y empleados para coincidir con el contrato institucional vigente. No se modificaron componentes productivos, backend, contratos REST, auditoría, Oracle, migraciones ni Configuración de cálculo.
+- **Pruebas ejecutadas:** `git diff --check` PASS; búsqueda de referencias antiguas sin coincidencias productivas. La suite Playwright local no se ejecutó porque `frontend/rl-app/node_modules` permanece incompleto; la validación decisiva será el Quality Gate en entorno limpio.
+- **Seguridad y preservación:** `ORACLE_INSTITUTIONAL_DML=0`; `ORACLE_INSTITUTIONAL_DDL=0`; `main`, producción y servicios manuales no tocados. El trigger TX12 continúa siendo una fixture descartable e intencional para certificar fallo de auditoría y rollback.
+- **Estado:** `M1_E2E_EXPECTATION_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `OWNER_SIGNOFF=PENDING`. No se declara certificación total hasta leer el resultado del nuevo run.
+- **Punto exacto de continuación:** publicar el cambio selectivo en `origin/desarrollo`, revisar el Quality Gate nuevo y corregir solo una causa nueva demostrable.
+

@@ -5968,3 +5968,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Prueba local posterior:** `MonitoreoFuenteM1Tests=23/23 PASS`; `git diff --check=PASS`. La compilación Angular local permanece pendiente por dependencias ausentes/EBUSY; el nuevo Quality Gate debe confirmar la compilación en entorno limpio.
 - **Estado:** `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `QUALITY_GATE_STATUS=FAILED_ON_PRIOR_SHA_NEW_RUN_PENDING`; `PACKAGE_C_INSTITUTIONAL_STATUS=PENDING_AUTHORIZED_READ_ONLY_REVALIDATION`; `OWNER_SIGNOFF=PENDING`. No se continúa con otra corrección sin una causa nueva verificable.
 - **Punto exacto de continuación:** leer el nuevo Quality Gate del SHA `d05371b5`; si pasa, ejecutar la validación visual/Oracle autorizada pendiente; si falla, conservar el estado bloqueado y reportar la causa exacta.
+
+## Estado vigente — Corrección E2E M1 por contrato de etiqueta — 2026-11-23 (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`.
+- **Diagnóstico comprobado:** el Quality Gate [45222571124](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45222571124) terminó `failure` con `93 PASS`, `7 SKIP` y un único fallo en `monitoreo-listas-m1-agrupacion.spec.ts`. La prueba esperaba `Grupos por DNI`, pero el contrato frontend vigente muestra `Registros agrupados por identificación`. El `ORA-20991` observado en el log es el error provocado por la fixture negativa TX12 y demuestra rollback de auditoría; no representa daño de Oracle institucional.
+- **Corrección aplicada:** `frontend/rl-app/e2e/monitoreo-listas-m1-agrupacion.spec.ts` ahora valida las etiquetas vigentes para naturales y empleados. No se tocó código productivo, backend, auditoría ni base de datos.
+- **Verificación:** `git diff --check=PASS`; referencias antiguas eliminadas del frontend. Playwright local pendiente por `node_modules` incompleto; el nuevo Quality Gate en entorno limpio es la prueba decisiva.
+- **Protecciones:** `ORACLE_INSTITUTIONAL_DML=0`; `ORACLE_INSTITUTIONAL_DDL=0`; `main=NO`; producción=NO; Configuración de cálculo=NO; servicios manuales no iniciados ni detenidos.
+- **Estado actual:** `M1_E2E_EXPECTATION_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `PACKAGE_C_INSTITUTIONAL_STATUS=PENDING_AUTHORIZED_READ_ONLY_REVALIDATION`; `OWNER_SIGNOFF=PENDING`.
+- **Punto exacto de continuación:** publicar selectivamente este cambio y la documentación, verificar `HEAD == origin/desarrollo`, leer el Quality Gate nuevo y mantener `BLOCKED` si aparece cualquier fallo funcional, Oracle o de seguridad.

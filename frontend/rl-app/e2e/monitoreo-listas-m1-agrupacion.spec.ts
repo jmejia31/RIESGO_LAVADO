@@ -114,7 +114,7 @@ test('M1-P0: Monitoreo de Listas muestra naturales agrupados por DNI, detalle co
   await page.getByRole('button', { name: /Personas naturales/i }).click();
   await expect(page.getByText('MARIA MULTI')).toBeVisible();
   await expect(page.getByText('3 coincidencias', { exact: true })).toBeVisible();
-  await expect(page.getByText('Grupos por DNI (3 coincidencias de origen)')).toBeVisible();
+  await expect(page.getByText('Registros agrupados por identificación (3 coincidencias de origen)')).toBeVisible();
 
   await page.getByRole('button', { name: 'Consultar la coincidencia seleccionada de persona natural' }).click();
   const dialog = page.getByRole('dialog');
@@ -129,5 +129,5 @@ test('M1-P0: Monitoreo de Listas muestra naturales agrupados por DNI, detalle co
   await page.getByRole('button', { name: /Empleados/i }).click();
   await expect(page.getByText('PEDRO EMPLEADO HISTORICO')).toBeVisible();
   await expect(page.getByText('2 coincidencias', { exact: true })).toBeVisible();
-  await expect(page.getByText('Grupos por DNI (2 coincidencias de origen)')).toBeVisible();
+  await expect(page.getByText('Registros agrupados por identificación (2 coincidencias de origen)')).toBeVisible();
 });
