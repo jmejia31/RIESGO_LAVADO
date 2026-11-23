@@ -1,6 +1,6 @@
 {
-  "version": "P06-QA-REAL-2026-11-07-01",
-  "packageSha256": "fcc836fac2d40c3445bb14eb1c16cecc4bf8a194946b72195cae1dfa764435f0",
+  "version": "P06-QA-REAL-2026-11-23-01",
+  "packageSha256": "6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6",
   "files": [
     {
       "path": "backend/RL.API.Tests/Infrastructure/Health/P06OracleIdentityControllerContractTests.cs",
@@ -12,7 +12,7 @@
     },
     {
       "path": "backend/RL.API/Program.cs",
-      "sha256": "f9256d22d9d1c40b72008b33f1b15a019031cc7baaff0fe4c50c06a478a679bd"
+      "sha256": "02b0a7c4869645264f4e6735b46fa4a1f553a78de6f4d1db72a1860b13f723ef"
     },
     {
       "path": "frontend/rl-app/e2e/p06-qa-real-auth.spec.ts",
@@ -24,15 +24,15 @@
     },
     {
       "path": "frontend/rl-app/package-lock.json",
-      "sha256": "1feaf048fbecf54f97f5b28f5d9354e33cb6ff58ea7f46b53bc651f18de343ac"
+      "sha256": "ff7e86ec9e2904b0c16ec2a36c6e91511be94ee67bb72007a62345e0609797b4"
     },
     {
       "path": "frontend/rl-app/package.json",
-      "sha256": "a4f88c40e5f414835745fb47694e729484904b2dd8378abd2ee6cf5176589031"
+      "sha256": "777dd982cb78cfd406236cdb708ff4772df35aa754631251cf950219835f55c8"
     },
     {
       "path": "frontend/rl-app/playwright.qa.config.ts",
-      "sha256": "30c9a7fc59076c84a41eceed97d0495b19c0a936bcc31b8915b37037d200569e"
+      "sha256": "a9c0878d986c075fff26e53c84019aeeacd778a2df9b8b5d08484cc2ee09ae91"
     },
     {
       "path": "tools/p06-owner-manual.ps1",
@@ -44,7 +44,7 @@
     },
     {
       "path": "tools/p06-qa-runner.ps1",
-      "sha256": "30eb7659fac773c998cd956371228941805af5159d4ce7707b9d3012f29a66b8"
+      "sha256": "bf29df76a9247cdb4ee3aee21347b4aac1b2354dd14e5485dd9f20f945ecd63c"
     },
     {
       "path": "tools/p06-qa-contract-tests.ps1",
@@ -52,7 +52,7 @@
     },
     {
       "path": "tools/qa/P06_OracleIdentity.sql",
-      "sha256": "5cc198ea3460180472cc493cbd26939ea046a4bd99261c581a6bc620d30f579a"
+      "sha256": "d22a42649cb478502afa77f810c2b49adf7b000627345b3a8a7af2584ad6aedb"
     }
   ]
 }

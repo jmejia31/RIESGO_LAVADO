@@ -12,7 +12,7 @@ Este paquete prepara la ejecucion, pero no acredita aislamiento Windows, identid
 - `tools/qa/P06_OracleIdentity.sql`: consulta Oracle de solo lectura; no contiene credenciales ni ejecuta DDL/DML.
 - `tools/qa/P06_QA_PACKAGE_MANIFEST.json`: hashes individuales y digest del paquete.
 
-Digest vigente del paquete: `d7c32c38de5b5441fa3c732382dd8effea9320e8e0cbbcfc16ecbce798eb0168`.
+Digest vigente del paquete: `6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`. Versión fijada: `P06-QA-REAL-2026-11-23-01`. El Quality Gate de `desarrollo` valida esta huella y descubre exactamente seis escenarios, sin secretos ni conexión a Oracle.
 
 ## Preflight sin credenciales
 

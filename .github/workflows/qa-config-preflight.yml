@@ -54,6 +54,10 @@ jobs:
         working-directory: frontend/rl-app
         run: npm ci --ignore-scripts
 
+      - name: Verify P06 QA package integrity and test discovery (no credentials)
+        shell: pwsh
+        run: ./tools/p06-qa-runner.ps1 -Mode PREFLIGHT
+
       - name: Validate frontend error recovery and build contracts
         working-directory: frontend/rl-app
         run: |

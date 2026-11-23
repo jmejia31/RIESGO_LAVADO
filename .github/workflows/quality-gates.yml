@@ -98,6 +98,10 @@ jobs:
         shell: bash
         run: npm ci --ignore-scripts
 
+      - name: Verify P06 QA package integrity and test discovery (blocking, no credentials)
+        shell: pwsh
+        run: ./tools/p06-qa-runner.ps1 -Mode PREFLIGHT
+
       - name: Verify source-pinned vendored picomatch security fork (blocking)
         working-directory: frontend/rl-app
         shell: bash
