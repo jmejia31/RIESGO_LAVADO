@@ -1,4 +1,4 @@
-import { expect, expectHttpResponse, Page, test } from './support/telemetry-test';
+import { expect, expectHttpResponse, expectRequestFailure, Page, test } from './support/telemetry-test';
 
 function token(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -203,6 +203,19 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
   });
 
   test('Eliminar icono restablece favicon.ico y nombre vacío usa fallback SGRLA-IHSS', async ({ page }) => {
+    // Chromium may abort the superseded favicon GET when its link is replaced or the
+    // page reloads. This does not indicate an HTTP/API error. Allow only ONE
+    // exact browser cancellation in this scenario; keep every other request and
+    // all assertions for immediate fallback and persistence strictly enforced.
+    expectRequestFailure({
+      method: 'GET',
+      path: '/api/configuracion/sistema/favicon',
+      protocol: 'http:',
+      errorText: 'net::ERR_ABORTED',
+      minCount: 0,
+      maxCount: 1,
+      reason: 'Explicit removal of dynamic favicon can cancel its superseded browser GET while favicon.ico takes over',
+    });
     let currentConfig = {
       nombreSistema: 'Portal Especial',
       nombreInstitucion: 'Instituto Hondureño de Seguridad Social',
