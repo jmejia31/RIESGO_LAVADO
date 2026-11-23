@@ -188,6 +188,7 @@ describe('MatricesRiesgosGestionComponent', () => {
 
     let cerrarNotificacion!: () => void;
     notification.notify.mockReturnValue(new Promise<void>(resolve => { cerrarNotificacion = resolve; }));
+    expect(trigger.isConnected).toBe(true);
     const focus = vi.spyOn(trigger, 'focus');
     trigger.click();
     fixture.detectChanges();
@@ -203,11 +204,40 @@ describe('MatricesRiesgosGestionComponent', () => {
 
       root.removeAttribute('inert');
       cerrarNotificacion();
-      await new Promise(resolve => setTimeout(resolve, 0));
-      expect(focus).toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(focus).toHaveBeenCalledTimes(1);
+        expect(document.activeElement).toBe(trigger);
+      }, { timeout: 1000, interval: 10 });
     } finally {
       root.removeAttribute('inert');
     }
+  });
+
+
+  it('restaura el foco al botón Nuevo riesgo cuando el formulario se abre por código', async () => {
+    const root = fixture.nativeElement as HTMLElement;
+    const trigger = root.querySelector<HTMLButtonElement>('[data-ui-action="new-risk"]');
+    expect(trigger).not.toBeNull();
+    if (!trigger) throw new Error('Falta el botón Nuevo riesgo.');
+    expect(trigger.isConnected).toBe(true);
+    const focus = vi.spyOn(trigger, 'focus');
+
+    let cerrarNotificacion!: () => void;
+    notification.notify.mockReturnValue(new Promise<void>(resolve => { cerrarNotificacion = resolve; }));
+    component.nuevo();
+    fixture.detectChanges();
+    component.codigo = 'R-081';
+    component.nombre = 'Riesgo creado desde acción programática';
+    await component.guardar();
+    expect(component.modalRiesgoAbierto()).toBe(false);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(focus).not.toHaveBeenCalled();
+
+    cerrarNotificacion();
+    await vi.waitFor(() => {
+      expect(focus).toHaveBeenCalledTimes(1);
+      expect(document.activeElement).toBe(trigger);
+    }, { timeout: 1000, interval: 10 });
   });
 
   it('edita un riesgo con descripción null inicializando string vacío', () => {

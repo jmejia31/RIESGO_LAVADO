@@ -26,6 +26,7 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
   private readonly confirmation = inject(InstitutionalConfirmationService);
   private readonly notification = inject(InstitutionalNotificationService);
   private readonly codigoInput = viewChild<ElementRef<HTMLInputElement>>('codigoInput');
+  private readonly nuevoRiesgoButton = viewChild<ElementRef<HTMLButtonElement>>('nuevoRiesgoButton');
 
   readonly riesgos = signal<RiesgoDto[]>([]);
   readonly cargando = signal(false);
@@ -156,7 +157,11 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
   }
 
   nuevo(event?: Event): void {
-    if (event?.currentTarget instanceof HTMLElement) this.focoRetorno = event.currentTarget;
+    // The button reference remains available even when an opening is triggered
+    // programmatically or a delegated click has no currentTarget.
+    this.focoRetorno = event?.currentTarget instanceof HTMLElement
+      ? event.currentTarget
+      : this.nuevoRiesgoButton()?.nativeElement ?? null;
     this.editandoId.set(0);
     this.codigo = '';
     this.nombre = '';
@@ -210,7 +215,7 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
     setTimeout(() => this.codigoInput()?.nativeElement.focus({ preventScroll: true }));
   }
 
-  private cerrarFormulario(): void {
+  private cerrarFormulario(restaurarFoco = true): void {
     this.modalRiesgoAbierto.set(false);
     this.editandoId.set(0);
     this.codigo = '';
@@ -221,9 +226,13 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
     this.valoresIniciales = this.serializarValores();
     const foco = this.focoRetorno;
     this.focoRetorno = null;
-    setTimeout(() => {
-      if (foco?.isConnected && !foco.closest('[inert]')) foco.focus({ preventScroll: true });
-    });
+    // A save-success notification owns the focus trap until it is dismissed.
+    // A regular cancel/close still restores focus to its opener immediately.
+    if (restaurarFoco) {
+      setTimeout(() => {
+        if (foco?.isConnected && !foco.closest('[inert]')) foco.focus({ preventScroll: true });
+      });
+    }
   }
 
   async guardar(): Promise<void> {
@@ -270,8 +279,9 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
       next: () => {
         this.guardando.set(false);
         const focoRetorno = this.focoRetorno;
-        // The form closes immediately, but institutional notification has its own
-        // modal focus trap. Restore keyboard focus only after that notification closes.
+        // Close the CRUD dialog without racing the institutional notification's
+        // focus trap. Only the notification's completion may restore keyboard focus.
+        this.cerrarFormulario(false);
         void this.notification.notify({
           title: id > 0 ? 'Riesgo actualizado' : 'Riesgo creado',
           icon: 'success',
@@ -281,12 +291,16 @@ export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
           confirmVariant: 'success'
         }).then(() => {
           setTimeout(() => {
-            if (focoRetorno?.isConnected && !focoRetorno.closest('[inert]')) {
-              focoRetorno.focus({ preventScroll: true });
+            // The original trigger can be recreated by Angular when a list
+            // refreshes. For creation, fall back to the current New risk button.
+            const destino = focoRetorno?.isConnected
+              ? focoRetorno
+              : id === 0 ? this.nuevoRiesgoButton()?.nativeElement : null;
+            if (destino?.isConnected && !destino.closest('[inert]')) {
+              destino.focus({ preventScroll: true });
             }
           }, 0);
         });
-        this.cerrarFormulario();
         this.cargar();
       },
       error: (error: unknown) => {
