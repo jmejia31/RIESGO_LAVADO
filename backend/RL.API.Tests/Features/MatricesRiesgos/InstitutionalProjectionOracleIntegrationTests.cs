@@ -157,7 +157,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                     "APROBADA", approvedAt.AddMinutes(index), risk.Code, userId);
             }
 
-            await using var app = await CreateBlock7ApiAsync(connectionString);
+            await using var app = await CreateBlock7ApiAsync(connectionString, useBoundedConnectionPool: true);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
             using var http = new HttpClient { BaseAddress = new Uri(address) };
             int matchedRiskApi = 0;

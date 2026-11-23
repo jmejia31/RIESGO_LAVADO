@@ -1,3 +1,14 @@
+## 2026-11-23 14:08 -06:00 — Corrección quirúrgica de Oracle XE y validación Angular (COD)
+
+- **Base:** rama `desarrollo`, `HEAD=origin/desarrollo=c8de16859cc3acf6730c1c00b17bec5ae2f69a78`; se preservaron todos los archivos sin seguimiento ajenos y no se incluyeron en el stage.
+- **Objetivo:** resolver los dos bloqueos comunicados: dependencia Angular incompleta en `node_modules` y `ORA-12516` del Quality Gate en `Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection`.
+- **Diagnóstico reproducido:** la instalación Angular del checkout estaba incompleta (`@angular/core` inválido y sin `@angular/core/testing`); `npm ci` sobre el checkout fue bloqueado por `EBUSY` en `node_modules/sass-embedded-win32-x64/dart-sass/src`, retenido por el proceso manual de Node. No se detuvo ningún servicio manual ni se forzó limpieza.
+- **Corrección funcional:** `backend/RL.API.Tests/Features/MatricesRiesgos/InstitutionalProjectionOracleIntegrationTests.cs` ahora construye la API de prueba de la reconciliación canónica con `useBoundedConnectionPool: true`, reutilizando el pool máximo 4 ya empleado por las pruebas Block 12 estables. No se modificaron API productiva, Oracle institucional, esquema, migraciones ni datos.
+- **Verificación fresca:** en una copia limpia temporal del frontend, `npm ci --ignore-scripts --no-audit --no-fund` PASS; `npm test -- --include=src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.tabs-independientes.spec.ts` PASS (`1` archivo, `21/21` pruebas). La prueba .NET focalizada de `Canonical59RiskIdentitiesMatchOracleApiAndConsolidatedProjection` compiló y PASS localmente sin opt-in Oracle (`1/1`, retorna por configuración ausente); no sustituye la ejecución física Oracle XE.
+- **CI:** el run anterior `45249987051` falló con `ORA-12516` dentro de la API de prueba, en el primer contrato HTTP que necesitaba otra conexión; el run del SHA previo `45254259019` estaba en curso antes de esta corrección. El Quality Gate del commit de esta intervención queda pendiente de ejecución y lectura final.
+- **Limitaciones:** no se ejecutó Oracle XE local ni se tocó la base productiva; el `node_modules` original permanece bloqueado/incompleto hasta que el propietario detenga manualmente el frontend y pueda ejecutar `npm ci` en el checkout. La copia limpia usada para la verificación no se versiona.
+- **Punto de continuación:** publicar este cambio selectivamente en `origin/desarrollo`, verificar el run del SHA exacto y revisar el job Oracle; no declarar certificación hasta observar `59/59`, cero residuos y Quality Gate verde.
+
 ## 2026-11-06 — P06 aceptación documental y aclaración de alcance QA del propietario (CHAT)
 
 - `SOURCE_SHA=27a35ce40bce23ced3e309313668974449ae531c`; Quality Gate `42275655488` `SUCCESS`, intento 1, SHA exacto; jobs control e integral `SUCCESS`.
