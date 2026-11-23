@@ -5978,3 +5978,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** `ORACLE_INSTITUTIONAL_DML=0`; `ORACLE_INSTITUTIONAL_DDL=0`; `main=NO`; producción=NO; Configuración de cálculo=NO; servicios manuales no iniciados ni detenidos.
 - **Estado actual:** `M1_E2E_EXPECTATION_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `PACKAGE_C_INSTITUTIONAL_STATUS=PENDING_AUTHORIZED_READ_ONLY_REVALIDATION`; `OWNER_SIGNOFF=PENDING`.
 - **Punto exacto de continuación:** publicar selectivamente este cambio y la documentación, verificar `HEAD == origin/desarrollo`, leer el Quality Gate nuevo y mantener `BLOCKED` si aparece cualquier fallo funcional, Oracle o de seguridad.
+
+## Estado vigente — Arnés histórico Block 12 corregido — 2026-11-23 (COD)
+
+- **Base:** `7d3cae7582859867b490d1f2dfebdd83f90a512f`; rama `desarrollo`.
+- **Hallazgo comprobado:** el run [45226761965](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45226761965) esperaba `409` usando una fixture Full Matrix completa de 82 campos, pero el endpoint respondió `200`, que es correcto para esa fixture y coincide con la prueba positiva de lectura posterior al workflow.
+- **Acción acotada:** `tools/run_block12_prefx_reproduction.sh` ahora separa el SHA de aplicación histórica `3325778...` del SHA del harness comprobado `fc775fc6...`, que reproduce el caso histórico con datos incompletos y HTTP `409`. No se tocó código productivo ni Oracle.
+- **Validación local:** `git diff --check=PASS`; sintaxis Bash normalizada `PASS`; selección del harness histórico `PASS`. Playwright/Oracle XE local quedan pendientes; no se alteraron servicios manuales.
+- **Estado:** `BLOCK12_HARNESS_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `PACKAGE_C_INSTITUTIONAL_STATUS=PENDING_AUTHORIZED_READ_ONLY_REVALIDATION`; `OWNER_SIGNOFF=PENDING`.
+- **Punto exacto de continuación:** publicar este cambio selectivo, leer una sola vez el nuevo Quality Gate y, si vuelve a fallar, conservar el bloqueo y reportar la causa sin aplicar otra corrección no demostrada.

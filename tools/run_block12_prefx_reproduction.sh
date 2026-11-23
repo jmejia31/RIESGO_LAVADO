@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 prefx_sha="3325778c81dee92853044036945ae16ba0942311"
+prefx_harness_sha="fc775fc6f5b2aedb14fd743dc88fccad8ef81f25"
 temp_root="${RUNNER_TEMP:-/tmp}"
 prefx_root="$temp_root/block12-prefx-$GITHUB_RUN_ID"
 api_log="$temp_root/block12-prefx-api-$GITHUB_RUN_ID.log"
@@ -27,16 +28,16 @@ cleanup() {
 trap cleanup EXIT
 
 git -C "$repo_root" fetch --no-tags --depth=1 origin "$prefx_sha"
-git -C "$repo_root" worktree add --detach "$prefx_root" FETCH_HEAD
+git -C "$repo_root" fetch --no-tags --depth=1 origin "$prefx_harness_sha"
+git -C "$repo_root" worktree add --detach "$prefx_root" "$prefx_sha"
 
-# Use the historical browser flow with the historical Angular/backend code.
-# Copying the current evolving E2E spec into this detached old worktree mixed
-# incompatible modal contracts ("Si, guardar borrador") and failed before the
-# expected Full Matrix regression could be exercised.
-# Append only a focused negative regression to the historical original spec;
-# do not alter the historical source application or the current suite.
-cat "$repo_root/tools/block12_prefx_reproduction.case.ts" \
-  >> "$prefx_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts"
+# Use the last harness that actually reproduced the defect with the detached
+# historical application. The newer full-chain fixture contains all 82 fields,
+# so its correct response is 200 and it cannot reproduce the old 409 defect.
+# Keep application source at prefx_sha and test harness source at the proven
+# diagnostic commit; do not mix the current evolving E2E contract into it.
+git -C "$repo_root" show "$prefx_harness_sha:frontend/rl-app/e2e/block7-oracle-real.spec.ts" \
+  > "$prefx_root/frontend/rl-app/e2e/block7-oracle-real.spec.ts"
 # The normal E2E host uses a fixed user id and leaves that row in the shared XE schema.
 # Give this isolated historical run a run-scoped user id in both its host and browser token.
 sed -i "s/987654/$prefx_user_id/g" \
@@ -81,7 +82,7 @@ echo 'BLOCK12_PREFX_ORACLE_API_READY=PASS'
 
 pushd "$prefx_root/frontend/rl-app" >/dev/null
 export CI=true
-browser_output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts --grep 'Block 12 historical pre-fix Full Matrix projection regression' 2>&1 | tee /dev/stderr)"
+browser_output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts --grep 'Block 7/9 real browser certifies draft' 2>&1 | tee /dev/stderr)"
 popd >/dev/null
 
 if grep -Fq 'Datos incompatibles para proyección institucional' "$api_log"; then
@@ -93,5 +94,5 @@ if grep -Fq 'Datos incompatibles para proyección institucional' "$api_log"; the
 fi
 
 grep -Fq '1 passed' <<<"$browser_output"
-grep -Fq 'BLOCK12_PRE_FIX_FULL_MATRIX_DEFECT_REPRODUCED=YES' <<<"$browser_output"
+grep -Fq 'BLOCK12_PRE_FIX_CONSOLIDATED_MATRIX_DEFECT_REPRODUCED=YES' <<<"$browser_output"
 echo 'BLOCK12_PREFX_DISPOSABLE_XE_BROWSER_API_REPRODUCTION=PASS'

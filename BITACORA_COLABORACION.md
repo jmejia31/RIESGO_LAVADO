@@ -12948,3 +12948,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `M1_E2E_EXPECTATION_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; `PACKAGE_C_FUNCTIONAL_STATUS=PARTIAL`; `OWNER_SIGNOFF=PENDING`. No se declara certificación total hasta leer el resultado del nuevo run.
 - **Punto exacto de continuación:** publicar el cambio selectivo en `origin/desarrollo`, revisar el Quality Gate nuevo y corregir solo una causa nueva demostrable.
 
+## 2026-11-23 — Corrección quirúrgica del arnés Block 12 pre-fix (COD)
+
+- **Autor / rama:** `COD` / `desarrollo`. Base `7d3cae7582859867b490d1f2dfebdd83f90a512f`.
+- **Evidencia:** Quality Gate [45226761965](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45226761965) falló únicamente en `Block 12 historical pre-fix Full Matrix projection regression`: esperaba HTTP `409` y recibió HTTP `200` en `/proyeccion-institucional`.
+- **Causa comprobada:** el arnés nuevo sembraba la fixture `seed-full-chain-calculations`, que contiene los 82 campos completos; para esa entrada HTTP `200` es el comportamiento correcto y coincide con la prueba positiva Full Matrix posterior al workflow. La reproducción histórica válida utilizaba la fixture incompleta del harness `fc775fc6f5b2aedb14fd743dc88fccad8ef81f25`, que sí demostró HTTP `409` con la aplicación pre-fix `3325778c81dee92853044036945ae16ba0942311`.
+- **Corrección:** `tools/run_block12_prefx_reproduction.sh` conserva la aplicación pre-fix en `3325778...`, recupera explícitamente el harness probado `fc775fc6...` y ejecuta la prueba histórica que verifica `BLOCK12_PRE_FIX_CONSOLIDATED_MATRIX_DEFECT_REPRODUCED=YES`. No se modificaron endpoint, backend productivo, frontend productivo, Oracle, datos ni contratos REST.
+- **Verificación local:** `git diff --check=PASS`; sintaxis Bash validada sobre contenido normalizado `PASS`; comprobación del harness histórico y de la selección separada de SHA `PASS`. No se ejecutó Oracle XE/Playwright local por ausencia de ejecución local completa; la validación decisiva es el siguiente Quality Gate.
+- **Preservación:** no se iniciaron ni detuvieron servicios; `main`, producción, Oracle institucional, Configuración de cálculo y archivos no rastreados ajenos permanecen intactos.
+- **Estado:** `BLOCK12_HARNESS_CORRECTED=YES`; `QUALITY_GATE_STATUS=PENDING_NEW_RUN`; no se declara certificación hasta leer el resultado exacto.
+
