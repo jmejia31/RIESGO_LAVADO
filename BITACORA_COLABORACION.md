@@ -12981,3 +12981,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `PRODUCTION_READ_ONLY_AUDIT=PASS`; `AUDITOR_NULL_HANDLING=CORRECTED`; la certificación P0 integral continúa `BLOCKED` hasta el Quality Gate remoto del commit publicado y las pruebas/aceptación que aún correspondan. Esta evidencia sí corresponde a la base institucional real.
 - **Punto exacto de continuación:** publicar selectivamente el auditor y esta bitácora/estado en `origin/desarrollo`, verificar el SHA remoto y leer una sola vez el Quality Gate resultante; no tocar Oracle institucional ni hacer otro cambio sin una causa nueva.
 
+## 2026-11-23 13:56 -06:00 — Corrección de columnas del consolidado de evaluaciones (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; base `5844fca22634035b2df992e697a5c40dba9c09b3`.
+- **Hallazgo comprobado:** la tabla `Evaluaciones de Riesgo Consolidadas` declaraba 12 encabezados, pero cada fila renderizaba 11 celdas. Faltaba `evaluacionId`; por eso todos los valores se desplazaban una columna y el botón «Ver Matriz completa» aparecía bajo `Versión`.
+- **Corrección quirúrgica:** se añadió la primera celda `#{{ fila.evaluacionId }}` y se corrigió el `colspan` vacío de `11` a `12`. No se modificaron contratos, backend, Oracle, Configuración de cálculo ni acciones.
+- **Regresión añadida:** `matrices-riesgos.component.tabs-independientes.spec.ts` comprueba 12 encabezados, 12 celdas por fila, evaluación en la primera columna, versión en la columna 11 y ojo en la columna 12.
+- **Verificación:** `git diff --check=PASS`. La prueba focalizada no inició porque el `node_modules` local no contiene `@angular/core/testing`; no se declara PASS ni se sustituyó por un mock.
+- **Quality Gate relacionado:** [45249987051](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45249987051) terminó `failure` por `ORA-12516` del listener Oracle XE descartable; no corresponde a esta corrección de columnas.
+- **Preservación:** solo se stagearán el template, la regresión y esta bitácora/estado; los archivos no rastreados previos permanecen fuera. No se iniciaron ni detuvieron servicios.
+- **Estado:** `CONSOLIDATED_COLUMN_ALIGNMENT=CORRECTED`; `LOCAL_ANGULAR_TEST=BLOCKED_MISSING_DEPENDENCY`; `P0_CERTIFICATION=BLOCKED` por Quality Gate/validaciones pendientes.
+- **Punto exacto de continuación:** publicar el cambio selectivo, verificar el SHA remoto y validar visualmente la tabla con el frontend manual ya levantado por el propietario.
+

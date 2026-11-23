@@ -403,6 +403,16 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     const acciones = root.querySelector('[data-consolidado-actions]') as HTMLElement | null;
     expect(acciones).not.toBeNull();
     expect(acciones?.classList.contains('flex-nowrap')).toBe(true);
+    const encabezados = Array.from(root.querySelectorAll('#panel-consolidado thead th')).map(th => th.textContent?.trim());
+    expect(encabezados).toEqual([
+      'Evaluación', 'Código de riesgo', 'Área', 'Dueño', 'VRI', 'Riesgo inherente',
+      'VRR', 'Residual', 'Respuesta', 'Estado', 'Versión', 'Acciones'
+    ]);
+    const fila = root.querySelector('#panel-consolidado tbody tr') as HTMLTableRowElement;
+    expect(fila.cells).toHaveLength(12);
+    expect(fila.cells[0].textContent).toContain('#101');
+    expect(fila.cells[10].textContent).toContain('10');
+    expect(fila.cells[11].querySelector('[aria-label="Ver Matriz completa"]')).not.toBeNull();
     const etiquetas = Array.from(acciones?.querySelectorAll('button') ?? []).map(button => button.getAttribute('aria-label'));
     expect(etiquetas).toEqual(['Ver Matriz completa']);
     expect(root.querySelectorAll('#panel-consolidado [aria-label="Ver detalle del consolidado"]')).toHaveLength(0);

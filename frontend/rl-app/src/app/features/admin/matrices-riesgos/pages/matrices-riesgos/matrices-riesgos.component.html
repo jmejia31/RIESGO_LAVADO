@@ -301,6 +301,7 @@
           <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
             @for (fila of consolidadoPaginado(); track fila.evaluacionId) {
               <tr class="hover:bg-gray-50/50 transition-colors" [attr.data-evaluacion-id]="fila.evaluacionId">
+                <td class="px-6 py-4 font-bold text-gray-900">#{{ fila.evaluacionId }}</td>
                 <td class="px-6 py-4 font-bold text-gray-900">{{ fila.codigoRiesgo }}</td>
                 <td class="px-6 py-4">{{ fila.areaPrincipal }}</td>
                 <td class="px-6 py-4">{{ fila.duenoRiesgo }}</td>
@@ -324,7 +325,7 @@
                   </div>
                 </td>
               </tr>
-            } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">No hay matrices que coincidan con los filtros seleccionados.</td></tr> }
+            } @empty { <tr><td colspan="12" class="px-6 py-12 text-center text-gray-400 text-sm">No hay matrices que coincidan con los filtros seleccionados.</td></tr> }
           </tbody>
         </table>
       </div>

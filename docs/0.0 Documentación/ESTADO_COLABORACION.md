@@ -6009,3 +6009,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Servicios y alcance:** backend/frontend no fueron iniciados ni detenidos; E2E visual y pruebas de interfaz quedan pendientes; `Configuración de cálculo` permanece intacta. `scratch_excel_59x82.json` y los no rastreados previos permanecen fuera del stage.
 - **Estado vigente:** `PRODUCTION_READ_ONLY_AUDIT=PASS`; `AUDITOR_NULL_HANDLING=CORRECTED`; `P0_CERTIFICATION=BLOCKED` hasta publicar y leer el Quality Gate del nuevo SHA y completar las validaciones restantes. No declarar certificación total por esta auditoría aislada.
 - **Punto exacto de continuación:** commit/push selectivo del auditor y documentación, verificación de `HEAD == origin/desarrollo`, lectura única del Quality Gate resultante y detenerse si aparece una causa nueva no demostrada.
+
+## Estado vigente — Alineación de columnas del consolidado — 2026-11-23 13:56 -06:00 (COD)
+
+- **Base / rama:** `5844fca22634035b2df992e697a5c40dba9c09b3` / `desarrollo`.
+- **Causa:** `Evaluaciones de Riesgo Consolidadas` tenía 12 encabezados y 11 celdas por fila; faltaba `evaluacionId`. El desplazamiento colocaba el ojo bajo `Versión` y el contenido de versión bajo `Estado`.
+- **Corrección:** el template añade la primera celda de evaluación y usa `colspan="12"` para el estado vacío. La columna `Versión` conserva `versionFormularioId`; `Acciones` contiene exclusivamente el botón institucional de ver matriz.
+- **Regresión:** la prueba de pestañas independientes valida encabezados, conteo de celdas y ubicación de versión/acción.
+- **Verificación:** `git diff --check=PASS`. La prueba Angular focalizada quedó pendiente/bloqueada por dependencia local ausente (`@angular/core/testing` en `node_modules`); no se afirma ejecución exitosa.
+- **No tocar:** backend, Oracle, migraciones, Configuración de cálculo, contratos REST y servicios manuales permanecen intactos.
+- **Estado vigente:** `CONSOLIDATED_COLUMN_ALIGNMENT=CORRECTED`; `LOCAL_ANGULAR_TEST=BLOCKED_MISSING_DEPENDENCY`; `QUALITY_GATE=BLOCKED_ORACLE_XE` por `ORA-12516` en run [45249987051](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45249987051); `P0_CERTIFICATION=BLOCKED`.
+- **Punto exacto de continuación:** publicar selectivamente, verificar `HEAD == origin/desarrollo` y hacer una comprobación visual manual de la tabla cuando el propietario tenga el frontend levantado.
