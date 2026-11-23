@@ -15,6 +15,8 @@ fi
 export Database__Profile=LOCAL_XE
 
 cd "$repo_root"
+# Validate the fail-closed log scanner before expensive Oracle/Playwright suites.
+python3 -m unittest -v tools/test_validate_block7_oracle_logs.py
 export RL_BLOCK7_ORACLE_INTEGRATION_REQUIRED=true
 oracle_output="$(dotnet test backend/RL.API.Tests/RL.API.Tests.csproj \
   --configuration Release --no-build --no-restore \
@@ -464,20 +466,19 @@ if [[ "${RL_BLOCK7_FULL_REPOSITORY_E2E_REQUIRED:-}" == "true" ]]; then
 fi
 
 grep -Fq 'BLOCK12_ORACLE_XE_FULL_MATRIX_UI_CALCULATIONS=2006/2006' <<<"$browser_output"
-# Inspect both disposable API host logs and report counts, never exception text
-# or connection data.  TX12 deliberately raises ORA-20991; filter that exact
-# expected fault instead of excluding a broad log range that could hide other
-# Oracle failures from the full repository suite.
-api_logs_to_scan="$(mktemp)"
-cat "$first_api_log" "$api_log" > "$api_logs_to_scan"
-oracle_error_matches="$(grep -Eio 'ORA-[0-9]{5}|OracleException|Oracle[^[:cntrl:]]{0,80}(timeout|connection error)|database[^[:cntrl:]]{0,80}(timeout|connection error)' "$api_logs_to_scan" | grep -Eiv 'ORA-20991|TX12 disposable audit failure' || true)"
-rm -f "$api_logs_to_scan"
-if [[ -n "$oracle_error_matches" ]]; then
-  oracle_error_count="$(printf '%s\n' "$oracle_error_matches" | wc -l | tr -d '[:space:]')"
-  echo "BLOCK7_UNEXPECTED_ORACLE_ERRORS=$oracle_error_count" >&2
+# Audit complete Oracle exception events, not isolated regex fragments. TX12's
+# deliberate ORA-20991 and its Oracle stack wrappers are permitted only within
+# the same event; any unrelated Oracle error, connection failure or timeout
+# still blocks certification. Never print SQL, secrets or exception contents.
+api_log_paths=("$first_api_log")
+if [[ "$api_log" != "$first_api_log" ]]; then
+  api_log_paths+=("$api_log")
+fi
+if ! python3 "$repo_root/tools/validate_block7_oracle_logs.py" "${api_log_paths[@]}"; then
+  echo 'BLOCK7_ORACLE_LOG_AUDIT=FAIL' >&2
   exit 1
 fi
-echo 'BLOCK7_UNEXPECTED_ORACLE_ERRORS=0'
+echo 'BLOCK7_ORACLE_LOG_AUDIT=PASS'
 echo 'BLOCK7_REAL_BROWSER_TESTS_EXECUTED=1'
 echo 'BLOCK7_CRITICAL_MATRIX_API_ROUTES_MOCKED=0'
 echo 'BLOCK7_BROWSER_API_ORACLE_E2E=PASS'
