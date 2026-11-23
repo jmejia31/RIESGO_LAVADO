@@ -102,6 +102,19 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
   });
 
   test('Cambio en caliente (TITULO_A -> TITULO_B e ICONO_A -> ICONO_B) sin recargar página y persistencia tras recarga', async ({ page }) => {
+    // Chromium may abort an in-flight favicon download when the link is
+    // replaced. This is a browser cancellation, not an HTTP/API failure.
+    // Permit at most two exact requests in this case only; leave all other
+    // request failures, server errors, and functional assertions blocking.
+    expectRequestFailure({
+      method: 'GET',
+      path: '/api/configuracion/sistema/favicon',
+      protocol: 'http:',
+      errorText: 'net::ERR_ABORTED',
+      minCount: 0,
+      maxCount: 2,
+      reason: 'The hot favicon replacement and subsequent page reload can cancel only the superseded favicon request',
+    });
     let currentConfig = {
       nombreSistema: 'SGRLA-IHSS',
       nombreInstitucion: 'Instituto Hondureño de Seguridad Social',
@@ -536,6 +549,19 @@ test.describe('Parametrización dinámica de Título y Favicon Institucional', (
   });
 
   test('Coexistencia y desacoplamiento: URL directa HTTPS no altera logo institucional ni flujo de carga', async ({ page }) => {
+    // Chromium may abort an in-flight favicon download when the link is
+    // replaced. This is a browser cancellation, not an HTTP/API failure.
+    // Permit at most two exact requests in this case only; leave all other
+    // request failures, server errors, and functional assertions blocking.
+    expectRequestFailure({
+      method: 'GET',
+      path: '/api/configuracion/sistema/favicon',
+      protocol: 'http:',
+      errorText: 'net::ERR_ABORTED',
+      minCount: 0,
+      maxCount: 2,
+      reason: 'Switching to the direct HTTPS favicon can abort only the superseded dynamic favicon request',
+    });
     let currentConfig = {
       nombreSistema: 'SGRLA-IHSS',
       nombreInstitucion: 'Instituto Hondureño de Seguridad Social',
