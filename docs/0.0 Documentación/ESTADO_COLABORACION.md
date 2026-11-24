@@ -6072,3 +6072,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Validación documental:** el Word quedó validado estructuralmente (29 párrafos, 2 tablas, 9 encabezados, metadatos personales vacíos). El render visual quedó pendiente por ausencia de `soffice.exe`/Word; se documentó la limitación.
 - **Estado:** `ISSUE_25_STATE=OPEN_BLOCKED_EXTERNAL`; `ISSUE_25_CLOSE_CRITERIA=NOT_MET`; `P06_PREFLIGHT=PASS`; `ORACLE_READONLY_ACCESS=NOT_VERIFIED`; `OWNER_SIGNOFF=PENDING`.
 - **Punto exacto de continuación:** recibir y revisar desde el entorno QA autorizado el reporte sanitizado vigente de `AUTH-01..AUTH-06` y la certificación de la cuenta Oracle independiente RO contra el objetivo exacto. No cerrar la Issue antes de demostrar ambos controles.
+
+# ESTADO VIGENTE — Preparacion operativa final P06 Issue 25 (COD, 2026-11-23 19:37 -06:00)
+
+- **Base / rama:** `3b47b404f5d073c1349542f78668059b60be39fe` / `desarrollo`; no se realizaron conexiones privilegiadas.
+- **Orden atendida:** comentario [7118335850](https://github.com/jmejia31/RIESGO_LAVADO/issues/25#issuecomment-7118335850), limitada a las dos certificaciones conectadas pendientes.
+- **Quality Gate vigente:** [45297437340](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45297437340) `completed/success` sobre el HEAD anterior; no se repitieron sus pruebas manualmente.
+- **Expediente:** `docs/certificaciones/ISSUE-25-P06-DICTAMEN-FINAL-2026-11-23.docx`, SHA-256 `22017C03BB64090312A2295E9781DFA65D46E7484407C8788BF0945B032ECFDC`. Incluye handoff operador/DBA, matriz AUTH, controles Oracle RO y criterios de cierre.
+- **Seguridad:** no se solicitaron ni visualizaron credenciales; no se ejecutaron `LOCAL_OWNER_MANUAL` ni `CERTIFICATION`; watcher no reactivado; DML/DDL=0.
+- **Pendientes externos únicos:** `AUTH_REAL_6_OF_6=PENDING_OPERATOR_PRIMARY_EVIDENCE`; `ORACLE_INDEPENDENT_RO=PENDING_DBA_PRIMARY_EVIDENCE`; `ORACLE_TARGET_VERIFIED=PENDING_PRIMARY_EVIDENCE`.
+- **Estado:** `ISSUE25=OPEN_BLOCKED_EXTERNAL`; `OWNER_SIGNOFF=PENDING`; no cerrar hasta recibir seis PASS reales, cero omitidos y el acta RO independiente contra el destino exacto.
+- **Punto exacto de continuación:** ejecutar exclusivamente en sesión protegida del operador/DBA; devolver a COD un resumen sanitizado con hashes, IDs opacos, resultados individuales y cadena de custodia. COD consolidará y verificará sin manejar secretos.

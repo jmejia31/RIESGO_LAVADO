@@ -13052,3 +13052,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Dictamen:** `ISSUE_25_STATE=OPEN_BLOCKED_EXTERNAL`; `ISSUE_25_CLOSE_CRITERIA=NOT_MET`; `P06_PREFLIGHT=PASS`; `ORACLE_READONLY_ACCOUNT=NOT_VERIFIED`; `NO_CODE_FIX_PERFORMED=YES`.
 - **Punto exacto de continuación:** el propietario u operador QA autorizado debe publicar evidencia sanitizada vigente de los seis flujos AUTH y de la cuenta Oracle independiente RO contra el objetivo exacto. Solo después debe ejecutarse una comprobación de cierre y evaluarse la clausura de la Issue.
 
+## 2026-11-23 19:37 -06:00 — Preparacion operativa final de las dos certificaciones P06 (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; base `3b47b404f5d073c1349542f78668059b60be39fe`; alcance exclusivo de la orden [7118335850](https://github.com/jmejia31/RIESGO_LAVADO/issues/25#issuecomment-7118335850).
+- **Objetivo:** preparar la ejecución protegida de autenticación real de Javier QA y la comprobación DBA de Oracle RO independiente, sin realizar conexiones, sin manejar credenciales y sin repetir auditorías documentales.
+- **Verificación heredada no repetida:** Quality Gate [45297437340](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45297437340) `completed/success` sobre `3b47b404f5d073c1349542f78668059b60be39fe`; Quality Gate [45294032404](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45294032404) `completed/success` sobre `d12e74c9`. El watcher continúa `DISABLED_BY_QA_ISOLATION`.
+- **Expediente actualizado:** `docs/certificaciones/ISSUE-25-P06-DICTAMEN-FINAL-2026-11-23.docx`; se incorporó el handoff operativo, el comando `CERTIFICATION` con ruta marcada, la matriz AUTH-01..AUTH-06A, los controles DBA RO y el paquete mínimo de evidencias. Nueva validación estructural: 53 párrafos, 4 tablas, 16 encabezados, metadatos personales vacíos. SHA-256 `22017C03BB64090312A2295E9781DFA65D46E7484407C8788BF0945B032ECFDC`.
+- **Pruebas no ejecutadas por diseño:** no se ejecutó `p06-owner-manual.ps1`, no se ejecutó `p06-qa-runner.ps1 -Mode CERTIFICATION`, no se hizo login, no se abrió sesión Oracle, no se ejecutó DML/DDL y no se reactivó el watcher. La certificación queda pendiente de operador QA y DBA autorizados.
+- **Cambios:** solo expediente Word, bitácora y estado colaborativo; no se modificó código funcional, datos, producción, `main`, Oracle institucional, permisos ni otras funcionalidades.
+- **Dictamen:** `AUTH_REAL_6_OF_6=PENDING_OPERATOR_PRIMARY_EVIDENCE`; `ORACLE_INDEPENDENT_RO=PENDING_DBA_PRIMARY_EVIDENCE`; `QUALITY_GATE=SUCCESS_FOR_CURRENT_HANDOFF`; `ISSUE25=OPEN_BLOCKED_EXTERNAL`.
+- **Punto exacto de continuación:** el operador QA debe ejecutar la ruta `CERTIFICATION` en una sesión Windows segregada y el DBA debe emitir el acta RO sanitizada. COD solo cotejará hashes, resultados y referencias sin recibir secretos; después actualizará el Word y solicitará aceptación expresa antes de cerrar la Issue.
+
