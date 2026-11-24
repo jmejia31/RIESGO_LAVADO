@@ -6056,3 +6056,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** no se modificaron producción, Oracle institucional, datos, migraciones, `main`, configuración de cálculo ni servicios manuales. Los archivos sin seguimiento preexistentes se preservan fuera del stage.
 - **Estado:** `ORACLE_XE_POOL_FIX=IMPLEMENTED`; `ANGULAR_CLEAN_INSTALL=PASS_TEMPORARY_COPY`; `WORKSPACE_NODE_MODULES_REPAIR=PENDING_MANUAL_SERVICE_STOP`; `QUALITY_GATE=AWAITING_FRESH_RUN`; `OWNER_SIGNOFF=PENDING`.
 - **Punto exacto de continuación:** stage selectivo de la prueba y ambos documentos, commit/push a `origin/desarrollo`, verificar el run del SHA exacto y no cerrar hasta que el job Oracle demuestre la reconciliación completa.
+
+# ESTADO VIGENTE — Dictamen final Issue 25 P06 QA (COD, 2026-11-23 18:01 -06:00)
+
+- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; `HEAD == origin/desarrollo == 12d4cc2497e630a5110a73d6412fe0aaf9881afd`.
+- **Orden ejecutada:** Issue [#25, comentario vigente](https://github.com/jmejia31/RIESGO_LAVADO/issues/25#issuecomment-7117336415). Se recuperó la evidencia disponible y no se repitieron pruebas ya certificadas.
+- **P06 preflight:** `PASS`; paquete `P06-QA-REAL-2026-11-23-01`, 13 archivos, digest `6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`.
+- **Quality Gate:** [45272724235](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45272724235) `completed/success` sobre el SHA exacto. Su alcance es preflight/CI; no constituye login real de Javier QA ni verificación de una cuenta Oracle RO independiente.
+- **Watcher:** `RiesgoLavado-CodexQueue=DISABLED_BY_QA_ISOLATION`; la tarea existe, `Disabled`, `Settings.Enabled=False`, sin proceso activo observado. No se reactivó ni se invocó `-AllowExecution`.
+- **Autenticación:** `JAVIER_QA_REAL_AUTH=HISTORICAL_OWNER_REPORTED_NOT_CURRENTLY_REVIEWABLE`. La documentación histórica conserva `AUTH-01..AUTH-06=6/6 PASS`, pero no hay evidencia primaria vigente y sanitizada publicada para esta certificación.
+- **Oracle:** `ORACLE_READONLY_ACCOUNT=NOT_VERIFIED`. El artefacto histórico con hash `4457B8AF5D333E220D3523F4153D9688B8BF4FA036F1A6076F4182EFC32849FD` solo demuestra `SELECT_ONLY`/`AUTH_PERSISTENCE_OWNER`; no demuestra independencia de cuenta, grants mínimos y objetivo exacto vigente.
+- **Cambios de esta intervención:** no se modificó código, datos, Oracle, producción, `main`, watcher, servicios manuales ni Configuración de cálculo. Se creó el Word `docs/certificaciones/ISSUE-25-P06-DICTAMEN-FINAL-2026-11-23.docx` con SHA-256 `07D1C6D8A7602B0882276288A9171CEDAF0C7514208EFB5F49804754FE7EE1B` y se actualizó la bitácora.
+- **Validación documental:** el Word quedó validado estructuralmente (29 párrafos, 2 tablas, 9 encabezados, metadatos personales vacíos). El render visual quedó pendiente por ausencia de `soffice.exe`/Word; se documentó la limitación.
+- **Estado:** `ISSUE_25_STATE=OPEN_BLOCKED_EXTERNAL`; `ISSUE_25_CLOSE_CRITERIA=NOT_MET`; `P06_PREFLIGHT=PASS`; `ORACLE_READONLY_ACCESS=NOT_VERIFIED`; `OWNER_SIGNOFF=PENDING`.
+- **Punto exacto de continuación:** recibir y revisar desde el entorno QA autorizado el reporte sanitizado vigente de `AUTH-01..AUTH-06` y la certificación de la cuenta Oracle independiente RO contra el objetivo exacto. No cerrar la Issue antes de demostrar ambos controles.

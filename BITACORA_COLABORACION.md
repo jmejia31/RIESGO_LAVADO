@@ -13037,3 +13037,16 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `CONSOLIDATED_COLUMN_ALIGNMENT=CORRECTED`; `LOCAL_ANGULAR_TEST=BLOCKED_MISSING_DEPENDENCY`; `P0_CERTIFICATION=BLOCKED` por Quality Gate/validaciones pendientes.
 - **Punto exacto de continuación:** publicar el cambio selectivo, verificar el SHA remoto y validar visualmente la tabla con el frontend manual ya levantado por el propietario.
 
+## 2026-11-23 18:01 -06:00 — Dictamen final Issue 25 P06 QA (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; inicio `12d4cc2497e630a5110a73d6412fe0aaf9881afd`; `HEAD == origin/desarrollo` al inicio y al cierre de la auditoría.
+- **Objetivo:** ejecutar la orden vigente de la Issue [#25](https://github.com/jmejia31/RIESGO_LAVADO/issues/25#issuecomment-7117336415) usando evidencia existente, sin repetir pruebas certificadas, sin manejar credenciales y sin cerrar mientras falte una condición demostrable.
+- **Evidencia vigente verificada:** paquete `P06-QA-REAL-2026-11-23-01`, digest `6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`, 13 archivos; Quality Gate [45272724235](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45272724235) `completed/success` sobre `12d4cc24`.
+- **Watcher Windows:** inspección de solo lectura. `RiesgoLavado-CodexQueue` existe y está `Disabled`, `Settings.Enabled=False`; no se detectó proceso activo. Estado clasificado como `DISABLED_BY_QA_ISOLATION`. No se reactivó, no se ejecutó `-AllowExecution` y no se modificó la cola.
+- **Autenticación Javier QA:** se conserva el reporte histórico owner-provided de `AUTH-01` a `AUTH-06` como referencia `6/6 PASS`, pero no se encontró un artefacto primario vigente, sanitizado y revisable en el repositorio que permita elevarlo a certificación actual. No se ejecutaron logins ni se solicitaron credenciales.
+- **Oracle:** el artefacto histórico sanitizado con hash `4457B8AF5D333E220D3523F4153D9688B8BF4FA036F1A6076F4182EFC32849FD` reporta `SELECT_ONLY` y `AUTH_PERSISTENCE_OWNER`; no prueba una cuenta independiente de solo lectura ni reconcilia por sí solo el objetivo exacto del paquete vigente. No se ejecutó DML ni una comprobación conectada con credenciales.
+- **Cambios:** no se corrigió código ni se tocó producción, `main`, Oracle institucional, datos, watcher, servicios manuales o Configuración de cálculo. Se creó únicamente el expediente Word y se actualizó esta bitácora y el estado vivo.
+- **Expediente:** `docs/certificaciones/ISSUE-25-P06-DICTAMEN-FINAL-2026-11-23.docx`; SHA-256 `07D1C6D8A7602B0882276288A9171CEDAF0C7514208EFB5F49804754FE7EE1B`. La validación estructural pasó: 29 párrafos, 2 tablas, 9 encabezados y metadatos personales vacíos. El render visual no pudo ejecutarse porque el entorno no dispone de `soffice.exe` ni Word; queda declarado, no oculto.
+- **Dictamen:** `ISSUE_25_STATE=OPEN_BLOCKED_EXTERNAL`; `ISSUE_25_CLOSE_CRITERIA=NOT_MET`; `P06_PREFLIGHT=PASS`; `ORACLE_READONLY_ACCOUNT=NOT_VERIFIED`; `NO_CODE_FIX_PERFORMED=YES`.
+- **Punto exacto de continuación:** el propietario u operador QA autorizado debe publicar evidencia sanitizada vigente de los seis flujos AUTH y de la cuenta Oracle independiente RO contra el objetivo exacto. Solo después debe ejecutarse una comprobación de cierre y evaluarse la clausura de la Issue.
+
