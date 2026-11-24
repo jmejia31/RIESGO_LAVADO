@@ -143,22 +143,24 @@ public sealed class ApplicationRateLimitingTests
     }
 
     [Fact]
-    public void DefaultSettings_PermiteAlMenosDiezLoginsPorMinutoParaSuitesDePruebas()
+    public void DefaultSettings_ConservaLimiteInstitucionalDeCincoLoginsPorMinuto()
     {
         var settings = new RateLimitingSettings();
 
-        Assert.True(settings.LoginPermitLimit >= 10,
-            $"LoginPermitLimit ({settings.LoginPermitLimit}) debe ser al menos 10 para soportar suites de pruebas automatizadas.");
+        Assert.Equal(5, settings.LoginPermitLimit);
 
         var context = CreateContext("POST", "/api/auth/login", ip: "127.0.0.1");
         using var limiter = PartitionedRateLimiter.Create<HttpContext, string>(
             request => ApplicationRateLimitPartitions.ForRequest(request, settings));
 
-        for (var i = 1; i <= 6; i++)
+        for (var i = 1; i <= settings.LoginPermitLimit; i++)
         {
             using var lease = limiter.AttemptAcquire(context);
             Assert.True(lease.IsAcquired, $"El intento de login {i} debe permitirse.");
         }
+
+        using var rejected = limiter.AttemptAcquire(context);
+        Assert.False(rejected.IsAcquired);
     }
 
     private static DefaultHttpContext CreateContext(

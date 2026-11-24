@@ -7,6 +7,10 @@ const username = process.env['RL_QA_WEB_USERNAME'] ?? '';
 const password = process.env['RL_QA_WEB_PASSWORD'] ?? '';
 const expectedRole = process.env['P06_QA_EXPECTED_ROLE'] ?? '';
 const expectedModules = parseExpectedModules();
+const institutionalLoginPermitLimit = 5;
+const institutionalLoginWindowMs = 60_000;
+const loginWindowSafetyMs = 250;
+const loginAttempts: number[] = [];
 
 function parseExpectedModules(): number[] {
   const raw = process.env['P06_QA_EXPECTED_MODULE_IDS_JSON'] ?? '';
@@ -38,10 +42,37 @@ function requireCertification(): void {
   if (missing.length > 0) throw new Error(`BLOCKED_PRECONDITION:${missing.join(',')}`);
 }
 
+function pruneLoginAttempts(now: number): void {
+  while (loginAttempts.length > 0 && now - loginAttempts[0] >= institutionalLoginWindowMs) {
+    loginAttempts.shift();
+  }
+}
+
+async function waitForInstitutionalLoginPermit(page: Page): Promise<void> {
+  while (true) {
+    const now = Date.now();
+    pruneLoginAttempts(now);
+    if (loginAttempts.length < institutionalLoginPermitLimit) {
+      loginAttempts.push(now);
+      return;
+    }
+
+    const waitMs = Math.max(
+      0,
+      loginAttempts[0] + institutionalLoginWindowMs - now + loginWindowSafetyMs,
+    );
+    await page.waitForTimeout(waitMs);
+  }
+}
+
 async function login(page: Page): Promise<void> {
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await page.locator('#email').fill(username);
   await page.locator('#password').fill(password);
+  // P06 is intentionally serialized in playwright.qa.config.ts. The suite
+  // waits for the next fixed window instead of weakening the institutional
+  // five-attempts-per-IP login policy.
+  await waitForInstitutionalLoginPermit(page);
   const responsePromise = page.waitForResponse(response =>
     response.request().method() === 'POST' && response.url().endsWith('/api/auth/login'),
   );

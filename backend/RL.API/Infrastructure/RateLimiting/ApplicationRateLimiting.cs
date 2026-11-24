@@ -25,7 +25,7 @@ public static class RateLimitPolicies
 /// </summary>
 public sealed class RateLimitingSettings
 {
-    public int LoginPermitLimit { get; set; } = 10;
+    public int LoginPermitLimit { get; set; } = 5;
     public int LoginWindowSeconds { get; set; } = 60;
 
     public int PasswordRecoveryPermitLimit { get; set; } = 3;

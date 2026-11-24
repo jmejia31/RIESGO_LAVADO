@@ -6118,3 +6118,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Seguridad / preservación:** Oracle, datos, producción, `main`, frontend, watcher, servicios manuales y Configuración de cálculo permanecen intactos; no se usaron credenciales ni se ejecutaron conexiones institucionales.
 - **Estado:** `LISTAS_CONTROLLER_ANALYZERS=CORRECTED`; `LOCAL_BACKEND_BUILD=PASS`; `LOCAL_LISTAS_CONTROLLER_TESTS=22/22 PASS`; `QUALITY_GATE=SUCCESS` en [45431336323](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45431336323); `OWNER_SIGNOFF=NOT_REQUIRED_FOR_ANALYZER_FIX`.
 - **Punto exacto de continuación:** no queda pendiente técnico para estos dos diagnósticos. Las demás advertencias del backend quedan fuera de alcance y requieren autorización/intervención separada.
+
+# ESTADO VIGENTE — Limite institucional de login restaurado y P06 adaptado (COD, 2026-11-24 12:24 -06:00)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `aa793d42028c00456fd66b11f48447bbed5f124e`.
+- **Hallazgo:** el cambio de ANTIG había elevado `LoginPermitLimit` de `5` a `10` para que una suite de seis logins pasara dentro de una ventana de 60 segundos. Esto debilitaba la protección institucional y no contaba con autorización expresa.
+- **Estado técnico:** límite restaurado a `5` en `ApplicationRateLimiting.cs` y `appsettings.example.json`; la regresión backend valida exactamente cinco concesiones y rechazo del sexto. P06 mantiene seis escenarios, `workers=1`, `fullyParallel=false` y una espera controlada antes del sexto login; no hay bypass ni modificación de refresh.
+- **Verificación local:** `ApplicationRateLimitingTests=19/19 PASS`; `p06-qa-contract-tests.ps1=PASS`; descubrimiento Playwright `6`; certificación real `NO EJECUTADA`; credenciales `NO UTILIZADAS`; Oracle institucional `NO ACCEDIDO`.
+- **Paquete P06:** manifiesto actualizado con digest `8b1bb21f4db08a2dde3c88441d53c446ea21072f6b8e4dc55c411aeceff9e3e6`; se recalcularon los hashes del spec y del contrato.
+- **Protecciones:** no se tocaron CSRF, refresh, rotación, revocación, datos, producción, `main`, watcher, Configuración de cálculo ni servicios manuales.
+- **Estado de publicación:** `PENDING_SINGLE_COMMIT_AND_PUSH`; `QUALITY_GATE=PENDING_NEW_SHA`; `ISSUE25=OPEN_BLOCKED_EXTERNAL` hasta que el propietario ejecute la sesión protegida y aporte evidencia primaria de los seis escenarios.
+- **Punto exacto de continuación:** revisar `git diff --check` respetando el CRLF ya existente del spec, ejecutar validaciones finales, publicar un único commit en `origin/desarrollo`, consultar el Quality Gate y no cerrar la Issue sin AUTH-01..AUTH-06A reales.

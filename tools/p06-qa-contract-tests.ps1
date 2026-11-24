@@ -193,6 +193,11 @@ try {
     $specText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'frontend\rl-app\e2e\p06-qa-real-auth.spec.ts')
     if ($specText -notmatch 'if \(!isRealAuthMode\) return') { throw 'LOCAL_OWNER_LOGOUT_CLEANUP_NOT_PRESENT' }
     Write-Output 'LOCAL_OWNER_LOGOUT_CLEANUP=PASS'
+    if ($specText -notmatch 'institutionalLoginPermitLimit = 5' -or $specText -notmatch 'institutionalLoginWindowMs = 60_000' -or $specText -notmatch 'waitForInstitutionalLoginPermit\(page\)') { throw 'INSTITUTIONAL_LOGIN_RATE_LIMIT_CONTRACT_NOT_PRESENT' }
+    $playwrightConfigText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'frontend\rl-app\playwright.qa.config.ts')
+    if ($playwrightConfigText -notmatch 'workers: 1' -or $playwrightConfigText -notmatch 'fullyParallel: false') { throw 'P06_SERIAL_LOGIN_CONTRACT_NOT_PRESENT' }
+    Write-Output 'INSTITUTIONAL_LOGIN_RATE_LIMIT=PASS'
+    Write-Output 'P06_SERIAL_LOGIN_CONTRACT=PASS'
     Write-Output 'CERTIFICATION_MODE_PROPAGATION=PASS'
     Write-Output 'CERTIFICATION_SKIPPED_TEST_REJECTED=PASS'
     Write-Output 'CERTIFICATION_ZERO_TESTS_REJECTED=PASS'
