@@ -6059,7 +6059,7 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 # ESTADO VIGENTE — Dictamen final Issue 25 P06 QA (COD, 2026-11-23 18:01 -06:00)
 
-- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; cierre documental `HEAD == origin/desarrollo == 223b830c704b80e459dba9f46e58dec71b3e959c`.
+- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; `HEAD == origin/desarrollo` verificado después del push final de esta intervención.
 - **Orden ejecutada:** Issue [#25, comentario vigente](https://github.com/jmejia31/RIESGO_LAVADO/issues/25#issuecomment-7117336415). Se recuperó la evidencia disponible y no se repitieron pruebas ya certificadas.
 - **P06 preflight:** `PASS`; paquete `P06-QA-REAL-2026-11-23-01`, 13 archivos, digest `6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`.
 - **Quality Gate del expediente publicado:** [45294032404](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45294032404) terminó `completed/success` sobre `d12e74c92f1c8abeade9d8e33c1116f597a2e98a`; valida el commit documental publicado y no sustituye autenticación real ni Oracle RO independiente.

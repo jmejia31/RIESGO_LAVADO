@@ -13039,7 +13039,7 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 
 ## 2026-11-23 18:01 -06:00 — Dictamen final Issue 25 P06 QA (COD)
 
-- **Autor / rama / base:** `COD` / `desarrollo`; inicio `12d4cc2497e630a5110a73d6412fe0aaf9881afd`; cierre documental `HEAD == origin/desarrollo == 223b830c704b80e459dba9f46e58dec71b3e959c`.
+- **Autor / rama / base:** `COD` / `desarrollo`; inicio `12d4cc2497e630a5110a73d6412fe0aaf9881afd`; cierre documental con `HEAD == origin/desarrollo` verificado después del push final.
 - **Objetivo:** ejecutar la orden vigente de la Issue [#25](https://github.com/jmejia31/RIESGO_LAVADO/issues/25#issuecomment-7117336415) usando evidencia existente, sin repetir pruebas certificadas, sin manejar credenciales y sin cerrar mientras falte una condición demostrable.
 - **Evidencia vigente verificada:** paquete `P06-QA-REAL-2026-11-23-01`, digest `6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`, 13 archivos; Quality Gate [45272724235](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45272724235) `completed/success` sobre `12d4cc24`.
 - **Quality Gate del expediente publicado:** [45294032404](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45294032404) terminó `completed/success` sobre `d12e74c92f1c8abeade9d8e33c1116f597a2e98a`. Todos los jobs finalizaron correctamente; esto valida el commit publicado y no sustituye las evidencias externas de autenticación/Oracle RO.
