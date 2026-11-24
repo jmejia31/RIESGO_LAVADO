@@ -27,6 +27,25 @@ QA_SECRET_ACCESS_GATE=BLOCKED
 BLOCK10_AUTHORIZED=NO
 ```
 
+## Reconciliación vigente — decisión Oracle del propietario 2026-11-24
+
+La Issue #25 sustituyó el requisito previo de cuenta Oracle RO independiente. El alcance vigente usa la cuenta administrativa QA existente (`RL_QA_DB_TEST_*`) y `RL_QA_DB_HOST` en una sesión protegida del operador. La cuenta no se presenta como RO; el paquete solo ejecuta diagnósticos `SELECT_ONLY` y no realiza DML/DDL ni mutaciones de negocio en esta intervención.
+
+La huella del paquete se actualizó tras corregir la ordenación cultural del digest entre Windows PowerShell 5 y PowerShell 7:
+
+```ini
+P06_PACKAGE_SHA256=a8b61de81554f34c6d1dca61baa2fa1b3f7b534d834630b03d2c63c8ff6f35bb
+P06_WINDOWS_POWERSHELL_PREFLIGHT=PASS
+P06_CONTRACT_TESTS=PASS
+AUTH_REAL_6_OF_6=PENDING_OPERATOR_PRIMARY_EVIDENCE
+ORACLE_EFFECTIVE_TARGET_VERIFIED=PENDING_OPERATOR_PRIMARY_EVIDENCE
+ORACLE_ACCOUNT_TYPE=ADMIN_OWNER_APPROVED
+ORACLE_READONLY_SECRETS_REQUIRED=NO
+ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION
+QA_ORACLE_QUERY_MODE=SELECT_ONLY
+ISSUE25=OPEN_PENDING_REAL_TESTS_AND_ACCEPTANCE
+```
+
 Ver [decisión de seguridad](DECISION_SEGURIDAD_EJECUCION_QA.md) y [controles de aceptación](CONTROL_ACEPTACION_SEGURIDAD_QA.md).
 
 ## Decisión del propietario y reconciliación final — 2026-11-06

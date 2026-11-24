@@ -22,8 +22,16 @@ function Stop-P06([string]$Reason, [int]$Code = 3) {
 }
 
 function Get-ManifestDigest($ManifestObject) {
-    $rows = foreach ($file in ($ManifestObject.files | Sort-Object path)) {
-        "$($file.path)=$((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $RepoRoot $file.path)).Hash.ToLowerInvariant())"
+    # Sort-Object uses culture-sensitive ordering in Windows PowerShell 5 and
+    # ordinal ordering in PowerShell 7 for some punctuation (for example
+    # package-lock.json vs package.json). The package digest must be identical
+    # in the protected Windows operator session and in CI, so sort paths with
+    # an explicit ordinal comparer instead of relying on the host shell.
+    $paths = [System.Collections.Generic.List[string]]::new()
+    foreach ($file in $ManifestObject.files) { [void]$paths.Add([string]$file.path) }
+    $paths.Sort([StringComparer]::Ordinal)
+    $rows = foreach ($pathValue in $paths) {
+        "$pathValue=$((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $RepoRoot $pathValue)).Hash.ToLowerInvariant())"
     }
     $payload = (($rows -join "`n") + "`n")
     $sha = [Security.Cryptography.SHA256]::Create()
@@ -48,7 +56,7 @@ function Assert-ManualOwnerDbIdentity([string]$PackageDigest) {
         if ($values.ContainsKey($key) -or $value -match '(?i)password|token|secret|connectionstring') { Stop-P06 'MANUAL_DB_IDENTITY_UNSAFE' }
         $values[$key] = $value
     }
-    $expected = @{ SOURCE = 'BACKEND_ORACLE_DB_CONTEXT_AND_SQLPLUS'; QUERY_EXECUTED = 'YES'; QUERY_OPERATION = 'SELECT_ONLY'; PRIVILEGE_CHECK = 'AUTH_PERSISTENCE_OWNER'; PRIVILEGE_RESULT = 'PASS'; AUTH_OBJECTS_VALID = 'YES'; AUTH_TRIGGERS_VALID = 'YES'; BACKEND_RUNTIME_ORACLE_PROOF = 'PASS'; BACKEND_PROFILE = 'PRODUCTION'; BACKEND_SESSION_USER = 'RIESGO_LAVADO'; BACKEND_CURRENT_SCHEMA = 'RIESGO_LAVADO'; BACKEND_SERVICE = 'hpprod1'; BACKEND_DB_UNIQUE_NAME = 'hpprod1'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; PACKAGE_SHA256 = $PackageDigest }
+    $expected = @{ SOURCE = 'BACKEND_ORACLE_DB_CONTEXT_AND_SQLPLUS'; QUERY_EXECUTED = 'YES'; QUERY_OPERATION = 'SELECT_ONLY'; QA_ORACLE_QUERY_MODE = 'SELECT_ONLY'; ORACLE_ACCOUNT_TYPE = 'ADMIN_OWNER_APPROVED'; ORACLE_READONLY_SECRETS_REQUIRED = 'NO'; ORACLE_INDEPENDENT_RO = 'NOT_REQUIRED_BY_OWNER_DECISION'; PRIVILEGE_CHECK = 'AUTH_PERSISTENCE_OWNER'; PRIVILEGE_RESULT = 'PASS'; AUTH_OBJECTS_VALID = 'YES'; AUTH_TRIGGERS_VALID = 'YES'; BACKEND_RUNTIME_ORACLE_PROOF = 'PASS'; BACKEND_PROFILE = 'PRODUCTION'; BACKEND_SESSION_USER = 'RIESGO_LAVADO'; BACKEND_CURRENT_SCHEMA = 'RIESGO_LAVADO'; BACKEND_SERVICE = 'hpprod1'; BACKEND_DB_UNIQUE_NAME = 'hpprod1'; SCHEMA = 'RIESGO_LAVADO'; SERVICE = 'hpprod1'; DB_UNIQUE_NAME = 'hpprod1'; PACKAGE_SHA256 = $PackageDigest }
     foreach ($key in $expected.Keys) { if ($values[$key] -ne $expected[$key]) { Stop-P06 "MANUAL_DB_IDENTITY_INVALID_$key" } }
     foreach ($key in @('BACKEND_PROCESS_ID', 'BACKEND_DB_NAME', 'BACKEND_INSTANCE_NAME', 'DB_NAME', 'INSTANCE_NAME')) {
         if (-not $values.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($values[$key])) { Stop-P06 "MANUAL_DB_IDENTITY_INVALID_$key" }

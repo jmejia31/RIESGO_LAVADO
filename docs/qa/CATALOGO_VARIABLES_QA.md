@@ -52,3 +52,21 @@ El propietario confirmó que el destino es una **base de desarrollo/QA en infrae
 La URL, puerto, servicio, esquema y `DB_UNIQUE_NAME` son sus **valores técnicos reales**, no el nombre amigable “RIESGOS LAVADO”. `RL_QA_ALLOWED_MUTATION_MODULE=MATRICES_RIESGOS`, `RL_QA_DATA_MUTATIONS_ENABLED=false` y `RL_QA_EXECUTION_MODE=DRY_RUN` mientras el preflight técnico no esté validado. Los nombres no son evidencia de instalación de secretos.
 
 **Seguridad:** `desarrollo` no está protegida; los secrets no deben ser consumidos por workflows de código mutable antes de revisar una ruta de ejecución confiable. No reutilizar credenciales de producción operativa.
+
+## Addendum vigente del propietario — 2026-11-24
+
+La decisión publicada en la Issue #25 (`issuecomment-7133898662`) sustituye la exigencia operativa previa de una cuenta Oracle independiente de solo lectura:
+
+- `RL_QA_DB_TEST_USERNAME` y `RL_QA_DB_TEST_PASSWORD` identifican la cuenta administrativa de QA aprobada por el propietario. La cuenta no se clasifica como RO.
+- `RL_QA_DB_HOST` se consume únicamente en la sesión Windows protegida del operador. Ninguno de esos valores se imprime, persiste en el repositorio o se entrega a Codex, Antigravity, watcher o GitHub Actions mutable.
+- `RL_QA_DB_READONLY_USERNAME` y `RL_QA_DB_READONLY_PASSWORD` no se solicitan, no se crean y no son requisito de cierre.
+- La comprobación SQL de este paquete continúa siendo estrictamente `SELECT_ONLY`; eso describe las operaciones de diagnóstico ejecutadas, no los privilegios de la cuenta.
+
+```ini
+ORACLE_ACCOUNT_TYPE=ADMIN_OWNER_APPROVED
+ORACLE_READONLY_SECRETS_REQUIRED=NO
+ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION
+QA_ORACLE_QUERY_MODE=SELECT_ONLY
+```
+
+Las referencias históricas a una cuenta RO se conservan para trazabilidad, pero no prevalecen sobre este addendum.

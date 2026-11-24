@@ -45,3 +45,20 @@ BLOCK10_AUTHORIZED=NO
 ```
 
 Siguiente control: [Checklist de aceptación](CONTROL_ACEPTACION_SEGURIDAD_QA.md). La preparación documental previa permanece en [Plan P06](PLAN_PREPARACION_QA.md).
+
+## Decisión supersedente del propietario — 2026-11-24
+
+La Issue #25 confirma que la cuenta `RL_QA_DB_TEST_USERNAME` / `RL_QA_DB_TEST_PASSWORD` es la cuenta administrativa QA aprobada para las comprobaciones Oracle. No se requiere una cuenta RO independiente y no se deben solicitar ni crear secrets `RL_QA_DB_READONLY_*`. Esta decisión sustituye únicamente ese requisito operativo histórico; mantiene la separación de la sesión protegida y la prohibición de exponer secretos.
+
+La cuenta administrativa no se certifica como RO. El procedimiento solo ejecuta consultas `SELECT_ONLY` para comprobar identidad, destino y objetos de persistencia; no ejecuta DML, DDL, cambios de grants ni mutaciones de negocio.
+
+```ini
+ORACLE_ACCOUNT_TYPE=ADMIN_OWNER_APPROVED
+ORACLE_READONLY_SECRETS_REQUIRED=NO
+ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION
+QA_ORACLE_QUERY_MODE=SELECT_ONLY
+QA_DB_TARGET_VERIFIED=PENDING_CONNECTED_EVIDENCE
+QA_WEB_LOGIN_VERIFIED=NO
+QA_AUTH_REAL_E2E=NOT_EXECUTED
+ISSUE25=OPEN_PENDING_REAL_TESTS_AND_ACCEPTANCE
+```

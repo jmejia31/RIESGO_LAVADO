@@ -34,17 +34,19 @@ function Assert-BackendRuntimeCorrespondence([string]$RepoRoot) {
     Write-Output 'P06_OWNER_BACKEND_RUNTIME=PASS'
     return @{ ProcessId = $runtimeProcess[0].ProcessId; Endpoint = 'PASS'; Oracle = $probeBody }
 }
-function Get-SecretMap {
-    $lines = @(& dotnet user-secrets list --project (Join-Path $RepoRoot 'backend\RL.API\RL.API.csproj') 2>$null)
-    if ($LASTEXITCODE -ne 0) { Stop-Owner 'BACKEND_USER_SECRETS_UNAVAILABLE' }
-    $map = @{}
-    foreach ($line in $lines) { if ($line -match '^\s*(?<key>[^=]+?)\s*=\s*(?<value>.*)$') { $map[$Matches.key.Trim()] = $Matches.value } }
-    return $map
-}
-function Get-ConnectionPart([string]$Connection, [string]$Key) {
-    $match = [Regex]::Match($Connection, "(?i)(?:^|;)\s*$Key\s*=\s*([^;]+)")
-    if (-not $match.Success) { Stop-Owner "BACKEND_CONNECTION_MISSING_$Key" }
-    return $match.Groups[1].Value.Trim()
+function Get-ProtectedQaOracleConnection([object]$OracleRuntime) {
+    $hostValue = [Environment]::GetEnvironmentVariable('RL_QA_DB_HOST', 'Process')
+    $userName = [Environment]::GetEnvironmentVariable('RL_QA_DB_TEST_USERNAME', 'Process')
+    $password = [Environment]::GetEnvironmentVariable('RL_QA_DB_TEST_PASSWORD', 'Process')
+    if ([string]::IsNullOrWhiteSpace($hostValue) -or [string]::IsNullOrWhiteSpace($userName) -or [string]::IsNullOrWhiteSpace($password)) { Stop-Owner 'QA_ORACLE_ADMIN_SECRET_CONTEXT_REQUIRED' }
+    $dataSource = $hostValue.Trim()
+    if ($dataSource -notmatch '(?i)^\(DESCRIPTION=' -and $dataSource -notmatch '(?i)/' -and $dataSource -notmatch '(?i)\bSERVICE_NAME\s*=') {
+        $service = [string]$OracleRuntime.serviceName
+        if ([string]::IsNullOrWhiteSpace($service)) { Stop-Owner 'BACKEND_ORACLE_SERVICE_UNAVAILABLE' }
+        if ($dataSource -notmatch ':\d+$') { $dataSource = "$dataSource`:1521" }
+        $dataSource = "$dataSource/$service"
+    }
+    return @{ UserName = $userName.Trim(); Password = $password; DataSource = $dataSource }
 }
 function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]$Password, [string]$DataSource) {
     $psi = [Diagnostics.ProcessStartInfo]::new(); $psi.FileName = $SqlPlusPath; $psi.Arguments = '-S -L /nolog'; $psi.UseShellExecute = $false; $psi.CreateNoWindow = $true; $psi.RedirectStandardInput = $true; $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true
@@ -60,7 +62,7 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
     $process.StandardInput.WriteLine("select 'PRIVILEGES|AUTH_PERSISTENCE_OWNER|' || case when (select count(*) from user_tables where table_name in ('RL_USUARIOS','RL_REFRESH_TOKENS','RL_AUDITORIA')) = 3 then 'YES' else 'NO' end || '|AUTH_OBJECTS_VALID|' || case when (select count(*) from user_objects where object_name in ('RL_USUARIOS','RL_REFRESH_TOKENS','RL_AUDITORIA') and status <> 'VALID') = 0 then 'YES' else 'NO' end || '|AUTH_TRIGGERS_VALID|' || case when (select count(*) from user_triggers where table_name in ('RL_USUARIOS','RL_REFRESH_TOKENS','RL_AUDITORIA') and status <> 'ENABLED') = 0 then 'YES' else 'NO' end from dual;")
     $process.StandardInput.WriteLine('exit'); $process.StandardInput.Close()
     $stdout = $process.StandardOutput.ReadToEnd(); $stderr = $process.StandardError.ReadToEnd(); $process.WaitForExit()
-    if ($process.ExitCode -ne 0 -or $stderr -match '(?i)ORA-|SP2-') { Stop-Owner 'ORACLE_READONLY_IDENTITY_QUERY_FAILED' }
+    if ($process.ExitCode -ne 0 -or $stderr -match '(?i)ORA-|SP2-') { Stop-Owner 'ORACLE_IDENTITY_QUERY_FAILED' }
     $lines = @($stdout -split "`r?`n" | ForEach-Object { if ($null -ne $_) { $_.Trim() } } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $identityLine = $lines | Where-Object { $_ -like 'IDENTITY|*' } | Select-Object -Last 1
     $privilegeLine = $lines | Where-Object { $_ -like 'PRIVILEGES|*' } | Select-Object -Last 1
@@ -76,7 +78,7 @@ function Invoke-OracleIdentity([string]$SqlPlusPath, [string]$UserName, [string]
 }
 
 # All checks below run before any web credential prompt.
-$preflight = @(& powershell -NoProfile -File $runner -Mode PREFLIGHT -RepoRoot $RepoRoot 2>&1)
+$preflight = @(& $runner -Mode PREFLIGHT -RepoRoot $RepoRoot 2>&1)
 if ($LASTEXITCODE -ne 0) { Stop-Owner 'PACKAGE_PREFLIGHT_FAILED' }
 $watcher = Get-ScheduledTask -TaskName 'RiesgoLavado-CodexQueue' -ErrorAction SilentlyContinue
 if ($watcher -and $watcher.Settings.Enabled) { Stop-Owner 'WATCHER_ENABLED' }
@@ -85,18 +87,18 @@ Assert-LocalHttp 'http://localhost:5043/healthz'
 $backendRuntime = Assert-BackendRuntimeCorrespondence $RepoRoot
 $sqlplus = Get-Command sqlplus -ErrorAction SilentlyContinue
 if (-not $sqlplus) { Stop-Owner 'SQLPLUS_NOT_AVAILABLE' }
-$settings = Get-SecretMap
-if ($settings['Database:Profile'] -ne 'PRODUCTION') { Stop-Owner 'BACKEND_PROFILE_NOT_PRODUCTION' }
-$connection = $settings['ConnectionStrings:OracleDB_Production']
-if ([string]::IsNullOrWhiteSpace($connection)) { Stop-Owner 'BACKEND_EFFECTIVE_CONNECTION_NOT_AVAILABLE' }
-$oracleUser = Get-ConnectionPart $connection 'User Id'; $oraclePassword = Get-ConnectionPart $connection 'Password'; $dataSource = Get-ConnectionPart $connection 'Data Source'
-$identity = Invoke-OracleIdentity $sqlplus.Source $oracleUser $oraclePassword $dataSource
+$qaOracleConnection = Get-ProtectedQaOracleConnection $backendRuntime.Oracle
+$identity = Invoke-OracleIdentity $sqlplus.Source $qaOracleConnection.UserName $qaOracleConnection.Password $qaOracleConnection.DataSource
 if ($backendRuntime.Oracle.profile -ne 'PRODUCTION' -or $backendRuntime.Oracle.sessionUser -ine $identity.Schema -or $backendRuntime.Oracle.currentSchema -ine $identity.Schema -or $backendRuntime.Oracle.serviceName -ine $identity.Service -or $backendRuntime.Oracle.dbUniqueName -ine $identity.DbUniqueName -or $backendRuntime.Oracle.dbName -ine $identity.DbName -or $backendRuntime.Oracle.instanceName -ine $identity.InstanceName) { Stop-Owner 'BACKEND_ORACLE_IDENTITY_MISMATCH' }
 $identityPath = Join-Path ([IO.Path]::GetTempPath()) ('P06-OracleIdentity-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '.txt')
 $evidenceLines = @(
     'SOURCE=BACKEND_ORACLE_DB_CONTEXT_AND_SQLPLUS'
     'QUERY_EXECUTED=YES'
     "QUERY_OPERATION=$($identity.QueryOperation)"
+    'QA_ORACLE_QUERY_MODE=SELECT_ONLY'
+    'ORACLE_ACCOUNT_TYPE=ADMIN_OWNER_APPROVED'
+    'ORACLE_READONLY_SECRETS_REQUIRED=NO'
+    'ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION'
     "PRIVILEGE_CHECK=$($identity.PrivilegeCheck)"
     'PRIVILEGE_RESULT=PASS'
     "AUTH_OBJECTS_VALID=$($identity.ObjectsValid)"
@@ -133,7 +135,7 @@ $names = @('P06_QA_MODE','P06_QA_MANUAL_OWNER_APPROVAL','P06_QA_EXPECTED_ROLE','
 try {
     foreach ($name in $names) { $old[$name] = [Environment]::GetEnvironmentVariable($name, 'Process') }
     [Environment]::SetEnvironmentVariable('P06_QA_MODE','LOCAL_OWNER_MANUAL','Process'); [Environment]::SetEnvironmentVariable('P06_QA_MANUAL_OWNER_APPROVAL','YES','Process'); [Environment]::SetEnvironmentVariable('P06_QA_EXPECTED_ROLE',$role,'Process'); [Environment]::SetEnvironmentVariable('P06_QA_EXPECTED_MODULE_IDS_JSON',$modules,'Process'); [Environment]::SetEnvironmentVariable('P06_QA_WEB_ORIGIN','http://localhost:4200','Process'); [Environment]::SetEnvironmentVariable('P06_QA_API_ORIGIN','http://localhost:5043','Process'); [Environment]::SetEnvironmentVariable('P06_QA_MANUAL_DB_IDENTITY_PATH',$identityPath,'Process'); [Environment]::SetEnvironmentVariable('RL_QA_WEB_USERNAME',$credential.UserName,'Process'); [Environment]::SetEnvironmentVariable('RL_QA_WEB_PASSWORD',$credential.GetNetworkCredential().Password,'Process')
-    & powershell -NoProfile -File $runner -Mode LOCAL_OWNER_MANUAL -RepoRoot $RepoRoot
+    & $runner -Mode LOCAL_OWNER_MANUAL -RepoRoot $RepoRoot
     exit $LASTEXITCODE
 }
-finally { foreach ($name in $names) { [Environment]::SetEnvironmentVariable($name, $old[$name], 'Process') }; $credential = $null; $oraclePassword = $null }
+finally { foreach ($name in $names) { [Environment]::SetEnvironmentVariable($name, $old[$name], 'Process') }; $credential = $null; $qaOracleConnection = $null }

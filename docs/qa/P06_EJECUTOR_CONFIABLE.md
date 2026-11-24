@@ -81,3 +81,18 @@ powershell -NoProfile -File tools/p06-owner-manual.ps1
 ```
 
 El comando comprueba que el proceso que escucha el puerto API autorizado pertenece al checkout esperado, verifica el endpoint de configuración de solo lectura y solo entonces consulta Oracle mediante `sqlplus` sin mostrar la credencial. La consulta distingue `QUERY_OPERATION=SELECT_ONLY` de la comprobación conservadora de privilegios efectivos (`session_roles`, privilegios de sistema y privilegios recibidos); cualquier ambigüedad bloquea. Genera evidencia sanitizada externa y exige `SCHEMA=RIESGO_LAVADO`, `SERVICE=hpprod1`, `DB_UNIQUE_NAME=hpprod1`, `READ_ONLY=YES`, correspondencia del runtime y `PACKAGE_SHA256`. Luego solicita aprobación manual, rol, módulos y credencial mediante `Get-Credential`; no usa argumentos, archivos persistentes ni logs para la contraseña.
+
+## Addendum operativo vigente — decisión del propietario 2026-11-24
+
+La cuenta Oracle requerida para la comprobación local es la cuenta administrativa QA existente en `RL_QA_DB_TEST_USERNAME` / `RL_QA_DB_TEST_PASSWORD`, con `RL_QA_DB_HOST` como destino suministrado en la sesión protegida. No se solicitan ni se crean `RL_QA_DB_READONLY_USERNAME` o `RL_QA_DB_READONLY_PASSWORD`. Una cuenta administrativa nunca se declara como cuenta de solo lectura.
+
+El modo `LOCAL_OWNER_MANUAL` solo puede ejecutarse por el operador autorizado, fuera de Codex/Antigravity/watcher, y consume esos secretos únicamente desde el proceso protegido. La consulta de identidad y persistencia del paquete es `SELECT_ONLY`, sin DDL, DML, cambios de grants ni pruebas de escritura. La evidencia debe declarar explícitamente:
+
+```ini
+ORACLE_ACCOUNT_TYPE=ADMIN_OWNER_APPROVED
+ORACLE_READONLY_SECRETS_REQUIRED=NO
+ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION
+QA_ORACLE_QUERY_MODE=SELECT_ONLY
+```
+
+El texto histórico que exigía `READ_ONLY=YES` ya no es un criterio vigente; no debe convertirse una consulta SELECT-only en una certificación de privilegios RO. El digest vigente del paquete tras la corrección de compatibilidad Windows PowerShell/PowerShell 7 es `a8b61de81554f34c6d1dca61baa2fa1b3f7b534d834630b03d2c63c8ff6f35bb`.

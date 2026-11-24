@@ -38,3 +38,18 @@ QA_AUTONOMOUS_MUTATIONS=DISABLED
 P06_REAL_QA_CERTIFICATION=NOT_EXECUTED
 BLOCK10_AUTHORIZED=NO
 ```
+
+## Addendum de aceptación vigente — 2026-11-24
+
+El control histórico `P06-G07` sobre usuario Oracle solo lectura queda supersedido por la decisión del propietario publicada en la Issue #25. El control vigente es verificar, en sesión protegida, que se usa la cuenta administrativa QA aprobada, que el destino coincide con el backend y que las consultas de esta comprobación fueron exclusivamente SELECT.
+
+```ini
+P06_G07_CURRENT=ADMIN_OWNER_APPROVED_SELECT_ONLY_DIAGNOSTICS
+ORACLE_ACCOUNT_TYPE=ADMIN_OWNER_APPROVED
+ORACLE_READONLY_SECRETS_REQUIRED=NO
+ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION
+QA_ORACLE_QUERY_MODE=SELECT_ONLY
+QA_DB_TARGET_VERIFIED=PENDING_CONNECTED_EVIDENCE
+```
+
+No se declara `ORACLE_READONLY_ACCOUNT_VERIFIED=PASS` para una cuenta administrativa. La certificación real de Javier QA y la comprobación conectada del destino continúan pendientes de la sesión protegida del operador.
