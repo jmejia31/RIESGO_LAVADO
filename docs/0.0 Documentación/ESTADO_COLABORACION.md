@@ -6083,3 +6083,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Pendientes externos únicos:** `AUTH_REAL_6_OF_6=PENDING_OPERATOR_PRIMARY_EVIDENCE`; `ORACLE_INDEPENDENT_RO=PENDING_DBA_PRIMARY_EVIDENCE`; `ORACLE_TARGET_VERIFIED=PENDING_PRIMARY_EVIDENCE`.
 - **Estado:** `ISSUE25=OPEN_BLOCKED_EXTERNAL`; `OWNER_SIGNOFF=PENDING`; no cerrar hasta recibir seis PASS reales, cero omitidos y el acta RO independiente contra el destino exacto.
 - **Punto exacto de continuación:** ejecutar exclusivamente en sesión protegida del operador/DBA; devolver a COD un resumen sanitizado con hashes, IDs opacos, resultados individuales y cadena de custodia. COD consolidará y verificará sin manejar secretos.
+
+# ESTADO VIGENTE — Correccion tecnica y Quality Gate P06 (COD, 2026-11-24 09:18 -06:00)
+
+- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; commit funcional `f251546b43324a7368812a3c1d2f41e0949cbfe6`, publicado en `origin/desarrollo`.
+- **Causa y correccion:** el digest del manifiesto era dependiente de cultura bajo Windows PowerShell y el wrapper anidaba otro shell. Se corrigió el ordenamiento ordinal, se unificó la ejecución directa y se alinearon los marcadores con la decisión vigente del propietario para el uso de la cuenta QA administrativa en modo `SELECT_ONLY`.
+- **Paquete vigente:** `P06_PACKAGE_SHA256=a8b61de81554f34c6d1dca61baa2fa1b3f7b534d834630b03d2c63c8ff6f35bb`; `P06_PREFLIGHT=PASS`; `P06_PLAYWRIGHT_DISCOVERY=6`; `P06_CONTRACT_TESTS=PASS`.
+- **Quality Gate:** [45419935855](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45419935855) `completed/success` sobre el SHA funcional exacto. Incluyó reproducción Full Matrix, 59 identidades, 30 transiciones, 34 y 2006 cálculos, persistencia/API/exportaciones y contenedores.
+- **Expediente:** `docs/certificaciones/ISSUE-25-P06-DICTAMEN-FINAL-2026-11-23.docx`, SHA-256 `92710E98991FAD4E588A70EAD29BAA7A85116500DCCC788685A23FE0A55E822D`; estructura validada: `64` párrafos, `5` tablas, `20` encabezados, autor vacío. Render visual pendiente por falta de Word/soffice.
+- **Seguridad:** credenciales no solicitadas ni visualizadas; conexiones Oracle institucionales `0`; DML/DDL `0`; watcher `RiesgoLavado-CodexQueue` no reactivado; producción, `main`, datos y Configuración de cálculo no modificados.
+- **Pendientes externos únicos:** `AUTH_REAL_6_OF_6=PENDING_OPERATOR_PRIMARY_EVIDENCE`; `ORACLE_TARGET_VERIFIED=PENDING_OPERATOR_PRIMARY_EVIDENCE`; `ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION`; `OWNER_SIGNOFF=PENDING`.
+- **Dictamen vigente:** `ISSUE25=OPEN_BLOCKED_EXTERNAL`; `ISSUE_25_CLOSE_CRITERIA=NOT_MET`; el Quality Gate técnico está verde, pero no sustituye las dos verificaciones conectadas ni la aceptación del propietario.
+- **Punto exacto de continuación:** ejecutar solo la sesión protegida del operador QA con las variables de proceso autorizadas, publicar evidencia sanitizada y solicitar aceptación expresa. No cerrar la Issue antes de verificar esos resultados.
