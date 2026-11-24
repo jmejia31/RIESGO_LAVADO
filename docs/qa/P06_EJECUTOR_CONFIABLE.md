@@ -12,7 +12,7 @@ Este paquete prepara la ejecucion, pero no acredita aislamiento Windows, identid
 - `tools/qa/P06_OracleIdentity.sql`: consulta Oracle de solo lectura; no contiene credenciales ni ejecuta DDL/DML.
 - `tools/qa/P06_QA_PACKAGE_MANIFEST.json`: hashes individuales y digest del paquete.
 
-Digest vigente del paquete: `6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`. Versión fijada: `P06-QA-REAL-2026-11-23-01`. El Quality Gate de `desarrollo` valida esta huella y descubre exactamente seis escenarios, sin secretos ni conexión a Oracle.
+Digest vigente del paquete: `d0b237403ab14a1acb95dc93e08cac67f15506a47112033989fab0d4df213f18`. Versión fijada: `P06-QA-REAL-2026-11-23-01`. El Quality Gate de `desarrollo` valida esta huella y descubre exactamente seis escenarios, sin secretos ni conexión a Oracle.
 
 ## Preflight sin credenciales
 
@@ -95,4 +95,4 @@ ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION
 QA_ORACLE_QUERY_MODE=SELECT_ONLY
 ```
 
-El texto histórico que exigía `READ_ONLY=YES` ya no es un criterio vigente; no debe convertirse una consulta SELECT-only en una certificación de privilegios RO. El digest vigente del paquete tras la corrección de compatibilidad Windows PowerShell/PowerShell 7 es `a8b61de81554f34c6d1dca61baa2fa1b3f7b534d834630b03d2c63c8ff6f35bb`.
+El texto histórico que exigía `READ_ONLY=YES` ya no es un criterio vigente; no debe convertirse una consulta SELECT-only en una certificación de privilegios RO. El digest vigente del paquete tras la corrección de compatibilidad Windows PowerShell/PowerShell 7 y la ampliación diagnóstica de AUTH-06A es `d0b237403ab14a1acb95dc93e08cac67f15506a47112033989fab0d4df213f18`.

@@ -34,7 +34,7 @@ La Issue #25 sustituyó el requisito previo de cuenta Oracle RO independiente. E
 La huella del paquete se actualizó tras corregir la ordenación cultural del digest entre Windows PowerShell 5 y PowerShell 7:
 
 ```ini
-P06_PACKAGE_SHA256=a8b61de81554f34c6d1dca61baa2fa1b3f7b534d834630b03d2c63c8ff6f35bb
+P06_PACKAGE_SHA256=d0b237403ab14a1acb95dc93e08cac67f15506a47112033989fab0d4df213f18
 P06_WINDOWS_POWERSHELL_PREFLIGHT=PASS
 P06_CONTRACT_TESTS=PASS
 AUTH_REAL_6_OF_6=PENDING_OPERATOR_PRIMARY_EVIDENCE

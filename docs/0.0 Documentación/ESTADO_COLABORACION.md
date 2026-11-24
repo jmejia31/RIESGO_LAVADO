@@ -6141,3 +6141,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** no se tocaron CSRF, refresh, rotación, revocación, datos, producción, `main`, watcher, Configuración de cálculo ni servicios manuales.
 - **Estado de publicación:** `PENDING_SINGLE_COMMIT_AND_PUSH`; `QUALITY_GATE=PENDING_NEW_SHA`; `ISSUE25=OPEN_BLOCKED_EXTERNAL` hasta que el propietario ejecute la sesión protegida y aporte evidencia primaria de los seis escenarios.
 - **Punto exacto de continuación:** revisar `git diff --check` respetando el CRLF ya existente del spec, ejecutar validaciones finales, publicar un único commit en `origin/desarrollo`, consultar el Quality Gate y no cerrar la Issue sin AUTH-01..AUTH-06A reales.
+## ESTADO VIGENTE — Cierre integral documental P0 B07 P07 P08 — 2026-11-24 14:05 -06:00 (COD)
+
+- **Base / rama:** `desarrollo` @ `1b6f193f64885ddcf3dc06372b4cf34f9dec477f`; esta intervención es documental y no altera código funcional.
+- **Cambio demostrable:** las guías P06 ahora publican el mismo digest que `tools/qa/P06_QA_PACKAGE_MANIFEST.json`: `d0b237403ab14a1acb95dc93e08cac67f15506a47112033989fab0d4df213f18`.
+- **Expedientes:** B07, P07 consolidado y P08 fueron creados bajo `docs/certificaciones/`; el índice fue actualizado con estados explícitos y no certificantes. `EVIDENCE_COMMIT_SHA` y URLs remotas quedan pendientes del único commit/push de cierre.
+- **Dictámenes:** `B07=READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS`; `P07=READY_FOR_DBA_REVIEW_NOT_CERTIFIED`; `P08=READY_FOR_OWNER_REVIEW`. B03 conserva `PARTIAL` y no se inventó un defecto funcional nuevo.
+- **Pendientes externos:** AUTH real 6/6 de P06, evidencia primaria de AUTH-06A, destino Oracle/DBA, backup/restore/rollback, revisión visual del propietario y aceptación formal. Ninguno fue sustituido por evidencia sintética o documental.
+- **Protecciones:** `ORACLE_INSTITUTIONAL_WRITES=0`; `DML=0`; `DDL=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `WATCHER_REACTIVATED=NO`; `SERVICES_STARTED_OR_STOPPED=NO`; `CONFIGURACION_CALCULO_TOUCHED=NO`.
+- **Verificación visual DOCX:** el renderer fue ejecutado para los tres documentos, pero el entorno carece de `soffice.exe`; las PNG no pudieron generarse. Estado `DOCX_RENDER=BLOCKED_MISSING_LIBREOFFICE`, no PASS.
+- **Continuación exacta:** retirar el builder temporal, stage selectivo, un commit y un push; luego una sola consulta de estado del Quality Gate del SHA documental, sin polling.

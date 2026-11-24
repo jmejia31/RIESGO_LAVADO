@@ -719,6 +719,52 @@
       "main_modified": false,
       "owner_acceptance": "PENDING",
       "review_ready": "NO_BLOCKED_BY_12_E2E_FAILURES"
+    },
+    {
+      "id": "B07-CERTIFICACION-INTEGRAL-20261124",
+      "path": "B07_CERTIFICACION_INTEGRAL_RIESGO_LAVADO.docx",
+      "status": "READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS",
+      "author": "COD",
+      "source_code_sha": "1b6f193f64885ddcf3dc06372b4cf34f9dec477f",
+      "evidence_commit_sha": "PENDING_FINAL_DOCUMENTARY_COMMIT",
+      "quality_gate_status": "PENDING_NEW_DOCUMENTARY_SHA",
+      "github_evidence_index_url": "PENDING_POST_PUSH",
+      "github_evidence_url": "PENDING_POST_PUSH",
+      "github_remote_verified": "PENDING_POST_PUSH",
+      "security_scan": "PENDING_NEW_QUALITY_GATE",
+      "review_ready": "YES_WITH_DOCUMENTED_LIMITATIONS",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/25"
+    },
+    {
+      "id": "P07-EXPEDIENTE-DBA-CONSOLIDADO-20261124",
+      "path": "P07_EXPEDIENTE_DBA_CONSOLIDADO_RIESGO_LAVADO.docx",
+      "status": "READY_FOR_DBA_REVIEW_NOT_CERTIFIED",
+      "author": "COD",
+      "source_code_sha": "1b6f193f64885ddcf3dc06372b4cf34f9dec477f",
+      "evidence_commit_sha": "PENDING_FINAL_DOCUMENTARY_COMMIT",
+      "quality_gate_status": "PENDING_NEW_DOCUMENTARY_SHA",
+      "github_evidence_index_url": "PENDING_POST_PUSH",
+      "github_evidence_url": "PENDING_POST_PUSH",
+      "github_remote_verified": "PENDING_POST_PUSH",
+      "security_scan": "PENDING_NEW_QUALITY_GATE",
+      "review_ready": "YES_WITH_DBA_LIMITATIONS",
+      "oracle_institutional_writes": 0
+    },
+    {
+      "id": "P08-GUIA-NUEVA-FAMILIA-20261124",
+      "path": "P08_GUIA_NUEVA_FAMILIA_Y_ENTREGA_RIESGO_LAVADO.docx",
+      "status": "READY_FOR_OWNER_REVIEW",
+      "author": "COD",
+      "source_code_sha": "1b6f193f64885ddcf3dc06372b4cf34f9dec477f",
+      "evidence_commit_sha": "PENDING_FINAL_DOCUMENTARY_COMMIT",
+      "quality_gate_status": "PENDING_NEW_DOCUMENTARY_SHA",
+      "github_evidence_index_url": "PENDING_POST_PUSH",
+      "github_evidence_url": "PENDING_POST_PUSH",
+      "github_remote_verified": "PENDING_POST_PUSH",
+      "security_scan": "PENDING_NEW_QUALITY_GATE",
+      "review_ready": "YES_FOR_OWNER_REVIEW",
+      "production_modified": false,
+      "oracle_institutional_writes": 0
     }
   ]
 }

@@ -13129,3 +13129,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `INSTITUTIONAL_LOGIN_LIMIT=RESTORED_5_PER_60_SECONDS`; `P06_RATE_LIMIT_AWARE=YES`; `REFRESH_LOGIC_UNCHANGED=YES`; `AUTH_REAL_6_OF_6=NOT_EXECUTED_BY_COD`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `QUALITY_GATE=PENDING_NEW_SHA`.
 - **Punto exacto de continuación:** revisar el diff selectivo, ejecutar los validadores locales de alcance, realizar un único commit/push a `origin/desarrollo`, comprobar el Quality Gate del SHA exacto y dejar la suite lista para la ejecución protegida del propietario.
 
+## 2026-11-24 14:05 -06:00 — Cierre integral documental P0 B07 P07 P08 (COD)
+
+- **Base / alcance:** rama `desarrollo` @ `1b6f193f64885ddcf3dc06372b4cf34f9dec477f`; intervención única conforme a la orden maestra de cierre integral. No se modificó código funcional, Oracle institucional, producción, `main`, watcher, Block 10, autenticación ni Configuración de cálculo.
+- **Corrección demostrable:** se alinearon las referencias documentales del digest P06 con el manifiesto vigente `d0b237403ab14a1acb95dc93e08cac67f15506a47112033989fab0d4df213f18` en `docs/qa/P06_EJECUTOR_CONFIABLE.md` y `docs/qa/RECONCILIACION_DOCUMENTAL_P06.md`.
+- **Expedientes creados:** `docs/certificaciones/B07_CERTIFICACION_INTEGRAL_RIESGO_LAVADO.docx`, `docs/certificaciones/P07_EXPEDIENTE_DBA_CONSOLIDADO_RIESGO_LAVADO.docx` y `docs/certificaciones/P08_GUIA_NUEVA_FAMILIA_Y_ENTREGA_RIESGO_LAVADO.docx`. Se actualizó `docs/certificaciones/INDEX.json` con estados no certificantes y referencias pendientes de publicación.
+- **Dictamen:** B07 queda `READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS`; P07 `READY_FOR_DBA_REVIEW_NOT_CERTIFIED`; P08 `READY_FOR_OWNER_REVIEW`. No se afirmó autenticación real, Oracle físico, backup/restore/rollback, firma DBA ni aceptación del propietario.
+- **Verificación:** índice JSON válido, diff documental revisable, manifiesto P06 coherente, preflight/contratos P06 heredados de la intervención previa y estado Git inspeccionado. No se repitió la suite completa ni se esperó GitHub Actions.
+- **Limitación de render:** el renderer DOCX fue invocado para los tres documentos, pero no pudo producir PNG porque el entorno no tiene `soffice.exe`/LibreOffice disponible. Esta verificación visual queda pendiente y se declara explícitamente; no se presenta como PASS.
+- **Protecciones:** no se usaron credenciales, no se conectó Oracle, no se iniciaron ni detuvieron servicios, no se reactivó el watcher y los untracked ajenos quedaron fuera del stage.
+- **Estado:** `INTEGRAL_CLOSURE=READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS`; `B03=PARTIAL`; `P06_REAL_AUTH=AWAITING_PROTECTED_RUN`; `P07_LIVE_ORACLE=NOT_EXECUTED`; `OWNER_ACCEPTANCE=PENDING`; `QUALITY_GATE_NEW_DOCUMENTARY_SHA=PENDING`.
+- **Punto de continuación:** eliminar el script temporal de construcción, revisar el diff selectivo, hacer un único commit/push de esta intervención y consultar una sola vez el estado del Quality Gate del SHA final, sin esperar ni repetirlo.
+
