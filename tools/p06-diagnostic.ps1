@@ -21,6 +21,7 @@ function Get-P06SafeDiagnostic {
     $reporter = $false
     $available = $false
     $reportedReal = $null
+    $auth06aHttpStatuses = $null
     foreach ($item in @($Lines)) {
         $line = [string]$item
         if ($line -match '^P06_DIAGNOSTIC_REPORTER=(PASS)$') { $reporter = $true; continue }
@@ -28,6 +29,7 @@ function Get-P06SafeDiagnostic {
         if ($line -match '^P06_(AUTH_01|AUTH_02|AUTH_03|AUTH_04|AUTH_05|AUTH_06A)=(PASS|FAIL|SKIPPED|NOT_RUN)$') { $statuses[$Matches[1]] = $Matches[2]; continue }
         if ($line -match '^P06_(AUTH_01|AUTH_02|AUTH_03|AUTH_04|AUTH_05|AUTH_06A)_STAGE=(login_profile_permissions|session_storage|csrf|refresh_rotation|logout_revocation|refresh_concurrency)$') { $stages[$Matches[1]] = $Matches[2]; continue }
         if ($line -match '^P06_(AUTH_01|AUTH_02|AUTH_03|AUTH_04|AUTH_05|AUTH_06A)_FAILURE_CATEGORY=(ASSERTION_FAILURE|HTTP_STATUS_MISMATCH|TIMEOUT|NAVIGATION_FAILURE|BROWSER_FAILURE|ENVIRONMENT_FAILURE|SETUP_FAILURE|UNKNOWN_FAILURE)$') { $categories[$Matches[1]] = $Matches[2]; continue }
+        if ($line -match '^P06_AUTH_06A_HTTP_STATUSES=(\d{3},\d{3}|NOT_AVAILABLE)$') { $auth06aHttpStatuses = $Matches[1]; continue }
         if ($line -match '^P06_TESTS_(TOTAL|PASSED|FAILED|SKIPPED|NOT_RUN)=(\d+)$') { $reportedCounts[$Matches[1]] = [int]$Matches[2]; continue }
         if ($line -match '^P06_FAILED_SCENARIOS=(NONE|(?:AUTH_01|AUTH_02|AUTH_03|AUTH_04|AUTH_05|AUTH_06A)(?:,(?:AUTH_01|AUTH_02|AUTH_03|AUTH_04|AUTH_05|AUTH_06A))*)$') { $reportedFailed = $Matches[1]; continue }
         if ($line -match '^P06_FAILURE_CATEGORY=(NONE|ASSERTION_FAILURE|HTTP_STATUS_MISMATCH|TIMEOUT|NAVIGATION_FAILURE|BROWSER_FAILURE|ENVIRONMENT_FAILURE|SETUP_FAILURE|UNKNOWN_FAILURE)$') { $aggregateCategory = $Matches[1]; continue }
@@ -41,6 +43,8 @@ function Get-P06SafeDiagnostic {
         if ($statuses[$id] -eq 'FAIL' -and -not $categories.ContainsKey($id)) { return $null }
         if ($statuses[$id] -ne 'FAIL' -and $categories.ContainsKey($id)) { return $null }
     }
+    if ($statuses['AUTH_06A'] -eq 'FAIL' -and $null -eq $auth06aHttpStatuses) { return $null }
+    if ($statuses['AUTH_06A'] -ne 'FAIL' -and $null -ne $auth06aHttpStatuses) { return $null }
 
     $passed = @($script:P06ScenarioIds | Where-Object { $statuses[$_] -eq 'PASS' }).Count
     $failed = @($script:P06ScenarioIds | Where-Object { $statuses[$_] -eq 'FAIL' }).Count
@@ -63,6 +67,7 @@ function Get-P06SafeDiagnostic {
         NotRun = $notRun
         FailedScenarios = $expectedFailed
         FailureCategory = $aggregateCategory
+        Auth06aHttpStatuses = $auth06aHttpStatuses
         RealCertification = $reportedReal
     }
 }
@@ -75,6 +80,7 @@ function Write-P06SafeDiagnostic {
         Write-Output "P06_${id}_STAGE=$($Diagnostic.Stages[$id])"
         if ($Diagnostic.Categories.ContainsKey($id)) { Write-Output "P06_${id}_FAILURE_CATEGORY=$($Diagnostic.Categories[$id])" }
     }
+    if ($Diagnostic.Statuses['AUTH_06A'] -eq 'FAIL') { Write-Output "P06_AUTH_06A_HTTP_STATUSES=$($Diagnostic.Auth06aHttpStatuses)" }
     Write-Output 'P06_TESTS_TOTAL=6'
     Write-Output "P06_TESTS_PASSED=$($Diagnostic.Passed)"
     Write-Output "P06_TESTS_FAILED=$($Diagnostic.Failed)"

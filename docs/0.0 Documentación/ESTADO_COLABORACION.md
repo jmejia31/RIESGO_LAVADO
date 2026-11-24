@@ -1,3 +1,15 @@
+﻿# ESTADO VIGENTE — AUTH-06A: timeout aislado y reporte de concurrencia sanitizado (COD, 2026-11-24 13:01 -06:00)
+
+- **Base de intervención:** `desarrollo` @ `052ef2fd9d79d7d0cf65789538e0053dee56fbe3`; Issue #25, comentario `#7141272654`.
+- **Defecto tratado:** el `waitForInstitutionalLoginPermit()` conserva el límite institucional de 5 logins por ventana de 60 segundos y puede consumir el timeout predeterminado de Playwright antes de AUTH-06A. La solución aplica `test.setTimeout(120_000)` solamente a AUTH-06A; no cambia la configuración global ni el límite de seguridad.
+- **Trazabilidad:** cuando AUTH-06A falla, el reporte seguro publica exactamente dos códigos HTTP de tres dígitos (`P06_AUTH_06A_HTTP_STATUSES=200,401`, con los valores reales observados) o `NOT_AVAILABLE` si la ejecución no llegó a obtener ambas respuestas. El parser valida que la línea solo exista para AUTH-06A fallido y rechaza formatos adicionales o inválidos.
+- **Contrato preservado:** se mantienen los seis escenarios, `workers: 1`, `fullyParallel: false`, `retries: 0`, aserciones de concurrencia (`algún 200` y todos `200/401`), CSRF, rotación, revocación y el límite de cinco logins. No se modificó código funcional de autenticación.
+- **Manifiesto P06:** digest recalculado `d0b237403ab14a1acb95dc93e08cac67f15506a47112033989fab0d4df213f18`; las huellas de spec, reporter, parser y contrato están actualizadas.
+- **Verificación fresca:** `tools/p06-qa-contract-tests.ps1` PASS; `tools/p06-qa-runner.ps1 -Mode PREFLIGHT` PASS (`P06_PACKAGE_INTEGRITY=PASS`, `P06_PLAYWRIGHT_DISCOVERY=6`); ESLint PASS para spec/reporter; Playwright `--list` PASS con 6 tests.
+- **No ejecutado:** autenticación real Javier QA, códigos HTTP institucionales, Oracle, credenciales, watcher, servicios manuales y pruebas conectadas. `P06_AUTH_06A_HTTP_EVIDENCE=AWAITING_PROTECTED_RUN`; no se presenta evidencia sintética como certificación real.
+- **Estado:** `READY_FOR_PROTECTED_AUTH06A_RUN`; `QUALITY_GATE_EXACT_SHA=PENDING_PUSH`; Issue #25 permanece abierta hasta observar el nuevo Quality Gate y la ejecución protegida autorizada.
+- **Continuación exacta:** publicar un único commit en `origin/desarrollo`, verificar el SHA remoto y su Quality Gate; posteriormente el propietario ejecuta los seis escenarios desde su sesión protegida y devuelve el reporte sanitizado.
+
 # ESTADO VIGENTE — P06 QA: Causa Raíz de AUTH-06A y Ajuste de Rate Limiting (ANTIG, 2026-11-24)
 
 - **Causa raíz comprobada con evidencia primaria:** en la primera ejecución real del propietario de `tools/p06-owner-manual.ps1`, el fallo de `AUTH-06A` por `ASSERTION_FAILURE` fue causado por `HTTP 429 (Too Many Requests)` en el 6.º login consecutivo (`backend/RL.API/logs/rl-20261124.log` a las `11:09:59.775`).

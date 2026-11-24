@@ -11,6 +11,7 @@ const institutionalLoginPermitLimit = 5;
 const institutionalLoginWindowMs = 60_000;
 const loginWindowSafetyMs = 250;
 const loginAttempts: number[] = [];
+const auth06aHttpStatusesAnnotationType = 'P06_AUTH_06A_HTTP_STATUSES';
 
 function parseExpectedModules(): number[] {
   const raw = process.env['P06_QA_EXPECTED_MODULE_IDS_JSON'] ?? '';
@@ -190,6 +191,9 @@ test.describe('P06 autenticación real QA', () => {
   });
 
   test('AUTH-06A concurrencia backend sin errores internos', async ({ page }) => {
+    test.setTimeout(120_000);
+    const auth06aHttpStatuses = { type: auth06aHttpStatusesAnnotationType, description: 'NOT_AVAILABLE' };
+    test.info().annotations.push(auth06aHttpStatuses);
     requireCertification(); await login(page);
     const token = await csrfToken(page);
     const statuses = await page.evaluate(async ({ apiBaseUrl, token }) => {
@@ -199,6 +203,9 @@ test.describe('P06 autenticación real QA', () => {
       ]);
       return responses.map(response => response.status);
     }, { apiBaseUrl, token });
+    auth06aHttpStatuses.description = statuses.length === 2 && statuses.every(status => Number.isInteger(status) && status >= 100 && status <= 999)
+      ? statuses.join(',')
+      : 'NOT_AVAILABLE';
     expect(statuses.some(status => status === 200)).toBe(true);
     expect(statuses.every(status => status === 200 || status === 401)).toBe(true);
   });

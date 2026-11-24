@@ -13,6 +13,7 @@ type FailureCategory =
   | 'UNKNOWN_FAILURE';
 
 const scenarios: ScenarioId[] = ['AUTH_01', 'AUTH_02', 'AUTH_03', 'AUTH_04', 'AUTH_05', 'AUTH_06A'];
+const auth06aHttpStatusesAnnotationType = 'P06_AUTH_06A_HTTP_STATUSES';
 
 const stages: Record<ScenarioId, string> = {
   AUTH_01: 'login_profile_permissions',
@@ -46,9 +47,15 @@ function classifyFailure(result: TestResult): FailureCategory {
   return 'UNKNOWN_FAILURE';
 }
 
+function sanitizedAuth06aHttpStatuses(test: TestCase): string {
+  const annotation = test.annotations.find(value => value.type === auth06aHttpStatusesAnnotationType);
+  const value = annotation?.description?.trim() ?? '';
+  return value === 'NOT_AVAILABLE' || /^\d{3},\d{3}$/.test(value) ? value || 'NOT_AVAILABLE' : 'NOT_AVAILABLE';
+}
+
 export default class P06SafeReporter implements Reporter {
   private readonly planned = new Set<ScenarioId>();
-  private readonly results = new Map<ScenarioId, { status: ScenarioStatus; category?: FailureCategory }>();
+  private readonly results = new Map<ScenarioId, { status: ScenarioStatus; category?: FailureCategory; httpStatuses?: string }>();
 
   onBegin(_config: FullConfig, suite: Suite): void {
     for (const test of suite.allTests()) {
@@ -71,7 +78,11 @@ export default class P06SafeReporter implements Reporter {
       return;
     }
 
-    this.results.set(id, { status: 'FAIL', category: classifyFailure(result) });
+    this.results.set(id, {
+      status: 'FAIL',
+      category: classifyFailure(result),
+      ...(id === 'AUTH_06A' ? { httpStatuses: sanitizedAuth06aHttpStatuses(test) } : {}),
+    });
   }
 
   onEnd(): void {
@@ -93,6 +104,9 @@ export default class P06SafeReporter implements Reporter {
       console.log(`P06_${outcome.id}=${outcome.status}`);
       console.log(`P06_${outcome.id}_STAGE=${outcome.stage}`);
       if (outcome.category) console.log(`P06_${outcome.id}_FAILURE_CATEGORY=${outcome.category}`);
+      if (outcome.id === 'AUTH_06A' && outcome.status === 'FAIL' && outcome.httpStatuses) {
+        console.log(`P06_AUTH_06A_HTTP_STATUSES=${outcome.httpStatuses}`);
+      }
     }
     console.log('P06_TESTS_TOTAL=6');
     console.log(`P06_TESTS_PASSED=${passed}`);

@@ -140,7 +140,7 @@ try {
     if ((Test-SqlPlusParserContract @('SQL> IDENTITY|RIESGO_LAVADO|hpprod1|hpprod1|hpprod1|instance1|SELECT_ONLY','PRIVILEGES|AUTH_PERSISTENCE_OWNER|YES|AUTH_OBJECTS_VALID|YES|AUTH_TRIGGERS_VALID|YES')) -ne 'ORACLE_IDENTITY_OUTPUT_INCOMPLETE') { throw 'SQLPLUS_PROMPT_OUTPUT_REGRESSION_FAILED' }
     Write-Output 'SQLPLUS_OUTPUT_PARSER=PASS'
     Write-Output 'NULL_REGEX_PREVENTION=PASS'
-    function New-SimulatedP06Diagnostic([hashtable]$Statuses, [hashtable]$Categories = @{}) {
+    function New-SimulatedP06Diagnostic([hashtable]$Statuses, [hashtable]$Categories = @{}, [hashtable]$HttpStatuses = @{}) {
         $lines = @('P06_DIAGNOSTIC_REPORTER=PASS','P06_DIAGNOSTIC_STATUS=AVAILABLE')
         $stages = @{ AUTH_01='login_profile_permissions'; AUTH_02='session_storage'; AUTH_03='csrf'; AUTH_04='refresh_rotation'; AUTH_05='logout_revocation'; AUTH_06A='refresh_concurrency' }
         foreach ($id in @('AUTH_01','AUTH_02','AUTH_03','AUTH_04','AUTH_05','AUTH_06A')) {
@@ -148,6 +148,7 @@ try {
             $lines += "P06_${id}_STAGE=$($stages[$id])"
             if ($Categories.ContainsKey($id)) { $lines += "P06_${id}_FAILURE_CATEGORY=$($Categories[$id])" }
         }
+        if ($HttpStatuses.ContainsKey('AUTH_06A')) { $lines += "P06_AUTH_06A_HTTP_STATUSES=$($HttpStatuses['AUTH_06A'])" }
         $passed = @($Statuses.Values | Where-Object { $_ -eq 'PASS' }).Count
         $failed = @($Statuses.Values | Where-Object { $_ -eq 'FAIL' }).Count
         $skipped = @($Statuses.Values | Where-Object { $_ -eq 'SKIPPED' }).Count
@@ -165,8 +166,17 @@ try {
     Write-Output 'P06_DIAGNOSTIC_ALL_PASS=PASS'
     $oneFail = $allPass.Clone(); $oneFail['AUTH_03'] = 'FAIL'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $oneFail @{ AUTH_03='HTTP_STATUS_MISMATCH' }))) { throw 'P06_DIAGNOSTIC_ONE_FAIL_FAILED' }
     Write-Output 'P06_DIAGNOSTIC_ONE_FAIL=PASS'
-    $multipleFail = $allPass.Clone(); $multipleFail['AUTH_02'] = 'FAIL'; $multipleFail['AUTH_06A'] = 'FAIL'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $multipleFail @{ AUTH_02='BROWSER_FAILURE'; AUTH_06A='TIMEOUT' }))) { throw 'P06_DIAGNOSTIC_MULTIPLE_FAIL_FAILED' }
+    $multipleFail = $allPass.Clone(); $multipleFail['AUTH_02'] = 'FAIL'; $multipleFail['AUTH_06A'] = 'FAIL'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $multipleFail @{ AUTH_02='BROWSER_FAILURE'; AUTH_06A='TIMEOUT' } @{ AUTH_06A='NOT_AVAILABLE' }))) { throw 'P06_DIAGNOSTIC_MULTIPLE_FAIL_FAILED' }
     Write-Output 'P06_DIAGNOSTIC_MULTIPLE_FAIL=PASS'
+    $auth06aConcurrency = $allPass.Clone(); $auth06aConcurrency['AUTH_06A'] = 'FAIL'
+    if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $auth06aConcurrency @{ AUTH_06A='ASSERTION_FAILURE' } @{ AUTH_06A='200,401' }))) { throw 'P06_DIAGNOSTIC_AUTH_06A_HTTP_STATUSES_FAILED' }
+    Write-Output 'P06_DIAGNOSTIC_AUTH_06A_HTTP_STATUSES=PASS'
+    if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $auth06aConcurrency @{ AUTH_06A='TIMEOUT' } @{ AUTH_06A='NOT_AVAILABLE' }))) { throw 'P06_DIAGNOSTIC_AUTH_06A_HTTP_STATUSES_NOT_AVAILABLE_FAILED' }
+    $invalidAuth06aStatuses = New-SimulatedP06Diagnostic $auth06aConcurrency @{ AUTH_06A='ASSERTION_FAILURE' } @{ AUTH_06A='200,401,500' }
+    if ($null -ne (Get-P06SafeDiagnostic $invalidAuth06aStatuses)) { throw 'P06_DIAGNOSTIC_AUTH_06A_HTTP_STATUSES_INVALID_NOT_BLOCKED' }
+    $unexpectedAuth06aStatuses = New-SimulatedP06Diagnostic $allPass @{} @{ AUTH_06A='200,401' }
+    if ($null -ne (Get-P06SafeDiagnostic $unexpectedAuth06aStatuses)) { throw 'P06_DIAGNOSTIC_AUTH_06A_HTTP_STATUSES_ON_PASS_NOT_BLOCKED' }
+    Write-Output 'P06_DIAGNOSTIC_AUTH_06A_HTTP_STATUSES_SANITIZATION=PASS'
     $skipped = $allPass.Clone(); $skipped['AUTH_05'] = 'SKIPPED'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $skipped))) { throw 'P06_DIAGNOSTIC_SKIPPED_FAILED' }
     Write-Output 'P06_DIAGNOSTIC_SKIPPED=PASS'
     $notRun = $allPass.Clone(); $notRun['AUTH_06A'] = 'NOT_RUN'; if ($null -eq (Get-P06SafeDiagnostic (New-SimulatedP06Diagnostic $notRun))) { throw 'P06_DIAGNOSTIC_NOT_RUN_FAILED' }
@@ -194,6 +204,12 @@ try {
     if ($specText -notmatch 'if \(!isRealAuthMode\) return') { throw 'LOCAL_OWNER_LOGOUT_CLEANUP_NOT_PRESENT' }
     Write-Output 'LOCAL_OWNER_LOGOUT_CLEANUP=PASS'
     if ($specText -notmatch 'institutionalLoginPermitLimit = 5' -or $specText -notmatch 'institutionalLoginWindowMs = 60_000' -or $specText -notmatch 'waitForInstitutionalLoginPermit\(page\)') { throw 'INSTITUTIONAL_LOGIN_RATE_LIMIT_CONTRACT_NOT_PRESENT' }
+    if ($specText -notmatch 'test\.setTimeout\(120_000\)' -or $specText -notmatch 'P06_AUTH_06A_HTTP_STATUSES' -or $specText -notmatch 'NOT_AVAILABLE') { throw 'AUTH_06A_TIMEOUT_STATUS_CONTRACT_NOT_PRESENT' }
+    $reporterText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'frontend\rl-app\e2e\p06-safe-reporter.ts')
+    if ($reporterText -notmatch 'sanitizedAuth06aHttpStatuses' -or $reporterText -notmatch '\\d\{3\},\\d\{3\}' -or $reporterText -notmatch 'outcome\.status === .FAIL.') { throw 'AUTH_06A_REPORTER_STATUS_CONTRACT_NOT_PRESENT' }
+    $diagnosticText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'tools\p06-diagnostic.ps1')
+    if ($diagnosticText -notmatch 'P06_AUTH_06A_HTTP_STATUSES' -or $diagnosticText -notmatch 'Auth06aHttpStatuses') { throw 'AUTH_06A_DIAGNOSTIC_STATUS_CONTRACT_NOT_PRESENT' }
+    Write-Output 'AUTH_06A_TIMEOUT_STATUS_CONTRACT=PASS'
     $playwrightConfigText = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'frontend\rl-app\playwright.qa.config.ts')
     if ($playwrightConfigText -notmatch 'workers: 1' -or $playwrightConfigText -notmatch 'fullyParallel: false') { throw 'P06_SERIAL_LOGIN_CONTRACT_NOT_PRESENT' }
     Write-Output 'INSTITUTIONAL_LOGIN_RATE_LIMIT=PASS'

@@ -1,3 +1,14 @@
+## 2026-11-24 13:01:01 -06:00 — Ajuste quirúrgico del timeout y trazabilidad HTTP de AUTH-06A (COD)
+
+- **Base / alcance:** rama `desarrollo` @ `052ef2fd9d79d7d0cf65789538e0053dee56fbe3`, instrucción Issue #25 comentario `#7141272654`. Se corrigió únicamente el posible timeout de Playwright de `AUTH-06A` causado por la espera institucional de hasta 60 segundos; no se tocó código funcional de autenticación ni el límite institucional de 5 logins por ventana.
+- **Corrección aplicada:** `AUTH-06A` usa `test.setTimeout(120_000)` de forma local al escenario, conservando `workers: 1`, `fullyParallel: false`, `retries: 0`, los seis escenarios y las aserciones originales `200/401`. El reporter añade solo cuando `AUTH-06A` falla una línea sanitizada `P06_AUTH_06A_HTTP_STATUSES=ddd,ddd` o `P06_AUTH_06A_HTTP_STATUSES=NOT_AVAILABLE`; no registra cookies, tokens, cabeceras ni cuerpos. El parser rechaza formatos, estados o presencia fuera de contrato.
+- **Manifiesto:** se actualizaron las huellas de los archivos de prueba/reporter/parser y el digest P06 a `d0b237403ab14a1acb95dc93e08cac67f15506a47112033989fab0d4df213f18`.
+- **Pruebas ejecutadas en esta intervención:** contrato determinista P06 PASS, incluyendo casos válidos `200,401`, `NOT_AVAILABLE`, formato inválido y línea inesperada en escenario PASS; preflight `P06_PACKAGE_INTEGRITY=PASS`, `P06_PLAYWRIGHT_DISCOVERY=6`, `P06_PREFLIGHT=PASS`, `P06_REAL_CERTIFICATION=NOT_EXECUTED`; ESLint de ambos archivos PASS; Playwright `--list` descubrió exactamente 6 pruebas.
+- **No ejecutado por restricción:** autenticación real Javier QA, sesión protegida, Oracle institucional, pruebas institucionales, credenciales, watcher y servicios manuales. Por tanto, no se declara disponible ningún par de códigos HTTP real en esta intervención; el ejecutor queda preparado para emitirlo en la próxima ejecución autorizada.
+- **Protecciones:** no se modificaron backend, endpoints de refresh, CSRF, rotación, revocación, datos, Oracle, `main` ni producción. Se conservaron archivos sin seguimiento preexistentes fuera del stage.
+- **Estado:** `P06_AUTH_06A_TIMEOUT_FIX=READY`; `P06_AUTH_06A_HTTP_EVIDENCE=AWAITING_PROTECTED_RUN`; `QUALITY_GATE_EXACT_SHA=PENDING_PUSH`; `OWNER_PROTECTED_EXECUTION=PENDING`.
+- **Punto de continuación:** publicar este único cambio en `origin/desarrollo`, verificar el Quality Gate del SHA exacto y entregar al propietario el ejecutor para repetir los seis escenarios desde su sesión protegida, sin manejar credenciales desde Codex.
+
 ## 2026-11-24 — Diagnóstico y resolución de Rate Limiting en suite P06 (AUTH-06A) (ANTIG)
 
 - **Base:** rama `desarrollo` @ `7d99844443ba2bab11cc1338ba311ab2a5fad13a`.
