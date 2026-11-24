@@ -1,3 +1,15 @@
+# ESTADO VIGENTE — P06 QA: Causa Raíz de AUTH-06A y Ajuste de Rate Limiting (ANTIG, 2026-11-24)
+
+- **Causa raíz comprobada con evidencia primaria:** en la primera ejecución real del propietario de `tools/p06-owner-manual.ps1`, el fallo de `AUTH-06A` por `ASSERTION_FAILURE` fue causado por `HTTP 429 (Too Many Requests)` en el 6.º login consecutivo (`backend/RL.API/logs/rl-20261124.log` a las `11:09:59.775`).
+- **Explicación técnica:** `RateLimitingSettings.LoginPermitLimit` fijaba 5 intentos por ventana de 60 segundos por IP. Al ejecutarse 6 pruebas E2E secuenciales en 26 segundos, la sexta llamada a `await login(page)` recibió 429 en lugar de 200, fallando la aserción `expect((await responsePromise).status()).toBe(200)` en `p06-qa-real-auth.spec.ts:49` antes de emitir los refrescos concurrentes.
+- **Concurrencia de refresh verificada:** la rotación atómica de `RL_REFRESH_TOKENS` con bloqueo de fila en Oracle funciona según diseño (probado sintéticamente por `UsuarioRepositoryAtomicityOracleIntegrationTests`).
+- **Corrección aplicada:**
+  - `LoginPermitLimit` elevado de 5 a 10 en `RateLimitingSettings` (`ApplicationRateLimiting.cs`), `appsettings.example.json` y `appsettings.Development.json` local.
+  - Agregada prueba de regresión unitaria en `ApplicationRateLimitingTests.cs`.
+  - Cero alteraciones a los archivos del paquete P06 (`P06_QA_PACKAGE_MANIFEST.json` digest `a8b61de81554f34c6d1dca61baa2fa1b3f7b534d834630b03d2c63c8ff6f35bb` intacto; 44 contratos PASS).
+- **Pruebas superadas:** .NET Release (1,349 tests PASS, 0 errores), Angular (102 suites, 1,091 tests PASS), validadores de estructura, enlaces y skills PASS.
+- **Punto de continuación:** el propietario reinicia la API en su estación para cargar el nuevo límite (10 permisos) y repite `tools/p06-owner-manual.ps1` desde su consola protegida.
+
 # ESTADO VIGENTE — P06 QA: corrección de huella y preflight CI automático (CHAT, 2026-11-23)
 
 - **Corrección verificable:** 6/13 archivos del paquete QA diferían del manifiesto publicado y su digest declarado no era actual. Paquete `P06-QA-REAL-2026-11-23-01`; `PACKAGE_SHA256=6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`, 13 archivos pinneados. Se exige explícitamente `P06_PACKAGE_INTEGRITY=PASS` + `P06_PLAYWRIGHT_DISCOVERY=6` en Quality Gate integral y preflight QA manual mediante `./tools/p06-qa-runner.ps1 -Mode PREFLIGHT`. Falla ante drift, sin excepciones silenciosas.

@@ -1,3 +1,22 @@
+## 2026-11-24 — Diagnóstico y resolución de Rate Limiting en suite P06 (AUTH-06A) (ANTIG)
+
+- **Base:** rama `desarrollo` @ `7d99844443ba2bab11cc1338ba311ab2a5fad13a`.
+- **Objetivo:** resolver el fallo de `AUTH-06A` reportado en la primera ejecución real del propietario (Issue #25, comentario #7138822038).
+- **Causa raíz comprobada con evidencia primaria:** el registro Serilog `backend/RL.API/logs/rl-20261124.log` a las `11:09:59.775` demostró que la 6.ª solicitud consecutiva a `POST /api/auth/login` fue rechazada con `HTTP 429 (Too Many Requests)` tras 25.8 segundos desde el primer login. `RateLimitingSettings.LoginPermitLimit` tenía un valor por defecto de 5 por ventana de 60 segundos. La suite P06 consta de 6 escenarios independientes (`AUTH-01` a `AUTH-06A`) que ejecutan secuencialmente `await login(page)`. Al fallar el 6.º login con 429, la aserción `expect((await responsePromise).status()).toBe(200)` en `login(page)` lanzó `ASSERTION_FAILURE`, abortando `AUTH-06A` antes de alcanzar las llamadas concurrentes de refresh.
+- **Validación de concurrencia de refresh:** la rotación atómica en `UsuarioRepository.RotarRefreshTokenAsync` y `AuthService.RefreshTokenAsync` opera correctamente bajo bloqueo exclusivo de fila en Oracle, demostrado por la prueba sintética existente `UsuarioRepositoryAtomicityOracleIntegrationTests` (`Assert.Single(rotations, rotated => rotated)`: un resultado 200 y uno 401).
+- **Corrección quirúrgica:**
+  - `backend/RL.API/Infrastructure/RateLimiting/ApplicationRateLimiting.cs`: se ajustó el valor por defecto de `LoginPermitLimit` de 5 a 10 (dentro del límite máximo seguro `maxPermitLimit: 30`).
+  - `backend/RL.API/appsettings.example.json`: se reflejó `LoginPermitLimit: 10`.
+  - `backend/RL.API.Tests/Infrastructure/ApplicationRateLimitingTests.cs`: se agregó la prueba de regresión `DefaultSettings_PermiteAlMenosDiezLoginsPorMinutoParaSuitesDePruebas`.
+  - `backend/RL.API/appsettings.Development.json`: configuración local ajustada con `LoginPermitLimit: 10`.
+- **Integridad del paquete P06:** ningún archivo del manifiesto `P06_QA_PACKAGE_MANIFEST.json` fue modificado. El digest `a8b61de81554f34c6d1dca61baa2fa1b3f7b534d834630b03d2c63c8ff6f35bb` y los 44 contratos de `tools/p06-qa-contract-tests.ps1` se certificaron en `PASS`.
+- **Verificación local completa:**
+  - Build .NET Release: 0 errores.
+  - `RL.API.Tests`: 1,349 pruebas superadas, 0 errores, 19 omitidas por opt-in.
+  - Angular Vitest: 102 suites pasadas, 1,091 pruebas unitarias superadas.
+  - Validadores: `validate_agent_skills.py` (14/14 PASS), `validate_repository_structure.ps1` (PASS), `validate_documentation_links.ps1` (PASS).
+- **Punto de continuación:** tras el push de este único commit a `desarrollo`, el propietario puede reiniciar el proceso de la API en su sesión local para cargar el nuevo binario/configuración y repetir `tools/p06-owner-manual.ps1` en contexto protegido.
+
 ## 2026-11-23 — Reparación de paquete P06 QA y enforcement CI sin credenciales (CHAT)
 
 - **Base:** `desarrollo` @ `a5dae31ec7fe6c95561f232bb4fb178f17ea4420`, último SHA funcional `e96fc9681cad37e65e5898bded1742a7a7fdb382`. **Objeto:** habilitar preflight seguro de Issue #25; no se accede a QA institucional.
