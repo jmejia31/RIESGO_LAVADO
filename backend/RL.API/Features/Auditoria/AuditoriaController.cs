@@ -33,11 +33,13 @@ namespace RL.API.Features.Auditoria
             [FromQuery] string? modulo = null,
             [FromQuery] string? tabla = null,
             [FromQuery] DateTime? fechaInicio = null,
-            [FromQuery] DateTime? fechaFin = null)
+            [FromQuery] DateTime? fechaFin = null,
+            [FromQuery] string? orden = "fecha",
+            [FromQuery] string? direccion = "desc")
         {
             try
             {
-                var (datos, total) = await _service.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
+                var (datos, total) = await _service.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin, orden, direccion);
                 return Ok(new AuditoriaPaginadoDto
                 {
                     Datos = datos,

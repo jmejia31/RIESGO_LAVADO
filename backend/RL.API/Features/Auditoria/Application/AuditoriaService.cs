@@ -21,8 +21,10 @@ public sealed class AuditoriaService : IAuditoriaService
         string? modulo,
         string? tabla,
         DateTime? fechaInicio,
-        DateTime? fechaFin) =>
-        _repository.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
+        DateTime? fechaFin,
+        string? orden = "fecha",
+        string? direccion = "desc") =>
+        _repository.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin, orden, direccion);
 
     public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorEntidadPaginadaAsync(string tabla, string registroId, string? registroAlternativo, int pagina, int limite) =>
         _repository.ObtenerPorEntidadPaginadaAsync(tabla, registroId, registroAlternativo, pagina, limite);

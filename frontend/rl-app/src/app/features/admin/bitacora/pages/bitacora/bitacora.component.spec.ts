@@ -69,7 +69,9 @@ describe('BitacoraComponent — rediseño institucional', () => {
       modulo: 'Bitacora',
       tabla: 'RL_AUDITORIA',
       fechaInicio: '2026-08-01',
-      fechaFin: '2026-08-31'
+      fechaFin: '2026-08-31',
+      orden: 'fecha',
+      direccion: 'desc'
     });
 
     component.filtrarDocumentosEliminados();
@@ -79,6 +81,17 @@ describe('BitacoraComponent — rediseño institucional', () => {
       modulo: 'MonitoreoListas',
       tabla: 'RL_DETALLE_EVIDENCIA'
     }));
+  });
+
+  it('envía al backend el orden seleccionado desde el encabezado institucional', () => {
+    component.ordenar('usuario');
+    expect(component.orden()).toBe('usuario');
+    expect(component.direccion()).toBe('asc');
+    expect(auditoriaService.getBitacora).toHaveBeenLastCalledWith(expect.objectContaining({ orden: 'usuario', direccion: 'asc', pagina: 1 }));
+
+    component.ordenar('usuario');
+    expect(component.direccion()).toBe('desc');
+    expect(auditoriaService.getBitacora).toHaveBeenLastCalledWith(expect.objectContaining({ orden: 'usuario', direccion: 'desc' }));
   });
 
   it('muestra la tabla compacta con identidad, descripción derivada y acción de detalle canónica', () => {
@@ -93,6 +106,7 @@ describe('BitacoraComponent — rediseño institucional', () => {
     expect(table?.textContent).toContain('Fecha');
     expect(table?.textContent).toContain('Entidad / registro');
     expect(table?.textContent).toContain('Descripción del evento');
+    expect(table?.querySelectorAll('app-sortable-table-header')).toHaveLength(6);
     expect(row?.textContent).toContain('Gestión de Usuarios');
     expect(row?.textContent).toContain('RL_USUARIOS');
     expect(row?.textContent).toContain('#123');

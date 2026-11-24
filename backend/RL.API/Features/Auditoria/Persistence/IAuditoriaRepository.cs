@@ -9,6 +9,10 @@ public interface IAuditoriaRepository
     Task RegistrarAsync(OracleConnection connection, OracleTransaction? transaction, string tabla, string registroId, string accion, string? datosAnt, string? datosNvo, long? usrId, string? email, string? ip, string? modulo)
         => throw new NotSupportedException("El repositorio de auditoría inyectado no admite una transacción compartida.");
     Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla, DateTime? fechaInicio, DateTime? fechaFin);
+    Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(
+        int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla,
+        DateTime? fechaInicio, DateTime? fechaFin, string? orden, string? direccion)
+        => ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
     Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorEntidadPaginadaAsync(string tabla, string registroId, string? registroAlternativo, int pagina, int limite)
         => throw new NotSupportedException("El repositorio de auditoria inyectado no admite historial por entidad.");
     Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorFamiliaPaginadaAsync(long familiaId, int pagina, int limite)

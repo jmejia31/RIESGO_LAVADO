@@ -23,7 +23,7 @@ describe('AuditoriaService', () => {
   it('envía paginación y todos los filtros informados', () => {
     service.getBitacora({
       pagina: 3, limite: 25, buscar: 'ana', accion: 'VER', modulo: 'Bitacora',
-      tabla: 'RL_AUDITORIA', fechaInicio: '2026-07-01', fechaFin: '2026-07-15'
+      tabla: 'RL_AUDITORIA', fechaInicio: '2026-07-01', fechaFin: '2026-07-15', orden: 'tabla', direccion: 'asc'
     }).subscribe();
 
     const request = http.expectOne(req => req.url === `${environment.apiUrl}/auditoria`);
@@ -35,6 +35,8 @@ describe('AuditoriaService', () => {
     expect(request.request.params.get('tabla')).toBe('RL_AUDITORIA');
     expect(request.request.params.get('fechaInicio')).toBe('2026-07-01');
     expect(request.request.params.get('fechaFin')).toBe('2026-07-15');
+    expect(request.request.params.get('orden')).toBe('tabla');
+    expect(request.request.params.get('direccion')).toBe('asc');
     request.flush({ datos: [], totalRegistros: 0 });
   });
 

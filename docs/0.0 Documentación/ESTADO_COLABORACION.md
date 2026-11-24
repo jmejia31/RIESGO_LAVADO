@@ -6161,3 +6161,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** no se modificó `backend/RL.API/appsettings.json`, código funcional, secretos, Oracle, datos, producción, `main`, watcher, servicios ni Configuración de cálculo. Untracked ajenos preservados fuera del stage.
 - **Estado:** `APPSETTINGS_JSON=VALID`; `EDITOR_SCHEMA=LOCAL`; `BACKEND_BEHAVIOR=UNCHANGED`; commit/push de esta intervención pendiente.
 - **Punto exacto de continuación:** stage selectivo de los dos archivos `.vscode` y estos registros, commit único y push a `origin/desarrollo`.
+
+## ESTADO VIGENTE — Cierre quirúrgico B03/B07/P07/P08 — 2026-11-24 15:16 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `61cf096e6eede07f46297b84fcb3d12834e1e0f5`.
+- **B03:** ordenamiento global de Bitácora implementado desde encabezados institucionales; backend con lista blanca de columnas/direcciones, orden previo a `ROWNUM` y desempate `AUD_ID`; filtros, paginación, permisos y auditoría preservados. Pruebas backend `18/18 PASS`; frontend `14/14 PASS`; ESLint focalizado `PASS`.
+- **B07:** Word existente actualizado con resultados `OWNER_REPORTED`: P06 `AUTH-01..AUTH-06A=6/6 PASS`, Oracle `PASS`, diagnóstico temporal `HTTP 404`, health/readiness `HTTP 200`. No constituye certificación independiente.
+- **P07:** Word existente conserva 25 tablas/25 secuencias, 33 FKs habilitadas/validadas, cero huérfanos en relaciones comprobadas, Data Pump reportado, `RESTORE_TEST=NOT_EXECUTED`, `FORMAL_DBA_SIGNATURE=NOT_PRESENT_IN_REPOSITORY` y `P07_DOCUMENTARY_CLOSURE=COMPLETE_WITH_LIMITATIONS`.
+- **P08:** Word existente distingue `POST /api/matrices-riesgos/familias` y `PUT /api/matrices-riesgos/familias/{id}` según el backend real.
+- **Validación documental:** los tres Word y `INDEX.json` pasan validación estructural. El render visual está bloqueado porque el entorno no tiene `soffice.exe`; no se declara PASS visual.
+- **Protecciones:** no P06 repetido, no credenciales, no Oracle, no producción/main/watcher/modales, no cambios de cálculo. Untracked preexistentes preservados fuera del stage.
+- **Estado:** `B03=CORRECTED_READY_FOR_INDEPENDENT_REVIEW`; `B07=OWNER_REPORTED_INTEGRATED`; `P07=COMPLETE_WITH_LIMITATIONS`; `P08=CORRECTED_READY_FOR_OWNER_REVIEW`; `QUALITY_GATE=PENDING_CI`; `OWNER_ACCEPTANCE=PENDING`.
+- **Publicación / continuación:** realizar un único commit y push selectivo; consultar una sola vez el run del SHA final y registrar su estado sin esperar CI. La revisión independiente y aceptación institucional siguen siendo responsabilidades externas.

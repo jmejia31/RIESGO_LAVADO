@@ -13,6 +13,20 @@ namespace RL.API.Features.Auditoria.Persistence;
 
 public class AuditoriaRepository : IAuditoriaRepository
 {
+    private static readonly IReadOnlyDictionary<string, string> ColumnasOrdenables =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["fecha"] = "AUD_FECHA",
+            ["usuario"] = "NVL((SELECT USR_NOMBRE || ' ' || USR_APELLIDO FROM RL_USUARIOS WHERE USR_ID = AUD_USR_ID), AUD_USR_EMAIL)",
+            ["modulo"] = "AUD_MODULO",
+            ["accion"] = "AUD_ACCION",
+            ["entidad"] = "AUD_TABLA",
+            ["tabla"] = "AUD_TABLA",
+            ["registro"] = "AUD_REGISTRO_ID",
+            ["ip"] = "AUD_IP",
+            ["id"] = "AUD_ID"
+        };
+
     private readonly OracleDbContext _db;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -117,6 +131,11 @@ public class AuditoriaRepository : IAuditoriaRepository
 
     public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(
         int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla, DateTime? fechaInicio, DateTime? fechaFin)
+        => await ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin, "fecha", "desc");
+
+    public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(
+        int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla,
+        DateTime? fechaInicio, DateTime? fechaFin, string? orden, string? direccion)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
@@ -176,7 +195,9 @@ public class AuditoriaRepository : IAuditoriaRepository
             total = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
         }
 
-        // Consulta 2: devuelve la página solicitada ordenada por fecha e identificador de auditoría.
+        // Consulta 2: el ordenamiento validado se inserta dentro de la consulta paginada,
+        // antes de ROWNUM, para que cada página sea estable y coherente con los filtros.
+        var orderSql = ConstruirOrdenBitacora(orden, direccion);
         var list = new List<AuditoriaDto>();
         await using (var queryCmd = conn.CreateCommand())
         {
@@ -193,7 +214,7 @@ public class AuditoriaRepository : IAuditoriaRepository
                                AUD_IP, AUD_FECHA, AUD_MODULO
                         FROM RL_AUDITORIA
                         {whereSql}
-                        ORDER BY AUD_FECHA DESC, AUD_ID DESC
+                        {orderSql}
                     ) a WHERE ROWNUM <= :maxRow
                 ) WHERE rnum > :minRow";
 
@@ -225,6 +246,25 @@ public class AuditoriaRepository : IAuditoriaRepository
         }
 
         return (list, total);
+    }
+
+    private static string ConstruirOrdenBitacora(string? orden, string? direccion)
+    {
+        var clave = string.IsNullOrWhiteSpace(orden) ? "fecha" : orden.Trim();
+        if (!ColumnasOrdenables.TryGetValue(clave, out var columna))
+        {
+            columna = ColumnasOrdenables["fecha"];
+        }
+
+        var sentido = string.Equals(direccion?.Trim(), "desc", StringComparison.OrdinalIgnoreCase)
+            ? "DESC"
+            : "ASC";
+
+        var desempate = string.Equals(columna, "AUD_ID", StringComparison.Ordinal)
+            ? string.Empty
+            : $", AUD_ID {sentido}";
+
+        return $"ORDER BY {columna} {sentido}{desempate}";
     }
 
     public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerPorEntidadPaginadaAsync(

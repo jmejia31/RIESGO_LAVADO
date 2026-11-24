@@ -13153,3 +13153,17 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `APPSETTINGS_JSON=VALID`; `EXTERNAL_SCHEMA_DEPENDENCY=REMOVED_FOR_WORKSPACE`; `BACKEND_BEHAVIOR=UNCHANGED`.
 - **Punto exacto de continuación:** comprobar el diff selectivo, crear un único commit y publicarlo en `origin/desarrollo`; no modificar `appsettings.json`.
 
+## 2026-11-24 15:16 -06:00 — Cierre quirúrgico B03/B07/P07/P08 (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; base `61cf096e6eede07f46297b84fcb3d12834e1e0f5`.
+- **B03:** se corrigió el defecto demostrable de Bitácora: ordenamiento global desde encabezados, lista blanca estricta de columnas y ASC/DESC, orden aplicado antes de `ROWNUM`, desempate determinista por `AUD_ID`, preservando filtros, paginación, permisos y auditoría. Se añadieron pruebas de backend y frontend; las superficies de descripción/detalle permanecen no ordenables por no representar columnas independientes y no se alteraron secuencias funcionales.
+- **B07:** se incorporó al expediente existente el resultado `OWNER_REPORTED` de la segunda ejecución protegida: `AUTH-01..AUTH-06A=6/6 PASS`, identidad Oracle `PASS`, diagnóstico temporal `HTTP 404`, health/readiness posteriores `HTTP 200`; no se elevó a certificación independiente.
+- **P07:** se conservaron los resultados físicos reportados de 25 tablas, 25 secuencias, 33 claves foráneas habilitadas/validadas, cero huérfanos en relaciones comprobadas y evidencia Data Pump; se mantienen `RESTORE_TEST=NOT_EXECUTED`, `FORMAL_DBA_SIGNATURE=NOT_PRESENT_IN_REPOSITORY` y `P07_DOCUMENTARY_CLOSURE=COMPLETE_WITH_LIMITATIONS`.
+- **P08:** la guía distingue `POST /api/matrices-riesgos/familias` de `PUT /api/matrices-riesgos/familias/{id}` conforme al backend real, sin modificar constructor ni agregar funcionalidad.
+- **Archivos modificados:** los ocho archivos de B03 solicitados, la prueba nueva de repositorio, los tres Word existentes, `docs/certificaciones/INDEX.json`, esta bitácora y el estado colaborativo. No se crearon documentos duplicados.
+- **Verificación ejecutada:** pruebas Auditoría backend `18/18 PASS`; pruebas Bitácora frontend `14/14 PASS` en 2 archivos; ESLint focalizado `PASS`; build Release de `RL.API` `PASS` con advertencias preexistentes; validación estructural de los tres Word y `INDEX.json` `PASS`; `git diff --check=PASS`.
+- **No ejecutado / limitación:** no se repitió P06, no se usaron credenciales, no se conectó Oracle, no se tocó producción/main/watcher/modales; el render visual DOCX quedó `BLOCKED_MISSING_LIBREOFFICE` porque no existe `soffice.exe`.
+- **Estado:** `B03_GLOBAL_STATUS=CORRECTED_READY_FOR_INDEPENDENT_REVIEW`; `B07_DOCUMENTARY_STATUS=OWNER_REPORTED_RESULTS_INTEGRATED_NOT_INDEPENDENTLY_CERTIFIED`; `P07_DOCUMENTARY_CLOSURE=COMPLETE_WITH_LIMITATIONS`; `P08_GUIDE_STATUS=CORRECTED_READY_FOR_OWNER_REVIEW`; `QUALITY_GATE=PENDING_CI`.
+- **Publicación:** pendiente del único commit y push de esta intervención. Después del push se hará una sola lectura del Quality Gate, sin polling; si continúa ejecutándose se registrará `PENDING_CI`.
+- **Punto exacto de continuación:** verificar el stage selectivo, publicar una sola vez en `origin/desarrollo`, registrar el SHA final y el Run ID disponible, y dejar la aceptación del propietario/revisión independiente como pendientes externas.
+

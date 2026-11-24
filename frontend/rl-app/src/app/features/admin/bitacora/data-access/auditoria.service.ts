@@ -23,6 +23,8 @@ export class AuditoriaService {
     registroAlternativo?: string;
     fechaInicio?: string;
     fechaFin?: string;
+    orden?: string;
+    direccion?: 'asc' | 'desc';
   }, errorScope: HttpErrorScope = 'global'): Observable<AuditoriaPaginado> {
     let httpParams = new HttpParams()
       .set('pagina', params.pagina.toString())
@@ -36,6 +38,8 @@ export class AuditoriaService {
     if (params.registroAlternativo) httpParams = httpParams.set('registroAlternativo', params.registroAlternativo);
     if (params.fechaInicio) httpParams = httpParams.set('fechaInicio', params.fechaInicio);
     if (params.fechaFin) httpParams = httpParams.set('fechaFin', params.fechaFin);
+    if (params.orden) httpParams = httpParams.set('orden', params.orden);
+    if (params.direccion) httpParams = httpParams.set('direccion', params.direccion);
 
     const url = params.registroId !== undefined ? `${this.apiUrl}/entidad` : this.apiUrl;
     return this.http.get<AuditoriaPaginado>(url, {

@@ -136,13 +136,13 @@
           <caption class="sr-only">Eventos de auditoría registrados en el SGRLA-IHSS</caption>
           <thead class="border-b border-gray-200 bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500">
             <tr>
-              <th scope="col" class="px-3 py-2.5">Fecha</th>
-              <th scope="col" class="px-3 py-2.5">Usuario</th>
-              <th scope="col" class="px-3 py-2.5">Módulo</th>
-              <th scope="col" class="px-3 py-2.5">Acción</th>
-              <th scope="col" class="px-3 py-2.5">Entidad / registro</th>
+              <th scope="col" class="px-3 py-2.5"><app-sortable-table-header column="fecha" label="Fecha" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar bitácora por fecha" (sortChange)="ordenar($event)" /></th>
+              <th scope="col" class="px-3 py-2.5"><app-sortable-table-header column="usuario" label="Usuario" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar bitácora por usuario" (sortChange)="ordenar($event)" /></th>
+              <th scope="col" class="px-3 py-2.5"><app-sortable-table-header column="modulo" label="Módulo" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar bitácora por módulo" (sortChange)="ordenar($event)" /></th>
+              <th scope="col" class="px-3 py-2.5"><app-sortable-table-header column="accion" label="Acción" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar bitácora por acción" (sortChange)="ordenar($event)" /></th>
+              <th scope="col" class="px-3 py-2.5"><app-sortable-table-header column="entidad" label="Entidad / registro" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar bitácora por entidad" (sortChange)="ordenar($event)" /></th>
               <th scope="col" class="px-3 py-2.5">Descripción del evento</th>
-              <th scope="col" class="px-3 py-2.5">IP</th>
+              <th scope="col" class="px-3 py-2.5"><app-sortable-table-header column="ip" label="IP" [activeColumn]="orden()" [direction]="direccion()" ariaLabel="Ordenar bitácora por IP" (sortChange)="ordenar($event)" /></th>
               <th scope="col" class="px-3 py-2.5 text-center">Detalle</th>
             </tr>
           </thead>

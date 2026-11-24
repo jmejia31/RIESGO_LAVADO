@@ -43,12 +43,12 @@ public sealed class AuditoriaModuleCharacterizationTests
         var inicio = new DateTime(2026, 7, 1);
         var fin = new DateTime(2026, 7, 15);
 
-        var result = Assert.IsType<OkObjectResult>(await controller.ObtenerBitacora(3, 25, "ana", "VER", "Bitacora", "RL_AUDITORIA", inicio, fin));
+        var result = Assert.IsType<OkObjectResult>(await controller.ObtenerBitacora(3, 25, "ana", "VER", "Bitacora", "RL_AUDITORIA", inicio, fin, "tabla", "asc"));
         var response = Assert.IsType<AuditoriaPaginadoDto>(result.Value);
 
         Assert.Equal(27, response.TotalRegistros);
         Assert.Single(response.Datos);
-        Assert.Equal((3, 25, "ana", "VER", "Bitacora", "RL_AUDITORIA", inicio, fin), repository.UltimaConsulta);
+        Assert.Equal((3, 25, "ana", "VER", "Bitacora", "RL_AUDITORIA", inicio, fin, "tabla", "asc"), repository.UltimaConsulta);
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public sealed class AuditoriaModuleCharacterizationTests
         public List<AuditoriaDto> Datos { get; init; } = new();
         public int Total { get; init; }
         public bool LanzarEnConsulta { get; init; }
-        public (int Pagina, int Limite, string? Buscar, string? Accion, string? Modulo, string? Tabla, DateTime? Inicio, DateTime? Fin)? UltimaConsulta { get; private set; }
+        public (int Pagina, int Limite, string? Buscar, string? Accion, string? Modulo, string? Tabla, DateTime? Inicio, DateTime? Fin, string? Orden, string? Direccion)? UltimaConsulta { get; private set; }
         public (string Tabla, string RegistroId, string? Alternativo, int Pagina, int Limite)? UltimaEntidad { get; private set; }
         public (long FamiliaId, int Pagina, int Limite)? UltimaFamilia { get; private set; }
         public List<AuditoriaRegistro> Registros { get; } = new();
@@ -188,11 +188,14 @@ public sealed class AuditoriaModuleCharacterizationTests
         }
 
         public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla, DateTime? fechaInicio, DateTime? fechaFin)
+            => ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin, "fecha", "desc");
+
+        public Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla, DateTime? fechaInicio, DateTime? fechaFin, string? orden, string? direccion)
         {
             if (LanzarEnConsulta)
                 return Task.FromException<(List<AuditoriaDto> Datos, int Total)>(new InvalidOperationException("fallo interno de prueba"));
 
-            UltimaConsulta = (pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
+            UltimaConsulta = (pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin, orden, direccion);
             return Task.FromResult((Datos, Total));
         }
 

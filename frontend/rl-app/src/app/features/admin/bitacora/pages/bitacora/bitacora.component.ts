@@ -9,11 +9,12 @@ import { DataPaginationComponent } from '../../../../../shared/components/data-p
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { InstitutionalNotificationService } from '../../../../../shared/notification/institutional-notification.service';
+import { SortableTableHeaderComponent, SortDirection } from '../../../../../shared/components/sortable-table-header/sortable-table-header.component';
 
 @Component({
   selector: 'app-bitacora',
   standalone: true,
-  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalTooltipDirective, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, InstitutionalTooltipDirective, SortableTableHeaderComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bitacora.component.html',
 })
@@ -38,6 +39,8 @@ export class BitacoraComponent implements OnInit {
   // Paginación
   paginaActual = signal(1);
   limite = signal(10);
+  orden = signal('fecha');
+  direccion = signal<SortDirection>('desc');
 
   // Modal Detalle
   modalDetalleAbierto = signal(false);
@@ -142,7 +145,9 @@ export class BitacoraComponent implements OnInit {
       modulo: this.filtroModulo || undefined,
       tabla: this.filtroTabla || undefined,
       fechaInicio: this.filtroFechaInicio || undefined,
-      fechaFin: this.filtroFechaFin || undefined
+      fechaFin: this.filtroFechaFin || undefined,
+      orden: this.orden(),
+      direccion: this.direccion()
     }).subscribe({
       next: (res) => {
         this.datos.set(res.datos);
@@ -165,6 +170,17 @@ export class BitacoraComponent implements OnInit {
         this.cargando.set(false);
       }
     });
+  }
+
+  ordenar(columna: string) {
+    if (this.orden() === columna) {
+      this.direccion.set(this.direccion() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.orden.set(columna);
+      this.direccion.set('asc');
+    }
+    this.paginaActual.set(1);
+    this.cargarDatos();
   }
 
   aplicarFiltros() {
