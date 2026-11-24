@@ -138,23 +138,34 @@ async function assertRenderedMatrixMatchesProjection(matrix: Locator, fields: Ma
   return comparableValues.length;
 }
 
+function consolidatedRequestMatches(response: Response, search: string, state: string): boolean {
+  if (response.request().method() !== 'GET') return false;
+  const url = new URL(response.url());
+  if (!url.pathname.endsWith('/consolidado/paginado')) return false;
+
+  const actualSearch = url.searchParams.get('buscar') ?? '';
+  const actualState = url.searchParams.get('estadoEvaluacion') ?? 'TODOS';
+  return actualSearch === search && actualState === state;
+}
+
+function waitForConsolidatedRequest(page: Page, search: string, state = 'TODOS'): Promise<Response> {
+  return page.waitForResponse(response => consolidatedRequestMatches(response, search, state));
+}
+
 async function refreshConsolidatedFor(page: Page, state: string, riskCode: string): Promise<void> {
   const stateFilter = page.locator('#consolidado-estado');
   if (await stateFilter.inputValue() !== state) {
-    const stateRequest = page.waitForResponse(response => response.request().method() === 'GET'
-      && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+    const stateRequest = waitForConsolidatedRequest(page, await page.locator('#consolidado-buscar').inputValue(), state);
     await stateFilter.selectOption(state);
     expect((await stateRequest).status()).toBe(200);
   }
   const search = page.locator('#consolidado-buscar');
   if (await search.inputValue() !== riskCode) {
-    const searchRequest = page.waitForResponse(response => response.request().method() === 'GET'
-      && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+    const searchRequest = waitForConsolidatedRequest(page, riskCode, state);
     await search.fill(riskCode);
     expect((await searchRequest).status()).toBe(200);
   }
-  const refreshRequest = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  const refreshRequest = waitForConsolidatedRequest(page, riskCode, state);
   await page.getByRole('button', { name: 'Actualizar matriz consolidada' }).click();
   expect((await refreshRequest).status()).toBe(200);
 }
@@ -1288,9 +1299,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   await installNonCriticalFixtures(page, fixture, uiEvaluation, { useRealConsolidated: true });
   await page.goto('/matrices-riesgos');
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
-  const initialConsolidatedRequest = page.waitForResponse(response =>
-    response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  const initialConsolidatedRequest = waitForConsolidatedRequest(page, '', 'TODOS');
   await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   expect((await initialConsolidatedRequest).status()).toBe(200);
 
@@ -1298,9 +1307,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   let preTransitionBusinessHash = '';
   const workflowMatrixTrace: Array<{ method: string; path: string; status: number }> = [];
   for (const item of fixtures) {
-    const listRequest = page.waitForResponse(response =>
-      response.request().method() === 'GET'
-      && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+    const listRequest = waitForConsolidatedRequest(page, item.riskCode, 'TODOS');
     await page.locator('#consolidado-buscar').fill(item.riskCode);
     const listResponse = await listRequest;
     expect(listResponse.status(), `Consolidado request failed for ${item.riskCode}`).toBe(200);
@@ -1355,8 +1362,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     workflowMatrixTrace.push({ method: response.request().method(), path: url.pathname, status: response.status() });
   };
   const consolidatedSearch = page.locator('#consolidado-buscar');
-  const filteredConsolidated = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  const filteredConsolidated = waitForConsolidatedRequest(page, transitionFixture.riskCode, 'TODOS');
   await consolidatedSearch.fill(transitionFixture.riskCode);
   expect((await filteredConsolidated).status()).toBe(200);
   const transitionedRow = page.locator(`#panel-consolidado tbody tr[data-evaluacion-id="${transitionFixture.evaluationId}"]`);
@@ -1370,8 +1376,7 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
     ? null
     : (await request.post(`${transitionUrl}?nuevoEstado=BORRADOR&motivo=${encodeURIComponent('Preparación aislada del escenario post-workflow')}`)).status();
   if (preparationTransitionStatus !== null) expect(preparationTransitionStatus).toBe(200);
-  const draftFilterRequest = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  const draftFilterRequest = waitForConsolidatedRequest(page, transitionFixture.riskCode, 'BORRADOR');
   uiEvaluation.state = 'BORRADOR';
   await page.locator('#consolidado-estado').selectOption('BORRADOR');
   expect((await draftFilterRequest).status()).toBe(200);
@@ -1477,16 +1482,13 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   ])).digest('hex')).toBe(preTransitionCanonicalBusinessHash);
   await followUpModal.getByRole('button', { name: 'Cerrar seguimiento' }).last().click();
   await expect(followUpModal).toBeHidden();
-  const approvedListRequest = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  const approvedListRequest = waitForConsolidatedRequest(page, transitionFixture.riskCode, 'BORRADOR');
   await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
   expect((await approvedListRequest).status()).toBe(200);
-  const approvedFilterRequest = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  const approvedFilterRequest = waitForConsolidatedRequest(page, transitionFixture.riskCode, 'APROBADA');
   await page.locator('#consolidado-estado').selectOption('APROBADA');
   expect((await approvedFilterRequest).status()).toBe(200);
-  const approvedSearchRequest = page.waitForResponse(response => response.request().method() === 'GET'
-    && new URL(response.url()).pathname.endsWith('/consolidado/paginado'));
+  const approvedSearchRequest = waitForConsolidatedRequest(page, transitionFixture.riskCode, 'APROBADA');
   await consolidatedSearch.fill(transitionFixture.riskCode);
   expect((await approvedSearchRequest).status()).toBe(200);
   await expect(transitionedRow).toContainText('Aprobada');
