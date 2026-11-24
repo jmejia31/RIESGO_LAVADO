@@ -13084,6 +13084,6 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Verificación ejecutada:** `git diff --check=PASS`; build Release de `backend/RL.API/RL.API.csproj` sin errores; comprobación del build sin CA1305/CA1859 en `ListasController.cs`; pruebas focalizadas `ListasControllerTests=22/22 PASS`.
 - **Advertencias fuera de alcance:** el build conserva advertencias preexistentes en otros archivos del backend; no se modificaron para evitar ampliar el alcance sin evidencia.
 - **Protecciones:** no se tocaron Oracle, datos institucionales, producción, `main`, frontend, servicios manuales, watcher ni Configuración de cálculo. Los no rastreados preexistentes permanecen fuera del stage.
-- **Publicación:** pendiente de commit/push selectivo y de Quality Gate del SHA final; no declarar cierre hasta verificarlo.
-- **Punto exacto de continuación:** publicar el controlador y esta documentación en `origin/desarrollo`, leer el Quality Gate del SHA final y reportar cualquier fallo con su causa exacta.
+- **Publicación:** commit `354b87f132f50727289998bfedf420d3b96d0d26` publicado en `origin/desarrollo`; Quality Gate [45431336323](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45431336323) terminó `completed/success` sobre el SHA exacto.
+- **Punto exacto de continuación:** no queda pendiente técnico para estos dos diagnósticos. Las demás advertencias del backend requieren una solicitud separada y no se modifican dentro de esta corrección.
 

@@ -6104,5 +6104,5 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Verificación local:** build Release del proyecto API `0 errores`; CA1305/CA1859 en `ListasController.cs` `0`; `ListasControllerTests` `22/22 PASS`; `git diff --check=PASS`.
 - **Advertencias restantes:** existen advertencias de análisis en otros archivos, no introducidas ni modificadas por esta intervención. No se amplió el alcance.
 - **Seguridad / preservación:** Oracle, datos, producción, `main`, frontend, watcher, servicios manuales y Configuración de cálculo permanecen intactos; no se usaron credenciales ni se ejecutaron conexiones institucionales.
-- **Estado:** `LISTAS_CONTROLLER_ANALYZERS=CORRECTED`; `LOCAL_BACKEND_BUILD=PASS`; `LOCAL_LISTAS_CONTROLLER_TESTS=22/22 PASS`; `QUALITY_GATE= PENDING_FINAL_SHA`; `OWNER_SIGNOFF=NOT_REQUIRED_FOR_ANALYZER_FIX`.
-- **Punto exacto de continuación:** commit/push selectivo, verificación de `HEAD == origin/desarrollo` y lectura del Quality Gate del SHA final.
+- **Estado:** `LISTAS_CONTROLLER_ANALYZERS=CORRECTED`; `LOCAL_BACKEND_BUILD=PASS`; `LOCAL_LISTAS_CONTROLLER_TESTS=22/22 PASS`; `QUALITY_GATE=SUCCESS` en [45431336323](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45431336323); `OWNER_SIGNOFF=NOT_REQUIRED_FOR_ANALYZER_FIX`.
+- **Punto exacto de continuación:** no queda pendiente técnico para estos dos diagnósticos. Las demás advertencias del backend quedan fuera de alcance y requieren autorización/intervención separada.
