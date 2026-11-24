@@ -13076,3 +13076,14 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Preservacion / publicación:** los archivos no rastreados preexistentes se conservaron fuera del stage. El commit funcional fue publicado en `origin/desarrollo`; esta actualización documental queda pendiente de su commit/push selectivo.
 - **Punto exacto de continuación:** el operador QA debe ejecutar `CERTIFICATION` en sesión protegida con las variables autorizadas y devolver evidencia sanitizada. COD solo verificará hashes, resultados y cadena de custodia; después se solicitará aceptación expresa para valorar el cierre de la Issue.
 
+## 2026-11-24 09:55 -06:00 — Correccion de analizadores en ListasController (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; base `2ba85c3a33eb2da0b24ad05619f7c8950e0530f2`; `HEAD == origin/desarrollo` verificado antes de editar.
+- **Objetivo:** resolver los diagnósticos CA1305 y CA1859 reportados en `backend/RL.API/Features/Listas/ListasController.cs`, sin alterar contratos HTTP ni comportamiento funcional.
+- **Corrección quirúrgica:** `ObtenerUsuarioId()` usa `Convert.ToInt64(..., CultureInfo.InvariantCulture)`; `Error500(Exception)` devuelve `ObjectResult`, que es el tipo concreto producido por `StatusCode(500, ...)`. Se añadió únicamente `using System.Globalization`.
+- **Verificación ejecutada:** `git diff --check=PASS`; build Release de `backend/RL.API/RL.API.csproj` sin errores; comprobación del build sin CA1305/CA1859 en `ListasController.cs`; pruebas focalizadas `ListasControllerTests=22/22 PASS`.
+- **Advertencias fuera de alcance:** el build conserva advertencias preexistentes en otros archivos del backend; no se modificaron para evitar ampliar el alcance sin evidencia.
+- **Protecciones:** no se tocaron Oracle, datos institucionales, producción, `main`, frontend, servicios manuales, watcher ni Configuración de cálculo. Los no rastreados preexistentes permanecen fuera del stage.
+- **Publicación:** pendiente de commit/push selectivo y de Quality Gate del SHA final; no declarar cierre hasta verificarlo.
+- **Punto exacto de continuación:** publicar el controlador y esta documentación en `origin/desarrollo`, leer el Quality Gate del SHA final y reportar cualquier fallo con su causa exacta.
+

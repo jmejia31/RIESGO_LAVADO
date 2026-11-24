@@ -8,6 +8,7 @@ using RL.API.Shared.Results;
 using RL.API.Infrastructure.Http;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -622,7 +623,7 @@ namespace RL.API.Features.Listas
 
         private long ObtenerUsuarioId()
         {
-            return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value, CultureInfo.InvariantCulture);
         }
 
         private IActionResult Responder(ServiceResult result)
@@ -632,7 +633,7 @@ namespace RL.API.Features.Listas
                 : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
         }
 
-        private IActionResult Error500(Exception ex)
+        private ObjectResult Error500(Exception ex)
         {
             return StatusCode(500, new
             {

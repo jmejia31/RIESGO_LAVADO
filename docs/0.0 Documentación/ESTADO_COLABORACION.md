@@ -6095,3 +6095,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Pendientes externos únicos:** `AUTH_REAL_6_OF_6=PENDING_OPERATOR_PRIMARY_EVIDENCE`; `ORACLE_TARGET_VERIFIED=PENDING_OPERATOR_PRIMARY_EVIDENCE`; `ORACLE_INDEPENDENT_RO=NOT_REQUIRED_BY_OWNER_DECISION`; `OWNER_SIGNOFF=PENDING`.
 - **Dictamen vigente:** `ISSUE25=OPEN_BLOCKED_EXTERNAL`; `ISSUE_25_CLOSE_CRITERIA=NOT_MET`; el Quality Gate técnico está verde, pero no sustituye las dos verificaciones conectadas ni la aceptación del propietario.
 - **Punto exacto de continuación:** ejecutar solo la sesión protegida del operador QA con las variables de proceso autorizadas, publicar evidencia sanitizada y solicitar aceptación expresa. No cerrar la Issue antes de verificar esos resultados.
+
+# ESTADO VIGENTE — Correccion de analizadores ListasController (COD, 2026-11-24 09:55 -06:00)
+
+- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `2ba85c3a33eb2da0b24ad05619f7c8950e0530f2`.
+- **Alcance:** solo `backend/RL.API/Features/Listas/ListasController.cs` y los registros obligatorios de continuidad.
+- **Hallazgos corregidos:** CA1305 en `ObtenerUsuarioId` mediante `CultureInfo.InvariantCulture`; CA1859 en `Error500` mediante retorno `ObjectResult`.
+- **Verificación local:** build Release del proyecto API `0 errores`; CA1305/CA1859 en `ListasController.cs` `0`; `ListasControllerTests` `22/22 PASS`; `git diff --check=PASS`.
+- **Advertencias restantes:** existen advertencias de análisis en otros archivos, no introducidas ni modificadas por esta intervención. No se amplió el alcance.
+- **Seguridad / preservación:** Oracle, datos, producción, `main`, frontend, watcher, servicios manuales y Configuración de cálculo permanecen intactos; no se usaron credenciales ni se ejecutaron conexiones institucionales.
+- **Estado:** `LISTAS_CONTROLLER_ANALYZERS=CORRECTED`; `LOCAL_BACKEND_BUILD=PASS`; `LOCAL_LISTAS_CONTROLLER_TESTS=22/22 PASS`; `QUALITY_GATE= PENDING_FINAL_SHA`; `OWNER_SIGNOFF=NOT_REQUIRED_FOR_ANALYZER_FIX`.
+- **Punto exacto de continuación:** commit/push selectivo, verificación de `HEAD == origin/desarrollo` y lectura del Quality Gate del SHA final.
