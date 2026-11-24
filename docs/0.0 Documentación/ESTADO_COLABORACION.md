@@ -6059,10 +6059,11 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 # ESTADO VIGENTE — Dictamen final Issue 25 P06 QA (COD, 2026-11-23 18:01 -06:00)
 
-- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; `HEAD == origin/desarrollo == 12d4cc2497e630a5110a73d6412fe0aaf9881afd`.
+- **Repositorio / rama:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; cierre documental `HEAD == origin/desarrollo == 223b830c704b80e459dba9f46e58dec71b3e959c`.
 - **Orden ejecutada:** Issue [#25, comentario vigente](https://github.com/jmejia31/RIESGO_LAVADO/issues/25#issuecomment-7117336415). Se recuperó la evidencia disponible y no se repitieron pruebas ya certificadas.
 - **P06 preflight:** `PASS`; paquete `P06-QA-REAL-2026-11-23-01`, 13 archivos, digest `6406ccdecd620c45cc717dc8da06f1724f960ef3c270ab0150d655027eae15e6`.
 - **Quality Gate del expediente publicado:** [45294032404](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45294032404) terminó `completed/success` sobre `d12e74c92f1c8abeade9d8e33c1116f597a2e98a`; valida el commit documental publicado y no sustituye autenticación real ni Oracle RO independiente.
+- **Handoff documental posterior:** el commit `223b830c704b80e459dba9f46e58dec71b3e959c` solo actualiza bitácora/estado; su Quality Gate [45297158972](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45297158972) quedó encolado y no se usa para afirmar la certificación P06.
 - **Quality Gate:** [45272724235](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/45272724235) `completed/success` sobre el SHA exacto. Su alcance es preflight/CI; no constituye login real de Javier QA ni verificación de una cuenta Oracle RO independiente.
 - **Watcher:** `RiesgoLavado-CodexQueue=DISABLED_BY_QA_ISOLATION`; la tarea existe, `Disabled`, `Settings.Enabled=False`, sin proceso activo observado. No se reactivó ni se invocó `-AllowExecution`.
 - **Autenticación:** `JAVIER_QA_REAL_AUTH=HISTORICAL_OWNER_REPORTED_NOT_CURRENTLY_REVIEWABLE`. La documentación histórica conserva `AUTH-01..AUTH-06=6/6 PASS`, pero no hay evidencia primaria vigente y sanitizada publicada para esta certificación.
