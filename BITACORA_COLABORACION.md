@@ -13141,3 +13141,15 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Estado:** `INTEGRAL_CLOSURE=READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS`; `B03=PARTIAL`; `P06_REAL_AUTH=AWAITING_PROTECTED_RUN`; `P07_LIVE_ORACLE=NOT_EXECUTED`; `OWNER_ACCEPTANCE=PENDING`; `QUALITY_GATE_NEW_DOCUMENTARY_SHA=PENDING`.
 - **Punto de continuación:** eliminar el script temporal de construcción, revisar el diff selectivo, hacer un único commit/push de esta intervención y consultar una sola vez el estado del Quality Gate del SHA final, sin esperar ni repetirlo.
 
+## 2026-11-24 14:58 -06:00 — Correccion local del esquema JSON de appsettings (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; base `3d71325af189e9bce9641300f935de3400a9e059`.
+- **Objetivo y alcance:** eliminar la advertencia del editor causada por la descarga fallida del esquema remoto de `appsettings.json`, sin alterar configuración operativa, contratos ni código funcional.
+- **Causa demostrada:** `backend/RL.API/appsettings.json` no contiene `$schema` y es JSON válido; la advertencia proviene de la asociación automática de VS Code al endpoint externo de SchemaStore, que respondió `404/ECONNRESET`. `.vscode/settings.json` no tenía una asociación local.
+- **Correccion quirurgica:** se preservaron los ajustes existentes de `.vscode/settings.json`, se deshabilitó la descarga automática de esquemas y se asoció `backend/RL.API/appsettings.json` a `.vscode/schemas/appsettings.schema.json`, un esquema local permisivo que no impone cambios sobre las claves institucionales.
+- **Verificación ejecutada:** `backend/RL.API/appsettings.json`, `.vscode/settings.json` y `.vscode/schemas/appsettings.schema.json` pasan análisis JSON local; `git diff --check=PASS`. No se ejecutaron build, pruebas de backend ni conexiones Oracle porque el cambio es exclusivamente de soporte del editor.
+- **Protecciones:** no se modificaron valores de `appsettings.json`, código funcional, datos institucionales, Oracle, producción, `main`, watcher, servicios ni Configuración de cálculo. Los archivos no rastreados ajenos permanecen fuera del stage.
+- **Archivos de esta intervención:** `.vscode/settings.json`, `.vscode/schemas/appsettings.schema.json`, esta bitácora y `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- **Estado:** `APPSETTINGS_JSON=VALID`; `EXTERNAL_SCHEMA_DEPENDENCY=REMOVED_FOR_WORKSPACE`; `BACKEND_BEHAVIOR=UNCHANGED`.
+- **Punto exacto de continuación:** comprobar el diff selectivo, crear un único commit y publicarlo en `origin/desarrollo`; no modificar `appsettings.json`.
+

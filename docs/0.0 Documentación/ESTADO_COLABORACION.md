@@ -6151,3 +6151,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** `ORACLE_INSTITUTIONAL_WRITES=0`; `DML=0`; `DDL=0`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `WATCHER_REACTIVATED=NO`; `SERVICES_STARTED_OR_STOPPED=NO`; `CONFIGURACION_CALCULO_TOUCHED=NO`.
 - **Verificación visual DOCX:** el renderer fue ejecutado para los tres documentos, pero el entorno carece de `soffice.exe`; las PNG no pudieron generarse. Estado `DOCX_RENDER=BLOCKED_MISSING_LIBREOFFICE`, no PASS.
 - **Continuación exacta:** retirar el builder temporal, stage selectivo, un commit y un push; luego una sola consulta de estado del Quality Gate del SHA documental, sin polling.
+
+## ESTADO VIGENTE — Correccion local del esquema JSON de appsettings — 2026-11-24 14:58 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `3d71325af189e9bce9641300f935de3400a9e059`.
+- **Problema:** VS Code no pudo descargar el esquema remoto asociado automáticamente a `appsettings.json` (`404/ECONNRESET`). El archivo local es JSON válido y no contiene `$schema`.
+- **Corrección:** `.vscode/settings.json` ahora deshabilita la descarga automática de esquemas y asocia `backend/RL.API/appsettings.json` al esquema local permisivo `.vscode/schemas/appsettings.schema.json`.
+- **Verificación:** los tres archivos JSON pasan parseo local y `git diff --check` pasa. No se ejecutaron pruebas funcionales porque no hubo cambio de runtime.
+- **Protecciones:** no se modificó `backend/RL.API/appsettings.json`, código funcional, secretos, Oracle, datos, producción, `main`, watcher, servicios ni Configuración de cálculo. Untracked ajenos preservados fuera del stage.
+- **Estado:** `APPSETTINGS_JSON=VALID`; `EDITOR_SCHEMA=LOCAL`; `BACKEND_BEHAVIOR=UNCHANGED`; commit/push de esta intervención pendiente.
+- **Punto exacto de continuación:** stage selectivo de los dos archivos `.vscode` y estos registros, commit único y push a `origin/desarrollo`.
