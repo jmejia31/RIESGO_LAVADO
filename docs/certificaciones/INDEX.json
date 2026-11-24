@@ -5,6 +5,22 @@
   "issue": 23,
   "entries": [
     {
+      "id": "B03-GLOBAL-AUDIT-20261124",
+      "path": "B03_ACTA_AUDITORIA_GLOBAL_FINAL.docx",
+      "status": "READY_FOR_INDEPENDENT_REVIEW_WITH_LIMITATIONS",
+      "source_code_sha": "1c398cddd4962c80931e5c557cfaedb151de7633",
+      "evidence_commit_sha": "RECORDED_IN_FINAL_HANDOFF_AFTER_SINGLE_PUSH",
+      "issue": "https://github.com/jmejia31/RIESGO_LAVADO/issues/38",
+      "github_evidence_url": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/B03_ACTA_AUDITORIA_GLOBAL_FINAL.docx",
+      "GITHUB_EVIDENCE_INDEX_URL": "https://github.com/jmejia31/RIESGO_LAVADO/blob/desarrollo/docs/certificaciones/INDEX.json",
+      "GITHUB_SIGNOFF_URL": "https://github.com/jmejia31/RIESGO_LAVADO/issues/38",
+      "github_remote_verified": "PENDING_SINGLE_PUSH",
+      "quality_gate_status": "PENDING_CI",
+      "owner_visual_acceptance": "PASS",
+      "independent_review": "PENDING_CHAT_REVIEW",
+      "oracle_institutional_writes": 0
+    },
+    {
       "id": "P0-2",
       "path": "P0_2_Integridad_Transaccional/README.md",
       "status": "READY_FOR_INDEPENDENT_REVIEW",

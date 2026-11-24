@@ -115,3 +115,12 @@ La extensión a Bitácora, Tipo de Listas, Cargar Listas, Configuración y tabla
 - Playwright visual/E2E local y Oracle no ejecutados por alcance frontend y dependencia de servidor/datos autorizados; el CI remoto del SHA publicado queda como verificación posterior.
 - `ORACLE_TOUCHED=NO`; `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `MIGRATION_54_TOUCHED=NO`; cambios P06 locales preservados fuera del stage.
 - `B03_GLOBAL_INVENTORY=PARTIAL`; `B03_OWNER_VISUAL_ACCEPTANCE=PENDING`; `B03_FINAL_STATUS=OPEN`; `GITHUB_REMOTE_VERIFIED=PENDING_AFTER_PUSH`; `SECURITY_SCAN=NOT_RUN`; `REVIEW_READY=NO` hasta verificar GitHub sobre el SHA final.
+
+## Adenda B03 — 2026-11-24 — auditoría global de preparación (COD)
+
+- `BASE_SHA=1c398cddd4962c80931e5c557cfaedb151de7633`; rama `desarrollo`; `B03_INVENTORY_LISTS_TOTAL=23`; `B03_KPI_SURFACES_TOTAL=14`; `B03_INVENTORY_CLASSIFIED=23/23`.
+- La auditoría fresca clasificó 13 tablas con el encabezado institucional ordenable y 10 superficies que conservan secuencia, detalle fuente, reporte, dato de dominio o vista secundaria filtrada. No se agregaron cabeceras a estas últimas porque no existe un defecto demostrado y algunas secuencias tienen significado funcional.
+- Configuración de cálculo: las versiones de fórmulas, funciones y parámetros mantienen su orden canónico descendente; los argumentos, catálogos y navegación contextual conservan su secuencia de dominio. Familias: la tabla canónica es ordenable y el historial se mantiene por versión descendente. Form Builder: las acciones explícitas de subir/bajar preservan el orden serializado del formulario.
+- Validación focalizada: Angular `391/391 PASS` (`273 + 118`), backend `92/92 PASS` con `--no-build`, `npm run build=PASS` con advertencias preexistentes y `npm run lint=PASS`. La recompilación backend quedó bloqueada por un proceso existente con `RL.API.dll`; no se detuvo dicho proceso. No se ejecutaron Oracle institucional, Playwright/E2E ni pruebas contra datos autorizados.
+- `B03_AUDIT_A_STATIC=PASS`; `B03_AUDIT_B_FUNCTIONAL_VISUAL=PARTIAL`; `B03_AUDIT_C_INDEPENDENT=PENDING_CHAT_REVIEW`; `B03_FULL_CERTIFICATION=READY_FOR_INDEPENDENT_REVIEW`; `ORACLE_INSTITUTIONAL_WRITES=0`.
+- Esta adenda no sustituye la historia previa de B03, no reabre correcciones visuales aprobadas y no declara certificación independiente ni cierre del propietario.

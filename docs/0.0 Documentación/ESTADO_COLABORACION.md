@@ -6173,3 +6173,15 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** no P06 repetido, no credenciales, no Oracle, no producción/main/watcher/modales, no cambios de cálculo. Untracked preexistentes preservados fuera del stage.
 - **Estado:** `B03=CORRECTED_READY_FOR_INDEPENDENT_REVIEW`; `B07=OWNER_REPORTED_INTEGRATED`; `P07=COMPLETE_WITH_LIMITATIONS`; `P08=CORRECTED_READY_FOR_OWNER_REVIEW`; `QUALITY_GATE=PENDING_CI`; `OWNER_ACCEPTANCE=PENDING`.
 - **Publicación / continuación:** realizar un único commit y push selectivo; consultar una sola vez el run del SHA final y registrar su estado sin esperar CI. La revisión independiente y aceptación institucional siguen siendo responsabilidades externas.
+
+## ESTADO VIGENTE — Auditoría global B03 para tercera revisión independiente — 2026-11-24 16:05 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `1c398cddd4962c80931e5c557cfaedb151de7633`. Alcance exclusivo B03; B07, P07, P08 y P06 no fueron reabiertos.
+- **Inventario:** `B03_INVENTORY_LISTS_TOTAL=23`; `B03_KPI_SURFACES_TOTAL=14`; `B03_INVENTORY_CLASSIFIED=23/23`; 13 tablas son ordenables con el encabezado institucional y 10 son secuencias, detalles, reportes, datos de dominio o vistas secundarias filtradas.
+- **Revisión:** Configuración de cálculo, Familias, Versiones y Form Builder quedan `PASS` sin defecto nuevo demostrado. No se alteraron el motor de cálculo, formularios, modales ni secuencias funcionales. El ordenamiento de Bitácora ya corregido en la base fue revalidado, sin duplicar implementación.
+- **Artefactos:** `docs/certificaciones/B03_ACTA_AUDITORIA_GLOBAL_FINAL.docx`, adenda de `B03_ESTANDAR_TABLAS_ORDENAMIENTO.md`, entrada B03 en `docs/certificaciones/INDEX.json` y registros de continuidad. No hubo cambios funcionales.
+- **Verificación:** Angular focal `391/391 PASS`; backend focal `92/92 PASS` con `--no-build`; build Angular `PASS` con advertencias preexistentes; lint `PASS`; estructura Word `PASS`; `git diff --check=PASS`. La recompilación backend no pudo ejecutarse porque un proceso existente mantenía `RL.API.dll`; no fue detenido.
+- **Pendientes/limitaciones:** Playwright/E2E contra servidor autorizado, Oracle institucional, credenciales y servicios no se ejecutaron. Render visual del Word `BLOCKED_MISSING_LIBREOFFICE` por ausencia de `soffice.exe`.
+- **Estado:** `B03_AUDIT_A_STATIC=PASS`; `B03_AUDIT_B_FUNCTIONAL_VISUAL=PARTIAL`; `B03_AUDIT_C_INDEPENDENT=PENDING_CHAT_REVIEW`; `B03_FULL_CERTIFICATION=READY_FOR_INDEPENDENT_REVIEW`; `ORACLE_INSTITUTIONAL_WRITES=0`; `OWNER_ACCEPTANCE=PENDING`.
+- **Publicación:** `PENDING_SINGLE_COMMIT_AND_PUSH`; `FINAL_SHA=PENDING`; `QUALITY_GATE_RUN_ID=PENDING_SINGLE_READ_AFTER_PUSH`; `QUALITY_GATE_STATUS=PENDING_CI`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`.
+- **Punto exacto de continuación:** stage selectivo, un único commit y push a `origin/desarrollo`, una sola lectura del Quality Gate sin polling y comentario en Issue #38 con SHA final, Run ID disponible, Word y limitaciones. No cerrar la Issue.
