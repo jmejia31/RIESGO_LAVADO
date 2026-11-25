@@ -210,7 +210,7 @@ export class AuthService {
         // request token. Obtain a new pair and retry once; backend antiforgery
         // validation remains enabled.
         if (error.status === 400) {
-          return this.http.get(`${this.API}/antiforgery`, { withCredentials: true, context: createHttpErrorScopeContext('local') }).pipe
+          return this.http.get(`${this.API}/antiforgery`, { withCredentials: true, context: createHttpErrorScopeContext('local') }).pipe(
             switchMap(() => this.http.post<RefreshResponse>(
               `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders(), context: createHttpErrorScopeContext('local') }
             ))
