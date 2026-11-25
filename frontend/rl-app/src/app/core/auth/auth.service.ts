@@ -14,6 +14,7 @@ type RefreshResponse = { success: boolean; datos: LoginResponse };
 export class AuthService {
   private readonly API = `${environment.apiUrl}/auth`;
   private readonly DEFAULT_INACTIVITY_MINUTES = 30;
+  private readonly ACTIVIDAD_KEY = 'rl_session_last_activity_at';
   private readonly REFRESH_MARGIN_MS = 5 * 60 * 1000;
   private readonly MAX_REFRESH_TIMER_MS = 60 * 60 * 1000;
   private readonly REFRESH_RETRY_MS = 30 * 1000;
@@ -43,6 +44,15 @@ export class AuthService {
     private configService: ConfiguracionService
   ) {
     localStorage.removeItem('refresh_token');
+    // Un JWT persistido sin registro de actividad válida no restaura automáticamente la sesión.
+    if (this._token()) {
+      const guardada = this.ultimaActividadPersistida();
+      if (guardada === null || Date.now() - guardada >= this.obtenerTimeoutInactividadMs()) {
+        this.limpiarSesion();
+      } else {
+        this.lastActivityAt = guardada;
+      }
+    }
     // El cambio del JWT por refresh no reinicia el reloj de inactividad.
     effect(() => {
       if (this.estaLogueado()) {
@@ -69,7 +79,7 @@ export class AuthService {
       { withCredentials: true, context: createHttpErrorScopeContext('local') }).pipe(
       tap(res => {
         if (res.success) {
-          this.guardarSesion(res.datos);
+          this.guardarSesion(res.datos, true);
         }
       })
     );
@@ -88,14 +98,18 @@ export class AuthService {
   }
 
   logout() {
-    this.http.post(`${this.API}/logout`, null, { withCredentials: true, headers: this.xsrfHeaders() }).pipe(
-      catchError(() => EMPTY)
-    ).subscribe();
+    const headers = this.xsrfHeaders();
     this.limpiarSesion();
+    this.http.post(`${this.API}/logout`, null, {
+      withCredentials: true, headers, context: createHttpErrorScopeContext('local')
+    }).pipe(catchError(() => EMPTY)).subscribe();
     this.router.navigate(['/login']);
   }
 
   refreshToken(): Observable<RefreshResponse> {
+    if (this.monitoringActive && this.verificarVencimientoInactividad()) {
+      return throwError(() => new Error('Sesión expirada por inactividad.'));
+    }
     // Single-flight: varios 401 o verificaciones simultáneas comparten una sola rotación de refresh token.
     if (this.refreshRequest$) {
       return this.refreshRequest$;
@@ -131,6 +145,7 @@ export class AuthService {
   }
 
   getAccessToken(): string | null {
+    if (this.monitoringActive && this.verificarVencimientoInactividad()) return null;
     return this._token();
   }
 
@@ -147,8 +162,12 @@ export class AuthService {
     this.limpiarSesion();
   }
 
-  private guardarSesion(datos: LoginResponse) {
+  private guardarSesion(datos: LoginResponse, esLoginHumano = false) {
     this.sessionEpoch++;
+    if (esLoginHumano || this.ultimaActividadPersistida() === null) {
+      this.lastActivityAt = Date.now();
+      localStorage.setItem(this.ACTIVIDAD_KEY, String(this.lastActivityAt));
+    }
     localStorage.setItem('access_token',  datos.accessToken);
     localStorage.setItem('token_expira',  datos.expiresAt);
     this._token.set(datos.accessToken);
@@ -168,6 +187,7 @@ export class AuthService {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('token_expira');
+    localStorage.removeItem(this.ACTIVIDAD_KEY);
     this._token.set(null);
     this._usuario.set(null);
   }
@@ -181,7 +201,7 @@ export class AuthService {
 
   private ejecutarRefreshConRecuperacion(): Observable<RefreshResponse> {
     return this.http.post<RefreshResponse>(
-      `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
+      `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders(), context: createHttpErrorScopeContext('local') }
     ).pipe(
       catchError((error: unknown) => {
         if (!(error instanceof HttpErrorResponse)) return throwError(() => error);
@@ -190,9 +210,9 @@ export class AuthService {
         // request token. Obtain a new pair and retry once; backend antiforgery
         // validation remains enabled.
         if (error.status === 400) {
-          return this.http.get(`${this.API}/antiforgery`, { withCredentials: true }).pipe(
+          return this.http.get(`${this.API}/antiforgery`, { withCredentials: true, context: createHttpErrorScopeContext('local') }).pipe
             switchMap(() => this.http.post<RefreshResponse>(
-              `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
+              `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders(), context: createHttpErrorScopeContext('local') }
             ))
           );
         }
@@ -203,7 +223,7 @@ export class AuthService {
         if (error.status === 401) {
           return timer(this.REFRESH_RACE_RETRY_MS).pipe(
             switchMap(() => this.http.post<RefreshResponse>(
-              `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders() }
+              `${this.API}/refresh`, null, { withCredentials: true, headers: this.xsrfHeaders(), context: createHttpErrorScopeContext('local') }
             ))
           );
         }
@@ -255,7 +275,10 @@ export class AuthService {
     }
 
     this.monitoringActive = true;
-    this.lastActivityAt = Date.now();
+    const ultima = this.ultimaActividadPersistida();
+    if (ultima === null) { this.logoutPorInactividad(); return; }
+    this.lastActivityAt = ultima;
+    if (this.verificarVencimientoInactividad()) return;
 
     const eventos = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
     eventos.forEach(evt => {
@@ -264,6 +287,25 @@ export class AuthService {
       this.eventListeners.push(() => window.removeEventListener(evt, handler));
     });
 
+    // Los timers se pausan con el navegador suspendido: revalidar el reloj real al regresar.
+    const revalidar = () => this.programarCierrePorInactividad();
+    window.addEventListener('focus', revalidar);
+    window.addEventListener('pageshow', revalidar);
+    document.addEventListener('visibilitychange', revalidar);
+    this.eventListeners.push(() => window.removeEventListener('focus', revalidar));
+    this.eventListeners.push(() => window.removeEventListener('pageshow', revalidar));
+    this.eventListeners.push(() => document.removeEventListener('visibilitychange', revalidar));
+    const sincronizar = (event: StorageEvent) => {
+      if (!this.monitoringActive) return;
+      if (event.key === 'access_token' && event.newValue === null) {
+        this.limpiarSesion();
+        this.router.navigate(['/login'], { queryParams: { razon: 'expirada' } });
+      } else if (event.key === this.ACTIVIDAD_KEY) {
+        this.programarCierrePorInactividad();
+      }
+    };
+    window.addEventListener('storage', sincronizar);
+    this.eventListeners.push(() => window.removeEventListener('storage', sincronizar));
     this.programarCierrePorInactividad();
     this.programarRenovacionProactiva();
   }
@@ -271,11 +313,31 @@ export class AuthService {
   private registrarActividadUsuario() {
     if (!this.monitoringActive || !this.estaLogueado()) return;
 
+    if (this.verificarVencimientoInactividad()) return;
     this.lastActivityAt = Date.now();
+    localStorage.setItem(this.ACTIVIDAD_KEY, String(this.lastActivityAt));
     this.programarCierrePorInactividad();
 
     // Si el navegador estuvo suspendido y el JWT quedó próximo a vencer, la primera actividad lo renueva.
     this.verificarRenovacionProactiva();
+  }
+
+  private ultimaActividadPersistida(): number | null {
+    const raw = localStorage.getItem(this.ACTIVIDAD_KEY);
+    if (!raw) return null;
+    const fecha = Number(raw);
+    return Number.isFinite(fecha) && fecha > 0 && fecha <= Date.now() ? fecha : null;
+  }
+
+  private verificarVencimientoInactividad(): boolean {
+    if (!this.monitoringActive || !this.estaLogueado()) return false;
+    const ultima = this.ultimaActividadPersistida();
+    if (ultima === null || Date.now() - ultima >= this.obtenerTimeoutInactividadMs()) {
+      this.logoutPorInactividad();
+      return true;
+    }
+    this.lastActivityAt = ultima;
+    return false;
   }
 
   private programarCierrePorInactividad() {
@@ -283,16 +345,13 @@ export class AuthService {
       clearTimeout(this.inactivityTimer);
     }
 
+    if (this.verificarVencimientoInactividad()) return;
     const timeoutMs = this.obtenerTimeoutInactividadMs();
     const transcurrido = Math.max(0, Date.now() - this.lastActivityAt);
     const restante = Math.max(0, timeoutMs - transcurrido);
 
     this.inactivityTimer = setTimeout(() => {
-      const inactividadActual = Date.now() - this.lastActivityAt;
-      if (inactividadActual >= this.obtenerTimeoutInactividadMs()) {
-        this.logoutPorInactividad();
-        return;
-      }
+      if (this.verificarVencimientoInactividad()) return;
       this.programarCierrePorInactividad();
     }, restante);
   }
@@ -328,11 +387,7 @@ export class AuthService {
   private verificarRenovacionProactiva() {
     if (!this.monitoringActive || !this.estaLogueado() || this.refreshRequest$) return;
 
-    const timeoutMs = this.obtenerTimeoutInactividadMs();
-    if (Date.now() - this.lastActivityAt >= timeoutMs) {
-      this.logoutPorInactividad();
-      return;
-    }
+    if (this.verificarVencimientoInactividad()) return;
 
     if (Date.now() < this.nextRefreshAttemptAt) {
       return;
@@ -412,13 +467,11 @@ export class AuthService {
   }
 
   private logoutPorInactividad() {
-    this.detenerMonitoreoInactividad();
-
-    this.http.post(`${this.API}/logout`, null, { withCredentials: true, headers: this.xsrfHeaders() }).pipe(
-      catchError(() => EMPTY)
-    ).subscribe();
-
-    this.limpiarSesion();
+    const headers = this.xsrfHeaders();
+    this.limpiarSesion(); // Fallos HTTP/antiforgery no impiden el cierre local.
+    this.http.post(`${this.API}/logout`, null, {
+      withCredentials: true, headers, context: createHttpErrorScopeContext('local')
+    }).pipe(catchError(() => EMPTY)).subscribe();
     this.router.navigate(['/login'], { queryParams: { razon: 'expirada' } });
   }
 }

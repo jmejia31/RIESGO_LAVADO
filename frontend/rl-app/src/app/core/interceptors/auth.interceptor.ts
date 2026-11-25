@@ -17,7 +17,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !req.url.includes('/auth/refresh') && !req.url.includes('/auth/login')) {
+      if (error.status === 401 && token && !req.url.includes('/auth/refresh') && !req.url.includes('/auth/login')) {
         // Intentar renovar el token antes de cerrar la sesión del usuario.
         return auth.refreshToken().pipe(
           switchMap(() => {

@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { HTTP_ERROR_SCOPE } from '../http/http-error-scope';
 import { signal, WritableSignal } from '@angular/core';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -281,6 +282,38 @@ describe('AuthService', () => {
     const logout = http.expectOne('http://localhost:5043/api/auth/logout');
     logout.flush({ success: true });
     expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
+  });
+
+  it('no reanima la sesión al mover el ratón después de 31 minutos de suspensión', () => {
+    iniciarSesionActiva();
+    vi.setSystemTime(new Date(now.getTime() + 31 * 60 * 1000));
+    window.dispatchEvent(new Event('mousemove'));
+    const logout = http.expectOne('http://localhost:5043/api/auth/logout');
+    expect(logout.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    logout.flush({ success: true });
+    expect(service.getAccessToken()).toBeNull();
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
+  });
+
+  it('rechaza token antes de un temporizador pausado por el navegador', () => {
+    iniciarSesionActiva();
+    vi.setSystemTime(new Date(now.getTime() + 30 * 60 * 1000));
+    expect(service.getAccessToken()).toBeNull();
+    http.expectOne('http://localhost:5043/api/auth/logout').flush({ success: true });
+  });
+
+  it('trata localmente el 400 recuperable de antiforgery', () => {
+    iniciarSesionActiva();
+    service.refreshToken().subscribe();
+    const refresh = http.expectOne('http://localhost:5043/api/auth/refresh');
+    expect(refresh.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    refresh.flush({}, { status: 400, statusText: 'Bad Request' });
+    const anti = http.expectOne('http://localhost:5043/api/auth/antiforgery');
+    expect(anti.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    anti.flush({ success: true });
+    const retry = http.expectOne('http://localhost:5043/api/auth/refresh');
+    expect(retry.request.context.get(HTTP_ERROR_SCOPE)).toBe('local');
+    retry.flush({ success: true, datos: crearLoginResponse('recuperado', 'rotado') });
   });
 
   function iniciarSesionActiva(expiresAt = '2099-12-31T23:59:59Z') {
