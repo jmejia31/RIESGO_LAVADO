@@ -65,6 +65,7 @@ async function preparar(page: Page): Promise<void> {
       const storage = window.localStorage;
       if (!storage) return;
       storage.setItem('access_token', token);
+      storage.setItem('rl_session_last_activity_at', String(Date.now()));
       storage.setItem('refresh_token', 'uat-refresh');
       storage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
     } catch {

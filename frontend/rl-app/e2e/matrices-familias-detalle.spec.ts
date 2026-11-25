@@ -60,6 +60,7 @@ function tokenAdministradorModulo10(): string {
 async function prepararSesion(page: Page): Promise<void> {
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
+    localStorage.setItem('rl_session_last_activity_at', String(Date.now()));
     localStorage.setItem('refresh_token', 'refresh-ui-fam2');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   }, tokenAdministradorModulo10());

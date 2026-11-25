@@ -36,6 +36,7 @@ function tokenAdministrador(modulos = '10', role = 'ADMINISTRADOR'): string {
 async function prepararSesion(page: Page, modulos = '10', role = 'ADMINISTRADOR'): Promise<void> {
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
+    localStorage.setItem('rl_session_last_activity_at', String(Date.now()));
     localStorage.setItem('refresh_token', 'refresh-local-e2e');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   }, tokenAdministrador(modulos, role));

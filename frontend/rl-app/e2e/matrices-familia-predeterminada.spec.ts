@@ -37,6 +37,7 @@ function tokenAdministrador(): string {
 async function preparar(page: Page): Promise<void> {
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
+    localStorage.setItem('rl_session_last_activity_at', String(Date.now()));
     localStorage.setItem('refresh_token', 'fp2-refresh');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   }, tokenAdministrador());

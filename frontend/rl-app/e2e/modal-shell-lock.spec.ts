@@ -40,6 +40,7 @@ function token(): string {
 async function preparar(page: Page): Promise<void> {
   await page.addInitScript(jwt => {
     localStorage.setItem('access_token', jwt);
+    localStorage.setItem('rl_session_last_activity_at', String(Date.now()));
     localStorage.setItem('refresh_token', 'modal-refresh');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   }, token());
@@ -803,7 +804,10 @@ test('el modal abierto hereda cambios azul, rojo y verde del tema sin alterar ge
 test('Crear Usuario hereda theme institucional y mantiene acciones de footer icon-only visibles', async ({ page }) => {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   const usuariosToken = `${encode({ alg: 'none' })}.${encode({ nameid: '1', uid: 'modal-user-audit', role: 'ADMINISTRADOR', rol_id: '1', modulos: '2,10', exp: Math.floor(Date.now() / 1000) + 3600 })}.`;
-  await page.addInitScript(jwt => localStorage.setItem('access_token', jwt), usuariosToken);
+  await page.addInitScript(jwt => {
+    localStorage.setItem('access_token', jwt);
+    localStorage.setItem('rl_session_last_activity_at', String(Date.now()));
+  }, usuariosToken);
   await page.route('**/api/catalogos/modulos', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ moduloId: 2, nombre: 'Usuarios', codigo: 'USUARIOS' }] }) }));
   await page.route('**/api/catalogos/roles', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ rolId: 1, rolNombre: 'Administrador', rolActivo: true }] }) }));
   await page.route('**/api/catalogos/dominios', route => route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true,"datos":[]}' }));

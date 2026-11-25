@@ -249,6 +249,7 @@ async function installNonCriticalFixtures(
   const token = unsignedTestToken();
   await page.addInitScript(accessToken => {
     localStorage.setItem('access_token', accessToken);
+    localStorage.setItem('rl_session_last_activity_at', String(Date.now()));
     localStorage.setItem('refresh_token', 'e2e-only');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   }, token);

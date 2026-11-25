@@ -205,6 +205,7 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
   const accessToken = createUnsignedAccessToken();
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
+    localStorage.setItem('rl_session_last_activity_at', String(Date.now()));
     localStorage.setItem('refresh_token', 'refresh-e2e-local');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   }, accessToken);
