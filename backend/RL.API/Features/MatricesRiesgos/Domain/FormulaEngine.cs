@@ -418,6 +418,14 @@ public sealed class FormulaEngine
     private static void ValidateStaticArgumentTypes(FunctionVersionDefinition definition, IReadOnlyList<Node> arguments)
     {
         if (definition.Arguments.Count == 0) return;
+        // IFERROR is intentionally polymorphic: its value branch may fail with
+        // a typed runtime error and its fallback may be a different type (the
+        // institutional formulas use a numeric LOOKUP with an empty-text
+        // fallback). The nested expressions are still validated recursively;
+        // only the pre-evaluation type comparison is deferred to the governed
+        // runtime, which already handles the function explicitly.
+        if (definition.HandlerKey?.Equals("IFERROR_V1", StringComparison.OrdinalIgnoreCase) == true)
+            return;
         for (int index = 0; index < arguments.Count; index++)
         {
             FunctionArgumentDefinition? argument = definition.Arguments.FirstOrDefault(a => a.Position == index + 1) ?? definition.Arguments.LastOrDefault(a => a.Variadic);

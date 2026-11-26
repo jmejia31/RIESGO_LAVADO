@@ -6270,3 +6270,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Preservación:** `MP01=v1 BORRADOR`, F01, catálogos, opciones, Oracle institucional, producción y `main` no fueron modificados; no se usaron credenciales ni se ejecutó E2E autorizado. `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED`; `OWNER_ACCEPTANCE=PENDING`.
 - **Estado de publicación:** `FUNCTIONAL_COMMIT=fae601bcd038462d44fd25119bfc429f183adb10`; `REMOTE_HEAD_SHA=11dc551af2612b6393f7682a20df70763805f5d1`; remoto verificado. `QUALITY_GATE_RUN_ID=NOT_AVAILABLE_IN_CONNECTOR`; `QUALITY_GATE_STATUS=PENDING_NO_PRIMARY_EVIDENCE`; `ISSUE_51=OPEN_PENDING_OWNER_REVIEW`.
 - **Punto exacto de continuación:** revisión y prueba manual del propietario sobre MP01; consultar el Quality Gate directamente en GitHub cuando esté disponible. No declarar PASS externo ni cerrar la Issue desde este handoff.
+
+## ESTADO VIGENTE — Corrección Quality Gate 45878043760 — 2026-11-26 12:53:51 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `ad431306bf94853b5cb7ea571d81416ee49ae14d`. Run fallido `45878043760`, job `140110126648`.
+- **Defecto comprobado:** la inferencia estática de tipos introducida para Issue #51 rechazó `IFERROR` por tratar rígidamente sus ramas polimórficas; las fórmulas institucionales F03–F09 usan `LOOKUP(..., "NUMBER")` con fallback `""`. La prueba de autorización también conservaba el conteo anterior de endpoints y no incluía el POST manual legítimo.
+- **Corrección aplicada:** se mantiene la validación recursiva, allowlist, aridad y runtime gobernado, pero se difiere solo la comparación estática de argumentos de `IFERROR_V1`; se actualizan las expectativas del contrato a `26` endpoints, `15` mutaciones, `11` GET y `7` rutas de fórmulas. No se tocaron MP01, fórmulas institucionales, Oracle, producción ni `main`.
+- **Verificación:** focal `30/30 PASS`; suite restante sin fixtures workbook ausentes `1,333/1,333 PASS` y `19` skips; build .NET `PASS` `0/0`; `git diff --check=PASS`. La suite completa local no es certificable mientras persista la eliminación ajena de `Matrices de Riesgos.xlsx`; no se restauró ni se incluyó.
+- **Estado:** `QUALITY_GATE_45878043760=FAILURE_ROOT_CAUSE_IDENTIFIED`; `CORRECTION=READY_TO_PUBLISH`; `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED`; `OWNER_ACCEPTANCE=PENDING`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`.
+- **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_AFTER_PUSH`.
+- **Punto exacto de continuación:** stage selectivo de los dos archivos funcionales y ambos registros, un único commit/push, verificar remoto y consultar una vez el Quality Gate del SHA corregido.

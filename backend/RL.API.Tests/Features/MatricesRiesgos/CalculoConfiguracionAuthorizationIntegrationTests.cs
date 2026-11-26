@@ -40,11 +40,11 @@ public sealed class CalculoConfiguracionAuthorizationIntegrationTests
             .Select(method => (Method: method, Http: method.GetCustomAttribute<HttpMethodAttribute>()))
             .Where(item => item.Http is not null)
             .ToArray();
-        Assert.Equal(25, endpoints.Length);
+        Assert.Equal(26, endpoints.Length);
         var mutationEndpoints = endpoints.Where(item => item.Http!.HttpMethods.Any(method => method != "GET")).ToArray();
-        Assert.Equal(14, mutationEndpoints.Length);
+        Assert.Equal(15, mutationEndpoints.Length);
         Assert.Equal(11, endpoints.Count(item => item.Http!.HttpMethods.All(method => method == "GET")));
-        Assert.Equal(6, mutationEndpoints.Count(item => item.Http!.Template!.StartsWith("formulas", StringComparison.Ordinal)
+        Assert.Equal(7, mutationEndpoints.Count(item => item.Http!.Template!.StartsWith("formulas", StringComparison.Ordinal)
             || item.Http.Template.StartsWith("formula-", StringComparison.Ordinal)));
         Assert.Equal(4, mutationEndpoints.Count(item => item.Http!.Template!.StartsWith("funciones", StringComparison.Ordinal)
             || item.Http.Template.StartsWith("funcion-versiones", StringComparison.Ordinal)));
@@ -60,7 +60,7 @@ public sealed class CalculoConfiguracionAuthorizationIntegrationTests
             .SelectMany(item => item.Http!.HttpMethods.Select(httpMethod =>
                 (item.Method, HttpMethod: httpMethod, Template: BuildRoute(item.Http.Template))))
             .ToArray();
-        Assert.Equal(14, mutations.Length);
+        Assert.Equal(15, mutations.Length);
 
         await using WebApplication app = await StartTestApplicationAsync();
         using var client = new HttpClient { BaseAddress = GetAddress(app) };
