@@ -6261,3 +6261,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Documentación:** `docs/certificaciones/P08_GUIA_NUEVA_FAMILIA_Y_ENTREGA_RIESGO_LAVADO.docx` actualizado; no se creó un documento duplicado. `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED`; `OWNER_ACCEPTANCE=PENDING`.
 - **Publicación / Quality Gate:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=NOT_YET_AVAILABLE`; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`; `ISSUE_51=OPEN_PENDING_OWNER_REVIEW`.
 - **Punto exacto de continuación:** stage selectivo de los cambios propios y de estos dos registros, un solo commit/push a `origin/desarrollo`, una única lectura del Quality Gate del SHA publicado sin polling, y entrega de procedimiento manual MP01. No ejecutar cambios en Oracle ni cerrar la Issue #51.
+
+## ESTADO VIGENTE — Issue #51 preview sintético y estado de coincidencia — 2026-11-26 12:38:59 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base funcional `71baab3e78ac6bb8e5b9942dfb4925a53ad6d2e2`; commit local de la corrección `fae601bcd038462d44fd25119bfc429f183adb10`. Cambios ajenos permanecen fuera del stage.
+- **Corrección verificada:** el inspector muestra preview sintético controlado mediante el parser seguro existente, mensajes tipados para errores y el estado real de coincidencia devuelto por el backend (`reutilizada`/`creada`); cualquier edición invalida el estado anterior. El flujo mantiene confirmación institucional, DRAFT no ejecutable, pinning central y bloqueo de publicación manual.
+- **Pruebas frescas:** `104` archivos Angular, `1,107/1,107 PASS`; lint PASS; build PASS con warnings de presupuesto SCSS/CommonJS conocidas; DOCX estructural PASS; `git diff --check` PASS. `DOCX_RENDER=BLOCKED_MISSING_LIBREOFFICE`.
+- **Preservación:** `MP01=v1 BORRADOR`, F01, catálogos, opciones, Oracle institucional, producción y `main` no fueron modificados; no se usaron credenciales ni se ejecutó E2E autorizado. `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED`; `OWNER_ACCEPTANCE=PENDING`.
+- **Estado de publicación:** `FUNCTIONAL_COMMIT=fae601bcd038462d44fd25119bfc429f183adb10`; push y `REMOTE_HEAD_SHA` pendientes de esta continuación; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`; `ISSUE_51=OPEN_PENDING_OWNER_REVIEW`.
+- **Punto exacto de continuación:** publicar el commit selectivo, verificar `origin/desarrollo`, registrar SHA remoto/QG disponible y conservar la Issue abierta hasta revisión y prueba manual del propietario.
