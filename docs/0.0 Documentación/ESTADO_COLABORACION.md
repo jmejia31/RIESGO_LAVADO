@@ -6219,3 +6219,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **G7:** `SELF_AUDIT=PARTIAL_EXTERNAL_PENDING`; estructural DOCX PASS, render visual `BLOCKED_LOCAL` por ausencia de LibreOffice, nuevo QG pendiente. No se declara certificación independiente de CHAT ni aceptación institucional.
 - **Publicación:** `ONE_COMMIT_ONE_PUSH=PENDING`; `FINAL_SHA=PENDING`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_CI`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`.
 - **Punto exacto de continuación:** stage selectivo, un único commit/push, una sola lectura del Quality Gate y comentario final verificable en Issues #38/#49. Si el gate falla, informar la causa real sin reintentos ni cambios especulativos.
+
+## ESTADO VIGENTE — P08 validación de campos MP01 8–11 — 2026-11-26 08:05 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `8b76447c6a5b1e6df7bec05c61266eef2bcd76d3`; commit funcional publicado `eac09cce`.
+- **Corrección:** los campos institucionales 8/9 se leen del riesgo maestro seleccionado, se muestran como solo lectura y no se persisten como respuestas duplicadas; sin selección no se inventa valor. Los campos 10/11 emiten números enteros `1..5`, conservan la selección numérica y el backend valida el catálogo/rango existente.
+- **Verificación:** Angular focal `64/64 PASS`; backend focal `52/52 PASS`; build Angular `PASS` con advertencias preexistentes; lint `PASS`; `git diff --check=PASS`; push con validación de skills `PASS (14 skills)`.
+- **Protecciones:** no Oracle institucional, no producción/main, no credenciales, no cambios de fórmulas, no modificación de registros MP01 del propietario. Se preservan los contratos y la proyección completa existentes.
+- **Pendiente real:** falta prueba manual del propietario sobre la familia MP01 `v1` en `BORRADOR`, incluyendo sus seis campos existentes, cuatro catálogos/70 opciones y persistencia contra la base autorizada. Por ello `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED` y `OWNER_ACCEPTANCE=PENDING`.
+- **Quality Gate:** `QUALITY_GATE_STATUS=PENDING_SINGLE_READ_AFTER_FINAL_HANDOFF_PUSH`; no se hará polling ni se declarará PASS sin resultado primario del SHA remoto final.
+- **Punto exacto de continuación:** publicar el registro de continuidad, consultar una sola vez Actions para el SHA final y entregar los pasos de prueba manual; ningún cambio adicional fuera de este alcance.
