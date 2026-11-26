@@ -93,6 +93,26 @@ if grep -Fq 'Datos incompatibles para proyección institucional' "$api_log"; the
   echo 'BLOCK12_PREFX_API_PROJECTION_EXCEPTION_END'
 fi
 
-grep -Fq '1 passed' <<<"$browser_output"
+# Playwright runs this historical reproduction with one CI retry.  The first
+# attempt can fail on the old activity-projection assertion before the retry
+# reaches the intended 409 diagnostic; when the retry succeeds Playwright
+# reports the test as "flaky" (and exits successfully).  Treat that state as
+# valid only after the diagnostic marker and its contractual fields below have
+# been verified.  A generic failure, or a flaky run without the old defect,
+# remains blocking.
+if grep -Fq '1 passed' <<<"$browser_output"; then
+  echo 'BLOCK12_PREFX_BROWSER_RESULT=PASS'
+elif grep -Fq '1 flaky' <<<"$browser_output"; then
+  echo 'BLOCK12_PREFX_BROWSER_RESULT=RETRY_PASS_WITH_INITIAL_FLAKE'
+else
+  echo 'BLOCK12_PREFX_BROWSER_RESULT=UNEXPECTED' >&2
+  exit 1
+fi
+
 grep -Fq 'BLOCK12_PRE_FIX_CONSOLIDATED_MATRIX_DEFECT_REPRODUCED=YES' <<<"$browser_output"
+grep -Fq '"projectionHttpStatus":409' <<<"$browser_output"
+grep -Fq '"monitoringHttpStatus":200' <<<"$browser_output"
+grep -Fq '"businessDataPreserved":true' <<<"$browser_output"
+grep -Fq '"renderedFieldCount":0' <<<"$browser_output"
+grep -Fq '"falseConcurrencyWarningVisible":true' <<<"$browser_output"
 echo 'BLOCK12_PREFX_DISPOSABLE_XE_BROWSER_API_REPRODUCTION=PASS'

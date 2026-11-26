@@ -6291,3 +6291,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Estado:** `FIXTURE_CONTRACT=CORRECTED_LOCALLY`; `PRODUCTION_CODE=UNCHANGED`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `MP01=UNCHANGED`; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`; `OWNER_ACCEPTANCE=UNCHANGED`.
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`; `ISSUE_STATUS=UNCHANGED`.
 - **Punto exacto de continuación:** stage selectivo, un único commit/push, verificar el SHA remoto y consultar una sola vez el resultado del Quality Gate del SHA exacto; no hacer polling.
+
+## ESTADO VIGENTE — Corrección del validador de reproducción histórica Block 12 — 2026-11-26 14:00:17 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `c88941ca27d211c6fd2799ba21aea17aca9f6eff`, coincidente con `origin/desarrollo`. Cambios locales ajenos permanecen fuera del stage.
+- **Quality Gate revisado:** run `45884454490`, job `140131637337`, falló únicamente en `Reproduce pre-fix Full Matrix failure on disposable Oracle XE`. El E2E principal terminó `94 passed` y `7 skipped`; la preparación Oracle descartable fue exitosa.
+- **Defecto:** `tools/run_block12_prefx_reproduction.sh` requería `1 passed`, aunque el retry de CI reportó correctamente `1 flaky` después de que el segundo intento reprodujo el defecto histórico. La salida contenía el marcador y los valores críticos `409/200`, preservación de datos, cero campos renderizados y advertencia de falsa concurrencia.
+- **Corrección:** el script distingue `PASS` de `RETRY_PASS_WITH_INITIAL_FLAKE` y solo acepta el segundo con todos los marcadores/valores del diagnóstico histórico. Sigue siendo fail-closed para fallos genéricos o diagnósticos incompletos. No se tocó funcionalidad productiva ni Oracle institucional.
+- **Verificación:** `git diff --check=PASS`; la reproducción completa queda `PENDING_CI_ENVIRONMENT` porque localmente no se dispone del Oracle XE descartable del gate. `bash -n` directo está limitado por los finales CRLF existentes del script; no se afirma esa prueba como PASS.
+- **Archivos propios:** `tools/run_block12_prefx_reproduction.sh`, `BITACORA_COLABORACION.md`, este estado vivo. Archivos ajenos preservados.
+- **Estado:** `BLOCK12_PREFX_GATE_FIX=READY_TO_PUBLISH`; `PRODUCTION_CODE=UNCHANGED`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `MP01=UNCHANGED`; `FINAL_SHA=PENDING_COMMIT`; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`; `OWNER_ACCEPTANCE=UNCHANGED`.
+- **Punto exacto de continuación:** stage selectivo, un único commit/push, verificar `origin/desarrollo` y consultar una sola vez el nuevo Quality Gate sin polling. No declarar PASS antes del resultado primario.
