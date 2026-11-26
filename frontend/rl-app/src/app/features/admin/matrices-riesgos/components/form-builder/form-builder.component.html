@@ -303,7 +303,10 @@
         [tiposControles]="tiposControles"
         [catalogosDisponibles]="catalogosDisponiblesParaCampos()"
         [formulaVersionesDisponibles]="formulasDisponibles"
+        [camposFormulario]="camposFormulario()"
+        [formulaCoincidencias]="formulaCoincidencias"
         (propiedadCambiada)="alCambiarPropiedadCampo()"
+        (formulaCoincidenciaInvalidada)="invalidarFormulaCoincidencia($event)"
         (navegarCatalogos)="cambiarVista('catalogos')">
       </app-form-builder-inspector>
     </div>

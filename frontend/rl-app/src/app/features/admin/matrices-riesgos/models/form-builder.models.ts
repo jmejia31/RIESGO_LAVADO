@@ -40,6 +40,9 @@ export interface CatalogoBuilderModel {
   elementosFuente?: 'elementos' | 'elementosRespaldo';
 }
 
+/** Estado de la conciliación de una expresión manual con el catálogo central. */
+export type FormulaCoincidenciaEstado = 'pendiente' | 'reutilizada' | 'creada';
+
 export interface CampoBuilderModel {
   id: string;
   clave: string;

@@ -75,11 +75,13 @@ export class FormBuilderComponent implements OnInit {
   @Input() procesando: boolean = false;
   @Input() operacion: 'guardar' | 'publicar' | null = null;
   @Input() formulasDisponibles: FormulaVersionSelectorOption[] = [];
+  @Input() formulaCoincidencias: Readonly<Record<string, import('../../models/form-builder.models').FormulaCoincidenciaEstado>> = {};
   @Input() errorFeedback: string | null = null;
   @Input() mensajeFeedback: string | null = null;
 
   @Output() guardarJson = new EventEmitter<string>();
   @Output() publicar = new EventEmitter<string>();
+  @Output() formulaCoincidenciaInvalidada = new EventEmitter<string>();
   @Output() cerrarErrorFeedback = new EventEmitter<void>();
   @Output() cerrarMensajeFeedback = new EventEmitter<void>();
   @Output() cerrar = new EventEmitter<void>();
@@ -113,6 +115,7 @@ export class FormBuilderComponent implements OnInit {
   readonly seccionEnConfirmacion = signal<string | null>(null);
 
   readonly catalogosList = computed<CatalogoBuilderModel[]>(() => this.model().catalogos ?? []);
+  readonly camposFormulario = computed<CampoBuilderModel[]>(() => this.model().secciones.flatMap(seccion => seccion.campos));
 
   readonly catalogosFiltrados = computed<CatalogoBuilderModel[]>(() => {
     const q = this.busquedaCatalogos().trim().toLowerCase();
@@ -299,6 +302,10 @@ export class FormBuilderComponent implements OnInit {
       campos: sec.campos.map(c => c.id === activo.id ? { ...activo } : c)
     }));
     this.model.set({ ...current, secciones });
+  }
+
+  invalidarFormulaCoincidencia(clave: string): void {
+    this.formulaCoincidenciaInvalidada.emit(clave);
   }
 
   eliminarCampo(seccionId: string, campoId: string): void {

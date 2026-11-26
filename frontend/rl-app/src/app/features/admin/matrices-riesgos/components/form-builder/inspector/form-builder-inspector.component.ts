@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CampoBuilderModel, TipoControlBuilder, TipoControlDefinicion } from '../../../models/form-builder.models';
+import { CampoBuilderModel, FormulaCoincidenciaEstado, TipoControlBuilder, TipoControlDefinicion } from '../../../models/form-builder.models';
+import { CampoFormulario, RespuestasFormulario } from '../../../models/matrices-riesgos.models';
 import { FormulaVersionSelectorOption } from '../../../models/calculo-configuracion.models';
+import { evaluarFormulaCampo, FormulaErrorCode, ResultadoEvaluacionFormula } from '../../../utils/dynamic-formula-evaluator.util';
 
 export interface InspectorCatalogoOption {
   codigo: string;
@@ -41,8 +43,11 @@ export class FormBuilderInspectorComponent {
   @Input() tiposControles: TipoControlDefinicion[] = [];
   @Input() catalogosDisponibles: InspectorCatalogoOption[] = [];
   @Input() formulaVersionesDisponibles: FormulaVersionSelectorOption[] = [];
+  @Input() camposFormulario: CampoBuilderModel[] = [];
+  @Input() formulaCoincidencias: Readonly<Record<string, FormulaCoincidenciaEstado>> = {};
 
   @Output() propiedadCambiada = new EventEmitter<void>();
+  @Output() formulaCoincidenciaInvalidada = new EventEmitter<string>();
   @Output() navegarCatalogos = new EventEmitter<void>();
 
   // Estado UI de acordeones colapsables (exclusivo de UI, nunca persistido)
@@ -90,6 +95,73 @@ export class FormBuilderInspectorComponent {
       ?? (this.campoActivo?.formulaVersionId ? 'central' : 'manual');
   }
 
+  /**
+   * Datos sintéticos controlados para que el editor muestre el resultado sin
+   * ejecutar fórmulas arbitrarias ni depender de respuestas institucionales.
+   */
+  get formulaRespuestasSinteticas(): RespuestasFormulario {
+    const respuestas: RespuestasFormulario = {
+      frecuencia_inherente: 2,
+      impacto_inherente: 3,
+      control_preventivo: 1,
+      control_detectivo: 1,
+      control_correctivo: 1
+    };
+    const campos = [...this.camposFormulario, ...(this.campoActivo ? [this.campoActivo] : [])];
+    for (const campo of campos) {
+      const clave = campo.clave.trim().toLowerCase();
+      if (!clave || clave in respuestas) continue;
+      respuestas[clave] = campo.tipo === 'checkbox' ? true : campo.tipo === 'numero' || campo.tipo === 'formula' ? 2 : 'VALOR_SINTETICO';
+    }
+    return respuestas;
+  }
+
+  get formulaCamposMap(): Map<string, CampoFormulario> {
+    const campos = [...this.camposFormulario, ...(this.campoActivo ? [this.campoActivo] : [])];
+    return new Map(campos.filter(campo => !!campo.clave.trim()).map(campo => [campo.clave.trim().toLowerCase(), campo as CampoFormulario]));
+  }
+
+  get formulaPreviewResult(): ResultadoEvaluacionFormula | null {
+    if (this.formulaModoActual !== 'manual' || !this.campoActivo?.formula?.trim()) return null;
+    return evaluarFormulaCampo(
+      this.campoActivo.formula,
+      this.formulaRespuestasSinteticas,
+      this.campoActivo.clave,
+      this.formulaCamposMap
+    );
+  }
+
+  get formulaCoincidenciaActual(): FormulaCoincidenciaEstado {
+    const clave = this.campoActivo?.clave.trim().toLowerCase();
+    if (!clave) return 'pendiente';
+    return this.formulaCoincidencias[clave] ?? 'pendiente';
+  }
+
+  get formulaCoincidenciaTexto(): string {
+    switch (this.formulaCoincidenciaActual) {
+      case 'reutilizada': return 'Coincidencia central elegible detectada; la fórmula sigue manual hasta seleccionar la versión exacta.';
+      case 'creada': return 'Nueva fórmula central registrada como DRAFT; requiere aprobación antes de ser ejecutable.';
+      default: return 'Pendiente: se resolverá al guardar y confirmar el registro de la fórmula manual.';
+    }
+  }
+
+  mensajeFormulaPreview(result: ResultadoEvaluacionFormula | null): string {
+    if (!result || result.exito) return '';
+    const mensajes: Partial<Record<FormulaErrorCode, string>> = {
+      FORMULA_SYNTAX_INVALID: 'La sintaxis DSL no es válida.',
+      FORMULA_OPERATOR_UNSUPPORTED: 'La expresión contiene un operador no permitido.',
+      FORMULA_FUNCTION_UNSUPPORTED: 'La expresión contiene una función no autorizada.',
+      FORMULA_REFERENCE_UNKNOWN: 'La expresión referencia un campo inexistente.',
+      FORMULA_SELF_REFERENCE: 'La fórmula no puede referenciarse a sí misma.',
+      FORMULA_CYCLE: 'La expresión contiene una dependencia circular.',
+      FORMULA_TYPE_MISMATCH: 'Los tipos de los operandos no son compatibles.',
+      FORMULA_DIVISION_BY_ZERO: 'La vista previa detectó una división por cero.',
+      FORMULA_ARGUMENT_INVALID: 'La cantidad o tipo de argumentos no es válida.',
+      FORMULA_LIMIT_EXCEEDED: 'La expresión excede los límites institucionales.'
+    };
+    return mensajes[result.codigo ?? 'FORMULA_SYNTAX_INVALID'] ?? result.error ?? 'La expresión no pudo validarse.';
+  }
+
   readonly tiposResultadoFormula = ['DECIMAL', 'INTEGER', 'BOOLEAN', 'TEXT', 'DATE'];
 
   get formulaVersionSelectOptions(): readonly BoundedSelectOption[] {
@@ -113,6 +185,7 @@ export class FormBuilderInspectorComponent {
       this.campoActivo.formulaFuente = undefined;
       this.campoActivo.formulaModo = undefined;
       this.campoActivo.formulaManualRespaldo = undefined;
+      this.formulaCoincidenciaInvalidada.emit(this.campoActivo.clave.trim().toLowerCase());
       this.cdr.markForCheck();
       this.propiedadCambiada.emit();
       return;
@@ -134,6 +207,7 @@ export class FormBuilderInspectorComponent {
     this.campoActivo.formulaFuente = 'formula';
     this.campoActivo.formulaModo = 'central';
     this.campoActivo.formulaTipoResultado = option.tipoResultado;
+    this.formulaCoincidenciaInvalidada.emit(this.campoActivo.clave.trim().toLowerCase());
     this.cdr.markForCheck();
     this.propiedadCambiada.emit();
   }
@@ -155,6 +229,7 @@ export class FormBuilderInspectorComponent {
       campo.formulaCodigo = undefined;
       campo.formulaVersion = undefined;
       campo.formulaValidacion = 'sin-validar';
+      this.formulaCoincidenciaInvalidada.emit(campo.clave.trim().toLowerCase());
       this.cdr.markForCheck();
       this.propiedadCambiada.emit();
       return;
@@ -183,6 +258,7 @@ export class FormBuilderInspectorComponent {
       actual.formula = undefined;
       actual.formulaModo = 'central';
       actual.formulaValidacion = 'sin-validar';
+      this.formulaCoincidenciaInvalidada.emit(actual.clave.trim().toLowerCase());
       this.cdr.markForCheck();
       this.propiedadCambiada.emit();
     });
@@ -191,8 +267,18 @@ export class FormBuilderInspectorComponent {
   validarFormulaManual(): void {
     if (this.soloLectura || !this.campoActivo) return;
     const expression = this.campoActivo.formula?.trim() ?? '';
-    this.campoActivo.formulaValidacion = expression.length > 0 && expression.length <= 4096 ? 'valida' : 'invalida';
+    const result = expression.length > 0 && expression.length <= 4096
+      ? this.formulaPreviewResult
+      : { exito: false } as ResultadoEvaluacionFormula;
+    this.campoActivo.formulaValidacion = result?.exito ? 'valida' : 'invalida';
     this.cdr.markForCheck();
+  }
+
+  alCambiarFormulaManual(): void {
+    if (this.soloLectura || !this.campoActivo) return;
+    this.campoActivo.formulaValidacion = 'sin-validar';
+    this.formulaCoincidenciaInvalidada.emit(this.campoActivo.clave.trim().toLowerCase());
+    this.alCambiarPropiedad();
   }
 
   get soportaPlaceholder(): boolean {

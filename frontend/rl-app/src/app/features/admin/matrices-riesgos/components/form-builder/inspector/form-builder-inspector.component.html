@@ -58,10 +58,22 @@
                     <div class="inspector-field"><label [for]="'prop-formula-name-' + campoActivo.id">Nombre descriptivo</label><input [id]="'prop-formula-name-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.formulaNombre" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura"></div>
                     <div class="inspector-field"><label [for]="'prop-formula-type-' + campoActivo.id">Tipo de resultado</label><select [id]="'prop-formula-type-' + campoActivo.id" [(ngModel)]="campoActivo.formulaTipoResultado" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura">@for (tipo of tiposResultadoFormula; track tipo) {<option [value]="tipo">{{ tipo }}</option>}</select></div>
                     <label [for]="'prop-formula-' + campoActivo.id">Expresión DSL manual</label>
-                    <textarea [id]="'prop-formula-' + campoActivo.id" rows="4" [(ngModel)]="campoActivo.formula" (ngModelChange)="campoActivo.formulaValidacion = 'sin-validar'; alCambiarPropiedad()" [disabled]="soloLectura" class="is-mono"></textarea>
+                    <textarea [id]="'prop-formula-' + campoActivo.id" rows="4" [(ngModel)]="campoActivo.formula" (ngModelChange)="alCambiarFormulaManual()" [disabled]="soloLectura" class="is-mono"></textarea>
                     <button type="button" class="inspector-formula-validate" (click)="validarFormulaManual()" [disabled]="soloLectura || !campoActivo.formula?.trim()" aria-label="Validar expresión localmente" title="Validar expresión localmente"><app-action-icon action="validate"></app-action-icon><span>Validar expresión localmente</span></button>
                     @if (campoActivo.formulaValidacion === 'valida') {<span class="inspector-success">Sintaxis y límites básicos válidos. El servidor hará la validación final.</span>}
-                    @if (campoActivo.formulaValidacion === 'invalida') {<span class="inspector-warning">La expresión está vacía o excede el límite de 4096 caracteres.</span>}
+                    @if (campoActivo.formulaValidacion === 'invalida') {<span class="inspector-warning">{{ mensajeFormulaPreview(formulaPreviewResult) || 'La expresión está vacía o excede el límite de 4096 caracteres.' }}</span>}
+                    @if (formulaPreviewResult; as formulaPreview) {
+                      <div class="inspector-formula-preview" [class.is-error]="!formulaPreview.exito" role="status" aria-live="polite">
+                        <strong>Vista previa sintética controlada</strong>
+                        <span>Entradas: frecuencia_inherente=2 · impacto_inherente=3</span>
+                        @if (formulaPreview.exito) {<span class="inspector-preview-result">Resultado: {{ formulaPreview.valorCalculado }}</span>}
+                        @else {<span class="inspector-warning">{{ mensajeFormulaPreview(formulaPreview) }}</span>}
+                      </div>
+                    }
+                    <div class="inspector-formula-match" [class.is-created]="formulaCoincidenciaActual === 'creada'" [class.is-reused]="formulaCoincidenciaActual === 'reutilizada'">
+                      <strong>Estado de coincidencia</strong>
+                      <span>{{ formulaCoincidenciaTexto }}</span>
+                    </div>
                     <span class="inspector-hint">Al guardar se compara contra fórmulas existentes y, si no hay equivalencia, se registra una nueva versión DRAFT. No se crea un uso ejecutable.</span>
                   }
                 </div>
