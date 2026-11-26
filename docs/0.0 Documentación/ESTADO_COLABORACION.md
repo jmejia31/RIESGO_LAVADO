@@ -6280,3 +6280,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Estado:** `QUALITY_GATE_45878043760=FAILURE_ROOT_CAUSE_IDENTIFIED`; `CORRECTION=READY_TO_PUBLISH`; `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED`; `OWNER_ACCEPTANCE=PENDING`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`.
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_AFTER_PUSH`.
 - **Punto exacto de continuación:** stage selectivo de los dos archivos funcionales y ambos registros, un único commit/push, verificar remoto y consultar una vez el Quality Gate del SHA corregido.
+
+## ESTADO VIGENTE — Corrección del fixture E2E del selector de fórmula — 2026-11-26 13:31:02 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `2c81a1a1f28e92f553c5d632f40deddf3340c4d7`, coincidente con `origin/desarrollo`. Se preservan los cambios locales ajenos sin stage.
+- **Fallo comprobado:** Quality Gate `45879752711`, job `140115883144`, falló únicamente en dos expectativas de `modal-shell-lock.spec.ts` porque el fixture no declaraba una fórmula central y la interfaz correctamente mostraba modo manual. La ejecución reportó `92 PASS`, `7 skips`, `2 FAIL`.
+- **Corrección local:** el fixture E2E ahora vincula explícitamente `F01_FORMULA_UAT v1` en modo central, mantiene la expresión larga inicial y conserva la selección de versiones. No hubo cambio de código de producción, backend, seguridad, Oracle, MP01, producción ni `main`.
+- **Verificación local:** Playwright focal `16/16 PASS`; `npm run lint=PASS`; `npm run build=PASS` con warnings preexistentes SCSS/CommonJS. `QUALITY_GATE_45879752711=FAILURE_ROOT_CAUSE_IDENTIFIED`; el nuevo gate aún no existe hasta publicar el SHA.
+- **Archivos de esta intervención:** `frontend/rl-app/e2e/modal-shell-lock.spec.ts`, bitácora y este estado vivo.
+- **Estado:** `FIXTURE_CONTRACT=CORRECTED_LOCALLY`; `PRODUCTION_CODE=UNCHANGED`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `MP01=UNCHANGED`; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`; `OWNER_ACCEPTANCE=UNCHANGED`.
+- **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`; `ISSUE_STATUS=UNCHANGED`.
+- **Punto exacto de continuación:** stage selectivo, un único commit/push, verificar el SHA remoto y consultar una sola vez el resultado del Quality Gate del SHA exacto; no hacer polling.

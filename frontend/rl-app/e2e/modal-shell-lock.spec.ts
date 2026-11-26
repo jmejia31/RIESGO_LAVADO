@@ -12,7 +12,7 @@ const definicion = JSON.stringify({
     campos: [
       { clave: 'area_responsable', etiqueta: 'Área responsable', tipo: 'texto', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
       { clave: 'dueno_riesgo', etiqueta: 'Dueño del riesgo', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_DUENO', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
-      { clave: 'resultado_formula', etiqueta: 'Resultado calculado', tipo: 'formula', formula: formulaLarga, obligatorio: false, soloLectura: true, anchoColumnas: 2 }
+      { clave: 'resultado_formula', etiqueta: 'Resultado calculado', tipo: 'formula', formula: formulaLarga, formulaId: 1, formulaVersionId: 1, formulaCodigo: 'F01_FORMULA_UAT', formulaVersion: 1, formulaModo: 'central', formulaFuente: 'formula', formulaTipoResultado: 'DECIMAL', obligatorio: false, soloLectura: true, anchoColumnas: 2 }
     ] }],
   catalogos: [{ codigo: 'CAT_DUENO', nombre: 'Dueños de riesgo', elementos: [{ codigo: '01', valor: 'Dirección General', orden: 1 }, { codigo: '02', valor: 'Cumplimiento', orden: 2 }] }]
 });
@@ -26,7 +26,9 @@ const formulaVersions = Array.from({ length: 24 }, (_, index) => ({
   id: index + 1,
   formulaId: 1,
   version: index + 1,
-  expresion: `IFERROR(LOOKUP("CAT_EFECTIVIDAD_${String(index + 1).padStart(2, '0')}", escala_correctivo, NUMBER), "")`,
+  expresion: index === 0
+    ? formulaLarga
+    : `IFERROR(LOOKUP("CAT_EFECTIVIDAD_${String(index + 1).padStart(2, '0')}", escala_correctivo, NUMBER), "")`,
   tipoResultado: 'DECIMAL',
   estado: 'DRAFT',
   hash: String(index + 1).padStart(64, '0')
