@@ -1570,6 +1570,19 @@ test('Block 12 Full Matrix UI preserves all 2006 workbook calculation results fr
   const destinationResults = ['APROBADA'];
   await matrixModal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
 
+  // The first phase opens the complete matrix 59 times and exercises the
+  // workflow in the same Angular component instance. Reset the browser view
+  // before the destination phase so stale component subscriptions or DOM
+  // state cannot suppress the next real consolidated request. The request is
+  // still matched exactly and its HTTP status remains asserted below.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  const resetConsolidatedRequest = waitForConsolidatedRequest(page, '', 'TODOS');
+  await page.getByRole('tab', { name: /Consolidado|Evaluaciones consolidadas/i }).click();
+  expect((await resetConsolidatedRequest).status()).toBe(200);
+  await expect(page.locator('#consolidado-buscar')).toHaveValue('');
+  await expect(page.locator('#consolidado-estado')).toHaveValue('TODOS');
+
   const destinationFixtures = [
     { item: fixtures[1], destination: 'BORRADOR' },
     { item: fixtures[2], destination: 'CERRADA' },

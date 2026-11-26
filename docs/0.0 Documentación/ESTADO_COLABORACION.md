@@ -6229,3 +6229,12 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Pendiente real:** falta prueba manual del propietario sobre la familia MP01 `v1` en `BORRADOR`, incluyendo sus seis campos existentes, cuatro catálogos/70 opciones y persistencia contra la base autorizada. Por ello `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED` y `OWNER_ACCEPTANCE=PENDING`.
 - **Quality Gate:** `QUALITY_GATE_STATUS=PENDING_SINGLE_READ_AFTER_FINAL_HANDOFF_PUSH`; no se hará polling ni se declarará PASS sin resultado primario del SHA remoto final.
 - **Punto exacto de continuación:** publicar el registro de continuidad, consultar una sola vez Actions para el SHA final y entregar los pasos de prueba manual; ningún cambio adicional fuera de este alcance.
+﻿# ESTADO VIGENTE — Block 12 Full Matrix: aislamiento de contexto Angular aplicado (COD, 2026-11-26 08:32 -06:00)
+
+- **Base:** `desarrollo` @ `3cb71a1c15e64f1eafd5f9cb82d325054efe700b`; Quality Gate `45835827257`, job `139964382153`.
+- **Defecto observado:** el primer intento del escenario Full Matrix agotó 240 segundos esperando la respuesta exacta de Consolidado durante la fase de destinos; el retry pasó en 45.3 segundos. El gate quedó en `FAIL` por resultado `1 flaky`, no por un HTTP de negocio demostrado.
+- **Corrección:** se recarga la página Angular entre la fase de 59 matrices y la fase de destinos; se espera y valida la carga real inicial de Consolidado (`buscar=''`, `estadoEvaluacion=TODOS`) antes de continuar. Se preservan los filtros exactos, las respuestas `200`, las 2006 comprobaciones, los seis destinos y todas las aserciones existentes.
+- **Protecciones:** solo se modificó el spec E2E; no se modificaron backend, autenticación, rate limiting, Oracle, datos institucionales, contratos, `main` ni producción. No se alteró el timeout de 240 segundos ni se aceptan respuestas genéricas.
+- **Verificación fresca:** `git diff --check` PASS; ESLint focalizado PASS; Playwright discovery `3` PASS; `npm run build` PASS. E2E Oracle XE no ejecutado localmente por requerir el host descartable del Quality Gate; queda pendiente la confirmación remota.
+- **Publicación:** commit/push selectivo pendiente en esta intervención; se conservarán todos los cambios ajenos preexistentes del checkout.
+- **Continuación exacta:** verificar el SHA publicado y el Quality Gate correspondiente. El estado correcto hasta esa comprobación es `READY_FOR_ORACLE_XE_E2E_RECHECK`, no `PASS`.
