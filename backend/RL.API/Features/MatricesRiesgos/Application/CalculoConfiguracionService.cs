@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.Json;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -13,6 +14,7 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
     { "DRAFT", "IN_REVIEW", "APPROVED", "PUBLISHED", "RETIRED", "ARCHIVED" };
 
     private readonly ICalculoConfiguracionRepository _repository;
+    private readonly FormulaEngine _formulaEngine = new();
 
     public CalculoConfiguracionService(ICalculoConfiguracionRepository repository)
     {
@@ -90,6 +92,53 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
         }
         try { return await Changed(await _repository.ReemplazarFormulaUsosAsync(versionFormularioId, usos, usuarioId, ip)); }
         catch (Exception ex) { return Failure(ex); }
+    }
+
+    public async Task<ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>> RegistrarFormulasManualesAsync(RegistrarFormulasManualesDto dto, long usuarioId, string? ip)
+    {
+        if (dto is null || string.IsNullOrWhiteSpace(dto.DefinicionFormularioJson))
+            return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.BadRequest("La definición del formulario es obligatoria para registrar fórmulas manuales.");
+
+        var formulas = dto.Formulas ?? new List<RegistrarFormulaManualDto>();
+        if (formulas.Count == 0) return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.Ok(Array.Empty<FormulaManualRegistroDto>());
+        if (formulas.Count > 100) return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.BadRequest("La cantidad de fórmulas manuales excede el límite permitido.");
+
+        try
+        {
+            var normalizadas = new List<RegistrarFormulaManualDto>(formulas.Count);
+            var claves = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (RegistrarFormulaManualDto formula in formulas)
+            {
+                string clave = formula.CampoClave?.Trim() ?? string.Empty;
+                string expresion = formula.Expresion?.Trim() ?? string.Empty;
+                string nombre = formula.Nombre?.Trim() ?? string.Empty;
+                string tipo = formula.TipoResultado?.Trim().ToUpperInvariant() ?? string.Empty;
+                if (clave.Length == 0 || clave.Length > 150 || expresion.Length == 0 || nombre.Length == 0)
+                    return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.BadRequest("Cada fórmula manual requiere campo, nombre y expresión.");
+                if (!claves.Add(clave))
+                    return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.BadRequest("No se permiten dos fórmulas manuales para el mismo campo.");
+                CalculoConfiguracionValidation.ValidateFormulaVersion(expresion, tipo);
+                normalizadas.Add(new RegistrarFormulaManualDto { CampoClave = clave, Expresion = expresion, Nombre = nombre, TipoResultado = tipo });
+            }
+
+            string? targetError = ValidarTargetsManuales(dto.DefinicionFormularioJson, normalizadas);
+            if (targetError is not null)
+                return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.BadRequest(targetError);
+
+            var expressions = normalizadas.ToDictionary(item => item.CampoClave, item => item.Expresion, StringComparer.OrdinalIgnoreCase);
+            var resultTypes = normalizadas.ToDictionary(item => item.CampoClave, item => item.TipoResultado, StringComparer.OrdinalIgnoreCase);
+            IReadOnlyList<FormulaDiagnostic> diagnostics = _formulaEngine.ValidateManualDefinition(dto.DefinicionFormularioJson, expressions, resultTypes);
+            if (diagnostics.Count > 0)
+            {
+                string detail = string.Join("; ", diagnostics.Select(error => $"{error.Field}: {error.Code}"));
+                return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.BadRequest($"La fórmula manual no supera la validación institucional: {detail}.");
+            }
+
+            return ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>.Ok(
+                await _repository.RegistrarFormulasManualesAsync(normalizadas, usuarioId, ip),
+                "Fórmulas manuales validadas y registradas como borrador.");
+        }
+        catch (Exception ex) { return Failure<IReadOnlyList<FormulaManualRegistroDto>>(ex); }
     }
 
     public async Task<ServiceResult> CambiarEstadoFormulaAsync(long id, CambiarEstadoConfiguracionDto dto, long usuarioId, string? ip)
@@ -170,6 +219,57 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
         : ServiceResult<IReadOnlyList<ParametroVersionDto>>.Ok(await _repository.ListarParametroVersionesAsync(id));
 
     private static bool IsMasterState(string? state) => state?.Trim().ToUpperInvariant() is "ACTIVE" or "INACTIVE" or "RETIRED";
+
+    private static string? ValidarTargetsManuales(string json, IReadOnlyList<RegistrarFormulaManualDto> formulas)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonElement root = document.RootElement;
+            if (root.TryGetProperty("definicionFormulario", out JsonElement nested)) root = nested;
+            var fields = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+            if (root.TryGetProperty("secciones", out JsonElement sections) && sections.ValueKind == JsonValueKind.Array)
+                foreach (JsonElement section in sections.EnumerateArray())
+                    if (section.TryGetProperty("campos", out JsonElement items) && items.ValueKind == JsonValueKind.Array)
+                        foreach (JsonElement field in items.EnumerateArray())
+                        {
+                            string? key = JsonText(field, "clave") ?? JsonText(field, "rutaDatos") ?? JsonText(field, "identificador");
+                            if (!string.IsNullOrWhiteSpace(key)) fields.TryAdd(key, field);
+                        }
+
+            foreach (RegistrarFormulaManualDto formula in formulas)
+            {
+                if (!fields.TryGetValue(formula.CampoClave, out JsonElement field))
+                    return $"El campo '{formula.CampoClave}' no existe en la definición del formulario.";
+                string type = (JsonText(field, "tipo") ?? string.Empty).Trim().ToLowerInvariant().Replace('_', '-');
+                if (type is not ("formula" or "calculado" or "calculo-sistema" or "texto-calculado"))
+                    return $"El campo '{formula.CampoClave}' no es un campo calculado compatible.";
+                if (TieneMetadataCentralManual(field))
+                    return $"El campo '{formula.CampoClave}' contiene identidad de fórmula central; desvincúlela antes de usar fórmula manual.";
+            }
+            return null;
+        }
+        catch (JsonException ex) { return $"La definición del formulario no es JSON válida: {ex.Message}"; }
+    }
+
+    private static string? JsonText(JsonElement element, string property) =>
+        element.TryGetProperty(property, out JsonElement value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()?.Trim()
+            : null;
+
+    private static bool TieneMetadataCentralManual(JsonElement field)
+    {
+        foreach (string property in new[] { "formulaId", "formulaVersionId", "formulaCodigo", "formulaVersion" })
+        {
+            if (!field.TryGetProperty(property, out JsonElement value) || value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+                continue;
+
+            if (value.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(value.GetString())) return true;
+            if (value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out decimal number) && number != 0) return true;
+            if (value.ValueKind is JsonValueKind.True or JsonValueKind.False) return true;
+        }
+        return false;
+    }
     private static async Task<ServiceResult> ChangeVersion(long id, CambiarEstadoConfiguracionDto dto, Func<long, string, int, Task<bool>> change)
     {
         if (dto is null) return ServiceResult.BadRequest("El estado de versión es obligatorio.");

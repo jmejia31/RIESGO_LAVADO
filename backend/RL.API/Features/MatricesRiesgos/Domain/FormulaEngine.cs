@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace RL.API.Features.MatricesRiesgos.Domain;
 
@@ -125,6 +126,71 @@ public sealed class FormulaEngine
         return new(names, functions, catalogs);
     }
 
+    /// <summary>
+    /// Produces a conservative AST identity for equivalence checks. Whitespace,
+    /// casing and the institutional frequency/impact aliases are normalized,
+    /// but operand order is intentionally preserved.
+    /// </summary>
+    public string CanonicalizeExpression(string expression)
+    {
+        Node ast = Parse(expression, DefaultRegistry.FunctionCodes);
+        return Canonicalize(ast);
+    }
+
+    public IReadOnlyList<FormulaDiagnostic> ValidateManualDefinition(
+        string json,
+        IReadOnlyDictionary<string, string> overrides,
+        IReadOnlyDictionary<string, string> resultTypes)
+    {
+        var errors = new List<FormulaDiagnostic>();
+        try
+        {
+            JsonNode parsed = JsonNode.Parse(json) ?? throw new JsonException("La definición está vacía.");
+            if (parsed is not JsonObject root)
+            {
+                errors.Add(new(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "JSON", "La definición debe ser un objeto JSON."));
+                return errors;
+            }
+
+            JsonObject definition = root["definicionFormulario"] as JsonObject ?? root;
+            var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (definition["secciones"] is JsonArray sections)
+                foreach (JsonNode? sectionNode in sections)
+                    if (sectionNode is JsonObject section && section["campos"] is JsonArray fields)
+                        foreach (JsonNode? fieldNode in fields)
+                            if (fieldNode is JsonObject field)
+                            {
+                                string? key = JsonText(field, "clave") ?? JsonText(field, "rutaDatos") ?? JsonText(field, "identificador");
+                                if (key is null) continue;
+                                if (overrides.TryGetValue(key, out string? expression))
+                                {
+                                    field["formula"] = expression;
+                                    field.Remove("calculo");
+                                    field.Remove("referenciaCalculo");
+                                    found.Add(key);
+                                }
+                            }
+
+            foreach (string key in overrides.Keys)
+                if (!found.Contains(key))
+                    errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, key, "El campo de fórmula manual no está declarado en el formulario."));
+
+            errors.AddRange(ValidateDefinition(root.ToJsonString()));
+            foreach ((string key, string expression) in overrides)
+            {
+                errors.AddRange(ValidateExpression(expression, new(DefaultRegistry))
+                    .Select(error => error with { Field = key }));
+                if (resultTypes.TryGetValue(key, out string? resultType))
+                    errors.AddRange(ValidateExpressionResultType(expression, resultType, key));
+            }
+        }
+        catch (JsonException ex)
+        {
+            errors.Add(new(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "JSON", ex.Message));
+        }
+        return errors;
+    }
+
     public IReadOnlyList<FormulaDiagnostic> ValidateExpression(string expression, FormulaRuntimeOptions options)
     {
         var errors = new List<FormulaDiagnostic>();
@@ -137,6 +203,28 @@ public sealed class FormulaEngine
         {
             errors.Add(new(ex.Code, "expression", ex.Message));
         }
+        return errors;
+    }
+
+    public IReadOnlyList<FormulaDiagnostic> ValidateExpressionResultType(string expression, string resultType, string field = "expression")
+    {
+        var errors = new List<FormulaDiagnostic>();
+        try
+        {
+            FormulaValueType? actual = StaticType(Parse(expression, DefaultRegistry.FunctionCodes), new(DefaultRegistry));
+            if (!actual.HasValue) return errors;
+            bool compatible = resultType.Trim().ToUpperInvariant() switch
+            {
+                "INTEGER" or "DECIMAL" => actual == FormulaValueType.Number,
+                "BOOLEAN" => actual == FormulaValueType.Boolean,
+                "TEXT" => actual == FormulaValueType.Text,
+                "DATE" => actual == FormulaValueType.Date,
+                _ => false
+            };
+            if (!compatible)
+                errors.Add(new(FormulaErrorCode.FORMULA_TYPE_MISMATCH, field, $"La expresión no produce el tipo de resultado '{resultType}'."));
+        }
+        catch (FormulaRuntimeException ex) { errors.Add(new(ex.Code, field, ex.Message)); }
         return errors;
     }
 
@@ -352,7 +440,7 @@ public sealed class FormulaEngine
         }
     }
 
-    private static FormulaValueType? StaticType(Node node)
+    private static FormulaValueType? StaticType(Node node, FormulaRuntimeOptions? options = null)
     {
         return node switch
         {
@@ -362,9 +450,48 @@ public sealed class FormulaEngine
             UnaryNode => FormulaValueType.Number,
             BinaryNode binary when binary.Operator is "=" or "<>" or "<" or "<=" or ">" or ">=" => FormulaValueType.Boolean,
             BinaryNode => FormulaValueType.Number,
-            CallNode => null,
+            CallNode call => StaticCallType(call, options),
             _ => null
         };
+    }
+
+    private static FormulaValueType? StaticCallType(CallNode call, FormulaRuntimeOptions? options)
+    {
+        try
+        {
+            FunctionVersionDefinition definition = (options?.Registry ?? DefaultRegistry).Resolve(call.Name, null, false);
+            return definition.ResultType.Trim().ToUpperInvariant() switch
+            {
+                "INTEGER" or "DECIMAL" or "NUMBER" => FormulaValueType.Number,
+                "BOOLEAN" or "BOOL" => FormulaValueType.Boolean,
+                "TEXT" or "STRING" => FormulaValueType.Text,
+                "DATE" => FormulaValueType.Date,
+                _ => null
+            };
+        }
+        catch (FormulaRuntimeException) { return null; }
+    }
+
+    private static string Canonicalize(Node node) => node switch
+    {
+        NumberNode number => $"N:{number.Number.ToString("R", CultureInfo.InvariantCulture)}",
+        BooleanNode boolean => boolean.Value ? "B:1" : "B:0",
+        StringNode text => $"S:{text.Text.Length}:{text.Text}",
+        ReferenceNode reference => $"R:{CanonicalReference(reference.Name)}",
+        UnaryNode unary => $"U:{unary.Operator}({Canonicalize(unary.Operand)})",
+        BinaryNode binary => $"X:{binary.Operator}({Canonicalize(binary.Left)},{Canonicalize(binary.Right)})",
+        CallNode call => $"F:{call.Name.ToUpperInvariant()}({string.Join(',', call.Arguments.Select(Canonicalize))})",
+        _ => throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "AST no soportado.")
+    };
+
+    private static string CanonicalReference(string reference) =>
+        InstitutionalFormulaReferenceResolver.Resolve(reference, new[] { "frecuencia_inherente", "impacto_inherente" }).ToUpperInvariant();
+
+    private static string? JsonText(JsonObject node, string property)
+    {
+        return node[property] is JsonValue value && value.TryGetValue<string>(out string? text)
+            ? text?.Trim()
+            : null;
     }
 
     private static Dictionary<string, Field> ReadFields(JsonElement root, List<FormulaDiagnostic> errors)

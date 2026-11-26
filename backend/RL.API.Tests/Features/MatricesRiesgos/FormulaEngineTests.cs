@@ -120,6 +120,61 @@ public sealed class FormulaEngineTests
         Assert.Contains(result.Errors, error => error.Code == FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN);
     }
 
+    [Fact]
+    public void ManualFormula_CanonicalizaAliasSinConfundirOrdenDeOperandos()
+    {
+        FormulaEngine engine = new();
+
+        Assert.Equal(
+            engine.CanonicalizeExpression("frecuencia + impacto - 1"),
+            engine.CanonicalizeExpression("FRECUENCIA_INHERENTE + IMPACTO_INHERENTE - 1"));
+        Assert.NotEqual(
+            engine.CanonicalizeExpression("frecuencia + impacto - 1"),
+            engine.CanonicalizeExpression("impacto + frecuencia - 1"));
+    }
+
+    [Fact]
+    public void ManualFormula_ValidaReferenciasCiclosYTipoAntesDeRegistrar()
+    {
+        const string validDefinition = """
+        {"secciones":[{"clave":"s","campos":[
+          {"clave":"frecuencia_inherente","tipo":"numero"},
+          {"clave":"impacto_inherente","tipo":"numero"},
+          {"clave":"vri","tipo":"formula"}
+        ]}]}
+        """;
+        FormulaEngine engine = new();
+
+        Assert.Empty(engine.ValidateManualDefinition(
+            validDefinition,
+            new Dictionary<string, string> { ["vri"] = "frecuencia + impacto - 1" },
+            new Dictionary<string, string> { ["vri"] = "DECIMAL" }));
+
+        var unknown = engine.ValidateManualDefinition(
+            validDefinition,
+            new Dictionary<string, string> { ["vri"] = "frecuencia + inexistente" },
+            new Dictionary<string, string> { ["vri"] = "DECIMAL" });
+        Assert.Contains(unknown, error => error.Code == FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN);
+
+        const string cyclicDefinition = """
+        {"secciones":[{"clave":"s","campos":[
+          {"clave":"a","tipo":"formula"},
+          {"clave":"b","tipo":"formula"}
+        ]}]}
+        """;
+        var cyclic = engine.ValidateManualDefinition(
+            cyclicDefinition,
+            new Dictionary<string, string> { ["a"] = "b + 1", ["b"] = "a + 1" },
+            new Dictionary<string, string> { ["a"] = "DECIMAL", ["b"] = "DECIMAL" });
+        Assert.Contains(cyclic, error => error.Code == FormulaErrorCode.FORMULA_CYCLE);
+
+        var wrongType = engine.ValidateManualDefinition(
+            validDefinition,
+            new Dictionary<string, string> { ["vri"] = "frecuencia > impacto" },
+            new Dictionary<string, string> { ["vri"] = "DECIMAL" });
+        Assert.Contains(wrongType, error => error.Code == FormulaErrorCode.FORMULA_TYPE_MISMATCH);
+    }
+
     [Theory]
     [InlineData("unknown(1)", FormulaErrorCode.FORMULA_FUNCTION_UNSUPPORTED)]
     [InlineData("a / 0", FormulaErrorCode.FORMULA_DIVISION_BY_ZERO)]

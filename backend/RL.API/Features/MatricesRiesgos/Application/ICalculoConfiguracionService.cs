@@ -14,6 +14,7 @@ public interface ICalculoConfiguracionService
     Task<ServiceResult<IReadOnlyList<FormulaUsageDto>>> ListarFormulaUsagesAsync(long id);
     Task<ServiceResult> CrearFormulaUsoAsync(CrearFormulaUsoDto dto, long usuarioId, string? ip);
     Task<ServiceResult> ReemplazarFormulaUsosAsync(long versionFormularioId, ReemplazarFormulaUsosDto dto, long usuarioId, string? ip);
+    Task<ServiceResult<IReadOnlyList<FormulaManualRegistroDto>>> RegistrarFormulasManualesAsync(RegistrarFormulasManualesDto dto, long usuarioId, string? ip);
     Task<ServiceResult> CambiarEstadoFormulaAsync(long id, CambiarEstadoConfiguracionDto dto, long usuarioId, string? ip);
 
     Task<ServiceResult<IReadOnlyList<FuncionDto>>> ListarFuncionesAsync(bool incluirInactivas);

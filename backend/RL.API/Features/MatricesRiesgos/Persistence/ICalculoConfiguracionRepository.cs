@@ -11,6 +11,7 @@ public interface ICalculoConfiguracionRepository
     Task<bool> ActualizarFormulaBorradorAsync(long versionId, ActualizarFormulaBorradorDto dto, long usuarioId, string? ip);
     Task<bool> CrearFormulaUsoAsync(CrearFormulaUsoDto dto, long usuarioId, string? ip);
     Task<bool> ReemplazarFormulaUsosAsync(long versionFormularioId, IReadOnlyList<CrearFormulaUsoDto> usos, long usuarioId, string? ip);
+    Task<IReadOnlyList<FormulaManualRegistroDto>> RegistrarFormulasManualesAsync(IReadOnlyList<RegistrarFormulaManualDto> formulas, long usuarioId, string? ip);
     Task<IReadOnlyList<FormulaVersionDto>> ListarFormulaVersionesAsync(long formulaId);
     Task<IReadOnlyList<FormulaUsageDto>> ListarFormulaUsagesAsync(long formulaId);
     Task<IReadOnlyList<FormulaBindingDto>> ListarFormulaBindingsPorVersionFormularioAsync(long versionFormularioId);

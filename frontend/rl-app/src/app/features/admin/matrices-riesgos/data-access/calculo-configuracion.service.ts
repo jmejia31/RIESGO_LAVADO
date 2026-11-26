@@ -15,8 +15,10 @@ import {
   CrearParametroDto,
   CrearParametroVersionDto,
   FormulaDto,
+  FormulaManualRegistroDto,
   FormulaUsageDto,
   FormulaVersionDto,
+  RegistrarFormulasManualesDto,
   FuncionArgumentoDto,
   FuncionDto,
   FuncionVersionDto,
@@ -69,6 +71,10 @@ export class CalculoConfiguracionService {
 
   reemplazarFormulaUsos(versionFormularioId: number, usos: CrearFormulaUsoDto[]): Observable<ApiMessage> {
     return this.http.put<ApiMessage>(`${this.apiUrl}/formula-usos/versiones-formulario/${versionFormularioId}`, { usos }, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
+  }
+
+  registrarFormulasManuales(dto: RegistrarFormulasManualesDto): Observable<FormulaManualRegistroDto[]> {
+    return this.http.post<ApiResponse<FormulaManualRegistroDto[]>>(`${this.apiUrl}/formulas/manuales/borrador`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') }).pipe(map(r => r.datos ?? []));
   }
 
   cambiarEstadoFormula(id: number, dto: CambiarEstadoConfiguracionDto): Observable<ApiMessage> {

@@ -103,6 +103,36 @@ public sealed class ReemplazarFormulaUsosDto
     public List<CrearFormulaUsoDto> Usos { get; set; } = new();
 }
 
+public sealed class RegistrarFormulaManualDto
+{
+    [Required, StringLength(150)] public string CampoClave { get; set; } = string.Empty;
+    [Required] public string Expresion { get; set; } = string.Empty;
+    [Required, StringLength(150)] public string Nombre { get; set; } = string.Empty;
+    [Required, StringLength(20)] public string TipoResultado { get; set; } = "DECIMAL";
+}
+
+public sealed class RegistrarFormulasManualesDto
+{
+    [Required] public string DefinicionFormularioJson { get; set; } = string.Empty;
+    [Required] public List<RegistrarFormulaManualDto> Formulas { get; set; } = new();
+}
+
+public sealed class FormulaManualRegistroDto
+{
+    public string CampoClave { get; set; } = string.Empty;
+    public long FormulaId { get; set; }
+    public long FormulaVersionId { get; set; }
+    public int FormulaVersion { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public string Expresion { get; set; } = string.Empty;
+    public string TipoResultado { get; set; } = string.Empty;
+    public string Estado { get; set; } = string.Empty;
+    public string Hash { get; set; } = string.Empty;
+    public bool Reutilizada { get; set; }
+    public bool Creada { get; set; }
+}
+
 public sealed class CambiarEstadoConfiguracionDto
 {
     [Required, StringLength(20)] public string Estado { get; set; } = string.Empty;

@@ -55,6 +55,12 @@ export interface CampoBuilderModel {
   formulaVersionId?: number;
   formulaCodigo?: string;
   formulaVersion?: number;
+  formulaModo?: 'central' | 'manual';
+  formulaNombre?: string;
+  formulaTipoResultado?: string;
+  /** Estado de validación exclusivamente visual; nunca se persiste. */
+  formulaValidacion?: 'sin-validar' | 'valida' | 'invalida';
+  formulaManualRespaldo?: { expresion: string; nombre?: string; tipoResultado?: string };
   codigoCatalogo?: string;
   permiteValorManual?: boolean;
   opciones?: string[];
@@ -338,6 +344,11 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           formulaVersionId: typeof cmp['formulaVersionId'] === 'number' ? cmp['formulaVersionId'] : undefined,
           formulaCodigo: texto(cmp['formulaCodigo']),
           formulaVersion: typeof cmp['formulaVersion'] === 'number' ? cmp['formulaVersion'] : undefined,
+          formulaModo: cmp['formulaModo'] === 'manual' || cmp['formulaModo'] === 'central'
+            ? cmp['formulaModo']
+            : (typeof cmp['formulaVersionId'] === 'number' && cmp['formulaVersionId'] > 0 ? 'central' : formulaFuente ? 'manual' : undefined),
+          formulaNombre: textoVisible(cmp['formulaNombre']),
+          formulaTipoResultado: texto(cmp['formulaTipoResultado'])?.toUpperCase(),
           obligatorio: !!cmp['obligatorio'],
           soloLectura: !!cmp['soloLectura'] || tipoResuelto.tipo === 'formula',
           placeholder: textoVisible(cmp['placeholder']),
@@ -425,17 +436,34 @@ function serializarCampo(campo: CampoBuilderModel, index: number): JsonObject {
     delete raw['formula'];
     delete raw['calculo'];
     delete raw['referenciaCalculo'];
+    raw['formulaModo'] = 'central';
+    delete raw['formulaNombre'];
+    delete raw['formulaTipoResultado'];
   } else if (campo.formula) raw[formulaFuente] = campo.formula;
   else if (esNuevo || formulaFuente in raw) raw[formulaFuente] = null;
-  const centralFormulaKeys: Array<[string, unknown]> = [
-    ['formulaId', campo.formulaId],
-    ['formulaVersionId', campo.formulaVersionId],
-    ['formulaCodigo', campo.formulaCodigo],
-    ['formulaVersion', campo.formulaVersion]
-  ];
-  for (const [key, value] of centralFormulaKeys) {
-    if (value !== undefined) raw[key] = value;
-    else delete raw[key];
+  if (!formulaCentralSeleccionada && campo.formula) {
+    raw['formulaModo'] = 'manual';
+    if (campo.formulaNombre?.trim()) raw['formulaNombre'] = campo.formulaNombre.trim();
+    else delete raw['formulaNombre'];
+    if (campo.formulaTipoResultado?.trim()) raw['formulaTipoResultado'] = campo.formulaTipoResultado.trim().toUpperCase();
+    else delete raw['formulaTipoResultado'];
+  }
+  const centralFormulaKeys = ['formulaId', 'formulaVersionId', 'formulaCodigo', 'formulaVersion'];
+  if (formulaCentralSeleccionada) {
+    const centralValues: Array<[string, unknown]> = [
+      ['formulaId', campo.formulaId],
+      ['formulaVersionId', campo.formulaVersionId],
+      ['formulaCodigo', campo.formulaCodigo],
+      ['formulaVersion', campo.formulaVersion]
+    ];
+    for (const [key, value] of centralValues) {
+      if (value !== undefined) raw[key] = value;
+      else delete raw[key];
+    }
+  } else {
+    // A manual expression must not carry stale central identity metadata from
+    // a previous selection; only a published central binding is executable.
+    for (const key of centralFormulaKeys) delete raw[key];
   }
 
   return raw;

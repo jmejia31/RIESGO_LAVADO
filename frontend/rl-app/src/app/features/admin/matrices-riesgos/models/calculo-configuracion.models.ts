@@ -64,6 +64,33 @@ export interface CrearFormulaUsoDto {
   formulaVersionId: number;
 }
 
+export interface RegistrarFormulaManualDto {
+  campoClave: string;
+  expresion: string;
+  nombre: string;
+  tipoResultado: string;
+}
+
+export interface RegistrarFormulasManualesDto {
+  definicionFormularioJson: string;
+  formulas: RegistrarFormulaManualDto[];
+}
+
+export interface FormulaManualRegistroDto {
+  campoClave: string;
+  formulaId: number;
+  formulaVersionId: number;
+  formulaVersion: number;
+  codigo: string;
+  nombre: string;
+  expresion: string;
+  tipoResultado: string;
+  estado: string;
+  hash: string;
+  reutilizada: boolean;
+  creada: boolean;
+}
+
 export interface FuncionDto {
   id: number;
   codigo: string;

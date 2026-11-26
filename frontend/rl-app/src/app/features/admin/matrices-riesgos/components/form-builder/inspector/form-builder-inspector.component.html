@@ -38,7 +38,34 @@
             <div class="inspector-group-content">
               <label class="inspector-check"><input [id]="'prop-obligatorio-' + campoActivo.id" type="checkbox" [checked]="campoActivo.obligatorio" (change)="campoActivo.obligatorio = $any($event.target).checked; alCambiarPropiedad()" [disabled]="soloLectura"><span>Campo obligatorio</span></label>
               <label class="inspector-check"><input [id]="'prop-sololectura-' + campoActivo.id" type="checkbox" [checked]="campoActivo.soloLectura" (change)="campoActivo.soloLectura = $any($event.target).checked; alCambiarPropiedad()" [disabled]="soloLectura || esFormula"><span>Solo lectura</span></label>
-              @if (requiereFormula) {<div class="inspector-formula"><label [for]="'prop-formula-' + campoActivo.id">Fórmula central y versión exacta</label>@if (formulaVersionesDisponibles.length > 0) {<app-bounded-select [inputId]="'prop-formula-' + campoActivo.id" ariaLabel="Fórmula central y versión exacta" placeholder="Seleccione una versión" searchPlaceholder="Buscar por código, versión o estado" [options]="formulaVersionSelectOptions" [value]="campoActivo.formulaVersionId ?? null" [disabled]="soloLectura" (valueChange)="seleccionarFormulaCentral($event)"></app-bounded-select>@if (campoActivo.formulaVersionId) {<div class="inspector-central-preview"><strong>{{ campoActivo.formulaCodigo }} · v{{ campoActivo.formulaVersion }}</strong><span>{{ campoActivo.formula }}</span></div>}<span class="inspector-hint">La selección queda pinneada; no se resuelve la última versión.</span>} @else {<input [id]="'prop-formula-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.formula" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" class="is-mono"><span class="inspector-hint">Se conserva el contrato legacy hasta que exista una fórmula central disponible.</span>}</div>}
+              @if (requiereFormula) {
+                <div class="inspector-formula">
+                  <label>Fuente de fórmula</label>
+                  <div class="inspector-formula-modes" role="tablist" aria-label="Fuente de fórmula">
+                    <button type="button" [class.is-active]="formulaModoActual === 'central'" (click)="cambiarModoFormula('central')" [disabled]="soloLectura" aria-label="Usar fórmula institucional" title="Usar fórmula institucional"><app-action-icon action="configure"></app-action-icon><span>Fórmula institucional</span></button>
+                    <button type="button" [class.is-active]="formulaModoActual === 'manual'" (click)="cambiarModoFormula('manual')" [disabled]="soloLectura" aria-label="Modo expresión manual" title="Modo expresión manual"><app-action-icon action="edit"></app-action-icon><span>Expresión manual</span></button>
+                  </div>
+                  @if (formulaModoActual === 'central') {
+                    <label [for]="'prop-formula-' + campoActivo.id">Versión central exacta</label>
+                    @if (formulaVersionesDisponibles.length > 0) {
+                      <app-bounded-select [inputId]="'prop-formula-' + campoActivo.id" ariaLabel="Fórmula central y versión exacta" placeholder="Seleccione una versión" searchPlaceholder="Buscar por código, versión o estado" [options]="formulaVersionSelectOptions" [value]="campoActivo.formulaVersionId ?? null" [disabled]="soloLectura" (valueChange)="seleccionarFormulaCentral($event)"></app-bounded-select>
+                      @if (campoActivo.formulaVersionId) {<div class="inspector-central-preview"><strong>{{ campoActivo.formulaCodigo }} · v{{ campoActivo.formulaVersion }}</strong><span>{{ campoActivo.formula }}</span></div>}
+                      <span class="inspector-hint">La selección queda pinneada; una versión DRAFT no es ejecutable ni se vincula como uso.</span>
+                    } @else {
+                      <span class="inspector-warning">No hay versiones centrales disponibles para seleccionar.</span>
+                    }
+                  } @else {
+                    <div class="inspector-field"><label [for]="'prop-formula-name-' + campoActivo.id">Nombre descriptivo</label><input [id]="'prop-formula-name-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.formulaNombre" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura"></div>
+                    <div class="inspector-field"><label [for]="'prop-formula-type-' + campoActivo.id">Tipo de resultado</label><select [id]="'prop-formula-type-' + campoActivo.id" [(ngModel)]="campoActivo.formulaTipoResultado" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura">@for (tipo of tiposResultadoFormula; track tipo) {<option [value]="tipo">{{ tipo }}</option>}</select></div>
+                    <label [for]="'prop-formula-' + campoActivo.id">Expresión DSL manual</label>
+                    <textarea [id]="'prop-formula-' + campoActivo.id" rows="4" [(ngModel)]="campoActivo.formula" (ngModelChange)="campoActivo.formulaValidacion = 'sin-validar'; alCambiarPropiedad()" [disabled]="soloLectura" class="is-mono"></textarea>
+                    <button type="button" class="inspector-formula-validate" (click)="validarFormulaManual()" [disabled]="soloLectura || !campoActivo.formula?.trim()" aria-label="Validar expresión localmente" title="Validar expresión localmente"><app-action-icon action="validate"></app-action-icon><span>Validar expresión localmente</span></button>
+                    @if (campoActivo.formulaValidacion === 'valida') {<span class="inspector-success">Sintaxis y límites básicos válidos. El servidor hará la validación final.</span>}
+                    @if (campoActivo.formulaValidacion === 'invalida') {<span class="inspector-warning">La expresión está vacía o excede el límite de 4096 caracteres.</span>}
+                    <span class="inspector-hint">Al guardar se compara contra fórmulas existentes y, si no hay equivalencia, se registra una nueva versión DRAFT. No se crea un uso ejecutable.</span>
+                  }
+                </div>
+              }
             </div>
           }
         </section>

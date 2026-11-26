@@ -216,4 +216,26 @@ public sealed class CalculoConfiguracionContractTests
         Assert.Contains("await tx.CommitAsync()", repository, StringComparison.Ordinal);
         Assert.Contains("await tx.RollbackAsync()", repository, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void ManualFormulaRegistration_IsDraftOnlyIdempotentAndDoesNotCreateExecutableUsage()
+    {
+        string controller = Read("backend/RL.API/Features/MatricesRiesgos/CalculoConfiguracionController.cs");
+        string service = Read("backend/RL.API/Features/MatricesRiesgos/Application/CalculoConfiguracionService.cs");
+        string repository = Read("backend/RL.API/Features/MatricesRiesgos/Persistence/CalculoConfiguracionRepository.cs");
+
+        Assert.Contains("formulas/manuales/borrador", controller, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ValidateManualDefinition", service, StringComparison.Ordinal);
+        Assert.Contains("TieneMetadataCentralManual", service, StringComparison.Ordinal);
+        Assert.Contains("formulaCodigo", service, StringComparison.Ordinal);
+        Assert.Contains("IsolationLevel.Serializable", repository, StringComparison.Ordinal);
+        Assert.Contains("MANUAL_", repository, StringComparison.Ordinal);
+        Assert.Contains("Solo se pueden vincular versiones de fórmula PUBLICADAS", repository, StringComparison.Ordinal);
+        Assert.Contains("RL_MR_FORMULA_USOS", repository, StringComparison.Ordinal);
+        int registrationStart = repository.IndexOf("public async Task<IReadOnlyList<FormulaManualRegistroDto>> RegistrarFormulasManualesAsync", StringComparison.Ordinal);
+        int registrationEnd = repository.IndexOf("    public async Task<IReadOnlyList<FormulaVersionDto>>", registrationStart, StringComparison.Ordinal);
+        Assert.True(registrationStart >= 0 && registrationEnd > registrationStart);
+        string registrationBody = repository[registrationStart..registrationEnd];
+        Assert.DoesNotContain("INSERT INTO RL_MR_FORMULA_USOS", registrationBody, StringComparison.OrdinalIgnoreCase);
+    }
 }

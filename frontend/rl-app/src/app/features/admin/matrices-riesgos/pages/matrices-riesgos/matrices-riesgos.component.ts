@@ -26,7 +26,7 @@ import {
   ValorRespuestaFormulario,
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
-import { CrearFormulaUsoDto, FormulaVersionSelectorOption } from '../../models/calculo-configuracion.models';
+import { CrearFormulaUsoDto, FormulaVersionSelectorOption, RegistrarFormulasManualesDto } from '../../models/calculo-configuracion.models';
 import { normalizarJsonABuilderModel } from '../../models/form-builder.models';
 import { ControlRiesgoDto, MatrizBloque6Dto, MitigacionBloque4Dto, PlanMitigacionDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
@@ -3029,8 +3029,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: formulas => {
         if (formulas.length === 0) { this.formulasCentralDisponibles.set([]); return; }
         forkJoin(formulas.map(formula => this.calculoConfig!.listarFormulaVersiones(formula.id))).subscribe({
-          next: versiones => this.formulasCentralDisponibles.set(versiones.flatMap((lista, index) => lista
-            .filter(versionItem => versionItem.estado !== 'ARCHIVED' && versionItem.estado !== 'RETIRED')
+            next: versiones => this.formulasCentralDisponibles.set(versiones.flatMap((lista, index) => lista
             .map(versionItem => ({
               formulaId: formulas[index].id,
               formulaVersionId: versionItem.id,
@@ -3080,12 +3079,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.operacionBuilderEnCurso.set('guardar');
     this.service.actualizarBorradorFormulario(version.verId, jsonEnviado).subscribe({
       next: () => {
-        this.sincronizarUsosFormula(version.verId, jsonEnviado).subscribe({
-          next: () => this.verificarDefinicionPersistida(version, jsonEnviado),
+        this.registrarFormulasManuales(jsonEnviado).subscribe({
+          next: () => this.sincronizarUsosFormula(version.verId, jsonEnviado).subscribe({
+            next: () => this.verificarDefinicionPersistida(version, jsonEnviado),
+            error: error => {
+              this.guardando.set(false);
+              this.operacionBuilderEnCurso.set(null);
+              this.mostrarError(this.obtenerMensajeErrorPublicacion(error, 'No se pudieron actualizar los usos de fórmula del borrador; la versión permanece en borrador.'));
+            }
+          }),
           error: error => {
             this.guardando.set(false);
             this.operacionBuilderEnCurso.set(null);
-            this.mostrarError(this.obtenerMensajeErrorPublicacion(error, 'No se pudieron actualizar los usos de fórmula del borrador; la versión permanece en borrador.'));
+            this.mostrarError(this.obtenerMensajeErrorPublicacion(error, 'La definición quedó guardada, pero no se pudo registrar la fórmula manual como borrador. Puede reintentar sin perder la edición.'));
           }
         });
       },
@@ -3132,6 +3138,28 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return this.calculoConfig.reemplazarFormulaUsos(versionFormularioId, this.extraerUsosFormula(versionFormularioId, json));
   }
 
+  private registrarFormulasManuales(json: string): Observable<unknown> {
+    if (!this.calculoConfig || typeof this.calculoConfig.registrarFormulasManuales !== 'function') return of(null);
+    const modelo = normalizarJsonABuilderModel(json);
+    const formulas = modelo.secciones.flatMap(seccion => seccion.campos)
+      .filter(campo => campo.tipo === 'formula' && !!campo.formula?.trim() && !(Number.isInteger(campo.formulaVersionId) && (campo.formulaVersionId ?? 0) > 0))
+      .map(campo => ({
+        campoClave: campo.clave.trim(),
+        expresion: campo.formula!.trim(),
+        nombre: campo.formulaNombre?.trim() || campo.etiqueta.trim(),
+        tipoResultado: campo.formulaTipoResultado?.trim().toUpperCase() || 'DECIMAL'
+      }));
+    if (formulas.length === 0) return of(null);
+    const dto: RegistrarFormulasManualesDto = { definicionFormularioJson: json, formulas };
+    return this.calculoConfig.registrarFormulasManuales(dto);
+  }
+
+  private tieneFormulasManuales(json: string): boolean {
+    const modelo = normalizarJsonABuilderModel(json);
+    return modelo.secciones.some(seccion => seccion.campos.some(campo =>
+      campo.tipo === 'formula' && !!campo.formula?.trim() && !(Number.isInteger(campo.formulaVersionId) && (campo.formulaVersionId ?? 0) > 0)));
+  }
+
   private extraerUsosFormula(versionFormularioId: number, json: string): CrearFormulaUsoDto[] {
     const modelo = normalizarJsonABuilderModel(json);
     return modelo.secciones.flatMap(seccion => seccion.campos)
@@ -3150,6 +3178,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
     if (!definicionActual.trim()) {
       this.mostrarError('El constructor no entregó una definición publicable. Revise el borrador e intente nuevamente.');
+      return;
+    }
+    if (this.tieneFormulasManuales(definicionActual)) {
+      this.mostrarError('La versión no puede publicarse mientras contenga expresiones manuales. Seleccione una versión central PUBLICADA para cada campo calculado; las expresiones manuales permanecen como DRAFT.');
       return;
     }
     void this.confirmation.confirm({
@@ -3171,7 +3203,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         return;
       }
       this.service.actualizarBorradorFormulario(version.verId, definicionActual).subscribe({
-        next: () => this.sincronizarUsosFormula(version.verId, definicionActual).subscribe({
+        next: () => this.registrarFormulasManuales(definicionActual).subscribe({
+          next: () => this.sincronizarUsosFormula(version.verId, definicionActual).subscribe({
           next: () => this.service.obtenerVersionFormulario(version.verId).subscribe({
             next: persistida => {
               if (!sonJsonSemanticamenteEquivalentes(definicionActual, persistida.verJson)) {
@@ -3182,7 +3215,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             },
             error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo verificar la definición antes de publicarla.'))
           }),
-          error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'La definición se guardó, pero no se pudieron sincronizar las dependencias de fórmula. La versión no se publicó; revise la configuración y vuelva a intentar.'))
+            error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'La definición se guardó, pero no se pudieron sincronizar las dependencias de fórmula. La versión no se publicó; revise la configuración y vuelva a intentar.'))
+          }),
+          error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo registrar la definición de fórmulas antes de publicar. La versión no se publicó.'))
         }),
         error: error => this.finalizarOperacionBuilder(this.obtenerMensajeErrorPublicacion(error, 'No se pudo guardar la definición actual; la versión no se publicó.'))
       });

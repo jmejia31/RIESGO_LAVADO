@@ -6250,3 +6250,14 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Estado:** `F01_REFERENCE_COMPATIBILITY=CORRECTED_LOCALLY`; `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED`; `OWNER_MANUAL_VALIDATION=PENDING`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `QUALITY_GATE=PENDING_NEW_SHA`.
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; se debe hacer stage selectivo, un commit/push a `origin/desarrollo` y una sola lectura del Quality Gate, sin polling.
 - **Punto exacto de continuación:** publicar únicamente los archivos de esta corrección y entregar al propietario la validación manual de MP01 v1/BORRADOR; no declarar certificación funcional sin esa comprobación.
+
+## ESTADO VIGENTE — Issue #51 P08 fórmulas manuales del constructor — 2026-11-26 12:19 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `629046208a1569edef27da4c653665e8a4383cf5`, coincidente con `origin/desarrollo` al inicio. Cambios locales ajenos preservados fuera del stage.
+- **Estado funcional:** `P08_MANUAL_FORMULA_FLOW=IMPLEMENTED_LOCALLY`; el inspector separa fórmula central y expresión manual. La validación backend reutiliza `FormulaEngine`, mantiene alias institucionales permitidos, rechaza referencias/ciclos/tipos/metadata central no autorizados y registra maestros/versiones `DRAFT` de forma idempotente, sin usos ejecutables. La publicación permanece bloqueada mientras haya expresiones manuales.
+- **Preservación:** `MP01=v1 BORRADOR`; F01, fórmulas centrales, catálogos, opciones y registros del propietario permanecen sin cambios. `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `PRODUCTION=NOT_TOUCHED`; `MAIN=NOT_TOUCHED`; `CREDENTIALS=NOT_USED`.
+- **Verificación fresca:** backend focal `28/28 PASS`; Angular `1,104/1,104 PASS`; lint `PASS`; build Angular `PASS` con warnings de presupuesto/CommonJS; build solución .NET Release `PASS` con 0 warnings/0 errores; validadores de estructura, base de datos, enlaces, skills y DOCX estructural `PASS`; `git diff --check=PASS`.
+- **Limitación:** `DOCX_RENDER=BLOCKED_MISSING_LIBREOFFICE` porque no existe `soffice.exe` en el entorno. La validación visual no se presenta como realizada. E2E autorizado, Oracle y prueba manual MP01 quedan pendientes.
+- **Documentación:** `docs/certificaciones/P08_GUIA_NUEVA_FAMILIA_Y_ENTREGA_RIESGO_LAVADO.docx` actualizado; no se creó un documento duplicado. `MP01_FUNCTIONAL_CERTIFICATION=NOT_DECLARED`; `OWNER_ACCEPTANCE=PENDING`.
+- **Publicación / Quality Gate:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=NOT_YET_AVAILABLE`; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`; `ISSUE_51=OPEN_PENDING_OWNER_REVIEW`.
+- **Punto exacto de continuación:** stage selectivo de los cambios propios y de estos dos registros, un solo commit/push a `origin/desarrollo`, una única lectura del Quality Gate del SHA publicado sin polling, y entrega de procedimiento manual MP01. No ejecutar cambios en Oracle ni cerrar la Issue #51.

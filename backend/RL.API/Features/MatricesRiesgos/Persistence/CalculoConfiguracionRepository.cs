@@ -96,6 +96,8 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
             if (!formVersionState.Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Los usos de fórmula solo pueden modificarse en una versión de formulario en borrador.");
 
+            await EnsurePublishedFormulaVersion(c, tx, dto.FormulaVersionId);
+
             long id = await Next(c, tx, "SEQ_RL_MR_FORMULA_USOS");
             await Execute(c, tx, "INSERT INTO RL_MR_FORMULA_USOS(FUS_ID,FUS_VERSION_FORMULARIO_ID,FUS_CAMPO_CLAVE,FUS_FORMULA_VERSION_ID,FUS_FECHA_CREACION,FUS_USR_CREACION) VALUES(:id,:formVersion,:fieldKey,:formulaVersion,SYSDATE,:userId)",
                 P("id", id), P("formVersion", dto.VersionFormularioId), P("fieldKey", fieldKey), P("formulaVersion", dto.FormulaVersionId), P("userId", usuarioId));
@@ -119,6 +121,9 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
                 if (!lockReader.GetString(0).Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("Los usos de fórmula solo pueden modificarse en una versión de formulario en borrador.");
             }
+
+            foreach (CrearFormulaUsoDto uso in usos)
+                await EnsurePublishedFormulaVersion(c, tx, uso.FormulaVersionId);
 
             var existingIds = new List<long>();
             await using (var existingCommand = Command("SELECT FUS_ID FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID=:id FOR UPDATE", c, tx))
@@ -144,6 +149,90 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
             await tx.CommitAsync(); return true;
         }
         catch { await tx.RollbackAsync(); throw; }
+    }
+
+    public async Task<IReadOnlyList<FormulaManualRegistroDto>> RegistrarFormulasManualesAsync(IReadOnlyList<RegistrarFormulaManualDto> formulas, long usuarioId, string? ip)
+    {
+        await using var c = _db.CreateConnection();
+        await c.OpenAsync();
+        await using var tx = c.BeginTransaction(IsolationLevel.Serializable);
+        try
+        {
+            // A deterministic master-row lock serializes the read/compare/create
+            // window without changing schema or creating executable usages.
+            await LockAnyActiveFormula(c, tx);
+            var candidates = new List<ManualFormulaCandidate>();
+            const string existingSql = @"SELECT f.FOR_ID,f.FOR_CODIGO,f.FOR_NOMBRE,f.FOR_ESTADO,
+                                                v.FOV_ID,v.FOV_VERSION,v.FOV_EXPRESION,v.FOV_TIPO_RESULTADO,v.FOV_ESTADO,v.FOV_HASH
+                                           FROM RL_MR_FORMULAS f
+                                           JOIN RL_MR_FORMULA_VERSIONES v ON v.FOV_FORMULA_ID=f.FOR_ID
+                                          ORDER BY f.FOR_ID,v.FOV_VERSION";
+            await using (var existingCommand = Command(existingSql, c, tx))
+            await using (var existingReader = await existingCommand.ExecuteReaderAsync())
+            {
+                while (await existingReader.ReadAsync())
+                {
+                    string expression = existingReader.GetString(6);
+                    string canonical;
+                    try { canonical = new FormulaEngine().CanonicalizeExpression(expression); }
+                    catch (FormulaRuntimeException) { continue; }
+                    candidates.Add(new ManualFormulaCandidate(
+                        canonical,
+                        existingReader.GetString(7).Trim().ToUpperInvariant(),
+                        existingReader.GetInt64(0),
+                        existingReader.GetString(1),
+                        existingReader.GetString(2),
+                        existingReader.GetInt64(4),
+                        existingReader.GetInt32(5),
+                        expression,
+                        existingReader.GetString(8),
+                        existingReader.GetString(9)));
+                }
+            }
+
+            var result = new List<FormulaManualRegistroDto>(formulas.Count);
+            foreach (RegistrarFormulaManualDto formula in formulas)
+            {
+                string type = formula.TipoResultado.Trim().ToUpperInvariant();
+                string canonical = new FormulaEngine().CanonicalizeExpression(formula.Expresion);
+                ManualFormulaCandidate? equivalent = candidates.FirstOrDefault(candidate =>
+                    candidate.CanonicalExpression.Equals(canonical, StringComparison.Ordinal)
+                    && candidate.ResultType.Equals(type, StringComparison.OrdinalIgnoreCase));
+
+                if (equivalent is not null)
+                {
+                    result.Add(ToManualRegistration(formula.CampoClave, equivalent, reutilizada: true, creada: false));
+                    continue;
+                }
+
+                string hash = CalculoConfiguracionValidation.Hash(canonical + "|" + type);
+                string code = "MANUAL_" + hash[..32].ToUpperInvariant();
+                if (candidates.Any(candidate => candidate.Code.Equals(code, StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("La identidad determinista de la fórmula manual colisionó con una fórmula existente.");
+
+                long formulaId = await Next(c, tx, "SEQ_RL_MR_FORMULAS");
+                await Execute(c, tx, "INSERT INTO RL_MR_FORMULAS(FOR_ID,FOR_CODIGO,FOR_NOMBRE,FOR_DESCRIPCION,FOR_ESTADO,FOR_FECHA_CREACION,FOR_USR_CREACION,FOR_VERSION_ROW) VALUES(:id,:code,:name,:description,'ACTIVE',SYSDATE,:userId,1)",
+                    P("id", formulaId), P("code", code), P("name", formula.Nombre.Trim()),
+                    P("description", "Fórmula registrada desde el Constructor de Formularios; requiere revisión y publicación institucional."), P("userId", usuarioId));
+                long versionId = await Next(c, tx, "SEQ_RL_MR_FORMULA_VERSIONES");
+                await InsertFormulaVersion(c, tx, formulaId, 1,
+                    new CrearFormulaVersionDto { Expresion = formula.Expresion.Trim(), TipoResultado = type }, usuarioId, versionId);
+                await _auditoria.RegistrarAsync(c, tx, "RL_MR_FORMULAS", formulaId.ToString(), "INSERT", null, AuditJson(code, 1, "DRAFT"), usuarioId, null, ip, Modulo);
+                await _auditoria.RegistrarAsync(c, tx, "RL_MR_FORMULA_VERSIONES", versionId.ToString(), "INSERT", null, AuditJson(code, 1, "DRAFT"), usuarioId, null, ip, Modulo);
+
+                var created = new ManualFormulaCandidate(canonical, type, formulaId, code, formula.Nombre.Trim(), versionId, 1, formula.Expresion.Trim(), "DRAFT", FormulaHash(formula.Expresion, type));
+                candidates.Add(created);
+                result.Add(ToManualRegistration(formula.CampoClave, created, reutilizada: false, creada: true));
+            }
+
+            await tx.CommitAsync();
+            return result;
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<IReadOnlyList<FormulaVersionDto>> ListarFormulaVersionesAsync(long formulaId)
@@ -379,6 +468,27 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
     private static OracleParameter PClob(string name,object value)=>new(name,OracleDbType.Clob){Value=value};
     private static async Task<int> Execute(OracleConnection c,OracleTransaction tx,string sql,params OracleParameter[] ps){await using var cmd=Command(sql,c,tx);cmd.Parameters.AddRange(ps);return await cmd.ExecuteNonQueryAsync();}
     private static async Task Lock(OracleConnection c,OracleTransaction tx,string sql,long id){await using var cmd=Command(sql,c,tx);cmd.Parameters.Add(P("id",id));await using var r=await cmd.ExecuteReaderAsync();if(!await r.ReadAsync())throw new KeyNotFoundException("Recurso no encontrado o inactivo.");}
+    private static async Task LockAnyActiveFormula(OracleConnection c, OracleTransaction tx)
+    {
+        await using var command = Command("SELECT FOR_ID FROM RL_MR_FORMULAS WHERE FOR_ID=(SELECT MIN(FOR_ID) FROM RL_MR_FORMULAS WHERE FOR_ESTADO='ACTIVE') FOR UPDATE", c, tx);
+        await using var reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync() || reader.IsDBNull(0)) throw new InvalidOperationException("No existe un maestro de fórmulas activo para serializar el registro manual.");
+    }
+    private static async Task EnsurePublishedFormulaVersion(OracleConnection c, OracleTransaction tx, long versionId)
+    {
+        await using var command = Command("SELECT v.FOV_ID FROM RL_MR_FORMULA_VERSIONES v JOIN RL_MR_FORMULAS f ON f.FOR_ID=v.FOV_FORMULA_ID WHERE v.FOV_ID=:id AND v.FOV_ESTADO='PUBLISHED' AND f.FOR_ESTADO='ACTIVE'", c, tx);
+        command.Parameters.Add(P("id", versionId));
+        await using var reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync()) throw new InvalidOperationException("Solo se pueden vincular versiones de fórmula PUBLICADAS y activas. Las fórmulas manuales nuevas permanecen en borrador.");
+    }
+    private static FormulaManualRegistroDto ToManualRegistration(string field, ManualFormulaCandidate candidate, bool reutilizada, bool creada) => new()
+    {
+        CampoClave = field.Trim(), FormulaId = candidate.FormulaId, FormulaVersionId = candidate.VersionId,
+        FormulaVersion = candidate.Version, Codigo = candidate.Code, Nombre = candidate.Name,
+        Expresion = candidate.Expression, TipoResultado = candidate.ResultType, Estado = candidate.VersionState,
+        Hash = candidate.Hash, Reutilizada = reutilizada, Creada = creada
+    };
+    private sealed record ManualFormulaCandidate(string CanonicalExpression, string ResultType, long FormulaId, string Code, string Name, long VersionId, int Version, string Expression, string VersionState, string Hash);
     internal static string ResolveSequenceSql(string sequence) => sequence switch
     {
         "SEQ_RL_MR_FORMULAS" => "SELECT SEQ_RL_MR_FORMULAS.NEXTVAL FROM DUAL",
