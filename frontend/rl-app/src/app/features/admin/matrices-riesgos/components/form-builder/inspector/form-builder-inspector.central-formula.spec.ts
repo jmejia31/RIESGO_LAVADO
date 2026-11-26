@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormBuilderInspectorComponent } from './form-builder-inspector.component';
 import { normalizarJsonABuilderModel, serializarBuilderModelAJson } from '../../../models/form-builder.models';
+import { validarFormBuilderModel } from '../../../utils/form-builder-validator.util';
 
 describe('FormBuilderInspectorComponent — fórmula central pinneada', () => {
   let fixture: ComponentFixture<FormBuilderInspectorComponent>;
@@ -58,5 +59,23 @@ describe('FormBuilderInspectorComponent — fórmula central pinneada', () => {
     expect(serialized.secciones[0].campos[0]['formulaVersionId']).toBeUndefined();
     expect(serialized.secciones[0].campos[0]['formulaId']).toBeUndefined();
     expect(serialized.secciones[0].campos[0]['formula']).toBeNull();
+  });
+
+  it('persiste solo la vinculación central y permite validar el borrador sin fórmula embebida', () => {
+    const model = normalizarJsonABuilderModel(JSON.stringify({
+      secciones: [{ clave: 'riesgo', titulo: 'Riesgo', campos: [
+        { clave: 'frecuencia_inherente', etiqueta: 'Frecuencia', tipo: 'numero' },
+        { clave: 'impacto_inherente', etiqueta: 'Impacto', tipo: 'numero' },
+        { clave: 'valor_riesgo_inherente', etiqueta: 'VRI', tipo: 'formula', formulaVersionId: 8, formulaCodigo: 'F01_VALOR_RIESGO_INHERENTE', formulaVersion: 1 }
+      ] }]
+    }));
+
+    const serialized = JSON.parse(serializarBuilderModelAJson(model)) as { secciones: Array<{ campos: Array<Record<string, unknown>> }> };
+    const vri = serialized.secciones[0].campos[2];
+
+    expect(vri['formulaVersionId']).toBe(8);
+    expect(vri['formulaCodigo']).toBe('F01_VALOR_RIESGO_INHERENTE');
+    expect(vri['formula']).toBeUndefined();
+    expect(validarFormBuilderModel(model)).toEqual([]);
   });
 });

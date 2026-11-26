@@ -162,6 +162,50 @@ public static class InstitutionalCalculationContextKeys
     };
 }
 
+/// <summary>
+/// Resuelve únicamente los nombres semánticos que forman parte del contrato
+/// institucional de las fórmulas contra las claves persistibles del formulario.
+/// La expresión oficial no se reescribe y los alias solo son válidos cuando su
+/// destino está declarado en la versión evaluada.
+/// </summary>
+public static class InstitutionalFormulaReferenceResolver
+{
+    private static readonly IReadOnlyDictionary<string, string> Aliases =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["frecuencia"] = "frecuencia_inherente",
+            ["impacto"] = "impacto_inherente"
+        };
+
+    public static string Resolve(string reference, IEnumerable<string> knownNames)
+    {
+        string normalizedReference = reference.Trim();
+        string[] known = knownNames.ToArray();
+        string? direct = known.FirstOrDefault(name => name.Equals(normalizedReference, StringComparison.OrdinalIgnoreCase));
+        if (direct is not null) return direct;
+
+        if (normalizedReference.Equals("C1", StringComparison.OrdinalIgnoreCase))
+        {
+            string? c = known.FirstOrDefault(name => name.Equals("c", StringComparison.OrdinalIgnoreCase));
+            if (c is not null) return c;
+        }
+
+        return Aliases.TryGetValue(normalizedReference, out string? canonical)
+            ? known.FirstOrDefault(name => name.Equals(canonical, StringComparison.OrdinalIgnoreCase)) ?? normalizedReference
+            : normalizedReference;
+    }
+
+    public static IEnumerable<string> ExpandAllowedNames(IEnumerable<string> knownNames)
+    {
+        string[] known = knownNames.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var expanded = new HashSet<string>(known, StringComparer.OrdinalIgnoreCase);
+        foreach ((string alias, string canonical) in Aliases)
+            if (known.Any(name => name.Equals(canonical, StringComparison.OrdinalIgnoreCase)))
+                expanded.Add(alias);
+        return expanded;
+    }
+}
+
 public interface ICalculationLookup
 {
     FormulaValue Lookup(string catalogCode, FormulaValue input, string? resultField = null);

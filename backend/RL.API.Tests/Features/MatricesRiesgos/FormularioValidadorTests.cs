@@ -519,5 +519,23 @@ public sealed class FormularioValidadorTests
         Assert.Equal(2, invalido.Errores.Count);
     }
 
+    [Fact]
+    public async Task ValidarDefinicion_AceptaCampoFormulaConVinculacionCentralVersionada()
+    {
+        const string config = """
+        {
+          "secciones":[{"clave":"riesgo","titulo":"Riesgo","campos":[
+            {"clave":"frecuencia_inherente","etiqueta":"Frecuencia","tipo":"numero"},
+            {"clave":"impacto_inherente","etiqueta":"Impacto","tipo":"numero"},
+            {"clave":"valor_riesgo_inherente","etiqueta":"VRI","tipo":"formula","formulaVersionId":101,"formulaCodigo":"F01_VALOR_RIESGO_INHERENTE","formulaVersion":1}
+          ]}]
+        }
+        """;
+
+        FormularioDefinitionValidationResult result = await _validador.ValidarDefinicionPublicableAsync(config);
+
+        Assert.True(result.Valido, string.Join(" | ", result.Errores.Select(error => error.Mensaje)));
+    }
+
 }
 

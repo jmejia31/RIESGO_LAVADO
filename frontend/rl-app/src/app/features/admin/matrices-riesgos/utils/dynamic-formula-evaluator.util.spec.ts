@@ -68,4 +68,31 @@ describe('Motor de Evaluacion de Formulas Dinamicas Seguro (Fase 5)', () => {
     expect(resultado.exito).toBe(false);
     expect(resultado.codigo).toBe('FORMULA_DIVISION_BY_ZERO');
   });
+
+  it('resuelve las referencias oficiales de F01 contra las claves contractuales', () => {
+    const camposMap = new Map<string, CampoFormulario>([
+      ['frecuencia_inherente', { clave: 'frecuencia_inherente', etiqueta: 'Frecuencia', tipo: 'numero', obligatorio: true, soloLectura: false }],
+      ['impacto_inherente', { clave: 'impacto_inherente', etiqueta: 'Impacto', tipo: 'numero', obligatorio: true, soloLectura: false }]
+    ]);
+
+    const resultado = evaluarFormulaCampo(
+      'IF((frecuencia+impacto-1)=-1,"",frecuencia+impacto-1)',
+      { frecuencia_inherente: 2, impacto_inherente: 3 },
+      'valor_riesgo_inherente',
+      camposMap
+    );
+
+    expect(resultado).toEqual({ valorCalculado: 4, exito: true });
+  });
+
+  it('mantiene rechazadas las referencias no autorizadas aunque existan alias institucionales', () => {
+    const camposMap = new Map<string, CampoFormulario>([
+      ['frecuencia_inherente', { clave: 'frecuencia_inherente', etiqueta: 'Frecuencia', tipo: 'numero', obligatorio: true, soloLectura: false }]
+    ]);
+
+    const resultado = evaluarFormulaCampo('frecuencia + referencia_no_autorizada', { frecuencia_inherente: 2 }, 'vri', camposMap);
+
+    expect(resultado.exito).toBe(false);
+    expect(resultado.codigo).toBe('FORMULA_REFERENCE_UNKNOWN');
+  });
 });

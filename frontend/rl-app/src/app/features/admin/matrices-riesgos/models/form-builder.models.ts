@@ -416,7 +416,16 @@ function serializarCampo(campo: CampoBuilderModel, index: number): JsonObject {
   else if (esNuevo || 'opciones' in raw) raw['opciones'] = null;
 
   const formulaFuente = campo.formulaFuente ?? ('formula' in raw ? 'formula' : 'calculo' in raw ? 'calculo' : 'formula');
-  if (campo.formula) raw[formulaFuente] = campo.formula;
+  const formulaCentralSeleccionada = Number.isInteger(campo.formulaVersionId) && (campo.formulaVersionId ?? 0) > 0
+    && !!campo.formulaCodigo?.trim();
+  if (formulaCentralSeleccionada) {
+    // La vinculación RL_MR_FORMULA_USOS es la única fuente ejecutable de una
+    // fórmula central. El texto se mantiene en memoria para la vista previa,
+    // pero nunca se duplica en la definición persistida.
+    delete raw['formula'];
+    delete raw['calculo'];
+    delete raw['referenciaCalculo'];
+  } else if (campo.formula) raw[formulaFuente] = campo.formula;
   else if (esNuevo || formulaFuente in raw) raw[formulaFuente] = null;
   const centralFormulaKeys: Array<[string, unknown]> = [
     ['formulaId', campo.formulaId],

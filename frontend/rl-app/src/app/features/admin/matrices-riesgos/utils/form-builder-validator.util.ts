@@ -105,7 +105,10 @@ export function validarFormBuilderModel(model: FormBuilderModel): FormBuilderVal
           }
         }
 
-        if (cmp.tipo === 'formula' && !cmp.formula?.trim() && !cmp.tipoOriginal) {
+        const formulaCentralSeleccionada = Number.isInteger(cmp.formulaVersionId)
+          && (cmp.formulaVersionId ?? 0) > 0
+          && !!cmp.formulaCodigo?.trim();
+        if (cmp.tipo === 'formula' && !cmp.formula?.trim() && !formulaCentralSeleccionada && !cmp.tipoOriginal) {
           errores.push({ campo: cmp.clave || posicion, mensaje: `El campo calculado "${cmp.etiqueta || cmp.clave}" requiere una fórmula válida.` });
         }
       });
@@ -116,7 +119,11 @@ export function validarFormBuilderModel(model: FormBuilderModel): FormBuilderVal
   const campos = model.secciones.flatMap(sec => sec.campos) as unknown as CampoFormulario[];
   const camposMap = new Map(campos.map(campo => [campo.clave.toLowerCase(), campo]));
   const valoresIniciales: RespuestasFormulario = Object.fromEntries(campos.map(campo => [campo.clave, 0]));
-  campos.filter(campo => campo.formula?.trim()).forEach(campo => {
+  campos.filter(campo => campo.formula?.trim() && !(
+    Number.isInteger((campo as unknown as { formulaVersionId?: number }).formulaVersionId)
+    && (((campo as unknown as { formulaVersionId?: number }).formulaVersionId ?? 0) > 0)
+    && !!(campo as unknown as { formulaCodigo?: string }).formulaCodigo?.trim()
+  )).forEach(campo => {
     const resultado = evaluarFormulaCampo(campo.formula, valoresIniciales, campo.clave, camposMap);
     // La validación del contrato comprueba sintaxis, referencias y ciclos. Los
     // errores dependientes de valores no deben invalidar un borrador con ceros

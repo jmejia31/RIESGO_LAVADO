@@ -54,6 +54,8 @@ public sealed class VersionedCalculationRuntimeServiceTests
             "{\"escala\":\"SCALE_A\",\"resultado\":999}"));
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.CalculateAsync(63, definition,
             "{\"escala\":\"SCALE_A\",\"control_preventivo\":\"spoof\"}"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CalculateAsync(63, definition,
+            "{\"escala\":\"SCALE_A\",\"frecuencia\":5}"));
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.CalculateAsync(64, definition,
             "{\"escala\":\"SCALE_A\"}"));
         string tamperedDefinition = definition.Replace(CatalogSnapshotHasher.Compute(catalog), new string('0', 64), StringComparison.Ordinal);

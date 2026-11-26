@@ -59,6 +59,68 @@ public sealed class FormulaEngineTests
     }
 
     [Theory]
+    [InlineData(1, 1, 1d)]
+    [InlineData(2, 3, 4d)]
+    [InlineData(3, 4, 6d)]
+    [InlineData(5, 5, 9d)]
+    public void F01_ResuelveAliasInstitucionalSinCambiarLaExpresionOficial(int frecuencia, int impacto, double esperado)
+    {
+        const string definition = """
+        {"secciones":[{"clave":"riesgo","titulo":"Riesgo","campos":[
+          {"clave":"frecuencia_inherente","etiqueta":"Frecuencia","tipo":"numero"},
+          {"clave":"impacto_inherente","etiqueta":"Impacto","tipo":"numero"},
+          {"clave":"valor_riesgo_inherente","etiqueta":"VRI","tipo":"formula","formula":"IF((frecuencia+impacto-1)=-1,\"\",frecuencia+impacto-1)"}
+        ]}]}
+        """;
+
+        FormulaEngine engine = new();
+        Assert.Empty(engine.ValidateDefinition(definition));
+        FormulaEvaluationResult result = engine.Evaluate(definition,
+            $"{{\"frecuencia_inherente\":{frecuencia},\"impacto_inherente\":{impacto}}}");
+
+        Assert.True(result.Success, string.Join("; ", result.Errors.Select(error => error.Message)));
+        Assert.Equal(esperado, result.Values["valor_riesgo_inherente"]);
+    }
+
+    [Fact]
+    public void F01_GobernadaUsaLaVinculacionCentralSinDuplicarLaFuente()
+    {
+        const string definition = """
+        {"secciones":[{"clave":"riesgo","titulo":"Riesgo","campos":[
+          {"clave":"frecuencia_inherente","etiqueta":"Frecuencia","tipo":"numero"},
+          {"clave":"impacto_inherente","etiqueta":"Impacto","tipo":"numero"},
+          {"clave":"valor_riesgo_inherente","etiqueta":"VRI","tipo":"formula"}
+        ]}]}
+        """;
+        var binding = new GovernedFormulaBinding(
+            "valor_riesgo_inherente", "F01_VALOR_RIESGO_INHERENTE", 1,
+            "IF((frecuencia+impacto-1)=-1,\"\",frecuencia+impacto-1)", "DECIMAL", "PUBLISHED", "ACTIVE", new('A', 64));
+
+        FormulaEvaluationResult result = new FormulaEngine().EvaluateGoverned(definition,
+            "{\"frecuencia_inherente\":2,\"impacto_inherente\":3}", [binding], new FormulaRuntimeOptions(new InMemoryFunctionRegistry(NativeFunctionCatalog.CreateDefaultDefinitions())));
+
+        Assert.True(result.Success, string.Join("; ", result.Errors.Select(error => error.Message)));
+        Assert.Equal(4d, result.Values["valor_riesgo_inherente"]);
+    }
+
+    [Fact]
+    public void F01_ConEntradaIncompletaFallaCerradoPorReferenciaAusente()
+    {
+        const string definition = """
+        {"secciones":[{"clave":"riesgo","titulo":"Riesgo","campos":[
+          {"clave":"frecuencia_inherente","etiqueta":"Frecuencia","tipo":"numero"},
+          {"clave":"impacto_inherente","etiqueta":"Impacto","tipo":"numero"},
+          {"clave":"valor_riesgo_inherente","etiqueta":"VRI","tipo":"formula","formula":"IF((frecuencia+impacto-1)=-1,\"\",frecuencia+impacto-1)"}
+        ]}]}
+        """;
+
+        FormulaEvaluationResult result = new FormulaEngine().Evaluate(definition, "{\"frecuencia_inherente\":2}");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, error => error.Code == FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN);
+    }
+
+    [Theory]
     [InlineData("unknown(1)", FormulaErrorCode.FORMULA_FUNCTION_UNSUPPORTED)]
     [InlineData("a / 0", FormulaErrorCode.FORMULA_DIVISION_BY_ZERO)]
     [InlineData("a + b", FormulaErrorCode.FORMULA_TYPE_MISMATCH)]

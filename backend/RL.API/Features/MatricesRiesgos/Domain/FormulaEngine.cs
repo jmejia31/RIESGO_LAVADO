@@ -49,12 +49,13 @@ public sealed class FormulaEngine
                 {
                     Node ast = Parse(field.Expression!, options.Registry.FunctionCodes);
                     formulas[field.Key] = (field.Expression!, ast);
-                    ValidateReferences(ast, fields.Keys.Concat(options.Parameters?.Keys ?? Array.Empty<string>())
-                        .Concat(InstitutionalCalculationContextKeys.Reserved), field.Key, errors);
+                    ValidateReferences(ast, InstitutionalFormulaReferenceResolver.ExpandAllowedNames(
+                        fields.Keys.Concat(options.Parameters?.Keys ?? Array.Empty<string>())
+                            .Concat(InstitutionalCalculationContextKeys.Reserved)), field.Key, errors);
                 }
                 catch (FormulaRuntimeException ex) { errors.Add(new(ex.Code, field.Key, ex.Message)); }
             }
-            DetectCycles(formulas, errors);
+            DetectCycles(formulas, errors, fields.Keys);
         }
         catch (JsonException ex) { errors.Add(new(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "JSON", ex.Message)); }
         return errors;
@@ -97,8 +98,9 @@ public sealed class FormulaEngine
             }
             foreach (KeyValuePair<string, (string Expression, Node Ast)> entry in formulas)
             {
-                ValidateReferences(entry.Value.Ast, fields.Keys.Concat(options.Parameters?.Keys ?? Array.Empty<string>())
-                    .Concat(InstitutionalCalculationContextKeys.Reserved), entry.Key, errors);
+                ValidateReferences(entry.Value.Ast, InstitutionalFormulaReferenceResolver.ExpandAllowedNames(
+                    fields.Keys.Concat(options.Parameters?.Keys ?? Array.Empty<string>())
+                        .Concat(InstitutionalCalculationContextKeys.Reserved)), entry.Key, errors);
                 ValidateExpressionNode(entry.Value.Ast, options, errors);
                 FormulaExpressionAnalysis analysis = AnalyzeExpression(entry.Value.Expression, options.Registry);
                 if (analysis.ReferencedCatalogs is { } referencedCatalogs)
@@ -106,7 +108,7 @@ public sealed class FormulaEngine
                         if (options.Pinning?.CatalogSnapshots.ContainsKey(catalogCode) != true || options.Lookup is null)
                             errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, entry.Key, $"El catalogo '{catalogCode}' no esta pinneado o no tiene resolver versionado."));
             }
-            DetectCycles(formulas, errors);
+            DetectCycles(formulas, errors, fields.Keys);
         }
         catch (JsonException ex) { errors.Add(new(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "JSON", ex.Message)); }
         catch (FormulaRuntimeException ex) { errors.Add(new(ex.Code, "formula", ex.Message)); }
@@ -398,21 +400,28 @@ public sealed class FormulaEngine
             string resolved = ResolveReferenceName(reference, known);
             if (!known.Contains(resolved)) errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, field, $"Referencia desconocida '{reference}'."));
         }
-        if (node.References().Any(r => r.Equals(field, StringComparison.OrdinalIgnoreCase))) errors.Add(new(FormulaErrorCode.FORMULA_SELF_REFERENCE, field, "La fórmula se referencia a sí misma."));
+        if (node.References().Any(r => ResolveReferenceName(r, known).Equals(field, StringComparison.OrdinalIgnoreCase)))
+            errors.Add(new(FormulaErrorCode.FORMULA_SELF_REFERENCE, field, "La fórmula se referencia a sí misma."));
     }
 
-    private static string ResolveReferenceName(string reference, IEnumerable<string> knownNames) => reference.Equals("C1", StringComparison.OrdinalIgnoreCase) && knownNames.Any(n => n.Equals("c", StringComparison.OrdinalIgnoreCase)) ? "c" : reference;
+    private static string ResolveReferenceName(string reference, IEnumerable<string> knownNames) => InstitutionalFormulaReferenceResolver.Resolve(reference, knownNames);
 
-    private static void DetectCycles(Dictionary<string, (string Expression, Node Ast)> formulas, List<FormulaDiagnostic> errors)
+    private static void DetectCycles(Dictionary<string, (string Expression, Node Ast)> formulas, List<FormulaDiagnostic> errors, IEnumerable<string> fieldNames)
     {
-        try { foreach (string key in formulas.Keys) Visit(key, formulas, new(StringComparer.OrdinalIgnoreCase)); }
+        string[] knownNames = fieldNames.ToArray();
+        try { foreach (string key in formulas.Keys) Visit(key, formulas, new(StringComparer.OrdinalIgnoreCase), knownNames); }
         catch (FormulaRuntimeException ex) { errors.Add(new(ex.Code, "formula", ex.Message)); }
     }
 
-    private static void Visit(string key, Dictionary<string, (string Expression, Node Ast)> formulas, HashSet<string> path)
+    private static void Visit(string key, Dictionary<string, (string Expression, Node Ast)> formulas, HashSet<string> path, IReadOnlyCollection<string> knownNames)
     {
         if (!path.Add(key)) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_CYCLE, "Dependencia circular detectada.");
-        if (formulas.TryGetValue(key, out var formula)) foreach (string reference in formula.Ast.References().Where(formulas.ContainsKey)) Visit(reference, formulas, new(path, StringComparer.OrdinalIgnoreCase));
+        if (formulas.TryGetValue(key, out var formula))
+            foreach (string reference in formula.Ast.References())
+            {
+                string resolved = ResolveReferenceName(reference, formulas.Keys.Concat(knownNames));
+                if (formulas.ContainsKey(resolved)) Visit(resolved, formulas, new(path, StringComparer.OrdinalIgnoreCase), knownNames);
+            }
     }
 
     private sealed record Field(string Key, string? Expression);

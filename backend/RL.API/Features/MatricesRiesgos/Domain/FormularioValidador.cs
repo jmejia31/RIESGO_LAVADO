@@ -123,14 +123,13 @@ public sealed class FormularioValidador : IFormularioValidador
                             && !TryGetText(field, "calculo", out formula)
                             && !TryGetText(field, "referenciaCalculo", out formula))
                         {
-                            result.Errores.Add(new FormularioValidationError(key!, "El campo fórmula requiere una expresión."));
+                            if (!TieneFormulaCentral(field))
+                                result.Errores.Add(new FormularioValidationError(key!, "El campo fórmula requiere una expresión o una vinculación central versionada."));
                         }
                         else if (string.IsNullOrWhiteSpace(formula))
                         {
-                            result.Errores.Add(new FormularioValidationError(key!, "La expresión fórmula no puede estar vacía."));
-                        }
-                        else
-                        {
+                            if (!TieneFormulaCentral(field))
+                                result.Errores.Add(new FormularioValidationError(key!, "La expresión fórmula no puede estar vacía."));
                         }
                     }
                 }
@@ -485,6 +484,15 @@ public sealed class FormularioValidador : IFormularioValidador
             return prop.GetString();
         }
         return null;
+    }
+
+    private static bool TieneFormulaCentral(JsonElement field)
+    {
+        bool versionIdValido = field.TryGetProperty("formulaVersionId", out JsonElement versionId)
+            && versionId.TryGetInt64(out long id)
+            && id > 0;
+        string? codigo = ObtenerPropiedadString(field, "formulaCodigo");
+        return versionIdValido && !string.IsNullOrWhiteSpace(codigo);
     }
 
     private static void AgregarAliasSiDifiere(List<string> aliases, string idPrincipal, string? aliasCandidato)

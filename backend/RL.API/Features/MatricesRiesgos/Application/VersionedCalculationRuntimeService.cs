@@ -46,8 +46,11 @@ public sealed class VersionedCalculationRuntimeService
         using JsonDocument answers = JsonDocument.Parse(string.IsNullOrWhiteSpace(answersJson) ? "{}" : answersJson);
         if (answers.RootElement.ValueKind != JsonValueKind.Object)
             throw new InvalidOperationException("Las respuestas de una versión gobernada deben ser un objeto JSON.");
+        Dictionary<string, string> declaredFields = ReadFieldKeys(definitionJson);
         foreach (JsonProperty property in answers.RootElement.EnumerateObject())
         {
+            if (!declaredFields.ContainsKey(property.Name))
+                throw new InvalidOperationException($"La respuesta '{property.Name}' no está declarada en la versión del formulario.");
             if (InstitutionalCalculationContextKeys.Reserved.Contains(property.Name))
                 throw new InvalidOperationException($"La respuesta '{property.Name}' es contexto reservado del cálculo y no puede enviarla el cliente.");
             if (targets.Contains(property.Name))
