@@ -58,6 +58,12 @@ export interface ActualizarFormulaBorradorDto extends CrearFormulaVersionDto {
   versionRow: number;
 }
 
+export interface ActualizarFormulaMetadataDto {
+  nombre: string;
+  descripcion?: string | null;
+  versionRow: number;
+}
+
 export interface CrearFormulaUsoDto {
   versionFormularioId: number;
   campoClave: string;

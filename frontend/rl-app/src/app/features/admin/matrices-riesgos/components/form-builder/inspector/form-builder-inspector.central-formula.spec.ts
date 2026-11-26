@@ -28,7 +28,7 @@ describe('FormBuilderInspectorComponent — fórmula central pinneada', () => {
     const option = component.formulaVersionSelectOptions[0];
     expect(option).toEqual(expect.objectContaining({
       value: 8,
-      label: 'F_TOTAL · v2 · APPROVED',
+      label: 'Total · v2 · Aprobada',
       searchText: expect.stringContaining('a + b')
     }));
   });

@@ -80,6 +80,38 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
         catch { await tx.RollbackAsync(); throw; }
     }
 
+    public async Task<bool> ActualizarFormulaMetadataAsync(long formulaId, ActualizarFormulaMetadataDto dto, long usuarioId, string? ip)
+    {
+        await using var c = _db.CreateConnection(); await c.OpenAsync(); await using var tx = c.BeginTransaction();
+        try
+        {
+            await using var read = Command("SELECT FOR_CODIGO,FOR_NOMBRE,FOR_DESCRIPCION,FOR_VERSION_ROW FROM RL_MR_FORMULAS WHERE FOR_ID=:id FOR UPDATE", c, tx);
+            read.Parameters.Add(P("id", formulaId));
+            await using var reader = await read.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) { await tx.RollbackAsync(); return false; }
+
+            string codigo = reader.GetString(0);
+            string nombreAnterior = reader.GetString(1);
+            string? descripcionAnterior = NullString(reader, 2);
+            int versionRowActual = reader.GetInt32(3);
+            if (versionRowActual != dto.VersionRow) { await tx.RollbackAsync(); return false; }
+            await reader.CloseAsync();
+
+            int changed = await Execute(c, tx,
+                "UPDATE RL_MR_FORMULAS SET FOR_NOMBRE=:name,FOR_DESCRIPCION=:description,FOR_VERSION_ROW=FOR_VERSION_ROW+1 WHERE FOR_ID=:id AND FOR_VERSION_ROW=:row",
+                P("name", dto.Nombre), P("description", (object?)dto.Descripcion ?? DBNull.Value), P("id", formulaId), P("row", dto.VersionRow));
+            if (changed != 1) { await tx.RollbackAsync(); return false; }
+
+            await _auditoria.RegistrarAsync(
+                c, tx, "RL_MR_FORMULAS", formulaId.ToString(), "UPDATE",
+                AuditFormulaMetadataJson(codigo, nombreAnterior, descripcionAnterior, versionRowActual),
+                AuditFormulaMetadataJson(codigo, dto.Nombre, dto.Descripcion, versionRowActual + 1),
+                usuarioId, null, ip, Modulo);
+            await tx.CommitAsync(); return true;
+        }
+        catch { await tx.RollbackAsync(); throw; }
+    }
+
     public async Task<bool> CrearFormulaUsoAsync(CrearFormulaUsoDto dto, long usuarioId, string? ip)
     {
         string fieldKey = dto.CampoClave.Trim();
@@ -506,6 +538,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
     private static async Task<int> NextVersion(OracleConnection c,OracleTransaction tx,string versionColumn,string foreignColumn,string table,long id){await using var cmd=Command($"SELECT NVL(MAX({versionColumn}),0)+1 FROM {table} WHERE {foreignColumn}=:id",c,tx);cmd.Parameters.Add(P("id",id));return Convert.ToInt32(await cmd.ExecuteScalarAsync());}
     private static string FormulaHash(string expression,string resultType)=>CalculoConfiguracionValidation.Hash(expression.Trim()+"|"+resultType.Trim().ToUpperInvariant());
     private static string AuditJson(object code,int version,string state)=>JsonSerializer.Serialize(new{code,version,state});
+    private static string AuditFormulaMetadataJson(string code,string nombre,string? descripcion,int versionRow)=>JsonSerializer.Serialize(new{code,nombre,descripcion,versionRow});
     private static string? NullString(DbDataReader r,int i)=>r.IsDBNull(i)?null:r.GetString(i);
     private static int? NullableInt(DbDataReader r,int i)=>r.IsDBNull(i)?null:Convert.ToInt32(r.GetValue(i));
     private static bool? NullableBool(DbDataReader r,int i)=>r.IsDBNull(i)?null:Convert.ToInt32(r.GetValue(i))==1;

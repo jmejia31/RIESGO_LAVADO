@@ -7,6 +7,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
 import {
   ActualizarFormulaBorradorDto,
+  ActualizarFormulaMetadataDto,
   ActualizarFuncionBorradorDto,
   ActualizarParametroBorradorDto,
   CambiarEstadoConfiguracionDto,
@@ -28,6 +29,7 @@ import {
 } from '../../models/calculo-configuracion.models';
 import { CatalogoMatrices, MetodologiaFormulario } from '../../models/matrices-riesgos.models';
 import { MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
+import { etiquetaEstadoFormula, nombreFormulaLegible, normalizarBusquedaFormula } from '../../utils/institutional-formula-label.util';
 
 type ConfigTab = 'formulas' | 'funciones' | 'parametros' | 'reglas' | 'catalogos';
 
@@ -37,6 +39,12 @@ interface FormulaDraftForm {
   descripcion: string;
   expresion: string;
   tipoResultado: string;
+}
+
+interface FormulaMetadataForm {
+  nombre: string;
+  descripcion: string;
+  versionRow: number;
 }
 
 interface FunctionDraftForm {
@@ -105,6 +113,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
   readonly handlerKeys = ['IF_V1', 'IFERROR_V1', 'ROUND_V1', 'ROUNDDOWN_V1', 'MAX_V1', 'MIN_V1', 'MOD_V1', 'OR_V1', 'AND_V1', 'LOOKUP_V1'];
 
   readonly modoFormula = signal<'none' | 'create' | 'version' | 'edit'>('none');
+  readonly modoFormulaMetadata = signal(false);
   readonly modoFuncion = signal<'none' | 'create' | 'version' | 'edit'>('none');
   readonly modoParametro = signal<'none' | 'create' | 'version' | 'edit'>('none');
   readonly formulaVersionEditando = signal<FormulaVersionDto | null>(null);
@@ -112,6 +121,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
   readonly parametroVersionEditando = signal<ParametroVersionDto | null>(null);
 
   formulaForm: FormulaDraftForm = this.nuevaFormulaForm();
+  formulaMetadataForm: FormulaMetadataForm = this.nuevaFormulaMetadataForm();
   funcionForm: FunctionDraftForm = this.nuevaFuncionForm();
   parametroForm: ParameterDraftForm = this.nuevoParametroForm();
   funcionArgumentosForm: FuncionArgumentoGuardarDto[] = [];
@@ -166,6 +176,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
     this.preservarScrollMaster(() => {
       this.formulaSeleccionada.set(item);
       this.modoFormula.set('none');
+      this.modoFormulaMetadata.set(false);
     });
     forkJoin({ versiones: this.config.listarFormulaVersiones(item.id, 'local'), usos: this.config.listarFormulaUsages(item.id) }).subscribe({
       next: data => { this.formulaVersiones.set(data.versiones); this.formulaUsages.set(data.usos); },
@@ -291,6 +302,21 @@ export class ConfiguracionCalculoComponent implements OnInit {
     this.modoFormula.set('edit');
   }
 
+  prepararEdicionFormulaMetadata(item = this.formulaSeleccionada()): void {
+    if (!item) return;
+    this.formulaMetadataForm = { nombre: item.nombre, descripcion: item.descripcion ?? '', versionRow: item.versionRow };
+    this.modoFormulaMetadata.set(true);
+    this.modoFormula.set('none');
+  }
+
+  formulaMetadataFormularioValido(): boolean {
+    return this.formulaMetadataForm.nombre.trim().length > 0
+      && this.formulaMetadataForm.nombre.trim().length <= 150
+      && this.formulaMetadataForm.descripcion.trim().length <= 1000;
+  }
+
+  formulaNombreVisible(item: FormulaDto): string { return nombreFormulaLegible(item); }
+
   prepararNuevaFormula(): void { this.formulaForm = this.nuevaFormulaForm(); this.modoFormula.set('create'); this.formulaSeleccionada.set(null); }
   prepararVersionFormula(): void { this.formulaForm = this.nuevaFormulaForm(); this.formulaVersionEditando.set(null); this.modoFormula.set('version'); }
   prepararNuevaFuncion(): void { this.funcionForm = this.nuevaFuncionForm(); this.funcionArgumentosForm = []; this.modoFuncion.set('create'); this.funcionSeleccionada.set(null); }
@@ -334,6 +360,35 @@ export class ConfiguracionCalculoComponent implements OnInit {
         : this.config.crearFormulaVersion(this.formulaSeleccionada()!.id, versionDto);
     this.ejecutar(request)
       .subscribe({ next: () => this.finalizar('Fórmula guardada correctamente.'), error: error => this.fallar(error, 'No se pudo guardar la fórmula.') });
+  }
+
+  async guardarFormulaMetadata(): Promise<void> {
+    const formula = this.formulaSeleccionada();
+    if (!formula || !this.formulaMetadataFormularioValido()) {
+      this.error.set('El nombre descriptivo es obligatorio y la descripción no puede exceder 1000 caracteres.');
+      return;
+    }
+    if (!await this.confirmarGuardado('Guardar metadatos de fórmula', '¿Desea guardar el nombre y la descripción de esta fórmula?')) return;
+    const dto: ActualizarFormulaMetadataDto = {
+      nombre: this.formulaMetadataForm.nombre.trim(),
+      descripcion: this.formulaMetadataForm.descripcion.trim() || null,
+      versionRow: this.formulaMetadataForm.versionRow
+    };
+    this.ejecutar(this.config.actualizarFormulaMetadata(formula.id, dto)).subscribe({
+      next: () => {
+        this.config.obtenerFormula(formula.id).subscribe({
+          next: actualizada => {
+            this.formulas.update(items => items.map(item => item.id === actualizada.id ? actualizada : item));
+            this.formulaSeleccionada.set(actualizada);
+            this.modoFormulaMetadata.set(false);
+            this.guardando.set(false);
+            this.mensaje.set('Metadatos descriptivos actualizados correctamente.');
+          },
+          error: error => this.fallar(error, 'Los metadatos se guardaron, pero no se pudo refrescar la fórmula.')
+        });
+      },
+      error: error => this.fallar(error, 'No se pudieron actualizar los metadatos de la fórmula.')
+    });
   }
 
   async guardarFormulaBorrador(version: FormulaVersionDto): Promise<void> {
@@ -403,7 +458,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
     return value === null || value === undefined ? '—' : String(value);
   }
 
-  estadoLabel(estado: string): string { return ({ DRAFT: 'Borrador', IN_REVIEW: 'En revisión', APPROVED: 'Aprobada', PUBLISHED: 'Publicada', RETIRED: 'Retirada', ARCHIVED: 'Archivada', ACTIVE: 'Activa', INACTIVE: 'Inactiva' } as Record<string, string>)[estado] ?? estado; }
+  estadoLabel(estado: string): string { return etiquetaEstadoFormula(estado); }
   esPublicado(estado: string): boolean { return estado === 'PUBLISHED'; }
 
   private crearFormulaDto(): CrearFormulaDto { return { codigo: this.formulaForm.codigo.trim().toUpperCase(), nombre: this.formulaForm.nombre.trim(), descripcion: this.formulaForm.descripcion.trim() || null, versionInicial: { expresion: this.formulaForm.expresion.trim(), tipoResultado: this.formulaForm.tipoResultado } }; }
@@ -412,7 +467,12 @@ export class ConfiguracionCalculoComponent implements OnInit {
   private validarFormula(): boolean { if (!this.formulaForm.expresion.trim() || (this.modoFormula() === 'create' && (!this.formulaForm.codigo.trim() || !this.formulaForm.nombre.trim()))) { this.error.set('Código, nombre y expresión son obligatorios.'); return false; } return true; }
   private validarFuncion(): boolean { if ((this.modoFuncion() === 'create' && (!this.funcionForm.codigo.trim() || !this.funcionForm.nombre.trim())) || (this.funcionForm.tipo === 'NATIVE' && !this.funcionForm.handlerKey.trim()) || (this.funcionForm.tipo === 'COMPOSITE' && !this.funcionForm.definicionDsl.trim())) { this.error.set('Completa los datos requeridos del contrato de función.'); return false; } return true; }
   private validarParametro(): boolean { if ((this.modoParametro() === 'create' && (!this.parametroForm.codigo.trim() || !this.parametroForm.nombre.trim())) || !this.parametroForm.tipo) { this.error.set('Código, nombre y tipo son obligatorios.'); return false; } return true; }
-  private filtrar<T extends { codigo: string; nombre: string }>(items: T[]): T[] { const q = this.busqueda().trim().toLowerCase(); return q ? items.filter(item => item.codigo.toLowerCase().includes(q) || item.nombre.toLowerCase().includes(q)) : items; }
+  private filtrar<T extends { codigo: string; nombre: string; descripcion?: string | null; estado?: string }>(items: T[]): T[] {
+    const q = normalizarBusquedaFormula(this.busqueda());
+    if (!q) return items;
+    return items.filter(item => [item.codigo, item.nombre, item.descripcion ?? '', item.estado ?? '']
+      .some(value => normalizarBusquedaFormula(value).includes(q)));
+  }
   private preservarScrollMaster(action: () => void): void {
     const pane = typeof document === 'undefined' ? null : document.querySelector<HTMLElement>('.calculation-workspace > div.grid > section:first-child > .divide-y');
     const scrollTop = pane?.scrollTop ?? 0;
@@ -444,6 +504,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
     }
   }
   private nuevaFormulaForm(): FormulaDraftForm { return { codigo: '', nombre: '', descripcion: '', expresion: '', tipoResultado: 'DECIMAL' }; }
+  private nuevaFormulaMetadataForm(): FormulaMetadataForm { return { nombre: '', descripcion: '', versionRow: 0 }; }
   private nuevaFuncionForm(): FunctionDraftForm { return { codigo: '', nombre: '', descripcion: '', categoria: 'CALCULO', tipo: 'NATIVE', tipoResultado: 'DECIMAL', handlerKey: '', definicionDsl: '', minArity: 1, maxArity: 1 }; }
   private nuevoParametroForm(): ParameterDraftForm { return { codigo: '', nombre: '', descripcion: '', tipo: 'DECIMAL', valorEntero: null, valorDecimal: null, valorBooleano: null, valorTexto: '', valorFecha: '' }; }
   private posicion<T extends { id: number }>(items: T[], selected: T | null): string { const index = selected ? items.findIndex(item => item.id === selected.id) : -1; return index >= 0 ? `${index + 1} de ${items.length}` : `${items.length} resultados`; }

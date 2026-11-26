@@ -48,8 +48,8 @@
                   @if (formulaModoActual === 'central') {
                     <label [for]="'prop-formula-' + campoActivo.id">Versión central exacta</label>
                     @if (formulaVersionesDisponibles.length > 0) {
-                      <app-bounded-select [inputId]="'prop-formula-' + campoActivo.id" ariaLabel="Fórmula central y versión exacta" placeholder="Seleccione una versión" searchPlaceholder="Buscar por código, versión o estado" [options]="formulaVersionSelectOptions" [value]="campoActivo.formulaVersionId ?? null" [disabled]="soloLectura" (valueChange)="seleccionarFormulaCentral($event)"></app-bounded-select>
-                      @if (campoActivo.formulaVersionId) {<div class="inspector-central-preview"><strong>{{ campoActivo.formulaCodigo }} · v{{ campoActivo.formulaVersion }}</strong><span>{{ campoActivo.formula }}</span></div>}
+                      <app-bounded-select [inputId]="'prop-formula-' + campoActivo.id" ariaLabel="Fórmula central y versión exacta" placeholder="Seleccione una versión" searchPlaceholder="Buscar por nombre, código, versión o estado" [options]="formulaVersionSelectOptions" [value]="campoActivo.formulaVersionId ?? null" [disabled]="soloLectura" (valueChange)="seleccionarFormulaCentral($event)"></app-bounded-select>
+                      @if (campoActivo.formulaVersionId) {<div class="inspector-central-preview"><strong>{{ formulaVersionSeleccionada ? nombreFormulaLegible(formulaVersionSeleccionada) : campoActivo.formulaNombre || campoActivo.formulaCodigo }} · v{{ campoActivo.formulaVersion }}</strong><span>Código técnico: {{ campoActivo.formulaCodigo }}</span>@if (formulaVersionSeleccionada?.descripcion) {<span>{{ formulaVersionSeleccionada.descripcion }}</span>}<details><summary>Ver expresión técnica</summary><code>{{ campoActivo.formula }}</code></details></div>}
                       <span class="inspector-hint">La selección queda pinneada; una versión DRAFT no es ejecutable ni se vincula como uso.</span>
                     } @else {
                       <span class="inspector-warning">No hay versiones centrales disponibles para seleccionar.</span>

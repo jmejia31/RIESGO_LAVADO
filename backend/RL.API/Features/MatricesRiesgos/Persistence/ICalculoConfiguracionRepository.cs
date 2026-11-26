@@ -9,6 +9,7 @@ public interface ICalculoConfiguracionRepository
     Task<long> CrearFormulaAsync(CrearFormulaDto dto, long usuarioId, string? ip);
     Task<long> CrearFormulaVersionAsync(long formulaId, CrearFormulaVersionDto dto, long usuarioId, string? ip);
     Task<bool> ActualizarFormulaBorradorAsync(long versionId, ActualizarFormulaBorradorDto dto, long usuarioId, string? ip);
+    Task<bool> ActualizarFormulaMetadataAsync(long formulaId, ActualizarFormulaMetadataDto dto, long usuarioId, string? ip);
     Task<bool> CrearFormulaUsoAsync(CrearFormulaUsoDto dto, long usuarioId, string? ip);
     Task<bool> ReemplazarFormulaUsosAsync(long versionFormularioId, IReadOnlyList<CrearFormulaUsoDto> usos, long usuarioId, string? ip);
     Task<IReadOnlyList<FormulaManualRegistroDto>> RegistrarFormulasManualesAsync(IReadOnlyList<RegistrarFormulaManualDto> formulas, long usuarioId, string? ip);

@@ -60,6 +60,18 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
         catch (Exception ex) { return Failure(ex); }
     }
 
+    public async Task<ServiceResult> ActualizarFormulaMetadataAsync(long id, ActualizarFormulaMetadataDto dto, long usuarioId, string? ip)
+    {
+        if (id <= 0 || dto is null) return ServiceResult.BadRequest("La fórmula y sus metadatos son obligatorios.");
+        try
+        {
+            dto.Nombre = CalculoConfiguracionValidation.NormalizeFormulaName(dto.Nombre);
+            dto.Descripcion = CalculoConfiguracionValidation.NormalizeFormulaDescription(dto.Descripcion);
+            return await Changed(await _repository.ActualizarFormulaMetadataAsync(id, dto, usuarioId, ip));
+        }
+        catch (Exception ex) { return Failure(ex); }
+    }
+
     public async Task<ServiceResult<IReadOnlyList<FormulaVersionDto>>> ListarFormulaVersionesAsync(long id) => id <= 0
         ? ServiceResult<IReadOnlyList<FormulaVersionDto>>.BadRequest("El ID de fórmula es inválido.")
         : ServiceResult<IReadOnlyList<FormulaVersionDto>>.Ok(await _repository.ListarFormulaVersionesAsync(id));

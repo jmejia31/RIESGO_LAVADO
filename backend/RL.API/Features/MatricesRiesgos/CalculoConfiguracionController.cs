@@ -38,6 +38,11 @@ public sealed class CalculoConfiguracionController : ControllerBase
     [AuditRequired("Actualización de borrador de fórmula")]
     public async Task<IActionResult> ActualizarFormulaBorrador(long id, [FromBody] ActualizarFormulaBorradorDto dto) => Responder(await _service.ActualizarFormulaBorradorAsync(id, dto, UsuarioId(), Ip()));
 
+    [HttpPut("formulas/{id:long}/metadatos")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Actualización de metadatos descriptivos de fórmula")]
+    public async Task<IActionResult> ActualizarFormulaMetadata(long id, [FromBody] ActualizarFormulaMetadataDto dto) => Responder(await _service.ActualizarFormulaMetadataAsync(id, dto, UsuarioId(), Ip()));
+
     [HttpGet("formulas/{id:long}/versiones")]
     public async Task<IActionResult> ListarFormulaVersiones(long id) => Responder(await _service.ListarFormulaVersionesAsync(id));
 

@@ -5,6 +5,7 @@ import { environment } from '../../../../../environments/environment';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
 import {
   ActualizarFormulaBorradorDto,
+  ActualizarFormulaMetadataDto,
   ActualizarFuncionBorradorDto,
   ActualizarParametroBorradorDto,
   CambiarEstadoConfiguracionDto,
@@ -55,6 +56,10 @@ export class CalculoConfiguracionService {
 
   actualizarFormulaBorrador(versionId: number, dto: ActualizarFormulaBorradorDto): Observable<ApiMessage> {
     return this.http.put<ApiMessage>(`${this.apiUrl}/formula-versiones/${versionId}`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
+  }
+
+  actualizarFormulaMetadata(id: number, dto: ActualizarFormulaMetadataDto): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/formulas/${id}/metadatos`, dto, { ...this.confirmadoJson, context: createHttpErrorScopeContext('local') });
   }
 
   listarFormulaVersiones(formulaId: number, errorScope: HttpErrorScope = 'global'): Observable<FormulaVersionDto[]> {

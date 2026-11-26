@@ -32,6 +32,20 @@ public static partial class CalculoConfiguracionValidation
         return code;
     }
 
+    public static string NormalizeFormulaName(string? value)
+    {
+        string name = value?.Trim() ?? string.Empty;
+        if (name.Length is < 1 or > 150) throw new InvalidOperationException("El nombre descriptivo debe contener entre 1 y 150 caracteres.");
+        return name;
+    }
+
+    public static string? NormalizeFormulaDescription(string? value)
+    {
+        string description = value?.Trim() ?? string.Empty;
+        if (description.Length > 1000) throw new InvalidOperationException("La descripción de la fórmula no puede exceder 1000 caracteres.");
+        return description.Length == 0 ? null : description;
+    }
+
     public static void ValidateFormulaVersion(string expression, string type)
     {
         if (string.IsNullOrWhiteSpace(expression) || expression.Length > FormulaEngine.MaxExpressionLength)

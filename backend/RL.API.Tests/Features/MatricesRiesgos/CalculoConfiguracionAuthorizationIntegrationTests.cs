@@ -28,7 +28,7 @@ public sealed class CalculoConfiguracionAuthorizationIntegrationTests
     private const string SigningSecret = "local-test-signing-key-32-bytes-minimum";
 
     [Fact]
-    public async Task EveryMutation_EnforcesAuthenticationAndModule10_WithoutRoleGate()
+    public async Task EveryMutation_EnforcesAuthenticationAndModule10_AndMetadataRequiresAdministrator()
     {
         var controller = typeof(CalculoConfiguracionController);
         Assert.NotNull(controller.GetCustomAttribute<AuthorizeAttribute>());
@@ -40,11 +40,11 @@ public sealed class CalculoConfiguracionAuthorizationIntegrationTests
             .Select(method => (Method: method, Http: method.GetCustomAttribute<HttpMethodAttribute>()))
             .Where(item => item.Http is not null)
             .ToArray();
-        Assert.Equal(26, endpoints.Length);
+        Assert.Equal(27, endpoints.Length);
         var mutationEndpoints = endpoints.Where(item => item.Http!.HttpMethods.Any(method => method != "GET")).ToArray();
-        Assert.Equal(15, mutationEndpoints.Length);
+        Assert.Equal(16, mutationEndpoints.Length);
         Assert.Equal(11, endpoints.Count(item => item.Http!.HttpMethods.All(method => method == "GET")));
-        Assert.Equal(7, mutationEndpoints.Count(item => item.Http!.Template!.StartsWith("formulas", StringComparison.Ordinal)
+        Assert.Equal(8, mutationEndpoints.Count(item => item.Http!.Template!.StartsWith("formulas", StringComparison.Ordinal)
             || item.Http.Template.StartsWith("formula-", StringComparison.Ordinal)));
         Assert.Equal(4, mutationEndpoints.Count(item => item.Http!.Template!.StartsWith("funciones", StringComparison.Ordinal)
             || item.Http.Template.StartsWith("funcion-versiones", StringComparison.Ordinal)));
@@ -53,14 +53,17 @@ public sealed class CalculoConfiguracionAuthorizationIntegrationTests
         Assert.All(endpoints, item =>
         {
             Assert.Null(item.Method.GetCustomAttribute<AllowAnonymousAttribute>());
-            Assert.Null(item.Method.GetCustomAttribute<AuthorizeAttribute>()?.Roles);
+            if (!item.Http!.Template!.Contains("/metadatos", StringComparison.Ordinal))
+                Assert.Null(item.Method.GetCustomAttribute<AuthorizeAttribute>()?.Roles);
+            else
+                Assert.Equal(SystemRoles.Administrador, item.Method.GetCustomAttribute<AuthorizeAttribute>()?.Roles);
         });
 
         var mutations = mutationEndpoints
             .SelectMany(item => item.Http!.HttpMethods.Select(httpMethod =>
                 (item.Method, HttpMethod: httpMethod, Template: BuildRoute(item.Http.Template))))
             .ToArray();
-        Assert.Equal(15, mutations.Length);
+        Assert.Equal(16, mutations.Length);
 
         await using WebApplication app = await StartTestApplicationAsync();
         using var client = new HttpClient { BaseAddress = GetAddress(app) };
@@ -76,10 +79,11 @@ public sealed class CalculoConfiguracionAuthorizationIntegrationTests
             Assert.Equal(HttpStatusCode.Forbidden,
                 await SendAsync(client, mutation.HttpMethod, mutation.Template, CreateToken("ANALISTA", modules: null)));
 
+            bool adminOnly = mutation.Template.Contains("/metadatos", StringComparison.Ordinal);
             foreach (string role in new[] { "ANALISTA", "SUPERVISOR", "ADMINISTRADOR" })
             {
                 // Malformed JSON yields 400 only after both authentication and module authorization pass.
-                Assert.Equal(HttpStatusCode.BadRequest,
+                Assert.Equal(adminOnly && role != "ADMINISTRADOR" ? HttpStatusCode.Forbidden : HttpStatusCode.BadRequest,
                     await SendAsync(client, mutation.HttpMethod, mutation.Template, CreateToken(role, "10")));
             }
 

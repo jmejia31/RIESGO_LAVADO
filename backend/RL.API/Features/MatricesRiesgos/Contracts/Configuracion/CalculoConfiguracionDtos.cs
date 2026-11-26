@@ -91,6 +91,13 @@ public sealed class ActualizarFormulaBorradorDto
     public int VersionRow { get; set; }
 }
 
+public sealed class ActualizarFormulaMetadataDto
+{
+    [Required, StringLength(150)] public string Nombre { get; set; } = string.Empty;
+    [StringLength(1000)] public string? Descripcion { get; set; }
+    public int VersionRow { get; set; }
+}
+
 public sealed class CrearFormulaUsoDto
 {
     [Required] public long VersionFormularioId { get; set; }

@@ -10,6 +10,7 @@ public interface ICalculoConfiguracionService
     Task<ServiceResult<long>> CrearFormulaAsync(CrearFormulaDto dto, long usuarioId, string? ip);
     Task<ServiceResult<long>> CrearFormulaVersionAsync(long id, CrearFormulaVersionDto dto, long usuarioId, string? ip);
     Task<ServiceResult> ActualizarFormulaBorradorAsync(long id, ActualizarFormulaBorradorDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> ActualizarFormulaMetadataAsync(long id, ActualizarFormulaMetadataDto dto, long usuarioId, string? ip);
     Task<ServiceResult<IReadOnlyList<FormulaVersionDto>>> ListarFormulaVersionesAsync(long id);
     Task<ServiceResult<IReadOnlyList<FormulaUsageDto>>> ListarFormulaUsagesAsync(long id);
     Task<ServiceResult> CrearFormulaUsoAsync(CrearFormulaUsoDto dto, long usuarioId, string? ip);

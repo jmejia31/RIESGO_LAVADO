@@ -16,6 +16,7 @@ import { ActionIconComponent } from '../../../../../../shared/components/action-
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../../shared/components/bounded-select/bounded-select.component';
 import { InstitutionalTooltipDirective } from '../../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { InstitutionalConfirmationService } from '../../../../../../shared/confirmation/institutional-confirmation.service';
+import { etiquetaEstadoFormula, nombreFormulaLegible, normalizarBusquedaFormula } from '../../../utils/institutional-formula-label.util';
 
 @Component({
   selector: 'app-form-builder-inspector',
@@ -28,6 +29,7 @@ import { InstitutionalConfirmationService } from '../../../../../../shared/confi
 export class FormBuilderInspectorComponent {
   private cdr = inject(ChangeDetectorRef);
   private readonly confirmation = inject(InstitutionalConfirmationService);
+  readonly nombreFormulaLegible = nombreFormulaLegible;
 
   private _campoActivo: CampoBuilderModel | null = null;
   @Input()
@@ -164,11 +166,16 @@ export class FormBuilderInspectorComponent {
 
   readonly tiposResultadoFormula = ['DECIMAL', 'INTEGER', 'BOOLEAN', 'TEXT', 'DATE'];
 
+  get formulaVersionSeleccionada(): FormulaVersionSelectorOption | null {
+    const id = this.campoActivo?.formulaVersionId;
+    return id ? this.formulaVersionesDisponibles.find(item => item.formulaVersionId === id) ?? null : null;
+  }
+
   get formulaVersionSelectOptions(): readonly BoundedSelectOption[] {
     return this.formulaVersionesDisponibles.map(option => ({
       value: option.formulaVersionId,
-      label: `${option.codigo} · v${option.version} · ${option.estado}`,
-      searchText: `${option.codigo} ${option.nombre} ${option.version} ${option.estado} ${option.expresion}`
+      label: `${nombreFormulaLegible(option)} · v${option.version} · ${etiquetaEstadoFormula(option.estado)}`,
+      searchText: normalizarBusquedaFormula(`${nombreFormulaLegible(option)} ${option.codigo} ${option.version} ${etiquetaEstadoFormula(option.estado)} ${option.descripcion ?? ''} ${option.expresion}`)
     }));
   }
 
