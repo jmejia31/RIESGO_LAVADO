@@ -43,6 +43,7 @@ import {
   normalizarDefinicionFormulario,
   normalizarMetodologiaFormulario,
   normalizarRespuestasFormulario,
+  obtenerCampoMaestroRiesgo,
   tieneValorRespuesta
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
@@ -414,7 +415,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return seccionesEval
       .flatMap(seccion => seccion.campos)
       .filter(campo => campo.obligatorio)
-      .every(campo => this.tieneValor(respuestas[campo.clave]));
+      .every(campo => this.tieneValor(this.valorRespuesta(campo)));
   });
 
   @HostListener('document:keydown.escape', ['$event'])
@@ -1886,6 +1887,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   valorRespuesta(campo: CampoFormulario): ValorRespuestaFormulario {
+    const campoMaestro = obtenerCampoMaestroRiesgo(campo);
+    if (campoMaestro !== null) {
+      const riesgo = this.riesgos().find(item => item.rieId === this.riesgoId());
+      if (!riesgo) return null;
+      return campoMaestro === 8 ? riesgo.rieNombre : riesgo.rieDescripcion ?? null;
+    }
+
     if (campo.tipo === 'formula' || campo.soloLectura) {
       const contractField = MATRIX_FIELDS.find(field => field.key && this.normalizarClaveContrato(field.key) === this.normalizarClaveContrato(campo.clave));
       const projectionValue = contractField ? this.valorProyeccion(contractField.ordinal) : null;

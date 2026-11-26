@@ -489,5 +489,35 @@ public sealed class FormularioValidadorTests
         Assert.Contains(result.Errores, e => e.Campo == "respuesta_riesgo");
     }
 
+    [Fact]
+    public async Task ValidarRespuestas_EscalasInherentes_AceptaEnterosDelCatalogoYRechazaFueraDeRango()
+    {
+        const string config = """
+        {
+          "secciones":[{
+            "clave":"riesgo_inherente",
+            "titulo":"Riesgo inherente",
+            "campos":[
+              {"clave":"frecuencia_inherente","etiqueta":"Frecuencia","tipo":"selector-catalogo","codigoCatalogo":"MR_FRECUENCIA_1_5","obligatorio":true},
+              {"clave":"impacto_inherente","etiqueta":"Impacto","tipo":"selector-catalogo","codigoCatalogo":"MR_IMPACTO_1_5","obligatorio":true}
+            ]
+          }],
+          "catalogos":[
+            {"codigo":"MR_FRECUENCIA_1_5","nombre":"Frecuencia","elementos":[{"codigo":"1","valor":"1","orden":1},{"codigo":"2","valor":"2","orden":2},{"codigo":"3","valor":"3","orden":3},{"codigo":"4","valor":"4","orden":4},{"codigo":"5","valor":"5","orden":5}]},
+            {"codigo":"MR_IMPACTO_1_5","nombre":"Impacto","elementos":[{"codigo":"1","valor":"1","orden":1},{"codigo":"2","valor":"2","orden":2},{"codigo":"3","valor":"3","orden":3},{"codigo":"4","valor":"4","orden":4},{"codigo":"5","valor":"5","orden":5}]}
+          ]
+        }
+        """;
+
+        FormularioValidationResult valido = await _validador.ValidarRespuestasAsync(
+            "{\"frecuencia_inherente\":1,\"impacto_inherente\":5}", config);
+        FormularioValidationResult invalido = await _validador.ValidarRespuestasAsync(
+            "{\"frecuencia_inherente\":0,\"impacto_inherente\":6}", config);
+
+        Assert.True(valido.Valido, string.Join(" | ", valido.Errores.Select(e => e.Mensaje)));
+        Assert.False(invalido.Valido);
+        Assert.Equal(2, invalido.Errores.Count);
+    }
+
 }
 

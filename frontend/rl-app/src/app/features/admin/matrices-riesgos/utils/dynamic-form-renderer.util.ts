@@ -25,6 +25,40 @@ export interface TipoCampoNormalizado {
   tipoOriginal: string | null;
 }
 
+export type CampoMaestroRiesgo = 8 | 9;
+
+function claveTecnica(valor: unknown): string {
+  return textoLimpio(valor)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+/** Identifica los campos institucionales que se leen desde RL_MR_RIESGOS. */
+export function obtenerCampoMaestroRiesgo(campo: Pick<CampoFormulario, 'campoCanonicoId' | 'clave' | 'etiqueta' | 'soloLectura'>): CampoMaestroRiesgo | null {
+  if (campo.campoCanonicoId === 8 || campo.campoCanonicoId === 9) {
+    return campo.campoCanonicoId;
+  }
+
+  if (!campo.soloLectura) return null;
+
+  const clave = claveTecnica(campo.clave);
+  const etiqueta = claveTecnica(campo.etiqueta);
+  if (['rienombre', 'riesgoinherente'].includes(clave) || etiqueta === 'riesgoinherente') {
+    return 8;
+  }
+  if (['riedescripcion', 'evaluacionnarrativa'].includes(clave) || etiqueta === 'evaluacion') {
+    return 9;
+  }
+  return null;
+}
+
+export function esEscalaInherente(campo: Pick<CampoFormulario, 'campoCanonicoId' | 'clave'>): boolean {
+  if (campo.campoCanonicoId === 10 || campo.campoCanonicoId === 11) return true;
+  return ['frecuenciainherente', 'impactoinherente'].includes(claveTecnica(campo.clave));
+}
+
 const ALIASES_TIPO: Record<string, Exclude<TipoCampoRenderer, 'desconocido'>> = {
   texto: 'texto',
   text: 'texto',
@@ -155,7 +189,14 @@ function normalizarCampo(valor: unknown, clavesUsadas: Set<string>): CampoFormul
     : null;
 
   const soloLecturaConfigurado = booleanoSeguro(primerValor(raw, ['soloLectura', 'readOnly']));
+  const esCampoMaestro = campoCanonicoId === 8 || campoCanonicoId === 9;
+  const tipoInstitucional = campoCanonicoId === 8
+    ? 'texto'
+    : campoCanonicoId === 9
+      ? 'texto-largo'
+      : tipoNormalizado.tipo;
   const soloLectura = soloLecturaConfigurado
+    || esCampoMaestro
     || tipoNormalizado.tipo === 'formula'
     || tipoNormalizado.tipo === 'desconocido';
 
@@ -163,8 +204,8 @@ function normalizarCampo(valor: unknown, clavesUsadas: Set<string>): CampoFormul
     campoCanonicoId,
     clave,
     etiqueta,
-    tipo: tipoNormalizado.tipo,
-    tipoOriginal: tipoNormalizado.tipo === 'desconocido' ? tipoNormalizado.tipoOriginal : null,
+    tipo: tipoInstitucional,
+    tipoOriginal: tipoInstitucional === 'desconocido' ? tipoNormalizado.tipoOriginal : null,
     codigoCatalogo,
     permiteValorManual: booleanoSeguro(primerValor(raw, ['permiteValorManual', 'allowManualValue'])),
     opciones: opcionesSeguras(primerValor(raw, ['opciones', 'options'])),
@@ -364,6 +405,7 @@ export function construirRespuestasFormularioPersistibles(
 ): RespuestasFormulario {
   const persistibles: RespuestasFormulario = {};
   for (const campo of secciones.flatMap(seccion => seccion.campos)) {
+    if (obtenerCampoMaestroRiesgo(campo) !== null) continue;
     if (Object.prototype.hasOwnProperty.call(respuestas, campo.clave)) {
       persistibles[campo.clave] = respuestas[campo.clave];
     }

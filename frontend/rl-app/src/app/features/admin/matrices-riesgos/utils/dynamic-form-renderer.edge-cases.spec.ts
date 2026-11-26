@@ -78,7 +78,7 @@ describe('renderer dinámico — casos límite del contrato', () => {
             id: 101,
             label: 'Confirmado',
             type: 'bool',
-            campoCanonicoId: '8',
+            campoCanonicoId: '101',
             catalogCode: ' CAT ',
             options: [1, ' Dos ', 1, null, ''],
             required: 'sí',
@@ -108,7 +108,7 @@ describe('renderer dinámico — casos límite del contrato', () => {
     expect(confirmado).toEqual(expect.objectContaining({
       clave: '101',
       etiqueta: 'Confirmado',
-      campoCanonicoId: 8,
+      campoCanonicoId: 101,
       codigoCatalogo: 'CAT',
       opciones: ['1', 'Dos'],
       obligatorio: true,
@@ -118,6 +118,27 @@ describe('renderer dinámico — casos límite del contrato', () => {
     expect(soloLectura.obligatorio).toBe(true);
     expect(soloLectura.soloLectura).toBe(true);
     expect(idInvalido.campoCanonicoId).toBeNull();
+  });
+
+  it('protege los campos maestros 8/9 y no los duplica en EVA_DATOS_JSON', () => {
+    const definicion = normalizarDefinicionFormulario({
+      secciones: [{
+        clave: 'riesgo',
+        titulo: 'Riesgo',
+        campos: [
+          { campoCanonicoId: 8, clave: 'rieNombre', etiqueta: 'Riesgo Inherente', tipo: 'texto', obligatorio: true },
+          { campoCanonicoId: 9, clave: 'rieDescripcion', etiqueta: 'Evaluación', tipo: 'texto', obligatorio: false },
+          { campoCanonicoId: 10, clave: 'frecuencia_inherente', etiqueta: 'Frecuencia', tipo: 'selector-catalogo', obligatorio: true }
+        ]
+      }]
+    });
+
+    const [riesgo, evaluacion, frecuencia] = definicion.secciones[0].campos;
+    expect(riesgo).toEqual(expect.objectContaining({ tipo: 'texto', soloLectura: true }));
+    expect(evaluacion).toEqual(expect.objectContaining({ tipo: 'texto-largo', soloLectura: true }));
+    expect(construirRespuestasFormularioPersistibles({ rieNombre: 'No persistir', rieDescripcion: 'No persistir', frecuencia_inherente: 4 }, definicion.secciones))
+      .toEqual({ frecuencia_inherente: 4 });
+    expect(frecuencia.campoCanonicoId).toBe(10);
   });
 
   it('usa defaults seguros para secciones incompletas e ignora entradas que no son objetos', () => {

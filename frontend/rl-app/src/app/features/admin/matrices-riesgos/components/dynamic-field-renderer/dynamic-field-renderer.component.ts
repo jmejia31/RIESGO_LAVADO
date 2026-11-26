@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CampoFormulario, ValorRespuestaFormulario } from '../../models/matrices-riesgos.models';
 import {
   TipoCampoRenderer,
+  esEscalaInherente,
   formatearValorRespuesta,
   normalizarTipoCampoRenderer,
   tieneValorRespuesta
@@ -216,7 +217,7 @@ export interface OpcionCampoRenderer {
                       (change)="emitirSeleccion($any($event.target).value)">
                 <option value="" [selected]="!valorEscalar">Seleccione una opción</option>
                 @for (opcion of opcionesDisponibles; track opcion.codigo) {
-                  <option [value]="opcion.codigo" [selected]="opcion.codigo === valorEscalar">{{ opcion.valor }}</option>
+                  <option [value]="opcion.codigo" [selected]="opcion.codigo === valorEscalarComoTexto">{{ opcion.valor }}</option>
                 }
               </select>
               @if (opcionesDisponibles.length === 0) {
@@ -337,6 +338,12 @@ export class DynamicFieldRendererComponent {
     return Array.isArray(this.valor) ? null : this.valor;
   }
 
+  get valorEscalarComoTexto(): string {
+    return this.valorEscalar === null || this.valorEscalar === undefined
+      ? ''
+      : String(this.valorEscalar);
+  }
+
   get valorBooleano(): boolean {
     return this.valor === true;
   }
@@ -417,6 +424,11 @@ export class DynamicFieldRendererComponent {
   }
 
   emitirSeleccion(valor: unknown): void {
+    if (esEscalaInherente(this.campo)) {
+      const numero = Number(valor);
+      this.valorChange.emit(Number.isInteger(numero) && numero >= 1 && numero <= 5 ? numero : null);
+      return;
+    }
     this.valorChange.emit(valor === null || valor === undefined || valor === '' ? null : String(valor));
   }
 

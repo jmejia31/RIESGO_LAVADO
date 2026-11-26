@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { CampoFormulario, EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
@@ -409,6 +409,56 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
 
     expect(component.riesgos()[0].rieNombre).toBe('Registro de proveedores con información inconsistente');
     expect(component.riesgos()[0].rieDescripcion).toBe('Evaluación técnica del proveedor');
+  });
+
+  it('proyecta automáticamente los campos maestros 8/9 y los considera al validar guardado', () => {
+    component.riesgos.set([{
+      rieId: 5,
+      rieCodigo: 'R-005',
+      rieNombre: 'Riesgo maestro MP01',
+      rieDescripcion: 'Descripción oficial del riesgo MP01',
+      rieActivo: true,
+      rieUsrCreacion: 1,
+      rieFechaCreacion: '2026-08-07T08:00:00'
+    }]);
+    component.seleccionarRiesgoNuevaEvaluacion(5);
+
+    const campo8: CampoFormulario = {
+      campoCanonicoId: 8,
+      clave: 'rieNombre',
+      etiqueta: 'Riesgo Inherente',
+      tipo: 'texto',
+      obligatorio: true,
+      soloLectura: true
+    };
+    const campo9: CampoFormulario = {
+      campoCanonicoId: 9,
+      clave: 'rieDescripcion',
+      etiqueta: 'Evaluación',
+      tipo: 'texto-largo',
+      obligatorio: false,
+      soloLectura: true
+    };
+
+    component.riesgoId.set(0);
+    expect(component.valorRespuesta(campo8)).toBeNull();
+    expect(component.valorRespuesta(campo9)).toBeNull();
+    component.riesgoId.set(5);
+
+    expect(component.valorRespuesta(campo8)).toBe('Riesgo maestro MP01');
+    expect(component.valorRespuesta(campo9)).toBe('Descripción oficial del riesgo MP01');
+
+    const versionActual = component.versionVigente();
+    expect(versionActual).not.toBeNull();
+    component.versionVigente.set({
+      ...versionActual!,
+      verJson: JSON.stringify({ secciones: [{ clave: 'riesgo', titulo: 'Riesgo', campos: [campo8, campo9] }] })
+    });
+    component.respuestas.set({});
+    expect(component.puedeGuardar()).toBe(true);
+
+    component.riesgoId.set(0);
+    expect(component.puedeGuardar()).toBe(false);
   });
 
   it('construye secciones y campos desde la versión del formulario', () => {

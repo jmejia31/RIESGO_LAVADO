@@ -124,6 +124,27 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
     expect(select.value).toBe('B');
   });
 
+  it('emite frecuencia e impacto como enteros 1..5 y conserva la selección numérica', () => {
+    const emitSpy = vi.spyOn(component.valorChange, 'emit');
+    component.campo = campo('selector-catalogo', {
+      clave: 'frecuencia_inherente',
+      campoCanonicoId: 10,
+      codigoCatalogo: 'MR_FRECUENCIA_1_5'
+    });
+
+    component.emitirSeleccion('4');
+    expect(emitSpy).toHaveBeenLastCalledWith(4);
+
+    component.emitirSeleccion('6');
+    expect(emitSpy).toHaveBeenLastCalledWith(null);
+
+    component.opcionesCatalogo = [{ codigo: '3', valor: '3 - Posible' }];
+    const host = render(component.campo, 3);
+    const select = host.querySelector('select') as HTMLSelectElement;
+    expect(select.value).toBe('3');
+    expect((select.options[1] as HTMLOptionElement).selected).toBe(true);
+  });
+
   it('renderiza radio con opciones inline y emite una selección exclusiva', () => {
     const emitSpy = vi.spyOn(component.valorChange, 'emit');
     const host = render(campo('radio', { opciones: ['Sí', 'No'] }));
