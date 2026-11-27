@@ -6334,6 +6334,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`. Se requiere un único commit/push selectivo con los archivos funcionales, pruebas y estos registros.
 - **Punto exacto de continuación:** stage selectivo, commit/push único, verificar remoto y consultar una sola vez el Quality Gate del SHA final; mantener Issue #53 abierta hasta la revisión y aceptación manual del propietario.
 
+## ESTADO VIGENTE — Corrección B04 posterior a Issue #53 — 2026-11-27 10:29:24 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; corrección funcional publicada en `50aa0bc96372519a5c7fcfbd4233762bef9b02e8`. Cambios locales ajenos preservados fuera del stage.
+- **Defecto comprobado:** Quality Gate `46032647002` falló porque el componente standalone `dynamic-field-renderer.component.ts` usaba un botón con tooltip sin importar `InstitutionalTooltipDirective`; B04 reportó `TOOLTIP_STANDARD_MISSING_GLOBAL`.
+- **Corrección:** importación y registro de `InstitutionalTooltipDirective` en el renderer. Es un cambio de contrato visual institucional únicamente; no cambia la proyección 1:N del campo 32 ni su persistencia, ordenamiento, catálogo o estados de error.
+- **Verificación:** B04 `PASS`; renderer `24/24 PASS`; Angular `105/105 archivos, 1,117/1,117 pruebas PASS`; lint `PASS`; `git diff --check=PASS`.
+- **Publicación / CI:** `SOURCE_CODE_SHA=50aa0bc96372519a5c7fcfbd4233762bef9b02e8`; `REMOTE_HEAD_SHA=50aa0bc96372519a5c7fcfbd4233762bef9b02e8`; `GITHUB_REMOTE_VERIFIED=PASS`; `QUALITY_GATE_RUN_ID=46033957523`; `QUALITY_GATE_STATUS=IN_PROGRESS_AT_SINGLE_READ`.
+- **Protecciones:** `MP01_REAL_DATA_MUTATIONS=0`; `MAIN_PRODUCTION_ORACLE_WRITES=0`; Oracle institucional, producción, `main` y credenciales no fueron tocados. `OWNER_ACCEPTANCE=PENDING`.
+- **Punto exacto de continuación:** consultar el resultado primario del run `46033957523` cuando finalice; no declarar PASS ni cerrar Issue #53 mientras continúe en ejecución.
+
 ## ESTADO VIGENTE — Corrección E2E del contrato de nombres descriptivos — 2026-11-27 09:31:42 -06:00 (COD)
 
 - **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `d05b84042e201c64f17d87833d36a7e026f553c4`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.

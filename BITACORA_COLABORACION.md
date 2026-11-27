@@ -13348,3 +13348,13 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **No ejecutado:** E2E autenticado/Oracle institucional, credenciales, producción, `main` y prueba manual del propietario sobre MP01 `v1/BORRADOR` no se ejecutaron. No se declara certificación funcional ni aceptación del propietario.
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; se hará un único commit selectivo y un push a `origin/desarrollo`, sin incluir archivos ajenos. `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_CI`; no se hará polling.
 - **Punto exacto de continuación:** verificar stage selectivo, crear un único commit, publicar, confirmar igualdad local/remota, consultar una sola vez el Quality Gate asociado al SHA exacto y entregar al propietario la prueba manual pendiente.
+
+## 2026-11-27 10:29:24 -06:00 — Corrección B04 posterior a Issue #53 (COD)
+
+- **Autor / rama / base:** `COD` / `desarrollo`; base funcional publicada `b68c33a1306d35b632218861632f116a0225ece1`. Se preservaron fuera del stage la eliminación rastreada de `Matrices de Riesgos.xlsx` y los archivos no rastreados ajenos.
+- **Evidencia primaria:** Quality Gate `46032647002`, SHA `b68c33a1306d35b632218861632f116a0225ece1`, falló únicamente en `Run repository quality gates`, auditoría B04 `TOOLTIP_STANDARD_MISSING_GLOBAL` para `dynamic-field-renderer.component.ts`. Los pasos de build, analizadores, pruebas, Oracle XE descartable, contenedores y E2E previos al gate terminaron correctamente.
+- **Causa raíz:** el renderer incorporado por Issue #53 tenía un botón institucional de reintento con `title`/`aria-label`, pero su componente standalone no importaba `InstitutionalTooltipDirective`; el inventario B04 no podía certificar el estándar global.
+- **Corrección quirúrgica:** se agregó únicamente la importación de `InstitutionalTooltipDirective` y su registro en `imports` del componente. No se modificaron contratos, datos MP01, fórmulas, endpoints, Oracle, producción ni `main`.
+- **Verificación local:** B04 self-test y auditoría `PASS`; renderer `24/24 PASS`; suite Angular `105 archivos / 1,117 pruebas PASS`; `npm run lint=PASS`; `git diff --check=PASS`.
+- **Publicación:** corrección funcional en commit `50aa0bc96372519a5c7fcfbd4233762bef9b02e8`, publicado en `origin/desarrollo`. Quality Gate nuevo `46033957523` asociado al SHA exacto, estado `IN_PROGRESS` en la única consulta; no se hizo polling.
+- **Estado:** `MP01_REAL_DATA_MUTATIONS=0`; `MAIN_PRODUCTION_ORACLE_WRITES=0`; `OWNER_ACCEPTANCE=PENDING`; no se declara certificación funcional hasta resultado primario del nuevo gate y revisión del propietario.
