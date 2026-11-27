@@ -631,8 +631,8 @@ test('UAT expone la Matriz completa solo desde Consolidado y conserva la navegac
   await expect(fields.nth(23)).toContainText('Control detectivo UAT');
   await expect(fields.nth(27)).toContainText('Control correctivo UAT');
   await expect(fields.nth(31)).toContainText('Manual');
-  await expect(fields.nth(31)).toContainText('Semiautomático');
-  await expect(fields.nth(31)).toContainText('Automático');
+  await expect(fields.nth(31)).toContainText('Semiautomatizado');
+  await expect(fields.nth(31)).toContainText('Automatizado');
 
   const block3Labels = [
     'Riesgo Residual',

@@ -6344,6 +6344,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** `MP01_REAL_DATA_MUTATIONS=0`; `MAIN_PRODUCTION_ORACLE_WRITES=0`; Oracle institucional, producción, `main` y credenciales no fueron tocados. `OWNER_ACCEPTANCE=PENDING`.
 - **Punto exacto de continuación:** consultar el resultado primario del run `46033957523` cuando finalice; no declarar PASS ni cerrar Issue #53 mientras continúe en ejecución.
 
+## ESTADO VIGENTE — Corrección E2E integral tras Quality Gate 46034172474 — 2026-11-27 10:55:19 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `a23c5f8b99cc85aa87ded237a67ced009c255da5`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.
+- **Fallo comprobado:** el Quality Gate `46034172474`, job `140625356060`, falló en el E2E integral con `93 PASS` y `1 FAIL`; la expectativa de `matrices-uat-integral.spec.ts:634` buscaba `Semiautomático` y `Automático`.
+- **Causa / corrección:** el catálogo institucional vigente usa `Semiautomatizado` y `Automatizado`; se actualizaron solo esas aserciones del fixture E2E. El código funcional del campo 32, la relación por control, MP01, fórmulas, Oracle y producción permanecen sin cambios.
+- **Verificación fresca:** el caso focal pasó `1/1`; `git diff --check=PASS`. La suite local completa tuvo `21 PASS` y una falla independiente por desprendimiento transitorio de un botón durante la selección de `R-040`; queda sin declarar como PASS integral.
+- **Estado:** `E2E_LABEL_CONTRACT=CORRECTED`; `PRODUCTION_CODE=UNCHANGED`; `MP01=UNCHANGED`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `MAIN=NOT_TOUCHED`; `CREDENTIALS=NOT_USED`; `OWNER_ACCEPTANCE=PENDING`; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`.
+- **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`. Se hará stage selectivo, un único commit/push y una sola consulta del Quality Gate del SHA final.
+- **Punto exacto de continuación:** publicar la corrección, verificar el SHA remoto y registrar el resultado primario del nuevo Quality Gate sin declarar PASS antes de que finalice.
+
 ## ESTADO VIGENTE — Corrección E2E del contrato de nombres descriptivos — 2026-11-27 09:31:42 -06:00 (COD)
 
 - **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `d05b84042e201c64f17d87833d36a7e026f553c4`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.
