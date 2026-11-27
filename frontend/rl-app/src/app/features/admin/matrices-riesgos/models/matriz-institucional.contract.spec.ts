@@ -66,7 +66,7 @@ describe('contrato canónico de la Matriz institucional', () => {
       ['REPEATER', true], ['INPUT', true], ['COMPUTED', false], ['COMPUTED', false],
       ['REPEATER', true], ['INPUT', true], ['COMPUTED', false], ['COMPUTED', false],
       ['REPEATER', true], ['INPUT', true], ['COMPUTED', false], ['COMPUTED', false],
-      ['REPEATER', true], ['COMPUTED', false]
+      ['REPEATER', false], ['COMPUTED', false]
     ]);
     for (const field of [MATRIX_BLOCK_2_FIELDS[1], MATRIX_BLOCK_2_FIELDS[2], MATRIX_BLOCK_2_FIELDS[3], MATRIX_BLOCK_2_FIELDS[5], MATRIX_BLOCK_2_FIELDS[6], MATRIX_BLOCK_2_FIELDS[7], MATRIX_BLOCK_2_FIELDS[9], MATRIX_BLOCK_2_FIELDS[10], MATRIX_BLOCK_2_FIELDS[11]]) {
       expect(field.source).not.toContain('RL_MR_EVALUACIONES_CONTROL');

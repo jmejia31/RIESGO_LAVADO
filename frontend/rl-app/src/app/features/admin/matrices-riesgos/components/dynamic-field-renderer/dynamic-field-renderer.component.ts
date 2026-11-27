@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { CampoFormulario, ValorRespuestaFormulario } from '../../models/matrices-riesgos.models';
+import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
+import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import {
   TipoCampoRenderer,
   esEscalaInherente,
@@ -9,6 +12,7 @@ import {
   normalizarTipoCampoRenderer,
   tieneValorRespuesta
 } from '../../utils/dynamic-form-renderer.util';
+import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 
 export interface OpcionCampoRenderer {
   codigo: string;
@@ -18,11 +22,51 @@ export interface OpcionCampoRenderer {
 @Component({
   selector: 'app-dynamic-field-renderer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-1" [attr.data-renderer-type]="tipo">
-      @if (modoLectura) {
+      @if (tipo === 'controles-vinculados') {
+        <div [id]="idControl"
+             class="space-y-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
+             [attr.data-field-key]="campo.clave"
+             [attr.data-matrix-field]="campo.campoCanonicoId === 32 ? '32' : null"
+             [attr.data-matrix-field-mode]="campo.cardinalidad === '1:N' ? 'repeater' : null"
+             aria-readonly="true">
+          <span class="block text-xs font-bold text-gray-700">{{ campo.etiqueta }}</span>
+          @if (!evaluacionId) {
+            <p class="text-xs font-medium text-gray-600">Se obtiene automáticamente de los controles registrados para cada evaluación</p>
+          } @else if (controlesVinculadosCargando()) {
+            <p class="text-xs font-medium text-gray-600" role="status">Cargando controles registrados…</p>
+          } @else if (controlesVinculadosError()) {
+            <div class="flex items-center justify-between gap-3 text-xs text-red-700" role="alert">
+              <span>{{ controlesVinculadosError() }}</span>
+              <button type="button"
+                      class="rounded-lg border border-red-200 bg-white px-2 py-1 font-semibold text-red-700"
+                      aria-label="Reintentar carga de controles vinculados"
+                      title="Reintentar carga de controles vinculados"
+                      (click)="cargarControlesVinculados()">
+                <app-action-icon action="retry"></app-action-icon>
+                <span class="sr-only">Reintentar carga de controles</span>
+              </button>
+            </div>
+          } @else if (controlesVinculados().length === 0) {
+            <p class="text-xs font-medium text-gray-600">Sin controles registrados</p>
+          } @else {
+            <ul class="space-y-1" aria-label="Controles vinculados">
+              @for (control of controlesVinculados(); track control.conId) {
+                <li class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700">
+                  <span class="font-bold">Control #{{ control.conId }}</span>
+                  <span class="mx-1 text-gray-400">·</span>
+                  <span>{{ control.conTipo }}</span>
+                  <span class="mx-1 text-gray-400">·</span>
+                  <span class="font-semibold">{{ etiquetaAutomatizacion(control.conAutomatizacion) }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      } @else if (modoLectura) {
         <span class="block text-xs font-bold text-gray-600">
           {{ campo.etiqueta }}
           @if (campo.obligatorio) { <span class="text-red-500" aria-hidden="true">*</span> }
@@ -270,7 +314,13 @@ export interface OpcionCampoRenderer {
     </div>
   `
 })
-export class DynamicFieldRendererComponent {
+export class DynamicFieldRendererComponent implements OnChanges {
+  private readonly matricesRiesgosService = inject(MatricesRiesgosService, { optional: true });
+  private linkedRequestSequence = 0;
+  readonly controlesVinculados = signal<ControlRiesgoDto[]>([]);
+  readonly controlesVinculadosCargando = signal(false);
+  readonly controlesVinculadosError = signal<string | null>(null);
+
   @Input() campo: CampoFormulario = {
     clave: '',
     etiqueta: '',
@@ -283,7 +333,49 @@ export class DynamicFieldRendererComponent {
   @Input() modoLectura = false;
   @Input() idPrefix = 'campo';
   @Input() validationError: string | null = null;
+  @Input() evaluacionId: number | null = null;
+  @Input() controlesRevision = 0;
   @Output() readonly valorChange = new EventEmitter<ValorRespuestaFormulario>();
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['campo'] || changes['evaluacionId'] || changes['controlesRevision']) {
+      this.cargarControlesVinculados();
+    }
+  }
+
+  cargarControlesVinculados(): void {
+    if (this.tipo !== 'controles-vinculados') return;
+
+    const requestSequence = ++this.linkedRequestSequence;
+    const evaluationId = this.evaluacionId;
+    this.controlesVinculadosError.set(null);
+    this.controlesVinculados.set([]);
+
+    if (!evaluationId || !this.matricesRiesgosService) {
+      this.controlesVinculadosCargando.set(false);
+      return;
+    }
+
+    this.controlesVinculadosCargando.set(true);
+    this.matricesRiesgosService.listarControles(evaluationId).subscribe({
+      next: controles => {
+        if (requestSequence !== this.linkedRequestSequence || evaluationId !== this.evaluacionId) return;
+        this.controlesVinculados.set([...(Array.isArray(controles) ? controles : [])].sort((a, b) => a.conId - b.conId));
+        this.controlesVinculadosCargando.set(false);
+      },
+      error: () => {
+        if (requestSequence !== this.linkedRequestSequence || evaluationId !== this.evaluacionId) return;
+        this.controlesVinculadosCargando.set(false);
+        this.controlesVinculadosError.set('No se pudieron cargar los controles vinculados.');
+      }
+    });
+  }
+
+  etiquetaAutomatizacion(valor: unknown): string {
+    const codigo = typeof valor === 'string' ? valor.trim().toUpperCase() : '';
+    const opcion = canonicalCatalogSelectOptions('CONTROL_AUTOMATION').find(item => item.value === codigo);
+    return opcion?.label ?? `Clave no válida del catálogo institucional: ${codigo || 'vacía'}`;
+  }
 
   get tipo(): TipoCampoRenderer {
     return normalizarTipoCampoRenderer(this.campo?.tipo).tipo;

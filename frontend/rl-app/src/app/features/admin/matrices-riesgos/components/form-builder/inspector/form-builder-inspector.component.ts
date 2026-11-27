@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CampoBuilderModel, FormulaCoincidenciaEstado, TipoControlBuilder, TipoControlDefinicion } from '../../../models/form-builder.models';
+import { CAMPO_CONTROLES_VINCULADOS, CampoBuilderModel, FormulaCoincidenciaEstado, TipoControlBuilder, TipoControlDefinicion } from '../../../models/form-builder.models';
 import { CampoFormulario, RespuestasFormulario } from '../../../models/matrices-riesgos.models';
 import { FormulaVersionSelectorOption } from '../../../models/calculo-configuracion.models';
 import { evaluarFormulaCampo, FormulaErrorCode, ResultadoEvaluacionFormula } from '../../../utils/dynamic-formula-evaluator.util';
@@ -90,6 +90,10 @@ export class FormBuilderInspectorComponent {
 
   get esFormula(): boolean {
     return this.campoActivo?.tipo === 'formula';
+  }
+
+  get esControlesVinculados(): boolean {
+    return this.campoActivo?.tipo === CAMPO_CONTROLES_VINCULADOS.tipo;
   }
 
   get formulaModoActual(): 'central' | 'manual' {
@@ -298,6 +302,10 @@ export class FormBuilderInspectorComponent {
     if (this.soloLectura || !this.campoActivo) return;
     this.campoActivo.tipo = nuevoTipo;
 
+    if (nuevoTipo === CAMPO_CONTROLES_VINCULADOS.tipo) {
+      this.aplicarInvariantesControlesVinculados();
+    }
+
     // Invariante formula soloLectura
     if (nuevoTipo === 'formula') {
       this.campoActivo.soloLectura = true;
@@ -310,12 +318,25 @@ export class FormBuilderInspectorComponent {
 
   alCambiarPropiedad(): void {
     if (this.soloLectura || !this.campoActivo) return;
+    if (this.esControlesVinculados) this.aplicarInvariantesControlesVinculados();
     if (this.campoActivo.tipo === 'formula') {
       this.campoActivo.soloLectura = true;
       if (!this.campoActivo.formulaModo && !this.campoActivo.formulaVersionId) this.campoActivo.formulaModo = 'manual';
     }
     this.cdr.markForCheck();
     this.propiedadCambiada.emit();
+  }
+
+  private aplicarInvariantesControlesVinculados(): void {
+    if (!this.campoActivo) return;
+    this.campoActivo.clave = CAMPO_CONTROLES_VINCULADOS.clave;
+    this.campoActivo.etiqueta = CAMPO_CONTROLES_VINCULADOS.etiqueta;
+    this.campoActivo.campoCanonicoId = CAMPO_CONTROLES_VINCULADOS.campoCanonicoId;
+    this.campoActivo.fuenteVinculada = CAMPO_CONTROLES_VINCULADOS.fuenteVinculada;
+    this.campoActivo.cardinalidad = CAMPO_CONTROLES_VINCULADOS.cardinalidad;
+    this.campoActivo.persistirRespuesta = false;
+    this.campoActivo.obligatorio = false;
+    this.campoActivo.soloLectura = true;
   }
 
   agregarOpcion(): void {

@@ -1,7 +1,61 @@
-import { duplicarSeccionBuilderModel, normalizarJsonABuilderModel, serializarBuilderModelAJson, FormBuilderModel } from './form-builder.models';
+import { CAMPO_CONTROLES_VINCULADOS, duplicarSeccionBuilderModel, normalizarJsonABuilderModel, serializarBuilderModelAJson, FormBuilderModel } from './form-builder.models';
 import { validarFormBuilderModel } from '../utils/form-builder-validator.util';
 
 describe('Contrato bidireccional del Form Builder', () => {
+  it('persiste el campo 32 como vínculo institucional no escalar y lo recupera sin alias editable', () => {
+    const model: FormBuilderModel = {
+      codigoFormulario: 'MP01',
+      nombreFormulario: 'Matriz prueba',
+      secciones: [{
+        id: 'controles',
+        clave: 'controles',
+        titulo: 'Controles',
+        orden: 1,
+        columnasPorFila: 1,
+        campos: [{
+          id: 'field_32',
+          clave: CAMPO_CONTROLES_VINCULADOS.clave,
+          etiqueta: CAMPO_CONTROLES_VINCULADOS.etiqueta,
+          tipo: CAMPO_CONTROLES_VINCULADOS.tipo,
+          campoCanonicoId: 32,
+          fuenteVinculada: CAMPO_CONTROLES_VINCULADOS.fuenteVinculada,
+          cardinalidad: '1:N',
+          persistirRespuesta: false,
+          obligatorio: true,
+          soloLectura: false,
+          formula: 'no debe persistir',
+          codigoCatalogo: 'NO_DEBE_PERSISTIR',
+          anchoColumnas: 1
+        }]
+      }]
+    };
+
+    const serializado = JSON.parse(serializarBuilderModelAJson(model)) as {
+      secciones: Array<{ campos: Array<Record<string, unknown>> }>;
+    };
+    const campo = serializado.secciones[0].campos[0];
+    expect(campo).toEqual(expect.objectContaining({
+      clave: CAMPO_CONTROLES_VINCULADOS.clave,
+      tipo: CAMPO_CONTROLES_VINCULADOS.tipo,
+      campoCanonicoId: 32,
+      cardinalidad: '1:N',
+      persistirRespuesta: false,
+      obligatorio: false,
+      soloLectura: true
+    }));
+    expect(campo['formula']).toBeUndefined();
+    expect(campo['codigoCatalogo']).toBeUndefined();
+
+    const recuperado = normalizarJsonABuilderModel(JSON.stringify(serializado));
+    expect(recuperado.secciones[0].campos[0]).toEqual(expect.objectContaining({
+      tipo: CAMPO_CONTROLES_VINCULADOS.tipo,
+      campoCanonicoId: 32,
+      persistirRespuesta: false,
+      soloLectura: true
+    }));
+    expect(validarFormBuilderModel(recuperado)).toEqual([]);
+  });
+
   it('duplica una sección dos veces con copias profundas, IDs y claves únicos', () => {
     const original: FormBuilderModel = {
       codigoFormulario: 'FORM_DUP', nombreFormulario: 'Duplicación', catalogos: [{ codigo: 'CAT', nombre: 'Catálogo', elementos: [{ codigo: 'A', valor: 'Alto', orden: 1 }] }],

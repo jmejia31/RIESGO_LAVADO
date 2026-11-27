@@ -78,6 +78,7 @@ describe('FormBuilderInspectorComponent — UI-FORM.4 Inspector Profesional', ()
       const esperados = [
         'catalogo-multiple',
         'checkbox',
+        'controles-vinculados',
         'fecha',
         'formula',
         'numero',
@@ -88,7 +89,7 @@ describe('FormBuilderInspectorComponent — UI-FORM.4 Inspector Profesional', ()
       ].sort();
 
       expect(opciones).toEqual(esperados);
-      expect(opciones.length).toBe(9);
+      expect(opciones.length).toBe(10);
     });
 
     it('cambiar tipo a "formula" asegura soloLectura = true de forma inmutable', () => {

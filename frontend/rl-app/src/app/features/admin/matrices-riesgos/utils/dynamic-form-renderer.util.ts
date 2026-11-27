@@ -18,6 +18,7 @@ export type TipoCampoRenderer =
   | 'catalogo-multiple'
   | 'checkbox'
   | 'formula'
+  | 'controles-vinculados'
   | 'desconocido';
 
 export interface TipoCampoNormalizado {
@@ -95,7 +96,12 @@ const ALIASES_TIPO: Record<string, Exclude<TipoCampoRenderer, 'desconocido'>> = 
   formula: 'formula',
   fórmula: 'formula',
   calculado: 'formula',
-  calculada: 'formula'
+  calculada: 'formula',
+  'controles-vinculados': 'controles-vinculados',
+  'referencia-controles': 'controles-vinculados',
+  'controles-relacionados': 'controles-vinculados',
+  'linked-controls': 'controles-vinculados',
+  'repeater-controles': 'controles-vinculados'
 };
 
 function comoRegistro(valor: unknown): Record<string, unknown> | null {
@@ -187,6 +193,7 @@ function normalizarCampo(valor: unknown, clavesUsadas: Set<string>): CampoFormul
   const campoCanonicoId = Number.isFinite(campoCanonicoIdRaw) && campoCanonicoIdRaw > 0
     ? Math.trunc(campoCanonicoIdRaw)
     : null;
+  const esControlesVinculados = campoCanonicoId === 32 || tipoNormalizado.tipo === 'controles-vinculados';
 
   const soloLecturaConfigurado = booleanoSeguro(primerValor(raw, ['soloLectura', 'readOnly']));
   const esCampoMaestro = campoCanonicoId === 8 || campoCanonicoId === 9;
@@ -194,14 +201,26 @@ function normalizarCampo(valor: unknown, clavesUsadas: Set<string>): CampoFormul
     ? 'texto'
     : campoCanonicoId === 9
       ? 'texto-largo'
+      : esControlesVinculados
+        ? 'controles-vinculados'
       : tipoNormalizado.tipo;
   const soloLectura = soloLecturaConfigurado
     || esCampoMaestro
+    || esControlesVinculados
     || tipoNormalizado.tipo === 'formula'
     || tipoNormalizado.tipo === 'desconocido';
 
   return {
     campoCanonicoId,
+    fuenteVinculada: esControlesVinculados
+      ? 'RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION'
+      : textoLimpio(primerValor(raw, ['fuenteVinculada', 'source'])) || null,
+    cardinalidad: esControlesVinculados
+      ? '1:N'
+      : (primerValor(raw, ['cardinalidad']) === '1:1' || primerValor(raw, ['cardinalidad']) === '1:N'
+        ? primerValor(raw, ['cardinalidad']) as '1:1' | '1:N'
+        : null),
+    persistirRespuesta: esControlesVinculados ? false : primerValor(raw, ['persistirRespuesta']) !== false,
     clave,
     etiqueta,
     tipo: tipoInstitucional,
@@ -406,6 +425,7 @@ export function construirRespuestasFormularioPersistibles(
   const persistibles: RespuestasFormulario = {};
   for (const campo of secciones.flatMap(seccion => seccion.campos)) {
     if (obtenerCampoMaestroRiesgo(campo) !== null) continue;
+    if (campo.campoCanonicoId === 32 || campo.tipo === 'controles-vinculados' || campo.persistirRespuesta === false) continue;
     if (Object.prototype.hasOwnProperty.call(respuestas, campo.clave)) {
       persistibles[campo.clave] = respuestas[campo.clave];
     }

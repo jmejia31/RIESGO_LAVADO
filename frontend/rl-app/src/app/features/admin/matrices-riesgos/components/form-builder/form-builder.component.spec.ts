@@ -471,11 +471,12 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       expect(component.model().secciones[0].campos).toHaveLength(totalAntes);
     });
 
-    it('6. gate obligatorio de tipos: TIPOS_CONTROLES_DISPONIBLES contiene exactamente los 9 tipos oficiales (0 inventados)', () => {
+    it('6. gate obligatorio de tipos: TIPOS_CONTROLES_DISPONIBLES contiene exactamente los 10 tipos oficiales (0 inventados)', () => {
       const tipos = component.tiposControles.map(t => t.tipo).sort();
       const tiposOficiales = [
         'catalogo-multiple',
         'checkbox',
+        'controles-vinculados',
         'fecha',
         'formula',
         'numero',
@@ -486,7 +487,7 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       ].sort();
 
       expect(tipos).toEqual(tiposOficiales);
-      expect(tipos.length).toBe(9);
+      expect(tipos.length).toBe(10);
     });
   });
 

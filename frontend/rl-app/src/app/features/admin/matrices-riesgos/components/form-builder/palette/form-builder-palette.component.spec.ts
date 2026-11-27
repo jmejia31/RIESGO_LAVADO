@@ -49,11 +49,11 @@ describe('FormBuilderPaletteComponent — UI-FORM.2 Biblioteca de Campos', () =>
     expect(titulos).toContain('Avanzados');
   });
 
-  it('2. agrupa la cantidad exacta de controles por categoría (4 Básicos, 4 Selección, 1 Avanzado = 9 total)', () => {
+  it('2. agrupa la cantidad exacta de controles por categoría (4 Básicos, 4 Selección, 2 Avanzados = 10 total)', () => {
     expect(component.controlesBasicos().length).toBe(4);
     expect(component.controlesSeleccion().length).toBe(4);
-    expect(component.controlesAvanzados().length).toBe(1);
-    expect(component.totalFiltrados()).toBe(9);
+    expect(component.controlesAvanzados().length).toBe(2);
+    expect(component.totalFiltrados()).toBe(10);
   });
 
   it('3. busca en tiempo real por etiqueta (nombre)', () => {
@@ -125,7 +125,7 @@ describe('FormBuilderPaletteComponent — UI-FORM.2 Biblioteca de Campos', () =>
 
     component.limpiarBusqueda();
     fixture.detectChanges();
-    expect(component.totalFiltrados()).toBe(9);
+    expect(component.totalFiltrados()).toBe(10);
     expect(component.terminoBusqueda()).toBe('');
   });
 
@@ -209,9 +209,9 @@ describe('FormBuilderPaletteComponent — UI-FORM.2 Biblioteca de Campos', () =>
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('Agregar campos');
     expect(el.querySelector('#buscador-palette')).not.toBeNull();
-    expect(el.querySelectorAll('.palette-card').length).toBe(9);
+    expect(el.querySelectorAll('.palette-card').length).toBe(10);
     expect(el.querySelectorAll('.palette-card[draggable="true"]').length).toBe(0);
-    expect(el.querySelectorAll('.palette-card[aria-disabled="true"]').length).toBe(9);
+    expect(el.querySelectorAll('.palette-card[aria-disabled="true"]').length).toBe(10);
   });
 
   it('17. modo soloLectura no emite agregarCampo por click ni teclado', () => {

@@ -429,12 +429,12 @@
                             <ul class="space-y-1">
                               @for (control of controlesMatrizCompleta(); track control.conId; let index = $index) {
                                 <li class="rounded-lg bg-slate-50 p-2" [attr.data-control-type]="control.conTipo">
-                                  Control {{ control.conTipo.toLowerCase() }} {{ index + 1 }} — {{ control.conAutomatizacion === 'SEMIAUTOMATICO' ? 'Semiautomático' : control.conAutomatizacion === 'AUTOMATICO' ? 'Automático' : 'Manual' }}
+                                  Control {{ control.conTipo.toLowerCase() }} {{ index + 1 }} — {{ etiquetaAutomatizacionControl(control.conAutomatizacion) }}
                                 </li>
                               }
                             </ul>
                           } @else {
-                            <span>Sin automatización registrada porque no existen controles.</span>
+                            <span>Sin controles registrados</span>
                           }
                         } @else {
                           {{ valorCampoControl(field) }}
@@ -1204,6 +1204,8 @@
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
                     [modoLectura]="true"
+                    [evaluacionId]="evaluacionSeleccionada()?.evaId ?? null"
+                    [controlesRevision]="controlesVinculadosRevision()"
                     idPrefix="campo-view"
                     [style.grid-column]="'span ' + (campo.anchoColumnas || 1)" />
                 }
@@ -1292,6 +1294,8 @@
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
                     [validationError]="errorCampoEditor(campo)"
+                    [evaluacionId]="evaluacionSeleccionada()?.evaId ?? null"
+                    [controlesRevision]="controlesVinculadosRevision()"
                     idPrefix="campo-edit"
                     (valorChange)="actualizarRespuesta(campo, $event)" />
                 }
@@ -1301,6 +1305,23 @@
           }
 
           @if (bloqueEvaluacionActual() === 2 && evaluacionSeleccionada(); as evaluation) {
+            @for (seccion of seccionesDelBloqueActual(); track seccion.clave) {
+              <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+                <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
+                <div class="grid gap-4" [style.grid-template-columns]="'repeat(' + (seccion.columnasPorFila || 1) + ', minmax(0, 1fr))'">
+                  @for (campo of seccion.campos; track campo.clave) {
+                    <app-dynamic-field-renderer
+                      [campo]="campo"
+                      [valor]="valorRespuesta(campo)"
+                      [opcionesCatalogo]="opcionesCatalogo(campo)"
+                      [modoLectura]="true"
+                      [evaluacionId]="evaluation.evaId"
+                      [controlesRevision]="controlesVinculadosRevision()"
+                      idPrefix="campo-controles-vinculados" />
+                  }
+                </div>
+              </section>
+            }
             <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="controles" (persisted)="refrescarProyeccionEvaluacion()" />
           }
 
@@ -1319,7 +1340,7 @@
               @for (seccion of seccionesDelBloqueActual(); track seccion.clave) {
                 <div class="grid gap-4 sm:grid-cols-2">
                   @for (campo of seccion.campos; track campo.clave) {
-                    <app-dynamic-field-renderer [campo]="campo" [valor]="valorRespuesta(campo)" [opcionesCatalogo]="opcionesCatalogo(campo)" [validationError]="errorCampoEditor(campo)" idPrefix="campo-edit" (valorChange)="actualizarRespuesta(campo, $event)" />
+                    <app-dynamic-field-renderer [campo]="campo" [valor]="valorRespuesta(campo)" [opcionesCatalogo]="opcionesCatalogo(campo)" [validationError]="errorCampoEditor(campo)" [evaluacionId]="evaluacionSeleccionada()?.evaId ?? null" [controlesRevision]="controlesVinculadosRevision()" idPrefix="campo-edit" (valorChange)="actualizarRespuesta(campo, $event)" />
                   }
                 </div>
               }
@@ -1611,6 +1632,8 @@
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
                     [validationError]="errorCampoEditor(campo)"
+                    [evaluacionId]="evaluacionSeleccionada()?.evaId ?? null"
+                    [controlesRevision]="controlesVinculadosRevision()"
                     idPrefix="campo-new"
                     [style.grid-column]="'span ' + (campo.anchoColumnas || 1) + ' / span ' + (campo.anchoColumnas || 1)"
                     [attr.data-evaluation-field]="campo.clave"

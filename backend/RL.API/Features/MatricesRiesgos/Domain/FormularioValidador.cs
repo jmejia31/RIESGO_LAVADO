@@ -11,7 +11,7 @@ public sealed class FormularioValidador : IFormularioValidador
     private static readonly HashSet<string> TiposCanónicos = new(StringComparer.OrdinalIgnoreCase)
     {
         "texto", "numero", "fecha", "texto-largo", "selector-catalogo",
-        "radio", "catalogo-multiple", "checkbox", "formula"
+        "radio", "catalogo-multiple", "checkbox", "formula", "controles-vinculados"
     };
 
     private static readonly Dictionary<string, string> AliasTipos = new(StringComparer.OrdinalIgnoreCase)
@@ -21,7 +21,9 @@ public sealed class FormularioValidador : IFormularioValidador
         ["catalogo"] = "selector-catalogo", ["select"] = "selector-catalogo", ["seleccion"] = "selector-catalogo",
         ["opciones"] = "radio", ["multiselect"] = "catalogo-multiple", ["seleccion-multiple"] = "catalogo-multiple",
         ["sino"] = "checkbox", ["bool"] = "checkbox", ["booleano"] = "checkbox",
-        ["calculado"] = "formula", ["calculo-sistema"] = "formula", ["texto-calculado"] = "formula"
+        ["calculado"] = "formula", ["calculo-sistema"] = "formula", ["texto-calculado"] = "formula",
+        ["referencia-controles"] = "controles-vinculados", ["controles-relacionados"] = "controles-vinculados",
+        ["linked-controls"] = "controles-vinculados", ["repeater-controles"] = "controles-vinculados"
     };
 
     public Task<FormularioDefinitionValidationResult> ValidarDefinicionPublicableAsync(string jsonConfigFormulario)
@@ -106,6 +108,22 @@ public sealed class FormularioValidador : IFormularioValidador
                     if (!TiposCanónicos.Contains(normalizedType))
                         result.Errores.Add(new FormularioValidationError(key!, "El tipo de campo no está soportado por el runtime."));
 
+                    if (normalizedType == "controles-vinculados")
+                    {
+                        if (!TryGetInt(field, "campoCanonicoId", out long campoCanonicoId) || campoCanonicoId != 32)
+                            result.Errores.Add(new FormularioValidationError(key!, "El campo de controles vinculados debe declarar campoCanonicoId=32."));
+                        if (!TryGetText(field, "fuenteVinculada", out string? fuente) || !string.Equals(fuente, "RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION", StringComparison.Ordinal))
+                            result.Errores.Add(new FormularioValidationError(key!, "El campo de controles vinculados requiere la fuente institucional de automatización."));
+                        if (!TryGetText(field, "cardinalidad", out string? cardinalidad) || !string.Equals(cardinalidad, "1:N", StringComparison.Ordinal))
+                            result.Errores.Add(new FormularioValidationError(key!, "El campo de controles vinculados debe declarar cardinalidad 1:N."));
+                        if (field.TryGetProperty("obligatorio", out JsonElement obligatorio) && obligatorio.ValueKind == JsonValueKind.True)
+                            result.Errores.Add(new FormularioValidationError(key!, "El campo de controles vinculados no puede ser obligatorio."));
+                        if (!field.TryGetProperty("soloLectura", out JsonElement soloLectura) || soloLectura.ValueKind != JsonValueKind.True)
+                            result.Errores.Add(new FormularioValidationError(key!, "El campo de controles vinculados debe ser de solo lectura."));
+                        if (field.TryGetProperty("persistirRespuesta", out JsonElement persistir) && persistir.ValueKind != JsonValueKind.False)
+                            result.Errores.Add(new FormularioValidationError(key!, "El campo de controles vinculados no puede persistir una respuesta escalar."));
+                    }
+
                     if (normalizedType is "selector-catalogo" or "catalogo-multiple")
                     {
                         if (TryGetText(field, "codigoCatalogo", out string? catalogRef)
@@ -185,6 +203,18 @@ public sealed class FormularioValidador : IFormularioValidador
         return false;
     }
 
+    private static bool TryGetInt(JsonElement element, string property, out long value)
+    {
+        if (element.TryGetProperty(property, out JsonElement candidate)
+            && candidate.ValueKind == JsonValueKind.Number
+            && candidate.TryGetInt64(out value))
+        {
+            return true;
+        }
+        value = 0;
+        return false;
+    }
+
     public Task<FormularioValidationResult> ValidarRespuestasAsync(
         string jsonRespuestas,
         string jsonConfigFormulario,
@@ -218,6 +248,10 @@ public sealed class FormularioValidador : IFormularioValidador
                 {
                     result.Errores.Add(new FormularioValidationError(key, $"La propiedad '{key}' no está definida en la estructura del formulario."));
                 }
+                else if (camposDefinidos[key].NoPersistible)
+                {
+                    result.Errores.Add(new FormularioValidationError(key, $"La propiedad '{key}' es una proyección institucional y no admite respuestas escalares."));
+                }
             }
 
             // 2. Validar cada campo definido en la plantilla
@@ -225,6 +259,8 @@ public sealed class FormularioValidador : IFormularioValidador
             {
                 string campoId = kvp.Key;
                 var metadatos = kvp.Value;
+
+                if (metadatos.NoPersistible) continue;
 
                 bool existe = BuscarValorEnRespuestas(respuestasDict, metadatos, out JsonElement valorElemento);
                 bool esNuloOVacio = !existe || valorElemento.ValueKind == JsonValueKind.Null || 
@@ -390,14 +426,16 @@ public sealed class FormularioValidador : IFormularioValidador
                     AgregarAliasSiDifiere(aliases, id, ObtenerPropiedadString(campo, "id"));
 
                     string etiqueta = ObtenerPropiedadString(campo, "etiqueta") ?? id;
-                    string tipo = ObtenerPropiedadString(campo, "tipo") ?? "texto";
+                    string tipo = NormalizarTipo(ObtenerPropiedadString(campo, "tipo") ?? "texto");
                     bool obligatorio = campo.TryGetProperty("obligatorio", out JsonElement oblProp) && oblProp.ValueKind == JsonValueKind.True;
                     bool permiteValorManual = campo.TryGetProperty("permiteValorManual", out JsonElement manualProp) && manualProp.ValueKind == JsonValueKind.True;
                     string regex = ObtenerPropiedadString(campo, "regexValidacion") ?? ObtenerPropiedadString(campo, "expresionValidacion") ?? string.Empty;
 
                     var opciones = ExtraerCodicesOpciones(campo, catalogosRaiz);
 
-                    var metadatos = new CampoMetadatos(id, etiqueta, tipo, obligatorio, permiteValorManual, regex, aliases, opciones);
+                    bool noPersistible = tipo.Equals("controles-vinculados", StringComparison.OrdinalIgnoreCase)
+                        || (campo.TryGetProperty("persistirRespuesta", out JsonElement persistirProp) && persistirProp.ValueKind == JsonValueKind.False);
+                    var metadatos = new CampoMetadatos(id, etiqueta, tipo, obligatorio, permiteValorManual, regex, aliases, opciones, noPersistible);
                     campos[id] = metadatos;
                     foreach (string alias in aliases)
                     {
@@ -570,6 +608,7 @@ public sealed class FormularioValidador : IFormularioValidador
         public string RegexValidacion { get; }
         public List<string> Aliases { get; }
         public HashSet<string> OpcionesCatalogo { get; }
+        public bool NoPersistible { get; }
 
         public CampoMetadatos(
             string id,
@@ -579,7 +618,8 @@ public sealed class FormularioValidador : IFormularioValidador
             bool permiteValorManual,
             string regexValidacion,
             List<string> aliases,
-            HashSet<string> opcionesCatalogo)
+            HashSet<string> opcionesCatalogo,
+            bool noPersistible)
         {
             Id = id;
             Etiqueta = etiqueta;
@@ -589,6 +629,7 @@ public sealed class FormularioValidador : IFormularioValidador
             RegexValidacion = regexValidacion;
             Aliases = aliases;
             OpcionesCatalogo = opcionesCatalogo;
+            NoPersistible = noPersistible;
         }
     }
 }

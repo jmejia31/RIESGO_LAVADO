@@ -88,6 +88,9 @@ export interface ActualizarFamiliaFormularioDto {
 
 export interface CampoFormulario {
   campoCanonicoId?: number | null;
+  fuenteVinculada?: string | null;
+  cardinalidad?: '1:1' | '1:N' | null;
+  persistirRespuesta?: boolean;
   clave: string;
   etiqueta: string;
   tipo: string;

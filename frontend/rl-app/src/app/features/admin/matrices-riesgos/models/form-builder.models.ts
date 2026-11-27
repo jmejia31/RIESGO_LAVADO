@@ -10,7 +10,17 @@ export type TipoControlBuilder =
   | 'radio'
   | 'catalogo-multiple'
   | 'checkbox'
-  | 'formula';
+  | 'formula'
+  | 'controles-vinculados';
+
+export const CAMPO_CONTROLES_VINCULADOS = {
+  tipo: 'controles-vinculados' as const,
+  campoCanonicoId: 32,
+  clave: 'nivel_automatizacion_controles',
+  etiqueta: 'Nivel de Automatización de los Controles',
+  fuenteVinculada: 'RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION',
+  cardinalidad: '1:N' as const
+};
 
 export type JsonObject = Record<string, unknown>;
 
@@ -51,6 +61,10 @@ export interface CampoBuilderModel {
   tipo: TipoControlBuilder;
   /** Tipo exacto recibido cuando se usó un alias o un tipo aún no editable en el Builder. */
   tipoOriginal?: string;
+  campoCanonicoId?: number;
+  fuenteVinculada?: string;
+  cardinalidad?: '1:1' | '1:N';
+  persistirRespuesta?: boolean;
   claveFuente?: 'clave' | 'rutaDatos' | 'identificador';
   catalogoFuente?: 'codigoCatalogo' | 'catalogoCodigo' | 'catalogo';
   formulaFuente?: 'formula' | 'calculo' | 'referenciaCalculo';
@@ -157,7 +171,8 @@ export const TIPOS_CONTROLES_DISPONIBLES: TipoControlDefinicion[] = [
   { tipo: 'radio', etiqueta: 'Opciones de radio', descripcion: 'Botones de selección exclusiva', icono: 'radio-button-checked', categoria: 'seleccion', requiereCatalogo: false, requiereOpciones: true, requiereFormula: false },
   { tipo: 'catalogo-multiple', etiqueta: 'Lista de checkbox', descripcion: 'Selección múltiple de elementos', icono: 'check-square-list', categoria: 'seleccion', requiereCatalogo: true, requiereOpciones: false, requiereFormula: false },
   { tipo: 'checkbox', etiqueta: 'Checkbox simple', descripcion: 'Casilla de verificación Sí/No', icono: 'check-box', categoria: 'seleccion', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false },
-  { tipo: 'formula', etiqueta: 'Fórmula', descripcion: 'Campo calculado automáticamente', icono: 'function', categoria: 'avanzado', requiereCatalogo: false, requiereOpciones: false, requiereFormula: true }
+  { tipo: 'formula', etiqueta: 'Fórmula', descripcion: 'Campo calculado automáticamente', icono: 'function', categoria: 'avanzado', requiereCatalogo: false, requiereOpciones: false, requiereFormula: true },
+  { tipo: 'controles-vinculados', etiqueta: 'Controles vinculados', descripcion: 'Proyección de controles asociados a la evaluación, solo lectura', icono: 'list', categoria: 'avanzado', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false }
 ];
 
 function esObjeto(value: unknown): value is JsonObject {
@@ -215,6 +230,11 @@ function normalizarTipoBuilder(value: unknown): { tipo: TipoControlBuilder; tipo
     case 'calculado':
     case 'calculo-sistema':
     case 'texto-calculado': tipo = 'formula'; break;
+    case 'controles-vinculados':
+    case 'referencia-controles':
+    case 'controles-relacionados':
+    case 'linked-controls':
+    case 'repeater-controles': tipo = 'controles-vinculados'; break;
     default: tipo = 'texto'; break;
   }
 
@@ -222,6 +242,7 @@ function normalizarTipoBuilder(value: unknown): { tipo: TipoControlBuilder; tipo
 }
 
 function serializarTipo(campo: CampoBuilderModel): string {
+  if (campo.tipo === CAMPO_CONTROLES_VINCULADOS.tipo) return CAMPO_CONTROLES_VINCULADOS.tipo;
   if (!campo.tipoOriginal) return campo.tipo;
   return normalizarTipoBuilder(campo.tipoOriginal).tipo === campo.tipo ? campo.tipoOriginal : campo.tipo;
 }
@@ -320,8 +341,9 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
       const camposRaw = Array.isArray(sec['campos']) ? sec['campos'] as unknown[] : [];
       const campos: CampoBuilderModel[] = camposRaw.filter(esObjeto).map((cmp, cmpIdx) => {
         const claveFuente: CampoBuilderModel['claveFuente'] = texto(cmp['clave']) ? 'clave' : texto(cmp['rutaDatos']) ? 'rutaDatos' : 'identificador';
-        const clave = texto(cmp[claveFuente]) ?? `campo_${cmpIdx + 1}`;
         const tipoResuelto = normalizarTipoBuilder(cmp['tipo']);
+        const esControlesVinculados = tipoResuelto.tipo === CAMPO_CONTROLES_VINCULADOS.tipo;
+        const clave = texto(cmp[claveFuente]) ?? (esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.clave : `campo_${cmpIdx + 1}`);
         const catalogoFuente: CampoBuilderModel['catalogoFuente'] | undefined = texto(cmp['codigoCatalogo']) ? 'codigoCatalogo' : texto(cmp['catalogoCodigo']) ? 'catalogoCodigo' : texto(cmp['catalogo']) ? 'catalogo' : undefined;
         const formulaFuente: CampoBuilderModel['formulaFuente'] | undefined = texto(cmp['formula']) ? 'formula' : texto(cmp['calculo']) ? 'calculo' : texto(cmp['referenciaCalculo']) ? 'referenciaCalculo' : undefined;
 
@@ -329,7 +351,7 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           id: `field_${texto(cmp['identificador']) ?? clave}`,
           clave,
           claveFuente,
-          etiqueta: textoVisible(cmp['etiqueta']) ?? `Campo ${cmpIdx + 1}`,
+          etiqueta: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.etiqueta : (textoVisible(cmp['etiqueta']) ?? `Campo ${cmpIdx + 1}`),
           descripcion: textoVisible(cmp['descripcion']),
           tipo: tipoResuelto.tipo,
           tipoOriginal: tipoResuelto.tipoOriginal,
@@ -352,8 +374,12 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
             : (typeof cmp['formulaVersionId'] === 'number' && cmp['formulaVersionId'] > 0 ? 'central' : formulaFuente ? 'manual' : undefined),
           formulaNombre: textoVisible(cmp['formulaNombre']),
           formulaTipoResultado: texto(cmp['formulaTipoResultado'])?.toUpperCase(),
-          obligatorio: !!cmp['obligatorio'],
-          soloLectura: !!cmp['soloLectura'] || tipoResuelto.tipo === 'formula',
+          campoCanonicoId: typeof cmp['campoCanonicoId'] === 'number' ? cmp['campoCanonicoId'] : (esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.campoCanonicoId : undefined),
+          fuenteVinculada: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.fuenteVinculada : texto(cmp['fuenteVinculada']),
+          cardinalidad: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.cardinalidad : (cmp['cardinalidad'] === '1:1' || cmp['cardinalidad'] === '1:N' ? cmp['cardinalidad'] : undefined),
+          persistirRespuesta: esControlesVinculados ? false : (cmp['persistirRespuesta'] !== false),
+          obligatorio: esControlesVinculados ? false : !!cmp['obligatorio'],
+          soloLectura: esControlesVinculados || !!cmp['soloLectura'] || tipoResuelto.tipo === 'formula',
           placeholder: textoVisible(cmp['placeholder']),
           textoAyuda: textoVisible(cmp['textoAyuda']),
           orden: numeroEnteroPositivo(cmp['orden'], cmpIdx + 1),
@@ -409,11 +435,33 @@ function serializarCampo(campo: CampoBuilderModel, index: number): JsonObject {
   const esNuevo = !campo.metadatosOriginales;
   const raw = clonarJson(campo.metadatosOriginales ?? {});
   const claveFuente = campo.claveFuente ?? 'clave';
-  raw[claveFuente] = campo.clave;
-  raw['etiqueta'] = campo.etiqueta;
+  const esControlesVinculados = campo.tipo === CAMPO_CONTROLES_VINCULADOS.tipo;
+  raw[claveFuente] = esControlesVinculados
+    ? CAMPO_CONTROLES_VINCULADOS.clave
+    : campo.clave;
+  raw['etiqueta'] = esControlesVinculados
+    ? CAMPO_CONTROLES_VINCULADOS.etiqueta
+    : campo.etiqueta;
   raw['tipo'] = serializarTipo(campo);
-  raw['obligatorio'] = campo.obligatorio;
-  raw['soloLectura'] = campo.soloLectura;
+  raw['obligatorio'] = esControlesVinculados ? false : campo.obligatorio;
+  raw['soloLectura'] = esControlesVinculados || campo.soloLectura;
+
+  if (esControlesVinculados) {
+    raw['campoCanonicoId'] = CAMPO_CONTROLES_VINCULADOS.campoCanonicoId;
+    raw['fuenteVinculada'] = CAMPO_CONTROLES_VINCULADOS.fuenteVinculada;
+    raw['cardinalidad'] = CAMPO_CONTROLES_VINCULADOS.cardinalidad;
+    raw['persistirRespuesta'] = false;
+    for (const propiedad of [
+      'valor', 'valorInicial', 'valorPorDefecto', 'defaultValue',
+      'formula', 'calculo', 'referenciaCalculo', 'formulaId',
+      'formulaVersionId', 'formulaCodigo', 'formulaVersion', 'formulaModo',
+      'formulaNombre', 'formulaTipoResultado', 'codigoCatalogo',
+      'catalogoCodigo', 'catalogo', 'opciones', 'permiteValorManual'
+    ]) {
+      delete raw[propiedad];
+    }
+    return raw;
+  }
 
   if ('orden' in raw || campo.orden !== undefined) raw['orden'] = campo.orden ?? index + 1;
   if (esNuevo || 'anchoColumnas' in raw || campo.anchoColumnas !== 1) raw['anchoColumnas'] = campo.anchoColumnas;

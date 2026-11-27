@@ -1,6 +1,7 @@
 import { MetodologiaFormulario } from '../models/matrices-riesgos.models';
 import {
   formatearValorRespuesta,
+  construirRespuestasFormularioPersistibles,
   normalizarDefinicionFormulario,
   normalizarMetodologiaFormulario,
   normalizarRespuestasFormulario,
@@ -25,6 +26,35 @@ describe('Renderer dinámico — normalización defensiva', () => {
     for (const [entrada, esperado] of casos) {
       expect(normalizarTipoCampoRenderer(entrada).tipo).toBe(esperado);
     }
+  });
+
+  it('normaliza el campo 32 como proyección vinculada 1:N y no lo persiste como respuesta', () => {
+    const definicion = normalizarDefinicionFormulario({
+      secciones: [{ clave: 'controles', titulo: 'Controles', campos: [{
+        clave: 'nivel_automatizacion_controles',
+        etiqueta: 'Nivel de Automatización de los Controles',
+        tipo: 'controles-vinculados',
+        campoCanonicoId: 32,
+        fuenteVinculada: 'RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION',
+        cardinalidad: '1:N',
+        obligatorio: false,
+        soloLectura: true,
+        persistirRespuesta: false
+      }] }]
+    });
+    const campo = definicion.secciones[0].campos[0];
+
+    expect(campo).toEqual(expect.objectContaining({
+      tipo: 'controles-vinculados',
+      campoCanonicoId: 32,
+      cardinalidad: '1:N',
+      persistirRespuesta: false,
+      soloLectura: true
+    }));
+    expect(construirRespuestasFormularioPersistibles(
+      { nivel_automatizacion_controles: 'Manual' },
+      definicion.secciones
+    )).toEqual({});
   });
 
   it('degrada tipos desconocidos sin convertirlos silenciosamente en texto editable', () => {

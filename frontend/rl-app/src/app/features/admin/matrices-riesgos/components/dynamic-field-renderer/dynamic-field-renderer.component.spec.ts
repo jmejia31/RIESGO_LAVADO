@@ -1,11 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Subject, of, throwError } from 'rxjs';
 import { CampoFormulario } from '../../models/matrices-riesgos.models';
+import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
+import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { DynamicFieldRendererComponent } from './dynamic-field-renderer.component';
 
 describe('DynamicFieldRendererComponent — controles dinámicos', () => {
   let fixture: ComponentFixture<DynamicFieldRendererComponent>;
   let component: DynamicFieldRendererComponent;
+  let controlesApi: { listarControles: ReturnType<typeof vi.fn> };
 
   const campo = (tipo: string, extra: Partial<CampoFormulario> = {}): CampoFormulario => ({
     clave: `campo_${tipo.replace(/[^a-z0-9]+/gi, '_')}`,
@@ -17,8 +21,10 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
   });
 
   beforeEach(async () => {
+    controlesApi = { listarControles: vi.fn() };
     await TestBed.configureTestingModule({
-      imports: [DynamicFieldRendererComponent]
+      imports: [DynamicFieldRendererComponent],
+      providers: [{ provide: MatricesRiesgosService, useValue: controlesApi }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(DynamicFieldRendererComponent);
@@ -188,6 +194,83 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
     expect(host.querySelector('input, textarea, select')).toBeNull();
     expect(host.textContent).toContain('12');
     expect(host.textContent).toContain('probabilidad * impacto');
+  });
+
+  it('renderiza campo 32 sin inventar valor cuando no existe evaluación', () => {
+    const host = render(campo('controles-vinculados', {
+      clave: 'nivel_automatizacion_controles',
+      etiqueta: 'Nivel de Automatización de los Controles',
+      campoCanonicoId: 32,
+      cardinalidad: '1:N',
+      persistirRespuesta: false,
+      soloLectura: true
+    }), null);
+
+    expect(host.textContent).toContain('Se obtiene automáticamente de los controles registrados para cada evaluación');
+    expect(host.querySelector('input, textarea, select')).toBeNull();
+    expect(host.querySelector('[data-matrix-field="32"][data-matrix-field-mode="repeater"]')).not.toBeNull();
+  });
+
+  it('muestra el estado seguro para una clave de automatización no catalogada', () => {
+    component.campo = campo('controles-vinculados', { campoCanonicoId: 32, soloLectura: true });
+    expect(component.etiquetaAutomatizacion('DESCONOCIDO')).toContain('Clave no válida');
+    expect(component.etiquetaAutomatizacion('MANUAL')).toBe('Manual');
+  });
+
+  it('proyecta todos los controles vinculados en orden ascendente y usa el catálogo institucional', () => {
+    const controles: ControlRiesgoDto[] = [
+      { conId: 9, conEvaluacionId: 41, conTipo: 'CORRECTIVO', conDescripcion: 'C9', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' },
+      { conId: 3, conEvaluacionId: 41, conTipo: 'PREVENTIVO', conDescripcion: 'C3', conAutomatizacion: 'AUTOMATICO', conEstado: 'ACTIVO' }
+    ];
+    controlesApi.listarControles.mockReturnValue(of(controles));
+
+    fixture.componentRef.setInput('campo', campo('controles-vinculados', {
+      clave: 'nivel_automatizacion_controles', campoCanonicoId: 32, cardinalidad: '1:N', soloLectura: true, persistirRespuesta: false
+    }));
+    fixture.componentRef.setInput('evaluacionId', 41);
+    fixture.detectChanges();
+
+    const items = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('li'))
+      .map(item => item.textContent?.replace(/\s+/g, '').trim());
+    expect(items).toEqual(['Control#3·PREVENTIVO·Automatizado', 'Control#9·CORRECTIVO·Manual']);
+    expect(controlesApi.listarControles).toHaveBeenCalledWith(41);
+  });
+
+  it('muestra error institucional y permite reintentar la carga de controles', () => {
+    controlesApi.listarControles
+      .mockReturnValueOnce(throwError(() => new Error('fallo')))
+      .mockReturnValueOnce(of([{ conId: 2, conEvaluacionId: 41, conTipo: 'DETECTIVO', conDescripcion: 'C2', conAutomatizacion: 'SEMIAUTOMATICO', conEstado: 'ACTIVO' }]));
+
+    fixture.componentRef.setInput('campo', campo('controles-vinculados', { campoCanonicoId: 32, soloLectura: true }));
+    fixture.componentRef.setInput('evaluacionId', 41);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('No se pudieron cargar los controles vinculados.');
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[aria-label="Reintentar carga de controles vinculados"]')?.click();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Semiautomatizado');
+  });
+
+  it('descarta la respuesta de una evaluación anterior cuando la navegación cambia', () => {
+    const primeraRespuesta = new Subject<ControlRiesgoDto[]>();
+    const segundaRespuesta = new Subject<ControlRiesgoDto[]>();
+    controlesApi.listarControles
+      .mockReturnValueOnce(primeraRespuesta)
+      .mockReturnValueOnce(segundaRespuesta);
+
+    fixture.componentRef.setInput('campo', campo('controles-vinculados', { campoCanonicoId: 32, soloLectura: true }));
+    fixture.componentRef.setInput('evaluacionId', 41);
+    fixture.detectChanges();
+    fixture.componentRef.setInput('evaluacionId', 42);
+    fixture.detectChanges();
+
+    primeraRespuesta.next([{ conId: 1, conEvaluacionId: 41, conTipo: 'PREVENTIVO', conDescripcion: 'viejo', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }]);
+    segundaRespuesta.next([{ conId: 2, conEvaluacionId: 42, conTipo: 'CORRECTIVO', conDescripcion: 'vigente', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }]);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('Control #2');
+    expect(host.textContent).not.toContain('Control #1');
   });
 
   it('envuelve fórmulas extensas sin mutar el valor técnico', () => {

@@ -1,4 +1,4 @@
-import { FormBuilderModel } from '../models/form-builder.models';
+import { CAMPO_CONTROLES_VINCULADOS, FormBuilderModel } from '../models/form-builder.models';
 import { CampoFormulario, RespuestasFormulario } from '../models/matrices-riesgos.models';
 import { evaluarFormulaCampo } from './dynamic-formula-evaluator.util';
 
@@ -94,6 +94,17 @@ export function validarFormBuilderModel(model: FormBuilderModel): FormBuilderVal
 
         if (!cmp.etiqueta || cmp.etiqueta.trim() === '') {
           errores.push({ campo: cmp.clave || posicion, mensaje: `El campo "${cmp.clave || posicion}" requiere una etiqueta visible.` });
+        }
+
+        if (cmp.tipo === CAMPO_CONTROLES_VINCULADOS.tipo) {
+          if (cmp.campoCanonicoId !== CAMPO_CONTROLES_VINCULADOS.campoCanonicoId
+            || cmp.fuenteVinculada !== CAMPO_CONTROLES_VINCULADOS.fuenteVinculada
+            || cmp.cardinalidad !== CAMPO_CONTROLES_VINCULADOS.cardinalidad
+            || cmp.obligatorio
+            || !cmp.soloLectura
+            || cmp.persistirRespuesta !== false) {
+            errores.push({ campo: cmp.clave || posicion, mensaje: 'El campo de controles vinculados debe ser el campo institucional 32, de solo lectura, cardinalidad 1:N y sin respuesta persistible.' });
+          }
         }
 
         if (cmp.tipo === 'selector-catalogo' || cmp.tipo === 'catalogo-multiple') {

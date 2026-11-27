@@ -48,7 +48,7 @@ const SEEDS: readonly MatrixFieldSeed[] = [
   { label: 'Escala de efectividad de control(es) correctivo(s)', mode: 'INPUT', editable: true, key: 'escala_correctivo', source: 'Snapshot institucional CAT_EFECTIVIDAD_NIVEL / CAT_EFECTIVIDAD_PORCENTAJE; selector pendiente de contrato versionado' },
   { label: 'Nivel de efectividad de control(es) correctivo(s)', mode: 'COMPUTED', editable: false, key: 'nivel_control_correctivo', source: 'Backend F07 / CAT_EFECTIVIDAD_NIVEL' },
   { label: '% efectividad de control correctivo', mode: 'COMPUTED', editable: false, key: 'porcentaje_control_correctivo', source: 'Backend F08 / CAT_EFECTIVIDAD_PORCENTAJE; proporción 0..1' },
-  { label: 'Nivel de Automatización de los Controles', mode: 'REPEATER', editable: true, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION por control' },
+  { label: 'Nivel de Automatización de los Controles', mode: 'REPEATER', editable: false, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION por control' },
   { label: 'Efectividad Total Ponderada de los Controles', mode: 'COMPUTED', editable: false, key: 'efectividad_total_ponderada', source: 'Runtime institucional' },
   { label: 'Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'riesgo_residual_descripcion', source: 'Backend F10 / Runtime institucional' },
   { label: 'Frecuencia Residual', mode: 'COMPUTED', editable: false, key: 'frecuencia_residual', source: 'Backend F11 / Runtime institucional' },

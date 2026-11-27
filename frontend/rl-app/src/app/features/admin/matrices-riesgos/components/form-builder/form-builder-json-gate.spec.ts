@@ -40,11 +40,12 @@ describe('Form Builder — HARD GATE de Integridad JSON (UI-FORM.3)', () => {
     'isHovered'
   ];
 
-  it('1. el catálogo de tipos contiene exactamente los 9 tipos oficiales (0 tipos inventados)', () => {
+  it('1. el catálogo de tipos contiene exactamente los 10 tipos oficiales (0 tipos inventados)', () => {
     const tipos = TIPOS_CONTROLES_DISPONIBLES.map(t => t.tipo).sort();
     const esperados = [
       'catalogo-multiple',
       'checkbox',
+      'controles-vinculados',
       'fecha',
       'formula',
       'numero',
@@ -55,7 +56,7 @@ describe('Form Builder — HARD GATE de Integridad JSON (UI-FORM.3)', () => {
     ].sort();
 
     expect(tipos).toEqual(esperados);
-    expect(tipos.length).toBe(9);
+    expect(tipos.length).toBe(10);
   });
 
   it('2. la serialización JSON nunca incluye propiedades UI temporales o visuales', () => {

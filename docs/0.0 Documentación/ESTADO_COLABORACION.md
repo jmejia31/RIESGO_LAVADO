@@ -6323,6 +6323,17 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_CI`; `ISSUE_52=OPEN_PENDING_OWNER_REVIEW`; `OWNER_ACCEPTANCE=PENDING`.
 - **Punto exacto de continuación:** stage selectivo, un único commit/push, verificar SHA remoto y consultar una sola vez el Quality Gate del SHA nuevo; no cerrar la Issue #52 ni declarar certificación funcional.
 
+## ESTADO VIGENTE — Issue #53 campo 32 de controles vinculados 1:N — 2026-11-27 10:13:15 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `ec9eeb6e9fe3e4c24a692d753141630c0e1f2d07`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.
+- **Estado funcional:** `FIELD32_MODEL=LINKED_PER_CONTROL`; el Builder reconoce el tipo institucional `controles-vinculados`, lo mantiene como campo canónico 32, no editable/no obligatorio/no persistible y conserva fuente `RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION` con cardinalidad `1:N`. La evaluación consulta los controles de la evaluación seleccionada, ordena por `CON_ID ASC`, muestra tipo y automatización usando `CONTROL_AUTOMATION`, y protege respuestas obsoletas mediante secuencia de solicitud. La Matriz completa usa la misma proyección ordenada.
+- **Persistencia / seguridad:** `FIELD32_NO_SCALAR_PERSISTENCE=PASS`; el frontend elimina metadatos escalares/fórmulas/catálogos del campo vinculado al serializar y el backend rechaza respuestas escalares. Se conserva la validación de tipos, referencias y campos desconocidos. No se modificaron fórmulas, MP01, Oracle institucional, producción ni `main`.
+- **Compatibilidad:** `FIELD20_24_28_RELATIONAL_AUDIT=PASS_BY_CONTRACT_AND_FULL_SUITE`; el contrato canónico 20–33, incluidos los campos 20/24/28, permanece intacto y las pruebas existentes pasan.
+- **Verificación fresca:** backend focal `31/31 PASS`; Angular completo `105 archivos / 1,114 pruebas PASS`; build y lint `PASS`; TypeScript `PASS`; `git diff --check=PASS`. E2E autorizado, Oracle institucional y prueba manual MP01 quedan pendientes por entorno/protección y no se presentan como ejecutados.
+- **Estado:** `CONTROL_AUTOMATION_CATALOG_REUSED=PASS`; `FIELD32_BUILDER_SAVE_RELOAD=PASS_BY_ROUNDTRIP_TEST`; `FIELD32_EVALUATION_PROJECTION=PASS_BY_RENDERER_AND_MATRIX_CONTRACT`; `MP01_REAL_DATA_MUTATIONS=0`; `MAIN_PRODUCTION_ORACLE_WRITES=0`; `OWNER_ACCEPTANCE=PENDING`; `QUALITY_GATE_STATUS=PENDING_NEW_SHA`.
+- **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`. Se requiere un único commit/push selectivo con los archivos funcionales, pruebas y estos registros.
+- **Punto exacto de continuación:** stage selectivo, commit/push único, verificar remoto y consultar una sola vez el Quality Gate del SHA final; mantener Issue #53 abierta hasta la revisión y aceptación manual del propietario.
+
 ## ESTADO VIGENTE — Corrección E2E del contrato de nombres descriptivos — 2026-11-27 09:31:42 -06:00 (COD)
 
 - **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `d05b84042e201c64f17d87833d36a7e026f553c4`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.

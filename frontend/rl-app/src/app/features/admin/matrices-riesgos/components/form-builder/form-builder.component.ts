@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   CampoBuilderModel,
+  CAMPO_CONTROLES_VINCULADOS,
   CatalogoBuilderModel,
   ElementoCatalogoBuilderModel,
   FormBuilderModel,
@@ -262,14 +263,19 @@ export class FormBuilderComponent implements OnInit {
     const seccion = current.secciones[seccionIndex];
     const totalCampos = current.secciones.reduce((acc: number, s: SeccionBuilderModel) => acc + s.campos.length, 0) + 1;
     const catalogoPredeterminado = this.catalogosDisponiblesParaCampos()[0]?.codigo;
+    const esControlesVinculados = ctrlDef.tipo === CAMPO_CONTROLES_VINCULADOS.tipo;
     const nuevoCampo: CampoBuilderModel = {
       id: `cmp_${Date.now()}_${totalCampos}`,
-      clave: `campo_${totalCampos}`,
-      etiqueta: `${ctrlDef.etiqueta} ${totalCampos}`,
+      clave: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.clave : `campo_${totalCampos}`,
+      etiqueta: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.etiqueta : `${ctrlDef.etiqueta} ${totalCampos}`,
       tipo: ctrlDef.tipo,
       codigoCatalogo: ctrlDef.requiereCatalogo ? catalogoPredeterminado : undefined,
-      obligatorio: true,
-      soloLectura: ctrlDef.tipo === 'formula',
+      campoCanonicoId: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.campoCanonicoId : undefined,
+      fuenteVinculada: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.fuenteVinculada : undefined,
+      cardinalidad: esControlesVinculados ? CAMPO_CONTROLES_VINCULADOS.cardinalidad : undefined,
+      persistirRespuesta: esControlesVinculados ? false : true,
+      obligatorio: !esControlesVinculados,
+      soloLectura: esControlesVinculados || ctrlDef.tipo === 'formula',
       anchoColumnas: 1
     };
 
@@ -629,6 +635,10 @@ export class FormBuilderComponent implements OnInit {
 
   campoPreview(campo: CampoBuilderModel): CampoFormulario {
     return {
+      campoCanonicoId: campo.campoCanonicoId ?? null,
+      fuenteVinculada: campo.fuenteVinculada ?? null,
+      cardinalidad: campo.cardinalidad ?? null,
+      persistirRespuesta: campo.persistirRespuesta ?? campo.tipo !== 'controles-vinculados',
       clave: campo.clave,
       etiqueta: campo.etiqueta,
       tipo: campo.tipo,

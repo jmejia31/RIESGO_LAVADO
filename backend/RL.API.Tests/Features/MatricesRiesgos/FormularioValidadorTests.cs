@@ -537,5 +537,39 @@ public sealed class FormularioValidadorTests
         Assert.True(result.Valido, string.Join(" | ", result.Errores.Select(error => error.Mensaje)));
     }
 
+    [Fact]
+    public async Task ValidarDefinicion_AceptaCampo32ComoProyeccionInstitucional1N()
+    {
+        const string config = """
+        {
+          "secciones":[{"clave":"controles","titulo":"Controles","campos":[
+            {"clave":"nivel_automatizacion_controles","etiqueta":"Nivel de Automatización de los Controles","tipo":"controles-vinculados","campoCanonicoId":32,"fuenteVinculada":"RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION","cardinalidad":"1:N","obligatorio":false,"soloLectura":true,"persistirRespuesta":false}
+          ]}]
+        }
+        """;
+
+        var result = await _validador.ValidarDefinicionPublicableAsync(config);
+
+        Assert.True(result.Valido, string.Join(" | ", result.Errores.Select(error => error.Mensaje)));
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_RechazaRespuestaEscalarDelCampo32()
+    {
+        const string config = """
+        {
+          "secciones":[{"clave":"controles","titulo":"Controles","campos":[
+            {"clave":"nivel_automatizacion_controles","etiqueta":"Nivel de Automatización de los Controles","tipo":"controles-vinculados","campoCanonicoId":32,"fuenteVinculada":"RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION","cardinalidad":"1:N","obligatorio":false,"soloLectura":true,"persistirRespuesta":false}
+          ]}]
+        }
+        """;
+
+        var result = await _validador.ValidarRespuestasAsync(
+            "{\"nivel_automatizacion_controles\":\"Manual\"}", config);
+
+        Assert.False(result.Valido);
+        Assert.Contains(result.Errores, error => error.Campo == "nivel_automatizacion_controles" && error.Mensaje.Contains("no admite respuestas escalares"));
+    }
+
 }
 

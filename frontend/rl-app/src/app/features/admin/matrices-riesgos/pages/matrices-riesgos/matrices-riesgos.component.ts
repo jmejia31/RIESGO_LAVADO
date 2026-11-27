@@ -49,7 +49,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { canonicalCatalogOptions, canonicalRiskLevelLabel, canonicalRiskResponseLabel } from '../../utils/matrices-riesgos-catalogos-canonicos';
+import { canonicalCatalogOptions, canonicalCatalogSelectOptions, canonicalRiskLevelLabel, canonicalRiskResponseLabel } from '../../utils/matrices-riesgos-catalogos-canonicos';
 import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_BLOCK_6_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
@@ -257,6 +257,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly matrizCompletaError = signal<string | null>(null);
   readonly modalMatrizCompletaAbierto = signal(false);
   readonly controlesMatrizCompleta = signal<ControlRiesgoDto[]>([]);
+  readonly controlesVinculadosRevision = signal(0);
   readonly controlesMatrizEnCarga = signal(false);
   readonly controlesMatrizError = signal<string | null>(null);
   readonly bloque4Matriz = signal<MitigacionBloque4Dto | null>(null);
@@ -1689,7 +1690,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const keys = new Set(contract.map(field => this.normalizarClaveContrato(field.key!)));
     return this.seccionesModal().flatMap(section => section.campos).filter(field => {
       const key = this.normalizarClaveContrato(field.clave);
-      return keys.has(key) || (!MATRIX_FIELDS.some(item => item.key && this.normalizarClaveContrato(item.key) === key) && bloque === 1);
+      const esControlesVinculados = field.campoCanonicoId === 32 || field.tipo === 'controles-vinculados';
+      return esControlesVinculados
+        ? bloque === 2
+        : keys.has(key) || (!MATRIX_FIELDS.some(item => item.key && this.normalizarClaveContrato(item.key) === key) && bloque === 1);
     }).map(field => {
       const contractField = MATRIX_FIELDS.find(item => item.key && this.normalizarClaveContrato(item.key) === this.normalizarClaveContrato(field.clave));
       return {
@@ -1858,6 +1862,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   refrescarProyeccionEvaluacion(): void {
+    this.controlesVinculadosRevision.update(value => value + 1);
     const evaluationId = this.evaluacionSeleccionada()?.evaId;
     if (!evaluationId) return;
     this.cargandoProyeccionEvaluacion.set(true);
@@ -1889,6 +1894,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   valorRespuesta(campo: CampoFormulario): ValorRespuestaFormulario {
+    if (campo.campoCanonicoId === 32 || campo.tipo === 'controles-vinculados' || campo.persistirRespuesta === false) return null;
     const campoMaestro = obtenerCampoMaestroRiesgo(campo);
     if (campoMaestro !== null) {
       const riesgo = this.riesgos().find(item => item.rieId === this.riesgoId());
@@ -2597,7 +2603,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.listarControles(evaluacionId).subscribe({
       next: controles => {
         if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
-        this.controlesMatrizCompleta.set(controles);
+        this.controlesMatrizCompleta.set([...(Array.isArray(controles) ? controles : [])].sort((a, b) => a.conId - b.conId));
         this.controlesMatrizEnCarga.set(false);
       },
       error: error => {
@@ -2607,6 +2613,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.controlesMatrizEnCarga.set(false);
       }
     });
+  }
+
+  etiquetaAutomatizacionControl(valor: unknown): string {
+    const codigo = typeof valor === 'string' ? valor.trim().toUpperCase() : '';
+    const opcion = canonicalCatalogSelectOptions('CONTROL_AUTOMATION').find(item => item.value === codigo);
+    return opcion?.label ?? `Clave no válida del catálogo institucional: ${codigo || 'vacía'}`;
   }
 
   abrirMatrizCompletaDesdeConsolidado(fila: RiesgoReporteFila): void {
