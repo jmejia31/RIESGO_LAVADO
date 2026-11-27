@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Out
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { InstitutionalTooltipDirective } from '../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { CampoFormulario, ValorRespuestaFormulario } from '../../models/matrices-riesgos.models';
 import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -22,7 +23,7 @@ export interface OpcionCampoRenderer {
 @Component({
   selector: 'app-dynamic-field-renderer',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule, InstitutionalTooltipDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-1" [attr.data-renderer-type]="tipo">
