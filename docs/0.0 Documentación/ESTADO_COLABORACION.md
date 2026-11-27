@@ -6322,3 +6322,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Preservación:** `MP01=UNCHANGED`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `PRODUCTION=NOT_TOUCHED`; `MAIN=NOT_TOUCHED`; `CREDENTIALS=NOT_USED`; no se desactivaron gates ni se modificaron pruebas.
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_CI`; `ISSUE_52=OPEN_PENDING_OWNER_REVIEW`; `OWNER_ACCEPTANCE=PENDING`.
 - **Punto exacto de continuación:** stage selectivo, un único commit/push, verificar SHA remoto y consultar una sola vez el Quality Gate del SHA nuevo; no cerrar la Issue #52 ni declarar certificación funcional.
+
+## ESTADO VIGENTE — Corrección E2E del contrato de nombres descriptivos — 2026-11-27 09:31:42 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `d05b84042e201c64f17d87833d36a7e026f553c4`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.
+- **Fallo comprobado:** run `46014237674`, job `140557315178`; dos aserciones E2E de `modal-shell-lock.spec.ts` seguían esperando el código técnico en el texto visible después de Issue #52. El escenario TX12 negativo mantiene su contrato y no es la causa funcional a corregir.
+- **Corrección:** el fixture valida `Fórmula UAT · vN · Borrador` como etiqueta institucional, conserva `F01_FORMULA_UAT` como código técnico secundario y comprueba la expresión sin locator ambiguo.
+- **Verificación local:** spec completo `16/16 PASS` serial; focal `2/2 PASS`; lint `PASS`; build Angular `PASS` con warnings preexistentes; `git diff --check=PASS`.
+- **Preservación:** `PRODUCTION_CODE=UNCHANGED`; `MP01=UNCHANGED`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `MAIN=NOT_TOUCHED`; `CREDENTIALS=NOT_USED`; no se desactivaron pruebas ni gates.
+- **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_CI`; `ISSUE_52=OPEN_PENDING_OWNER_REVIEW`; `OWNER_ACCEPTANCE=PENDING`.
+- **Punto exacto de continuación:** stage selectivo, un único commit/push, verificar SHA remoto y consultar una sola vez el Quality Gate del SHA nuevo; no cerrar la Issue #52 ni declarar certificación funcional.

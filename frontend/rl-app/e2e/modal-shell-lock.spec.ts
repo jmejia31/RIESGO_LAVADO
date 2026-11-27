@@ -22,6 +22,7 @@ const publicada = { verId: 10, verFamiliaId: 1, verCodigo: 'MATRIZ_RIESGOS_LAFT_
 const borrador = { ...publicada, verId: 11, verCodigo: 'MATRIZ_RIESGOS_LAFT_V2', verVersion: 2,
   verJson: definicion, verHash: 'borrador', verEstado: 'DRAFT', verVigente: false };
 const formulas = [{ id: 1, codigo: 'F01_FORMULA_UAT', nombre: 'Fórmula UAT', descripcion: 'Fórmula para pruebas de selector.' }];
+const nombreFormulaVisible = 'Fórmula UAT';
 const formulaVersions = Array.from({ length: 24 }, (_, index) => ({
   id: index + 1,
   formulaId: 1,
@@ -125,7 +126,7 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   await expect(panel.locator('[role="option"]')).toHaveCount(25);
   await expect(panel.locator('[data-ui-bounded-select-option][title]')).toHaveCount(0);
   const opcionesExtensas = panel.locator('[data-ui-bounded-select-option]');
-  await expect(opcionesExtensas.first()).toHaveAttribute('aria-label', /F01_FORMULA_UAT/);
+  await expect(opcionesExtensas.first()).toHaveAttribute('aria-label', `${nombreFormulaVisible} · v1 · Borrador`);
   const overflow = await opcionesExtensas.evaluateAll(opciones => opciones.map(opcion => ({
     text: opcion.textContent ?? '',
     fits: (opcion as HTMLElement).scrollWidth <= (opcion as HTMLElement).clientWidth,
@@ -145,17 +146,18 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   const search = panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' });
   await search.fill('CAT_EFECTIVIDAD_24');
   await expect(panel.locator('[role="option"]')).toHaveCount(2);
-  const filteredFormula = panel.locator('[role="option"]').filter({ hasText: 'F01_FORMULA_UAT' });
+  const filteredFormula = panel.locator('[role="option"]').filter({ hasText: `${nombreFormulaVisible} · v24` });
   await expect(filteredFormula).toHaveCount(1);
   await filteredFormula.click();
-  await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v24');
-  await expect(inspector.locator('.inspector-central-preview span')).toContainText('CAT_EFECTIVIDAD_24');
+  await expect(inspector.locator('.inspector-central-preview')).toContainText(`${nombreFormulaVisible} · v24`);
+  await expect(inspector.locator('.inspector-central-preview')).toContainText('Código técnico: F01_FORMULA_UAT');
+  await expect(inspector.locator('.inspector-central-preview')).toContainText('CAT_EFECTIVIDAD_24');
 
   await abrirSelectorDeFormula(page, selector);
   await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).fill('CAT_EFECTIVIDAD_23');
   await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).press('ArrowDown');
   await panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' }).press('Enter');
-  await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v23');
+  await expect(inspector.locator('.inspector-central-preview')).toContainText(`${nombreFormulaVisible} · v23`);
 
   await abrirSelectorDeFormula(page, selector);
   const escapeSearch = panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' });
@@ -259,8 +261,8 @@ test('audita el selector compartido en los cuatro viewports solicitados', async 
 
     const search = panel.getByRole('searchbox', { name: 'Buscar en Fórmula central y versión exacta' });
     await search.fill('CAT_EFECTIVIDAD_24');
-    await panel.getByRole('option').filter({ hasText: 'F01_FORMULA_UAT' }).click();
-    await expect(inspector.locator('.inspector-central-preview')).toContainText('F01_FORMULA_UAT · v24');
+    await panel.getByRole('option').filter({ hasText: `${nombreFormulaVisible} · v24` }).click();
+    await expect(inspector.locator('.inspector-central-preview')).toContainText(`${nombreFormulaVisible} · v24`);
 
     if (viewport.expected !== 'desktop') {
       const toggle = dialogo.locator('[data-ui-form-builder-inspector-toggle]');
