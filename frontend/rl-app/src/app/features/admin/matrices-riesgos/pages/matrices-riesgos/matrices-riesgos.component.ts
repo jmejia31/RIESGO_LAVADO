@@ -31,7 +31,6 @@ import { FormulaCoincidenciaEstado, normalizarJsonABuilderModel } from '../../mo
 import { ControlRiesgoDto, MatrizBloque6Dto, MitigacionBloque4Dto, PlanMitigacionDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 import { InstitutionalConfirmationService } from '../../../../../shared/confirmation/institutional-confirmation.service';
-import { nombreFormulaLegible } from '../../utils/institutional-formula-label.util';
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
 import { DynamicFieldRendererComponent } from '../../components/dynamic-field-renderer/dynamic-field-renderer.component';
@@ -3049,7 +3048,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               formulaId: formulas[index].id,
               formulaVersionId: versionItem.id,
               codigo: formulas[index].codigo,
-              nombre: nombreFormulaLegible(formulas[index]),
+              nombre: formulas[index].nombre,
+              referenciaInstitucional: formulas[index].referenciaInstitucional,
               version: versionItem.version,
               estado: versionItem.estado,
               tipoResultado: versionItem.tipoResultado,

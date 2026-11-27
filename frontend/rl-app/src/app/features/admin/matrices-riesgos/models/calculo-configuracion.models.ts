@@ -227,6 +227,7 @@ export interface FormulaVersionSelectorOption {
   formulaVersionId: number;
   codigo: string;
   nombre: string;
+  referenciaInstitucional?: ReferenciaFormulaInstitucionalDto | null;
   version: number;
   estado: EstadoConfiguracion;
   tipoResultado: string;

@@ -6354,6 +6354,16 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `GITHUB_REMOTE_VERIFIED=PENDING_SINGLE_PUSH`. Se hará stage selectivo, un único commit/push y una sola consulta del Quality Gate del SHA final.
 - **Punto exacto de continuación:** publicar la corrección, verificar el SHA remoto y registrar el resultado primario del nuevo Quality Gate sin declarar PASS antes de que finalice.
 
+## ESTADO VIGENTE — Issue #54 selector de fórmulas con nombre funcional y FI — 2026-11-27 11:37:38 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `d0af566095a2a1eaf4e8200f55ad8c14ad2151ba`, sincronizada con `origin/desarrollo`. Issue #53 está finalizada técnicamente en el gate `46037923138=SUCCESS` y no fue modificada.
+- **Defecto corregido:** nombres genéricos del selector no se transformaban al campo funcional y la referencia institucional no viajaba al modelo de opciones. La causa quedó limitada al helper/modelado frontend; no hubo defecto de backend ni de cálculo.
+- **Estado funcional:** `SELECTOR_FI_HUMAN_LABEL=IMPLEMENTED`; formato esperado `Valor del Riesgo Inherente · FI · v1 · Borrador`, `Riesgo Residual · FI · v1 · Borrador` y equivalentes F01–F34. `MATRIX_FIELD_REFERENCE_VISIBLE=PASS`; `INSTITUTIONAL_34_MAPPING=STRICT_EXACT_CODE_AND_REFERENCE`; `CUSTOM_NAMES_PRESERVED=PASS`; `MANUAL_FORMULA_NOT_MISLABELED_FI=PASS`; `EXACT_VERSION_PINNING_PRESERVED=PASS`.
+- **Verificación local:** `FRONTEND_TESTS=105 archivos / 1,123 pruebas PASS`; focal `30/30 PASS`; `LINT=PASS`; `BUILD=PASS` con warnings preexistentes SCSS/CommonJS; `E2E_MODAL_SHELL=17/17 PASS`; `E2E_CONFIG_REFERENCES=1/1 PASS`; `GIT_DIFF_CHECK=PASS`. Backend no ejecutado por no haber cambios backend.
+- **Protecciones:** `MP01_REAL_DATA_MUTATIONS=0`; `ISSUE53_NOT_INTERFERED=YES`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `PRODUCTION=NOT_TOUCHED`; `MAIN=NOT_TOUCHED`; `CREDENTIALS=NOT_USED`; `OWNER_VISUAL_ACCEPTANCE=PENDING`. No se modificaron fórmulas, cálculos, versiones, usos centrales, contratos ni modales institucionales.
+- **Publicación / CI:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=d0af566095a2a1eaf4e8200f55ad8c14ad2151ba`; `GITHUB_REMOTE_VERIFIED=PASS` para la base; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_SHA=PENDING_COMMIT`; `QUALITY_GATE_STATUS=PENDING_CI`; `ISSUE_54=OPEN_PENDING_OWNER_REVIEW`.
+- **Punto exacto de continuación:** stage selectivo de los archivos propios, un único commit/push, verificar el SHA remoto y consultar una sola vez el nuevo Quality Gate. Mantener la Issue #54 abierta hasta la revisión visual del propietario; no declarar certificación funcional por las pruebas sintéticas solamente.
+
 ## ESTADO VIGENTE — Corrección E2E del contrato de nombres descriptivos — 2026-11-27 09:31:42 -06:00 (COD)
 
 - **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `d05b84042e201c64f17d87833d36a7e026f553c4`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.

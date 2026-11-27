@@ -16,7 +16,7 @@ import { ActionIconComponent } from '../../../../../../shared/components/action-
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../../shared/components/bounded-select/bounded-select.component';
 import { InstitutionalTooltipDirective } from '../../../../../../shared/components/institutional-tooltip/institutional-tooltip.directive';
 import { InstitutionalConfirmationService } from '../../../../../../shared/confirmation/institutional-confirmation.service';
-import { etiquetaEstadoFormula, nombreFormulaLegible, normalizarBusquedaFormula } from '../../../utils/institutional-formula-label.util';
+import { campoMatrizFormula, etiquetaFormulaVersion, nombreFormulaLegible, normalizarBusquedaFormula } from '../../../utils/institutional-formula-label.util';
 
 @Component({
   selector: 'app-form-builder-inspector',
@@ -30,6 +30,8 @@ export class FormBuilderInspectorComponent {
   private cdr = inject(ChangeDetectorRef);
   private readonly confirmation = inject(InstitutionalConfirmationService);
   readonly nombreFormulaLegible = nombreFormulaLegible;
+  readonly etiquetaFormulaVersion = etiquetaFormulaVersion;
+  readonly campoMatrizFormula = campoMatrizFormula;
 
   private _campoActivo: CampoBuilderModel | null = null;
   @Input()
@@ -176,11 +178,15 @@ export class FormBuilderInspectorComponent {
   }
 
   get formulaVersionSelectOptions(): readonly BoundedSelectOption[] {
-    return this.formulaVersionesDisponibles.map(option => ({
-      value: option.formulaVersionId,
-      label: `${nombreFormulaLegible(option)} · v${option.version} · ${etiquetaEstadoFormula(option.estado)}`,
-      searchText: normalizarBusquedaFormula(`${nombreFormulaLegible(option)} ${option.codigo} ${option.version} ${etiquetaEstadoFormula(option.estado)} ${option.descripcion ?? ''} ${option.expresion}`)
-    }));
+    return this.formulaVersionesDisponibles.map(option => {
+      const campoMatriz = campoMatrizFormula(option)?.label ?? '';
+      const label = etiquetaFormulaVersion(option);
+      return {
+        value: option.formulaVersionId,
+        label,
+        searchText: normalizarBusquedaFormula(`${label} ${option.codigo} ${campoMatriz} ${option.version} ${option.estado} ${option.descripcion ?? ''} ${option.expresion}`)
+      };
+    });
   }
 
   seleccionarFormulaCentral(versionId: string | number | null): void {

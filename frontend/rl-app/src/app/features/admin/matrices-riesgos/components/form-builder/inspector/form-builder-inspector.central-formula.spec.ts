@@ -33,6 +33,28 @@ describe('FormBuilderInspectorComponent — fórmula central pinneada', () => {
     }));
   });
 
+  it('presenta el nombre funcional, FI y el campo matriz para una fórmula institucional', () => {
+    component.formulaVersionesDisponibles = [{
+      formulaId: 1,
+      formulaVersionId: 8,
+      codigo: 'F01_VALOR_RIESGO_INHERENTE',
+      nombre: 'Fórmula institucional 01',
+      referenciaInstitucional: { numero: 1, targetField: 'valor_riesgo_inherente', sourceCell: 'Matriz Consolidada!L2', excelColumn: 'L' },
+      version: 1,
+      estado: 'DRAFT',
+      tipoResultado: 'DECIMAL',
+      hash: 'a'.repeat(64),
+      expresion: 'frecuencia + impacto - 1'
+    }];
+    component.tiposControles = [{ tipo: 'formula', etiqueta: 'Fórmula', descripcion: 'Campo calculado', icono: 'function', categoria: 'avanzado', requiereCatalogo: false, requiereOpciones: false, requiereFormula: true }];
+    component.campoActivo = { id: 'formula_1', clave: 'valor_riesgo_inherente', etiqueta: 'Valor del Riesgo Inherente', tipo: 'formula', obligatorio: false, soloLectura: true, anchoColumnas: 1, formulaVersionId: 8, formulaVersion: 1, formulaCodigo: 'F01_VALOR_RIESGO_INHERENTE' };
+    fixture.detectChanges();
+
+    expect(component.formulaVersionSelectOptions[0].label).toBe('Valor del Riesgo Inherente · FI · v1 · Borrador');
+    expect(component.formulaVersionSelectOptions[0].searchText).toContain('valor del riesgo inherente');
+    expect(fixture.nativeElement.textContent).toContain('Campo matriz: Valor del Riesgo Inherente');
+  });
+
   it('rechaza identificadores no enteros sin alterar la fórmula fijada', () => {
     component.seleccionarFormulaCentral(8);
     component.seleccionarFormulaCentral('8.5');

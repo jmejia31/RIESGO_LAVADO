@@ -111,6 +111,20 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(component.referenciaInstitucionalFormula(formula)).toBeNull();
   });
 
+  it('permite buscar una fórmula institucional por el nombre semántico del campo matriz', () => {
+    const formula = {
+      id: 1,
+      codigo: 'F01_VALOR_RIESGO_INHERENTE',
+      nombre: 'Fórmula institucional 01',
+      estado: 'ACTIVE',
+      versionRow: 1,
+      referenciaInstitucional: { numero: 1, targetField: 'valor_riesgo_inherente', sourceCell: 'Matriz Consolidada!L2', excelColumn: 'L' }
+    };
+    component.formulas.set([formula]);
+    component.busqueda.set('valor del riesgo inherente');
+    expect(component.formulasFiltradas()).toEqual([formula]);
+  });
+
   it('muestra resultados sin selección y oculta la navegación contextual', () => {
     expect(component.formulaPosicion()).toBe('1 resultados');
     const navigation = fixture.nativeElement.querySelector('.config-record-navigation') as HTMLElement;

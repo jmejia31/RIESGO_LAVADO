@@ -157,7 +157,19 @@ export class ConfiguracionCalculoComponent implements OnInit {
 
   cambiarInactivas(): void { this.cargar(); }
 
-  formulasFiltradas(): FormulaDto[] { return this.filtrar(this.formulas()); }
+  formulasFiltradas(): FormulaDto[] {
+    const q = normalizarBusquedaFormula(this.busqueda());
+    if (!q) return this.formulas();
+    return this.formulas().filter(item => [
+      item.codigo,
+      item.nombre,
+      nombreFormulaLegible(item),
+      item.descripcion ?? '',
+      item.estado ?? '',
+      item.referenciaInstitucional ? 'FI' : '',
+      this.referenciaInstitucionalFormula(item)?.field.label ?? ''
+    ].some(value => normalizarBusquedaFormula(value).includes(q)));
+  }
   referenciaInstitucionalFormula(item: FormulaDto): { field: MatrixFieldContract; referencia: NonNullable<FormulaDto['referenciaInstitucional']> } | null {
     const referencia = item.referenciaInstitucional;
     if (!referencia) return null;

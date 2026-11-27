@@ -1,5 +1,5 @@
 import { FormulaDto } from '../models/calculo-configuracion.models';
-import { etiquetaEstadoFormula, nombreFormulaLegible, normalizarBusquedaFormula } from './institutional-formula-label.util';
+import { campoMatrizFormula, etiquetaEstadoFormula, etiquetaFormulaVersion, nombreFormulaLegible, normalizarBusquedaFormula } from './institutional-formula-label.util';
 
 describe('etiquetas institucionales de fórmulas', () => {
   it('resuelve los 34 códigos institucionales sin exponer el identificador técnico', () => {
@@ -28,6 +28,45 @@ describe('etiquetas institucionales de fórmulas', () => {
   it('prioriza el nombre descriptivo administrado cuando no es técnico', () => {
     const formula: FormulaDto = { id: 1, codigo: 'F01_VALOR_RIESGO_INHERENTE', nombre: 'VRI institucional', estado: 'ACTIVE', versionRow: 1 };
     expect(nombreFormulaLegible(formula)).toBe('VRI institucional');
+  });
+
+  it('reemplaza nombres genéricos institucionales por el campo funcional exacto', () => {
+    const formula: FormulaDto = { id: 1, codigo: 'F01_VALOR_RIESGO_INHERENTE', nombre: '  fórmula   institucional 01 ', estado: 'ACTIVE', versionRow: 1 };
+    expect(nombreFormulaLegible(formula)).toBe('Valor del Riesgo Inherente');
+    expect(campoMatrizFormula(formula)?.label).toBe('Valor del Riesgo Inherente');
+  });
+
+  it('muestra FI y conserva versión/estado reales en una opción institucional', () => {
+    expect(etiquetaFormulaVersion({
+      formulaId: 10,
+      formulaVersionId: 11,
+      codigo: 'F10_RIESGO_RESIDUAL_DESCRIPCION',
+      nombre: 'Formula institucional 10',
+      version: 1,
+      estado: 'DRAFT',
+      tipoResultado: 'TEXT',
+      hash: 'a'.repeat(64),
+      expresion: 'x'
+    })).toBe('Riesgo Residual · FI · v1 · Borrador');
+  });
+
+  it('no convierte fórmulas manuales con prefijo F01 en institucionales', () => {
+    const formula: FormulaDto = { id: 99, codigo: 'F01_FORMULA_UAT', nombre: 'Fórmula UAT', estado: 'DRAFT', versionRow: 1 };
+    expect(nombreFormulaLegible(formula)).toBe('Fórmula UAT');
+    expect(campoMatrizFormula(formula)).toBeNull();
+  });
+
+  it('solo expone el campo matriz cuando la referencia institucional coincide', () => {
+    const formula: FormulaDto = {
+      id: 1,
+      codigo: 'F01_VALOR_RIESGO_INHERENTE',
+      nombre: 'Fórmula institucional 1',
+      estado: 'ACTIVE',
+      versionRow: 1,
+      referenciaInstitucional: { numero: 1, targetField: 'valor_riesgo_inherente', sourceCell: 'Matriz Consolidada!L2', excelColumn: 'L' }
+    };
+    expect(campoMatrizFormula(formula)?.label).toBe('Valor del Riesgo Inherente');
+    expect(campoMatrizFormula({ ...formula, referenciaInstitucional: { numero: 1, targetField: 'diferencia_vri_vrr', sourceCell: 'Matriz Consolidada!BQ2', excelColumn: 'BQ' } })).toBeNull();
   });
 
   it('normaliza búsqueda con acentos y estado institucional', () => {

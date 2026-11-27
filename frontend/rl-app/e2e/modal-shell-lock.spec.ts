@@ -171,6 +171,47 @@ test('el selector de fórmula usa bounded select, búsqueda y contención de exp
   await expect(panel).toBeHidden();
 });
 
+test('el selector institucional muestra campo matriz, FI y estado real sin renombrar fórmulas manuales', async ({ page }) => {
+  await page.route('**/api/matrices-riesgos/configuracion-calculo/formulas*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [{
+      id: 1,
+      codigo: 'F01_VALOR_RIESGO_INHERENTE',
+      nombre: 'Fórmula institucional 01',
+      descripcion: 'Fórmula institucional del riesgo inherente.',
+      estado: 'ACTIVE',
+      versionRow: 1,
+      referenciaInstitucional: {
+        numero: 1,
+        targetField: 'valor_riesgo_inherente',
+        sourceCell: 'Matriz Consolidada!L2',
+        excelColumn: 'L'
+      }
+    }] })
+  }));
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  const versionesFormulas = page.waitForResponse(response => response.url().endsWith('/api/matrices-riesgos/configuracion-calculo/formulas/1/versiones') && response.ok());
+  await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+  await versionesFormulas;
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const formulaCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').filter({ hasText: 'Resultado calculado' });
+  await formulaCard.click();
+  const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
+  const selector = inspector.getByRole('combobox', { name: 'Fórmula central y versión exacta' });
+  const panel = await abrirSelectorDeFormula(page, selector);
+  await expect(panel.locator('[data-ui-bounded-select-option]').first()).toHaveAttribute('aria-label', 'Valor del Riesgo Inherente · FI · v1 · Borrador');
+  await panel.locator('[data-ui-bounded-select-option]').first().click();
+  await expect(inspector.locator('.inspector-central-preview')).toContainText('Valor del Riesgo Inherente · FI · v1 · Borrador');
+  await expect(inspector.locator('.inspector-central-preview')).toContainText('Campo matriz: Valor del Riesgo Inherente');
+  await expect(inspector.locator('.inspector-central-preview')).toContainText('Código técnico: F01_VALOR_RIESGO_INHERENTE');
+});
+
 test('audita el selector compartido en los cuatro viewports solicitados', async ({ page }) => {
   test.setTimeout(120_000);
   const viewports = [
