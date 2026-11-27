@@ -6312,3 +6312,13 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 - **Protecciones:** `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `CREDENTIALS=NOT_USED`; `PRODUCTION=NOT_TOUCHED`; `MAIN=NOT_TOUCHED`; `MP01=UNCHANGED`; `OWNER_ACCEPTANCE=PENDING`; `FUNCTIONAL_CERTIFICATION=NOT_DECLARED`.
 - **Publicación:** `SOURCE_CODE_SHA=498bede68a662c5934e6a1452215c61f15775537`; `REMOTE_HEAD_SHA=498bede68a662c5934e6a1452215c61f15775537`; `GITHUB_REMOTE_VERIFIED=PASS`; `QUALITY_GATE_RUN_ID=45903623084`; `QUALITY_GATE_STATUS=IN_PROGRESS_AT_SINGLE_READ`; `ISSUE_52=OPEN_PENDING_OWNER_REVIEW`.
 - **Punto exacto de continuación:** no declarar Quality Gate PASS mientras el run no termine; publicar el resultado primario cuando esté disponible y entregar al propietario los pasos de validación manual. No cerrar la Issue #52 ni declarar certificación funcional.
+
+## ESTADO VIGENTE — Corrección Quality Gate 45903941530 — 2026-11-27 08:13:42 -06:00 (COD)
+
+- **Repositorio / rama / base:** `jmejia31/RIESGO_LAVADO`, `desarrollo`; base `628ab33891a176655b71905eddea751567fea3c7`, coincidente con `origin/desarrollo`. Cambios locales ajenos preservados fuera del stage.
+- **Fallo comprobado:** run `45903941530`, job `140196135214`; `Run repository quality gates` falló porque B04 detectó `<details>/<summary>` nativo no estandarizado en el preview central del inspector de fórmulas.
+- **Corrección:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/inspector/form-builder-inspector.component.html` ahora muestra la expresión técnica con el markup institucional permitido, sin cambiar valores, expresión, versión, contratos ni lógica de Issue #52.
+- **Verificación local:** B04 self-test y auditoría `PASS`; lint `PASS`; build Angular `PASS` con warnings preexistentes; Angular `105` archivos / `1,110` pruebas `PASS`; `git diff --check=PASS`.
+- **Preservación:** `MP01=UNCHANGED`; `ORACLE_INSTITUTIONAL=NOT_ACCESSED`; `PRODUCTION=NOT_TOUCHED`; `MAIN=NOT_TOUCHED`; `CREDENTIALS=NOT_USED`; no se desactivaron gates ni se modificaron pruebas.
+- **Publicación:** `FINAL_SHA=PENDING_COMMIT`; `REMOTE_HEAD_SHA=PENDING_PUSH`; `QUALITY_GATE_RUN_ID=PENDING_NEW_SHA`; `QUALITY_GATE_STATUS=PENDING_CI`; `ISSUE_52=OPEN_PENDING_OWNER_REVIEW`; `OWNER_ACCEPTANCE=PENDING`.
+- **Punto exacto de continuación:** stage selectivo, un único commit/push, verificar SHA remoto y consultar una sola vez el Quality Gate del SHA nuevo; no cerrar la Issue #52 ni declarar certificación funcional.
